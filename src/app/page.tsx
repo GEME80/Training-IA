@@ -80,6 +80,11 @@ export default function HomePage() {
           }),
         });
 
+        if (!res.ok) {
+          console.warn("Aviso: /api/evaluate respondió con estado", res.status);
+          return;
+        }
+
         const data = await res.json();
         if (data.success) {
           setProfile(data.profile);
@@ -122,6 +127,11 @@ export default function HomePage() {
             skipAI: false, // Disparar inferencia completa de Gemini
           }),
         });
+
+        if (!res.ok) {
+          console.warn("Aviso: /api/evaluate respondió con estado", res.status);
+          return;
+        }
 
         const data = await res.json();
         if (data.success) {

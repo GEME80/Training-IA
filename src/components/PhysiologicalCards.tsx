@@ -103,18 +103,31 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
         </div>
 
         {/* Rolling HRV Z-Score */}
-        <div className="card-gradient rounded-xl p-3.5 border border-slate-800 transition hover:border-slate-700">
+        <div
+          className="card-gradient rounded-xl p-3.5 border border-slate-800 transition hover:border-slate-700"
+          title={
+            status.hrvZScore !== null
+              ? `HRV actual: ${status.currentHrv} ms vs media base móvil de 30 días (${status.baselineHrvMean} ms).`
+              : "Intervals.icu no tiene registros de HRV (rMSSD) en tus datos de Wellness de los últimos 90 días."
+          }
+        >
           <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>HRV Z-Score</span>
             <Activity className="h-3.5 w-3.5 text-emerald-400" />
           </div>
           <div className="mt-2 text-2xl font-black font-mono">
             <span className={getHrvColor(status.hrvZScore)}>
-              {status.hrvZScore !== null ? (status.hrvZScore > 0 ? `+${status.hrvZScore}` : status.hrvZScore) : "N/D"}
+              {status.hrvZScore !== null
+                ? status.hrvZScore > 0
+                  ? `+${status.hrvZScore}`
+                  : status.hrvZScore
+                : "N/D"}
             </span>
           </div>
-          <p className="mt-1 text-[10px] text-slate-400">
-            {status.currentHrv ? `${status.currentHrv} ms (Base: ${status.baselineHrvMean})` : "Rolling 30d"}
+          <p className="mt-1 text-[10px] text-slate-400 truncate">
+            {status.hrvZScore !== null && status.currentHrv
+              ? `${status.currentHrv} ms (Base: ${status.baselineHrvMean})`
+              : "Sin telemetría en Intervals"}
           </p>
         </div>
 

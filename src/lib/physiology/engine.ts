@@ -64,15 +64,18 @@ export class PhysiologicalEngine {
       latestWithLoad?.rampRate ??
       (typeof profile.rampRate === "number" ? profile.rampRate : 0);
 
-    // Extraer valores válidos de HRV para la línea base móvil (Rolling Baseline)
-    const validHrvRecords = wellnessHistory
-      .filter((w) => typeof w.hrv === "number" && w.hrv > 0)
-      .map((w) => w.hrv as number);
+    // Extraer valores válidos de HRV para la línea base móvil (Rolling Baseline) soportando múltiples campos de Intervals
+    const getHrvValue = (w: any): number | null => {
+      const val = w?.hrv ?? w?.hrvSDNN ?? w?.icu_hrv ?? w?.avgOvernightHrv ?? w?.rmssd;
+      return typeof val === "number" && val > 0 ? val : null;
+    };
 
-    const latestWithHrv = reversedWellness.find(
-      (w) => typeof w.hrv === "number" && w.hrv > 0
-    );
-    const currentHrv = latestWithHrv?.hrv ?? null;
+    const validHrvRecords = wellnessHistory
+      .map(getHrvValue)
+      .filter((v): v is number => v !== null);
+
+    const latestWithHrv = reversedWellness.find((w) => getHrvValue(w) !== null);
+    const currentHrv = latestWithHrv ? getHrvValue(latestWithHrv) : null;
 
     const latestWithRhr = reversedWellness.find(
       (w) => typeof w.restingHR === "number" && w.restingHR > 0
@@ -88,9 +91,13 @@ export class PhysiologicalEngine {
       validHrvRecords.length > 5 ? validHrvRecords.slice(-30) : validHrvRecords
     );
 
-    if (currentHrv !== null && baselineHrvSd > 0) {
-      hrvZScore = (currentHrv - baselineHrvMean) / baselineHrvSd;
-      hrvZScore = Math.round(hrvZScore * 100) / 100;
+    if (currentHrv !== null) {
+      if (baselineHrvSd > 0) {
+        hrvZScore = (currentHrv - baselineHrvMean) / baselineHrvSd;
+        hrvZScore = Math.round(hrvZScore * 100) / 100;
+      } else {
+        hrvZScore = 0.0; // HRV presente y estable
+      }
     }
 
     // Reglas de Clasificación Fisiológica

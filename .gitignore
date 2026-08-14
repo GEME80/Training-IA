@@ -1,0 +1,51 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Next.js build output
+/.next/
+/out/
+
+# Production
+/build
+
+# Environment variables & secrets (CRITICAL: Never commit secrets)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+serviceAccountKey.json
+firebase-admin-key.json
+
+# Firebase cache and emulators
+.firebase/
+.firebaserc.local
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Vercel / Cloud
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS Files
+.DS_Store
+*.pem
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo

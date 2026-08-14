@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función auxiliar para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función auxiliar para verificar si el usuario accede a sus propios datos
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Regla estricta de aislamiento de usuario (Tenant Isolation)
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Subcolecciones de datos del atleta (planes, snapshots, logs de decisión)
+      match /{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Bloqueo por defecto para cualquier otra ruta no autorizada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

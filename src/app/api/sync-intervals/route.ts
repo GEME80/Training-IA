@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!plan || !Array.isArray(plan)) {
+    if (!plan || !Array.isArray(plan) || plan.length === 0) {
       return NextResponse.json(
         { success: false, error: "Estructura del microciclo inválida." },
         { status: 400 }
@@ -25,59 +25,78 @@ export async function POST(req: NextRequest) {
     const client = new IntervalsClient(athleteId, apiKey);
     const createdEvents: CalendarEvent[] = [];
 
-    // Calcular las fechas correspondientes para la semana actual
-    const today = new Date();
-    // Lunes de la semana actual
-    const dayOfWeek = today.getDay(); // 0 = Domingo, 1 = Lunes
-    const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + distanceToMonday);
+    // 1. Extraer rango de fechas del microciclo (Lunes a Domingo)
+    const validDates = plan.map((p) => p.date).filter(Boolean).sort();
+    let startDateStr = validDates[0];
+    let endDateStr = validDates[validDates.length - 1];
 
-    const dayOffsets: Record<string, number> = {
-      Lunes: 0,
-      Martes: 1,
-      Miércoles: 2,
-      Jueves: 3,
-      Viernes: 4,
-      Sábado: 5,
-      Domingo: 6,
-    };
+    if (!startDateStr || !endDateStr) {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + distanceToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
 
+      startDateStr = monday.toISOString().split("T")[0];
+      endDateStr = sunday.toISOString().split("T")[0];
+    }
+
+    // 2. Limpieza de entrenamientos previos [SGEA] para evitar duplicación
+    try {
+      const existingEvents = await client.getEvents(startDateStr, endDateStr);
+      const sgeaEventsToDelete = existingEvents.filter(
+        (e) =>
+          e.id &&
+          e.category === "WORKOUT" &&
+          (e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
+      );
+
+      if (sgeaEventsToDelete.length > 0) {
+        console.log(`Eliminando ${sgeaEventsToDelete.length} entrenamientos previos de [SGEA] en el rango ${startDateStr} a ${endDateStr}...`);
+        await Promise.all(
+          sgeaEventsToDelete.map((e) =>
+            client.deleteEvent(e.id!).catch((delErr) => {
+              console.warn(`No se pudo eliminar evento previo ${e.id}:`, delErr);
+            })
+          )
+        );
+      }
+    } catch (cleanErr) {
+      console.warn("Aviso al consultar/limpiar eventos previos en Intervals:", cleanErr);
+    }
+
+    // 3. Inserción del nuevo microciclo optimizado
     for (const item of plan) {
-      // Omitir descanso total si está marcado como descanso
+      // Omitir días de descanso pasivo
       if (item.isRestDay || item.discipline === "Descanso") {
         continue;
       }
 
-      let dateStr = item.date;
-      if (!dateStr) {
-        const offset = dayOffsets[item.day] ?? 0;
-        const targetDate = new Date(monday);
-        targetDate.setDate(monday.getDate() + offset);
-        dateStr = targetDate.toISOString().split("T")[0];
-      }
+      const dateStr = item.date || startDateStr;
 
       let type: CalendarEvent["type"] = "Run";
-      let workoutSyntax = "";
+      let fallbackSyntax = "";
 
       if (item.discipline === "Ciclismo") {
         type = "Ride";
-        workoutSyntax = PhysiologicalEngine.generateWorkoutSyntax("Ride", "Z2_BASE");
+        fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("Ride", "Z2_BASE");
       } else if (item.discipline === "Fuerza") {
         type = "WeightTraining";
-        workoutSyntax = PhysiologicalEngine.generateWorkoutSyntax("WeightTraining", "STRENGTH");
+        fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("WeightTraining", "STRENGTH");
       } else {
         type = "Run";
         if (item.day === "Martes") {
-          workoutSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "THRESHOLD_INTERVALS", 100);
+          fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "THRESHOLD_INTERVALS", 100);
         } else if (item.day === "Domingo") {
-          workoutSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 88);
+          fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 88);
         } else {
-          workoutSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70);
+          fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70);
         }
       }
 
-      const workoutText = item.workoutDoc || workoutSyntax;
+      const workoutText = item.workoutDoc || fallbackSyntax;
 
       const eventPayload: CalendarEvent = {
         start_date_local: `${dateStr}T07:00:00`,
@@ -97,8 +116,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `¡Microciclo sincronizado exitosamente con Intervals.icu! (${createdEvents.length} sesiones publicadas)`,
-      createdEventsCount: createdEvents.length,
+      message: `¡Microciclo actualizado exitosamente en Intervals.icu! (${createdEvents.length} sesiones actualizadas)`,
+      createdCount: createdEvents.length,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error al sincronizar con Intervals.icu";

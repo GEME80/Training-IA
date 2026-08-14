@@ -74,13 +74,14 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      const workoutText = item.workoutDoc || workoutSyntax;
+
       const eventPayload: CalendarEvent = {
         start_date_local: `${dateStr}T07:00:00`,
         name: `[SGEA] ${item.workoutName}`,
-        description: `Prescripción inteligente SGEA: ${item.justification}`,
+        description: workoutText,
         type,
         category: "WORKOUT",
-        workout_doc: item.workoutDoc || workoutSyntax,
       };
 
       try {

@@ -313,7 +313,7 @@ export default function HomePage() {
 
         {/* Main Content Area */}
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
-          {/* Season Planner & Macrocycle Card */}
+          {/* Season & Target Race Planner Card */}
           <SeasonPlannerCard
             phaseInfo={macrocyclePhase}
             races={targetRaces}
@@ -321,6 +321,8 @@ export default function HomePage() {
               setSettingsTab("races");
               setIsSettingsOpen(true);
             }}
+            onSelectWeek={handleWeekChange}
+            currentWeekOffset={weekOffset}
           />
 
           {/* Physiological Telemetry Cards Grid */}
@@ -334,9 +336,7 @@ export default function HomePage() {
           <AgentCommandCenter
             decision={agentDecision}
             onReevaluate={() => generateAIPlan(weekOffset)}
-            onSyncIntervals={handleSyncToIntervals}
             isEvaluating={isGeneratingAI}
-            isSyncing={isSyncing}
           />
 
           {/* 7-Day Weekly Interactive Matrix */}

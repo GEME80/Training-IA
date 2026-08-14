@@ -1,37 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Bot, Sparkles, Send, CheckCircle2, RefreshCw, GitBranch, ArrowRight, Cpu, Compass } from "lucide-react";
+import React from "react";
+import { Bot, Sparkles, RefreshCw, Cpu, Compass } from "lucide-react";
 import { AgentDecisionOutput } from "@/lib/gemini/engine";
 
 interface AgentCommandCenterProps {
   decision: AgentDecisionOutput | null;
   onReevaluate: () => void;
-  onSyncIntervals: () => Promise<void>;
   isEvaluating: boolean;
-  isSyncing: boolean;
 }
 
 export const AgentCommandCenter: React.FC<AgentCommandCenterProps> = ({
   decision,
   onReevaluate,
-  onSyncIntervals,
   isEvaluating,
-  isSyncing,
 }) => {
-  const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
-
-  const handleSync = async () => {
-    setSyncSuccess(null);
-    try {
-      await onSyncIntervals();
-      setSyncSuccess("¡Microciclo publicado exitosamente en Intervals.icu!");
-      setTimeout(() => setSyncSuccess(null), 6000);
-    } catch {
-      // Error handled by parent
-    }
-  };
-
   return (
     <div className="card-gradient rounded-2xl p-5 border border-slate-800 space-y-4">
       {/* Header */}
@@ -59,80 +42,81 @@ export const AgentCommandCenter: React.FC<AgentCommandCenterProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons (On-Demand AI Execution & Sync) */}
+        {/* Action Button: Generar Plan con IA */}
         <div className="flex items-center space-x-2">
           <button
             onClick={onReevaluate}
-            disabled={isEvaluating || isSyncing}
-            className="flex items-center space-x-2 rounded-xl border border-cyan-500/40 bg-cyan-950/40 px-4 py-2.5 text-xs font-bold text-cyan-300 shadow-md shadow-cyan-500/10 transition hover:bg-cyan-900/60 hover:text-white disabled:opacity-50"
+            disabled={isEvaluating}
+            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 px-5 py-2.5 text-xs font-black text-black shadow-lg shadow-cyan-500/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             title="Analizar asimilación de cargas y periodización con Inteligencia Artificial"
           >
-            <RefreshCw className={`h-4 w-4 ${isEvaluating ? "animate-spin text-cyan-400" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isEvaluating ? "animate-spin text-black" : ""}`} />
             <span>{isEvaluating ? "Consultando IA..." : "🧠 Generar Plan con IA"}</span>
-          </button>
-
-          <button
-            onClick={handleSync}
-            disabled={isSyncing || isEvaluating || !decision}
-            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-xs font-extrabold text-black shadow-lg shadow-emerald-500/25 transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-            title="Publicar microciclo en el calendario de Intervals.icu"
-          >
-            {isSyncing ? (
-              <RefreshCw className="h-4 w-4 animate-spin text-black" />
-            ) : (
-              <Send className="h-4 w-4 text-black" />
-            )}
-            <span>{isSyncing ? "Sincronizando..." : "Sincronizar a Intervals"}</span>
           </button>
         </div>
       </div>
 
-      {/* Sync Success Feedback */}
-      {syncSuccess && (
-        <div className="flex items-center space-x-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 animate-fadeIn">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-          <span>{syncSuccess}</span>
-        </div>
-      )}
-
-      {/* Decision Summary & Reasoning Chain */}
+      {/* Decision Summary & Status */}
       {decision ? (
-        <div className="space-y-3">
-          <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
-                Diagnóstico Fisiológico & Estado de Macrociclo
-              </span>
-              {decision.macrocyclePhase && (
-                <span className="text-[10px] font-mono text-amber-300 flex items-center gap-1">
-                  <Compass className="h-3 w-3" />
-                  {decision.macrocyclePhase}
+        <div className="space-y-4">
+          <div className="rounded-xl bg-slate-950/80 p-4 border border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-900 pb-2.5">
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] uppercase font-bold text-slate-400">
+                  Diagnóstico Adaptativo del Agente
                 </span>
-              )}
+                {decision.macrocyclePhase && (
+                  <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-slate-800 flex items-center gap-1">
+                    <Compass className="h-3 w-3" />
+                    {decision.macrocyclePhase}
+                  </span>
+                )}
+              </div>
+              <span
+                className={`w-fit rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                  decision.status === "OPTIMAL"
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : decision.status === "CAUTION"
+                    ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                    : "bg-red-500/10 text-red-400 border border-red-500/20"
+                }`}
+              >
+                {decision.status === "OPTIMAL"
+                  ? "🟢 Estado Óptimo"
+                  : decision.status === "CAUTION"
+                  ? "🟡 Precaución"
+                  : "🔴 Fatiga Elevada"}
+              </span>
             </div>
-            <p className="mt-1 text-sm font-semibold text-white">
+            <p className="mt-2 text-sm font-semibold text-white leading-relaxed">
               {decision.summaryHeadline}
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-300">
-              <GitBranch className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Árbol de Razonamiento del Agente:</span>
+          {/* Reasoning Tree */}
+          {decision.reasoningTree && decision.reasoningTree.length > 0 && (
+            <div className="rounded-xl bg-slate-950/40 p-3.5 border border-slate-800/80">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Árbol de Decisión Fisiológica (Gemini Thinking):
+              </span>
+              <ul className="space-y-1.5 text-xs text-slate-300">
+                {decision.reasoningTree.map((reason, index) => (
+                  <li key={index} className="flex items-start space-x-2">
+                    <span className="text-cyan-400 font-mono text-[11px] shrink-0 mt-0.5">
+                      ›
+                    </span>
+                    <span className="leading-snug">{reason}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 space-y-1.5">
-              {decision.reasoningTree.map((step, idx) => (
-                <div key={idx} className="flex items-start space-x-2 text-xs text-slate-300">
-                  <ArrowRight className="h-3 w-3 mt-0.5 shrink-0 text-cyan-400" />
-                  <span className="font-mono text-[11px] leading-relaxed">{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       ) : (
-        <div className="rounded-xl bg-slate-950/40 p-6 text-center text-xs text-slate-400 border border-slate-800/60">
-          Cargando telemetría del atleta y generando árbol de decisiones...
+        <div className="rounded-xl bg-slate-950/40 p-6 text-center text-slate-400 border border-slate-800/60">
+          <p className="text-xs">
+            Pulsa <strong>"🧠 Generar Plan con IA"</strong> para que el Head Coach Digital evalúe tu telemetría y periodice tu microciclo.
+          </p>
         </div>
       )}
     </div>

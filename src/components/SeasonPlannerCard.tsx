@@ -14,19 +14,24 @@ import {
   Clock,
   Compass,
   ArrowRight,
+  Eye,
 } from "lucide-react";
-import { MacrocyclePhaseInfo, TargetRace } from "@/lib/physiology/macrocycle";
+import { MacrocyclePhaseInfo, TargetRace, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 
 interface SeasonPlannerCardProps {
   phaseInfo: MacrocyclePhaseInfo | null;
   races: TargetRace[];
   onOpenRaceSettings: () => void;
+  onSelectWeek?: (weekOffset: number) => void;
+  currentWeekOffset?: number;
 }
 
 export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
   phaseInfo,
   races,
   onOpenRaceSettings,
+  onSelectWeek,
+  currentWeekOffset = 0,
 }) => {
   const [showFullTimeline, setShowFullTimeline] = useState(false);
   const primaryRace = phaseInfo?.primaryRace;
@@ -53,6 +58,19 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
       default:
         return "Competición Objetivo";
     }
+  };
+
+  // Calcula el weekOffset relativo a hoy para una semana dada del macrociclo
+  const getOffsetForWeek = (w: MacrocycleWeek): number => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const todayMonday = new Date(now.setDate(diff));
+    todayMonday.setHours(0, 0, 0, 0);
+
+    const weekMon = new Date(w.startDate + "T00:00:00");
+    const diffTime = weekMon.getTime() - todayMonday.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
   };
 
   return (
@@ -184,17 +202,17 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
             </div>
           </div>
 
-          {/* Expandable Macrocycle Timeline */}
+          {/* Interactive Week Matrix: Click any week to preview & edit its plan */}
           {blueprint && blueprint.weeks.length > 0 && (
-            <div className="rounded-xl bg-slate-950/60 p-3.5 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between">
+            <div className="rounded-xl bg-slate-950/60 p-3.5 border border-slate-800 space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center space-x-2">
                   <Compass className="h-4 w-4 text-cyan-400" />
                   <span className="text-xs font-bold text-white">
-                    {blueprint.cycleTitle}
+                    {blueprint.cycleTitle} ({blueprint.totalWeeks} Semanas)
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    (Periodización 3:1)
+                    (Haz clic en cualquier semana para cargar y ver su plan)
                   </span>
                 </div>
 
@@ -208,37 +226,63 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
                 </button>
               </div>
 
-              {/* Grid of Weeks */}
+              {/* Grid of Clickable Weeks */}
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-1">
-                {(showFullTimeline ? blueprint.weeks : blueprint.weeks.slice(0, 8)).map((w) => (
-                  <div
-                    key={w.weekNumber}
-                    className={`rounded-lg p-2 text-xs border transition ${
-                      w.isCurrentWeek
-                        ? "bg-cyan-950/60 border-cyan-500/60 shadow-sm shadow-cyan-500/20"
-                        : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className={`font-mono font-bold ${w.isCurrentWeek ? "text-cyan-300" : "text-slate-400"}`}>
-                        Sem {w.weekNumber}
-                      </span>
-                      {w.isCurrentWeek && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-                      )}
-                    </div>
-                    <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">{w.formattedRange}</p>
-                    <span
-                      className={`mt-1.5 block rounded px-1 py-0.5 text-[9px] font-bold text-center border truncate ${w.microcycleBadgeColor}`}
-                      title={w.microcycleLabel}
+                {(showFullTimeline ? blueprint.weeks : blueprint.weeks.slice(0, 8)).map((w) => {
+                  const offset = getOffsetForWeek(w);
+                  const isSelected = currentWeekOffset === offset;
+
+                  return (
+                    <button
+                      type="button"
+                      key={w.weekNumber}
+                      onClick={() => onSelectWeek && onSelectWeek(offset)}
+                      className={`text-left rounded-xl p-2 text-xs border transition cursor-pointer group ${
+                        isSelected
+                          ? "bg-cyan-950/90 border-cyan-400 ring-2 ring-cyan-500/40 shadow-md shadow-cyan-500/20"
+                          : w.isCurrentWeek
+                          ? "bg-slate-900/90 border-emerald-500/60 hover:border-emerald-400"
+                          : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/60"
+                      }`}
+                      title={`Haz clic para cargar el plan de la Semana ${w.weekNumber} (${w.formattedRange})`}
                     >
-                      {w.microcycleLabel.split(" ")[0]}
-                    </span>
-                    <p className="text-[10px] font-mono text-slate-400 mt-1 text-center font-semibold">
-                      {w.targetTss} TSS
-                    </p>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span
+                          className={`font-mono font-bold ${
+                            isSelected
+                              ? "text-cyan-300"
+                              : w.isCurrentWeek
+                              ? "text-emerald-400"
+                              : "text-slate-400 group-hover:text-slate-200"
+                          }`}
+                        >
+                          Sem {w.weekNumber}
+                        </span>
+                        {isSelected ? (
+                          <span className="rounded-full bg-cyan-400 px-1 py-0.2 text-[8px] font-bold text-black uppercase">
+                            Viendo
+                          </span>
+                        ) : w.isCurrentWeek ? (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        ) : null}
+                      </div>
+
+                      <p className="text-[10px] font-mono text-slate-500 truncate mt-0.5">{w.formattedRange}</p>
+
+                      <span
+                        className={`mt-1.5 block rounded px-1 py-0.5 text-[9px] font-bold text-center border truncate ${w.microcycleBadgeColor}`}
+                        title={w.microcycleLabel}
+                      >
+                        {w.microcycleLabel.split(" ")[0]}
+                      </span>
+
+                      <div className="mt-1 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                        <span className="font-semibold">{w.targetTss} TSS</span>
+                        <span className="text-[9px] text-slate-500">⏱️{w.maxLongRunMinutes}m</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

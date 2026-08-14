@@ -42,7 +42,7 @@ export default function HomePage() {
   // Credenciales y configuraciones cacheadas
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
   const [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
-  const [selectedModelCache, setSelectedModelCache] = useState<string>("gemini-2.5-flash");
+  const [selectedModelCache, setSelectedModelCache] = useState<string>("gemini-flash-latest");
   const [customPromptCache, setCustomPromptCache] = useState<string>("");
 
   // 1. Carga de Telemetría (Rápido, sin invocar IA)

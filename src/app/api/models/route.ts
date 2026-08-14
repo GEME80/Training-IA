@@ -16,32 +16,32 @@ export async function GET(req: NextRequest) {
 
     const fallbackModels: AvailableModel[] = [
       {
-        id: "gemini-2.5-flash",
-        displayName: "Gemini 2.5 Flash",
-        description: "Última generación Google. Ultrarrápido, altamente eficiente y de costo mínimo.",
+        id: "gemini-flash-latest",
+        displayName: "Gemini Flash (Última Generación)",
+        description: "Modelo insignia Flash de Google. Ultrarrápido, altamente preciso y de coste mínimo.",
         isRecommended: true,
         tier: "flash",
       },
       {
-        id: "gemini-2.0-flash",
-        displayName: "Gemini 2.0 Flash",
-        description: "Modelo multimodal Flash de alta velocidad y baja latencia.",
+        id: "gemini-3.5-flash",
+        displayName: "Gemini 3.5 Flash",
+        description: "Modelo multimodal avanzado de alta velocidad.",
+        isRecommended: true,
+        tier: "flash",
+      },
+      {
+        id: "gemini-flash-lite-latest",
+        displayName: "Gemini Flash Lite",
+        description: "Versión ligera de máxima velocidad y latencia ultrabaja.",
         isRecommended: false,
         tier: "flash",
       },
       {
-        id: "gemini-2.5-pro",
-        displayName: "Gemini 2.5 Pro",
-        description: "Razonamiento fisiológico profundo para macrociclos y picos de forma.",
+        id: "gemini-3.7-flash",
+        displayName: "Gemini 3.7 Flash",
+        description: "Inferencia multimodal con capacidades avanzadas de razonamiento.",
         isRecommended: false,
-        tier: "pro",
-      },
-      {
-        id: "gemini-1.5-flash",
-        displayName: "Gemini 1.5 Flash (Legacy)",
-        description: "Modelo estándar de generación anterior.",
-        isRecommended: false,
-        tier: "standard",
+        tier: "flash",
       },
     ];
 

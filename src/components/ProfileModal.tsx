@@ -74,7 +74,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   // Configuración de Inteligencia Artificial (Gemini)
   const [geminiApiKey, setGeminiApiKey] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+  const [selectedModel, setSelectedModel] = useState("gemini-flash-latest");
   const [customPrompt, setCustomPrompt] = useState(DEFAULT_PROMPT);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);

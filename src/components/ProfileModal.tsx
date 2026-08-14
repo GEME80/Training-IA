@@ -13,8 +13,13 @@ import {
   Sliders,
   Sparkles,
   RotateCcw,
+  Trophy,
+  Plus,
+  Trash2,
+  Flag,
 } from "lucide-react";
 import { AvailableModel } from "@/app/api/models/route";
+import { TargetRace } from "@/lib/physiology/macrocycle";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -22,6 +27,7 @@ interface ProfileModalProps {
   athleteId: string;
   runFtp: number;
   bikeFtp: number;
+  initialTab?: "intervals" | "races" | "ai";
   onSave: (data: {
     athleteId: string;
     apiKey?: string;
@@ -31,6 +37,7 @@ interface ProfileModalProps {
     geminiApiKey?: string;
     selectedModel?: string;
     customPrompt?: string;
+    targetRaces?: TargetRace[];
   }) => Promise<void>;
 }
 
@@ -45,9 +52,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   athleteId: initialAthleteId,
   runFtp: initialRunFtp,
   bikeFtp: initialBikeFtp,
+  initialTab = "intervals",
   onSave,
 }) => {
-  const [activeTab, setActiveTab] = useState<"intervals" | "ai">("intervals");
+  const [activeTab, setActiveTab] = useState<"intervals" | "races" | "ai">(initialTab);
 
   // Credenciales & Perfil Intervals
   const [athleteId, setAthleteId] = useState(initialAthleteId || "i442091");
@@ -55,6 +63,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [runFtp, setRunFtp] = useState(initialRunFtp || 285);
   const [bikeFtp, setBikeFtp] = useState(initialBikeFtp || 260);
   const [focus, setFocus] = useState("BUILD");
+
+  // Carreras Objetivo & Macrociclos
+  const [races, setRaces] = useState<TargetRace[]>([]);
+  const [newRaceName, setNewRaceName] = useState("");
+  const [newRaceDate, setNewRaceDate] = useState("");
+  const [newRaceDistance, setNewRaceDistance] = useState<TargetRace["distance"]>("42k");
+  const [newRacePriority, setNewRacePriority] = useState<TargetRace["priority"]>("A");
+  const [newRaceGoal, setNewRaceGoal] = useState("");
 
   // Configuración de Inteligencia Artificial (Gemini)
   const [geminiApiKey, setGeminiApiKey] = useState("");
@@ -78,12 +94,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       const savedGeminiKey = localStorage.getItem("sgea_gemini_key");
       const savedModel = localStorage.getItem("sgea_gemini_model");
       const savedPrompt = localStorage.getItem("sgea_custom_prompt");
+      const savedRaces = localStorage.getItem("sgea_target_races");
 
       if (savedKey) setApiKey(savedKey);
       if (savedId) setAthleteId(savedId);
       if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
       if (savedModel) setSelectedModel(savedModel);
       if (savedPrompt) setCustomPrompt(savedPrompt);
+
+      if (savedRaces) {
+        try {
+          setRaces(JSON.parse(savedRaces));
+        } catch {
+          // Keep default
+        }
+      }
 
       setTestResult(null);
       setGeminiTestResult(null);
@@ -110,6 +135,36 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  const handleAddRace = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRaceName || !newRaceDate) return;
+
+    const newRace: TargetRace = {
+      id: "race_" + Date.now(),
+      name: newRaceName.trim(),
+      date: newRaceDate,
+      distance: newRaceDistance,
+      priority: newRacePriority,
+      goalTarget: newRaceGoal.trim() || undefined,
+    };
+
+    const updated = [...races, newRace].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    setRaces(updated);
+    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
+
+    setNewRaceName("");
+    setNewRaceDate("");
+    setNewRaceGoal("");
+  };
+
+  const handleDeleteRace = (id: string) => {
+    const updated = races.filter((r) => r.id !== id);
+    setRaces(updated);
+    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
+  };
 
   const handleTestConnection = async () => {
     if (!athleteId || !apiKey) {
@@ -157,7 +212,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setGeminiTestResult(null);
 
     try {
-      const keyToTest = geminiApiKey || "ENV_DEFAULT";
       const res = await fetch("/api/models?apiKey=" + encodeURIComponent(geminiApiKey));
       const data = await res.json();
 
@@ -192,6 +246,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       if (geminiApiKey.trim()) localStorage.setItem("sgea_gemini_key", geminiApiKey.trim());
       localStorage.setItem("sgea_gemini_model", selectedModel);
       localStorage.setItem("sgea_custom_prompt", customPrompt);
+      localStorage.setItem("sgea_target_races", JSON.stringify(races));
 
       await onSave({
         athleteId: athleteId.trim(),
@@ -202,6 +257,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         geminiApiKey: geminiApiKey.trim() || undefined,
         selectedModel,
         customPrompt,
+        targetRaces: races,
       });
       onClose();
     } catch (err) {
@@ -213,7 +269,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="card-gradient relative w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="card-gradient relative w-full max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -225,7 +281,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-4">
           <Shield className="h-5 w-5 text-emerald-400" />
-          <h3 className="text-lg font-bold text-white">Panel de Configuración General</h3>
+          <h3 className="text-lg font-bold text-white">Panel de Configuración del Atleta</h3>
         </div>
 
         {/* Navigation Tabs */}
@@ -240,7 +296,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             }`}
           >
             <Sliders className="h-4 w-4" />
-            <span>Perfil & Intervals.icu</span>
+            <span>Perfil & Intervals</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("races")}
+            className={`flex items-center space-x-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
+              activeTab === "races"
+                ? "border-amber-500 text-amber-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Trophy className="h-4 w-4" />
+            <span>🎯 Carreras & Macrociclos ({races.length})</span>
           </button>
 
           <button
@@ -261,7 +330,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {/* TAB 1: PERFIL & INTERVALS */}
           {activeTab === "intervals" && (
             <div className="space-y-4 animate-fadeIn">
-              {/* Athlete ID */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                   Intervals Athlete ID
@@ -274,12 +342,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   required
                   className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                 />
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Disponible en tu perfil de Intervals.icu (ej. intervals.icu/athlete/i442091).
-                </p>
               </div>
 
-              {/* API Key */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                   Intervals API Key (Cifrada con AES-256-GCM)
@@ -316,7 +380,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 )}
               </div>
 
-              {/* Potencias Stryd & FTP */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -351,10 +414,142 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: AGENTE IA & GEMINI */}
+          {/* TAB 2: CARRERAS OBJETIVO & MACROCICLOS */}
+          {activeTab === "races" && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Agregar Nueva Carrera Objetivo
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] text-slate-300">Nombre de la Carrera</label>
+                    <input
+                      type="text"
+                      value={newRaceName}
+                      onChange={(e) => setNewRaceName(e.target.value)}
+                      placeholder="ej. Maratón de Valencia"
+                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-300">Fecha del Evento</label>
+                    <input
+                      type="date"
+                      value={newRaceDate}
+                      onChange={(e) => setNewRaceDate(e.target.value)}
+                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-300">Distancia / Disciplina</label>
+                    <select
+                      value={newRaceDistance}
+                      onChange={(e) => setNewRaceDistance(e.target.value as any)}
+                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none cursor-pointer"
+                    >
+                      <option value="42k">Maratón (42.195 km)</option>
+                      <option value="21k">Media Maratón (21.097 km)</option>
+                      <option value="10k">10K Ruta</option>
+                      <option value="5k">5K Ruta / Pista</option>
+                      <option value="cycling_fondo">Gran Fondo Ciclismo</option>
+                      <option value="triathlon_703">Triatlón 70.3</option>
+                      <option value="triathlon_1406">Triatlón 140.6</option>
+                      <option value="custom">Personalizado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-300">Prioridad</label>
+                    <select
+                      value={newRacePriority}
+                      onChange={(e) => setNewRacePriority(e.target.value as any)}
+                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none cursor-pointer"
+                    >
+                      <option value="A">🥇 Prioridad A (Objetivo Principal - Rige Macrociclo)</option>
+                      <option value="B">🥈 Prioridad B (Test de Puesta a Punto)</option>
+                      <option value="C">🥉 Prioridad C (Entrenamiento con Dorsal)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-300">Meta / Tiempo Objetivo (Opcional)</label>
+                  <input
+                    type="text"
+                    value={newRaceGoal}
+                    onChange={(e) => setNewRaceGoal(e.target.value)}
+                    placeholder="ej. Sub 3h00m @ 275W Stryd"
+                    className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddRace}
+                  disabled={!newRaceName || !newRaceDate}
+                  className="w-full rounded-lg bg-amber-500/20 py-2 text-xs font-bold text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-50 transition"
+                >
+                  + Agregar Carrera al Calendario
+                </button>
+              </div>
+
+              {/* List of Registered Races */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Carreras Programadas ({races.length})
+                </label>
+                {races.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No tienes carreras registradas. Agrega una para calcular macrociclos.</p>
+                ) : (
+                  races.map((r) => (
+                    <div
+                      key={r.id}
+                      className="flex items-center justify-between rounded-xl bg-slate-950 p-3 border border-slate-800 text-xs"
+                    >
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                              r.priority === "A"
+                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                : r.priority === "B"
+                                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                : "bg-slate-800 text-slate-400"
+                            }`}
+                          >
+                            Prioridad {r.priority}
+                          </span>
+                          <strong className="text-white">{r.name}</strong>
+                          <span className="text-slate-400">({r.distance.toUpperCase()})</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          📅 {r.date} {r.goalTarget && `• Meta: ${r.goalTarget}`}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRace(r.id)}
+                        className="rounded-lg p-1 text-slate-400 hover:bg-red-950 hover:text-red-300 transition"
+                        title="Eliminar carrera"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: AGENTE IA & GEMINI */}
           {activeTab === "ai" && (
             <div className="space-y-4 animate-fadeIn">
-              {/* Gemini API Key */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -394,7 +589,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 )}
               </div>
 
-              {/* Dynamic Model Selector */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -422,12 +616,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     </>
                   )}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  El sistema consulta los modelos activos en vivo y usa una cascada de respaldo si hay límite de tasa.
-                </p>
               </div>
 
-              {/* Custom Prompt / Directrices del Head Coach */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -446,12 +636,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   rows={4}
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Instrucciones específicas (ej: tengo sobrecarga en el gemelo, evitar pliometría; enfocar en maratón sub-3h...)"
+                  placeholder="Instrucciones específicas (ej: sobrecarga sóleo, evitar pliometría; enfocar en maratón sub-3h...)"
                   className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
                 />
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Estas directrices se inyectan en el prompt para condicionar la periodización del agente de IA.
-                </p>
               </div>
             </div>
           )}

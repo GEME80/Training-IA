@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { IntervalsClient } from "@/lib/intervals/client";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { GeminiPhysiologicalAgent } from "@/lib/gemini/engine";
+import { calculateMacrocyclePhase, TargetRace } from "@/lib/physiology/macrocycle";
 import { AthleteProfile, AthleteWellness, CalendarEvent } from "@/lib/intervals/types";
 
 export async function POST(req: NextRequest) {
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
       geminiApiKey,
       selectedModel,
       customPrompt,
+      targetRaces = [],
+      skipAI = false,
     } = body;
 
     let profile: AthleteProfile;
@@ -88,7 +91,10 @@ export async function POST(req: NextRequest) {
     profile.rampRate = physioStatus.rampRate;
     profile.restingHR = physioStatus.restingHR ?? profile.restingHR;
 
-    // 2. Inferencia y generación del árbol de decisiones del Head Coach (Gemini con descubrimiento dinámico)
+    // 2. Calcular fase de macrociclo según carreras objetivo
+    const macrocyclePhase = calculateMacrocyclePhase(targetRaces as TargetRace[]);
+
+    // 3. Inferencia y generación del árbol de decisiones del Head Coach (Gemini con descubrimiento dinámico)
     const agentDecision = await GeminiPhysiologicalAgent.analyzeMicrocycle(
       profile,
       wellness,
@@ -99,6 +105,8 @@ export async function POST(req: NextRequest) {
         customApiKey: geminiApiKey,
         preferredModel: selectedModel,
         customDirectives: customPrompt,
+        macrocyclePhase,
+        skipAI,
       }
     );
 
@@ -106,6 +114,7 @@ export async function POST(req: NextRequest) {
       success: true,
       profile,
       physioStatus,
+      macrocyclePhase,
       agentDecision,
     });
   } catch (error: unknown) {

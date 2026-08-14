@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { PhysiologicalCards } from "@/components/PhysiologicalCards";
+import { SeasonPlannerCard } from "@/components/SeasonPlannerCard";
 import { WeeklyPlanner } from "@/components/WeeklyPlanner";
 import { AgentCommandCenter } from "@/components/AgentCommandCenter";
 import { ProfileModal } from "@/components/ProfileModal";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AgentDecisionOutput, PlanItem } from "@/lib/gemini/engine";
 import { AthleteProfile } from "@/lib/intervals/types";
+import { MacrocyclePhaseInfo, TargetRace, calculateMacrocyclePhase } from "@/lib/physiology/macrocycle";
 
 export default function HomePage() {
   const [profile, setProfile] = useState<AthleteProfile>({
@@ -27,11 +29,15 @@ export default function HomePage() {
   const [agentDecision, setAgentDecision] = useState<AgentDecisionOutput | null>(null);
   const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
   const [weekOffset, setWeekOffset] = useState<number>(0);
+  const [targetRaces, setTargetRaces] = useState<TargetRace[]>([]);
+  const [macrocyclePhase, setMacrocyclePhase] = useState<MacrocyclePhaseInfo | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [settingsTab, setSettingsTab] = useState<"intervals" | "races" | "ai">("intervals");
 
   // Credenciales y configuraciones cacheadas
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
@@ -39,25 +45,19 @@ export default function HomePage() {
   const [selectedModelCache, setSelectedModelCache] = useState<string>("gemini-2.5-flash");
   const [customPromptCache, setCustomPromptCache] = useState<string>("");
 
-  // Carga y evaluación del microciclo
-  const evaluateMicrocycle = useCallback(
+  // 1. Carga de Telemetría (Rápido, sin invocar IA)
+  const refreshTelemetry = useCallback(
     async (
-      athleteId: string,
+      athleteId?: string,
       apiKey?: string,
       runFtp?: number,
       bikeFtp?: number,
-      offset: number = 0,
-      geminiKey?: string,
-      model?: string,
-      prompt?: string
+      offset: number = weekOffset,
+      racesList: TargetRace[] = targetRaces
     ) => {
-      setIsEvaluating(true);
+      setIsRefreshingTelemetry(true);
       try {
         const effectiveApiKey = apiKey || apiKeyCache;
-        const effectiveGeminiKey = geminiKey || geminiKeyCache;
-        const effectiveModel = model || selectedModelCache;
-        const effectivePrompt = prompt !== undefined ? prompt : customPromptCache;
-
         const res = await fetch("/api/evaluate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -67,9 +67,8 @@ export default function HomePage() {
             customRunFtp: runFtp || profile.run_ftp || 285,
             customBikeFtp: bikeFtp || profile.bike_ftp || 260,
             weekOffset: offset,
-            geminiApiKey: effectiveGeminiKey,
-            selectedModel: effectiveModel,
-            customPrompt: effectivePrompt,
+            targetRaces: racesList,
+            skipAI: true, // Actualización rápida de telemetría sin consumo de tokens
           }),
         });
 
@@ -77,21 +76,63 @@ export default function HomePage() {
         if (data.success) {
           setProfile(data.profile);
           setPhysioStatus(data.physioStatus);
+          setMacrocyclePhase(data.macrocyclePhase);
+          if (!agentDecision) {
+            setAgentDecision(data.agentDecision);
+            setActivePlan(data.agentDecision.suggestedPlan || []);
+          }
+        }
+      } catch (err) {
+        console.error("Error al actualizar telemetría:", err);
+      } finally {
+        setIsRefreshingTelemetry(false);
+        setIsLoading(false);
+      }
+    },
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, weekOffset, targetRaces, agentDecision]
+  );
+
+  // 2. Inferencia y Planificación con IA (Bajo Demanda al pulsar botón)
+  const generateAIPlan = useCallback(
+    async (offset: number = weekOffset) => {
+      setIsGeneratingAI(true);
+      try {
+        const res = await fetch("/api/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            athleteId: profile.id,
+            apiKey: apiKeyCache,
+            customRunFtp: profile.run_ftp || 285,
+            customBikeFtp: profile.bike_ftp || 260,
+            weekOffset: offset,
+            geminiApiKey: geminiKeyCache,
+            selectedModel: selectedModelCache,
+            customPrompt: customPromptCache,
+            targetRaces,
+            skipAI: false, // Disparar inferencia completa de Gemini
+          }),
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          setProfile(data.profile);
+          setPhysioStatus(data.physioStatus);
+          setMacrocyclePhase(data.macrocyclePhase);
           setAgentDecision(data.agentDecision);
           setActivePlan(data.agentDecision.suggestedPlan || []);
         }
       } catch (err) {
-        console.error("Error al evaluar microciclo:", err);
+        console.error("Error al generar plan con IA:", err);
       } finally {
-        setIsEvaluating(false);
-        setIsLoading(false);
+        setIsGeneratingAI(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, geminiKeyCache, selectedModelCache, customPromptCache]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, geminiKeyCache, selectedModelCache, customPromptCache, targetRaces, weekOffset]
   );
 
   useEffect(() => {
-    // Restaurar credenciales guardadas en el navegador en el montaje inicial
+    // Restaurar credenciales y carreras guardadas en el navegador
     const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
     const savedKey = localStorage.getItem("sgea_api_key") || "";
     const savedGeminiKey = localStorage.getItem("sgea_gemini_key") || "";
@@ -99,11 +140,22 @@ export default function HomePage() {
     const savedPrompt = localStorage.getItem("sgea_custom_prompt") || "";
     const savedRunFtp = localStorage.getItem("sgea_run_ftp");
     const savedBikeFtp = localStorage.getItem("sgea_bike_ftp");
+    const savedRaces = localStorage.getItem("sgea_target_races");
 
     if (savedKey) setApiKeyCache(savedKey);
     if (savedGeminiKey) setGeminiKeyCache(savedGeminiKey);
     if (savedModel) setSelectedModelCache(savedModel);
     if (savedPrompt) setCustomPromptCache(savedPrompt);
+
+    let parsedRaces: TargetRace[] = [];
+    if (savedRaces) {
+      try {
+        parsedRaces = JSON.parse(savedRaces);
+        setTargetRaces(parsedRaces);
+      } catch {
+        // Keep empty
+      }
+    }
 
     const runFtpVal = savedRunFtp ? Number(savedRunFtp) : 285;
     const bikeFtpVal = savedBikeFtp ? Number(savedBikeFtp) : 260;
@@ -115,7 +167,8 @@ export default function HomePage() {
       bike_ftp: bikeFtpVal,
     }));
 
-    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal, 0, savedGeminiKey, savedModel, savedPrompt);
+    setMacrocyclePhase(calculateMacrocyclePhase(parsedRaces));
+    refreshTelemetry(savedId, savedKey, runFtpVal, bikeFtpVal, 0, parsedRaces);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -128,6 +181,7 @@ export default function HomePage() {
     geminiApiKey?: string;
     selectedModel?: string;
     customPrompt?: string;
+    targetRaces?: TargetRace[];
   }) => {
     if (data.apiKey) {
       setApiKeyCache(data.apiKey);
@@ -145,6 +199,11 @@ export default function HomePage() {
       setCustomPromptCache(data.customPrompt);
       localStorage.setItem("sgea_custom_prompt", data.customPrompt);
     }
+    if (data.targetRaces) {
+      setTargetRaces(data.targetRaces);
+      setMacrocyclePhase(calculateMacrocyclePhase(data.targetRaces));
+      localStorage.setItem("sgea_target_races", JSON.stringify(data.targetRaces));
+    }
 
     localStorage.setItem("sgea_athlete_id", data.athleteId);
     localStorage.setItem("sgea_run_ftp", String(data.runFtp));
@@ -157,21 +216,19 @@ export default function HomePage() {
       bike_ftp: data.bikeFtp,
     }));
 
-    await evaluateMicrocycle(
+    await refreshTelemetry(
       data.athleteId,
       data.apiKey,
       data.runFtp,
       data.bikeFtp,
       weekOffset,
-      data.geminiApiKey,
-      data.selectedModel,
-      data.customPrompt
+      data.targetRaces || targetRaces
     );
   };
 
   const handleWeekChange = async (newOffset: number) => {
     setWeekOffset(newOffset);
-    await evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, newOffset);
+    await refreshTelemetry(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, newOffset);
   };
 
   const handlePlanUpdate = (updatedPlan: PlanItem[]) => {
@@ -210,51 +267,39 @@ export default function HomePage() {
         <Header
           athleteName={profile.name || "Germán Morales"}
           athleteId={profile.id}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onRefresh={() => evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
-          isLoading={isEvaluating}
+          onOpenSettings={() => {
+            setSettingsTab("intervals");
+            setIsSettingsOpen(true);
+          }}
+          onRefresh={() => refreshTelemetry(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
+          isLoading={isRefreshingTelemetry}
         />
 
         {/* Main Content Area */}
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
-          {/* Top Banner / Summary */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 p-6 border border-slate-800 shadow-xl athletic-glow">
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
-                  ● Sistema Adaptativo Activo
-                </span>
-                <span className="text-xs text-slate-400 font-mono">Modo On-Demand</span>
-              </div>
-              <h1 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                Panel Fisiológico & Control de Carga
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-slate-400">
-                Periodización dinámica integrada con Intervals.icu, Stryd Running Power y Google Gemini AI.
-              </p>
-            </div>
+          {/* Season Planner & Macrocycle Card */}
+          <SeasonPlannerCard
+            phaseInfo={macrocyclePhase}
+            races={targetRaces}
+            onOpenRaceSettings={() => {
+              setSettingsTab("races");
+              setIsSettingsOpen(true);
+            }}
+          />
 
-            <div className="flex items-center space-x-3">
-              <div className="rounded-xl bg-slate-950/80 p-3 border border-slate-800 text-right">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Dispositivo Principal</p>
-                <p className="text-xs font-bold text-emerald-400">Stryd Footpod + Garmin</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Physiological Cards Grid */}
+          {/* Physiological Telemetry Cards Grid */}
           <PhysiologicalCards
             status={physioStatus}
             runFtp={profile.run_ftp ?? 285}
             bikeFtp={profile.bike_ftp ?? 260}
           />
 
-          {/* Agent Command Center & Reasoning Tree */}
+          {/* Agent Command Center (AI On-Demand) */}
           <AgentCommandCenter
             decision={agentDecision}
-            onReevaluate={() => evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
+            onReevaluate={() => generateAIPlan(weekOffset)}
             onSyncIntervals={handleSyncToIntervals}
-            isEvaluating={isEvaluating}
+            isEvaluating={isGeneratingAI}
             isSyncing={isSyncing}
           />
 
@@ -284,6 +329,7 @@ export default function HomePage() {
         athleteId={profile.id}
         runFtp={profile.run_ftp ?? 285}
         bikeFtp={profile.bike_ftp ?? 260}
+        initialTab={settingsTab}
         onSave={handleSaveSettings}
       />
     </div>

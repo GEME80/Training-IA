@@ -1,5 +1,6 @@
 import { AthleteProfile, AthleteWellness, CalendarEvent } from "../intervals/types";
 import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
+import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
 
 export interface PlanItem {
   day: string; // "Lunes", "Martes", etc.
@@ -21,6 +22,7 @@ export interface AgentDecisionOutput {
   reasoningTree: string[];
   suggestedPlan: PlanItem[];
   modelUsed?: string;
+  macrocyclePhase?: string;
 }
 
 /**
@@ -67,14 +69,16 @@ export class GeminiPhysiologicalAgent {
       customApiKey?: string;
       preferredModel?: string;
       customDirectives?: string;
+      macrocyclePhase?: MacrocyclePhaseInfo;
+      skipAI?: boolean;
     }
   ): Promise<AgentDecisionOutput> {
     const apiKey = options?.customApiKey || process.env.GEMINI_API_KEY;
     const weekDates = getWeekDates(weekOffset);
 
-    // Si no hay API Key de Gemini configurada, generamos el análisis determinístico basado en las reglas del motor fisiológico
-    if (!apiKey) {
-      return this.generateDeterministicAnalysis(profile, physioStatus, weekDates);
+    // Si se solicita omitir la IA (para actualización rápida de telemetría) o no hay clave:
+    if (options?.skipAI || !apiKey) {
+      return this.generateDeterministicAnalysis(profile, physioStatus, weekDates, options?.macrocyclePhase);
     }
 
     // Cascada de modelos dinámicos (sin fijar un único agente estático)
@@ -93,7 +97,19 @@ export class GeminiPhysiologicalAgent {
       ? `\nDIRECTRICES ESPECÍFICAS DEL ATLETA:\n${options.customDirectives}\n`
       : "";
 
-    const prompt = `Actúa como un Head Coach Fisiológico Digital experto en entrenamiento de resistencia, potenciómetros Stryd y modelos Banister (CTL, ATL, TSB, Rolling HRV).
+    const macroInfo = options?.macrocyclePhase;
+    const macrocycleText = macroInfo?.primaryRace
+      ? `\nCONTEXTO DE MACROCICLO & CARRERA OBJETIVO:
+- Carrera Principal (Prioridad A): ${macroInfo.primaryRace.name} (${macroInfo.primaryRace.distance}) el ${macroInfo.primaryRace.date}
+- Conteo regresivo: ${macroInfo.weeksRemaining} semanas restantes (${macroInfo.daysRemaining} días)
+- Fase Actual del Macrociclo: ${macroInfo.phaseLabel} (${macroInfo.phase})
+- Enfoque Sugerido: ${macroInfo.suggestedFocus}
+- Pauta Metodológica: ${macroInfo.guideline}\n`
+      : `\nCONTEXTO DE MACROCICLO:
+- Fase Actual: Mantenimiento General Adaptativo (Sin carrera A próxima definida)
+- Enfoque: Estabilidad de CTL y prevención de lesiones.\n`;
+
+    const prompt = `Actúa como un Head Coach Fisiológico Digital experto en entrenamiento de resistencia, potenciómetros Stryd, periodización de macrociclos y modelos Banister (CTL, ATL, TSB, Rolling HRV).
 Analiza el siguiente atleta y genera un diagnóstico semanal con ajustes para cada día de la semana (Lunes a Domingo):
 
 PERFIL Y MÉTRICAS BIOMÉTRICAS:
@@ -105,14 +121,12 @@ PERFIL Y MÉTRICAS BIOMÉTRICAS:
 - FC Reposo: ${physioStatus.restingHR ?? "N/A"} bpm
 - Potencia Crítica Carrera (Stryd Run FTP / CP): ${profile.run_ftp ?? 285} W
 - FTP Ciclismo: ${profile.bike_ftp ?? 260} W
-${customDirectivesText}
+${macrocycleText}${customDirectivesText}
 MATRIZ BASE DE DISPONIBILIDAD:
 - Lunes: Descanso total
-- Martes: Carrera (Calidad / Umbral Stryd % FTP)
+- Martes: Carrera (Calidad / Umbral Stryd % FTP según fase)
 - Miércoles: Ciclismo (Z2 Base % Bike FTP)
 - Jueves: Fuerza / Prevención Sóleo
-- Viernes: Carrera (Regenerativo Z1-Z2)
-- Sábado: Ciclismo (Fondo Resistencia)
 - Domingo: Carrera (Tirada Larga Progresiva Stryd)
 
 REGLAS FISIOLÓGICAS DE REAJUSTE:
@@ -209,27 +223,34 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
   }
 
   /**
-   * Generador determinístico de alta precisión en caso de desconexión con Gemini.
+   * Generador determinístico de alta precisión en caso de desconexión con Gemini o modo rápido.
    */
   private static generateDeterministicAnalysis(
     profile: AthleteProfile,
     status: PhysiologicalStatus,
-    weekDates: Array<{ day: string; date: string; formattedDate: string }>
+    weekDates: Array<{ day: string; date: string; formattedDate: string }>,
+    macrocyclePhase?: MacrocyclePhaseInfo
   ): AgentDecisionOutput {
     const isFatigued = status.status === "OVERTRAINING_RISK" || status.status === "CAUTION";
     const runFtp = profile.run_ftp ?? 285;
     const bikeFtp = profile.bike_ftp ?? 260;
+
+    const macroTitle = macrocyclePhase?.primaryRace
+      ? `Macrociclo: ${macrocyclePhase.phaseLabel} (${macrocyclePhase.weeksRemaining} sem para ${macrocyclePhase.primaryRace.name}).`
+      : `Macrociclo: Mantenimiento General Adaptativo.`;
 
     return {
       status: status.status,
       summaryHeadline: isFatigued
         ? `Fatiga aguda detectada (TSB: ${status.tsb}, HRV Z-Score: ${status.hrvZScore ?? "N/D"}). Se prescribe modulación protectora de intensidad.`
         : `Estado adaptativo óptimo (TSB: ${status.tsb}). Microciclo balanceado para asimilación de potencia Stryd.`,
+      macrocyclePhase: macrocyclePhase?.phaseLabel,
       reasoningTree: [
-        `1. Evaluación Banister: CTL=${status.ctl.toFixed(1)}, ATL=${status.atl.toFixed(1)}, TSB=${status.tsb.toFixed(1)}.`,
-        `2. Análisis autonómico: Rolling HRV Z-Score=${status.hrvZScore ?? "0.0"}, FC Reposo=${status.restingHR ?? "50"} bpm.`,
-        `3. Tasa de incremento: Ramp Rate Semanal=${status.rampRate.toFixed(1)} pts/semana (${status.rampRate > 8 ? "Elevado" : "Seguro"}).`,
-        `4. Decisión del Head Coach: ${
+        `1. Contexto de Temporada: ${macroTitle}`,
+        `2. Evaluación Banister: CTL=${status.ctl.toFixed(1)}, ATL=${status.atl.toFixed(1)}, TSB=${status.tsb.toFixed(1)}.`,
+        `3. Análisis autonómico: Rolling HRV Z-Score=${status.hrvZScore ?? "0.0"}, FC Reposo=${status.restingHR ?? "50"} bpm.`,
+        `4. Tasa de incremento: Ramp Rate Semanal=${status.rampRate.toFixed(1)} pts/semana (${status.rampRate > 8 ? "Elevado" : "Seguro"}).`,
+        `5. Decisión del Head Coach: ${
           isFatigued
             ? "Atenuar sesión de calidad del martes a rodaje Z1 suave y añadir descanso activo para asimilar la carga."
             : "Microciclo estándar de sobrecarga progresiva respetando el descanso del lunes."

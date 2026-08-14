@@ -18,29 +18,40 @@ export async function POST(req: NextRequest) {
       try {
         const client = new IntervalsClient(athleteId, apiKey);
         
-        // Rango de fechas: últimos 30 días para Rolling HRV y PMC
+        // Rango de fechas: últimos 90 días para asegurar captura completa de PMC y Rolling HRV
         const today = new Date();
-        const past30Days = new Date();
-        past30Days.setDate(today.getDate() - 30);
+        const past90Days = new Date();
+        past90Days.setDate(today.getDate() - 90);
         
         const next7Days = new Date();
         next7Days.setDate(today.getDate() + 7);
 
-        const oldestStr = past30Days.toISOString().split("T")[0];
+        const oldestStr = past90Days.toISOString().split("T")[0];
         const newestStr = today.toISOString().split("T")[0];
         const futureStr = next7Days.toISOString().split("T")[0];
 
         const [athleteData, wellnessData, calendarEvents] = await Promise.all([
-          client.getAthlete().catch(() => null),
-          client.getWellness(oldestStr, newestStr).catch(() => []),
-          client.getEvents(newestStr, futureStr).catch(() => []),
+          client.getAthlete().catch((err) => {
+            console.warn("Aviso al consultar atleta:", err);
+            return null;
+          }),
+          client.getWellness(oldestStr, newestStr).catch((err) => {
+            console.warn("Aviso al consultar wellness:", err);
+            return [];
+          }),
+          client.getEvents(newestStr, futureStr).catch((err) => {
+            console.warn("Aviso al consultar eventos:", err);
+            return [];
+          }),
         ]);
 
         if (athleteData) {
           profile = {
             ...athleteData,
-            run_ftp: customRunFtp || athleteData.run_ftp || 280,
-            bike_ftp: customBikeFtp || athleteData.bike_ftp || 250,
+            id: athleteData.id || athleteId,
+            name: athleteData.name || "Atleta Intervals",
+            run_ftp: customRunFtp || athleteData.run_ftp || 285,
+            bike_ftp: customBikeFtp || athleteData.bike_ftp || athleteData.icu_ftp || 260,
           };
         } else {
           profile = getFallbackProfile(athleteId, customRunFtp, customBikeFtp);
@@ -60,6 +71,13 @@ export async function POST(req: NextRequest) {
 
     // 1. Evaluación del motor fisiológico
     const physioStatus = PhysiologicalEngine.evaluateAthlete(profile, wellness);
+
+    // Sincronizar métricas resueltas en el perfil del atleta
+    profile.ctl = physioStatus.ctl;
+    profile.atl = physioStatus.atl;
+    profile.tsb = physioStatus.tsb;
+    profile.rampRate = physioStatus.rampRate;
+    profile.restingHR = physioStatus.restingHR ?? profile.restingHR;
 
     // 2. Inferencia y generación del árbol de decisiones del Head Coach
     const agentDecision = await GeminiPhysiologicalAgent.analyzeMicrocycle(

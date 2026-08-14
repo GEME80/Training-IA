@@ -36,6 +36,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  React.useEffect(() => {
+    if (isOpen && typeof window !== "undefined") {
+      const savedKey = localStorage.getItem("sgea_api_key");
+      const savedId = localStorage.getItem("sgea_athlete_id");
+      if (savedKey) setApiKey(savedKey);
+      if (savedId) setAthleteId(savedId);
+      setTestResult(null);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleTestConnection = async () => {

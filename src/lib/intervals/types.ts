@@ -11,6 +11,8 @@ export interface AthleteProfile {
   maxHR?: number;
   run_ftp?: number; // Stryd Potencia Crítica (CP / Run FTP)
   bike_ftp?: number; // FTP Ciclismo
+  icu_ftp?: number; // FTP General Intervals
+  icu_run_ftp?: number;
   ctl?: number; // Fitness
   atl?: number; // Fatigue
   tsb?: number; // Form

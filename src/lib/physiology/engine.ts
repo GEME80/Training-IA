@@ -38,19 +38,50 @@ export class PhysiologicalEngine {
     profile: AthleteProfile,
     wellnessHistory: AthleteWellness[]
   ): PhysiologicalStatus {
-    const ctl = profile.ctl ?? 0;
-    const atl = profile.atl ?? 0;
-    const tsb = profile.tsb ?? ctl - atl;
-    const rampRate = profile.rampRate ?? 0;
+    // Buscar el registro más reciente que contenga métricas de carga PMC calculadas
+    const reversedWellness = [...wellnessHistory].reverse();
+    const latestWithLoad = reversedWellness.find(
+      (w) =>
+        (typeof w.ctl === "number" && w.ctl > 0) ||
+        (typeof w.ctlLoad === "number" && w.ctlLoad > 0)
+    );
 
-    // Extraer valores válidos de HRV de los últimos 30 días para la línea base móvil (Rolling Baseline)
+    const ctl =
+      latestWithLoad?.ctl ??
+      latestWithLoad?.ctlLoad ??
+      (typeof profile.ctl === "number" && profile.ctl > 0 ? profile.ctl : 0);
+
+    const atl =
+      latestWithLoad?.atl ??
+      latestWithLoad?.atlLoad ??
+      (typeof profile.atl === "number" && profile.atl > 0 ? profile.atl : 0);
+
+    const tsb =
+      latestWithLoad?.tsb ??
+      (typeof profile.tsb === "number" ? profile.tsb : Math.round((ctl - atl) * 10) / 10);
+
+    const rampRate =
+      latestWithLoad?.rampRate ??
+      (typeof profile.rampRate === "number" ? profile.rampRate : 0);
+
+    // Extraer valores válidos de HRV para la línea base móvil (Rolling Baseline)
     const validHrvRecords = wellnessHistory
       .filter((w) => typeof w.hrv === "number" && w.hrv > 0)
       .map((w) => w.hrv as number);
 
-    const latestWellness = wellnessHistory[wellnessHistory.length - 1];
-    const currentHrv = latestWellness?.hrv ?? null;
-    const restingHR = latestWellness?.restingHR ?? profile.restingHR ?? null;
+    const latestWithHrv = reversedWellness.find(
+      (w) => typeof w.hrv === "number" && w.hrv > 0
+    );
+    const currentHrv = latestWithHrv?.hrv ?? null;
+
+    const latestWithRhr = reversedWellness.find(
+      (w) => typeof w.restingHR === "number" && w.restingHR > 0
+    );
+    const restingHR =
+      latestWithRhr?.restingHR ??
+      profile.restingHR ??
+      profile.icu_resting_hr ??
+      null;
 
     let hrvZScore: number | null = null;
     const { mean: baselineHrvMean, sd: baselineHrvSd } = calculateStats(

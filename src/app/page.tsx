@@ -37,12 +37,13 @@ export default function HomePage() {
     async (athleteId: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => {
       setIsEvaluating(true);
       try {
+        const effectiveApiKey = apiKey || apiKeyCache;
         const res = await fetch("/api/evaluate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             athleteId: athleteId || profile.id,
-            apiKey: apiKey || apiKeyCache,
+            apiKey: effectiveApiKey,
             customRunFtp: runFtp || profile.run_ftp || 285,
             customBikeFtp: bikeFtp || profile.bike_ftp || 260,
           }),
@@ -65,7 +66,27 @@ export default function HomePage() {
   );
 
   useEffect(() => {
-    evaluateMicrocycle("i442091");
+    // Restaurar credenciales guardadas en el navegador
+    const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
+    const savedKey = localStorage.getItem("sgea_api_key") || "";
+    const savedRunFtp = localStorage.getItem("sgea_run_ftp");
+    const savedBikeFtp = localStorage.getItem("sgea_bike_ftp");
+
+    if (savedKey) {
+      setApiKeyCache(savedKey);
+    }
+
+    const runFtpVal = savedRunFtp ? Number(savedRunFtp) : 285;
+    const bikeFtpVal = savedBikeFtp ? Number(savedBikeFtp) : 260;
+
+    setProfile((prev) => ({
+      ...prev,
+      id: savedId,
+      run_ftp: runFtpVal,
+      bike_ftp: bikeFtpVal,
+    }));
+
+    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal);
   }, [evaluateMicrocycle]);
 
   const handleSaveSettings = async (data: {
@@ -77,7 +98,12 @@ export default function HomePage() {
   }) => {
     if (data.apiKey) {
       setApiKeyCache(data.apiKey);
+      localStorage.setItem("sgea_api_key", data.apiKey);
     }
+    localStorage.setItem("sgea_athlete_id", data.athleteId);
+    localStorage.setItem("sgea_run_ftp", String(data.runFtp));
+    localStorage.setItem("sgea_bike_ftp", String(data.bikeFtp));
+
     setProfile((prev) => ({
       ...prev,
       id: data.athleteId,

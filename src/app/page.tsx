@@ -348,6 +348,8 @@ export default function HomePage() {
               weekOffset={weekOffset}
               onWeekChange={handleWeekChange}
               onPlanUpdate={handlePlanUpdate}
+              onSyncIntervals={handleSyncToIntervals}
+              isSyncing={isSyncing}
             />
           )}
         </main>

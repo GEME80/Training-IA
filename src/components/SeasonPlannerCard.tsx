@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Clock,
   Compass,
+  ArrowRight,
 } from "lucide-react";
 import { MacrocyclePhaseInfo, TargetRace } from "@/lib/physiology/macrocycle";
 
@@ -31,6 +32,7 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
   const primaryRace = phaseInfo?.primaryRace;
   const blueprint = phaseInfo?.blueprint;
   const currentWeek = blueprint?.currentWeek;
+  const isPreSeason = blueprint?.mode === "PRE_SEASON_MAINTENANCE";
 
   const getDistanceLabel = (dist?: string) => {
     switch (dist) {
@@ -71,13 +73,15 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
           </div>
         </div>
 
-        {/* Phase Badge & Manage Button */}
-        <div className="flex items-center space-x-2">
+        {/* Dynamic Active Cycle Badge & Settings */}
+        <div className="flex flex-wrap items-center gap-2">
           {phaseInfo && (
             <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-bold border ${phaseInfo.badgeColor}`}
+              className={`rounded-full px-3 py-1 text-xs font-bold border tracking-wide shadow-sm ${
+                phaseInfo.cycleBadgeColor || phaseInfo.badgeColor
+              }`}
             >
-              {phaseInfo.phaseLabel}
+              {phaseInfo.cycleBadgeLabel || phaseInfo.phaseLabel}
             </span>
           )}
 
@@ -117,20 +121,36 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
                 </p>
               </div>
 
-              {/* Start Date & Current Week Status */}
-              {blueprint && (
-                <div className="rounded-lg bg-slate-900/90 p-2.5 border border-slate-800 text-[11px] text-slate-300 flex flex-wrap items-center justify-between gap-2">
+              {/* Dynamic Status / Kickoff Banner */}
+              {isPreSeason ? (
+                <div className="rounded-lg bg-blue-950/40 p-3 border border-blue-500/30 text-xs text-blue-200 flex items-start space-x-2">
+                  <Clock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-slate-400">Inicio del Macrociclo: </span>
-                    <strong className="text-white font-mono">{blueprint.startDate}</strong>
-                    <span className="text-slate-500"> ({blueprint.totalWeeks} semanas de preparación)</span>
-                  </div>
-                  {currentWeek && (
-                    <span className="rounded bg-cyan-500/10 px-2 py-0.5 font-bold text-cyan-300 border border-cyan-500/30">
-                      📍 Semana {currentWeek.weekNumber} de {blueprint.totalWeeks}: {currentWeek.microcycleLabel}
+                    <strong className="text-white">Plan de Mantenimiento Activo: </strong>
+                    <span>
+                      Tu ciclo específico de 16 semanas para <strong>{primaryRace.name}</strong> iniciará el{" "}
+                      <strong className="text-amber-300 font-mono">{blueprint?.startDate}</strong>.
                     </span>
-                  )}
+                    <p className="text-[11px] text-blue-300/80 mt-1">
+                      Actualmente te encuentras en mantenimiento adaptativo (tirada dominical de 55m max) para preservar salud articular y tono aeróbico.
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                blueprint && (
+                  <div className="rounded-lg bg-slate-900/90 p-2.5 border border-slate-800 text-[11px] text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="text-slate-400">Inicio del Macrociclo: </span>
+                      <strong className="text-white font-mono">{blueprint.startDate}</strong>
+                      <span className="text-slate-500"> ({blueprint.totalWeeks} semanas de preparación)</span>
+                    </div>
+                    {currentWeek && (
+                      <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-300 border border-emerald-500/30">
+                        📍 Semana {currentWeek.weekNumber} de {blueprint.totalWeeks}: {currentWeek.microcycleLabel}
+                      </span>
+                    )}
+                  </div>
+                )
               )}
             </div>
 
@@ -138,17 +158,19 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
             <div className="rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/20 p-4 border border-slate-800/80 flex flex-col justify-between">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  Cuenta Regresiva
+                  {isPreSeason ? "Inicio Ciclo Específico" : "Día de Competición"}
                 </span>
                 <div className="mt-1">
                   <div className="flex items-baseline space-x-1.5">
                     <span className="text-3xl font-black font-mono text-amber-400">
-                      {phaseInfo?.weeksRemaining ?? 0}
+                      {isPreSeason ? blueprint?.weeksUntilKickoff ?? 0 : phaseInfo?.weeksRemaining ?? 0}
                     </span>
                     <span className="text-xs font-bold text-slate-300">semanas</span>
                   </div>
                   <p className="text-[11px] font-mono text-slate-400">
-                    {phaseInfo?.daysRemaining ?? 0} días restantes
+                    {isPreSeason
+                      ? `para arrancar el ciclo de 16 sem`
+                      : `${phaseInfo?.daysRemaining ?? 0} días restantes`}
                   </p>
                 </div>
               </div>
@@ -162,17 +184,17 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
             </div>
           </div>
 
-          {/* Expandable 16-Week Macrocycle Timeline */}
+          {/* Expandable Macrocycle Timeline */}
           {blueprint && blueprint.weeks.length > 0 && (
             <div className="rounded-xl bg-slate-950/60 p-3.5 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Compass className="h-4 w-4 text-cyan-400" />
                   <span className="text-xs font-bold text-white">
-                    Cronograma del Macrociclo ({blueprint.totalWeeks} Semanas)
+                    {blueprint.cycleTitle}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    Estructura 3:1 de Carga y Asimilación
+                    (Periodización 3:1)
                   </span>
                 </div>
 
@@ -181,12 +203,12 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
                   onClick={() => setShowFullTimeline(!showFullTimeline)}
                   className="flex items-center space-x-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition"
                 >
-                  <span>{showFullTimeline ? "Ocultar Semanas" : "Ver Todas las Semanas"}</span>
+                  <span>{showFullTimeline ? "Ocultar Semanas" : "Ver Cronograma Completo"}</span>
                   {showFullTimeline ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
               </div>
 
-              {/* Collapsed view: Show current week + 2 next weeks / Expanded: Show all */}
+              {/* Grid of Weeks */}
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-1">
                 {(showFullTimeline ? blueprint.weeks : blueprint.weeks.slice(0, 8)).map((w) => (
                   <div
@@ -224,11 +246,14 @@ export const SeasonPlannerCard: React.FC<SeasonPlannerCardProps> = ({
       ) : (
         /* Empty State / Maintenance Mode */
         <div className="rounded-xl bg-slate-950/60 p-5 border border-slate-800 text-center space-y-2">
-          <p className="text-xs text-slate-300">
-            Actualmente te encuentras en <strong>Mantenimiento General Adaptativo</strong>.
+          <span className="inline-block rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-300 border border-blue-500/30">
+            🔵 CICLO ACTIVO: MANTENIMIENTO GENERAL ADAPTATIVO
+          </span>
+          <p className="text-xs text-slate-300 mt-2">
+            Actualmente te encuentras en <strong>Mantenimiento General Continuo</strong> (Tiradas de 55m máx, 280-360 TSS).
           </p>
           <p className="text-[11px] text-slate-400 max-w-md mx-auto">
-            Agrega tu próxima competición objetivo (ej. Maratón de Valencia en Dic 2026) para que el agente calcule automáticamente la fecha de inicio del ciclo de 16 semanas y programe las semanas de carga y descarga 3:1.
+            Agrega tu próxima competición objetivo (ej. Maratón de Valencia en Dic 2026) para que el sistema calcule la fecha de inicio del ciclo de 16 semanas y mantenga tu plan en mantenimiento hasta ese día.
           </p>
           <button
             onClick={onOpenRaceSettings}

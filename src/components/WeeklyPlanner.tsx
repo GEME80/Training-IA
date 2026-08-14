@@ -12,6 +12,9 @@ import {
   RotateCcw,
   Code2,
   AlertTriangle,
+  Send,
+  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 import { PlanItem, getWeekDates } from "@/lib/gemini/engine";
 import { WorkoutChart } from "./WorkoutChart";
@@ -23,6 +26,8 @@ interface WeeklyPlannerProps {
   weekOffset: number;
   onWeekChange: (offset: number) => void;
   onPlanUpdate: (updatedPlan: PlanItem[]) => void;
+  onSyncIntervals?: () => Promise<void>;
+  isSyncing?: boolean;
 }
 
 export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
@@ -32,10 +37,13 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   weekOffset,
   onWeekChange,
   onPlanUpdate,
+  onSyncIntervals,
+  isSyncing = false,
 }) => {
   const [currentPlan, setCurrentPlan] = useState<PlanItem[]>(initialPlan);
   const [expandedSyntaxIdx, setExpandedSyntaxIdx] = useState<number | null>(null);
   const [hasUserCustomized, setHasUserCustomized] = useState<boolean>(false);
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
 
   // Sincronizar estado local cuando initialPlan cambie desde el backend
   React.useEffect(() => {
@@ -61,12 +69,11 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       };
     });
     setCurrentPlan(updated);
-    onPlanUpdate(updated);
     onWeekChange(newOffset);
   };
 
-  // 1. Conmutador de Descanso
-  const handleToggleRest = (idx: number) => {
+  // 1. Alternar Día de Descanso (Toggle Rest Day)
+  const handleToggleRestDay = (idx: number) => {
     const updated = [...currentPlan];
     const item = { ...updated[idx] };
 
@@ -146,7 +153,20 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     onPlanUpdate(initialPlan);
   };
 
-  // 4. Validador Fisiológico en tiempo real (Protección de Impacto Articular)
+  // 4. Sincronización con Intervals
+  const handleSync = async () => {
+    if (!onSyncIntervals) return;
+    setSyncSuccessMsg(null);
+    try {
+      await onSyncIntervals();
+      setSyncSuccessMsg("¡Microciclo publicado en Intervals.icu!");
+      setTimeout(() => setSyncSuccessMsg(null), 5000);
+    } catch {
+      // Error manejado en parent
+    }
+  };
+
+  // 5. Validador Fisiológico en tiempo real (Protección de Impacto Articular)
   const checkConsecutiveHardRuns = () => {
     for (let i = 0; i < currentPlan.length - 1; i++) {
       const today = currentPlan[i];
@@ -183,7 +203,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   return (
     <div className="card-gradient rounded-2xl p-5 border border-slate-800 space-y-5">
       {/* Header & Week Navigation Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-emerald-400" />
@@ -199,8 +219,8 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
           </p>
         </div>
 
-        {/* Week Selector & Reset Actions */}
-        <div className="flex items-center space-x-2">
+        {/* Week Selector, Reset Actions & Sync to Intervals */}
+        <div className="flex flex-wrap items-center gap-2">
           {hasUserCustomized && (
             <button
               onClick={handleResetToAgent}
@@ -212,6 +232,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </button>
           )}
 
+          {/* Week Navigation */}
           <div className="flex items-center rounded-xl bg-slate-950 p-1 border border-slate-800">
             <button
               onClick={() => handleSwitchWeek(weekOffset - 1)}
@@ -251,155 +272,165 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Sincronizar con Intervals (Ubicado estratégicamente al lado del calendario) */}
+          {onSyncIntervals && (
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 py-2 text-xs font-extrabold text-black shadow-md shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition disabled:opacity-50"
+              title="Publicar este microciclo en el calendario de Intervals.icu"
+            >
+              {isSyncing ? (
+                <RefreshCw className="h-3.5 w-3.5 animate-spin text-black" />
+              ) : (
+                <Send className="h-3.5 w-3.5 text-black" />
+              )}
+              <span>{isSyncing ? "Sincronizando..." : "Sincronizar con Intervals"}</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Real-time Physiological Warning */}
+      {/* Sync Success Feedback */}
+      {syncSuccessMsg && (
+        <div className="flex items-center space-x-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 animate-fadeIn">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          <span>{syncSuccessMsg}</span>
+        </div>
+      )}
+
+      {/* Impact Warning Banner */}
       {validationWarning && (
-        <div className="flex items-center space-x-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0" />
+        <div className="flex items-center space-x-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300 animate-fadeIn">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
           <span>{validationWarning}</span>
         </div>
       )}
 
-      {/* 7-Day Interactive Matrix */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-7">
+      {/* 7-Day Responsive Grid */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
         {currentPlan.map((item, idx) => {
           const isRest = item.isRestDay || item.discipline === "Descanso";
+          const isExpanded = expandedSyntaxIdx === idx;
 
           return (
             <div
-              key={idx}
-              className={`group relative flex flex-col justify-between rounded-xl p-3 border transition-all min-w-0 overflow-hidden ${
+              key={`${item.day}-${idx}`}
+              className={`group flex flex-col justify-between rounded-xl p-3 transition border ${
                 isRest
-                  ? "border-slate-800/60 bg-slate-950/40 opacity-80 hover:opacity-100"
-                  : item.isCustomized
-                  ? "border-cyan-500/40 bg-cyan-950/10 shadow-md shadow-cyan-500/5"
-                  : item.action === "MODIFICAR" || item.action === "REDUCIR_INTENSIDAD"
-                  ? "border-amber-500/40 bg-amber-950/10"
-                  : "border-slate-800/80 bg-slate-900/40 hover:border-slate-700"
+                  ? "border-slate-800 bg-slate-950/40 opacity-75 hover:opacity-100"
+                  : "border-slate-800 bg-slate-950/80 shadow-md hover:border-slate-700"
               }`}
             >
-              {/* Card Header: Day & Date */}
-              <div className="min-w-0">
-                <div className="flex items-center justify-between gap-1">
-                  <div className="min-w-0">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-200 truncate block">
+              {/* Card Top: Day Header & Controls */}
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider text-white">
                       {item.day}
                     </span>
-                    <p className="text-[11px] font-mono font-semibold text-emerald-400 truncate">
+                    <span className="block text-[10px] font-mono text-emerald-400">
                       {item.formattedDate}
-                    </p>
+                    </span>
                   </div>
 
-                  {item.isCustomized ? (
-                    <span className="rounded-full bg-cyan-500/20 px-1.5 py-0.5 text-[9px] font-bold text-cyan-300 border border-cyan-500/30 whitespace-nowrap">
-                      Editado
-                    </span>
-                  ) : isRest ? (
-                    <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-700 whitespace-nowrap">
-                      Descanso
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-                      {item.action === "MODIFICAR" ? "Ajustado" : "Nominal"}
-                    </span>
-                  )}
+                  {/* Status Badge */}
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                      isRest
+                        ? "bg-slate-800 text-slate-400"
+                        : item.isCustomized
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : item.action === "MODIFICAR" || item.action === "REDUCIR_INTENSIDAD"
+                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                        : "bg-emerald-500/10 text-emerald-400"
+                    }`}
+                  >
+                    {isRest ? "Descanso" : item.isCustomized ? "Editado" : item.action === "MODIFICAR" ? "Ajustado IA" : "Nominal"}
+                  </span>
                 </div>
 
-                {/* Rest Day Toggle & Swap Select in single compact row */}
-                <div className="mt-2 flex items-center justify-between gap-1 rounded-lg bg-slate-950/80 p-1.5 border border-slate-800/80 min-w-0">
-                  <label className="flex items-center space-x-1.5 text-[10px] font-medium text-slate-300 cursor-pointer select-none truncate">
+                {/* Day Manipulation Toolbar */}
+                <div className="mt-2 flex items-center justify-between gap-1">
+                  {/* Rest Checkbox */}
+                  <label className="flex items-center space-x-1 cursor-pointer min-w-0">
                     <input
                       type="checkbox"
-                      checked={isRest}
-                      onChange={() => handleToggleRest(idx)}
-                      className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0"
+                      checked={!isRest}
+                      onChange={() => handleToggleRestDay(idx)}
+                      className="h-3 w-3 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 cursor-pointer"
                     />
-                    <span className="truncate">{isRest ? "💤 Descanso" : "Activo"}</span>
+                    <span className="text-[10px] text-slate-400 select-none truncate">
+                      {isRest ? "💤 D..." : "Activo"}
+                    </span>
                   </label>
 
-                  {/* Swap Selector Dropdown strictly sized */}
-                  <select
-                    onChange={(e) => {
-                      const targetIdx = Number(e.target.value);
-                      if (!isNaN(targetIdx)) {
-                        handleSwapDays(idx, targetIdx);
-                        e.target.value = "";
-                      }
-                    }}
-                    defaultValue=""
-                    className="h-5 max-w-[62px] rounded bg-slate-800 px-1 text-[9px] font-semibold text-slate-300 border border-slate-700 hover:bg-slate-700 focus:outline-none cursor-pointer truncate"
-                    title="Mover o intercambiar sesión con otro día"
-                  >
-                    <option value="" disabled>
-                      ↔ Mover
-                    </option>
-                    {currentPlan.map((target, targetIdx) => {
-                      if (targetIdx === idx) return null;
-                      return (
-                        <option key={targetIdx} value={targetIdx}>
-                          A {target.day.slice(0, 3)} ({target.formattedDate})
+                  {/* Swap Selector */}
+                  <div className="flex items-center space-x-1 shrink-0">
+                    <select
+                      value={idx}
+                      onChange={(e) => handleSwapDays(idx, Number(e.target.value))}
+                      className="h-5 rounded border border-slate-800 bg-slate-900 px-1 text-[10px] text-slate-300 hover:border-slate-700 cursor-pointer min-w-0 max-w-[62px] truncate"
+                      title="Mover o intercambiar este entrenamiento a otro día"
+                    >
+                      <option value={idx}>↔ M...</option>
+                      {currentPlan.map((d, targetIdx) => (
+                        <option key={targetIdx} value={targetIdx} disabled={targetIdx === idx}>
+                          {d.day.slice(0, 3)} ({d.formattedDate})
                         </option>
-                      );
-                    })}
-                  </select>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Discipline & Workout Details */}
-                <div className="mt-2.5 min-w-0">
+                {/* Workout Title & Discipline */}
+                <div className="mt-2.5">
                   <div className="flex items-center space-x-1.5">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 flex-shrink-0">
-                      {getDisciplineIcon(item.discipline)}
-                    </div>
-                    <span className="text-xs font-semibold text-slate-200 truncate">{item.discipline}</span>
+                    {getDisciplineIcon(item.discipline)}
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      {item.discipline}
+                    </span>
                   </div>
 
-                  <h3 className={`mt-1.5 text-xs font-bold leading-snug line-clamp-2 ${isRest ? "text-slate-400" : "text-white"}`}>
+                  <h4 className="mt-1 text-xs font-bold text-white line-clamp-2 min-h-[32px]">
                     {item.workoutName}
-                  </h3>
-
-                  {/* Power Target */}
-                  {item.powerTarget && !isRest && (
-                    <div className="mt-2 rounded bg-slate-950/80 px-2 py-1 border border-slate-800">
-                      <span className="text-[11px] font-mono font-bold text-emerald-400">
-                        🎯 {item.powerTarget}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Visual Interval Stepped Profile Chart */}
-                  {!isRest && item.workoutDoc && (
-                    <WorkoutChart workoutDoc={item.workoutDoc} discipline={item.discipline} />
-                  )}
+                  </h4>
                 </div>
+
+                {/* Stepped Visual Interval Chart */}
+                {!isRest && item.workoutDoc && (
+                  <div className="mt-2">
+                    <WorkoutChart workoutDoc={item.workoutDoc} discipline={item.discipline} />
+                  </div>
+                )}
               </div>
 
-              {/* Workout Syntax Inspector Toggle */}
-              <div className="mt-3 border-t border-slate-800/60 pt-2 space-y-1.5">
+              {/* Card Footer: Justification & Structured Syntax Dropdown */}
+              <div className="mt-3 border-t border-slate-800/80 pt-2 text-[10px] text-slate-400">
                 {item.workoutDoc && !isRest && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedSyntaxIdx(expandedSyntaxIdx === idx ? null : idx)
-                    }
-                    className="flex w-full items-center justify-between rounded bg-slate-950/40 px-1.5 py-1 text-[10px] font-mono text-slate-400 hover:text-emerald-400 border border-slate-800"
-                  >
-                    <span className="flex items-center space-x-1">
-                      <Code2 className="h-3 w-3" />
-                      <span>Sintaxis Stryd</span>
-                    </span>
-                    <span>{expandedSyntaxIdx === idx ? "▲" : "▼"}</span>
-                  </button>
+                  <div className="mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSyntaxIdx(isExpanded ? null : idx)}
+                      className="flex w-full items-center justify-between rounded-lg bg-slate-900/90 px-2 py-1 text-[10px] font-mono text-cyan-400 border border-slate-800 hover:bg-slate-800 transition"
+                    >
+                      <span className="flex items-center gap-1">
+                        <Code2 className="h-3 w-3" />
+                        Sintaxis Stryd
+                      </span>
+                      <span>{isExpanded ? "▲" : "▼"}</span>
+                    </button>
+
+                    {isExpanded && (
+                      <pre className="mt-1.5 max-h-32 overflow-x-auto rounded-lg bg-slate-950 p-2 font-mono text-[9px] text-slate-300 border border-slate-800 whitespace-pre-wrap animate-fadeIn">
+                        {item.workoutDoc}
+                      </pre>
+                    )}
+                  </div>
                 )}
 
-                {expandedSyntaxIdx === idx && item.workoutDoc && (
-                  <pre className="mt-1 rounded bg-black/90 p-2 text-[9px] font-mono text-emerald-300 whitespace-pre-wrap border border-emerald-500/20 max-h-32 overflow-y-auto">
-                    {item.workoutDoc}
-                  </pre>
-                )}
-
-                <p className="text-[10px] text-slate-400 leading-tight">
+                <p className="line-clamp-3 leading-relaxed">
                   {item.justification}
                 </p>
               </div>

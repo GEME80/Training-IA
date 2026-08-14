@@ -9,6 +9,7 @@ export interface TargetRace {
 
 export type MacrocyclePhaseType =
   | "MAINTENANCE"
+  | "PRE_SEASON_MAINTENANCE"
   | "BASE_1"
   | "BASE_2"
   | "BUILD"
@@ -43,10 +44,12 @@ export interface MacrocycleWeek {
 }
 
 export interface MacrocycleBlueprint {
-  mode: "MARATHON_SPECIFIC" | "MAINTENANCE";
+  mode: "MARATHON_SPECIFIC" | "PRE_SEASON_MAINTENANCE" | "GENERAL_MAINTENANCE";
+  cycleTitle: string; // "Ciclo de Mantenimiento Adaptativo" vs "Ciclo Específico de Maratón"
   primaryRace: TargetRace | null;
-  startDate: string;
+  startDate: string; // Fecha de inicio de preparación específica de 16 semanas
   raceDate: string | null;
+  weeksUntilKickoff: number | null; // Semanas que faltan para arrancar el ciclo de 16 sem
   totalWeeks: number;
   currentWeekIndex: number;
   currentWeek: MacrocycleWeek;
@@ -56,6 +59,8 @@ export interface MacrocycleBlueprint {
 export interface MacrocyclePhaseInfo {
   phase: MacrocyclePhaseType;
   phaseLabel: string;
+  cycleBadgeLabel: string; // "🔵 CICLO ACTIVO: MANTENIMIENTO" vs "🏃 CICLO ACTIVO: MARATÓN"
+  cycleBadgeColor: string;
   weeksRemaining: number | null;
   daysRemaining: number | null;
   primaryRace: TargetRace | null;
@@ -110,19 +115,19 @@ export function generateMacrocycleBlueprint(
 
   const primaryRace = futureRaces.find((r) => r.priority === "A") || futureRaces[0] || null;
 
-  // CASO A: MANTENIMIENTO GENERAL (Sin maratón próxima o modo base)
-  if (!primaryRace || primaryRace.distance !== "42k") {
+  // CASO 1: SIN CARRERA PRINCIPAL (Mantenimiento General Continuo)
+  if (!primaryRace) {
     const totalWeeks = 8;
     const weeks: MacrocycleWeek[] = [];
 
     for (let i = 0; i < totalWeeks; i++) {
       const weekMon = new Date(currentMonday);
-      weekMon.setDate(currentMonday.getDate() + (i - 1) * 7); // -1 semana previa, actual y 6 futuras
+      weekMon.setDate(currentMonday.getDate() + i * 7);
       const weekSun = new Date(weekMon);
       weekSun.setDate(weekMon.getDate() + 6);
 
-      const isRecovery = (i + 1) % 4 === 0; // Semana 4 y 8 de asimilación
-      const isCurrent = i === 1;
+      const isRecovery = (i + 1) % 4 === 0;
+      const isCurrent = i === 0;
 
       weeks.push({
         weekNumber: i + 1,
@@ -147,39 +152,107 @@ export function generateMacrocycleBlueprint(
     }
 
     return {
-      mode: "MAINTENANCE",
-      primaryRace,
+      mode: "GENERAL_MAINTENANCE",
+      cycleTitle: "Ciclo de Mantenimiento General",
+      primaryRace: null,
       startDate: weeks[0].startDate,
-      raceDate: primaryRace ? primaryRace.date : null,
+      raceDate: null,
+      weeksUntilKickoff: null,
       totalWeeks,
-      currentWeekIndex: 1,
-      currentWeek: weeks[1],
+      currentWeekIndex: 0,
+      currentWeek: weeks[0],
       weeks,
     };
   }
 
-  // CASO B: PLAN ESPECÍFICO DE MARATÓN (16 Semanas)
-  const totalWeeks = 16;
+  // CASO 2: CON CARRERA OBJETIVO
+  const totalPrepWeeks = 16;
   const raceDateObj = new Date(primaryRace.date);
   const raceMonday = getMonday(raceDateObj);
 
-  // Fecha de inicio del macrociclo (15 semanas antes del lunes de la carrera = 16 semanas en total)
-  const planStartMonday = new Date(raceMonday);
-  planStartMonday.setDate(raceMonday.getDate() - (totalWeeks - 1) * 7);
+  // Fecha de inicio del ciclo específico de 16 semanas
+  const kickoffMonday = new Date(raceMonday);
+  kickoffMonday.setDate(raceMonday.getDate() - (totalPrepWeeks - 1) * 7);
 
+  const diffMs = raceDateObj.getTime() - now.getTime();
+  const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const weeksRemaining = Math.ceil(daysRemaining / 7);
+
+  // 2A: SI HOY ES ANTES DE LA FECHA DE INICIO DEL CICLO DE 16 SEMANAS -> MANTENIMIENTO PRE-CARRERA
+  if (currentMonday.getTime() < kickoffMonday.getTime() || weeksRemaining > 16) {
+    const diffToKickoffMs = kickoffMonday.getTime() - currentMonday.getTime();
+    const weeksUntilKickoff = Math.ceil(diffToKickoffMs / (1000 * 60 * 60 * 24 * 7));
+
+    const totalWeeks = Math.max(8, weeksUntilKickoff + 4);
+    const weeks: MacrocycleWeek[] = [];
+
+    for (let i = 0; i < totalWeeks; i++) {
+      const weekMon = new Date(currentMonday);
+      weekMon.setDate(currentMonday.getDate() + i * 7);
+      const weekSun = new Date(weekMon);
+      weekSun.setDate(weekMon.getDate() + 6);
+
+      const isRecovery = (i + 1) % 4 === 0;
+      const isCurrent = i === 0;
+      const isKickoffWeek = weekMon.getTime() === kickoffMonday.getTime();
+
+      weeks.push({
+        weekNumber: i + 1,
+        countdownWeeks: weeksUntilKickoff - i,
+        startDate: formatDate(weekMon),
+        endDate: formatDate(weekSun),
+        formattedRange: formatRange(weekMon, weekSun),
+        phase: "PRE_SEASON_MAINTENANCE",
+        phaseLabel: "Mantenimiento Pre-Maratón",
+        microcycleType: isKickoffWeek ? "CARGA" : isRecovery ? "DESCARGA_ASIMILACION" : "MANTENIMIENTO",
+        microcycleLabel: isKickoffWeek
+          ? "🚀 KICKOFF MARATÓN (Sem 1/16)"
+          : isRecovery
+          ? "Asimilación / Descarga (3:1)"
+          : "Mantenimiento Aeróbico",
+        microcycleBadgeColor: isKickoffWeek
+          ? "bg-amber-500/25 text-amber-300 border-amber-500/40 font-bold"
+          : isRecovery
+          ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+          : "bg-slate-800 text-slate-300 border-slate-700",
+        targetTss: isRecovery ? 260 : 330,
+        maxLongRunMinutes: isRecovery ? 45 : 55,
+        focusDescription: isKickoffWeek
+          ? `¡Inicio oficial del ciclo específico de 16 semanas para ${primaryRace.name}!`
+          : isRecovery
+          ? "Descarga de volumen y asimilación biológica para refrescar el TSB."
+          : `Mantenimiento de fitness (CTL) y salud articular hasta iniciar el ciclo de 16 semanas el ${formatDate(kickoffMonday)}.`,
+        isCurrentWeek: isCurrent,
+      });
+    }
+
+    return {
+      mode: "PRE_SEASON_MAINTENANCE",
+      cycleTitle: `Ciclo de Mantenimiento Pre-${primaryRace.name}`,
+      primaryRace,
+      startDate: formatDate(kickoffMonday),
+      raceDate: primaryRace.date,
+      weeksUntilKickoff,
+      totalWeeks,
+      currentWeekIndex: 0,
+      currentWeek: weeks[0],
+      weeks,
+    };
+  }
+
+  // 2B: DENTRO DE LAS 16 SEMANAS -> PLAN ESPECÍFICO DE MARATÓN ACTIVO
   const weeks: MacrocycleWeek[] = [];
   let currentWeekIndex = 0;
 
-  for (let i = 0; i < totalWeeks; i++) {
-    const weekMon = new Date(planStartMonday);
-    weekMon.setDate(planStartMonday.getDate() + i * 7);
+  for (let i = 0; i < totalPrepWeeks; i++) {
+    const weekMon = new Date(kickoffMonday);
+    weekMon.setDate(kickoffMonday.getDate() + i * 7);
     const weekSun = new Date(weekMon);
     weekSun.setDate(weekMon.getDate() + 6);
 
-    const countdown = totalWeeks - i;
+    const countdown = totalPrepWeeks - i;
     const weekNumber = i + 1;
 
-    // Determinar Fase del Macrociclo
     let phase: MacrocyclePhaseType = "BASE_1";
     let phaseLabel = "Base Aeróbica I";
     let microType: MicrocycleType = "CARGA";
@@ -272,10 +345,12 @@ export function generateMacrocycleBlueprint(
 
   return {
     mode: "MARATHON_SPECIFIC",
+    cycleTitle: "Ciclo de Preparación Específica de Maratón",
     primaryRace,
     startDate: weeks[0].startDate,
     raceDate: primaryRace.date,
-    totalWeeks,
+    weeksUntilKickoff: 0,
+    totalWeeks: totalPrepWeeks,
     currentWeekIndex,
     currentWeek: weeks[currentWeekIndex] || weeks[0],
     weeks,
@@ -300,6 +375,8 @@ export function calculateMacrocyclePhase(
     return {
       phase: "MAINTENANCE",
       phaseLabel: "Mantenimiento General Adaptativo",
+      cycleBadgeLabel: "🔵 CICLO ACTIVO: MANTENIMIENTO",
+      cycleBadgeColor: "bg-blue-500/10 text-blue-300 border-blue-500/30",
       weeksRemaining: null,
       daysRemaining: null,
       primaryRace: null,
@@ -319,14 +396,31 @@ export function calculateMacrocyclePhase(
   const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   const weeksRemaining = Math.ceil(daysRemaining / 7);
 
+  const isPreSeason = blueprint.mode === "PRE_SEASON_MAINTENANCE";
+  const isMarathonActive = blueprint.mode === "MARATHON_SPECIFIC";
+
+  const cycleBadgeLabel = isPreSeason
+    ? `🔵 CICLO ACTIVO: MANTENIMIENTO PRE-MARATÓN`
+    : isMarathonActive
+    ? `🏃 CICLO ACTIVO: MARATÓN (${currentWeek.phaseLabel})`
+    : `🔵 CICLO ACTIVO: MANTENIMIENTO`;
+
+  const cycleBadgeColor = isPreSeason
+    ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+
   return {
     phase: currentWeek.phase,
-    phaseLabel: currentWeek.phaseLabel,
+    phaseLabel: isPreSeason ? "Mantenimiento Pre-Maratón" : currentWeek.phaseLabel,
+    cycleBadgeLabel,
+    cycleBadgeColor,
     weeksRemaining,
     daysRemaining,
     primaryRace,
     guideline: currentWeek.focusDescription,
-    suggestedFocus: `Semana ${currentWeek.weekNumber} de ${blueprint.totalWeeks} (${currentWeek.microcycleLabel}). Target: ${currentWeek.targetTss} TSS.`,
+    suggestedFocus: isPreSeason
+      ? `En Mantenimiento (Tirada 55m max). El ciclo de 16 semanas inicia el ${blueprint.startDate} (en ${blueprint.weeksUntilKickoff} semanas).`
+      : `Semana ${currentWeek.weekNumber} de ${blueprint.totalWeeks} (${currentWeek.microcycleLabel}). Target: ${currentWeek.targetTss} TSS.`,
     badgeColor: currentWeek.microcycleBadgeColor,
     maxLongRunMinutes: currentWeek.maxLongRunMinutes,
     isSpecificMarathonPhase: blueprint.mode === "MARATHON_SPECIFIC" && currentWeek.phase === "PEAK",

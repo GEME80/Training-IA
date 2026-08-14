@@ -102,32 +102,34 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
           <p className="mt-1 text-[10px] text-slate-400">Balance de Estrés</p>
         </div>
 
-        {/* Rolling HRV Z-Score */}
+        {/* Rolling HRV Z-Score / Modo PMC */}
         <div
           className="card-gradient rounded-xl p-3.5 border border-slate-800 transition hover:border-slate-700"
           title={
             status.hrvZScore !== null
               ? `HRV actual: ${status.currentHrv} ms vs media base móvil de 30 días (${status.baselineHrvMean} ms).`
-              : "Intervals.icu no tiene registros de HRV (rMSSD) en tus datos de Wellness de los últimos 90 días."
+              : "Modo PMC activo: Periodización guiada por potencia crítica Stryd, CTL, ATL y TSB."
           }
         >
           <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>HRV Z-Score</span>
-            <Activity className="h-3.5 w-3.5 text-emerald-400" />
+            <span>HRV / Modo Telemetría</span>
+            <Activity className="h-3.5 w-3.5 text-cyan-400" />
           </div>
           <div className="mt-2 text-2xl font-black font-mono">
-            <span className={getHrvColor(status.hrvZScore)}>
-              {status.hrvZScore !== null
-                ? status.hrvZScore > 0
-                  ? `+${status.hrvZScore}`
-                  : status.hrvZScore
-                : "N/D"}
-            </span>
+            {status.hrvZScore !== null ? (
+              <span className={getHrvColor(status.hrvZScore)}>
+                {status.hrvZScore > 0 ? `+${status.hrvZScore}` : status.hrvZScore}
+              </span>
+            ) : (
+              <span className="text-sm font-bold text-cyan-300 font-sans tracking-wide bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+                PMC & Stryd
+              </span>
+            )}
           </div>
           <p className="mt-1 text-[10px] text-slate-400 truncate">
             {status.hrvZScore !== null && status.currentHrv
               ? `${status.currentHrv} ms (Base: ${status.baselineHrvMean})`
-              : "Sin telemetría en Intervals"}
+              : "Control por Cargas PMC"}
           </p>
         </div>
 

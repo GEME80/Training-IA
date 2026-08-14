@@ -382,7 +382,7 @@ flowchart LR
    - Inicialización con `.gitignore` exhaustivo (Next.js, Node, Firebase credentials y `.env*.local`).
    - Cada ciclo de trabajo completado se confirmará mediante *commits* descriptivos y *pushes* a la rama principal (`main`).
 4. **Aprovisionamiento y Despliegue en GCP / Firebase:**
-   - Proyecto Google Cloud / Firebase (ej. `sgea-training`).
+   - **Proyecto Oficial GCP / Firebase:** `training-ia-8f67f` ([Consola Firebase](https://console.firebase.google.com/u/0/project/training-ia-8f67f/overview))
    - Firebase Authentication con proveedor Google Sign-In activo.
    - Cloud Firestore (Modo Nativo) con reglas de seguridad por UID (`firestore.rules`).
    - Secretos seguros gestionados vía variables de entorno / Secret Manager (`ENCRYPTION_MASTER_KEY`, `GEMINI_API_KEY`).

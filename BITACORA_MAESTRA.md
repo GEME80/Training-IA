@@ -383,7 +383,7 @@ flowchart LR
    - Cada ciclo de trabajo completado se confirmará mediante *commits* descriptivos y *pushes* a la rama principal (`main`).
 4. **Aprovisionamiento y Despliegue en GCP / Firebase:**
    - **Proyecto Oficial GCP / Firebase:** `training-ia-8f67f` ([Consola Firebase](https://console.firebase.google.com/u/0/project/training-ia-8f67f/overview))
-   - Firebase Authentication con proveedor Google Sign-In activo.
-   - Cloud Firestore (Modo Nativo) con reglas de seguridad por UID (`firestore.rules`).
-   - Secretos seguros gestionados vía variables de entorno / Secret Manager (`ENCRYPTION_MASTER_KEY`, `GEMINI_API_KEY`).
+   - **Firebase Web App:** `sgea-web` (`1:518084993984:web:90479d02bb3884e6cdde25`).
+   - **Cloud Firestore (Modo Nativo):** Base de datos `(default)` creada y reglas `firestore.rules` con aislamiento por UID desplegadas.
+   - **Criptografía:** Módulo `AES-256-GCM` activo con llave maestra generada en `.env.local`.
    - **Cero Despliegues Automáticos no Autorizados:** El despliegue a la infraestructura en la nube de Google Cloud Platform (GCP / Firebase) **únicamente se ejecutará bajo la instrucción explícita del usuario** mediante Firebase App Hosting o Cloud Run.

@@ -378,7 +378,7 @@ flowchart LR
 2. **Entorno de Desarrollo y Validación Local (`localhost`):**
    - Todas las nuevas funcionalidades, interfaces gráficas y conexiones de API deben desplegarse y verificarse exhaustivamente primero en el entorno local (`localhost:3000`).
 3. **Control de Versiones en GitHub:**
-   - El proyecto residirá en un repositorio oficial de **GitHub**.
+   - **Repositorio Oficial:** [https://github.com/GEME80/Training-IA](https://github.com/GEME80/Training-IA)
    - Inicialización con `.gitignore` exhaustivo (Next.js, Node, Firebase credentials y `.env*.local`).
    - Cada ciclo de trabajo completado se confirmará mediante *commits* descriptivos y *pushes* a la rama principal (`main`).
 4. **Aprovisionamiento y Despliegue en GCP / Firebase:**

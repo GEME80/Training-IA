@@ -125,7 +125,7 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
     if (mins >= 60) {
       const h = Math.floor(mins / 60);
       const m = mins % 60;
-      return m > 0 ? `${h}h ${m}m` : `${h}h`;
+      return m > 0 ? `${h}h${m < 10 ? "0" + m : m}m` : `${h}h`;
     }
     return `${mins}m`;
   };
@@ -139,23 +139,23 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   };
 
   const maxIntensity = Math.max(...segments.map((s) => s.intensityPercent), 110);
-  const chartHeight = 46;
+  const chartHeight = 44;
 
   return (
-    <div className="mt-2.5 rounded-xl bg-slate-950/80 p-2.5 border border-slate-800/80 space-y-1.5">
-      {/* Header with duration and estimated TSS */}
-      <div className="flex items-center justify-between text-[11px] font-mono">
-        <span className="font-bold text-white flex items-center gap-1">
+    <div className="mt-2 rounded-lg bg-slate-950/90 p-2 border border-slate-800/80 space-y-1 overflow-hidden">
+      {/* Header with duration and estimated TSS in single line */}
+      <div className="flex items-center justify-between text-[10px] font-mono leading-none">
+        <span className="font-bold text-white">
           ⏱️ {formatDuration(totalMins)}
         </span>
-        <span className="font-semibold text-slate-400">
-          Carga: <strong className="text-emerald-400">{estimatedTss} TSS</strong>
+        <span className="text-slate-400">
+          <strong className="text-emerald-400">{estimatedTss} TSS</strong>
         </span>
       </div>
 
       {/* Stepped Profile Bar Chart */}
       <div
-        className="relative flex items-end w-full rounded-md bg-slate-900/90 p-1 gap-[2px] overflow-hidden border border-slate-800"
+        className="relative flex items-end w-full rounded bg-slate-900/90 p-1 gap-[2px] overflow-hidden border border-slate-800"
         style={{ height: `${chartHeight}px` }}
       >
         {segments.map((seg, idx) => {

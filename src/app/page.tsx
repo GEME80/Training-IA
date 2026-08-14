@@ -41,7 +41,7 @@ export default function HomePage() {
       apiKey?: string,
       runFtp?: number,
       bikeFtp?: number,
-      offset: number = weekOffset
+      offset: number = 0
     ) => {
       setIsEvaluating(true);
       try {
@@ -72,11 +72,11 @@ export default function HomePage() {
         setIsLoading(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, weekOffset]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache]
   );
 
   useEffect(() => {
-    // Restaurar credenciales guardadas en el navegador
+    // Restaurar credenciales guardadas en el navegador en el montaje inicial
     const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
     const savedKey = localStorage.getItem("sgea_api_key") || "";
     const savedRunFtp = localStorage.getItem("sgea_run_ftp");
@@ -97,7 +97,8 @@ export default function HomePage() {
     }));
 
     evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal, 0);
-  }, [evaluateMicrocycle]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSaveSettings = async (data: {
     athleteId: string;

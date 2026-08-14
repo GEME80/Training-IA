@@ -270,7 +270,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
           return (
             <div
               key={idx}
-              className={`group relative flex flex-col justify-between rounded-xl p-3.5 border transition-all ${
+              className={`group relative flex flex-col justify-between rounded-xl p-3 border transition-all min-w-0 overflow-hidden ${
                 isRest
                   ? "border-slate-800/60 bg-slate-950/40 opacity-80 hover:opacity-100"
                   : item.isCustomized
@@ -281,80 +281,78 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
               }`}
             >
               {/* Card Header: Day & Date */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+              <div className="min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <div className="min-w-0">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-200 truncate block">
                       {item.day}
                     </span>
-                    <p className="text-[11px] font-mono font-semibold text-emerald-400">
+                    <p className="text-[11px] font-mono font-semibold text-emerald-400 truncate">
                       {item.formattedDate}
                     </p>
                   </div>
 
                   {item.isCustomized ? (
-                    <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300 border border-cyan-500/30">
+                    <span className="rounded-full bg-cyan-500/20 px-1.5 py-0.5 text-[9px] font-bold text-cyan-300 border border-cyan-500/30 whitespace-nowrap">
                       Editado
                     </span>
                   ) : isRest ? (
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-700">
+                    <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-700 whitespace-nowrap">
                       Descanso
                     </span>
                   ) : (
-                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/20">
+                    <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                       {item.action === "MODIFICAR" ? "Ajustado" : "Nominal"}
                     </span>
                   )}
                 </div>
 
-                {/* Rest Day Toggle Checkbox */}
-                <div className="mt-2.5 flex items-center justify-between rounded-lg bg-slate-950/60 px-2 py-1.5 border border-slate-800/80">
-                  <label className="flex items-center space-x-2 text-[11px] font-medium text-slate-300 cursor-pointer select-none">
+                {/* Rest Day Toggle & Swap Select in single compact row */}
+                <div className="mt-2 flex items-center justify-between gap-1 rounded-lg bg-slate-950/80 p-1.5 border border-slate-800/80 min-w-0">
+                  <label className="flex items-center space-x-1.5 text-[10px] font-medium text-slate-300 cursor-pointer select-none truncate">
                     <input
                       type="checkbox"
                       checked={isRest}
                       onChange={() => handleToggleRest(idx)}
-                      className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 focus:ring-offset-0"
+                      className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0"
                     />
-                    <span>{isRest ? "💤 En Descanso" : "Día Activo"}</span>
+                    <span className="truncate">{isRest ? "💤 Descanso" : "Activo"}</span>
                   </label>
 
-                  {/* Swap Selector Dropdown */}
-                  <div className="relative">
-                    <select
-                      onChange={(e) => {
-                        const targetIdx = Number(e.target.value);
-                        if (!isNaN(targetIdx)) {
-                          handleSwapDays(idx, targetIdx);
-                          e.target.value = "";
-                        }
-                      }}
-                      defaultValue=""
-                      className="h-6 rounded bg-slate-800 px-1 text-[10px] font-semibold text-slate-300 border border-slate-700 hover:bg-slate-700 focus:outline-none cursor-pointer"
-                      title="Mover o intercambiar sesión con otro día"
-                    >
-                      <option value="" disabled>
-                        ↔ Mover
-                      </option>
-                      {currentPlan.map((target, targetIdx) => {
-                        if (targetIdx === idx) return null;
-                        return (
-                          <option key={targetIdx} value={targetIdx}>
-                            A {target.day} ({target.formattedDate})
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
+                  {/* Swap Selector Dropdown strictly sized */}
+                  <select
+                    onChange={(e) => {
+                      const targetIdx = Number(e.target.value);
+                      if (!isNaN(targetIdx)) {
+                        handleSwapDays(idx, targetIdx);
+                        e.target.value = "";
+                      }
+                    }}
+                    defaultValue=""
+                    className="h-5 max-w-[62px] rounded bg-slate-800 px-1 text-[9px] font-semibold text-slate-300 border border-slate-700 hover:bg-slate-700 focus:outline-none cursor-pointer truncate"
+                    title="Mover o intercambiar sesión con otro día"
+                  >
+                    <option value="" disabled>
+                      ↔ Mover
+                    </option>
+                    {currentPlan.map((target, targetIdx) => {
+                      if (targetIdx === idx) return null;
+                      return (
+                        <option key={targetIdx} value={targetIdx}>
+                          A {target.day.slice(0, 3)} ({target.formattedDate})
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
 
                 {/* Discipline & Workout Details */}
-                <div className="mt-3">
+                <div className="mt-2.5 min-w-0">
                   <div className="flex items-center space-x-1.5">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-800 border border-slate-700">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-slate-800 border border-slate-700 flex-shrink-0">
                       {getDisciplineIcon(item.discipline)}
                     </div>
-                    <span className="text-xs font-semibold text-slate-200">{item.discipline}</span>
+                    <span className="text-xs font-semibold text-slate-200 truncate">{item.discipline}</span>
                   </div>
 
                   <h3 className={`mt-1.5 text-xs font-bold leading-snug line-clamp-2 ${isRest ? "text-slate-400" : "text-white"}`}>

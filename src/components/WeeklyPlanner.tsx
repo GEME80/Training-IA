@@ -10,13 +10,11 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
-  ArrowLeftRight,
   Code2,
   AlertTriangle,
-  CheckCircle2,
-  Sliders,
 } from "lucide-react";
-import { PlanItem } from "@/lib/gemini/engine";
+import { PlanItem, getWeekDates } from "@/lib/gemini/engine";
+import { WorkoutChart } from "./WorkoutChart";
 
 interface WeeklyPlannerProps {
   initialPlan: PlanItem[];
@@ -51,13 +49,28 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     onPlanUpdate(newPlan);
   };
 
+  // Manejo de cambio de semana con actualización inmediata de fechas locales
+  const handleSwitchWeek = (newOffset: number) => {
+    const newDates = getWeekDates(newOffset);
+    const updated = currentPlan.map((item, idx) => {
+      const dateInfo = newDates[idx] || { date: "", formattedDate: "" };
+      return {
+        ...item,
+        date: dateInfo.date,
+        formattedDate: dateInfo.formattedDate,
+      };
+    });
+    setCurrentPlan(updated);
+    onPlanUpdate(updated);
+    onWeekChange(newOffset);
+  };
+
   // 1. Conmutador de Descanso
   const handleToggleRest = (idx: number) => {
     const updated = [...currentPlan];
     const item = { ...updated[idx] };
 
     if (item.isRestDay || item.discipline === "Descanso") {
-      // Restaurar a sesión activa según el día
       const defaultDisciplines: Record<string, "Carrera" | "Ciclismo" | "Fuerza"> = {
         Martes: "Carrera",
         Miércoles: "Ciclismo",
@@ -75,8 +88,8 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       item.isCustomized = true;
       item.justification = "Reactivado manualmente por el atleta.";
       item.powerTarget = disc === "Carrera" ? `${Math.round(runFtp * 0.75)}W (75% CP)` : disc === "Ciclismo" ? `${Math.round(bikeFtp * 0.65)}W (65% FTP)` : undefined;
+      item.workoutDoc = disc === "Carrera" ? `Warmup\n- 15m 70% FTP\n\nMain\n- 35m 75% FTP\n\nCooldown\n- 10m 60% FTP` : undefined;
     } else {
-      // Convertir a descanso total
       item.discipline = "Descanso";
       item.isRestDay = true;
       item.workoutName = "Descanso Pasivo Total";
@@ -99,7 +112,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     const itemA = { ...updated[fromIdx] };
     const itemB = { ...updated[toIdx] };
 
-    // Conservamos las fechas y nombres de día de cada posición
     const dayA = itemA.day;
     const dateA = itemA.date;
     const formattedDateA = itemA.formattedDate;
@@ -108,7 +120,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     const dateB = itemB.date;
     const formattedDateB = itemB.formattedDate;
 
-    // Asignar el contenido de B a la posición A
     updated[fromIdx] = {
       ...itemB,
       day: dayA,
@@ -117,7 +128,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       isCustomized: true,
     };
 
-    // Asignar el contenido de A a la posición B
     updated[toIdx] = {
       ...itemA,
       day: dayB,
@@ -185,7 +195,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </span>
           </div>
           <p className="mt-0.5 text-xs text-slate-400">
-            Reorganiza sesiones, personaliza días de descanso y sincroniza directamente a Intervals.icu
+            Reorganiza sesiones, personaliza días de descanso y visualiza la gráfica de intervalos antes de sincronizar
           </p>
         </div>
 
@@ -204,7 +214,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
           <div className="flex items-center rounded-xl bg-slate-950 p-1 border border-slate-800">
             <button
-              onClick={() => onWeekChange(weekOffset - 1)}
+              onClick={() => handleSwitchWeek(weekOffset - 1)}
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
               title="Semana anterior"
             >
@@ -212,7 +222,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </button>
 
             <button
-              onClick={() => onWeekChange(0)}
+              onClick={() => handleSwitchWeek(0)}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
                 weekOffset === 0
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
@@ -223,7 +233,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </button>
 
             <button
-              onClick={() => onWeekChange(1)}
+              onClick={() => handleSwitchWeek(1)}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
                 weekOffset === 1
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
@@ -234,7 +244,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </button>
 
             <button
-              onClick={() => onWeekChange(weekOffset + 1)}
+              onClick={() => handleSwitchWeek(weekOffset + 1)}
               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
               title="Semana siguiente"
             >
@@ -358,6 +368,11 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                         🎯 {item.powerTarget}
                       </span>
                     </div>
+                  )}
+
+                  {/* Visual Interval Stepped Profile Chart */}
+                  {!isRest && item.workoutDoc && (
+                    <WorkoutChart workoutDoc={item.workoutDoc} discipline={item.discipline} />
                   )}
                 </div>
               </div>

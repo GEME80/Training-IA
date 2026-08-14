@@ -313,14 +313,13 @@ flowchart TD
 > Para evitar errores de cálculo de tiempo gigante en la API (como sesiones calculadas de 80h o 100h) y garantizar total compatibilidad con los dispositivos Garmin y sensores Stryd, se deben respetar estrictamente las siguientes reglas:
 
 #### A. Carrera por Potencia Stryd (Tiempo + % FTP / CP)
-> **Regla de Oro:** Se define siempre la duración en tiempo (`m` o `s`) y la intensidad en `% FTP` (Potencia Crítica).
+> **Regla de Oro:** Se define siempre la duración en tiempo (`m` o `s`), la intensidad en `% FTP` (Potencia Crítica) y los bloques de repetición con `Nx` (ej. `4x`).
 
 ```plaintext
 Warmup
 - 15m 70% FTP
 
-Main
-repeat 4
+4x
 - 8m 100% FTP
 - 3m 65% FTP
 
@@ -335,8 +334,7 @@ Cooldown
 Warmup
 - 15m 65% Pace
 
-Main
-repeat 5
+5x
 - 1000mtr 100% Pace
 - 2m 60% Pace
 

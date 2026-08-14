@@ -170,7 +170,7 @@ export class PhysiologicalEngine {
       if (workoutType === "LONG_RUN" || workoutType === "Z2_BASE") {
         return `Warmup\n- 15m 55% FTP\n\nMain\n- 1h30m 65% FTP\n\nCooldown\n- 15m 50% FTP`;
       }
-      return `Warmup\n- 15m 55% FTP\n\nMain\nrepeat 4\n- 8m ${targetPowerPercentage}% FTP\n- 3m 55% FTP\n\nCooldown\n- 12m 50% FTP`;
+      return `Warmup\n- 15m 55% FTP\n\n4x\n- 8m ${targetPowerPercentage}% FTP\n- 3m 55% FTP\n\nCooldown\n- 12m 50% FTP`;
     }
 
     // Carrera por Potencia Stryd (% FTP / CP)
@@ -182,10 +182,10 @@ export class PhysiologicalEngine {
         return `Warmup\n- 15m 68% FTP\n\nMain\n- 40m 75% FTP\n\nCooldown\n- 10m 65% FTP`;
 
       case "THRESHOLD_INTERVALS":
-        return `Warmup\n- 15m 70% FTP\n\nMain\nrepeat 4\n- 8m ${targetPowerPercentage}% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
+        return `Warmup\n- 15m 70% FTP\n\n4x\n- 8m ${targetPowerPercentage}% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
 
       case "VO2MAX":
-        return `Warmup\n- 20m 70% FTP\n\nMain\nrepeat 5\n- 3m 108% FTP\n- 3m 60% FTP\n\nCooldown\n- 10m 60% FTP`;
+        return `Warmup\n- 20m 70% FTP\n\n5x\n- 3m 108% FTP\n- 3m 60% FTP\n\nCooldown\n- 10m 60% FTP`;
 
       case "LONG_RUN":
         return `Warmup\n- 20m 72% FTP\n\nMain\n- 1h15m 78% FTP\n- 20m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;

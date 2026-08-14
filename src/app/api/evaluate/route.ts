@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
       selectedModel,
       customPrompt,
       targetRaces = [],
+      weeklyAvailability,
       skipAI = false,
     } = body;
 
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
         preferredModel: selectedModel,
         customDirectives: customPrompt,
         macrocyclePhase,
+        weeklyAvailability,
         skipAI,
       }
     );

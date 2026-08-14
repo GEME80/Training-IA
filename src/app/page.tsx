@@ -8,7 +8,12 @@ import { WeeklyPlanner } from "@/components/WeeklyPlanner";
 import { AgentCommandCenter } from "@/components/AgentCommandCenter";
 import { ProfileModal } from "@/components/ProfileModal";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
-import { AgentDecisionOutput, PlanItem } from "@/lib/gemini/engine";
+import {
+  AgentDecisionOutput,
+  PlanItem,
+  WeeklyAvailabilityMap,
+  DEFAULT_WEEKLY_AVAILABILITY,
+} from "@/lib/gemini/engine";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { MacrocyclePhaseInfo, TargetRace, calculateMacrocyclePhase } from "@/lib/physiology/macrocycle";
 
@@ -30,6 +35,7 @@ export default function HomePage() {
   const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const [targetRaces, setTargetRaces] = useState<TargetRace[]>([]);
+  const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(DEFAULT_WEEKLY_AVAILABILITY);
   const [macrocyclePhase, setMacrocyclePhase] = useState<MacrocyclePhaseInfo | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -37,7 +43,7 @@ export default function HomePage() {
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [settingsTab, setSettingsTab] = useState<"intervals" | "races" | "ai">("intervals");
+  const [settingsTab, setSettingsTab] = useState<"intervals" | "availability" | "races" | "ai">("intervals");
 
   // Credenciales y configuraciones cacheadas
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
@@ -53,7 +59,8 @@ export default function HomePage() {
       runFtp?: number,
       bikeFtp?: number,
       offset: number = weekOffset,
-      racesList: TargetRace[] = targetRaces
+      racesList: TargetRace[] = targetRaces,
+      availability: WeeklyAvailabilityMap = weeklyAvailability
     ) => {
       setIsRefreshingTelemetry(true);
       try {
@@ -68,6 +75,7 @@ export default function HomePage() {
             customBikeFtp: bikeFtp || profile.bike_ftp || 260,
             weekOffset: offset,
             targetRaces: racesList,
+            weeklyAvailability: availability,
             skipAI: true, // Actualización rápida de telemetría sin consumo de tokens
           }),
         });
@@ -89,7 +97,7 @@ export default function HomePage() {
         setIsLoading(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, weekOffset, targetRaces, agentDecision]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, weekOffset, targetRaces, weeklyAvailability, agentDecision]
   );
 
   // 2. Inferencia y Planificación con IA (Bajo Demanda al pulsar botón)
@@ -110,6 +118,7 @@ export default function HomePage() {
             selectedModel: selectedModelCache,
             customPrompt: customPromptCache,
             targetRaces,
+            weeklyAvailability,
             skipAI: false, // Disparar inferencia completa de Gemini
           }),
         });
@@ -128,19 +137,20 @@ export default function HomePage() {
         setIsGeneratingAI(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, geminiKeyCache, selectedModelCache, customPromptCache, targetRaces, weekOffset]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, geminiKeyCache, selectedModelCache, customPromptCache, targetRaces, weeklyAvailability, weekOffset]
   );
 
   useEffect(() => {
-    // Restaurar credenciales y carreras guardadas en el navegador
+    // Restaurar credenciales, matriz semanal y carreras guardadas
     const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
     const savedKey = localStorage.getItem("sgea_api_key") || "";
     const savedGeminiKey = localStorage.getItem("sgea_gemini_key") || "";
-    const savedModel = localStorage.getItem("sgea_gemini_model") || "gemini-2.5-flash";
+    const savedModel = localStorage.getItem("sgea_gemini_model") || "gemini-flash-latest";
     const savedPrompt = localStorage.getItem("sgea_custom_prompt") || "";
     const savedRunFtp = localStorage.getItem("sgea_run_ftp");
     const savedBikeFtp = localStorage.getItem("sgea_bike_ftp");
     const savedRaces = localStorage.getItem("sgea_target_races");
+    const savedAvailability = localStorage.getItem("sgea_weekly_availability");
 
     if (savedKey) setApiKeyCache(savedKey);
     if (savedGeminiKey) setGeminiKeyCache(savedGeminiKey);
@@ -157,6 +167,16 @@ export default function HomePage() {
       }
     }
 
+    let parsedAvailability = DEFAULT_WEEKLY_AVAILABILITY;
+    if (savedAvailability) {
+      try {
+        parsedAvailability = JSON.parse(savedAvailability);
+        setWeeklyAvailability(parsedAvailability);
+      } catch {
+        // Keep default
+      }
+    }
+
     const runFtpVal = savedRunFtp ? Number(savedRunFtp) : 285;
     const bikeFtpVal = savedBikeFtp ? Number(savedBikeFtp) : 260;
 
@@ -168,7 +188,7 @@ export default function HomePage() {
     }));
 
     setMacrocyclePhase(calculateMacrocyclePhase(parsedRaces));
-    refreshTelemetry(savedId, savedKey, runFtpVal, bikeFtpVal, 0, parsedRaces);
+    refreshTelemetry(savedId, savedKey, runFtpVal, bikeFtpVal, 0, parsedRaces, parsedAvailability);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -182,6 +202,7 @@ export default function HomePage() {
     selectedModel?: string;
     customPrompt?: string;
     targetRaces?: TargetRace[];
+    weeklyAvailability?: WeeklyAvailabilityMap;
   }) => {
     if (data.apiKey) {
       setApiKeyCache(data.apiKey);
@@ -204,6 +225,10 @@ export default function HomePage() {
       setMacrocyclePhase(calculateMacrocyclePhase(data.targetRaces));
       localStorage.setItem("sgea_target_races", JSON.stringify(data.targetRaces));
     }
+    if (data.weeklyAvailability) {
+      setWeeklyAvailability(data.weeklyAvailability);
+      localStorage.setItem("sgea_weekly_availability", JSON.stringify(data.weeklyAvailability));
+    }
 
     localStorage.setItem("sgea_athlete_id", data.athleteId);
     localStorage.setItem("sgea_run_ftp", String(data.runFtp));
@@ -222,7 +247,8 @@ export default function HomePage() {
       data.runFtp,
       data.bikeFtp,
       weekOffset,
-      data.targetRaces || targetRaces
+      data.targetRaces || targetRaces,
+      data.weeklyAvailability || weeklyAvailability
     );
   };
 

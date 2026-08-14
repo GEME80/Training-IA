@@ -16,10 +16,19 @@ import {
   Trophy,
   Plus,
   Trash2,
-  Flag,
+  Calendar,
+  Footprints,
+  Bike,
+  Dumbbell,
+  Moon,
 } from "lucide-react";
 import { AvailableModel } from "@/app/api/models/route";
 import { TargetRace } from "@/lib/physiology/macrocycle";
+import {
+  WeeklyAvailabilityMap,
+  DisciplineType,
+  DEFAULT_WEEKLY_AVAILABILITY,
+} from "@/lib/gemini/engine";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -27,7 +36,7 @@ interface ProfileModalProps {
   athleteId: string;
   runFtp: number;
   bikeFtp: number;
-  initialTab?: "intervals" | "races" | "ai";
+  initialTab?: "intervals" | "availability" | "races" | "ai";
   onSave: (data: {
     athleteId: string;
     apiKey?: string;
@@ -38,6 +47,7 @@ interface ProfileModalProps {
     selectedModel?: string;
     customPrompt?: string;
     targetRaces?: TargetRace[];
+    weeklyAvailability?: WeeklyAvailabilityMap;
   }) => Promise<void>;
 }
 
@@ -55,7 +65,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   initialTab = "intervals",
   onSave,
 }) => {
-  const [activeTab, setActiveTab] = useState<"intervals" | "races" | "ai">(initialTab);
+  const [activeTab, setActiveTab] = useState<"intervals" | "availability" | "races" | "ai">(initialTab);
 
   // Credenciales & Perfil Intervals
   const [athleteId, setAthleteId] = useState(initialAthleteId || "i442091");
@@ -63,6 +73,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [runFtp, setRunFtp] = useState(initialRunFtp || 285);
   const [bikeFtp, setBikeFtp] = useState(initialBikeFtp || 260);
   const [focus, setFocus] = useState("BUILD");
+
+  // Matriz Semanal de Disponibilidad & Disciplinas
+  const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(DEFAULT_WEEKLY_AVAILABILITY);
 
   // Carreras Objetivo & Macrociclos
   const [races, setRaces] = useState<TargetRace[]>([]);
@@ -95,6 +108,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       const savedModel = localStorage.getItem("sgea_gemini_model");
       const savedPrompt = localStorage.getItem("sgea_custom_prompt");
       const savedRaces = localStorage.getItem("sgea_target_races");
+      const savedAvailability = localStorage.getItem("sgea_weekly_availability");
 
       if (savedKey) setApiKey(savedKey);
       if (savedId) setAthleteId(savedId);
@@ -105,6 +119,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       if (savedRaces) {
         try {
           setRaces(JSON.parse(savedRaces));
+        } catch {
+          // Keep default
+        }
+      }
+
+      if (savedAvailability) {
+        try {
+          setWeeklyAvailability(JSON.parse(savedAvailability));
         } catch {
           // Keep default
         }
@@ -132,6 +154,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     } finally {
       setIsLoadingModels(false);
     }
+  };
+
+  const handleDayDisciplineChange = (day: string, discipline: DisciplineType) => {
+    setWeeklyAvailability((prev) => ({
+      ...prev,
+      [day]: discipline,
+    }));
   };
 
   if (!isOpen) return null;
@@ -218,7 +247,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       if (data.success) {
         setGeminiTestResult({
           success: true,
-          message: `¡Google AI respondio correctamente! ${data.models?.length || 0} modelos detectados. Fuente: ${data.source}`,
+          message: `¡Google AI respondió correctamente! ${data.models?.length || 0} modelos detectados. Fuente: ${data.source}`,
         });
         if (data.models) setAvailableModels(data.models);
       } else {
@@ -247,6 +276,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       localStorage.setItem("sgea_gemini_model", selectedModel);
       localStorage.setItem("sgea_custom_prompt", customPrompt);
       localStorage.setItem("sgea_target_races", JSON.stringify(races));
+      localStorage.setItem("sgea_weekly_availability", JSON.stringify(weeklyAvailability));
 
       await onSave({
         athleteId: athleteId.trim(),
@@ -258,6 +288,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         selectedModel,
         customPrompt,
         targetRaces: races,
+        weeklyAvailability,
       });
       onClose();
     } catch (err) {
@@ -266,6 +297,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setSaving(false);
     }
   };
+
+  const getDisciplineIcon = (disc: DisciplineType) => {
+    switch (disc) {
+      case "Carrera":
+        return <Footprints className="h-4 w-4 text-emerald-400" />;
+      case "Ciclismo":
+        return <Bike className="h-4 w-4 text-cyan-400" />;
+      case "Fuerza":
+        return <Dumbbell className="h-4 w-4 text-purple-400" />;
+      default:
+        return <Moon className="h-4 w-4 text-slate-400" />;
+    }
+  };
+
+  const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
@@ -285,11 +331,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="mt-4 flex border-b border-slate-800">
+        <div className="mt-4 flex border-b border-slate-800 overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab("intervals")}
-            className={`flex items-center space-x-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
               activeTab === "intervals"
                 ? "border-emerald-500 text-emerald-400"
                 : "border-transparent text-slate-400 hover:text-slate-200"
@@ -301,23 +347,36 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
           <button
             type="button"
+            onClick={() => setActiveTab("availability")}
+            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
+              activeTab === "availability"
+                ? "border-cyan-500 text-cyan-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            <span>📅 Matriz Semanal</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("races")}
-            className={`flex items-center space-x-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
               activeTab === "races"
                 ? "border-amber-500 text-amber-400"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Trophy className="h-4 w-4" />
-            <span>🎯 Carreras & Macrociclos ({races.length})</span>
+            <span>🎯 Carreras ({races.length})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("ai")}
-            className={`flex items-center space-x-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
               activeTab === "ai"
-                ? "border-cyan-500 text-cyan-300"
+                ? "border-purple-500 text-purple-300"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -414,7 +473,63 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: CARRERAS OBJETIVO & MACROCICLOS */}
+          {/* TAB 2: MATRIZ SEMANAL DE DISPONIBILIDAD */}
+          {activeTab === "availability" && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Estructura Semanal de Disciplinas & Descanso
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Define qué disciplina deseas realizar cada día de la semana. El agente de IA tomará esta matriz como base obligatoria para generar y modular tus entrenamientos.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {daysOfWeek.map((day) => {
+                  const currentDisc = weeklyAvailability[day] || "Carrera";
+                  return (
+                    <div
+                      key={day}
+                      className="flex items-center justify-between rounded-xl bg-slate-950 p-3 border border-slate-800"
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 border border-slate-800">
+                          {getDisciplineIcon(currentDisc)}
+                        </div>
+                        <span className="text-xs font-bold text-white">{day}</span>
+                      </div>
+
+                      <select
+                        value={currentDisc}
+                        onChange={(e) => handleDayDisciplineChange(day, e.target.value as DisciplineType)}
+                        className="h-8 rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-xs font-semibold text-slate-200 focus:border-cyan-500 focus:outline-none cursor-pointer"
+                      >
+                        <option value="Descanso">💤 Descanso Total</option>
+                        <option value="Carrera">🏃 Carrera (Stryd Power)</option>
+                        <option value="Ciclismo">🚴 Ciclismo (FTP)</option>
+                        <option value="Fuerza">🏋️ Fuerza / Sóleo</option>
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setWeeklyAvailability(DEFAULT_WEEKLY_AVAILABILITY)}
+                  className="flex items-center space-x-1 text-[11px] font-semibold text-cyan-400 hover:text-cyan-300"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Restablecer Matriz por Defecto</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CARRERAS OBJETIVO & MACROCICLOS */}
           {activeTab === "races" && (
             <div className="space-y-4 animate-fadeIn">
               <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 space-y-3">
@@ -547,7 +662,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: AGENTE IA & GEMINI */}
+          {/* TAB 4: AGENTE IA & GEMINI */}
           {activeTab === "ai" && (
             <div className="space-y-4 animate-fadeIn">
               <div>
@@ -609,10 +724,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     ))
                   ) : (
                     <>
-                      <option value="gemini-2.5-flash">Gemini 2.5 Flash ★ (Recomendado - Bajo Costo & Rápido)</option>
-                      <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                      <option value="gemini-2.5-pro">Gemini 2.5 Pro (Razonamiento Profundo)</option>
-                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      <option value="gemini-flash-latest">Gemini Flash (Última Generación) ★ (Recomendado)</option>
+                      <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                      <option value="gemini-flash-lite-latest">Gemini Flash Lite</option>
                     </>
                   )}
                 </select>

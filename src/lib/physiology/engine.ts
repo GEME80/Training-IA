@@ -157,11 +157,11 @@ export class PhysiologicalEngine {
    */
   static generateWorkoutSyntax(
     discipline: "Run" | "Ride" | "WeightTraining",
-    workoutType: "RECOVERY" | "Z2_BASE" | "THRESHOLD_INTERVALS" | "VO2MAX" | "LONG_RUN" | "STRENGTH",
+    workoutType: string,
     targetPowerPercentage: number = 100,
     phase?: string
   ): string {
-    if (discipline === "WeightTraining" || workoutType === "STRENGTH") {
+    if (discipline === "WeightTraining" || workoutType.includes("STRENGTH") || workoutType.includes("Fuerza")) {
       return `Rutina de Fuerza y Prevención Neuromuscular (SGEA):
 - Calentamiento articular y movilidad dinámica: 10m
 - Sentadilla búlgara con mancuernas: 4 series x 8 reps (RIR 2)
@@ -172,49 +172,72 @@ export class PhysiologicalEngine {
     }
 
     if (discipline === "Ride") {
-      if (workoutType === "RECOVERY") {
-        return `Warmup\n- 10m 50% FTP\n\nMain\n- 40m 55% FTP\n\nCooldown\n- 10m 45% FTP`;
+      const typeLower = workoutType.toLowerCase();
+      if (typeLower.includes("recovery") || typeLower.includes("regenerativ")) {
+        return `Warmup\n- 10m 50% FTP\n\nMain\n- 35m 55% FTP\n\nCooldown\n- 10m 45% FTP`;
       }
-      if (workoutType === "LONG_RUN" || workoutType === "Z2_BASE") {
-        const isLong = workoutType === "LONG_RUN" && (phase === "BUILD" || phase === "PEAK");
+      if (typeLower.includes("cadencia") || typeLower.includes("tempo") || typeLower.includes("variacion")) {
+        return `Warmup\n- 15m 55% FTP\n\n4x\n- 5m 75% FTP\n- 2m 55% FTP\n\nCooldown\n- 10m 50% FTP`;
+      }
+      if (typeLower.includes("fondo") || typeLower.includes("long")) {
+        const isLong = phase === "BUILD" || phase === "PEAK";
         return `Warmup\n- 15m 55% FTP\n\nMain\n- ${isLong ? "1h30m" : "55m"} 65% FTP\n\nCooldown\n- 10m 50% FTP`;
       }
-      return `Warmup\n- 15m 55% FTP\n\n4x\n- 8m ${targetPowerPercentage}% FTP\n- 3m 55% FTP\n\nCooldown\n- 12m 50% FTP`;
+      return `Warmup\n- 15m 55% FTP\n\nMain\n- 40m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
     }
 
     // Carrera por Potencia Stryd (% FTP / CP)
-    switch (workoutType) {
-      case "RECOVERY":
-        return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 10m 60% FTP`;
+    const typeLower = workoutType.toLowerCase();
 
-      case "Z2_BASE":
-        return `Warmup\n- 10m 68% FTP\n\nMain\n- 30m 75% FTP\n\nCooldown\n- 10m 65% FTP`;
-
-      case "THRESHOLD_INTERVALS":
-        return `Warmup\n- 15m 70% FTP\n\n4x\n- 6m ${targetPowerPercentage}% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
-
-      case "VO2MAX":
-        return `Warmup\n- 15m 70% FTP\n\n5x\n- 3m 106% FTP\n- 3m 60% FTP\n\nCooldown\n- 10m 60% FTP`;
-
-      case "LONG_RUN":
-        // Si estamos en MANTENIMIENTO o TAPER: Tirada controlada y suave (50-60m)
-        if (phase === "MAINTENANCE" || !phase) {
-          return `Warmup\n- 10m 68% FTP\n\nMain\n- 35m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
-        }
-        if (phase === "TAPER" || phase === "RACE_WEEK") {
-          return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\nCooldown\n- 10m 60% FTP`;
-        }
-        if (phase === "BASE_1" || phase === "BASE_2") {
-          return `Warmup\n- 15m 70% FTP\n\nMain\n- 45m 75% FTP\n\nCooldown\n- 10m 65% FTP`;
-        }
-        if (phase === "BUILD") {
-          return `Warmup\n- 15m 70% FTP\n\nMain\n- 55m 76% FTP\n- 15m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
-        }
-        // PEAK / ESPECÍFICO DE MARATÓN
-        return `Warmup\n- 15m 72% FTP\n\nMain\n- 1h15m 78% FTP\n- 20m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
-
-      default:
-        return `Warmup\n- 10m 70% FTP\n\nMain\n- 30m 75% FTP\n\nCooldown\n- 10m 60% FTP`;
+    // 1. Rodaje con Strides / Progresiones reactivas
+    if (typeLower.includes("stride") || typeLower.includes("recta") || typeLower.includes("progresion")) {
+      return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\n5x\n- 20s 115% FTP\n- 40s 60% FTP\n\nCooldown\n- 5m 62% FTP`;
     }
+
+    // 2. Cuestas Cortas / Neuro-fuerza
+    if (typeLower.includes("cuesta") || typeLower.includes("hill") || typeLower.includes("fartlek")) {
+      return `Warmup\n- 15m 68% FTP\n\n6x\n- 45s 96% FTP\n- 1m15s 60% FTP\n\nCooldown\n- 10m 62% FTP`;
+    }
+
+    // 3. Tempo Aeróbico Z3 / Sweetspot
+    if (typeLower.includes("tempo") || typeLower.includes("z3") || typeLower.includes("sweetspot")) {
+      return `Warmup\n- 15m 70% FTP\n\n3x\n- 8m 88% FTP\n- 2m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
+    }
+
+    // 4. Series de Umbral / Intervalos Stryd
+    if (typeLower.includes("series") || typeLower.includes("umbral") || typeLower.includes("threshold")) {
+      return `Warmup\n- 15m 70% FTP\n\n4x\n- 6m ${targetPowerPercentage}% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
+    }
+
+    // 5. VO2 Max
+    if (typeLower.includes("vo2")) {
+      return `Warmup\n- 15m 70% FTP\n\n5x\n- 3m 106% FTP\n- 3m 60% FTP\n\nCooldown\n- 10m 60% FTP`;
+    }
+
+    // 6. Tirada Larga Dominical (Long Run)
+    if (typeLower.includes("larga") || typeLower.includes("long")) {
+      if (phase === "MAINTENANCE" || !phase) {
+        return `Warmup\n- 10m 68% FTP\n\nMain\n- 35m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
+      }
+      if (phase === "TAPER" || phase === "RACE_WEEK") {
+        return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\nCooldown\n- 10m 60% FTP`;
+      }
+      if (phase === "BASE_1" || phase === "BASE_2") {
+        return `Warmup\n- 15m 68% FTP\n\nMain\n- 35m 74% FTP\n- 15m 82% FTP\n\nCooldown\n- 5m 65% FTP`;
+      }
+      if (phase === "BUILD") {
+        return `Warmup\n- 15m 70% FTP\n\nMain\n- 55m 76% FTP\n- 15m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
+      }
+      // PEAK / ESPECÍFICO DE MARATÓN
+      return `Warmup\n- 15m 72% FTP\n\nMain\n- 1h15m 78% FTP\n- 20m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
+    }
+
+    // 7. Rodaje Regenerativo
+    if (typeLower.includes("regenerativ") || typeLower.includes("suave") || typeLower.includes("recovery")) {
+      return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 10m 60% FTP`;
+    }
+
+    // Rodaje Base Progresivo por defecto
+    return `Warmup\n- 10m 68% FTP\n\nMain\n- 25m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
   }
 }

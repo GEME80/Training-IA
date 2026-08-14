@@ -1,19 +1,49 @@
 import { AthleteProfile, AthleteWellness, CalendarEvent } from "../intervals/types";
-import { PhysiologicalStatus } from "../physiology/engine";
+import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
+
+export interface PlanItem {
+  day: string; // "Lunes", "Martes", etc.
+  date: string; // "YYYY-MM-DD"
+  formattedDate: string; // "18 Ago"
+  discipline: "Descanso" | "Carrera" | "Ciclismo" | "Fuerza";
+  workoutName: string;
+  action: "MANTENER" | "MODIFICAR" | "REDUCIR_INTENSIDAD" | "DESCANSO_ACTIVO";
+  powerTarget?: string;
+  justification: string;
+  workoutDoc?: string;
+  isRestDay?: boolean;
+  isCustomized?: boolean;
+}
 
 export interface AgentDecisionOutput {
   status: "OPTIMAL" | "CAUTION" | "OVERTRAINING_RISK" | "RECOVERY_NEEDED";
   summaryHeadline: string;
   reasoningTree: string[];
-  suggestedPlan: Array<{
-    day: string; // "Lunes", "Martes", etc.
-    discipline: "Descanso" | "Carrera" | "Ciclismo" | "Fuerza";
-    workoutName: string;
-    action: "MANTENER" | "MODIFICAR" | "REDUCIR_INTENSIDAD" | "DESCANSO_ACTIVO";
-    powerTarget?: string;
-    justification: string;
-    workoutDoc?: string;
-  }>;
+  suggestedPlan: PlanItem[];
+}
+
+/**
+ * Obtiene el array de fechas (ISO y formateada) para los 7 días de la semana (Lunes a Domingo)
+ * a partir de un offset de semana (0 = esta semana, 1 = próxima semana) o una fecha base.
+ */
+export function getWeekDates(weekOffset: number = 0, baseDate?: Date): Array<{ day: string; date: string; formattedDate: string }> {
+  const now = baseDate ? new Date(baseDate) : new Date();
+  const dayOfWeek = now.getDay(); // 0 = Dom, 1 = Lun ... 6 = Sab
+  const distanceToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + distanceToMonday + weekOffset * 7);
+
+  const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+  return days.map((day, idx) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + idx);
+    const dateStr = d.toISOString().split("T")[0];
+    const formatted = `${d.getDate()} ${months[d.getMonth()]}`;
+    return { day, date: dateStr, formattedDate: formatted };
+  });
 }
 
 /**
@@ -27,13 +57,15 @@ export class GeminiPhysiologicalAgent {
     profile: AthleteProfile,
     wellness: AthleteWellness[],
     events: CalendarEvent[],
-    physioStatus: PhysiologicalStatus
+    physioStatus: PhysiologicalStatus,
+    weekOffset: number = 0
   ): Promise<AgentDecisionOutput> {
     const apiKey = process.env.GEMINI_API_KEY;
+    const weekDates = getWeekDates(weekOffset);
 
     // Si no hay API Key de Gemini configurada, generamos el análisis determinístico basado en las reglas del motor fisiológico
     if (!apiKey) {
-      return this.generateDeterministicAnalysis(profile, physioStatus);
+      return this.generateDeterministicAnalysis(profile, physioStatus, weekDates);
     }
 
     try {
@@ -104,10 +136,28 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
       const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!rawText) throw new Error("Respuesta vacía de Gemini");
 
-      return JSON.parse(rawText) as AgentDecisionOutput;
+      const parsed = JSON.parse(rawText) as AgentDecisionOutput;
+      
+      // Asignar fechas y documentos de sintaxis si no vienen definidos
+      parsed.suggestedPlan = parsed.suggestedPlan.map((item, idx) => {
+        const dateInfo = weekDates[idx] || { date: "", formattedDate: "" };
+        const isRest = item.discipline === "Descanso" || item.action === "DESCANSO_ACTIVO";
+        return {
+          ...item,
+          date: dateInfo.date,
+          formattedDate: dateInfo.formattedDate,
+          isRestDay: isRest,
+          workoutDoc: item.workoutDoc || (isRest ? undefined : PhysiologicalEngine.generateWorkoutSyntax(
+            item.discipline === "Ciclismo" ? "Ride" : item.discipline === "Fuerza" ? "WeightTraining" : "Run",
+            item.day === "Martes" ? "THRESHOLD_INTERVALS" : item.day === "Domingo" ? "LONG_RUN" : "RECOVERY"
+          )),
+        };
+      });
+
+      return parsed;
     } catch (err) {
       console.warn("Fallo en Gemini API, utilizando motor fisiológico determinístico:", err);
-      return this.generateDeterministicAnalysis(profile, physioStatus);
+      return this.generateDeterministicAnalysis(profile, physioStatus, weekDates);
     }
   }
 
@@ -116,10 +166,12 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
    */
   private static generateDeterministicAnalysis(
     profile: AthleteProfile,
-    status: PhysiologicalStatus
+    status: PhysiologicalStatus,
+    weekDates: Array<{ day: string; date: string; formattedDate: string }>
   ): AgentDecisionOutput {
     const isFatigued = status.status === "OVERTRAINING_RISK" || status.status === "CAUTION";
-    const runFtp = profile.run_ftp ?? 280;
+    const runFtp = profile.run_ftp ?? 285;
+    const bikeFtp = profile.bike_ftp ?? 260;
 
     return {
       status: status.status,
@@ -135,13 +187,18 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
       suggestedPlan: [
         {
           day: "Lunes",
+          date: weekDates[0]?.date || "",
+          formattedDate: weekDates[0]?.formattedDate || "",
           discipline: "Descanso",
-          workoutName: "Descanso Total",
+          workoutName: "Descanso Pasivo Total",
           action: "MANTENER",
+          isRestDay: true,
           justification: "Recuperación pasiva y equilibrio del sistema nervioso autónomo.",
         },
         {
           day: "Martes",
+          date: weekDates[1]?.date || "",
+          formattedDate: weekDates[1]?.formattedDate || "",
           discipline: "Carrera",
           workoutName: isFatigued ? "Rodaje Regenerativo Stryd Z1" : "Series Umbral Stryd (4x8m @ 100% FTP)",
           action: isFatigued ? "MODIFICAR" : "MANTENER",
@@ -149,40 +206,55 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
           justification: isFatigued
             ? "Sustitución preventiva de calidad por rodaje suave debido a fatiga aguda."
             : "Estímulo de potencia crítica y tolerancia al lactato.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", isFatigued ? "RECOVERY" : "THRESHOLD_INTERVALS", 100),
         },
         {
           day: "Miércoles",
+          date: weekDates[2]?.date || "",
+          formattedDate: weekDates[2]?.formattedDate || "",
           discipline: "Ciclismo",
           workoutName: "Ciclismo Z2 Base Aeróbica",
           action: "MANTENER",
-          powerTarget: `${Math.round((profile.bike_ftp ?? 250) * 0.65)}W (65% FTP)`,
+          powerTarget: `${Math.round(bikeFtp * 0.65)}W (65% FTP)`,
           justification: "Volumen aeróbico mitocondrial sin impacto articular.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Ride", "Z2_BASE"),
         },
         {
           day: "Jueves",
+          date: weekDates[3]?.date || "",
+          formattedDate: weekDates[3]?.formattedDate || "",
           discipline: "Fuerza",
-          workoutName: "Fuerza y Prevención Sóleo / Pliometría",
+          workoutName: "Fuerza Sóleo / Pliometría Reactiva",
           action: "MANTENER",
           justification: "Optimización neuromuscular, rigidez del tendón de Aquiles y prevención de lesiones.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("WeightTraining", "STRENGTH"),
         },
         {
           day: "Viernes",
+          date: weekDates[4]?.date || "",
+          formattedDate: weekDates[4]?.formattedDate || "",
           discipline: "Carrera",
           workoutName: "Rodaje Suave Z1-Z2 Stryd (40m)",
           action: "MANTENER",
           powerTarget: `${Math.round(runFtp * 0.72)}W (72% CP)`,
           justification: "Descarga activa previa al bloque de fin de semana.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 72),
         },
         {
           day: "Sábado",
+          date: weekDates[5]?.date || "",
+          formattedDate: weekDates[5]?.formattedDate || "",
           discipline: "Ciclismo",
           workoutName: "Fondo Resistencia Ciclismo (2h Z2)",
           action: "MANTENER",
-          powerTarget: `${Math.round((profile.bike_ftp ?? 250) * 0.65)}W (65% FTP)`,
+          powerTarget: `${Math.round(bikeFtp * 0.65)}W (65% FTP)`,
           justification: "Estímulo lipolítico de resistencia cardiovascular profunda.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Ride", "LONG_RUN"),
         },
         {
           day: "Domingo",
+          date: weekDates[6]?.date || "",
+          formattedDate: weekDates[6]?.formattedDate || "",
           discipline: "Carrera",
           workoutName: isFatigued ? "Tirada Aeróbica Moderada (16km Z2)" : "Tirada Larga Progresiva Stryd (22km)",
           action: isFatigued ? "REDUCIR_INTENSIDAD" : "MANTENER",
@@ -190,6 +262,7 @@ Responde ÚNICAMENTE en formato JSON con la siguiente estructura exacta:
           justification: isFatigued
             ? "Ajuste de volumen dominical para evitar sobreentrenamiento."
             : "Desarrollo de durabilidad y economía de carrera.",
+          workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", isFatigued ? "RECOVERY" : "LONG_RUN", 88),
         },
       ],
     };

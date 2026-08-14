@@ -7,7 +7,7 @@ import { WeeklyPlanner } from "@/components/WeeklyPlanner";
 import { AgentCommandCenter } from "@/components/AgentCommandCenter";
 import { ProfileModal } from "@/components/ProfileModal";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
-import { AgentDecisionOutput } from "@/lib/gemini/engine";
+import { AgentDecisionOutput, PlanItem } from "@/lib/gemini/engine";
 import { AthleteProfile } from "@/lib/intervals/types";
 
 export default function HomePage() {
@@ -25,6 +25,8 @@ export default function HomePage() {
 
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
   const [agentDecision, setAgentDecision] = useState<AgentDecisionOutput | null>(null);
+  const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
+  const [weekOffset, setWeekOffset] = useState<number>(0);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
@@ -32,9 +34,15 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
 
-  // Carga y evaluación inicial del microciclo
+  // Carga y evaluación del microciclo
   const evaluateMicrocycle = useCallback(
-    async (athleteId: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => {
+    async (
+      athleteId: string,
+      apiKey?: string,
+      runFtp?: number,
+      bikeFtp?: number,
+      offset: number = weekOffset
+    ) => {
       setIsEvaluating(true);
       try {
         const effectiveApiKey = apiKey || apiKeyCache;
@@ -46,6 +54,7 @@ export default function HomePage() {
             apiKey: effectiveApiKey,
             customRunFtp: runFtp || profile.run_ftp || 285,
             customBikeFtp: bikeFtp || profile.bike_ftp || 260,
+            weekOffset: offset,
           }),
         });
 
@@ -54,6 +63,7 @@ export default function HomePage() {
           setProfile(data.profile);
           setPhysioStatus(data.physioStatus);
           setAgentDecision(data.agentDecision);
+          setActivePlan(data.agentDecision.suggestedPlan || []);
         }
       } catch (err) {
         console.error("Error al evaluar microciclo:", err);
@@ -62,7 +72,7 @@ export default function HomePage() {
         setIsLoading(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, weekOffset]
   );
 
   useEffect(() => {
@@ -86,7 +96,7 @@ export default function HomePage() {
       bike_ftp: bikeFtpVal,
     }));
 
-    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal);
+    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal, 0);
   }, [evaluateMicrocycle]);
 
   const handleSaveSettings = async (data: {
@@ -111,11 +121,21 @@ export default function HomePage() {
       bike_ftp: data.bikeFtp,
     }));
 
-    await evaluateMicrocycle(data.athleteId, data.apiKey, data.runFtp, data.bikeFtp);
+    await evaluateMicrocycle(data.athleteId, data.apiKey, data.runFtp, data.bikeFtp, weekOffset);
+  };
+
+  const handleWeekChange = async (newOffset: number) => {
+    setWeekOffset(newOffset);
+    await evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, newOffset);
+  };
+
+  const handlePlanUpdate = (updatedPlan: PlanItem[]) => {
+    setActivePlan(updatedPlan);
   };
 
   const handleSyncToIntervals = async () => {
-    if (!agentDecision) return;
+    const planToSync = activePlan.length > 0 ? activePlan : agentDecision?.suggestedPlan;
+    if (!planToSync) return;
 
     setIsSyncing(true);
     try {
@@ -125,7 +145,7 @@ export default function HomePage() {
         body: JSON.stringify({
           athleteId: profile.id,
           apiKey: apiKeyCache || "sample-api-key",
-          plan: agentDecision.suggestedPlan,
+          plan: planToSync,
         }),
       });
 
@@ -146,7 +166,7 @@ export default function HomePage() {
           athleteName={profile.name || "Germán Morales"}
           athleteId={profile.id}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onRefresh={() => evaluateMicrocycle(profile.id)}
+          onRefresh={() => evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
           isLoading={isEvaluating}
         />
 
@@ -187,18 +207,21 @@ export default function HomePage() {
           {/* Agent Command Center & Reasoning Tree */}
           <AgentCommandCenter
             decision={agentDecision}
-            onReevaluate={() => evaluateMicrocycle(profile.id)}
+            onReevaluate={() => evaluateMicrocycle(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
             onSyncIntervals={handleSyncToIntervals}
             isEvaluating={isEvaluating}
             isSyncing={isSyncing}
           />
 
-          {/* 7-Day Weekly Matrix */}
+          {/* 7-Day Weekly Interactive Matrix */}
           {agentDecision && (
             <WeeklyPlanner
-              suggestedPlan={agentDecision.suggestedPlan}
+              initialPlan={agentDecision.suggestedPlan}
               runFtp={profile.run_ftp ?? 285}
               bikeFtp={profile.bike_ftp ?? 260}
+              weekOffset={weekOffset}
+              onWeekChange={handleWeekChange}
+              onPlanUpdate={handlePlanUpdate}
             />
           )}
         </main>

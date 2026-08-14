@@ -7,7 +7,7 @@ import { AthleteProfile, AthleteWellness, CalendarEvent } from "@/lib/intervals/
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, customRunFtp = 280, customBikeFtp = 250 } = body;
+    const { athleteId, apiKey, customRunFtp = 280, customBikeFtp = 250, weekOffset = 0 } = body;
 
     let profile: AthleteProfile;
     let wellness: AthleteWellness[] = [];
@@ -84,7 +84,8 @@ export async function POST(req: NextRequest) {
       profile,
       wellness,
       events,
-      physioStatus
+      physioStatus,
+      Number(weekOffset) || 0
     );
 
     return NextResponse.json({

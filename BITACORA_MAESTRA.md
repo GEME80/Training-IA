@@ -262,13 +262,16 @@ flowchart TD
 2. **Panel Fisiológico Integral (Head Coach Dashboard):**
    - Métricas en tiempo real del atleta activo: **CTL (Fitness)**, **ATL (Fatiga)**, **TSB (Forma)**, **Ramp Rate** y **HRV Rolling Z-Score**.
    - Indicador visual del estado de recuperación: 🟢 Óptimo, ⚠️ Precaución, 🚨 Fatiga Extrema / Sobrecarga.
-3. **Planificador Semanal Interactivo (Microciclo):**
-   - Visualización de la matriz de lunes a domingo adaptada a la disponibilidad del perfil.
-   - Estructura detallada de cada sesión con bloques de potencia Stryd (`% CP / FTP`, vatios estimados y zonas).
+3. **Planificador Semanal Interactivo (Microciclo Adaptativo):**
+   - **Fechas Reales y Navegación de Semanas:** Visualización de fechas ISO (`YYYY-MM-DD`) y formato legible (`18 Ago`), con selector de "Esta Semana", "Próxima Semana" y desplazamiento temporal continuo.
+   - **Control Interactivo de Descanso:** Conmutador/checkbox por día (`"💤 En Descanso"`) que permite modular la carga o transformar cualquier sesión en descanso pasivo.
+   - **Reordenamiento Dinámico (Swap Sessions):** Selector para intercambiar sesiones entre días con 1 clic (ej. mover series de calidad o tirada larga).
+   - **Validador Fisiológico en Tiempo Real:** Alerta preventiva ante sesiones de carrera de alto impacto en días consecutivos.
+   - **Inspector de Sintaxis Stryd (% FTP):** Visualizador de bloques estructurados de entrenamiento que se envían directamente a Intervals.icu.
 4. **Centro de Mando del Agente Inteligente:**
    - Botón manual de acción: **"Reevaluar y Ajustar Microciclo"**.
    - Visualización del **Árbol de Razonamiento del Agente**: Explicación clara de por qué se sugiere cada cambio antes de sincronizarlo.
-   - Botón de aprobación y sincronización directa: **"Sincronizar a Intervals.icu"** (con opción de revertir).
+   - Botón de aprobación y sincronización directa: **"Sincronizar a Intervals.icu"** con fechas exactas del calendario.
 
 ---
 

@@ -44,14 +44,17 @@ export async function POST(req: NextRequest) {
     };
 
     for (const item of plan) {
-      const offset = dayOffsets[item.day] ?? 0;
-      const targetDate = new Date(monday);
-      targetDate.setDate(monday.getDate() + offset);
-      const dateStr = targetDate.toISOString().split("T")[0];
-
-      // Omitir descanso total si no se desea crear evento
-      if (item.discipline === "Descanso") {
+      // Omitir descanso total si está marcado como descanso
+      if (item.isRestDay || item.discipline === "Descanso") {
         continue;
+      }
+
+      let dateStr = item.date;
+      if (!dateStr) {
+        const offset = dayOffsets[item.day] ?? 0;
+        const targetDate = new Date(monday);
+        targetDate.setDate(monday.getDate() + offset);
+        dateStr = targetDate.toISOString().split("T")[0];
       }
 
       let type: CalendarEvent["type"] = "Run";
@@ -88,7 +91,7 @@ export async function POST(req: NextRequest) {
         const created = await client.createEvent(eventPayload);
         createdEvents.push(created);
       } catch (postErr) {
-        console.warn(`Aviso al publicar sesión del ${item.day}:`, postErr);
+        console.warn(`Aviso al publicar sesión del ${item.day} (${dateStr}):`, postErr);
       }
     }
 

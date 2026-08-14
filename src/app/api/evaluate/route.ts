@@ -7,7 +7,16 @@ import { AthleteProfile, AthleteWellness, CalendarEvent } from "@/lib/intervals/
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, customRunFtp = 280, customBikeFtp = 250, weekOffset = 0 } = body;
+    const {
+      athleteId,
+      apiKey,
+      customRunFtp = 280,
+      customBikeFtp = 250,
+      weekOffset = 0,
+      geminiApiKey,
+      selectedModel,
+      customPrompt,
+    } = body;
 
     let profile: AthleteProfile;
     let wellness: AthleteWellness[] = [];
@@ -79,13 +88,18 @@ export async function POST(req: NextRequest) {
     profile.rampRate = physioStatus.rampRate;
     profile.restingHR = physioStatus.restingHR ?? profile.restingHR;
 
-    // 2. Inferencia y generación del árbol de decisiones del Head Coach
+    // 2. Inferencia y generación del árbol de decisiones del Head Coach (Gemini con descubrimiento dinámico)
     const agentDecision = await GeminiPhysiologicalAgent.analyzeMicrocycle(
       profile,
       wellness,
       events,
       physioStatus,
-      Number(weekOffset) || 0
+      Number(weekOffset) || 0,
+      {
+        customApiKey: geminiApiKey,
+        preferredModel: selectedModel,
+        customDirectives: customPrompt,
+      }
     );
 
     return NextResponse.json({

@@ -32,7 +32,12 @@ export default function HomePage() {
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+  // Credenciales y configuraciones cacheadas
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
+  const [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
+  const [selectedModelCache, setSelectedModelCache] = useState<string>("gemini-2.5-flash");
+  const [customPromptCache, setCustomPromptCache] = useState<string>("");
 
   // Carga y evaluación del microciclo
   const evaluateMicrocycle = useCallback(
@@ -41,11 +46,18 @@ export default function HomePage() {
       apiKey?: string,
       runFtp?: number,
       bikeFtp?: number,
-      offset: number = 0
+      offset: number = 0,
+      geminiKey?: string,
+      model?: string,
+      prompt?: string
     ) => {
       setIsEvaluating(true);
       try {
         const effectiveApiKey = apiKey || apiKeyCache;
+        const effectiveGeminiKey = geminiKey || geminiKeyCache;
+        const effectiveModel = model || selectedModelCache;
+        const effectivePrompt = prompt !== undefined ? prompt : customPromptCache;
+
         const res = await fetch("/api/evaluate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -55,6 +67,9 @@ export default function HomePage() {
             customRunFtp: runFtp || profile.run_ftp || 285,
             customBikeFtp: bikeFtp || profile.bike_ftp || 260,
             weekOffset: offset,
+            geminiApiKey: effectiveGeminiKey,
+            selectedModel: effectiveModel,
+            customPrompt: effectivePrompt,
           }),
         });
 
@@ -72,19 +87,23 @@ export default function HomePage() {
         setIsLoading(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, geminiKeyCache, selectedModelCache, customPromptCache]
   );
 
   useEffect(() => {
     // Restaurar credenciales guardadas en el navegador en el montaje inicial
     const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
     const savedKey = localStorage.getItem("sgea_api_key") || "";
+    const savedGeminiKey = localStorage.getItem("sgea_gemini_key") || "";
+    const savedModel = localStorage.getItem("sgea_gemini_model") || "gemini-2.5-flash";
+    const savedPrompt = localStorage.getItem("sgea_custom_prompt") || "";
     const savedRunFtp = localStorage.getItem("sgea_run_ftp");
     const savedBikeFtp = localStorage.getItem("sgea_bike_ftp");
 
-    if (savedKey) {
-      setApiKeyCache(savedKey);
-    }
+    if (savedKey) setApiKeyCache(savedKey);
+    if (savedGeminiKey) setGeminiKeyCache(savedGeminiKey);
+    if (savedModel) setSelectedModelCache(savedModel);
+    if (savedPrompt) setCustomPromptCache(savedPrompt);
 
     const runFtpVal = savedRunFtp ? Number(savedRunFtp) : 285;
     const bikeFtpVal = savedBikeFtp ? Number(savedBikeFtp) : 260;
@@ -96,7 +115,7 @@ export default function HomePage() {
       bike_ftp: bikeFtpVal,
     }));
 
-    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal, 0);
+    evaluateMicrocycle(savedId, savedKey, runFtpVal, bikeFtpVal, 0, savedGeminiKey, savedModel, savedPrompt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -106,11 +125,27 @@ export default function HomePage() {
     runFtp: number;
     bikeFtp: number;
     focus: string;
+    geminiApiKey?: string;
+    selectedModel?: string;
+    customPrompt?: string;
   }) => {
     if (data.apiKey) {
       setApiKeyCache(data.apiKey);
       localStorage.setItem("sgea_api_key", data.apiKey);
     }
+    if (data.geminiApiKey) {
+      setGeminiKeyCache(data.geminiApiKey);
+      localStorage.setItem("sgea_gemini_key", data.geminiApiKey);
+    }
+    if (data.selectedModel) {
+      setSelectedModelCache(data.selectedModel);
+      localStorage.setItem("sgea_gemini_model", data.selectedModel);
+    }
+    if (data.customPrompt !== undefined) {
+      setCustomPromptCache(data.customPrompt);
+      localStorage.setItem("sgea_custom_prompt", data.customPrompt);
+    }
+
     localStorage.setItem("sgea_athlete_id", data.athleteId);
     localStorage.setItem("sgea_run_ftp", String(data.runFtp));
     localStorage.setItem("sgea_bike_ftp", String(data.bikeFtp));
@@ -122,7 +157,16 @@ export default function HomePage() {
       bike_ftp: data.bikeFtp,
     }));
 
-    await evaluateMicrocycle(data.athleteId, data.apiKey, data.runFtp, data.bikeFtp, weekOffset);
+    await evaluateMicrocycle(
+      data.athleteId,
+      data.apiKey,
+      data.runFtp,
+      data.bikeFtp,
+      weekOffset,
+      data.geminiApiKey,
+      data.selectedModel,
+      data.customPrompt
+    );
   };
 
   const handleWeekChange = async (newOffset: number) => {
@@ -186,7 +230,7 @@ export default function HomePage() {
                 Panel Fisiológico & Control de Carga
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-slate-400">
-                Periodización dinámica integrada con Intervals.icu, Stryd Running Power y Garmin.
+                Periodización dinámica integrada con Intervals.icu, Stryd Running Power y Google Gemini AI.
               </p>
             </div>
 
@@ -230,7 +274,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/40 py-4 text-center text-xs text-slate-400">
-        <p>SGEA Training Platform • Ecosistema Google Cloud & Firebase • Intervals.icu REST API v1</p>
+        <p>SGEA Training Platform • Google Cloud Vertex AI & Firebase • Intervals.icu REST API v1</p>
       </footer>
 
       {/* Profile & Settings Modal */}

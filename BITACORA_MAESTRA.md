@@ -388,3 +388,87 @@ flowchart LR
    - **Cloud Firestore (Modo Nativo):** Base de datos `(default)` creada y reglas `firestore.rules` con aislamiento por UID desplegadas.
    - **Criptografía:** Módulo `AES-256-GCM` activo con llave maestra generada en `.env.local`.
    - **Cero Despliegues Automáticos no Autorizados:** El despliegue a la infraestructura en la nube de Google Cloud Platform (GCP / Firebase) **únicamente se ejecutará bajo la instrucción explícita del usuario** mediante Firebase App Hosting o Cloud Run.
+
+---
+
+## 14. Registro Histórico de Versiones y Evolución del Sistema (Changelog Técnico)
+
+### 🚀 Versión 0.5.0 (Agosto 2026) — Arquitectura UX/UI por Vistas, Motor de Plantillas Progresivas de 16 Semanas y Periodización 3:1
+
+#### 1. Rediseño de Experiencia de Usuario e Información (UX/UI):
+- **Barra de Navegación por Pestañas (`NavigationTabs.tsx`):**
+  - **`🗺️ 1. Plan del Macrociclo (Master Plan)`**: Vista macro de la temporada, cronograma de las 16 semanas del ciclo, conteo regresivo a la carrera objetivo y visualización detallada de la plantilla diaria de cualquier semana seleccionada.
+  - **`🧠 2. Microciclo Activo & IA (Esta Semana / Próxima)`**: Panel de control del Head Coach Digital, telemetría Banister en tiempo real (CTL, ATL, TSB, HRV), diagnóstico adaptativo y plan semanal editable con botón único de sincronización a Intervals.icu.
+  - **`⚙️ 3. Configuración & Atleta`**: Panel centralizado para parámetros de potencia (Stryd CP / Bike FTP), Matriz Semanal de Disponibilidad (Lunes a Domingo), Gestión de Carreras Objetivo y clave Gemini API.
+
+#### 2. Motor de Plantillas Progresivas de Macrociclo (`macrocycleTemplates.ts`):
+- Eliminación total de microciclos planos o idénticos. Cada una de las 16 semanas cuenta con una plantilla cuantitativa calculada a la potencia del atleta:
+  - **Base I & II (Sem 1-4):** Cuestas cortas de neuro-fuerza (`6x 45s @ 96% CP`), rodajes con strides reactivos (`5x 20s @ 110% CP`), tempo aeróbico Z3 (`2x 10m @ 86% CP`) y semana 4 de descarga biológica 3:1 (`55m Z2 suave`).
+  - **Construcción / Build I & II (Sem 5-10):** Series de Umbral Lactato Z4 (`4x 6m` a `4x 8m @ 100% CP`), sweetspot en ciclismo (`3x 8m @ 85% FTP`), tiradas dominicales de `85m a 95m` con bloques a ritmo maratón y descarga programada en semana 8.
+  - **Pico de Rendimiento / Peak (Sem 11-13):** Fondos específicos de Maratón de **`1h45m a 1h55m (28-32km)`** con bloques a potencia de carrera (`3x 5km @ 80% CP`), series de potencia crítica (`5x 4m @ 102% CP`) y descarga intermedia en semana 12.
+  - **Tapering (Sem 14-15):** Descarga de volumen al -50% con toques breves de ritmo (`3x 2m @ 82% CP`).
+  - **Semana de Competición (Sem 16):** Activación previa de 25m y ejecución de 42.195 km a potencia constante de maratón.
+
+#### 3. Flujo de Mantenimiento Pre-Competición & Cálculo de Fecha de Inicio:
+- Detección automática del inicio del bloque de 16 semanas para cualquier maratón objetivo.
+- Prescripción de microciclos de mantenimiento adaptativo (tiradas de 55m máx, 280-360 TSS) durante todas las semanas previas a la fecha de inicio del ciclo específico.
+
+#### 4. Sincronización Segura y Sobrescritura Limpia en Intervals.icu:
+- Consulta del rango de fechas del microciclo y eliminación previa de sesiones antiguas marcadas con `[SGEA]` antes de insertar el nuevo plan, evitando duplicidades de calendario o inflado de TSS.
+
+---
+
+### 🚀 Versión 0.6.0 (Agosto 2026) — Biblioteca Integral de Macrociclos, Configurador Dinámico con Calendario & Previsualizador Interactivo
+
+#### 1. Biblioteca Modular de Macrociclos (`macrocycleLibrary.ts`):
+- **Catálogo por Tipo de Carrera (Event-Driven):**
+  - **Maratón (42.195 km):** 12 a 24 semanas. Economía de carrera, oxidación lipídica, fondos de hasta 34 km y bloques a $80\text{--}84\%$ Stryd CP.
+  - **Media Maratón (21.097 km):** 10 a 18 semanas. Potencia de crucero en umbral lactato Z4 ($93\text{--}97\%$ CP) y tiradas progresivas de hasta 22 km.
+  - **10K Ruta / Pista:** 8 a 16 semanas. Potencia aeróbica máxima ($VO_2\text{max}$ Z5), intervalos de 1000m a $102\text{--}106\%$ CP y tolerancia a hiperacidez.
+  - **5K Velocidad & Potencia Crítica:** 6 a 12 semanas. Zancada neuromuscular, reclutamiento de fibras rápidas tipo IIa y series cortas al $108\text{--}112\%$ CP.
+  - **Gran Fondo Ciclismo:** 8 a 18 semanas. Resistencia muscular sobre la bicicleta, densidad en Sweetspot ($85\text{--}92\%$ Bike FTP) y fondos de 3 a 5 horas.
+  - **Triatlón Media Distancia (70.3):** 12 a 20 semanas. Carga concurrente multi-disciplina sin interferencia neuromuscular y transiciones *Brick*.
+- **Catálogo por Momento / Estado del Atleta (Athlete Moment):**
+  - **Mantenimiento Adaptativo & Salud Articular:** 4 a 16 semanas. TSB neutro ($-5 \le \text{TSB} \le +5$), prevención de sóleo/Aquiles y tiradas de $\le 55\text{ min}$.
+  - **Construcción de Base Pura (GPP / Base Building):** 6 a 14 semanas. Capilarización periférica, volumen polarizado en Z2 y neurofuerza en cuestas.
+  - **Recuperación Post-Competición (Deload):** 2 a 6 semanas. Reparación miofibrilar, estabilización del HRV y cero impacto articular inicial.
+  - **Retorno Progresivo / Reacondicionamiento:** 4 a 12 semanas. Protocolo CaCo (Caminar-Correr) con progresión mecánica inferior al $10\%$ semanal.
+
+#### 2. Configurador de Temporada con Calendario & Periodización Proporcional (`macrocycleGenerator.ts`):
+- Selección interactiva de **Fecha de Inicio (Lunes)** y **Fecha Fin / Competición**, o selector continuo de semanas.
+- Algoritmo de distribución proporcional de fases (Base, Construcción, Pico y Tapering) adaptado a la distancia y duración elegida.
+- Inserción automática de semanas de descarga y asimilación biológica bajo la **Regla 3:1** (semanas 4, 8, 12, etc.).
+
+#### 3. Previsualizador Fase por Fase (*Preview Before Commit* - `MacrocyclePreviewTimeline.tsx`):
+- Timeline gráfico interactivo con curvas de TSS, alturas de barra proporcionales y codificación por color según tipo de microciclo (Carga, Choque, Descarga, Competición).
+- Visor desplegable de los **7 días de entrenamiento estructurado** para cualquier semana del macrociclo seleccionado, con cálculo en vatios a partir del Stryd CP y Bike FTP reales del atleta antes de guardar.
+
+#### 4. Integración y Activación Inmediata (`MacrocycleLibraryModal.tsx` & `page.tsx`):
+- Botón *"📚 Biblioteca de Macrociclos"* integrado en el panel principal.
+- Persistencia en almacenamiento local y recálculo automático del estado del atleta, integrándose con el Head Coach IA para saltar directamente a cualquier microciclo.
+
+---
+
+### 🚀 Versión 0.7.0 (Agosto 2026) — Asistente Guiado Paso a Paso (Wizard), Detección de Puente Pre-Temporada (Tokio 2027), Persistencia en Firestore y Personalización con IA
+
+#### 1. Asistente Guiado Paso a Paso (`MacrocycleWizardModal.tsx` & `macrocycleWizard.ts`):
+- Eliminación del selector de opciones estáticas en favor de un **Wizard interactivo por etapas**:
+  - **Paso 1:** Selección de enfoque (Competición vs. Momento del Atleta).
+  - **Paso 2:** Configuración de carrera (ej. *Maratón de Tokio 2027*, 7 de marzo de 2027) o momento.
+  - **Paso 3:** Detección de línea temporal y **Puente de Mantenimiento Pre-Competición**: cálculo del kickoff de 16 semanas (ej. 16 de Noviembre de 2026) y estructuración de las semanas previas en Mantenimiento Adaptativo & Salud Articular.
+  - **Paso 4:** Diagnóstico fisiológico en vivo con métricas de Intervals.icu (CTL, ATL, TSB, Stryd CP, Bike FTP).
+  - **Paso 5:** Generación y personalización con IA de Gemini más previsualización y guardado.
+
+#### 2. Persistencia en Cloud Firestore & Cero Hardcoding (`src/lib/db/macrocycles.ts` & `/api/macrocycles`):
+- Persistencia completa de macrociclos generados en la subcolección `users/{uid}/macrocycles/{macrocycleId}` y puntero activo en `users/{uid}/meta/active_macrocycle`.
+- Endpoints REST para lectura y escritura segura en la base de datos de Google Cloud Firestore.
+
+#### 3. Motor de Periodización con IA (`src/lib/gemini/macrocycleAI.ts` & `/api/macrocycles/generate-ai`):
+- Inferencia server-side que cruza la telemetría viva de Intervals.icu con el objetivo del atleta para modular la rampa de sobrecarga ($+4$ a $+6$ CTL/sem), semanas de descarga 3:1 y metas de vatios en Stryd y Ciclismo.
+
+#### 4. Rediseño Minimalista de Interfaz (`MacrocycleView.tsx`):
+- Consolidación en una única cabecera elegante sin cajas ni botones duplicados.
+- Gráficas de bloques e intervalos escalonados integradas en cada tarjeta diaria con botón amigable *`📋 Detalle del Plan`*.
+
+
+

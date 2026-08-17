@@ -64,23 +64,6 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
               )}
             </button>
           </div>
-
-          {/* 3. Quick Settings / Perfil */}
-          <div className="shrink-0">
-            <button
-              type="button"
-              onClick={() => onTabChange("settings")}
-              className={`flex items-center space-x-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition border ${
-                activeTab === "settings"
-                  ? "bg-purple-500/15 text-purple-300 border-purple-500/40"
-                  : "bg-slate-900/60 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Settings2 className="h-4 w-4 text-purple-400" />
-              <span className="hidden sm:inline">Configuración & Atleta</span>
-              <span className="sm:hidden">Ajustes</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>

@@ -17,9 +17,10 @@ import {
   DEFAULT_WEEKLY_AVAILABILITY,
 } from "@/lib/gemini/engine";
 import { AthleteProfile } from "@/lib/intervals/types";
-import { MacrocyclePhaseInfo, TargetRace, calculateMacrocyclePhase } from "@/lib/physiology/macrocycle";
+import { MacrocyclePhaseInfo, TargetRace, MacrocycleBlueprint, calculateMacrocyclePhase } from "@/lib/physiology/macrocycle";
 
 export default function HomePage() {
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavigationTabType>("macrocycle");
   const [profile, setProfile] = useState<AthleteProfile>({
     id: "i442091",
@@ -45,6 +46,7 @@ export default function HomePage() {
   const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [settingsTab, setSettingsTab] = useState<"intervals" | "availability" | "races" | "ai">("intervals");
 
@@ -87,6 +89,9 @@ export default function HomePage() {
 
         const data = await res.json();
         if (data.success) {
+          if (data.isLive !== undefined) {
+            setIsLiveConnected(Boolean(data.isLive));
+          }
           setProfile((prev) => ({
             ...prev,
             ...data.profile,
@@ -213,6 +218,7 @@ export default function HomePage() {
     }));
 
     setIsLoading(false);
+    setIsMounted(true);
     refreshTelemetry(savedAthleteId, savedApiKey, savedRunFtp, savedBikeFtp, 0, savedRaces, savedAvailability);
   }, []);
 
@@ -328,6 +334,58 @@ export default function HomePage() {
     }
   };
 
+  const handleApplyMacrocycle = async (
+    blueprint: MacrocycleBlueprint,
+    primaryRace?: TargetRace,
+    source: "AI_GENERATED" | "WIZARD_CUSTOM" = "WIZARD_CUSTOM"
+  ) => {
+    let updatedRaces: TargetRace[] = [];
+    if (primaryRace) {
+      // Reemplazar carrera principal o añadir
+      updatedRaces = [
+        primaryRace,
+        ...targetRaces.filter((r) => r.id !== primaryRace.id && r.priority !== "A"),
+      ];
+    } else {
+      updatedRaces = [];
+    }
+
+    localStorage.setItem("sgea_target_races", JSON.stringify(updatedRaces));
+    setTargetRaces(updatedRaces);
+
+    const newPhaseInfo = calculateMacrocyclePhase(updatedRaces);
+    // Asignar el blueprint personalizado directamente
+    newPhaseInfo.blueprint = blueprint;
+    setMacrocyclePhase(newPhaseInfo);
+
+    // 1. Guardar en Base de Datos Firestore a través de la API
+    try {
+      await fetch("/api/macrocycles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: profile.id,
+          blueprint,
+          primaryRace: primaryRace || blueprint.primaryRace,
+          source,
+        }),
+      });
+    } catch (dbErr) {
+      console.warn("Aviso al persistir macrociclo en Firestore:", dbErr);
+    }
+
+    // 2. Refrescar telemetría
+    await refreshTelemetry(
+      profile.id,
+      apiKeyCache,
+      profile.run_ftp,
+      profile.bike_ftp,
+      weekOffset,
+      updatedRaces,
+      weeklyAvailability
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col justify-between">
       <div>
@@ -341,6 +399,7 @@ export default function HomePage() {
           }}
           onRefresh={() => refreshTelemetry(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, weekOffset)}
           isLoading={isRefreshingTelemetry}
+          isLiveConnected={isLiveConnected}
         />
 
         {/* Top Navigation Tabs */}
@@ -354,65 +413,74 @@ export default function HomePage() {
 
         {/* Main Content Area */}
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
-          {/* TAB 1: MASTER MACROCYCLE PLAN */}
-          {activeTab === "macrocycle" && (
-            <MacrocycleView
-              phaseInfo={macrocyclePhase}
-              races={targetRaces}
-              runFtp={profile.run_ftp ?? 285}
-              bikeFtp={profile.bike_ftp ?? 260}
-              weeklyAvailability={weeklyAvailability}
-              onOpenRaceSettings={() => {
-                setSettingsTab("races");
-                setIsSettingsOpen(true);
-              }}
-              onJumpToMicrocycleWithAI={handleJumpToMicrocycleWithAI}
-            />
-          )}
-
-          {/* TAB 2: ACTIVE MICROCYCLE & AI COACH */}
-          {activeTab === "microcycle" && (
-            <div className="space-y-6 animate-fadeIn">
-              {/* Season & Target Race Planner Card */}
-              <SeasonPlannerCard
-                phaseInfo={macrocyclePhase}
-                races={targetRaces}
-                onOpenRaceSettings={() => {
-                  setSettingsTab("races");
-                  setIsSettingsOpen(true);
-                }}
-                onSelectWeek={handleWeekChange}
-                currentWeekOffset={weekOffset}
-              />
-
-              {/* Physiological Telemetry Cards Grid */}
-              <PhysiologicalCards
-                status={physioStatus}
-                runFtp={profile.run_ftp ?? 285}
-                bikeFtp={profile.bike_ftp ?? 260}
-              />
-
-              {/* Agent Command Center (AI On-Demand) */}
-              <AgentCommandCenter
-                decision={agentDecision}
-                onReevaluate={() => generateAIPlan(weekOffset)}
-                isEvaluating={isGeneratingAI}
-              />
-
-              {/* 7-Day Weekly Interactive Matrix */}
-              {agentDecision && (
-                <WeeklyPlanner
-                  initialPlan={activePlan.length > 0 ? activePlan : agentDecision.suggestedPlan}
-                  runFtp={profile.run_ftp ?? 285}
-                  bikeFtp={profile.bike_ftp ?? 260}
-                  weekOffset={weekOffset}
-                  onWeekChange={handleWeekChange}
-                  onPlanUpdate={handlePlanUpdate}
-                  onSyncIntervals={handleSyncToIntervals}
-                  isSyncing={isSyncing}
+          {!isMounted ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-3">
+              <div className="h-7 w-7 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+              <span className="text-xs font-bold text-slate-400">Cargando periodización y telemetría SGEA...</span>
+            </div>
+          ) : (
+            <>
+              {/* TAB 1: MASTER MACROCYCLE PLAN */}
+              {activeTab === "macrocycle" && (
+                <MacrocycleView
+                  phaseInfo={macrocyclePhase}
+                  races={targetRaces}
+                  profile={profile}
+                  physioStatus={physioStatus}
+                  apiKey={apiKeyCache}
+                  geminiApiKey={geminiKeyCache}
+                  selectedModel={selectedModelCache}
+                  weeklyAvailability={weeklyAvailability}
+                  onJumpToMicrocycleWithAI={handleJumpToMicrocycleWithAI}
+                  onApplyMacrocycle={handleApplyMacrocycle}
                 />
               )}
-            </div>
+
+              {/* TAB 2: ACTIVE MICROCYCLE & AI COACH */}
+              {activeTab === "microcycle" && (
+                <div className="space-y-6 animate-fadeIn">
+                  {/* Season & Target Race Planner Card */}
+                  <SeasonPlannerCard
+                    phaseInfo={macrocyclePhase}
+                    races={targetRaces}
+                    onOpenRaceSettings={() => {
+                      setSettingsTab("races");
+                      setIsSettingsOpen(true);
+                    }}
+                    onSelectWeek={handleWeekChange}
+                    currentWeekOffset={weekOffset}
+                  />
+
+                  {/* Physiological Telemetry Cards Grid */}
+                  <PhysiologicalCards
+                    status={physioStatus}
+                    runFtp={profile.run_ftp ?? 285}
+                    bikeFtp={profile.bike_ftp ?? 260}
+                  />
+
+                  {/* Agent Command Center (AI On-Demand) */}
+                  <AgentCommandCenter
+                    decision={agentDecision}
+                    onReevaluate={() => generateAIPlan(weekOffset)}
+                    isEvaluating={isGeneratingAI}
+                  />
+
+                  {/* 7-Day Weekly Interactive Matrix */}
+                  {agentDecision && (
+                    <WeeklyPlanner
+                      initialPlan={activePlan.length > 0 ? activePlan : agentDecision.suggestedPlan}
+                      runFtp={profile.run_ftp ?? 285}
+                      bikeFtp={profile.bike_ftp ?? 260}
+                      weekOffset={weekOffset}
+                      onWeekChange={handleWeekChange}
+                      onPlanUpdate={handlePlanUpdate}
+                      onSyncIntervals={handleSyncToIntervals}
+                      isSyncing={isSyncing}
+                    />
+                  )}
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -1,8 +1,10 @@
+import { MacrocycleDistanceType } from "./macrocycleLibrary";
+
 export interface TargetRace {
   id: string;
   name: string; // e.g. "Maratón de Valencia", "Media Maratón de Bogotá"
   date: string; // "YYYY-MM-DD"
-  distance: "5k" | "10k" | "21k" | "42k" | "cycling_fondo" | "triathlon_703" | "triathlon_1406" | "custom";
+  distance: MacrocycleDistanceType;
   priority: "A" | "B" | "C"; // A: Principal (Rige Macrociclo), B: Test/Ajuste, C: Entrenamiento
   goalTarget?: string; // e.g. "Sub-3h00m", "275W Stryd", "Completar"
 }

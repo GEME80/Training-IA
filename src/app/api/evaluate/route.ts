@@ -25,11 +25,15 @@ export async function POST(req: NextRequest) {
     let profile: AthleteProfile;
     let wellness: AthleteWellness[] = [];
     let events: CalendarEvent[] = [];
+    let isLive = false;
+
+    const effectiveApiKey = (apiKey || process.env.INTERVALS_API_KEY || "").trim();
+    const effectiveAthleteId = (athleteId || process.env.INTERVALS_ATHLETE_ID || "i442091").trim();
 
     // Si se proporcionan credenciales activas, consultamos la API de Intervals en vivo
-    if (athleteId && apiKey) {
+    if (effectiveAthleteId && effectiveApiKey) {
       try {
-        const client = new IntervalsClient(athleteId, apiKey);
+        const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
         
         // Rango de fechas: últimos 90 días para asegurar captura completa de PMC y Rolling HRV
         const today = new Date();
@@ -59,26 +63,41 @@ export async function POST(req: NextRequest) {
         ]);
 
         if (athleteData) {
+          isLive = true;
+          const anyAthlete = athleteData as any;
+          const icuCtl = anyAthlete.icu_ctl ?? anyAthlete.ctl;
+          const icuAtl = anyAthlete.icu_atl ?? anyAthlete.atl;
+          const icuRestingHr = anyAthlete.icu_resting_hr ?? anyAthlete.restingHR;
+          const icuFtp = anyAthlete.icu_ftp ?? anyAthlete.bike_ftp;
+          const icuRunFtp = anyAthlete.icu_run_ftp ?? anyAthlete.run_ftp;
+
+          const sportSettings = anyAthlete.sportSettings || [];
+          const runSport = sportSettings.find((s: any) => s.types?.includes("Run") || s.id === "Run");
+          const rideSport = sportSettings.find((s: any) => s.types?.includes("Ride") || s.id === "Ride");
+
           profile = {
             ...athleteData,
-            id: athleteData.id || athleteId,
-            name: athleteData.name || "Atleta Intervals",
-            run_ftp: customRunFtp || athleteData.run_ftp || 285,
-            bike_ftp: customBikeFtp || athleteData.bike_ftp || athleteData.icu_ftp || 260,
+            id: athleteData.id || effectiveAthleteId,
+            name: athleteData.name || "Germán Morales",
+            ctl: typeof icuCtl === "number" ? icuCtl : undefined,
+            atl: typeof icuAtl === "number" ? icuAtl : undefined,
+            restingHR: typeof icuRestingHr === "number" ? icuRestingHr : undefined,
+            run_ftp: customRunFtp || runSport?.ftp || icuRunFtp || athleteData.run_ftp || 285,
+            bike_ftp: customBikeFtp || rideSport?.ftp || icuFtp || athleteData.bike_ftp || 260,
           };
         } else {
-          profile = getFallbackProfile(athleteId, customRunFtp, customBikeFtp);
+          profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
         }
 
         wellness = wellnessData.length > 0 ? wellnessData : getFallbackWellness();
         events = calendarEvents;
       } catch (clientErr) {
         console.warn("Fallo al conectar con Intervals API, utilizando datos de telemetría de respaldo:", clientErr);
-        profile = getFallbackProfile(athleteId, customRunFtp, customBikeFtp);
+        profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
         wellness = getFallbackWellness();
       }
     } else {
-      profile = getFallbackProfile("i442091", customRunFtp, customBikeFtp);
+      profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
       wellness = getFallbackWellness();
     }
 
@@ -114,6 +133,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isLive,
       profile,
       physioStatus,
       macrocyclePhase,

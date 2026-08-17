@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Activity, ShieldCheck, Settings, RefreshCw } from "lucide-react";
+import { Activity, ShieldCheck, Settings, RefreshCw, Radio } from "lucide-react";
 
 interface HeaderProps {
   athleteName: string;
@@ -9,6 +9,7 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onRefresh: () => void;
   isLoading: boolean;
+  isLiveConnected?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onRefresh,
   isLoading,
+  isLiveConnected = false,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-[#090d16]/90 backdrop-blur-md">
@@ -44,14 +46,32 @@ export const Header: React.FC<HeaderProps> = ({
               <span>{athleteName || "Germán Morales"}</span>
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
             </div>
-            <p className="text-xs text-slate-400 font-mono">ID: {athleteId || "i442091"}</p>
+            <div className="flex items-center justify-end space-x-2 mt-0.5">
+              <p className="text-xs text-slate-400 font-mono">ID: {athleteId || "i442091"}</p>
+              {isLiveConnected ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Intervals En Vivo
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer"
+                  title="Haz clic para configurar tu API Key de Intervals.icu y cargar datos en vivo"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Configurar API
+                </button>
+              )}
+            </div>
           </div>
 
           <button
             onClick={onRefresh}
             disabled={isLoading}
             className="flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700 hover:text-white disabled:opacity-50"
-            title="Actualizar datos"
+            title="Actualizar datos desde Intervals.icu"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-emerald-400" : ""}`} />
             <span className="hidden sm:inline">Recargar</span>

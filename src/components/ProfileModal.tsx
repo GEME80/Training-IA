@@ -102,11 +102,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   // Carga inicial de preferencias desde localStorage
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
-      const savedKey = localStorage.getItem("sgea_api_key");
-      const savedId = localStorage.getItem("sgea_athlete_id");
-      const savedGeminiKey = localStorage.getItem("sgea_gemini_key");
-      const savedModel = localStorage.getItem("sgea_gemini_model");
-      const savedPrompt = localStorage.getItem("sgea_custom_prompt");
+      const savedKey = localStorage.getItem("sgea_intervals_api_key") || localStorage.getItem("sgea_api_key") || "";
+      const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
+      const savedGeminiKey = localStorage.getItem("sgea_gemini_api_key") || localStorage.getItem("sgea_gemini_key") || "";
+      const savedModel = localStorage.getItem("sgea_selected_model") || localStorage.getItem("sgea_gemini_model") || "gemini-flash-latest";
+      const savedPrompt = localStorage.getItem("sgea_custom_prompt") || DEFAULT_PROMPT;
       const savedRaces = localStorage.getItem("sgea_target_races");
       const savedAvailability = localStorage.getItem("sgea_weekly_availability");
 
@@ -270,9 +270,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
-      if (apiKey.trim()) localStorage.setItem("sgea_api_key", apiKey.trim());
+      if (apiKey.trim()) {
+        localStorage.setItem("sgea_intervals_api_key", apiKey.trim());
+        localStorage.setItem("sgea_api_key", apiKey.trim());
+      }
       if (athleteId.trim()) localStorage.setItem("sgea_athlete_id", athleteId.trim());
-      if (geminiApiKey.trim()) localStorage.setItem("sgea_gemini_key", geminiApiKey.trim());
+      if (geminiApiKey.trim()) {
+        localStorage.setItem("sgea_gemini_api_key", geminiApiKey.trim());
+        localStorage.setItem("sgea_gemini_key", geminiApiKey.trim());
+      }
+      localStorage.setItem("sgea_selected_model", selectedModel);
       localStorage.setItem("sgea_gemini_model", selectedModel);
       localStorage.setItem("sgea_custom_prompt", customPrompt);
       localStorage.setItem("sgea_target_races", JSON.stringify(races));

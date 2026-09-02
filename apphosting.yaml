@@ -24,6 +24,6 @@ env:
   - variable: SUPERADMIN_EMAIL
     value: "gerkof@gmail.com"
   - variable: ENCRYPTION_MASTER_KEY
-    secret: sgea-encryption-master-key
+    secret: pulse-encryption-master-key
   - variable: GEMINI_API_KEY
     secret: gemini-api-key

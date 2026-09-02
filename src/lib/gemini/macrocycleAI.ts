@@ -1,7 +1,11 @@
 import { AthleteProfile } from "../intervals/types";
 import { PhysiologicalStatus } from "../physiology/engine";
 import { MacrocycleBlueprint } from "../physiology/macrocycle";
-import { WizardPlanConfig, generateWizardMacrocycle } from "../physiology/macrocycleWizard";
+import { WizardPlanConfig } from "../physiology/macrocycleWizard";
+import { generateCustomMacrocycleBlueprint } from "../physiology/macrocycleGenerator";
+import { trackGeminiUsage } from "../ai/telemetry";
+import { buildMacrocycleArchitectSystemPrompt, DEFAULT_PROMPTS } from "../ai/prompts";
+import { resolveTrainingModel, computePhaseWeeksDistribution } from "../ai/knowledge";
 
 export interface AIMacrocycleResponse {
   success: boolean;
@@ -11,109 +15,151 @@ export interface AIMacrocycleResponse {
   recommendedRampRate: number;
   blueprint: MacrocycleBlueprint;
   modelUsed: string;
+  trainingModelApplied?: string;
 }
 
 export class MacrocycleAIEngine {
   /**
    * Genera o personaliza un macrociclo completo utilizando la IA de Gemini
-   * cruzando la telemetría viva de Intervals.icu con el objetivo de competición o momento del atleta.
+   * cruzando la telemetría viva de Intervals.icu con el objetivo, modelo curado rector y tests programados.
    */
   static async generatePersonalizedMacrocycle(
     profile: AthleteProfile,
     physioStatus: PhysiologicalStatus,
-    config: WizardPlanConfig,
+    config: WizardPlanConfig & { periodization?: string; trainingApproach?: string; targetDistance?: string; weeklyAvailability?: Record<string, any> },
     options?: {
       geminiApiKey?: string;
       selectedModel?: string;
       customPrompt?: string;
     }
   ): Promise<AIMacrocycleResponse> {
-    const apiKey = options?.geminiApiKey || process.env.GEMINI_API_KEY;
-    const baseBlueprint = generateWizardMacrocycle(config);
+    const rawApiKey = options?.geminiApiKey || process.env.GEMINI_API_KEY;
+    const apiKey = (rawApiKey || "").toString().replace(/^[\"']|[\"']$/g, "").trim();
 
-    // Si no hay API Key o falla la llamada externa, retornamos el cálculo fisiológico determinístico
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
+    const startDate = config.startDate || new Date(today.setDate(diff)).toISOString().split("T")[0];
+
+    const distType = (config.targetDistance || config.raceDistance || "42k") as any;
+    const requestedWeeks = config.weeksCount || 16;
+
+    // 1. Resolver modelo científico rector (Canova / Coggan / Friel / Koop / Seiler)
+    const curatedModel = resolveTrainingModel({
+      targetDistance: config.targetDistance,
+      raceDistance: config.raceDistance,
+      athleteMoment: config.athleteMoment,
+      trainingApproach: config.trainingApproach,
+      raceName: config.raceName,
+    });
+
+    const isPreventive = config.periodization === "2:1" || !config.periodization;
+
+    const baseBlueprint = generateCustomMacrocycleBlueprint({
+      distanceType: distType,
+      startDate,
+      weeksCount: requestedWeeks,
+      customGoal: `${config.raceName || "Macrociclo de Temporada"}. Metodología: ${curatedModel.displayName}`,
+      periodization: (config.periodization as any) || "2:1",
+      primaryRace: config.hasRace || config.raceName ? {
+        id: `race-${Date.now()}`,
+        name: config.raceName || "Competición Objetivo",
+        date: config.raceDate || "",
+        distance: distType,
+        priority: "A",
+        goalTarget: config.raceGoal || "Pico de Forma",
+      } : undefined,
+      athleteMetrics: {
+        ctl: profile.ctl || physioStatus.ctl,
+        runFtp: profile.run_ftp,
+        bikeFtp: profile.bike_ftp,
+        weightKg: profile.weight,
+        lthr: profile.lthr,
+        // ✅ Matriz Semanal del Atleta propagada al motor generador
+        weeklyAvailability: config.weeklyAvailability as any,
+      },
+
+
+    });
+
+    // Anotar los tests fisiológicos programados en los focusDescription de las semanas correspondientes
+    curatedModel.mandatoryTests.forEach((test) => {
+      const targetWk = baseBlueprint.weeks.find((w) => w.weekNumber === test.recommendedWeekIndex);
+      if (targetWk) {
+        targetWk.focusDescription = `🧪 ${test.testName} • ${targetWk.focusDescription}`;
+      }
+    });
+
+    const defaultNotes = [
+      `Metodología oficial aplicada: ${curatedModel.displayName} (${curatedModel.scientificAuthors.join(", ")}).`,
+      `Periodización en ${baseBlueprint.weeks.length} semanas estructuradas con ratio ${isPreventive ? "Preventivo (2:1)" : "Estándar (3:1)"} para asimilación biológica.`,
+      `Pauta de Tirada Larga: ${curatedModel.longRunRules.description} (${curatedModel.longRunRules.targetIntensityPercentCpOrFtp}).`,
+      `Tests de Campo Fisiológicos programados: ${curatedModel.mandatoryTests.map((t) => `Sem ${t.recommendedWeekIndex} (${t.testName})`).join(", ") || "Calibración continua"}.`,
+      `Calibración por vatios: Stryd CP ${profile.run_ftp || 327}W y Bike FTP ${profile.bike_ftp || 240}W.`,
+    ];
+
     if (!apiKey) {
       return {
         success: true,
-        reasoningHeadline: `Periodización Fisiológica Calculada para ${config.raceName || "Temporada"}`,
-        reasoningNotes: [
-          `CTL Inicial del Atleta: ${physioStatus.ctl.toFixed(1)} | ATL: ${physioStatus.atl.toFixed(1)} | TSB: ${physioStatus.tsb.toFixed(1)}`,
-          `Rampa de progresión controlada (+4 a +6 CTL/semana) con descarga biológica 3:1 cada 4ª semana.`,
-          config.hasRace
-            ? `Detección de evento objetivo para el ${config.raceDate}. Ciclo específico de 16 semanas con fondos de hasta 34 km y bloques a potencia Stryd.`
-            : `Foco en mantenimiento adaptativo y salud articular de sóleo/Aquiles con TSB neutro.`,
-        ],
-        projectedPeakCtl: Math.min(105, Math.round(physioStatus.ctl + 25)),
-        recommendedRampRate: 4.8,
+        reasoningHeadline: `Periodización Científica (${curatedModel.displayName}) • ${baseBlueprint.weeks.length} Semanas`,
+        reasoningNotes: defaultNotes,
+        projectedPeakCtl: Math.min(105, Math.round((profile.ctl || physioStatus.ctl || 42) + baseBlueprint.weeks.length * 1.5)),
+        recommendedRampRate: curatedModel.banisterRampRateLimits.maxCtlPerWeek,
         blueprint: baseBlueprint,
-        modelUsed: "Motor Fisiológico SGEA (Algorítmico)",
+        modelUsed: "Motor Fisiológico PULSE (Algorítmico)",
+        trainingModelApplied: curatedModel.displayName,
       };
     }
 
     try {
-      const prompt = `
-Actúas como el Head Coach Fisiológico Digital (SGEA) de un atleta de alto rendimiento.
-Debes analizar su telemetría actual y personalizar el Plan Rector del Macrociclo para su objetivo de temporada.
+      const prompt = buildMacrocycleArchitectSystemPrompt(
+        options?.customPrompt || DEFAULT_PROMPTS.macrocyclePrompt,
+        {
+          profile,
+          physioStatus,
+          config: {
+            ...config,
+            weeksCount: baseBlueprint.weeks.length,
+          },
+          customPromptDirective: options?.customPrompt,
+        }
+      );
 
-DATOS FISIOLÓGICOS DEL ATLETA (INTERVALS.ICU):
-- Nombre: ${profile.name || "Atleta"}
-- CTL Actual (Fitness Crónico): ${physioStatus.ctl.toFixed(1)}
-- ATL Actual (Fatiga Aguda): ${physioStatus.atl.toFixed(1)}
-- TSB Actual (Forma / Balance): ${physioStatus.tsb.toFixed(1)}
-- Ramp Rate Actual: ${physioStatus.rampRate.toFixed(1)} CTL/semana
-- Potencia Crítica de Carrera (Stryd CP / Run FTP): ${profile.run_ftp || 285} W
-- Potencia Umbral de Ciclismo (Bike FTP): ${profile.bike_ftp || 260} W
-- FC en Reposo: ${profile.restingHR || 46} bpm
+      const model = options?.selectedModel && !options.selectedModel.includes("3.5")
+        ? options.selectedModel
+        : "gemini-2.5-flash";
 
-OBJETIVO CONFIGURADO POR EL ATLETA:
-- Tipo: ${config.hasRace ? `Competición Oficial (${config.raceName}, Distancia: ${config.raceDistance}, Fecha: ${config.raceDate}, Meta: ${config.raceGoal})` : `Momento del Atleta (${config.athleteMoment})`}
-- Macrociclo Rector Activo: ${baseBlueprint.mode === "PRE_SEASON_MAINTENANCE" ? `Fase Puente de Mantenimiento Adaptativo & Consolidación (${baseBlueprint.totalWeeks} semanas) hasta el Kickoff del ciclo específico de 16 semanas.` : `${baseBlueprint.cycleTitle} (${baseBlueprint.totalWeeks} semanas)`}
-
-DIRECTIVAS FISIOLÓGICAS:
-1. ${baseBlueprint.mode === "PRE_SEASON_MAINTENANCE" ? `Estructurar las ${baseBlueprint.totalWeeks} semanas de mantenimiento con consistencia aeróbica, TSB neutro, tests de calibración (Test Stryd CP en S4 y Test Bike FTP en S8) y semanas de asimilación 3:1 sin fatiga residual acumulada.` : `Asegurar que la tasa de incremento de carga (Ramp Rate) no supere +6.0 CTL/semana para prevenir lesiones y sobreentrenamiento.`}
-2. Garantizar semanas de descarga de asimilación biológica bajo la regla 3:1 (reducción del 25-35% de TSS y volumen).
-3. Prescribir las sesiones clave calculadas exactamente a los vatios reales del atleta (% CP Stryd y % FTP Ciclismo).
-
-Responde ÚNICAMENTE con un JSON válido con la siguiente estructura:
-{
-  "reasoningHeadline": "Breve titular de 1 línea sobre la estrategia del macrociclo",
-  "reasoningNotes": [
-    "Punto clave 1 sobre cómo se adapta el plan al CTL actual del atleta",
-    "Punto clave 2 sobre la distribución de las fases y semanas de descarga 3:1",
-    "Punto clave 3 sobre los picos de volumen y vatios Stryd específicos"
-  ],
-  "projectedPeakCtl": 88,
-  "recommendedRampRate": 5.2
-}
-`;
-
-      const model = options?.selectedModel || "gemini-2.5-flash";
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
         }),
+        signal: AbortSignal.timeout(35000),
       });
 
-      if (!res.ok) {
-        throw new Error(`Error API Gemini: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
-        return {
-          success: true,
-          reasoningHeadline: parsed.reasoningHeadline || `Macrociclo Personalizado con IA`,
-          reasoningNotes: parsed.reasoningNotes || [],
-          projectedPeakCtl: parsed.projectedPeakCtl || Math.round(physioStatus.ctl + 20),
-          recommendedRampRate: parsed.recommendedRampRate || 5.0,
-          blueprint: baseBlueprint,
-          modelUsed: model,
-        };
+      if (res.ok) {
+        const data = await res.json();
+        if (data.usageMetadata) {
+          const pTokens = Number(data.usageMetadata.promptTokenCount) || 0;
+          const cTokens = Number(data.usageMetadata.candidatesTokenCount) || 0;
+          trackGeminiUsage(model, pTokens, cTokens, "MACROCYCLE_GENERATOR").catch(() => {});
+        }
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (rawText) {
+          const parsed = JSON.parse(rawText);
+          return {
+            success: true,
+            reasoningHeadline: parsed.reasoningHeadline || `Periodización Científica (${curatedModel.displayName})`,
+            reasoningNotes: Array.isArray(parsed.reasoningNotes) && parsed.reasoningNotes.length > 0 ? parsed.reasoningNotes : defaultNotes,
+            projectedPeakCtl: parsed.projectedPeakCtl || Math.round((profile.ctl || physioStatus.ctl || 42) + baseBlueprint.weeks.length * 1.5),
+            recommendedRampRate: parsed.recommendedRampRate || curatedModel.banisterRampRateLimits.maxCtlPerWeek,
+            blueprint: baseBlueprint,
+            modelUsed: model,
+            trainingModelApplied: curatedModel.displayName,
+          };
+        }
       }
     } catch (aiErr) {
       console.warn("Fallo en inferencia IA del macrociclo, recurriendo a modelo determinístico:", aiErr);
@@ -121,15 +167,13 @@ Responde ÚNICAMENTE con un JSON válido con la siguiente estructura:
 
     return {
       success: true,
-      reasoningHeadline: `Periodización Fisiológica para ${config.raceName || "Temporada"}`,
-      reasoningNotes: [
-        `CTL Inicial: ${physioStatus.ctl.toFixed(1)} | Stryd CP: ${profile.run_ftp || 285}W`,
-        `Progresión 3:1 adaptada a la distancia ${config.raceDistance || "42k"}.`,
-      ],
-      projectedPeakCtl: Math.round(physioStatus.ctl + 20),
-      recommendedRampRate: 5.0,
+      reasoningHeadline: `Periodización Científica (${curatedModel.displayName}) • ${baseBlueprint.weeks.length} Semanas`,
+      reasoningNotes: defaultNotes,
+      projectedPeakCtl: Math.round((profile.ctl || physioStatus.ctl || 42) + baseBlueprint.weeks.length * 1.5),
+      recommendedRampRate: curatedModel.banisterRampRateLimits.maxCtlPerWeek,
       blueprint: baseBlueprint,
-      modelUsed: "Motor Fisiológico SGEA",
+      modelUsed: "Motor Fisiológico PULSE",
+      trainingModelApplied: curatedModel.displayName,
     };
   }
 }

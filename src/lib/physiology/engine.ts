@@ -1,4 +1,6 @@
 import { AthleteProfile, AthleteWellness, CalendarEvent } from "../intervals/types";
+import { ALL_STRENGTH_MODELS, ALL_CROSS_MODELS } from "../ai/knowledge";
+
 
 export interface PhysiologicalStatus {
   ctl: number;
@@ -13,6 +15,7 @@ export interface PhysiologicalStatus {
   status: "OPTIMAL" | "CAUTION" | "OVERTRAINING_RISK" | "RECOVERY_NEEDED";
   recommendations: string[];
 }
+
 
 /**
  * Calcula la media y desviación estándar de una serie numérica.
@@ -162,14 +165,26 @@ export class PhysiologicalEngine {
     phase?: string
   ): string {
     if (discipline === "WeightTraining" || workoutType.includes("STRENGTH") || workoutType.includes("Fuerza")) {
-      return `Rutina de Fuerza y Prevención Neuromuscular (SGEA):
-- Calentamiento articular y movilidad dinámica: 10m
-- Sentadilla búlgara con mancuernas: 4 series x 8 reps (RIR 2)
-- Peso muerto rumano (cadena posterior): 4 series x 8 reps
-- Elevación de talones sóleo sentado: 4 series x 15 reps
-- Pliometría suave (Saltos al cajón reactivos): 3 series x 6 reps
-- Plancha frontal y anti-rotación Pallof: 3 series x 45s`;
+      const typeLower = workoutType.toLowerCase();
+      if (typeLower.includes("agua") || typeLower.includes("hidro") || typeLower.includes("piscina")) {
+        return ALL_STRENGTH_MODELS.water_hydrotherapy_strength.workoutDoc;
+      }
+      if (typeLower.includes("heavy") || typeLower.includes("máxima") || typeLower.includes("neural")) {
+        return ALL_STRENGTH_MODELS.strength_heavy_neural.workoutDoc;
+      }
+      if (typeLower.includes("cuesta") || typeLower.includes("excéntrica") || typeLower.includes("bajada")) {
+        return ALL_STRENGTH_MODELS.strength_downhill_eccentric.workoutDoc;
+      }
+      if (typeLower.includes("hombro") || typeLower.includes("dorsal") || typeLower.includes("tracción") || typeLower.includes("escapular")) {
+        return ALL_STRENGTH_MODELS.strength_swim_shoulder_dorsal.workoutDoc;
+      }
+      if (typeLower.includes("pelvic") || typeLower.includes("core") || typeLower.includes("prehab")) {
+        return ALL_STRENGTH_MODELS.strength_pelvic_core_prehab.workoutDoc;
+      }
+
+      return ALL_STRENGTH_MODELS.strength_spring_ankle_soleus.workoutDoc;
     }
+
 
     if (discipline === "Ride") {
       const typeLower = workoutType.toLowerCase();

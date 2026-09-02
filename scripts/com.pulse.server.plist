@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pulse.server</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/germanmorales/Documents/antigravity/IA Training/scripts/start-server.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/germanmorales/Documents/antigravity/IA Training</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/germanmorales/.nvm/versions/node/v24.15.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>NODE_OPTIONS</key>
+        <string>--max-http-header-size=131072</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/germanmorales/Documents/antigravity/IA Training/scripts/pulse-server.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/germanmorales/Documents/antigravity/IA Training/scripts/pulse-server.err.log</string>
+</dict>
+</plist>

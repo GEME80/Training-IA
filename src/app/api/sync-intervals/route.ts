@@ -2,16 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { IntervalsClient } from "@/lib/intervals/client";
 import { CalendarEvent } from "@/lib/intervals/types";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
+import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, plan } = body;
+    const { athleteId, apiKey, uid, plan } = body;
 
-    if (!athleteId || !apiKey) {
+    const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
+      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+
+    if (!effectiveApiKey) {
       return NextResponse.json(
-        { success: false, error: "Athlete ID y API Key son obligatorios para sincronizar con Intervals.icu." },
-        { status: 400 }
+        {
+          success: false,
+          error: "API Key de Intervals.icu no configurada. Ingresa tu API Key para sincronizar con tu calendario y reloj Garmin.",
+          isAuthError: true,
+        },
+        { status: 401 }
       );
     }
 
@@ -22,8 +30,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = new IntervalsClient(athleteId, apiKey);
+    const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
     const createdEvents: CalendarEvent[] = [];
+    const errors: string[] = [];
 
     // 1. Extraer rango de fechas del microciclo (Lunes a Domingo)
     const validDates = plan.map((p) => p.date).filter(Boolean).sort();
@@ -43,18 +52,18 @@ export async function POST(req: NextRequest) {
       endDateStr = sunday.toISOString().split("T")[0];
     }
 
-    // 2. Limpieza de entrenamientos previos [SGEA] para evitar duplicación
+    // 2. Limpieza de entrenamientos previos [PULSE AI] / [SGEA] para evitar duplicación
     try {
       const existingEvents = await client.getEvents(startDateStr, endDateStr);
       const sgeaEventsToDelete = existingEvents.filter(
         (e) =>
           e.id &&
           e.category === "WORKOUT" &&
-          (e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
+          (e.name?.includes("[PULSE AI]") || e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
       );
 
       if (sgeaEventsToDelete.length > 0) {
-        console.log(`Eliminando ${sgeaEventsToDelete.length} entrenamientos previos de [SGEA] en el rango ${startDateStr} a ${endDateStr}...`);
+        console.log(`Eliminando ${sgeaEventsToDelete.length} entrenamientos previos de [PULSE AI] en el rango ${startDateStr} a ${endDateStr}...`);
         await Promise.all(
           sgeaEventsToDelete.map((e) =>
             client.deleteEvent(e.id!).catch((delErr) => {
@@ -63,8 +72,18 @@ export async function POST(req: NextRequest) {
           )
         );
       }
-    } catch (cleanErr) {
+    } catch (cleanErr: any) {
       console.warn("Aviso al consultar/limpiar eventos previos en Intervals:", cleanErr);
+      if (cleanErr?.message?.includes("401") || cleanErr?.message?.includes("403")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Credenciales de Intervals.icu incorrectas (401/403). Por favor verifica tu API Key.",
+            isAuthError: true,
+          },
+          { status: 401 }
+        );
+      }
     }
 
     // 3. Inserción del nuevo microciclo optimizado
@@ -85,6 +104,9 @@ export async function POST(req: NextRequest) {
       } else if (item.discipline === "Fuerza") {
         type = "WeightTraining";
         fallbackSyntax = PhysiologicalEngine.generateWorkoutSyntax("WeightTraining", "STRENGTH");
+      } else if (item.discipline === "Natacion" || (item.discipline as string) === "Natación") {
+        type = "Swim";
+        fallbackSyntax = item.workoutDoc || "Warmup\n- 200m Nado Suave\n\nMain (6x 100m)\n- 100m Ritmo Aeróbico c/20s desc\n\nCooldown\n- 100m Suave";
       } else {
         type = "Run";
         if (item.day === "Martes") {
@@ -100,7 +122,7 @@ export async function POST(req: NextRequest) {
 
       const eventPayload: CalendarEvent = {
         start_date_local: `${dateStr}T07:00:00`,
-        name: `[SGEA] ${item.workoutName}`,
+        name: `[PULSE AI] ${item.workoutName}`,
         description: workoutText,
         type,
         category: "WORKOUT",
@@ -109,15 +131,27 @@ export async function POST(req: NextRequest) {
       try {
         const created = await client.createEvent(eventPayload);
         createdEvents.push(created);
-      } catch (postErr) {
+      } catch (postErr: any) {
         console.warn(`Aviso al publicar sesión del ${item.day} (${dateStr}):`, postErr);
+        errors.push(`${item.day}: ${postErr?.message || "Error al publicar"}`);
       }
+    }
+
+    if (createdEvents.length === 0 && errors.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No se pudieron publicar las sesiones en Intervals.icu: ${errors[0]}`,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: `¡Microciclo actualizado exitosamente en Intervals.icu! (${createdEvents.length} sesiones actualizadas)`,
+      message: `¡Microciclo actualizado con éxito en Intervals.icu! (${createdEvents.length} sesiones publicadas)`,
       createdCount: createdEvents.length,
+      athleteUrl: `https://intervals.icu/activities`,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error al sincronizar con Intervals.icu";

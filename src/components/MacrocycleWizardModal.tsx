@@ -75,6 +75,9 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
   // Paso 3: Estrategia de Puente Pre-Temporada
   const [bridgeStrategy, setBridgeStrategy] = useState<"MAINTENANCE" | "BASE_GPP" | "EXTENDED_SPECIFIC">("MAINTENANCE");
 
+  // Modalidad de Intensidad Rector (Potencia, FC, Ritmo o RPE)
+  const [intensityMetric, setIntensityMetric] = useState<"POWER" | "HEART_RATE" | "PACE" | "RPE">("POWER");
+
   // Paso 5: Estado de Generación con IA
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [aiResult, setAiResult] = useState<AIMacrocycleResponse | null>(null);
@@ -474,7 +477,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                     <div className="rounded-xl bg-slate-950/80 p-3.5 border border-amber-500/20 text-xs text-slate-300 flex items-start gap-3">
                       <Sparkles className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="text-white">Dinámica de Transición SGEA:</strong> Al activar este plan, tu macrociclo rector actual será el <strong>Plan de Mantenimiento ({timeline.weeksUntilKickoff} semanas)</strong> para mantenerte en forma óptima. El <strong>{new Date(new Date(timeline.kickoffDateStr + "T00:00:00").getTime() - 86400000).toISOString().split("T")[0]}</strong> (el día antes del inicio), el Head Coach IA auditará tu nuevo nivel de fitness (CTL y Stryd CP) en Intervals.icu y construirá el <strong>Plan Específico de Maratón</strong> adaptado a tu condición física de ese momento.
+                        <strong className="text-white">Dinámica de Transición PULSE AI PRO:</strong> Al activar este plan, tu macrociclo rector actual será el <strong>Plan de Mantenimiento ({timeline.weeksUntilKickoff} semanas)</strong> para mantenerte en forma óptima. El <strong>{new Date(new Date(timeline.kickoffDateStr + "T00:00:00").getTime() - 86400000).toISOString().split("T")[0]}</strong> (el día antes del inicio), el Head Coach IA auditará tu nuevo nivel de fitness (CTL y Stryd CP) en Intervals.icu y construirá el <strong>Plan Específico de Maratón</strong> adaptado a tu condición física de ese momento.
                       </div>
                     </div>
                   </div>
@@ -528,12 +531,84 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
 
               <div className="rounded-xl bg-slate-950 p-3 border border-slate-800 text-center">
                 <span className="text-[10px] text-slate-400 font-bold uppercase">Stryd CP</span>
-                <p className="text-lg font-black text-amber-300 mt-1">{profile.run_ftp || 285}W</p>
+                <p className="text-lg font-black text-amber-300 mt-1">{profile.run_ftp ? `${profile.run_ftp}W` : "—"}</p>
               </div>
 
               <div className="rounded-xl bg-slate-950 p-3 border border-slate-800 text-center">
                 <span className="text-[10px] text-slate-400 font-bold uppercase">Bike FTP</span>
-                <p className="text-lg font-black text-cyan-300 mt-1">{profile.bike_ftp || 260}W</p>
+                <p className="text-lg font-black text-cyan-300 mt-1">{profile.bike_ftp ? `${profile.bike_ftp}W` : "—"}</p>
+              </div>
+            </div>
+
+            {/* Selector de Modalidad de Intensidad */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-bold text-white">
+                🎯 Modalidad de Intensidad Rector (¿Cómo deseas que la IA prescriba tus sesiones?)
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIntensityMetric("POWER")}
+                  className={`p-3 rounded-2xl border text-left transition-all space-y-1 cursor-pointer ${
+                    intensityMetric === "POWER"
+                      ? "bg-amber-500/15 border-amber-400 ring-2 ring-amber-400/30 text-white"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300">⚡ Potencia</span>
+                    {intensityMetric === "POWER" && <CheckCircle2 className="h-4 w-4 text-amber-400" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300 leading-tight">Vatios exactos (% Stryd CP / % FTP)</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIntensityMetric("HEART_RATE")}
+                  className={`p-3 rounded-2xl border text-left transition-all space-y-1 cursor-pointer ${
+                    intensityMetric === "HEART_RATE"
+                      ? "bg-rose-500/15 border-rose-400 ring-2 ring-rose-400/30 text-white"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-rose-300">💓 Frecuencia Cardíaca</span>
+                    {intensityMetric === "HEART_RATE" && <CheckCircle2 className="h-4 w-4 text-rose-400" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300 leading-tight">Zonas de pulso (% LTHR / Z1-Z5)</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIntensityMetric("PACE")}
+                  className={`p-3 rounded-2xl border text-left transition-all space-y-1 cursor-pointer ${
+                    intensityMetric === "PACE"
+                      ? "bg-cyan-500/15 border-cyan-400 ring-2 ring-cyan-400/30 text-white"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-cyan-300">⏱️ Ritmo / Velocidad</span>
+                    {intensityMetric === "PACE" && <CheckCircle2 className="h-4 w-4 text-cyan-400" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300 leading-tight">Minutos por kilómetro (min/km)</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIntensityMetric("RPE")}
+                  className={`p-3 rounded-2xl border text-left transition-all space-y-1 cursor-pointer ${
+                    intensityMetric === "RPE"
+                      ? "bg-emerald-500/15 border-emerald-400 ring-2 ring-emerald-400/30 text-white"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-300">🧠 Sensaciones (RPE)</span>
+                    {intensityMetric === "RPE" && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300 leading-tight">Esfuerzo percibido (Escala 1-10)</p>
+                </button>
               </div>
             </div>
 

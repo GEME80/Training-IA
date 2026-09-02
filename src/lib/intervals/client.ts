@@ -1,9 +1,14 @@
+import dns from "node:dns";
 import {
   AthleteProfile,
   AthleteWellness,
   CalendarEvent,
   ActivitySummary,
 } from "./types";
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {}
 
 const BASE_URL = "https://intervals.icu/api/v1";
 
@@ -15,6 +20,8 @@ function getAuthHeader(apiKey: string): Record<string, string> {
   return {
     Authorization: `Basic ${credentials}`,
     "Content-Type": "application/json",
+    Accept: "application/json",
+    "User-Agent": "PulseAI-SGEA/2.0 (Macintosh; Intel Mac OS X; athlete-sync)",
   };
 }
 
@@ -29,26 +36,81 @@ export class IntervalsClient {
     if (!athleteId || !apiKey) {
       throw new Error("IntervalsClient requiere athleteId y apiKey válidos.");
     }
-    this.athleteId = athleteId.trim();
-    this.apiKey = apiKey.trim();
+    this.athleteId = athleteId.replace(/["']/g, "").trim();
+    this.apiKey = apiKey.replace(/["']/g, "").trim();
   }
 
   /**
-   * Verifica la validez de las credenciales consultando el perfil del atleta.
+   * Verifica la validez de las credenciales consultando el perfil del atleta y extrayendo sus parámetros biométricos.
    */
-  async testConnection(): Promise<{ success: boolean; athleteName?: string; error?: string }> {
+  async testConnection(): Promise<{
+    success: boolean;
+    athleteName?: string;
+    athleteId?: string;
+    city?: string;
+    runFtp?: number;
+    bikeFtp?: number;
+    restingHR?: number;
+    maxHR?: number;
+    lthr?: number;
+    weight?: number;
+    athlete?: AthleteProfile;
+    error?: string;
+  }> {
     try {
       const athlete = await this.getAthlete();
+      const anyAthlete = athlete as unknown as Record<string, unknown>;
+      const athleteName = athlete.name || athlete.id || "Atleta";
+      const runFtp = (anyAthlete.icu_running_ftp as number) || (anyAthlete.run_ftp as number) || undefined;
+      const bikeFtp = (anyAthlete.icu_ftp as number) || (anyAthlete.bike_ftp as number) || undefined;
+      const restingHR = (anyAthlete.icu_resting_hr as number) || (anyAthlete.restingHR as number) || undefined;
+      const maxHR = (anyAthlete.max_hr as number) || (anyAthlete.maxHR as number) || undefined;
+      const lthr = (anyAthlete.lthr as number) || undefined;
+      const weight = (anyAthlete.icu_weight as number) || (anyAthlete.weight as number) || undefined;
+      const city = (anyAthlete.city as string) || undefined;
+
       return {
         success: true,
-        athleteName: athlete.name || athlete.id,
+        athleteName,
+        athleteId: athlete.id || this.athleteId,
+        city,
+        runFtp: typeof runFtp === "number" ? runFtp : undefined,
+        bikeFtp: typeof bikeFtp === "number" ? bikeFtp : undefined,
+        restingHR: typeof restingHR === "number" ? restingHR : undefined,
+        maxHR: typeof maxHR === "number" ? maxHR : undefined,
+        lthr: typeof lthr === "number" ? lthr : undefined,
+        weight: typeof weight === "number" ? weight : undefined,
+        athlete,
       };
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Error desconocido de conexión";
+      const cause = (err as any)?.cause ? ((err as any).cause.message || (err as any).cause.code || String((err as any).cause)) : undefined;
+      console.error(`[IntervalsClient] testConnection falló: ${errorMessage}`, cause);
       return {
         success: false,
-        error: errorMessage,
+        error: cause ? `${errorMessage} (${cause})` : errorMessage,
       };
+    }
+  }
+
+  /**
+   * Ejecuta peticiones fetch con control de tiempo y reintento resiliente.
+   */
+  private async safeFetch(url: string, init?: RequestInit): Promise<Response> {
+    try {
+      return await fetch(url, {
+        ...init,
+        cache: "no-store",
+        signal: AbortSignal.timeout(12000),
+      });
+    } catch (err: unknown) {
+      console.warn(`[IntervalsClient] Reintentando fetch a ${url}... Error previo:`, err instanceof Error ? err.message : err);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return await fetch(url, {
+        ...init,
+        cache: "no-store",
+        signal: AbortSignal.timeout(12000),
+      });
     }
   }
 
@@ -56,10 +118,9 @@ export class IntervalsClient {
    * Obtiene el perfil completo del atleta con umbrales y métricas de rendimiento (CTL, ATL, TSB).
    */
   async getAthlete(): Promise<AthleteProfile> {
-    const res = await fetch(`${BASE_URL}/athlete/${this.athleteId}`, {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}`, {
       method: "GET",
       headers: getAuthHeader(this.apiKey),
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -81,10 +142,9 @@ export class IntervalsClient {
     url.searchParams.set("oldest", oldest);
     url.searchParams.set("newest", newest);
 
-    const res = await fetch(url.toString(), {
+    const res = await this.safeFetch(url.toString(), {
       method: "GET",
       headers: getAuthHeader(this.apiKey),
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -104,10 +164,9 @@ export class IntervalsClient {
     url.searchParams.set("oldest", oldest);
     url.searchParams.set("newest", newest);
 
-    const res = await fetch(url.toString(), {
+    const res = await this.safeFetch(url.toString(), {
       method: "GET",
       headers: getAuthHeader(this.apiKey),
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -123,7 +182,7 @@ export class IntervalsClient {
    * Publica un nuevo entrenamiento estructurado en el calendario de Intervals.icu.
    */
   async createEvent(event: CalendarEvent): Promise<CalendarEvent> {
-    const res = await fetch(`${BASE_URL}/athlete/${this.athleteId}/events`, {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}/events`, {
       method: "POST",
       headers: getAuthHeader(this.apiKey),
       body: JSON.stringify(event),
@@ -143,7 +202,7 @@ export class IntervalsClient {
    * Elimina un evento/entrenamiento del calendario por su ID.
    */
   async deleteEvent(eventId: number): Promise<void> {
-    const res = await fetch(
+    const res = await this.safeFetch(
       `${BASE_URL}/athlete/${this.athleteId}/events/${eventId}`,
       {
         method: "DELETE",
@@ -166,10 +225,9 @@ export class IntervalsClient {
     url.searchParams.set("oldest", oldest);
     url.searchParams.set("newest", newest);
 
-    const res = await fetch(url.toString(), {
+    const res = await this.safeFetch(url.toString(), {
       method: "GET",
       headers: getAuthHeader(this.apiKey),
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -179,5 +237,57 @@ export class IntervalsClient {
     }
 
     return (await res.json()) as ActivitySummary[];
+  }
+
+  /**
+   * Obtiene la configuración de deportes (Run, Ride, etc.) con sus zonas de potencia y frecuencia cardíaca.
+   */
+  async getSportSettings(): Promise<any[]> {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}/sport-settings`, {
+      method: "GET",
+      headers: getAuthHeader(this.apiKey),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error al consultar sport-settings (${res.status}): ${res.statusText}`);
+    }
+
+    return (await res.json()) as any[];
+  }
+
+  /**
+   * Actualiza la configuración de un deporte específico (ej. Run o Ride) en Intervals.icu.
+   */
+  async updateSportSettings(sportId: string, settingsData: Record<string, any>): Promise<any> {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}/sport-settings/${sportId}`, {
+      method: "PUT",
+      headers: getAuthHeader(this.apiKey),
+      body: JSON.stringify(settingsData),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error al actualizar sport-settings (${res.status}): ${errText || res.statusText}`);
+    }
+
+    return await res.json();
+  }
+
+  /**
+   * Actualiza los datos generales del perfil del atleta (peso, restingHR, etc.) en Intervals.icu.
+   */
+  async updateAthlete(athleteData: Record<string, any>): Promise<AthleteProfile> {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}`, {
+      method: "PUT",
+      headers: getAuthHeader(this.apiKey),
+      body: JSON.stringify(athleteData),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error al actualizar perfil del atleta (${res.status}): ${errText || res.statusText}`);
+    }
+
+    return (await res.json()) as AthleteProfile;
   }
 }

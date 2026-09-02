@@ -2,11 +2,15 @@ import admin from "firebase-admin";
 
 if (!admin.apps.length) {
   try {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY && process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim().startsWith("{")) {
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        });
+      } catch (e) {
+        console.warn("Aviso: FIREBASE_SERVICE_ACCOUNT_KEY no pudo ser parseado como JSON.");
+      }
     } else if (
       process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
       process.env.FIREBASE_ADMIN_PRIVATE_KEY

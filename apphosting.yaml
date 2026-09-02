@@ -10,7 +10,7 @@ runConfig:
 
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: ""
+    value: "AIzaSyDPFpEHrZ8cQn2l7Zm-hqbJwRL4mMQf2Ro"
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "training-ia-8f67f.firebaseapp.com"
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -18,9 +18,11 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "training-ia-8f67f.firebasestorage.app"
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: ""
+    value: "518084993984"
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: ""
+    value: "1:518084993984:web:90479d02bb3884e6cdde25"
+  - variable: SUPERADMIN_EMAIL
+    value: "gerkof@gmail.com"
   - variable: ENCRYPTION_MASTER_KEY
     secret: sgea-encryption-master-key
   - variable: GEMINI_API_KEY

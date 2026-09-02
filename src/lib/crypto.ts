@@ -1,14 +1,11 @@
 import crypto from "crypto";
+import type { EncryptedPayload } from "./db/types";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // 96 bits recomendado para GCM
 const AUTH_TAG_LENGTH = 16; // 128 bits
 
-export interface EncryptedPayload {
-  ciphertext: string;
-  iv: string;
-  authTag: string;
-}
+export type { EncryptedPayload };
 
 /**
  * Obtiene la clave maestra simétrica de 32 bytes desde las variables de entorno.

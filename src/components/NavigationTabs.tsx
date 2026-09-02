@@ -26,7 +26,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
         <div className="flex items-center justify-between overflow-x-auto py-2.5 no-scrollbar gap-3">
           {/* Tab Buttons */}
           <div className="flex items-center space-x-2 shrink-0">
-            {/* 1. Plan del Macrociclo */}
+            {/* 1. Diseñador de Macrociclo */}
             <button
               type="button"
               onClick={() => onTabChange("macrocycle")}
@@ -37,7 +37,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
               }`}
             >
               <Compass className="h-4 w-4 text-amber-400" />
-              <span>1. Plan del Macrociclo</span>
+              <span>1. Diseñador de Macrociclo</span>
               {primaryRaceName && (
                 <span className="hidden sm:inline-block rounded bg-amber-500/10 px-1.5 py-0.2 text-[10px] text-amber-300 border border-amber-500/20 truncate max-w-[120px]">
                   {primaryRaceName}
@@ -45,7 +45,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
               )}
             </button>
 
-            {/* 2. Microciclo Activo & IA */}
+            {/* 2. Calendario Semanal */}
             <button
               type="button"
               onClick={() => onTabChange("microcycle")}
@@ -55,8 +55,8 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
                   : "bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200"
               }`}
             >
-              <Sparkles className={`h-4 w-4 text-cyan-400 ${isEvaluating ? "animate-spin" : ""}`} />
-              <span>2. Microciclo Activo & IA</span>
+              <Calendar className="h-4 w-4 text-cyan-400" />
+              <span>2. Calendario Semanal</span>
               {macrocyclePhaseLabel && (
                 <span className="hidden sm:inline-block rounded bg-cyan-500/10 px-1.5 py-0.2 text-[10px] text-cyan-300 border border-cyan-500/20 truncate max-w-[140px]">
                   {macrocyclePhaseLabel}

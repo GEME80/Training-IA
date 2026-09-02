@@ -4,6 +4,7 @@ import {
   MacrocyclePhaseType,
   MicrocycleType,
   TargetRace,
+  getCleanFocusDescription,
 } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 
@@ -128,8 +129,8 @@ export function generateWizardMacrocycle(
       let targetTss = isRecovery ? 260 : 330;
       let maxLongRunMinutes = isRecovery ? 45 : 55;
       let focusDescription = isRecovery
-        ? "Descarga de volumen y asimilación biológica para refrescar el TSB."
-        : "Estabilidad de CTL, salud articular (sóleo/Aquiles) y consistencia.";
+        ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
+        : "Mantenimiento equilibrado: rodajes cómodos, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
 
       if (moment === "base_building") {
         phase = i < Math.floor(totalWeeks / 2) ? "BASE_1" : "BASE_2";
@@ -139,7 +140,9 @@ export function generateWizardMacrocycle(
         badgeColor = isRecovery ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
         targetTss = isRecovery ? 280 : 390;
         maxLongRunMinutes = isRecovery ? 50 : 70;
-        focusDescription = "Desarrollo mitocondrial, capilarización periférica y cuestas cortas de neurofuerza.";
+        focusDescription = isRecovery
+          ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
+          : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
       } else if (moment === "post_race_recovery") {
         phase = "RECOVERY";
         phaseLabel = "Recuperación Post-Carrera";
@@ -148,7 +151,7 @@ export function generateWizardMacrocycle(
         badgeColor = "bg-purple-500/20 text-purple-300 border-purple-500/30";
         targetTss = 160 + i * 40;
         maxLongRunMinutes = 25 + i * 10;
-        focusDescription = "Desinflamación miofibrilar, descanso pasivo y cero impacto articular agudo.";
+        focusDescription = "Descarga pasiva, ciclismo regenerativo suave y cero impacto articular agudo.";
       } else if (moment === "injury_rehab") {
         phase = "RECOVERY";
         phaseLabel = "Reacondicionamiento Gradual";
@@ -157,7 +160,7 @@ export function generateWizardMacrocycle(
         badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/30";
         targetTss = 180 + i * 30;
         maxLongRunMinutes = 25 + i * 5;
-        focusDescription = "Intervalos de caminar-correr (CaCo) y fortalecimiento excéntrico de sóleo/Aquiles.";
+        focusDescription = "Intervalos de caminar-correr (CaCo) y fortalecimiento progresivo controlado.";
       }
 
       weeks.push({
@@ -173,7 +176,7 @@ export function generateWizardMacrocycle(
         microcycleBadgeColor: badgeColor,
         targetTss,
         maxLongRunMinutes,
-        focusDescription,
+        focusDescription: getCleanFocusDescription(focusDescription, phase, isRecovery),
         isCurrentWeek: isCurrent,
       });
     }
@@ -295,8 +298,15 @@ export function generateWizardMacrocycle(
       microType = "COMPETICION";
       microLabel = `🏆 DÍA DE CARRERA: ${primaryRace.name}`;
       badgeColor = "bg-amber-500/25 text-amber-300 border-amber-500/40 font-bold";
-      targetTss = 180;
-      maxLongRun = 25;
+      targetTss = 220;
+      // Calcular duración real según distancia de la carrera (no hardcodeado)
+      const rDist = (primaryRace.distance || "42k").toString();
+      maxLongRun = rDist.includes("21") || rDist.includes("half") ? 110
+        : rDist.includes("10") ? 55
+        : rDist.includes("5") ? 30
+        : rDist.includes("70.3") || rDist.includes("703") ? 210
+        : rDist.includes("trail") ? 240
+        : 220; // Maratón 42K por defecto
       focus = `Máxima frescura neuromuscular, recarga de glucógeno y ejecución del ritmo de competición en ${primaryRace.name}.`;
     } else if (countdownSpecific <= 3) {
       phase = "TAPER";
@@ -331,19 +341,21 @@ export function generateWizardMacrocycle(
       targetTss = isRecovery ? 340 : 470;
       maxLongRun = isRecovery ? 65 : 95;
       focus = isRecovery
-        ? "Consolidación de meseta de CTL y descanso miofibrilar."
-        : "Series de umbral Stryd Z4 (% CP) y extensión de durabilidad aeróbica.";
+        ? "Recuperación estratégica: soltamos piernas y recargamos energía antes del siguiente bloque de intensidad."
+        : "Ritmo de carrera y potencia: series a ritmo exigente y aumento gradual de la tirada larga del fin de semana.";
     } else {
       phase = countdownSpecific > 14 ? "BASE_1" : "BASE_2";
       phaseLabel = phase === "BASE_1" ? "Base Aeróbica I" : "Base Aeróbica II";
       microType = isRecovery ? "DESCARGA_ASIMILACION" : "CARGA";
-      microLabel = isRecovery ? "Descarga / Asimilación" : "Base & Capilarización";
+      microLabel = isRecovery ? "Descarga / Asimilación" : "Base & Resistencia";
       badgeColor = isRecovery
         ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
         : "bg-teal-500/20 text-teal-300 border-teal-500/30";
       targetTss = isRecovery ? 300 : 410;
       maxLongRun = isRecovery ? 55 : 75;
-      focus = "Desarrollo mitocondrial, cuestas cortas y reactividad tendinosa de sóleo.";
+      focus = isRecovery
+        ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
+        : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
     }
 
     const isCurrent = currentMonday.getTime() === weekMon.getTime();
@@ -361,7 +373,7 @@ export function generateWizardMacrocycle(
       microcycleBadgeColor: badgeColor,
       targetTss,
       maxLongRunMinutes: maxLongRun,
-      focusDescription: focus,
+      focusDescription: getCleanFocusDescription(focus, phase, isRecovery),
       isCurrentWeek: isCurrent,
     });
   }

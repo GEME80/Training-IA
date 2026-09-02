@@ -15,8 +15,13 @@ import {
   Send,
   RefreshCw,
   CheckCircle2,
+  ExternalLink,
+  Key,
+  XCircle,
+  Sparkles,
 } from "lucide-react";
 import { PlanItem, getWeekDates } from "@/lib/gemini/engine";
+import { MacrocycleWeek, getOffsetForWeek } from "@/lib/physiology/macrocycle";
 import { WorkoutChart } from "./WorkoutChart";
 
 interface WeeklyPlannerProps {
@@ -26,8 +31,14 @@ interface WeeklyPlannerProps {
   weekOffset: number;
   onWeekChange: (offset: number) => void;
   onPlanUpdate: (updatedPlan: PlanItem[]) => void;
-  onSyncIntervals?: () => Promise<void>;
+  onSyncIntervals?: () => Promise<{ success: boolean; createdCount?: number; athleteUrl?: string }>;
   isSyncing?: boolean;
+  onNavigateToMacrocycle?: () => void;
+  macrocyclePhaseLabel?: string;
+  onOpenSettings?: () => void;
+  macrocycleWeeks?: MacrocycleWeek[];
+  onRecalibrateWithAI?: () => void;
+  isGeneratingAI?: boolean;
 }
 
 export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
@@ -39,11 +50,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   onPlanUpdate,
   onSyncIntervals,
   isSyncing = false,
+  onNavigateToMacrocycle,
+  macrocyclePhaseLabel,
+  onOpenSettings,
+  macrocycleWeeks,
+  onRecalibrateWithAI,
+  isGeneratingAI = false,
 }) => {
   const [currentPlan, setCurrentPlan] = useState<PlanItem[]>(initialPlan);
   const [expandedSyntaxIdx, setExpandedSyntaxIdx] = useState<number | null>(null);
   const [hasUserCustomized, setHasUserCustomized] = useState<boolean>(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
+  const [syncErrorMsg, setSyncErrorMsg] = useState<string | null>(null);
+  const [isAuthError, setIsAuthError] = useState<boolean>(false);
 
   // Sincronizar estado local cuando initialPlan cambie desde el backend
   React.useEffect(() => {
@@ -111,13 +130,13 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     updatePlan(updated);
   };
 
-  // 2. Intercambio de Sesiones entre dos días (Swap)
-  const handleSwapDays = (fromIdx: number, toIdx: number) => {
-    if (fromIdx === toIdx) return;
-    const updated = [...currentPlan];
+  // 2. Intercambio de entrenamientos entre días
+  const handleSwapDays = (idxA: number, idxB: number) => {
+    if (idxA < 0 || idxA >= currentPlan.length || idxB < 0 || idxB >= currentPlan.length) return;
 
-    const itemA = { ...updated[fromIdx] };
-    const itemB = { ...updated[toIdx] };
+    const updated = [...currentPlan];
+    const itemA = { ...updated[idxA] };
+    const itemB = { ...updated[idxB] };
 
     const dayA = itemA.day;
     const dateA = itemA.date;
@@ -127,7 +146,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     const dateB = itemB.date;
     const formattedDateB = itemB.formattedDate;
 
-    updated[fromIdx] = {
+    updated[idxA] = {
       ...itemB,
       day: dayA,
       date: dateA,
@@ -135,7 +154,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       isCustomized: true,
     };
 
-    updated[toIdx] = {
+    updated[idxB] = {
       ...itemA,
       day: dayB,
       date: dateB,
@@ -157,12 +176,30 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   const handleSync = async () => {
     if (!onSyncIntervals) return;
     setSyncSuccessMsg(null);
+    setSyncErrorMsg(null);
+    setIsAuthError(false);
+
     try {
-      await onSyncIntervals();
-      setSyncSuccessMsg("¡Microciclo publicado en Intervals.icu!");
-      setTimeout(() => setSyncSuccessMsg(null), 5000);
-    } catch {
-      // Error manejado en parent
+      const res = await onSyncIntervals();
+      if (res && res.success) {
+        setSyncSuccessMsg(
+          `¡Microciclo publicado exitosamente en Intervals.icu! (${res.createdCount || 6} sesiones creadas). Tu Garmin descargará las sesiones automáticamente.`
+        );
+      } else {
+        setSyncSuccessMsg("¡Microciclo publicado en Intervals.icu!");
+      }
+      setTimeout(() => setSyncSuccessMsg(null), 8000);
+    } catch (err: any) {
+      const errMsg = err?.message || "Error al sincronizar con Intervals.icu";
+      setSyncErrorMsg(errMsg);
+      if (
+        errMsg.includes("API Key") ||
+        errMsg.includes("401") ||
+        errMsg.includes("403") ||
+        errMsg.includes("no configurada")
+      ) {
+        setIsAuthError(true);
+      }
     }
   };
 
@@ -202,6 +239,49 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
   return (
     <div className="card-gradient rounded-2xl p-5 border border-slate-800 space-y-5">
+      {/* Carrusel Rápido de Semanas del Macrociclo */}
+      {macrocycleWeeks && macrocycleWeeks.length > 0 && (
+        <div className="space-y-1.5 pb-2 border-b border-slate-800/80">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+            <span className="flex items-center gap-1.5 text-amber-300">
+              <Sparkles className="h-3.5 w-3.5" />
+              Semanas del Macrociclo ({macrocycleWeeks.length} Semanas):
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+              Haz clic en cualquier semana para editar y sincronizar
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
+            {macrocycleWeeks.map((w, idx) => {
+              const offset = getOffsetForWeek(w);
+              const isSelected = weekOffset === offset;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSwitchWeek(offset)}
+                  className={`flex-shrink-0 rounded-xl px-3 py-2 border text-left transition ${
+                    isSelected
+                      ? "bg-amber-500/20 border-amber-400 text-amber-300 ring-2 ring-amber-400/40 shadow-lg shadow-amber-500/10"
+                      : "bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 text-xs font-black">
+                    <span>Semana {w.weekNumber}</span>
+                    <span className="text-[10px] font-mono text-slate-400">{w.targetTss} TSS</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">{w.formattedRange}</div>
+                  <div className="text-[9px] font-bold truncate mt-1 text-slate-300">
+                    {w.isRecoveryWeek ? "🌿 Descarga 3:1" : w.phaseLabel || w.phase}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Header & Week Navigation Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
@@ -213,6 +293,11 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-mono text-emerald-400 border border-slate-700">
               {startDate} — {endDate}
             </span>
+            {macrocyclePhaseLabel && (
+              <span className="hidden sm:inline-block rounded bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-300 border border-amber-500/30">
+                {macrocyclePhaseLabel}
+              </span>
+            )}
           </div>
           <p className="mt-0.5 text-xs text-slate-400">
             Reorganiza sesiones, personaliza días de descanso y visualiza la gráfica de intervalos antes de sincronizar
@@ -221,6 +306,18 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
         {/* Week Selector, Reset Actions & Sync to Intervals */}
         <div className="flex flex-wrap items-center gap-2">
+          {onNavigateToMacrocycle && (
+            <button
+              type="button"
+              onClick={onNavigateToMacrocycle}
+              className="flex items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+              title="Volver a la vista del Calendario Maestro del Macrociclo"
+            >
+              <Calendar className="h-3.5 w-3.5 text-amber-400" />
+              <span>Ver Macrociclo Completo</span>
+            </button>
+          )}
+
           {hasUserCustomized && (
             <button
               onClick={handleResetToAgent}
@@ -273,6 +370,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </button>
           </div>
 
+          {/* Botón de Recalibrar con IA */}
+          {onRecalibrateWithAI && (
+            <button
+              onClick={onRecalibrateWithAI}
+              disabled={isGeneratingAI}
+              className="flex items-center space-x-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 px-3.5 py-2 text-xs font-black text-amber-300 hover:bg-amber-500 hover:text-black transition disabled:opacity-50"
+              title="Recalibrar este microciclo con IA"
+            >
+              <Sparkles className={`h-3.5 w-3.5 ${isGeneratingAI ? "animate-spin text-amber-400" : "text-amber-400"}`} />
+              <span>{isGeneratingAI ? "Calculando..." : "Recalibrar IA"}</span>
+            </button>
+          )}
+
           {/* Sincronizar con Intervals (Ubicado estratégicamente al lado del calendario) */}
           {onSyncIntervals && (
             <button
@@ -294,9 +404,42 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
       {/* Sync Success Feedback */}
       {syncSuccessMsg && (
-        <div className="flex items-center space-x-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 animate-fadeIn">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-          <span>{syncSuccessMsg}</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/20 p-3.5 text-xs text-emerald-300 animate-fadeIn">
+          <div className="flex items-center space-x-2.5">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+            <span className="font-semibold">{syncSuccessMsg}</span>
+          </div>
+          <a
+            href="https://intervals.icu/activities"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-1 text-[11px] font-bold text-cyan-400 hover:text-cyan-300 underline shrink-0"
+          >
+            <span>Ver en Intervals.icu</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+
+      {/* Sync Error Feedback */}
+      {syncErrorMsg && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-rose-500/40 bg-rose-950/20 p-3.5 text-xs text-rose-300 animate-fadeIn">
+          <div className="flex items-center space-x-2.5">
+            <XCircle className="h-4 w-4 shrink-0 text-rose-400" />
+            <span>
+              <strong>Error de Sincronización:</strong> {syncErrorMsg}
+            </span>
+          </div>
+          {onOpenSettings && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="flex items-center space-x-1.5 rounded-lg bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-[11px] font-bold text-rose-200 hover:bg-rose-500/30 transition shrink-0"
+            >
+              <Key className="h-3 w-3" />
+              <span>Configurar API Key</span>
+            </button>
+          )}
         </div>
       )}
 

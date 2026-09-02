@@ -4,55 +4,66 @@ import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { GeminiPhysiologicalAgent } from "@/lib/gemini/engine";
 import { calculateMacrocyclePhase, TargetRace } from "@/lib/physiology/macrocycle";
 import { AthleteProfile, AthleteWellness, CalendarEvent } from "@/lib/intervals/types";
+import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/lib/dateUtils";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  let customRunFtp: number | undefined;
+  let customBikeFtp: number | undefined;
+
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const {
       athleteId,
       apiKey,
-      customRunFtp = 280,
-      customBikeFtp = 250,
+      uid,
+      customRunFtp: inputRunFtp,
+      customBikeFtp: inputBikeFtp,
       weekOffset = 0,
       geminiApiKey,
       selectedModel,
       customPrompt,
       targetRaces = [],
       weeklyAvailability,
-      skipAI = false,
-    } = body;
+      skipAI = true,
+    } = body || {};
 
-    let profile: AthleteProfile;
+    customRunFtp = inputRunFtp;
+    customBikeFtp = inputBikeFtp;
+
+    const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
+      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+
+    let profile: AthleteProfile = getEmptyProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
     let wellness: AthleteWellness[] = [];
     let events: CalendarEvent[] = [];
     let isLive = false;
-
-    const effectiveApiKey = (apiKey || process.env.INTERVALS_API_KEY || "").trim();
-    const effectiveAthleteId = (athleteId || process.env.INTERVALS_ATHLETE_ID || "i442091").trim();
+    let executedWeeklyTss = 0;
+    let dailyExecutedActivities: Record<string, any> = {};
 
     // Si se proporcionan credenciales activas, consultamos la API de Intervals en vivo
     if (effectiveAthleteId && effectiveApiKey) {
       try {
         const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
         
-        // Rango de fechas: últimos 90 días para asegurar captura completa de PMC y Rolling HRV
         const today = new Date();
-        const past90Days = new Date();
-        past90Days.setDate(today.getDate() - 90);
-        
-        const next7Days = new Date();
-        next7Days.setDate(today.getDate() + 7);
+        const past60Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 60);
+        const past30Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+        const next7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
 
-        const oldestStr = past90Days.toISOString().split("T")[0];
-        const newestStr = today.toISOString().split("T")[0];
-        const futureStr = next7Days.toISOString().split("T")[0];
-
-        const [athleteData, wellnessData, calendarEvents] = await Promise.all([
+        const oldestWellnessStr = formatLocalDateToYMD(past60Days);
+        const oldestActivitiesStr = formatLocalDateToYMD(past30Days);
+        const newestStr = getLocalTodayStr();
+        const futureStr = formatLocalDateToYMD(next7Days);
+        const thisMondayStr = getMondayOfWeekStr(today);
+        const [athleteData, wellnessData, calendarEvents, sportSettingsData, activitiesData] = await Promise.all([
           client.getAthlete().catch((err) => {
-            console.warn("Aviso al consultar atleta:", err);
+            console.warn("Aviso al consultar atleta en Intervals.icu:", err instanceof Error ? err.message : err);
             return null;
           }),
-          client.getWellness(oldestStr, newestStr).catch((err) => {
+          client.getWellness(oldestWellnessStr, newestStr).catch((err) => {
             console.warn("Aviso al consultar wellness:", err);
             return [];
           }),
@@ -60,7 +71,54 @@ export async function POST(req: NextRequest) {
             console.warn("Aviso al consultar eventos:", err);
             return [];
           }),
+          client.getSportSettings().catch((err) => {
+            console.warn("Aviso al consultar sportSettings:", err);
+            return [];
+          }),
+          client.getActivities(oldestActivitiesStr, newestStr).catch((err) => {
+            console.warn("Aviso al consultar actividades:", err);
+            return [];
+          }),
         ]);
+
+        dailyExecutedActivities = {};
+
+        (activitiesData || []).forEach((act: any) => {
+          if (!act.start_date_local) return;
+          const dateKey = act.start_date_local.split("T")[0];
+          const tss = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
+          const movingTimeMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
+          const watts = act.icu_weighted_avg_watts ?? act.icu_average_watts ?? act.weighted_average_watts ?? act.average_watts ?? act.device_watts;
+          const heartrate = act.average_heartrate;
+          const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
+
+          if (!dailyExecutedActivities[dateKey]) {
+            dailyExecutedActivities[dateKey] = {
+              date: dateKey,
+              totalTss: 0,
+              activities: [],
+            };
+          }
+          dailyExecutedActivities[dateKey].totalTss += tss;
+          dailyExecutedActivities[dateKey].activities.push({
+            id: act.id,
+            name: act.name,
+            type: act.type,
+            tss,
+            movingTimeMin,
+            watts: typeof watts === "number" ? Math.round(watts) : undefined,
+            heartrate: typeof heartrate === "number" ? Math.round(heartrate) : undefined,
+            distanceKm,
+          });
+        });
+
+        const weeklyExecutedTss = (activitiesData || [])
+          .filter((act: any) => act.start_date_local && act.start_date_local.split("T")[0] >= thisMondayStr)
+          .reduce((sum: number, act: any) => {
+            const load = act.icu_training_load ?? act.training_load ?? act.tss ?? 0;
+            return sum + (typeof load === "number" ? load : 0);
+          }, 0);
+        executedWeeklyTss = Math.round(weeklyExecutedTss);
 
         if (athleteData) {
           isLive = true;
@@ -69,36 +127,122 @@ export async function POST(req: NextRequest) {
           const icuAtl = anyAthlete.icu_atl ?? anyAthlete.atl;
           const icuRestingHr = anyAthlete.icu_resting_hr ?? anyAthlete.restingHR;
           const icuFtp = anyAthlete.icu_ftp ?? anyAthlete.bike_ftp;
-          const icuRunFtp = anyAthlete.icu_run_ftp ?? anyAthlete.run_ftp;
+          const icuRunFtp = anyAthlete.icu_running_ftp ?? anyAthlete.run_ftp;
+          const icuDob = anyAthlete.icu_date_of_birth || anyAthlete.dob || anyAthlete.date_of_birth;
+          const icuGender = anyAthlete.icu_gender || anyAthlete.gender;
 
-          const sportSettings = anyAthlete.sportSettings || [];
-          const runSport = sportSettings.find((s: any) => s.types?.includes("Run") || s.id === "Run");
-          const rideSport = sportSettings.find((s: any) => s.types?.includes("Ride") || s.id === "Ride");
+          const sports = (sportSettingsData && sportSettingsData.length > 0)
+            ? sportSettingsData
+            : (anyAthlete.sportSettings || []);
+          const runSport = sports.find((s: any) =>
+            s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) ||
+            /run/i.test(String(s.id)) ||
+            s.id === 1844382
+          );
+          const rideSport = sports.find((s: any) =>
+            s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
+            /ride|cycling|bike/i.test(String(s.id)) ||
+            s.id === 1844381
+          );
+
+          // Prioridad absoluta a los valores en vivo de Intervals.icu
+          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || icuRunFtp || customRunFtp || anyAthlete.run_ftp || 313;
+          const resolvedBikeFtp = rideSport?.ftp || icuFtp || customBikeFtp || anyAthlete.bike_ftp || 238;
+
+          let computedAge: number | undefined = undefined;
+          if (icuDob) {
+            const birth = new Date(icuDob);
+            if (!isNaN(birth.getTime())) {
+              const today = new Date();
+              let age = today.getFullYear() - birth.getFullYear();
+              const monthDiff = today.getMonth() - birth.getMonth();
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+              }
+              if (age > 0 && age < 120) computedAge = age;
+            }
+          }
+
+          const resolvedLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr;
+          const resolvedMaxHr = runSport?.max_hr || rideSport?.max_hr || anyAthlete.maxHR || (computedAge ? Math.round(208 - 0.7 * computedAge) : undefined);
+          const resolvedWeight = anyAthlete.icu_weight || anyAthlete.weight;
+
+          console.log("✓ [API evaluate] Telemetría y umbrales resueltos dinámicamente desde Intervals.icu:", {
+            atleta: athleteData.name,
+            runFtp: resolvedRunFtp,
+            bikeFtp: resolvedBikeFtp,
+            lthr: resolvedLthr,
+            ctl: icuCtl,
+            atl: icuAtl,
+            edad: computedAge,
+          });
 
           profile = {
             ...athleteData,
             id: athleteData.id || effectiveAthleteId,
-            name: athleteData.name || "Germán Morales",
+            name: athleteData.name || "Atleta",
+            birthDate: icuDob,
+            gender: icuGender === "MALE" || icuGender === "M" ? "M" : icuGender === "FEMALE" || icuGender === "F" ? "F" : "OTHER",
+            age: computedAge,
             ctl: typeof icuCtl === "number" ? icuCtl : undefined,
             atl: typeof icuAtl === "number" ? icuAtl : undefined,
             restingHR: typeof icuRestingHr === "number" ? icuRestingHr : undefined,
-            run_ftp: customRunFtp || runSport?.ftp || icuRunFtp || athleteData.run_ftp || 285,
-            bike_ftp: customBikeFtp || rideSport?.ftp || icuFtp || athleteData.bike_ftp || 260,
+            run_ftp: resolvedRunFtp,
+            bike_ftp: resolvedBikeFtp,
+            lthr: resolvedLthr,
+            maxHR: resolvedMaxHr,
+            weight: resolvedWeight,
           };
+        } else if (
+          (sportSettingsData && sportSettingsData.length > 0) ||
+          (activitiesData && activitiesData.length > 0) ||
+          (wellnessData && wellnessData.length > 0)
+        ) {
+          isLive = true;
+          const sports = sportSettingsData || [];
+          const runSport = sports.find((s: any) =>
+            s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) ||
+            /run/i.test(String(s.id)) ||
+            s.id === 1844382
+          );
+          const rideSport = sports.find((s: any) =>
+            s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
+            /ride|cycling|bike/i.test(String(s.id)) ||
+            s.id === 1844381
+          );
+          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || customRunFtp || 327;
+          const resolvedBikeFtp = rideSport?.ftp || customBikeFtp || 240;
+          const resolvedLthr = runSport?.lthr || rideSport?.lthr || 168;
+
+          const latestWel = wellnessData && wellnessData.length > 0 ? wellnessData[wellnessData.length - 1] : undefined;
+
+          profile = {
+            id: effectiveAthleteId,
+            name: effectiveAthleteId === "i442091" ? "German Morales" : "Atleta",
+            run_ftp: resolvedRunFtp,
+            bike_ftp: resolvedBikeFtp,
+            lthr: resolvedLthr,
+            ctl: latestWel?.ctl,
+            atl: latestWel?.atl,
+            restingHR: latestWel?.restingHR,
+          } as any;
         } else {
-          profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
+          isLive = false;
+          profile = getEmptyProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
         }
 
-        wellness = wellnessData.length > 0 ? wellnessData : getFallbackWellness();
+        wellness = wellnessData.length > 0 ? wellnessData : [];
         events = calendarEvents;
       } catch (clientErr) {
-        console.warn("Fallo al conectar con Intervals API, utilizando datos de telemetría de respaldo:", clientErr);
-        profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
-        wellness = getFallbackWellness();
+        console.warn("Fallo al conectar con Intervals API:", clientErr);
+        isLive = false;
+        profile = getEmptyProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
+        wellness = [];
       }
     } else {
-      profile = getFallbackProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
-      wellness = getFallbackWellness();
+      isLive = false;
+      profile = getEmptyProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
+      wellness = [];
     }
 
     // 1. Evaluación del motor fisiológico
@@ -111,71 +255,77 @@ export async function POST(req: NextRequest) {
     profile.rampRate = physioStatus.rampRate;
     profile.restingHR = physioStatus.restingHR ?? profile.restingHR;
 
-    // 2. Calcular fase de macrociclo según carreras objetivo
-    const macrocyclePhase = calculateMacrocyclePhase(targetRaces as TargetRace[]);
+    // 2. Calcular fase de macrociclo según carreras objetivo (null si no hay carreras)
+    const macrocyclePhase = (targetRaces && Array.isArray(targetRaces) && targetRaces.length > 0)
+      ? calculateMacrocyclePhase(targetRaces as TargetRace[])
+      : null;
 
-    // 3. Inferencia y generación del árbol de decisiones del Head Coach (Gemini con descubrimiento dinámico)
-    const agentDecision = await GeminiPhysiologicalAgent.analyzeMicrocycle(
-      profile,
-      wellness,
-      events,
-      physioStatus,
-      Number(weekOffset) || 0,
-      {
-        customApiKey: geminiApiKey,
-        preferredModel: selectedModel,
-        customDirectives: customPrompt,
-        macrocyclePhase,
-        weeklyAvailability,
-        skipAI,
-      }
-    );
+    // 3. Inferencia y generación del árbol de decisiones del Head Coach (Gemini con fallback automático)
+    let agentDecision;
+    try {
+      agentDecision = await GeminiPhysiologicalAgent.analyzeMicrocycle(
+        profile,
+        wellness,
+        events,
+        physioStatus,
+        Number(weekOffset) || 0,
+        {
+          customApiKey: geminiApiKey,
+          preferredModel: selectedModel,
+          customDirectives: customPrompt,
+          macrocyclePhase,
+          weeklyAvailability,
+          skipAI,
+        }
+      );
+    } catch (agentErr) {
+      console.warn("Fallo en inferencia de agente, usando fallback determinístico:", agentErr);
+      agentDecision = null;
+    }
 
     return NextResponse.json({
       success: true,
       isLive,
       profile,
+      wellness,
+      events,
       physioStatus,
       macrocyclePhase,
       agentDecision,
+      executedWeeklyTss,
+      dailyExecutedActivities,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Error al evaluar microciclo";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error("Error capturado en /api/evaluate:", error);
+    const defaultProfile = getEmptyProfile("i442091", customRunFtp, customBikeFtp);
+    const defaultPhysio = PhysiologicalEngine.evaluateAthlete(defaultProfile, []);
+
+    return NextResponse.json({
+      success: true,
+      isLive: false,
+      profile: defaultProfile,
+      wellness: [],
+      events: [],
+      physioStatus: defaultPhysio,
+      macrocyclePhase: null,
+      agentDecision: null,
+      executedWeeklyTss: 0,
+      dailyExecutedActivities: {},
+      warning: error instanceof Error ? error.message : "Evaluación recuperada por fallback",
+    });
   }
 }
 
-function getFallbackProfile(athleteId: string, runFtp: number, bikeFtp: number): AthleteProfile {
+function getEmptyProfile(athleteId?: string, runFtp?: number, bikeFtp?: number): AthleteProfile {
   return {
-    id: athleteId,
-    name: "Germán Morales (SGEA Atleta)",
-    ctl: 68.4,
-    atl: 84.2,
-    tsb: -15.8,
-    rampRate: 4.5,
-    restingHR: 46,
-    run_ftp: runFtp || 285,
-    bike_ftp: bikeFtp || 260,
+    id: athleteId || "i442091",
+    name: "Atleta",
+    ctl: 0,
+    atl: 0,
+    tsb: 0,
+    rampRate: 0,
+    run_ftp: runFtp,
+    bike_ftp: bikeFtp,
   };
 }
 
-function getFallbackWellness(): AthleteWellness[] {
-  const records: AthleteWellness[] = [];
-  const today = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(today.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
-    records.push({
-      id: dateStr,
-      date: dateStr,
-      ctl: 60 + (30 - i) * 0.28,
-      atl: 75 + Math.sin(i / 2) * 12,
-      tsb: -15 + Math.sin(i / 2) * 8,
-      restingHR: 46 + (i % 3 === 0 ? 2 : 0),
-      hrv: 62 + Math.sin(i) * 6,
-      sleepQuality: 4,
-    });
-  }
-  return records;
-}

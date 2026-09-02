@@ -26,7 +26,9 @@ export type MicrocycleType =
   | "IMPACTO_CHOQUE"
   | "TAPER"
   | "COMPETICION"
-  | "MANTENIMIENTO";
+  | "MANTENIMIENTO"
+  | "TEST_CONTROL"
+  | "CIERRE_PLAN";
 
 export interface MacrocycleWeek {
   weekNumber: number; // 1 a 16
@@ -43,19 +45,45 @@ export interface MacrocycleWeek {
   maxLongRunMinutes: number;
   focusDescription: string;
   isCurrentWeek: boolean;
+  isPastWeek?: boolean;
+  isFutureWeek?: boolean;
+  milestone?: string;
+  isRecoveryWeek?: boolean;
 }
 
 export interface MacrocycleBlueprint {
   mode: "MARATHON_SPECIFIC" | "PRE_SEASON_MAINTENANCE" | "GENERAL_MAINTENANCE";
-  cycleTitle: string; // "Ciclo de Mantenimiento Adaptativo" vs "Ciclo Específico de Maratón"
+  cycleTitle: string;
+  cycleSubtitle?: string;
   primaryRace: TargetRace | null;
-  startDate: string; // Fecha de inicio de preparación específica de 16 semanas
+  startDate: string;
   raceDate: string | null;
-  weeksUntilKickoff: number | null; // Semanas que faltan para arrancar el ciclo de 16 sem
+  weeksUntilKickoff: number | null;
   totalWeeks: number;
   currentWeekIndex: number;
   currentWeek: MacrocycleWeek;
   weeks: MacrocycleWeek[];
+  /** Snapshot de la Matriz Semanal del Atleta al momento de crear el plan */
+  availabilitySnapshot?: Record<string, string | string[]>;
+  /** Tipo de distancia/disciplina que rige los modelos de microciclo */
+  distanceType?: string;
+  /** CTL del atleta en el momento de generación (para auditoría y escalado) */
+  athleteCtlAtCreation?: number;
+}
+
+
+export interface SeasonPlanItem {
+  id: string;
+  planName: string;
+  goalType: string;
+  blueprint: MacrocycleBlueprint;
+  startDate: string; // "YYYY-MM-DD" (Lunes)
+  endDate: string; // "YYYY-MM-DD" (Domingo)
+  totalWeeks: number;
+  status: "COMPLETED" | "ACTIVE" | "UPCOMING";
+  orderIndex: number;
+  linkedRaceId?: string;
+  createdAt: string;
 }
 
 export interface MacrocyclePhaseInfo {
@@ -73,6 +101,36 @@ export interface MacrocyclePhaseInfo {
   isSpecificMarathonPhase: boolean;
   weeklyTssTarget: string;
   blueprint?: MacrocycleBlueprint;
+}
+
+/**
+ * Calcula el estado de un plan en base a su rango de fechas y la fecha viva de hoy.
+ */
+export function calculatePlanStatus(
+  startDateStr: string,
+  endDateStr: string,
+  baseDate: Date = new Date()
+): "COMPLETED" | "ACTIVE" | "UPCOMING" {
+  const today = new Date(baseDate);
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(startDateStr + "T00:00:00");
+  const end = new Date(endDateStr + "T23:59:59");
+
+  if (today > end) return "COMPLETED";
+  if (today < start) return "UPCOMING";
+  return "ACTIVE";
+}
+
+/**
+ * Obtiene el lunes inmediatamente posterior a una fecha dada para encadenamiento sin superposición.
+ */
+export function getNextMondayAfterDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  // Si ya es domingo (0), el día siguiente es lunes (+1). Si no, días hasta el próximo lunes: (8 - day) % 7 o (1 + (7 - day))
+  const daysUntilNextMonday = day === 0 ? 1 : 8 - day;
+  d.setDate(d.getDate() + daysUntilNextMonday);
+  return d.toISOString().split("T")[0];
 }
 
 /**
@@ -102,7 +160,7 @@ function formatRange(start: Date, end: Date): string {
 export function generateMacrocycleBlueprint(
   races: TargetRace[] = [],
   baseDate: Date = new Date()
-): MacrocycleBlueprint {
+): MacrocycleBlueprint | null {
   const now = new Date(baseDate);
   now.setHours(0, 0, 0, 0);
   const currentMonday = getMonday(now);
@@ -117,54 +175,9 @@ export function generateMacrocycleBlueprint(
 
   const primaryRace = futureRaces.find((r) => r.priority === "A") || futureRaces[0] || null;
 
-  // CASO 1: SIN CARRERA PRINCIPAL (Mantenimiento General Continuo)
+  // CASO 1: SIN CARRERA PRINCIPAL (Cero Absoluto)
   if (!primaryRace) {
-    const totalWeeks = 8;
-    const weeks: MacrocycleWeek[] = [];
-
-    for (let i = 0; i < totalWeeks; i++) {
-      const weekMon = new Date(currentMonday);
-      weekMon.setDate(currentMonday.getDate() + i * 7);
-      const weekSun = new Date(weekMon);
-      weekSun.setDate(weekMon.getDate() + 6);
-
-      const isRecovery = (i + 1) % 4 === 0;
-      const isCurrent = i === 0;
-
-      weeks.push({
-        weekNumber: i + 1,
-        countdownWeeks: totalWeeks - i,
-        startDate: formatDate(weekMon),
-        endDate: formatDate(weekSun),
-        formattedRange: formatRange(weekMon, weekSun),
-        phase: "MAINTENANCE",
-        phaseLabel: "Mantenimiento General Adaptativo",
-        microcycleType: isRecovery ? "DESCARGA_ASIMILACION" : "MANTENIMIENTO",
-        microcycleLabel: isRecovery ? "Asimilación / Descarga (3:1)" : "Mantenimiento Estable",
-        microcycleBadgeColor: isRecovery
-          ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-          : "bg-slate-800 text-slate-300 border-slate-700",
-        targetTss: isRecovery ? 260 : 330,
-        maxLongRunMinutes: isRecovery ? 45 : 55,
-        focusDescription: isRecovery
-          ? "Descarga de volumen y asimilación biológica para refrescar el TSB."
-          : "Estabilidad de CTL, salud articular (sóleo/Aquiles) y consistencia.",
-        isCurrentWeek: isCurrent,
-      });
-    }
-
-    return {
-      mode: "GENERAL_MAINTENANCE",
-      cycleTitle: "Ciclo de Mantenimiento General",
-      primaryRace: null,
-      startDate: weeks[0].startDate,
-      raceDate: null,
-      weeksUntilKickoff: null,
-      totalWeeks,
-      currentWeekIndex: 0,
-      currentWeek: weeks[0],
-      weeks,
-    };
+    return null;
   }
 
   // CASO 2: CON CARRERA OBJETIVO
@@ -281,7 +294,7 @@ export function generateMacrocycleBlueprint(
       badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/30";
       targetTss = countdown === 2 ? 240 : 280;
       maxLongRun = countdown === 2 ? 45 : 55;
-      focus = "Descarga de fatiga aguda para elevar el TSB sin perder tono muscular.";
+      focus = "Puesta a punto (Taper): bajamos los kilómetros manteniendo toques de chispa para llegar descansado y muy rápido al día de la carrera.";
     } else if (countdown <= 6) {
       phase = "PEAK";
       phaseLabel = "Pico de Forma & Fondos Específicos";
@@ -294,8 +307,8 @@ export function generateMacrocycleBlueprint(
       targetTss = isPeakRecovery ? 380 : 540;
       maxLongRun = isPeakRecovery ? 75 : 115;
       focus = isPeakRecovery
-        ? "Supercompensación intermedia tras fondos clave."
-        : "Fondo específico de 28-32km con bloques a potencia Stryd de maratón.";
+        ? "Asimilación estratégica: descanso prioritario para consolidar las adaptaciones de los fondos clave."
+        : "Máxima preparación: tiradas largas con tramos al ritmo objetivo de tu carrera para ganar confianza y ritmo.";
     } else if (countdown <= 12) {
       phase = "BUILD";
       phaseLabel = "Construcción Específica & Umbral";
@@ -308,20 +321,22 @@ export function generateMacrocycleBlueprint(
       targetTss = isBuildRecovery ? 340 : 470;
       maxLongRun = isBuildRecovery ? 65 : 95;
       focus = isBuildRecovery
-        ? "Consolidación de meseta de CTL y recuperación miofibrilar."
-        : "Series de umbral Stryd Z4 y extensión de durabilidad aeróbica.";
+        ? "Recuperación estratégica: soltamos piernas y recargamos energía antes del siguiente bloque de intensidad."
+        : "Ritmo de carrera y potencia: series a ritmo exigente y aumento gradual de la distancia en la tirada larga del fin de semana.";
     } else {
       phase = countdown > 14 ? "BASE_1" : "BASE_2";
       phaseLabel = countdown > 14 ? "Base Aeróbica I" : "Base Aeróbica II";
       const isBaseRecovery = countdown === 13;
       microType = isBaseRecovery ? "DESCARGA_ASIMILACION" : "CARGA";
-      microLabel = isBaseRecovery ? "Descarga / Asimilación" : "Base & Capilarización";
+      microLabel = isBaseRecovery ? "Descarga / Asimilación" : "Base & Resistencia";
       badgeColor = isBaseRecovery
         ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
         : "bg-teal-500/20 text-teal-300 border-teal-500/30";
       targetTss = isBaseRecovery ? 300 : 410;
       maxLongRun = isBaseRecovery ? 55 : 75;
-      focus = "Desarrollo mitocondrial, cuestas cortas y reactividad de sóleo.";
+      focus = isBaseRecovery
+        ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
+        : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
     }
 
     const isCurrent = currentMonday.getTime() === weekMon.getTime();
@@ -340,7 +355,7 @@ export function generateMacrocycleBlueprint(
       microcycleBadgeColor: badgeColor,
       targetTss,
       maxLongRunMinutes: maxLongRun,
-      focusDescription: focus,
+      focusDescription: getCleanFocusDescription(focus, phase, microType === "DESCARGA_ASIMILACION"),
       isCurrentWeek: isCurrent,
     });
   }
@@ -365,8 +380,12 @@ export function generateMacrocycleBlueprint(
 export function calculateMacrocyclePhase(
   races: TargetRace[] = [],
   baseDate: Date = new Date()
-): MacrocyclePhaseInfo {
+): MacrocyclePhaseInfo | null {
   const blueprint = generateMacrocycleBlueprint(races, baseDate);
+  if (!blueprint) {
+    return null;
+  }
+
   const currentWeek = blueprint.currentWeek;
   const primaryRace = blueprint.primaryRace;
 
@@ -374,22 +393,7 @@ export function calculateMacrocyclePhase(
   now.setHours(0, 0, 0, 0);
 
   if (!primaryRace) {
-    return {
-      phase: "MAINTENANCE",
-      phaseLabel: "Mantenimiento General Adaptativo",
-      cycleBadgeLabel: "🔵 CICLO ACTIVO: MANTENIMIENTO",
-      cycleBadgeColor: "bg-blue-500/10 text-blue-300 border-blue-500/30",
-      weeksRemaining: null,
-      daysRemaining: null,
-      primaryRace: null,
-      guideline: "Sin carrera principal próxima. Prioriza desarrollo aeróbico base, salud articular de sóleo/Aquiles y asimilación sin sobrecargas.",
-      suggestedFocus: "Mantenimiento de fitness (CTL estable). Tirada larga dominical de máximo 55 min.",
-      badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-      maxLongRunMinutes: 55,
-      isSpecificMarathonPhase: false,
-      weeklyTssTarget: "280 - 360 TSS",
-      blueprint,
-    };
+    return null;
   }
 
   const raceDate = new Date(primaryRace.date);
@@ -430,3 +434,74 @@ export function calculateMacrocyclePhase(
     blueprint,
   };
 }
+
+/**
+ * Calcula el offset de semanas respecto a la semana actual (Lunes actual = offset 0).
+ */
+export function getOffsetForWeek(w: MacrocycleWeek): number {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const todayMonday = new Date(now.setDate(diff));
+  todayMonday.setHours(0, 0, 0, 0);
+
+  const weekMon = new Date(w.startDate + "T00:00:00");
+  const diffTime = weekMon.getTime() - todayMonday.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+}
+
+/**
+ * Normaliza y traduce descripciones técnicas de macrociclo a lenguaje claro y motivador para el atleta.
+ */
+export function getCleanFocusDescription(
+  rawFocus?: string,
+  phase?: string,
+  isRecovery?: boolean
+): string {
+  if (!rawFocus) {
+    return isRecovery
+      ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
+      : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+  }
+
+  const lower = rawFocus.toLowerCase();
+
+  if (lower.includes("mitocondrial") || lower.includes("sóleo") || lower.includes("capilarización") || lower.includes("tendinoso")) {
+    if (isRecovery || lower.includes("asimilación") || lower.includes("balance de frescura")) {
+      return "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas.";
+    }
+    return "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+  }
+
+  if (lower.includes("miofibrilar") || lower.includes("meseta de ctl") || lower.includes("durabilidad aeróbica") || lower.includes("lactato z4")) {
+    if (isRecovery || lower.includes("recuperación") || lower.includes("asimilación")) {
+      return "Recuperación estratégica: soltamos piernas y recargamos energía antes del siguiente bloque de intensidad.";
+    }
+    return "Ritmo de carrera y potencia: series a ritmo exigente y aumento gradual de la distancia en la tirada larga del fin de semana.";
+  }
+
+  if (lower.includes("supercompensación intermedia") || lower.includes("fondos clave") || lower.includes("densidad de potencia")) {
+    if (isRecovery || lower.includes("asimilación")) {
+      return "Asimilación estratégica: descanso prioritario para consolidar las adaptaciones de los fondos clave.";
+    }
+    return "Máxima preparación: tiradas largas con tramos al ritmo objetivo de tu carrera para ganar confianza y ritmo.";
+  }
+
+  if (lower.includes("elevar el tsb sin perder tono") || lower.includes("puesta a punto (-") || lower.includes("fatiga aguda acumulada")) {
+    return "Puesta a punto (Taper): bajamos los kilómetros manteniendo toques de chispa para llegar descansado y muy rápido al día de la carrera.";
+  }
+
+  if (lower.includes("máxima frescura neuromuscular") || lower.includes("recarga de glucógeno") || lower.includes("pre-evento")) {
+    return "Semana de competición: entrenamientos cortos de activación, descanso prioritario y concentración para el día de la carrera.";
+  }
+
+  if (lower.includes("salud articular") || lower.includes("consistencia sin fatiga")) {
+    if (isRecovery) {
+      return "Descanso y regeneración: mantener el hábito sin acumular fatiga física ni mental.";
+    }
+    return "Mantenimiento equilibrado: rodajes cómodos, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
+  }
+
+  return rawFocus;
+}
+

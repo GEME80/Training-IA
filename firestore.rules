@@ -14,12 +14,26 @@ service cloud.firestore {
 
     // Regla estricta de aislamiento de usuario (Tenant Isolation)
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      // El dueño puede leer su perfil
+      allow read: if isOwner(userId);
+      
+      // El dueño puede actualizar sus propios datos fisiológicos pero NO su rol ni su status
+      allow update: if isOwner(userId) && 
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status']));
+      
+      // La creación inicial permite establecer los datos base
+      allow create: if isOwner(userId);
 
-      // Subcolecciones de datos del atleta (planes, snapshots, logs de decisión)
+      // Subcolecciones de datos del atleta (planes, snapshots, logs de decisión, macrocycles)
       match /{document=**} {
         allow read, write: if isOwner(userId);
       }
+    }
+
+    // Colección de metadatos administrativos globales (solo lectura autenticada / escritura servidor)
+    match /meta/{metaDoc} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Solo accesible mediante Firebase Admin SDK en el servidor
     }
     
     // Bloqueo por defecto para cualquier otra ruta no autorizada

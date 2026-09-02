@@ -1,11 +1,15 @@
 {
-  "name": "sgea-training",
+  "name": "pulse-ai-pro",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; NODE_OPTIONS='--max-http-header-size=131072' next dev -p 3000",
+    "dev:clean": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; rm -rf .next && NODE_OPTIONS='--max-http-header-size=131072' next dev -p 3000",
+    "check:health": "node -e \"fetch('http://localhost:3000').then(r => console.log('Pulse Health Status:', r.status)).catch(e => console.error('Health Check Error:', e.message))\"",
     "build": "next build",
-    "start": "next start",
+    "start": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; NODE_OPTIONS='--max-http-header-size=131072' next start -p 3000",
+    "start:robust": "bash scripts/start-server.sh",
+    "watchdog": "node scripts/watchdog.js",
     "lint": "next lint"
   },
   "dependencies": {

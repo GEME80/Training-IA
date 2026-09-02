@@ -1,34 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
-  Key,
-  Shield,
-  Zap,
-  Check,
-  AlertCircle,
-  RefreshCw,
-  Bot,
   Sliders,
-  Sparkles,
-  RotateCcw,
-  Trophy,
-  Plus,
-  Trash2,
+  Link as LinkIcon,
   Calendar,
-  Footprints,
-  Bike,
-  Dumbbell,
-  Moon,
+  Activity,
+  CheckCircle2,
 } from "lucide-react";
-import { AvailableModel } from "@/app/api/models/route";
-import { TargetRace } from "@/lib/physiology/macrocycle";
 import {
   WeeklyAvailabilityMap,
-  DisciplineType,
   DEFAULT_WEEKLY_AVAILABILITY,
+  DisciplineType,
+  normalizeDisciplines,
 } from "@/lib/gemini/engine";
+import { GeminiModelDto } from "@/app/api/gemini/models/route";
+import { DEFAULT_VISIBLE_METRICS } from "@/lib/intervals/types";
+
+import { ProfileConnectionsTab } from "./profile/ProfileConnectionsTab";
+import { ProfileAvailabilityTab } from "./profile/ProfileAvailabilityTab";
+import { ProfilePhysiologyTab } from "./profile/ProfilePhysiologyTab";
+
+export type ProfileModalTab = "connections" | "availability" | "physiology";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -36,25 +30,34 @@ interface ProfileModalProps {
   athleteId: string;
   runFtp: number;
   bikeFtp: number;
-  initialTab?: "intervals" | "availability" | "races" | "ai";
+  initialBirthDate?: string;
+  initialGender?: "M" | "F" | "OTHER";
+  initialVisibleMetrics?: string[];
+  initialTab?: ProfileModalTab | "intervals" | "ai";
+  weeklyAvailability?: WeeklyAvailabilityMap;
+  ctl?: number;
+  atl?: number;
+  tsb?: number;
   onSave: (data: {
     athleteId: string;
     apiKey?: string;
+    birthDate?: string;
+    gender?: "M" | "F" | "OTHER";
     runFtp: number;
     bikeFtp: number;
+    weightKg?: number;
+    restingHR?: number;
+    maxHR?: number;
+    lthr?: number;
     focus: string;
     geminiApiKey?: string;
     selectedModel?: string;
+    coachProfile?: string;
     customPrompt?: string;
-    targetRaces?: TargetRace[];
     weeklyAvailability?: WeeklyAvailabilityMap;
+    visibleMetrics?: string[];
   }) => Promise<void>;
 }
-
-const DEFAULT_PROMPT = `Actúa como un Head Coach Fisiológico Digital experto en entrenamiento de resistencia y potencia Stryd.
-- Prioriza adaptaciones biológicas protegiendo la variabilidad cardíaca (HRV) y evitando sobreentrenamiento.
-- Modula sesiones de calidad si detectas fatiga aguda (TSB < -20 o HRV Z-score negativo).
-- Asegura progresión aeróbica y estímulos neuromusculares en sóleo y tendón de Aquiles.`;
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
   isOpen,
@@ -62,726 +65,442 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   athleteId: initialAthleteId,
   runFtp: initialRunFtp,
   bikeFtp: initialBikeFtp,
-  initialTab = "intervals",
+  initialBirthDate,
+  initialGender,
+  initialVisibleMetrics,
+  initialTab = "connections",
+  weeklyAvailability: initialWeeklyAvailability,
   onSave,
 }) => {
-  const [activeTab, setActiveTab] = useState<"intervals" | "availability" | "races" | "ai">(initialTab);
+  const [activeTab, setActiveTab] = useState<ProfileModalTab>(
+    initialTab === "intervals" || initialTab === "ai" ? "connections" : initialTab
+  );
 
-  // Credenciales & Perfil Intervals
-  const [athleteId, setAthleteId] = useState(initialAthleteId || "i442091");
-  const [apiKey, setApiKey] = useState("");
-  const [runFtp, setRunFtp] = useState(initialRunFtp || 285);
-  const [bikeFtp, setBikeFtp] = useState(initialBikeFtp || 260);
-  const [focus, setFocus] = useState("BUILD");
+  const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
+  const [apiKey, setApiKey] = useState<string>("");
+  const [geminiApiKey, setGeminiApiKey] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
+  const [temperature, setTemperature] = useState<number>(0.0);
+  const [fallbackModels] = useState<string[]>(["gemini-2.0-flash", "gemini-1.5-pro"]);
+  const [enableGrounding] = useState<boolean>(false);
+  const [coachProfile, setCoachProfile] = useState<string>("olympic");
+  const [customPrompt] = useState<string>("");
 
-  // Matriz Semanal de Disponibilidad & Disciplinas
-  const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(DEFAULT_WEEKLY_AVAILABILITY);
+  const [birthDate, setBirthDate] = useState<string>(initialBirthDate || "1988-05-15");
+  const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialGender || "M");
+  const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
+  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
+  const [weightKg, setWeightKg] = useState<number>(84);
+  const [restingHR, setRestingHR] = useState<number>(46);
+  const [lthr, setLthr] = useState<number>(168);
+  const [maxHR, setMaxHR] = useState<number>(185);
 
-  // Carreras Objetivo & Macrociclos
-  const [races, setRaces] = useState<TargetRace[]>([]);
-  const [newRaceName, setNewRaceName] = useState("");
-  const [newRaceDate, setNewRaceDate] = useState("");
-  const [newRaceDistance, setNewRaceDistance] = useState<TargetRace["distance"]>("42k");
-  const [newRacePriority, setNewRacePriority] = useState<TargetRace["priority"]>("A");
-  const [newRaceGoal, setNewRaceGoal] = useState("");
+  const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
+    initialWeeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY
+  );
+  const [visibleMetrics, setVisibleMetrics] = useState<string[]>(
+    initialVisibleMetrics || DEFAULT_VISIBLE_METRICS
+  );
 
-  // Configuración de Inteligencia Artificial (Gemini)
-  const [geminiApiKey, setGeminiApiKey] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gemini-flash-latest");
-  const [customPrompt, setCustomPrompt] = useState(DEFAULT_PROMPT);
-  const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [testingConnection, setTestingConnection] = useState<boolean>(false);
+  const [availableModels, setAvailableModels] = useState<GeminiModelDto[]>([]);
+  const [loadingModels, setLoadingModels] = useState<boolean>(false);
 
-  // Estados de prueba de conexión
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [testingGemini, setTestingGemini] = useState(false);
-  const [geminiTestResult, setGeminiTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [saving, setSaving] = useState(false);
+  const calculatedAge = useMemo(() => {
+    if (!birthDate) return 38;
+    const dob = new Date(birthDate);
+    if (isNaN(dob.getTime())) return 38;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+    return age > 0 ? age : 38;
+  }, [birthDate]);
 
-  // Carga inicial de preferencias desde localStorage
-  useEffect(() => {
-    if (isOpen && typeof window !== "undefined") {
-      const savedKey = localStorage.getItem("sgea_intervals_api_key") || localStorage.getItem("sgea_api_key") || "";
-      const savedId = localStorage.getItem("sgea_athlete_id") || "i442091";
-      const savedGeminiKey = localStorage.getItem("sgea_gemini_api_key") || localStorage.getItem("sgea_gemini_key") || "";
-      const savedModel = localStorage.getItem("sgea_selected_model") || localStorage.getItem("sgea_gemini_model") || "gemini-flash-latest";
-      const savedPrompt = localStorage.getItem("sgea_custom_prompt") || DEFAULT_PROMPT;
-      const savedRaces = localStorage.getItem("sgea_target_races");
-      const savedAvailability = localStorage.getItem("sgea_weekly_availability");
+  const tanakaMaxHR = useMemo(() => Math.round(208 - 0.7 * calculatedAge), [calculatedAge]);
 
-      if (savedKey) setApiKey(savedKey);
-      if (savedId) setAthleteId(savedId);
-      if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
-      if (savedModel) setSelectedModel(savedModel);
-      if (savedPrompt) setCustomPrompt(savedPrompt);
+  const relativePower = useMemo(() => {
+    if (runFtp > 0 && weightKg > 0) return (runFtp / weightKg).toFixed(2);
+    return null;
+  }, [runFtp, weightKg]);
 
-      if (savedRaces) {
-        try {
-          setRaces(JSON.parse(savedRaces));
-        } catch {
-          // Keep default
-        }
-      }
-
-      if (savedAvailability) {
-        try {
-          setWeeklyAvailability(JSON.parse(savedAvailability));
-        } catch {
-          // Keep default
-        }
-      }
-
-      setTestResult(null);
-      setGeminiTestResult(null);
-      fetchModels(savedGeminiKey || "");
-    }
-  }, [isOpen]);
-
-  const fetchModels = async (keyToUse?: string) => {
-    setIsLoadingModels(true);
+  const fetchGeminiModels = async (forceRefresh = false) => {
+    setLoadingModels(true);
     try {
-      const url = keyToUse
-        ? `/api/models?apiKey=${encodeURIComponent(keyToUse)}`
-        : "/api/models";
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.success && data.models) {
-        setAvailableModels(data.models);
+      const res = await fetch(`/api/gemini/models?refresh=${forceRefresh ? "true" : "false"}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.models && Array.isArray(data.models) && data.models.length > 0) {
+          setAvailableModels(data.models);
+        }
       }
-    } catch (err) {
-      console.warn("Error al cargar modelos:", err);
+    } catch {
+      // Ignorar errores de red en polling de modelos
     } finally {
-      setIsLoadingModels(false);
+      setLoadingModels(false);
     }
-  };
-
-  const handleDayDisciplineChange = (day: string, discipline: DisciplineType) => {
-    setWeeklyAvailability((prev) => ({
-      ...prev,
-      [day]: discipline,
-    }));
-  };
-
-  if (!isOpen) return null;
-
-  const handleAddRace = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRaceName || !newRaceDate) return;
-
-    const newRace: TargetRace = {
-      id: "race_" + Date.now(),
-      name: newRaceName.trim(),
-      date: newRaceDate,
-      distance: newRaceDistance,
-      priority: newRacePriority,
-      goalTarget: newRaceGoal.trim() || undefined,
-    };
-
-    const updated = [...races, newRace].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-    setRaces(updated);
-    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
-
-    setNewRaceName("");
-    setNewRaceDate("");
-    setNewRaceGoal("");
-  };
-
-  const handleDeleteRace = (id: string) => {
-    const updated = races.filter((r) => r.id !== id);
-    setRaces(updated);
-    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
   };
 
   const handleTestConnection = async () => {
     if (!athleteId || !apiKey) {
-      setTestResult({
-        success: false,
-        message: "Ingresa tanto el Athlete ID como la API Key de Intervals.",
-      });
+      setToastMessage("Por favor ingresa tu Athlete ID y API Key de Intervals.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
-    setTesting(true);
-    setTestResult(null);
-
+    setTestingConnection(true);
     try {
       const res = await fetch("/api/test-connection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ athleteId, apiKey }),
       });
-
       const data = await res.json();
       if (data.success) {
-        setTestResult({
-          success: true,
-          message: `¡Conexión exitosa! Atleta: ${data.athleteName}`,
-        });
+        const detectedResting = data.restingHR || data.athlete?.icu_resting_hr;
+        const detectedWeight = data.weight || data.athlete?.weight || data.athlete?.icu_weight;
+        const detectedRunFtp = data.runFtp || data.athlete?.icu_running_ftp || data.athlete?.run_ftp;
+        const detectedBikeFtp = data.bikeFtp || data.athlete?.icu_ftp || data.athlete?.bike_ftp;
+        const detectedLthr = data.lthr || data.athlete?.lthr;
+        const detectedMaxHr = data.maxHR || data.athlete?.max_hr || data.athlete?.maxHR;
+
+        if (detectedResting) setRestingHR(detectedResting);
+        if (detectedWeight) setWeightKg(detectedWeight);
+        if (detectedRunFtp) setRunFtp(detectedRunFtp);
+        if (detectedBikeFtp) setBikeFtp(detectedBikeFtp);
+        if (detectedLthr) setLthr(detectedLthr);
+        if (detectedMaxHr) setMaxHR(detectedMaxHr);
+
+        const name = data.athleteName || data.athlete?.name || "Atleta";
+        setToastMessage(`✓ Conexión exitosa con Intervals.icu (${name})`);
       } else {
-        setTestResult({
-          success: false,
-          message: data.error || "No se pudo autenticar con Intervals.icu.",
-        });
+        setToastMessage(`Error de conexión: ${data.error || "Credenciales inválidas"}`);
       }
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3500);
     } catch {
-      setTestResult({
-        success: false,
-        message: "Error de red al conectar con el servidor.",
-      });
+      setToastMessage("Error de red al probar conexión con Intervals.icu.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3500);
     } finally {
-      setTesting(false);
+      setTestingConnection(false);
     }
   };
 
-  const handleTestGemini = async () => {
-    setTestingGemini(true);
-    setGeminiTestResult(null);
+  useEffect(() => {
+    if (isOpen) {
+      const storedApiKey = localStorage.getItem("sgea_intervals_api_key");
+      const storedAthleteId = localStorage.getItem("sgea_intervals_athlete_id");
+      const storedBirthDate = localStorage.getItem("sgea_birthdate");
+      const storedGender = localStorage.getItem("sgea_gender");
+      const storedRunFtp = localStorage.getItem("sgea_run_ftp");
+      const storedWeight = localStorage.getItem("sgea_athlete_weight");
+      const storedBikeFtp = localStorage.getItem("sgea_bike_ftp");
+      const storedResting = localStorage.getItem("sgea_resting_hr");
+      const storedMaxHR = localStorage.getItem("sgea_max_hr");
+      const storedLthr = localStorage.getItem("sgea_lthr");
+      const storedGeminiKey = localStorage.getItem("sgea_custom_gemini_key");
+      const storedModel = localStorage.getItem("sgea_selected_model");
+      const storedTemp = localStorage.getItem("sgea_temperature");
+      const storedCoach = localStorage.getItem("sgea_coach_profile");
+      const storedAvail = localStorage.getItem("sgea_weekly_availability");
+      const storedVisibleMetrics = localStorage.getItem("sgea_visible_metrics");
 
-    try {
-      const res = await fetch("/api/models?apiKey=" + encodeURIComponent(geminiApiKey));
-      const data = await res.json();
+      if (storedApiKey) setApiKey(storedApiKey);
+      if (storedAthleteId) setAthleteId(storedAthleteId);
+      else if (initialAthleteId) setAthleteId(initialAthleteId);
 
-      if (data.success) {
-        setGeminiTestResult({
-          success: true,
-          message: `¡Google AI respondió correctamente! ${data.models?.length || 0} modelos detectados. Fuente: ${data.source}`,
-        });
-        if (data.models) setAvailableModels(data.models);
-      } else {
-        setGeminiTestResult({
-          success: false,
-          message: data.error || "No se pudo conectar con la API de Google Gemini.",
-        });
+      if (storedBirthDate) setBirthDate(storedBirthDate);
+      else if (initialBirthDate) setBirthDate(initialBirthDate);
+
+      if (storedGender && (storedGender === "M" || storedGender === "F" || storedGender === "OTHER")) {
+        setGender(storedGender as "M" | "F" | "OTHER");
+      } else if (initialGender) setGender(initialGender);
+
+      if (storedRunFtp) setRunFtp(Number(storedRunFtp));
+      else if (initialRunFtp) setRunFtp(initialRunFtp);
+
+      if (storedWeight) setWeightKg(Number(storedWeight));
+      if (storedBikeFtp) setBikeFtp(Number(storedBikeFtp));
+      else if (initialBikeFtp) setBikeFtp(initialBikeFtp);
+
+      if (storedResting) setRestingHR(Number(storedResting));
+      if (storedMaxHR) setMaxHR(Number(storedMaxHR));
+      if (storedLthr) setLthr(Number(storedLthr));
+
+      if (storedGeminiKey) setGeminiApiKey(storedGeminiKey);
+      if (storedModel) setSelectedModel(storedModel);
+      if (storedTemp) setTemperature(Number(storedTemp));
+      if (storedCoach) setCoachProfile(storedCoach);
+
+      if (storedAvail) {
+        try {
+          const parsed = JSON.parse(storedAvail);
+          if (parsed && typeof parsed === "object") setWeeklyAvailability(parsed);
+        } catch {}
+      } else if (initialWeeklyAvailability) {
+        setWeeklyAvailability(initialWeeklyAvailability);
       }
-    } catch {
-      setGeminiTestResult({
-        success: false,
-        message: "Error de red al conectar con Google AI.",
-      });
-    } finally {
-      setTestingGemini(false);
+
+      if (storedVisibleMetrics) {
+        try {
+          const parsed = JSON.parse(storedVisibleMetrics);
+          if (Array.isArray(parsed) && parsed.length > 0) setVisibleMetrics(parsed);
+        } catch {}
+      } else if (initialVisibleMetrics) {
+        setVisibleMetrics(initialVisibleMetrics);
+      }
+
+      fetchGeminiModels();
     }
+  }, [isOpen, initialAthleteId, initialRunFtp, initialBikeFtp, initialBirthDate, initialGender, initialWeeklyAvailability, initialVisibleMetrics]);
+
+  const handleToggleDayDiscipline = (dayKey: string, disc: DisciplineType) => {
+    setWeeklyAvailability((prev) => {
+      const currentList = normalizeDisciplines(prev[dayKey]);
+      if (disc === "Descanso") {
+        return { ...prev, [dayKey]: ["Descanso"] };
+      }
+      let nextList = currentList.filter((d) => d !== "Descanso") as DisciplineType[];
+      if (nextList.includes(disc)) {
+        nextList = nextList.filter((d) => d !== disc) as DisciplineType[];
+        if (nextList.length === 0) nextList = ["Descanso"];
+      } else {
+        nextList.push(disc);
+      }
+      return { ...prev, [dayKey]: nextList };
+    });
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleToggleMetric = (id: string) => {
+    setVisibleMetrics((prev) => {
+      const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+      localStorage.setItem("sgea_visible_metrics", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      if (apiKey.trim()) {
-        localStorage.setItem("sgea_intervals_api_key", apiKey.trim());
-        localStorage.setItem("sgea_api_key", apiKey.trim());
-      }
-      if (athleteId.trim()) localStorage.setItem("sgea_athlete_id", athleteId.trim());
-      if (geminiApiKey.trim()) {
-        localStorage.setItem("sgea_gemini_api_key", geminiApiKey.trim());
-        localStorage.setItem("sgea_gemini_key", geminiApiKey.trim());
-      }
+      localStorage.setItem("sgea_intervals_api_key", apiKey);
+      localStorage.setItem("sgea_intervals_athlete_id", athleteId);
+      localStorage.setItem("sgea_birthdate", birthDate);
+      localStorage.setItem("sgea_gender", gender);
+      localStorage.setItem("sgea_run_ftp", runFtp.toString());
+      localStorage.setItem("sgea_athlete_weight", weightKg.toString());
+      localStorage.setItem("sgea_bike_ftp", bikeFtp.toString());
+      localStorage.setItem("sgea_resting_hr", restingHR.toString());
+      localStorage.setItem("sgea_max_hr", maxHR.toString());
+      localStorage.setItem("sgea_lthr", lthr.toString());
+      localStorage.setItem("sgea_custom_gemini_key", geminiApiKey);
       localStorage.setItem("sgea_selected_model", selectedModel);
-      localStorage.setItem("sgea_gemini_model", selectedModel);
+      localStorage.setItem("sgea_temperature", temperature.toString());
+      localStorage.setItem("sgea_fallback_models", JSON.stringify(fallbackModels));
+      localStorage.setItem("sgea_enable_grounding", enableGrounding ? "true" : "false");
+      localStorage.setItem("sgea_coach_profile", coachProfile);
       localStorage.setItem("sgea_custom_prompt", customPrompt);
-      localStorage.setItem("sgea_target_races", JSON.stringify(races));
       localStorage.setItem("sgea_weekly_availability", JSON.stringify(weeklyAvailability));
+      localStorage.setItem("sgea_visible_metrics", JSON.stringify(visibleMetrics));
 
       await onSave({
-        athleteId: athleteId.trim(),
-        apiKey: apiKey.trim() || undefined,
-        runFtp: Number(runFtp),
-        bikeFtp: Number(bikeFtp),
-        focus,
-        geminiApiKey: geminiApiKey.trim() || undefined,
+        athleteId,
+        apiKey: apiKey || undefined,
+        birthDate,
+        gender,
+        runFtp,
+        weightKg,
+        bikeFtp,
+        restingHR,
+        maxHR,
+        lthr,
+        focus: "BUILD",
+        geminiApiKey: geminiApiKey || undefined,
         selectedModel,
+        coachProfile,
         customPrompt,
-        targetRaces: races,
         weeklyAvailability,
+        visibleMetrics,
       });
-      onClose();
-    } catch (err) {
-      console.error(err);
+
+      setToastMessage("¡Configuración y parámetros guardados correctamente!");
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        onClose();
+      }, 700);
+    } catch (error) {
+      console.error("Error al guardar perfil:", error);
+      setToastMessage("Error al guardar cambios.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
     } finally {
       setSaving(false);
     }
   };
 
-  const getDisciplineIcon = (disc: DisciplineType) => {
-    switch (disc) {
-      case "Carrera":
-        return <Footprints className="h-4 w-4 text-emerald-400" />;
-      case "Ciclismo":
-        return <Bike className="h-4 w-4 text-cyan-400" />;
-      case "Fuerza":
-        return <Dumbbell className="h-4 w-4 text-purple-400" />;
-      default:
-        return <Moon className="h-4 w-4 text-slate-400" />;
-    }
-  };
-
-  const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="card-gradient relative w-full max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-        >
-          <X className="h-5 w-5" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+      <div className="card-gradient rounded-3xl p-5 sm:p-7 max-w-3xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[90vh] flex flex-col justify-between animate-scaleUp overflow-hidden">
+        {/* Cabecera del Modal */}
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-4 shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 border border-amber-500/30">
+              <Sliders className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-slate-900 dark:text-white">
+                Ajustes del Atleta & Fisiología
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Conexiones, disponibilidad semanal y parámetros fisiológicos
+              </p>
+            </div>
+          </div>
 
-        {/* Modal Header */}
-        <div className="flex items-center space-x-2.5 border-b border-slate-800 pb-4">
-          <Shield className="h-5 w-5 text-emerald-400" />
-          <h3 className="text-lg font-bold text-white">Panel de Configuración del Atleta</h3>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="mt-4 flex border-b border-slate-800 overflow-x-auto">
           <button
             type="button"
-            onClick={() => setActiveTab("intervals")}
-            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
-              activeTab === "intervals"
-                ? "border-emerald-500 text-emerald-400"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 dark:border-slate-800 p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* 3 Pestañas Estructuradas */}
+        <div className="grid grid-cols-3 border-b border-slate-200 dark:border-slate-800 bg-slate-100/60 dark:bg-slate-950/40 px-2 sm:px-4 shrink-0 text-center">
+          <button
+            type="button"
+            onClick={() => setActiveTab("connections")}
+            className={`py-3 px-1.5 text-[11px] sm:text-xs font-black border-b-2 transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "connections"
+                ? "border-amber-500 text-amber-600 dark:text-amber-400 bg-white/50 dark:bg-slate-900/50"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            <Sliders className="h-4 w-4" />
-            <span>Perfil & Intervals</span>
+            <LinkIcon className="h-3.5 w-3.5" />
+            <span>1. Conexiones</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("availability")}
-            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
+            className={`py-3 px-1.5 text-[11px] sm:text-xs font-black border-b-2 transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === "availability"
-                ? "border-cyan-500 text-cyan-400"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+                ? "border-amber-500 text-amber-600 dark:text-amber-400 bg-white/50 dark:bg-slate-900/50"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            <Calendar className="h-4 w-4" />
-            <span>📅 Matriz Semanal</span>
+            <Calendar className="h-3.5 w-3.5" />
+            <span>2. Semana Tipo</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab("races")}
-            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
-              activeTab === "races"
-                ? "border-amber-500 text-amber-400"
-                : "border-transparent text-slate-400 hover:text-slate-200"
+            onClick={() => setActiveTab("physiology")}
+            className={`py-3 px-1.5 text-[11px] sm:text-xs font-black border-b-2 transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === "physiology"
+                ? "border-amber-500 text-amber-600 dark:text-amber-400 bg-white/50 dark:bg-slate-900/50"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
-            <Trophy className="h-4 w-4" />
-            <span>🎯 Carreras ({races.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ai")}
-            className={`flex items-center space-x-2 border-b-2 px-3 py-2.5 text-xs font-bold whitespace-nowrap transition ${
-              activeTab === "ai"
-                ? "border-purple-500 text-purple-300"
-                : "border-transparent text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Bot className="h-4 w-4" />
-            <span>Agente IA & Gemini</span>
+            <Activity className="h-3.5 w-3.5 text-emerald-500" />
+            <span>3. Fisiología</span>
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="mt-4 space-y-4">
-          {/* TAB 1: PERFIL & INTERVALS */}
-          {activeTab === "intervals" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Intervals Athlete ID
-                </label>
-                <input
-                  type="text"
-                  value={athleteId}
-                  onChange={(e) => setAthleteId(e.target.value)}
-                  placeholder="i442091"
-                  required
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Intervals API Key (Cifrada con AES-256-GCM)
-                </label>
-                <div className="mt-1 flex space-x-2">
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Pegar API Key de Intervals..."
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleTestConnection}
-                    disabled={testing}
-                    className="flex shrink-0 items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-                  >
-                    {testing ? <RefreshCw className="h-4 w-4 animate-spin text-emerald-400" /> : <Zap className="h-4 w-4 text-emerald-400" />}
-                    <span>Probar</span>
-                  </button>
-                </div>
-                {testResult && (
-                  <div
-                    className={`mt-2 flex items-center space-x-2 rounded-xl p-2.5 text-xs ${
-                      testResult.success
-                        ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                        : "border border-red-500/30 bg-red-500/10 text-red-300"
-                    }`}
-                  >
-                    {testResult.success ? <Check className="h-4 w-4 shrink-0 text-emerald-400" /> : <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />}
-                    <span>{testResult.message}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Stryd Run FTP / CP (W)
-                  </label>
-                  <input
-                    type="number"
-                    value={runFtp}
-                    onChange={(e) => setRunFtp(Number(e.target.value))}
-                    min="100"
-                    max="600"
-                    required
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-sm font-mono text-emerald-400 focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Bike FTP (W)
-                  </label>
-                  <input
-                    type="number"
-                    value={bikeFtp}
-                    onChange={(e) => setBikeFtp(Number(e.target.value))}
-                    min="100"
-                    max="600"
-                    required
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-sm font-mono text-cyan-400 focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-h-[75vh]">
+          {activeTab === "connections" && (
+            <ProfileConnectionsTab
+              athleteId={athleteId}
+              setAthleteId={setAthleteId}
+              apiKey={apiKey}
+              setApiKey={setApiKey}
+              geminiApiKey={geminiApiKey}
+              setGeminiApiKey={setGeminiApiKey}
+              selectedModel={selectedModel}
+              setSelectedModel={setSelectedModel}
+              temperature={temperature}
+              setTemperature={setTemperature}
+              coachProfile={coachProfile}
+              setCoachProfile={setCoachProfile}
+              testingConnection={testingConnection}
+              onTestConnection={handleTestConnection}
+              availableModels={availableModels}
+              loadingModels={loadingModels}
+              onRefreshModels={() => fetchGeminiModels(true)}
+            />
           )}
 
-          {/* TAB 2: MATRIZ SEMANAL DE DISPONIBILIDAD */}
           {activeTab === "availability" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Estructura Semanal de Disciplinas & Descanso
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Define qué disciplina deseas realizar cada día de la semana. El agente de IA tomará esta matriz como base obligatoria para generar y modular tus entrenamientos.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {daysOfWeek.map((day) => {
-                  const currentDisc = weeklyAvailability[day] || "Carrera";
-                  return (
-                    <div
-                      key={day}
-                      className="flex items-center justify-between rounded-xl bg-slate-950 p-3 border border-slate-800"
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 border border-slate-800">
-                          {getDisciplineIcon(currentDisc)}
-                        </div>
-                        <span className="text-xs font-bold text-white">{day}</span>
-                      </div>
-
-                      <select
-                        value={currentDisc}
-                        onChange={(e) => handleDayDisciplineChange(day, e.target.value as DisciplineType)}
-                        className="h-8 rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-xs font-semibold text-slate-200 focus:border-cyan-500 focus:outline-none cursor-pointer"
-                      >
-                        <option value="Descanso">💤 Descanso Total</option>
-                        <option value="Carrera">🏃 Carrera (Stryd Power)</option>
-                        <option value="Ciclismo">🚴 Ciclismo (FTP)</option>
-                        <option value="Fuerza">🏋️ Fuerza / Sóleo</option>
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setWeeklyAvailability(DEFAULT_WEEKLY_AVAILABILITY)}
-                  className="flex items-center space-x-1 text-[11px] font-semibold text-cyan-400 hover:text-cyan-300"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  <span>Restablecer Matriz por Defecto</span>
-                </button>
-              </div>
-            </div>
+            <ProfileAvailabilityTab
+              weeklyAvailability={weeklyAvailability}
+              onToggleDayDiscipline={handleToggleDayDiscipline}
+            />
           )}
 
-          {/* TAB 3: CARRERAS OBJETIVO & MACROCICLOS */}
-          {activeTab === "races" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <Plus className="h-3.5 w-3.5" />
-                  Agregar Nueva Carrera Objetivo
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] text-slate-300">Nombre de la Carrera</label>
-                    <input
-                      type="text"
-                      value={newRaceName}
-                      onChange={(e) => setNewRaceName(e.target.value)}
-                      placeholder="ej. Maratón de Valencia"
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] text-slate-300">Fecha del Evento</label>
-                    <input
-                      type="date"
-                      value={newRaceDate}
-                      onChange={(e) => setNewRaceDate(e.target.value)}
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] text-slate-300">Distancia / Disciplina</label>
-                    <select
-                      value={newRaceDistance}
-                      onChange={(e) => setNewRaceDistance(e.target.value as any)}
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none cursor-pointer"
-                    >
-                      <option value="42k">Maratón (42.195 km)</option>
-                      <option value="21k">Media Maratón (21.097 km)</option>
-                      <option value="10k">10K Ruta</option>
-                      <option value="5k">5K Ruta / Pista</option>
-                      <option value="cycling_fondo">Gran Fondo Ciclismo</option>
-                      <option value="triathlon_703">Triatlón 70.3</option>
-                      <option value="triathlon_1406">Triatlón 140.6</option>
-                      <option value="custom">Personalizado</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] text-slate-300">Prioridad</label>
-                    <select
-                      value={newRacePriority}
-                      onChange={(e) => setNewRacePriority(e.target.value as any)}
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus:outline-none cursor-pointer"
-                    >
-                      <option value="A">🥇 Prioridad A (Objetivo Principal - Rige Macrociclo)</option>
-                      <option value="B">🥈 Prioridad B (Test de Puesta a Punto)</option>
-                      <option value="C">🥉 Prioridad C (Entrenamiento con Dorsal)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] text-slate-300">Meta / Tiempo Objetivo (Opcional)</label>
-                  <input
-                    type="text"
-                    value={newRaceGoal}
-                    onChange={(e) => setNewRaceGoal(e.target.value)}
-                    placeholder="ej. Sub 3h00m @ 275W Stryd"
-                    className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddRace}
-                  disabled={!newRaceName || !newRaceDate}
-                  className="w-full rounded-lg bg-amber-500/20 py-2 text-xs font-bold text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-50 transition"
-                >
-                  + Agregar Carrera al Calendario
-                </button>
-              </div>
-
-              {/* List of Registered Races */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Carreras Programadas ({races.length})
-                </label>
-                {races.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No tienes carreras registradas. Agrega una para calcular macrociclos.</p>
-                ) : (
-                  races.map((r) => (
-                    <div
-                      key={r.id}
-                      className="flex items-center justify-between rounded-xl bg-slate-950 p-3 border border-slate-800 text-xs"
-                    >
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                              r.priority === "A"
-                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                                : r.priority === "B"
-                                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                                : "bg-slate-800 text-slate-400"
-                            }`}
-                          >
-                            Prioridad {r.priority}
-                          </span>
-                          <strong className="text-white">{r.name}</strong>
-                          <span className="text-slate-400">({r.distance.toUpperCase()})</span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          📅 {r.date} {r.goalTarget && `• Meta: ${r.goalTarget}`}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRace(r.id)}
-                        className="rounded-lg p-1 text-slate-400 hover:bg-red-950 hover:text-red-300 transition"
-                        title="Eliminar carrera"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+          {activeTab === "physiology" && (
+            <ProfilePhysiologyTab
+              birthDate={birthDate}
+              setBirthDate={setBirthDate}
+              calculatedAge={calculatedAge}
+              gender={gender}
+              setGender={setGender}
+              runFtp={runFtp}
+              setRunFtp={setRunFtp}
+              bikeFtp={bikeFtp}
+              setBikeFtp={setBikeFtp}
+              weightKg={weightKg}
+              setWeightKg={setWeightKg}
+              relativePower={relativePower}
+              restingHR={restingHR}
+              setRestingHR={setRestingHR}
+              lthr={lthr}
+              setLthr={setLthr}
+              maxHR={maxHR}
+              setMaxHR={setMaxHR}
+              tanakaMaxHR={tanakaMaxHR}
+              visibleMetrics={visibleMetrics}
+              onToggleMetric={handleToggleMetric}
+            />
           )}
 
-          {/* TAB 4: AGENTE IA & GEMINI */}
-          {activeTab === "ai" && (
-            <div className="space-y-4 animate-fadeIn">
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Google Gemini / Vertex API Key
-                  </label>
-                  <span className="text-[10px] text-cyan-400 font-mono">projects/604253242289</span>
-                </div>
-                <div className="mt-1 flex space-x-2">
-                  <input
-                    type="password"
-                    value={geminiApiKey}
-                    onChange={(e) => setGeminiApiKey(e.target.value)}
-                    placeholder="AQ.Ab8RN... (o configurada en .env.local)"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleTestGemini}
-                    disabled={testingGemini}
-                    className="flex shrink-0 items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-                  >
-                    {testingGemini ? <RefreshCw className="h-4 w-4 animate-spin text-cyan-400" /> : <Sparkles className="h-4 w-4 text-cyan-400" />}
-                    <span>Test IA</span>
-                  </button>
-                </div>
-                {geminiTestResult && (
-                  <div
-                    className={`mt-2 flex items-center space-x-2 rounded-xl p-2.5 text-xs ${
-                      geminiTestResult.success
-                        ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
-                        : "border border-red-500/30 bg-red-500/10 text-red-300"
-                    }`}
-                  >
-                    {geminiTestResult.success ? <Check className="h-4 w-4 shrink-0 text-cyan-400" /> : <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />}
-                    <span>{geminiTestResult.message}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Modelo de Inferencia (Descubrimiento Dinámico)
-                  </label>
-                  {isLoadingModels && <span className="text-[10px] text-slate-400">Consultando Google AI...</span>}
-                </div>
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs font-semibold text-white focus:border-cyan-500 focus:outline-none cursor-pointer"
-                >
-                  {availableModels.length > 0 ? (
-                    availableModels.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.displayName} {m.isRecommended ? "★ (Recomendado - Bajo Costo)" : `[${m.tier.toUpperCase()}]`}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="gemini-flash-latest">Gemini Flash (Última Generación) ★ (Recomendado)</option>
-                      <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-                      <option value="gemini-flash-lite-latest">Gemini Flash Lite</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Directrices de Entrenamiento / Prompt Personalizado
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setCustomPrompt(DEFAULT_PROMPT)}
-                    className="flex items-center space-x-1 text-[10px] font-semibold text-amber-300 hover:text-amber-200"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Restablecer</span>
-                  </button>
-                </div>
-                <textarea
-                  rows={4}
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Instrucciones específicas (ej: sobrecarga sóleo, evitar pliometría; enfocar en maratón sub-3h...)"
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-3 border-t border-slate-800 pt-4">
+          {/* Botonera de Guardar */}
+          <div className="border-t border-slate-200 dark:border-slate-800/80 pt-4 flex items-center justify-between shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 transition"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               Cancelar
             </button>
+
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2 text-xs font-black text-slate-950 shadow-lg hover:brightness-110 disabled:opacity-50 transition"
+              className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-400 hover:brightness-105 px-6 py-2.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition cursor-pointer disabled:opacity-50"
             >
-              {saving ? "Guardando..." : "Guardar & Aplicar"}
+              <CheckCircle2 className="h-4 w-4 text-slate-950" />
+              <span>{saving ? "Guardando..." : "Guardar Ajustes Fisiológicos"}</span>
             </button>
           </div>
         </form>
+
+        {/* Toast Notificación */}
+        {showToast && (
+          <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 shadow-xl animate-fadeIn flex items-center space-x-2">
+            <CheckCircle2 className="h-4 w-4 text-slate-950" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
       </div>
     </div>
   );

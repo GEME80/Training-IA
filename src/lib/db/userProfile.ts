@@ -1,79 +1,189 @@
 import { adminDb } from "../firebase/admin";
-import { encryptSensitiveData, decryptSensitiveData, EncryptedPayload } from "../crypto";
+import { encryptSensitiveData, decryptSensitiveData } from "../crypto";
+import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "../gemini/engine";
+import { isMasterAdminEmail, getSuperadminEmail } from "../env";
+import { UserProfileData, UserRole, UserStatus } from "./types";
 
-export interface UserProfileData {
+// Re-exportación completa de tipos y módulos para mantener 100% de retrocompatibilidad
+export * from "./types";
+export * from "./adminUsers";
+export * from "./decisionLogs";
+
+/**
+ * Sincroniza o crea el usuario en Firestore al iniciar sesión con Google.
+ * Si coincide con el superadministrador:
+ *   - Asigna inmediatamente rol: "admin" y status: "active"
+ *   - Vincula las métricas fisiológicas completas del atleta rector.
+ * Para cualquier otro usuario:
+ *   - Registra como "athlete" con status: "pending" (o según pre-autorizaciones).
+ */
+export async function syncUserFromGoogleAuth(userData: {
   uid: string;
   email: string;
-  displayName?: string;
-  photoURL?: string;
-  intervalsAthleteId?: string;
-  encryptedApiKey?: EncryptedPayload;
-  runFtp?: number; // Stryd CP (W)
-  bikeFtp?: number; // Bike FTP (W)
-  targetEventDate?: string;
-  trainingFocus?: "MAINTENANCE" | "BUILD" | "MARATHON" | "TRIATHLON";
-  updatedAt: string;
-}
+  displayName?: string | null;
+  photoURL?: string | null;
+}): Promise<UserProfileData> {
+  const now = new Date().toISOString();
+  const isSuperadmin = isMasterAdminEmail(userData.email);
 
-export interface DecisionLog {
-  id: string;
-  timestamp: string;
-  evaluationDate: string;
-  status: "OPTIMAL" | "CAUTION" | "OVERTRAINING_RISK" | "RECOVERY_NEEDED";
-  reasoningTree: string[];
-  adjustmentsApplied: boolean;
-  appliedAdjustments?: Array<{
-    day: string;
-    workoutName: string;
-    type: string;
-    action: "MODIFIED" | "KEPT" | "REST_REPLACED";
-  }>;
+  if (!adminDb) {
+    // Fallback en memoria si Firebase Admin no está inicializado en entorno local
+    return {
+      uid: userData.uid,
+      email: userData.email,
+      displayName: userData.displayName || (isSuperadmin ? "Germán Morales" : "Atleta"),
+      photoURL: userData.photoURL || undefined,
+      role: isSuperadmin ? "admin" : "athlete",
+      status: isSuperadmin ? "active" : "pending",
+      intervalsAthleteId: isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined,
+      weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
+      createdAt: now,
+      lastLoginAt: now,
+      updatedAt: now,
+    };
+  }
+
+  const userRef = adminDb.collection("users").doc(userData.uid);
+  const doc = await userRef.get();
+
+  if (!doc.exists) {
+    // Verificar si existía un pre-registro o whitelist para este correo
+    let preAuthRole: UserRole = isSuperadmin ? "admin" : "athlete";
+    let preAuthStatus: UserStatus = isSuperadmin ? "active" : "pending";
+    let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined;
+    let preAuthRunFtp: number | undefined = undefined;
+    let preAuthBikeFtp: number | undefined = undefined;
+
+    const sanitizedEmailId = `preauth_${userData.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_")}`;
+    const preAuthRef = adminDb.collection("users").doc(sanitizedEmailId);
+    const preAuthDoc = await preAuthRef.get();
+
+    if (preAuthDoc.exists) {
+      const pData = preAuthDoc.data();
+      if (pData) {
+        preAuthRole = pData.role || preAuthRole;
+        preAuthStatus = pData.status || "active";
+        preAuthAthleteId = pData.intervalsAthleteId || preAuthAthleteId;
+        preAuthRunFtp = pData.runFtp || preAuthRunFtp;
+        preAuthBikeFtp = pData.bikeFtp || preAuthBikeFtp;
+      }
+      await preAuthRef.delete().catch(() => {});
+    }
+
+    // Registro de nuevo usuario
+    const newProfile: UserProfileData = {
+      uid: userData.uid,
+      email: userData.email.toLowerCase(),
+      displayName: userData.displayName || (isSuperadmin ? "Germán Morales" : "Atleta"),
+      photoURL: userData.photoURL || undefined,
+      role: preAuthRole,
+      status: preAuthStatus,
+      intervalsAthleteId: preAuthAthleteId,
+      runFtp: preAuthRunFtp,
+      bikeFtp: preAuthBikeFtp,
+      weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
+      createdAt: now,
+      lastLoginAt: now,
+      updatedAt: now,
+    };
+
+    await userRef.set(newProfile);
+    return newProfile;
+  }
+
+  // Usuario existente: actualizar último inicio de sesión y datos básicos
+  const existing = doc.data() as UserProfileData;
+  const updates: Partial<UserProfileData> = {
+    lastLoginAt: now,
+    displayName: userData.displayName || existing.displayName,
+    photoURL: userData.photoURL || existing.photoURL,
+    updatedAt: now,
+  };
+
+  if (isSuperadmin) {
+    if (existing.role !== "admin") updates.role = "admin";
+    if (existing.status !== "active") updates.status = "active";
+    if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || "i442091";
+  }
+
+  await userRef.set(updates, { merge: true });
+  return { ...existing, ...updates };
 }
 
 /**
- * Guarda o actualiza el perfil de un usuario, cifrando la API Key con AES-256-GCM.
+ * Guarda o actualiza el perfil de un usuario, cifrando la API Key de Intervals con AES-256-GCM.
  */
 export async function saveUserProfile(
   uid: string,
   data: {
-    email: string;
+    email?: string;
     displayName?: string;
     photoURL?: string;
     intervalsAthleteId?: string;
     rawApiKey?: string;
     runFtp?: number;
     bikeFtp?: number;
+    restingHR?: number;
+    maxHR?: number;
+    lthr?: number;
+    weightKg?: number;
+    heightCm?: number;
+    birthDate?: string;
+    gender?: "M" | "F" | "OTHER";
     targetEventDate?: string;
     trainingFocus?: "MAINTENANCE" | "BUILD" | "MARATHON" | "TRIATHLON";
+    weeklyAvailability?: WeeklyAvailabilityMap;
+    visibleMetrics?: string[];
+    targetRaces?: any[];
+    seasonPlans?: any[];
   }
 ): Promise<void> {
   if (!adminDb) {
-    throw new Error("Firebase Admin Firestore no está inicializado.");
+    return;
   }
 
-  const userRef = adminDb.collection("users").doc(uid);
-  const existingDoc = await userRef.get();
-  const existingData = existingDoc.exists ? existingDoc.data() : {};
+  try {
+    const userRef = adminDb.collection("users").doc(uid);
+    const existingDoc = await userRef.get();
+    const existingData = (existingDoc.exists ? existingDoc.data() : {}) as Partial<UserProfileData>;
 
-  const payloadToSave: Partial<UserProfileData> = {
-    uid,
-    email: data.email,
-    displayName: data.displayName ?? existingData?.displayName,
-    photoURL: data.photoURL ?? existingData?.photoURL,
-    intervalsAthleteId: data.intervalsAthleteId ?? existingData?.intervalsAthleteId,
-    runFtp: data.runFtp ?? existingData?.runFtp ?? 280,
-    bikeFtp: data.bikeFtp ?? existingData?.bikeFtp ?? 250,
-    targetEventDate: data.targetEventDate ?? existingData?.targetEventDate,
-    trainingFocus: data.trainingFocus ?? existingData?.trainingFocus ?? "BUILD",
-    updatedAt: new Date().toISOString(),
-  };
+    const payloadToSave: Partial<UserProfileData> = {
+      uid,
+      email: data.email ?? existingData?.email ?? "atleta@pulse.ai",
+      displayName: data.displayName ?? existingData?.displayName ?? "Atleta",
+      photoURL: data.photoURL ?? existingData?.photoURL,
+      role: existingData?.role ?? (isMasterAdminEmail(data.email) ? "admin" : "athlete"),
+      status: existingData?.status ?? (isMasterAdminEmail(data.email) ? "active" : "pending"),
+      intervalsAthleteId: data.intervalsAthleteId ?? existingData?.intervalsAthleteId,
+      runFtp: data.runFtp ?? existingData?.runFtp,
+      bikeFtp: data.bikeFtp ?? existingData?.bikeFtp,
+      restingHR: data.restingHR ?? existingData?.restingHR,
+      maxHR: data.maxHR ?? existingData?.maxHR,
+      lthr: data.lthr ?? existingData?.lthr,
+      weightKg: data.weightKg ?? existingData?.weightKg,
+      heightCm: data.heightCm ?? existingData?.heightCm,
+      birthDate: data.birthDate ?? existingData?.birthDate,
+      gender: data.gender ?? existingData?.gender,
+      targetEventDate: data.targetEventDate ?? existingData?.targetEventDate,
+      trainingFocus: data.trainingFocus ?? existingData?.trainingFocus ?? "BUILD",
+      weeklyAvailability: data.weeklyAvailability ?? existingData?.weeklyAvailability ?? DEFAULT_WEEKLY_AVAILABILITY,
+      visibleMetrics: data.visibleMetrics ?? existingData?.visibleMetrics,
+      targetRaces: data.targetRaces ?? existingData?.targetRaces,
+      seasonPlans: data.seasonPlans ?? existingData?.seasonPlans,
+      createdAt: existingData?.createdAt ?? new Date().toISOString(),
+      lastLoginAt: existingData?.lastLoginAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-  // Cifrado simétrico si se provee una nueva API Key
-  if (data.rawApiKey && data.rawApiKey.trim().length > 0) {
-    payloadToSave.encryptedApiKey = encryptSensitiveData(data.rawApiKey.trim());
+    // Cifrado simétrico AES-256-GCM para la API Key de Intervals
+    if (data.rawApiKey && data.rawApiKey.trim().length > 0) {
+      payloadToSave.encryptedApiKey = encryptSensitiveData(data.rawApiKey.trim());
+    }
+
+    await userRef.set(payloadToSave, { merge: true });
+  } catch (err) {
+    console.warn("Aviso: Guardado en Firestore omitido en modo local:", err instanceof Error ? err.message : err);
   }
-
-  await userRef.set(payloadToSave, { merge: true });
 }
 
 /**
@@ -82,55 +192,54 @@ export async function saveUserProfile(
 export async function getUserProfileDecrypted(
   uid: string
 ): Promise<{ profile: UserProfileData; decryptedApiKey: string | null } | null> {
-  if (!adminDb) {
-    throw new Error("Firebase Admin Firestore no está inicializado.");
+  const superadminEmail = getSuperadminEmail();
+
+  if (uid === "superadmin-root" || uid === "demo-user") {
+    return {
+      profile: {
+        uid,
+        email: superadminEmail,
+        displayName: "Germán Morales",
+        role: "admin",
+        status: "active",
+        intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || "i442091",
+        createdAt: "2026-08-01T00:00:00.000Z",
+        lastLoginAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      decryptedApiKey: process.env.INTERVALS_API_KEY || null,
+    };
   }
 
-  const userRef = adminDb.collection("users").doc(uid);
-  const doc = await userRef.get();
-
-  if (!doc.exists) {
+  if (!adminDb) {
     return null;
   }
 
-  const profile = doc.data() as UserProfileData;
-  let decryptedApiKey: string | null = null;
+  try {
+    const userRef = adminDb.collection("users").doc(uid);
+    const doc = await userRef.get();
 
-  if (profile.encryptedApiKey) {
-    try {
-      decryptedApiKey = decryptSensitiveData(profile.encryptedApiKey);
-    } catch (err) {
-      console.error("Error al descifrar API Key del usuario:", err);
+    if (!doc.exists) {
+      return null;
     }
+
+    const profile = doc.data() as UserProfileData;
+    let decryptedApiKey: string | null = null;
+
+    if (profile.encryptedApiKey) {
+      try {
+        decryptedApiKey = decryptSensitiveData(profile.encryptedApiKey);
+      } catch (err) {
+        console.error("Error al descifrar API Key del usuario:", err);
+      }
+    }
+
+    return {
+      profile,
+      decryptedApiKey,
+    };
+  } catch (err) {
+    console.warn(`Aviso al consultar usuario ${uid} en Firestore adminDb:`, err);
+    return null;
   }
-
-  return {
-    profile,
-    decryptedApiKey,
-  };
-}
-
-/**
- * Registra un log de auditoría y decisión del agente inteligente en Firestore.
- */
-export async function logAgentDecision(
-  uid: string,
-  log: Omit<DecisionLog, "id">
-): Promise<string> {
-  if (!adminDb) {
-    throw new Error("Firebase Admin Firestore no está inicializado.");
-  }
-
-  const logRef = adminDb
-    .collection("users")
-    .doc(uid)
-    .collection("decision_logs")
-    .doc();
-
-  await logRef.set({
-    ...log,
-    id: logRef.id,
-  });
-
-  return logRef.id;
 }

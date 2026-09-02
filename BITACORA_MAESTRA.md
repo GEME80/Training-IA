@@ -1777,7 +1777,7 @@ flowchart TD
 - **2026-09-02 (Reingeniería Integral UX/UI de Admin Console, Modelo Mental de Usuarios, Descomposición Modular y Fusión de Ciencia & Programas - v3.4):**
   - **1. Clarificación del Modelo Mental de Creación de Usuarios y Onboarding:**
     - Se erradicó el término técnico y confuso *"Pre-autorizar Correo"*, reemplazándolo por el botón orientado a la acción: **`+ Invitar / Registrar Atleta`**.
-    - **Vía A (Invitación por Admin):** El entrenador registra el correo de Google y métricas iniciales opcionales (Intervals ID, Stryd CP, Bike FTP). El sistema permite copiar en 1 clic un mensaje de bienvenida personalizado para WhatsApp/Email. Cuando el atleta inicia sesión con Google, obtiene acceso inmediato y parametrizado sin demoras.
+    - **Vía A (Invitación por Admin):** El entrenador registra el correo de Google y métricas iniciales opcionales (Intervals ID, Stryd CP, Bike FTP). El sistema permite copiar en 1 clic un mensaje de bienvenida personalizado para el atleta. Cuando el atleta inicia sesión con Google, obtiene acceso inmediato y parametrizado sin demoras.
     - **Vía B (Auto-registro Orgánico):** Si un atleta se registra sin invitación previa, pasa automáticamente a estado **`🟡 Solicitud Pendiente`**, permitiendo al Admin aprobar su acceso con un solo clic (`Aprobar`) directamente desde la tabla.
     - **Distinción Visual Inconfundible:** La tabla ahora identifica 4 estados humanos claros:
       * `🔵 Invitado (Espera 1er login)` (Pre-autorizado con flag `isPreAuthorized`).

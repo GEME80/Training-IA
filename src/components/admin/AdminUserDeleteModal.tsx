@@ -10,6 +10,8 @@ interface AdminUserDeleteModalProps {
   onClose: () => void;
   onSuccess: () => void;
   showMessage: (text: string, type: "success" | "error") => void;
+  requesterUid?: string;
+  requesterEmail?: string;
 }
 
 export const AdminUserDeleteModal: React.FC<AdminUserDeleteModalProps> = ({
@@ -18,6 +20,8 @@ export const AdminUserDeleteModal: React.FC<AdminUserDeleteModalProps> = ({
   onClose,
   onSuccess,
   showMessage,
+  requesterUid,
+  requesterEmail,
 }) => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -32,6 +36,8 @@ export const AdminUserDeleteModal: React.FC<AdminUserDeleteModalProps> = ({
         body: JSON.stringify({
           targetUid: user.uid,
           targetEmail: user.email,
+          requesterUid,
+          requesterEmail,
         }),
       });
       const data = await res.json();

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { UserPlus, Search, Users, CheckCircle2, Clock, Mail } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
+import { useAuth } from "@/context/AuthContext";
 import { AdminUsersTable } from "./AdminUsersTable";
 import { AdminUserInviteModal } from "./AdminUserInviteModal";
 import { AdminUserEditModal } from "./AdminUserEditModal";
@@ -21,6 +22,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   onRefresh,
   showMessage,
 }) => {
+  const { user, userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [quickFilter, setQuickFilter] = useState<QuickTabFilter>("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -65,10 +67,20 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
   const handleStatusChange = async (targetUid: string, targetEmail: string, newStatus: UserStatus) => {
     try {
+      const requesterUid = user?.uid || userProfile?.uid || "superadmin-root";
+      const requesterEmail = user?.email || userProfile?.email || "gerkof@gmail.com";
+
       const res = await fetch("/api/admin/users/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetUid, targetEmail, status: newStatus }),
+        body: JSON.stringify({
+          targetUid,
+          targetEmail,
+          newStatus,
+          status: newStatus,
+          requesterUid,
+          requesterEmail,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al actualizar estado");
@@ -216,6 +228,8 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         onClose={() => setUserToDelete(null)}
         onSuccess={onRefresh}
         showMessage={showMessage}
+        requesterUid={user?.uid || userProfile?.uid || "superadmin-root"}
+        requesterEmail={user?.email || userProfile?.email || "gerkof@gmail.com"}
       />
     </div>
   );

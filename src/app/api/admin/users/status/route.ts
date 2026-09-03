@@ -5,11 +5,12 @@ import { isMasterAdminEmail } from "@/lib/env";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { targetUid, newStatus, requesterUid, requesterEmail } = body;
+    const { targetUid, requesterUid, requesterEmail } = body;
+    const statusToUpdate = (body.newStatus || body.status) as UserStatus;
 
-    if (!targetUid || !newStatus) {
+    if (!targetUid || !statusToUpdate) {
       return NextResponse.json(
-        { success: false, error: "targetUid y newStatus son obligatorios." },
+        { success: false, error: "targetUid y status (o newStatus) son obligatorios." },
         { status: 400 }
       );
     }
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const result = await updateUserStatus(
       targetUid,
-      newStatus as UserStatus,
+      statusToUpdate,
       requesterEmail
     );
 

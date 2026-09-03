@@ -158,3 +158,43 @@ export async function updateUserRole(
     message: `Rol de ${userData.displayName || userData.email} actualizado a ${newRole}.`,
   };
 }
+
+/**
+ * Elimina un usuario de Firestore de forma permanente utilizando privilegios de Firebase Admin.
+ * Protege al superadministrador raíz contra eliminación accidental.
+ */
+export async function deleteUserFromAdmin(
+  targetUid: string
+): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) {
+    return { success: true, message: "Usuario simulado eliminado en entorno local." };
+  }
+
+  const userRef = adminDb.collection("users").doc(targetUid);
+  const doc = await userRef.get();
+
+  if (!doc.exists) {
+    // Si no existe directamente, intentar con prefijo preauth
+    const preauthDoc = await adminDb.collection("users").doc(`preauth_${targetUid}`).get();
+    if (preauthDoc.exists) {
+      await adminDb.collection("users").doc(`preauth_${targetUid}`).delete();
+      return { success: true, message: "Invitación preautorizada eliminada con éxito." };
+    }
+    throw new Error("Usuario no encontrado en la base de datos.");
+  }
+
+  const userData = doc.data() as UserProfileData;
+
+  // Protección anti-eliminación para el Superadministrador Raíz
+  if (isMasterAdminEmail(userData.email)) {
+    throw new Error("Acción denegada: El Superadministrador Raíz no puede ser eliminado del sistema.");
+  }
+
+  // Eliminar el documento del usuario en Firestore
+  await userRef.delete();
+
+  return {
+    success: true,
+    message: `Usuario ${userData.displayName || userData.email} eliminado con éxito.`,
+  };
+}

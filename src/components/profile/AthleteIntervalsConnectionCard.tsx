@@ -77,7 +77,7 @@ export const AthleteIntervalsConnectionCard: React.FC<AthleteIntervalsConnection
           </div>
           <div>
             <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-              Sincronización Cloud con Intervals.icu
+              Conexión Intervals
               {isConnected ? (
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
                   🟢 ACTIVA

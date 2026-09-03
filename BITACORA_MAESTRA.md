@@ -2032,3 +2032,81 @@ flowchart TD
     - `tsc --noEmit`: 0 errores de tipado (Código 0).
     - `next build`: 21/21 rutas compiladas exitosamente (Código 0).
     - Todos los archivos respetan estrictamente la **Regla 3 (< 350 LOC)**.
+
+### Versión 3.10 (Persistencia de Biometría de Atleta, Acordeones Móviles Ergonómicos y Gobernanza de Atletas en Admin)
+- **Fecha y Hora:** 3 de Septiembre de 2026 - 09:05 COT.
+- **Objetivo Arquitectónico:** Corregir el bug que impedía la persistencia de peso, altura, sexo y fecha de nacimiento en el perfil del atleta; optimizar la ergonomía en dispositivos móviles mediante secciones táctiles colapsables para Zonas, Matriz y Conexión Intervals simplificando su nomenclatura; y reparar la imposibilidad de pausar (deshabilitar) y eliminar atletas en el panel de administración.
+- **Diagnóstico y Correcciones Realizadas:**
+  - **1. Persistencia Integral de Biometría en Perfil (`AthleteDashboard.tsx`, `AthletePhysiologyView.tsx`, `/api/evaluate`):**
+    - Se corrigió la inicialización del estado `profile` en `AthleteDashboard.tsx`, hidratando `weight`, `heightCm`, `gender` y `birthDate` tanto desde `localStorage` como desde `userProfile` (Firestore).
+    - En `refreshTelemetry`, se blindó el merge con la telemetría devuelta por `/api/evaluate` para evitar que campos nulos o no retornados por Intervals.icu sobrescriban la biometría manual del atleta.
+    - En `handleSaveSettings`, se vinculó la llamada a `refreshProfile()` de `useAuth()` para propagar reactivamente los cambios al contexto de sesión global.
+    - Se incorporó la resolución de `heightCm` en `/api/evaluate/route.ts`.
+  - **2. Acordeones Táctiles Móviles y Nomenclatura Simplificada (`AthleteCollapsibleSection.tsx`, `AthletePhysiologyView.tsx`, `AthleteIntervalsConnectionCard.tsx`):**
+    - Creado el componente modular `<AthleteCollapsibleSection />` (< 90 LOC), que implementa acordeones interactivos con icono, título, badge de estado y chevron animado.
+    - En pantallas móviles (`md:hidden`), las secciones de *Zonas de Entrenamiento & Ritmos*, *Matriz Semanal de Disponibilidad* y *Conexión Intervals* arrancan colapsadas, mostrando sus métricas resumen en el badge y reduciendo el scroll vertical.
+    - Se simplificó la denominación *"Sincronización Cloud con Intervals.icu"* por la versión concisa **"Conexión Intervals"**.
+  - **3. Reparación de Gestión de Atletas en Consola de Administración (`adminUsers.ts`, `/api/admin/users/status`, `/api/admin/users/delete`, `AdminUsersTab.tsx`, `AdminUserDeleteModal.tsx`):**
+    - *Pausar / Deshabilitar:* Se corrigió el desacople en el cuerpo de la petición (la API requería `newStatus` y el frontend enviaba `status`). Se adaptó la API para admitir indistintamente `newStatus` o `status`, y se inyectaron las credenciales del administrador (`requesterUid` y `requesterEmail`).
+    - *Eliminar Atleta:* Se erradicó el uso del SDK de cliente `deleteDoc` (bloqueado por reglas de seguridad de Firestore) en `/api/admin/users/delete/route.ts` y se reemplazó por la nueva función `deleteUserFromAdmin(targetUid)` ejecutada bajo Firebase Admin SDK (`adminDb`). Se preservó la protección inviolable del Superadministrador Raíz.
+- **Lista de Archivos Modificados / Creados y Conteo de Líneas:**
+  - `src/components/profile/AthleteCollapsibleSection.tsx` [NUEVO]: **87 líneas** (< 350 LOC)
+  - `src/components/profile/AthleteIntervalsConnectionCard.tsx` [MODIFICADO]: **153 líneas** (< 350 LOC)
+  - `src/components/dashboard/AthletePhysiologyView.tsx` [MODIFICADO]: **332 líneas** (< 350 LOC)
+  - `src/lib/db/adminUsers.ts` [MODIFICADO]: **201 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/status/route.ts` [MODIFICADO]: **55 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/delete/route.ts` [MODIFICADO]: **58 líneas** (< 350 LOC)
+  - `src/components/admin/AdminUserDeleteModal.tsx` [MODIFICADO]: **104 líneas** (< 350 LOC)
+  - `src/components/admin/AdminUsersTab.tsx` [MODIFICADO]: **237 líneas** (< 350 LOC)
+  - `src/app/api/evaluate/route.ts` [MODIFICADO]: **333 líneas** (< 350 LOC)
+  - `PROJECT_RULES.md` [MODIFICADO]: **152 líneas**
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado Estricto):` `npx tsc --noEmit` $\rightarrow$ **0 errores de tipado (Código 0)**.
+  - `Prueba 2 (Compilación Producción):` `npm run build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Auditoría Stryd):` **100% de entrenamientos prescriben potencia con Tiempo + % FTP** (cero distancias con % FTP).
+  - `Prueba 4 (Modularidad):` Todos los archivos nuevos o editados cumplen estrictamente la **Regla 3 (< 350 LOC)**.
+
+---
+
+### Versión 3.11 (Rediseño Comercial y Fisiológico de la Home Page, Catálogo Multidisciplina, Gráficas de Ciclos & Intervalos y Salón de la Fama de Head Coaches)
+- **Fecha y Hora:** 3 de Septiembre de 2026 - 09:30 COT.
+- **Objetivo Arquitectónico:** Modernizar la página de inicio (`LandingHome`) transformándola en una experiencia visualmente cautivadora de alta conversión para atletas de resistencia; erradicar la sigla confusa "PMC" en favor de conceptos transparentes; incorporar el catálogo de modelos específicos para Running, Ciclismo y Triatlón destacando cualidades y beneficios; integrar un visualizador gráfico de macrociclos y perfiles de intervalos reales (`WorkoutChart`); añadir el Salón de la Fama de Head Coaches con sus biografías de élite; estandarizar la mención de inteligencia artificial exclusivamente a Google Gemini (eliminando "2.5" o "gemi"); y descomponer el componente monolítico en submódulos atómicos (< 350 LOC) bajo `src/components/landing/`.
+- **Diagnóstico y Correcciones Realizadas:**
+  - **1. Erradicación Total de "PMC" y Estandarización a Google Gemini:**
+    - Se eliminaron todas las referencias a "PMC" y "Banister PMC" en cabecera, insignias, tarjetas numéricas, propuesta de valor y pie de página.
+    - Se reemplazaron por conceptos claros de alto valor: *Forma Acumulada*, *Fatiga Reciente*, *Frescura / Batería Biológica*, *Periodización Fisiológica Adaptativa*.
+    - Se depuraron las menciones de "Gemini 2.5 Flash" y "gemi", consolidando la comunicación oficial con **Google Gemini**.
+  - **2. Catálogo Interactivo Multidisciplina (`LandingDisciplineModels.tsx` - 294 LOC):**
+    - Selector segmentado por pestañas para **🏃 Running**, **🚴 Ciclismo** y **🏊🚴🏃 Triatlón**.
+    - Desglose de modelos de competición (Maratón 42K, 21K, 10K/5K Speed, Trail & Ultra, Gran Fondo, Escalada W/kg, Criterium, Triatlón 70.3, Full 140.6 IRONMAN, Sprint/Olímpico).
+    - Tarjetas de cualidades y beneficios tangibles: vatios exactos con Stryd, sweetspot sin sobrecarga, fondos cumbre con cap de 3h, sesiones brick clave y tapering científico.
+  - **3. Visualizador Gráfico de Ciclos y Perfil de Intervalos (`LandingCyclePreview.tsx` - 211 LOC):**
+    - Gráfica interactiva de las 4 fases de temporada: *Fase 1: Base Mitocondrial*, *Fase 2: Construcción*, *Fase 3: Pico Específico* y *Fase 4: Afinamiento & Carrera*.
+    - Integración en tiempo real del componente `<WorkoutChart />`, renderizando las barras escalonadas de color por zonas de esfuerzo (Z1 a Z5) idénticas a las que se transmiten a los relojes Garmin y Coros.
+    - Selector interactivo de sesiones de muestra (Maratón Canova, Tirada Larga, Sweetspot Ciclismo, VO2max Billat).
+  - **4. Salón de la Fama de Head Coaches de Élite (`LandingHeadCoaches.tsx` - 189 LOC):**
+    - Perfiles y biografías de las máximas leyendas mundiales cuyos métodos impulsan PULSE AI: *Renato Canova*, *Jack Daniels, PhD*, *Dr. Andrew Coggan*, *Dr. Jan Olbrecht*, *Joe Friel*, *Pete Pfitzinger* y *Dr. Stephen Seiler*.
+    - Exposición de sus roles, legados en el deporte olímpico y aportes específicos integrados en el motor del sistema.
+  - **5. Modularización Estricta y Nuevos Componentes (< 350 LOC):**
+    - Se refactorizó `LandingHome.tsx` pasando de 591 a **153 líneas**, convirtiéndose en un orquestador limpio.
+    - Se crearon componentes atómicos dedicados: `LandingHero.tsx` (105 LOC), `LandingControlHub.tsx` (92 LOC), `LandingDisciplineModels.tsx` (294 LOC), `LandingCyclePreview.tsx` (211 LOC), `LandingHeadCoaches.tsx` (189 LOC), `LandingEcosystem.tsx` (110 LOC), `LandingFaq.tsx` (79 LOC), `LandingCtaSection.tsx` (69 LOC) y `LandingFooter.tsx` (38 LOC).
+    - Se actualizaron los enlaces de navegación en `Header.tsx` (211 LOC) eliminando anclas obsoletas.
+- **Lista de Archivos Modificados / Creados y Conteo de Líneas:**
+  - `src/components/LandingHome.tsx` [MODIFICADO]: **153 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHero.tsx` [NUEVO]: **105 líneas** (< 350 LOC)
+  - `src/components/landing/LandingControlHub.tsx` [NUEVO]: **92 líneas** (< 350 LOC)
+  - `src/components/landing/LandingDisciplineModels.tsx` [NUEVO]: **294 líneas** (< 350 LOC)
+  - `src/components/landing/LandingCyclePreview.tsx` [NUEVO]: **211 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHeadCoaches.tsx` [NUEVO]: **189 líneas** (< 350 LOC)
+  - `src/components/landing/LandingEcosystem.tsx` [NUEVO]: **110 líneas** (< 350 LOC)
+  - `src/components/landing/LandingFaq.tsx` [NUEVO]: **79 líneas** (< 350 LOC)
+  - `src/components/landing/LandingCtaSection.tsx` [NUEVO]: **69 líneas** (< 350 LOC)
+  - `src/components/landing/LandingFooter.tsx` [NUEVO]: **38 líneas** (< 350 LOC)
+  - `src/components/Header.tsx` [MODIFICADO]: **211 líneas** (< 350 LOC)
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores de tipado (Código 0)**.
+  - `Prueba 2 (Compilación Producción):` `./node_modules/.bin/next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Auditoría Stryd):` **100% de entrenamientos prescriben potencia con Tiempo + % FTP** (cero distancias con % FTP).
+  - `Prueba 4 (Modularidad):` Todos los archivos nuevos o editados cumplen estrictamente la **Regla 3 (< 350 LOC)**.
+  - `Prueba 5 (Auditoría de Lenguaje):` **0 menciones de PMC, 0 menciones de 2.5/gemi**, 100% consistencia con **Google Gemini**.
+

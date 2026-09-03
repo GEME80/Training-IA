@@ -166,6 +166,7 @@ export async function POST(req: NextRequest) {
           const resolvedLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr;
           const resolvedMaxHr = runSport?.max_hr || rideSport?.max_hr || anyAthlete.maxHR || (computedAge ? Math.round(208 - 0.7 * computedAge) : undefined);
           const resolvedWeight = anyAthlete.icu_weight || anyAthlete.weight;
+          const resolvedHeight = anyAthlete.icu_height || anyAthlete.height;
 
           console.log("✓ [API evaluate] Telemetría y umbrales resueltos dinámicamente desde Intervals.icu:", {
             atleta: athleteData.name,
@@ -192,6 +193,7 @@ export async function POST(req: NextRequest) {
             lthr: resolvedLthr,
             maxHR: resolvedMaxHr,
             weight: resolvedWeight,
+            heightCm: resolvedHeight,
           };
         } else if (
           (sportSettingsData && sportSettingsData.length > 0) ||

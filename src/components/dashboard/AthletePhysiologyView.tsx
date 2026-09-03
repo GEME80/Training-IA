@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Check } from "lucide-react";
+import { User, Check, Zap, CalendarDays, Radio } from "lucide-react";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, DisciplineType, normalizeDisciplines } from "@/lib/gemini/engine";
 import { AthleteProfileHeroCard } from "../profile/AthleteProfileHeroCard";
 import { AthleteZonesViewer } from "../profile/AthleteZonesViewer";
 import { AthleteEditProfileModal } from "../profile/AthleteEditProfileModal";
 import { ProfileAvailabilityTab } from "../profile/ProfileAvailabilityTab";
 import { AthleteIntervalsConnectionCard } from "../profile/AthleteIntervalsConnectionCard";
+import { AthleteCollapsibleSection } from "../profile/AthleteCollapsibleSection";
 
 interface AthletePhysiologyViewProps {
   athleteId: string;
@@ -238,26 +239,71 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       />
 
       {/* 2. VISOR MULTI-DEPORTE DE ZONAS (Intervals.icu & Stryd) */}
-      <AthleteZonesViewer
-        runFtp={runFtp}
-        bikeFtp={bikeFtp}
-        lthr={lthr}
-        maxHR={maxHR}
-      />
+      <AthleteCollapsibleSection
+        id="section-zones"
+        title="Zonas de Entrenamiento & Ritmos"
+        subtitle="Potencia Stryd CP, Ciclismo FTP y Frecuencia Cardíaca (LTHR)"
+        icon={Zap}
+        iconColor="text-amber-500"
+        summaryBadge={
+          <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
+            {runFtp}W CP • {bikeFtp}W FTP
+          </span>
+        }
+      >
+        <AthleteZonesViewer
+          runFtp={runFtp}
+          bikeFtp={bikeFtp}
+          lthr={lthr}
+          maxHR={maxHR}
+        />
+      </AthleteCollapsibleSection>
 
       {/* 3. MATRIZ SEMANAL DE DISPONIBILIDAD (Alineada al Dashboard) */}
-      <ProfileAvailabilityTab
-        weeklyAvailability={weeklyAvailability}
-        onToggleDayDiscipline={handleToggleDayDiscipline}
-      />
+      <AthleteCollapsibleSection
+        id="section-availability"
+        title="Matriz Semanal de Disponibilidad"
+        subtitle="Distribución de días de carrera, rodillo, gimnasio y descansos fisiológicos"
+        icon={CalendarDays}
+        iconColor="text-emerald-500"
+        summaryBadge={
+          <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
+            7 días configurados
+          </span>
+        }
+      >
+        <ProfileAvailabilityTab
+          weeklyAvailability={weeklyAvailability}
+          onToggleDayDiscipline={handleToggleDayDiscipline}
+        />
+      </AthleteCollapsibleSection>
 
-      {/* 4. SINCRONIZACIÓN & CONEXIÓN CLOUD INTERVALS.ICU */}
-      <AthleteIntervalsConnectionCard
-        athleteId={athleteId}
-        hasApiKey={isLiveConnected || !!apiKey}
-        onOpenEditModal={() => setIsEditModalOpen(true)}
-        onTestConnection={onTestConnection}
-      />
+      {/* 4. CONEXIÓN INTERVALS */}
+      <AthleteCollapsibleSection
+        id="section-intervals"
+        title="Conexión Intervals"
+        subtitle="Telemetría en vivo, credenciales AES-256 y sincronización deportiva"
+        icon={Radio}
+        iconColor="text-sky-500"
+        summaryBadge={
+          isLiveConnected || !!apiKey ? (
+            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
+              🟢 ACTIVA ({athleteId || "i442091"})
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 font-mono text-[10px] font-bold border border-rose-500/20">
+              🔴 DESCONECTADO
+            </span>
+          )
+        }
+      >
+        <AthleteIntervalsConnectionCard
+          athleteId={athleteId}
+          hasApiKey={isLiveConnected || !!apiKey}
+          onOpenEditModal={() => setIsEditModalOpen(true)}
+          onTestConnection={onTestConnection}
+        />
+      </AthleteCollapsibleSection>
 
       {/* 5. MODAL DE EDICIÓN ATÓMICO */}
       <AthleteEditProfileModal

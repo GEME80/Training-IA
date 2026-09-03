@@ -71,7 +71,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   onLiveConnectedChange,
   onGeminiConnectedChange,
 }) => {
-  const { user, userProfile, isAdmin, signOutUser } = useAuth();
+  const { user, userProfile, isAdmin, signOutUser, refreshProfile } = useAuth();
   const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
 
   const [activeNavSection, setActiveNavSection] = useState<AthleteSidebarNavSection>("dashboard");
@@ -99,17 +99,28 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     return reversed.find((w) => w.sleepQuality !== undefined || w.sleepSecs !== undefined || w.hrv !== undefined || w.restingHR !== undefined) || reversed[0];
   }, [wellnessHistory]);
 
-  const [profile, setProfile] = useState<AthleteProfile>({
-    id: userProfile?.intervalsAthleteId || "",
-    name: userProfile?.displayName || "German Morales",
-    ctl: 0,
-    atl: 0,
-    tsb: 0,
-    rampRate: 0,
-    restingHR: userProfile?.restingHR,
-    run_ftp: userProfile?.runFtp,
-    bike_ftp: userProfile?.bikeFtp,
-    visibleMetrics: userProfile?.visibleMetrics,
+  const [profile, setProfile] = useState<AthleteProfile>(() => {
+    const storedWeight = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_weight_kg") : null;
+    const storedHeight = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_height_cm") : null;
+    const storedGender = typeof localStorage !== "undefined" ? (localStorage.getItem("sgea_gender") as "M" | "F" | "OTHER" | null) : null;
+    const storedBirthDate = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_birth_date") : null;
+
+    return {
+      id: userProfile?.intervalsAthleteId || "",
+      name: userProfile?.displayName || "German Morales",
+      ctl: 0,
+      atl: 0,
+      tsb: 0,
+      rampRate: 0,
+      restingHR: userProfile?.restingHR,
+      run_ftp: userProfile?.runFtp,
+      bike_ftp: userProfile?.bikeFtp,
+      weight: storedWeight ? Number(storedWeight) : userProfile?.weightKg,
+      heightCm: storedHeight ? Number(storedHeight) : userProfile?.heightCm,
+      gender: storedGender || userProfile?.gender,
+      birthDate: storedBirthDate || userProfile?.birthDate,
+      visibleMetrics: userProfile?.visibleMetrics,
+    };
   });
 
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
@@ -286,6 +297,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           setProfile((prev) => ({
             ...prev,
             ...data.profile,
+            weight: data.profile?.weight ?? prev.weight,
+            heightCm: data.profile?.heightCm ?? prev.heightCm,
+            gender: data.profile?.gender ?? prev.gender,
+            birthDate: data.profile?.birthDate ?? prev.birthDate,
             name:
               data.profile?.name && data.profile.name !== "Atleta"
                 ? data.profile.name
@@ -719,6 +734,14 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       console.warn("Aviso al persistir perfil en Firestore:", saveErr);
     }
 
+    if (refreshProfile) {
+      try {
+        await refreshProfile();
+      } catch (authErr) {
+        console.warn("Aviso al refrescar perfil en AuthContext:", authErr);
+      }
+    }
+
     await refreshTelemetry(athleteIdToUse || profile.id, data.apiKey, data.runFtp, data.bikeFtp);
   };
 
@@ -795,9 +818,23 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
 
       setApiKeyCache(storedApiKey);
       setGeminiKeyCache(storedGeminiKey);
+      const storedWeight = localStorage.getItem("sgea_weight_kg");
+      const storedHeight = localStorage.getItem("sgea_height_cm");
+      const storedGender = localStorage.getItem("sgea_gender") as "M" | "F" | "OTHER" | null;
+      const storedBirthDate = localStorage.getItem("sgea_birth_date");
+
+      const resolvedWeight = storedWeight ? Number(storedWeight) : userProfile?.weightKg;
+      const resolvedHeight = storedHeight ? Number(storedHeight) : userProfile?.heightCm;
+      const resolvedGender = storedGender || userProfile?.gender;
+      const resolvedBirthDate = storedBirthDate || userProfile?.birthDate;
+
       setProfile((prev) => ({
         ...prev,
         id: storedAthleteId,
+        weight: resolvedWeight ?? prev.weight,
+        heightCm: resolvedHeight ?? prev.heightCm,
+        gender: resolvedGender ?? prev.gender,
+        birthDate: resolvedBirthDate ?? prev.birthDate,
       }));
 
       if (storedRaces) {
@@ -916,7 +953,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
     };
 
     init();
-  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.targetRaces, userProfile?.seasonPlans, userProfile?.weeklyAvailability]);
+  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.targetRaces, userProfile?.seasonPlans, userProfile?.weeklyAvailability, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate]);
 
   // Heartbeat de auto-recuperación: Si está desconectado, reintentar silenciosamente cada 10s hasta reconectar
   useEffect(() => {

@@ -57,15 +57,21 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* 2. Centro: Enlaces en Landing Page */}
         {isLanding && (
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600">
-            <a href="#features" className="hover:text-cyan-700 transition">
-              Funcionalidades
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-600">
+            <a href="#modelos" className="hover:text-cyan-700 transition">
+              Modelos
             </a>
-            <a href="#pmc" className="hover:text-emerald-700 transition">
-              Modelo PMC
+            <a href="#ciclos" className="hover:text-emerald-700 transition">
+              Ciclos & Gráficas
             </a>
-            <a href="#ecosystem" className="hover:text-cyan-700 transition">
+            <a href="#headcoaches" className="hover:text-cyan-700 transition">
+              Head Coaches
+            </a>
+            <a href="#ecosistema" className="hover:text-cyan-700 transition">
               Ecosistema
+            </a>
+            <a href="#faq" className="hover:text-cyan-700 transition">
+              Preguntas
             </a>
           </nav>
         )}

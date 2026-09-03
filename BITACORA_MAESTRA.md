@@ -2149,4 +2149,33 @@ flowchart TD
   - `Prueba 2 (Compilación Producción):` `node node_modules/next/dist/bin/next build` $\rightarrow$ **21/21 páginas generadas exitosamente (Código 0)**.
   - `Prueba 3 (Modularidad):` Todos los archivos nuevos y modificados se mantienen estrictamente bajo **< 350 LOC**.
 
+---
+
+### Versión 3.12 - Consolidación de Identidad SuperAdmin, Deduplicación de Atletas en Firestore, Aislamiento de Registro y Resiliencia COOP en Producción (2026-09-03)
+- **Problemas Críticos Diagnosticados y Resueltos:**
+  1. **Triplicación de Registros de Germán Morales en la Tabla de SuperAdmin:**
+     - Al listar usuarios en `src/lib/db/adminUsers.ts`, la consulta `adminDb.collection("users").get()` traía 3 documentos con el mismo correo `gerkof@gmail.com`: dos con métricas en 0W generados por sesiones demo previas (`superadmin-root`) y uno real con `Stryd CP: 327 W` y `Bike FTP: 240 W`.
+     - Se implementó un algoritmo de **consolidación y deduplicación por email** en `getAllUsersForAdmin`: se evalúa el puntaje de datos de cada documento (`runFtp + bikeFtp + hasIntervalsKey`) y se conserva **únicamente el registro funcional**. Los documentos huérfanos/duplicados en 0W se eliminan automáticamente de Firestore.
+     - En `src/lib/db/userProfile.ts`, se incorporó la migración automática de métricas fisiológicas hacia el UID activo al iniciar sesión por Google/Email, evitando la creación de documentos duplicados.
+  2. **Erradicación Definitiva de Auto-Login SuperAdmin ante Excepciones de Google:**
+     - En `src/context/AuthContext.tsx`, se eliminó la llamada a `loginAsMasterAdminDemo()` dentro del bloque `catch` de `signInWithGoogle`. Ante cualquier cancelación de popup o error de red, el sistema jamás conmuta al perfil del SuperAdmin.
+     - En `syncProfile`, se erradicó el fallback que asignaba `"gerkof@gmail.com"` cuando el objeto de Firebase Auth carecía de email.
+  3. **Aislamiento del Formulario de Registro para Atletas (`AuthModal.tsx`):**
+     - En la pestaña `Registrarme como Atleta`, se solicita únicamente Nombre, Correo y Contraseña.
+     - Al enviar la solicitud, el usuario se registra con `status: "pending"` y el modal muestra inmediatamente la pantalla de confirmación: *"🟡 ¡Solicitud Registrada con Éxito! En espera de aprobación por Germán Morales"*.
+     - El atleta permanece bloqueado en `RestrictedAccessView` hasta su activación en el panel de administración.
+  4. **Autorización de Dominio en GCP y Cabecera COOP (`next.config.mjs`):**
+     - Se autorizó el dominio de producción `pulse-ia--training-ia-8f67f.us-central1.hosted.app` en Firebase Authentication Settings.
+     - Se configuró la cabecera `Cross-Origin-Opener-Policy: same-origin-allow-popups` en `next.config.mjs` para permitir la comunicación bidireccional limpia con las ventanas emergentes de Google Identity Toolkit.
+- **Archivos Modificados (< 350 LOC):**
+  - `src/lib/db/adminUsers.ts`: **332 líneas** (< 350 LOC).
+  - `src/lib/db/userProfile.ts`: **276 líneas** (< 350 LOC).
+  - `src/context/AuthContext.tsx`: **340 líneas** (< 350 LOC).
+  - `src/components/auth/AuthModal.tsx`: **349 líneas** (< 350 LOC).
+  - `next.config.mjs`: **67 líneas** (< 350 LOC).
+- **Validación del Set de Pruebas:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Suite de Integración):` `run_test_suite.mjs` $\rightarrow$ **34/34 pruebas superadas (100% PASS)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+
 

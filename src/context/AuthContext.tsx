@@ -24,6 +24,7 @@ export function translateAuthError(err: any): string {
   if (code === "auth/popup-closed-by-user") return "Inicio de sesión con Google cancelado.";
   if (code === "auth/network-request-failed") return "Error de red al conectar con los servidores de autenticación.";
   if (code === "auth/operation-not-allowed") return "El método de autenticación no está habilitado en Firebase Console.";
+  if (code === "auth/configuration-not-found" || (err?.message && err.message.includes("CONFIGURATION_NOT_FOUND"))) return "El servicio de Authentication aún no está habilitado en Firebase Console. Ve a Authentication > Comenzar y activa Google y Correo.";
   return err?.message || "Ocurrió un error en la autenticación.";
 }
 

@@ -80,7 +80,23 @@ export async function syncUserFromGoogleAuth(userData: {
       await preAuthRef.delete().catch(() => {});
     }
 
-    // Registro de nuevo usuario
+    // Migrar datos funcionales (Stryd CP, Bike FTP) de documentos anteriores con el mismo email
+    const emailSnap = await adminDb.collection("users").where("email", "==", userData.email.toLowerCase()).get();
+    let existingData: Partial<UserProfileData> = {};
+    if (!emailSnap.empty) {
+      for (const d of emailSnap.docs) {
+        if (d.id !== userData.uid) {
+          const dData = d.data() as UserProfileData;
+          if ((dData.runFtp || 0) > (existingData.runFtp || 0)) existingData.runFtp = dData.runFtp;
+          if ((dData.bikeFtp || 0) > (existingData.bikeFtp || 0)) existingData.bikeFtp = dData.bikeFtp;
+          if (dData.encryptedApiKey) existingData.encryptedApiKey = dData.encryptedApiKey;
+          if (dData.intervalsAthleteId) existingData.intervalsAthleteId = dData.intervalsAthleteId;
+          await d.ref.delete().catch(() => {});
+        }
+      }
+    }
+
+    // Registro de nuevo usuario consolidado
     const newProfile: UserProfileData = {
       uid: userData.uid,
       email: userData.email.toLowerCase(),
@@ -88,9 +104,10 @@ export async function syncUserFromGoogleAuth(userData: {
       photoURL: userData.photoURL || undefined,
       role: preAuthRole,
       status: preAuthStatus,
-      intervalsAthleteId: preAuthAthleteId,
-      runFtp: preAuthRunFtp,
-      bikeFtp: preAuthBikeFtp,
+      intervalsAthleteId: existingData.intervalsAthleteId || preAuthAthleteId,
+      encryptedApiKey: existingData.encryptedApiKey,
+      runFtp: existingData.runFtp || preAuthRunFtp,
+      bikeFtp: existingData.bikeFtp || preAuthBikeFtp,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
       createdAt: now,
       lastLoginAt: now,

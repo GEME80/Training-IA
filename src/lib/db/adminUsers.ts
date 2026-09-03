@@ -32,15 +32,18 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
 
   try {
     const snapshot = await adminDb.collection("users").get();
-    const users: AdminUserListItem[] = [];
+    const userMap = new Map<string, AdminUserListItem>();
+    const duplicateDocIdsToDelete: string[] = [];
 
     snapshot.forEach((doc) => {
       const data = doc.data() as UserProfileData;
-      const isSuper = isMasterAdminEmail(data.email);
+      const emailKey = (data.email || "").trim().toLowerCase();
+      if (!emailKey) return;
 
-      users.push({
+      const isSuper = isMasterAdminEmail(emailKey);
+      const item: AdminUserListItem = {
         uid: data.uid || doc.id,
-        email: data.email || "",
+        email: emailKey,
         displayName: data.displayName || (isSuper ? "Germán Morales" : "Atleta"),
         photoURL: data.photoURL,
         role: data.role || (isSuper ? "admin" : "athlete"),
@@ -52,9 +55,36 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         bikeFtp: data.bikeFtp,
         createdAt: data.createdAt || new Date().toISOString(),
         lastLoginAt: data.lastLoginAt || new Date().toISOString(),
-      });
+      };
+
+      if (!userMap.has(emailKey)) {
+        userMap.set(emailKey, item);
+      } else {
+        const existing = userMap.get(emailKey)!;
+        // Priorizar el registro que contiene los datos reales de potencia y credenciales
+        const itemScore = (item.runFtp || 0) + (item.bikeFtp || 0) + (item.hasIntervalsKey ? 100 : 0);
+        const existingScore = (existing.runFtp || 0) + (existing.bikeFtp || 0) + (existing.hasIntervalsKey ? 100 : 0);
+
+        if (itemScore > existingScore) {
+          duplicateDocIdsToDelete.push(existing.uid);
+          userMap.set(emailKey, item);
+        } else {
+          duplicateDocIdsToDelete.push(item.uid);
+        }
+      }
     });
 
+    // Limpieza en Firestore de documentos duplicados o vacíos
+    if (duplicateDocIdsToDelete.length > 0 && adminDb) {
+      const db = adminDb;
+      Promise.all(
+        duplicateDocIdsToDelete.map((id) =>
+          db.collection("users").doc(id).delete().catch(() => {})
+        )
+      ).catch(() => {});
+    }
+
+    const users = Array.from(userMap.values());
     const hasSuperadmin = users.some((u) => isMasterAdminEmail(u.email));
     if (!hasSuperadmin) {
       users.unshift(defaultSuperadmin);

@@ -129,7 +129,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   };
 
   return (
-    <div className="card-gradient rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 animate-fadeIn flex flex-col h-[calc(100vh-140px)] min-h-[580px]">
+    <div className="card-gradient rounded-3xl p-3 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-5 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[480px]">
       {/* CABECERA & HUD DE TELEMETRÍA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4 shrink-0">
         <div className="flex items-center space-x-3.5">
@@ -211,39 +211,39 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
 
       {/* ACCIONES RÁPIDAS & INPUT */}
       <div className="space-y-2.5 shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        <div className="flex items-center gap-2 text-[11px] overflow-x-auto no-scrollbar pb-1">
           <button
             type="button"
             onClick={() => handleSendMessage("¿Cómo evalúas mi asimilación de fatiga y rampa esta semana?")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
           >
-            📊 Evaluar Asimilación Semanal
+            📊 Evaluar Asimilación
           </button>
 
           <button
             type="button"
             onClick={() => handleSendMessage("Tuve que viajar por trabajo, ¿cómo reorganizas mi semana?")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
           >
-            ✈️ Adaptar por Viaje o Tiempo
+            ✈️ Adaptar por Viaje
           </button>
 
           <button
             type="button"
             onClick={() => handleSendMessage("Siento sobrecarga en sóleos, ajusta la intensidad a regenerativo")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
           >
-            🩹 Modulación por Sobrecarga
+            🩹 Modulación Sobrecarga
           </button>
 
           {onApplyPlanAndSync && (
             <button
               type="button"
               onClick={() => onApplyPlanAndSync(currentPlan)}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black shadow-xs cursor-pointer"
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black shadow-xs cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
             >
               <Check className="h-3.5 w-3.5" />
-              <span>Sincronizar Plan a Intervals</span>
+              <span>Sincronizar a Intervals</span>
             </button>
           )}
         </div>

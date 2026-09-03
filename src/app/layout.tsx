@@ -1,7 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ClientAutoRecovery } from "@/components/ClientAutoRecovery";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
   title: "PULSE AI — Smart Endurance & Performance Coach",
@@ -9,6 +18,12 @@ export const metadata: Metadata = {
     "Plataforma inteligente y adaptativa de entrenamiento deportivo de resistencia impulsada por IA, integrada con Intervals.icu, Stryd y Garmin.",
   icons: {
     icon: "/icon.svg",
+    apple: "/pulse-icon.jpg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PULSE AI",
   },
 };
 

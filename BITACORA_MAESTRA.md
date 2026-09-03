@@ -1883,6 +1883,41 @@ flowchart TD
     - `tsc --noEmit`: Código 0 (0 errores de tipado).
     - Despliegue automático a `origin/main` en GitHub y compilación en Google Cloud Run.
 
+---
+
+### Versión 3.6 (Arquitectura Responsive Mobile App Nativa & PWA Experience)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Transformar la experiencia visual y ergonómica de PULSE AI para dispositivos móviles (iOS y Android), permitiendo su uso fluido como si fuera una aplicación móvil instalada (Progressive Web App), con barra de navegación inferior fija, vista de agenda diaria para el calendario continuo, soporte de safe areas y tiempos de respuesta táctil instantáneos.
+- **Implementaciones Realizadas:**
+  - **1. Manifiesto PWA y Configuración Nativa de Viewport (`manifest.ts` y `layout.tsx`):**
+    - Creado `src/app/manifest.ts` (38 LOC) con metadatos de Web App standalone (`PULSE AI — Smart Coach`), orientación preferida vertical (`portrait`), tema esmeralda (`#10b981`) e íconos multi-resolución.
+    - Exportado `viewport: Viewport` en `src/app/layout.tsx` con `viewportFit: "cover"`, `userScalable: false`, `initialScale: 1` y metadatos dedicados para Apple Web App (`apple-mobile-web-app-capable: yes`, barra de estado translúcida).
+  - **2. Barra de Navegación Inferior Ergonómica (`AthleteMobileBottomNav.tsx`):**
+    - Creado `src/components/dashboard/AthleteMobileBottomNav.tsx` (117 LOC, < 350 LOC):
+      * Fijada en la base de la pantalla (`fixed bottom-0 z-40 md:hidden`).
+      * 4 destinos clave de 1 toque: **Hoy / Dashboard**, **Temporada**, **Coach IA** y **Perfil**.
+      * Integración de `padding-bottom: max(env(safe-area-inset-bottom), 16px)` para respetar la barra inferior y gestos nativos de iPhone y Android.
+      * Micro-indicadores táctiles, badge en vivo de Intervals.icu y animación `touch-bounce`.
+  - **3. Vista de Agenda Diaria Móvil del Calendario (`AthleteMobileAgendaView.tsx`):**
+    - Creado `src/components/dashboard/AthleteMobileAgendaView.tsx` (323 LOC, < 350 LOC):
+      * Resuelve la fricción de la cuadrícula de 1100px en celulares sustituyéndola por una agenda centrada en **HOY**.
+      * Carrusel horizontal de los 7 días de la semana (`LUN`, `MAR`, `MIÉ`, `JUE`, `VIE`, `SÁB`, `DOM`) con badge del número de día, estado de ejecución verde (`✓`) y botón para avanzar o retroceder semanas.
+      * Tarjeta táctil del día seleccionado con desglose de disciplina, tiempo, TSS real vs planificado, extracto de estructura Stryd y botón de 1 toque hacia `WorkoutDetailModal`.
+  - **4. Descomposición Modular y Selector de Vista en Calendario (`AthleteContinuousCalendar.tsx` & `AthleteCalendarWeekRow.tsx`):**
+    - Extraída la fila semanal a `AthleteCalendarWeekRow.tsx` (258 LOC, < 350 LOC), reduciendo `AthleteContinuousCalendar.tsx` a 185 LOC.
+    - Añadido selector de vista en móvil: `[ 📱 Agenda Diaria ]` (por defecto) vs `[ 📊 Matriz Completa ]` para permitir a atletas alternar entre la tarjeta del día o la tabla panorámica.
+  - **5. Cabecera Móvil y Chat Head Coach IA (`AthleteDashboard.tsx` & `AthleteHeadCoachView.tsx`):**
+    - En `AthleteDashboard.tsx`, agregada píldora interactiva en la cabecera móvil (`🟢 En Vivo / Offline`) que permite refrescar la telemetría viva en 1 toque.
+    - En `AthleteHeadCoachView.tsx`, ajustada la altura del chat a `h-[calc(100dvh-175px)]` con chips de sugerencias rápidas en scroll horizontal suave (`overflow-x-auto no-scrollbar`), evitando que el teclado tape la conversación.
+  - **6. Utilidades CSS Móviles de Alto Rendimiento (`globals.css`):**
+    - Añadido `touch-action: manipulation` y `-webkit-tap-highlight-color: transparent` para erradicar el delay de 300ms en toques táctiles.
+    - Añadidas clases de safe-areas `.pb-safe` y `.pt-safe`, y micro-interacción táctil `.touch-bounce`.
+  - **7. Set de Pruebas Obligatorio Superado al 100%:**
+    - `tsc --noEmit`: **Código 0 (0 errores de tipado TypeScript)**.
+    - `next build`: **Código 0 (21/21 rutas compiladas, incluyendo `/manifest.webmanifest` estático)**.
+    - Regla de Modularidad: **100% de los archivos creados y modificados cumplen estrictamente la cota de < 350 líneas**.
+
+
 
 
 

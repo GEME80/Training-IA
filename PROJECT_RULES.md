@@ -110,6 +110,12 @@ flowchart TD
 1. **Cero Código Hardcodeado:** Todos los porcentajes de FTP, zonas, cargas, duraciones y protocolos de test (ej. test de VAM, Test CSS) deben originarse de los modelos tipados y curados bajo `src/lib/ai/knowledge/`. Queda **estrictamente prohibido hardcodear** valores lógicos o descripciones directamente en los componentes de UI o endpoints de API.
 2. **Lenguaje Amigable y Accesible:** Aunque los modelos tienen un alto rigor científico y matemático en el backend, el lenguaje, los títulos y las descripciones mostradas al atleta deben ser claras, positivas, motivadoras y libres de jerga hipertécnica innecesaria (ej. prefiere "Carrera Continua de Soltura" en lugar de "Z1 Depleción LISS").
 3. **Erradicación Absoluta de HYROX:** El sistema está enfocado 100% en deportes de resistencia cíclica pura (Carrera a pie, Trail, Ciclismo y Triatlón) junto con sus momentos de preparación física. Quedan excluidos los modelos o entrenamientos tipo HYROX o "Acondicionamiento Híbrido".
+4. **Leyes Inviolables de Fisiología y Carga (v2.1.0):**
+   - *Cap Estricto de 2h30m (150 min):* Las tiradas largas de maratón/carrera jamás superarán los 150 minutos para evitar daño neuromuscular catabólico.
+   - *Escalado por Nivel (`athleteLevelCaps`):* Todos los modelos deben definir cotas de volumen e intensidad adaptadas al $CTL$ inicial (`BEGINNER`, `INTERMEDIATE`, `ADVANCED_ELITE`).
+   - *Tapering Científico Mujika & Bosquet (`taperingRules`):* 3 semanas para 42K/Ultra/IRONMAN, 2 semanas para 21K/70.3/Gran Fondo, 1.5 semanas para 10K y 1 semana para 5K/Sprint/Crit, preservando el 100% de la intensidad de competición.
+   - *Ecosistema Completo de Fuerza (100% SSOT):* Todo workout de fuerza o entrenamiento cruzado debe invocarse desde `strengthAndCrossModels.ts`.
+
 
 ---
 

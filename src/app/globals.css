@@ -276,3 +276,33 @@ footer {
   border-color: #e2e8f0 !important;
   color: #64748b !important;
 }
+
+/* ========================================================================= */
+/* UTILIDADES MOBILE APP NATIVA & SAFE AREAS                                 */
+/* ========================================================================= */
+html, body {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.touch-bounce:active {
+  transform: scale(0.96);
+  transition: transform 0.12s ease;
+}
+

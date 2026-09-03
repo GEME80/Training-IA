@@ -63,6 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    if (typeof window !== "undefined") {
+      const activeUid = localStorage.getItem("sgea_current_uid");
+      if (activeUid && activeUid !== fbUser.uid) {
+        Object.keys(localStorage).filter((k) => k.startsWith("sgea_") && k !== "sgea_mock_user").forEach((k) => localStorage.removeItem(k));
+      }
+      localStorage.setItem("sgea_current_uid", fbUser.uid);
+    }
+
     try {
       const res = await fetch("/api/auth/sync", {
         method: "POST",
@@ -255,7 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn("Aviso al cerrar sesión:", err);
     } finally {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("sgea_mock_user");
+        Object.keys(localStorage).filter((k) => k.startsWith("sgea_")).forEach((k) => localStorage.removeItem(k));
       }
       setUser(null);
       setUserProfile(null);

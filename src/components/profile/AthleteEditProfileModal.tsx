@@ -43,18 +43,18 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
   initialData,
   onSave,
 }) => {
-  const [displayName, setDisplayName] = useState(initialData.displayName || "German Morales");
-  const [email] = useState(initialData.email || "german.morales@pulseai.pro");
+  const [displayName, setDisplayName] = useState(initialData.displayName || "Atleta");
+  const [email] = useState(initialData.email || "");
   const [birthDate, setBirthDate] = useState(initialData.birthDate || "");
   const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialData.gender || "M");
-  const [weightKg, setWeightKg] = useState<number>(initialData.weightKg || 84);
-  const [heightCm, setHeightCm] = useState<number>(initialData.heightCm || 178);
-  const [runFtp, setRunFtp] = useState<number>(initialData.runFtp || 327);
-  const [bikeFtp, setBikeFtp] = useState<number>(initialData.bikeFtp || 240);
-  const [lthr, setLthr] = useState<number>(initialData.lthr || 168);
-  const [restingHR, setRestingHR] = useState<number>(initialData.restingHR || 45);
+  const [weightKg, setWeightKg] = useState<number>(initialData.weightKg || 70);
+  const [heightCm, setHeightCm] = useState<number>(initialData.heightCm || 175);
+  const [runFtp, setRunFtp] = useState<number>(initialData.runFtp || 0);
+  const [bikeFtp, setBikeFtp] = useState<number>(initialData.bikeFtp || 0);
+  const [lthr, setLthr] = useState<number>(initialData.lthr || 165);
+  const [restingHR, setRestingHR] = useState<number>(initialData.restingHR || 50);
   const [maxHR, setMaxHR] = useState<number>(initialData.maxHR || 185);
-  const [intervalsAthleteId, setIntervalsAthleteId] = useState<string>(initialData.intervalsAthleteId || "i442091");
+  const [intervalsAthleteId, setIntervalsAthleteId] = useState<string>(initialData.intervalsAthleteId || "");
   const [apiKey, setApiKey] = useState<string>(initialData.apiKey || "");
   const [showInfoLegend, setShowInfoLegend] = useState<boolean>(true);
 
@@ -64,17 +64,17 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
   // Sincronizar datos al abrir el modal
   useEffect(() => {
     if (isOpen) {
-      setDisplayName(initialData.displayName || "German Morales");
+      setDisplayName(initialData.displayName || "Atleta");
       setBirthDate(initialData.birthDate || "");
       setGender(initialData.gender || "M");
-      setWeightKg(initialData.weightKg || 84);
-      setHeightCm(initialData.heightCm || 178);
-      setRunFtp(initialData.runFtp || 327);
-      setBikeFtp(initialData.bikeFtp || 240);
-      setLthr(initialData.lthr || 168);
-      setRestingHR(initialData.restingHR || 45);
+      setWeightKg(initialData.weightKg || 70);
+      setHeightCm(initialData.heightCm || 175);
+      setRunFtp(initialData.runFtp || 0);
+      setBikeFtp(initialData.bikeFtp || 0);
+      setLthr(initialData.lthr || 165);
+      setRestingHR(initialData.restingHR || 50);
       setMaxHR(initialData.maxHR || 185);
-      setIntervalsAthleteId(initialData.intervalsAthleteId || "i442091");
+      setIntervalsAthleteId(initialData.intervalsAthleteId || "");
       setApiKey(initialData.apiKey || "");
     }
   }, [isOpen, initialData]);

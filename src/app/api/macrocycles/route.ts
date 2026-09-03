@@ -4,7 +4,15 @@ import { saveMacrocycleToFirestore, getActiveMacrocycleFromFirestore } from "@/l
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const athleteId = searchParams.get("athleteId") || "i442091";
+    const athleteId = searchParams.get("athleteId");
+
+    if (!athleteId) {
+      return NextResponse.json({
+        success: true,
+        macrocycle: null,
+        message: "No athleteId provided",
+      });
+    }
 
     const savedMacro = await getActiveMacrocycleFromFirestore(athleteId);
     if (savedMacro) {
@@ -28,7 +36,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId = "i442091", blueprint, primaryRace, source = "WIZARD_CUSTOM" } = body;
+    const { athleteId, blueprint, primaryRace, source = "WIZARD_CUSTOM" } = body;
+
+    if (!athleteId) {
+      return NextResponse.json({ success: false, error: "athleteId es requerido" }, { status: 400 });
+    }
 
     if (!blueprint) {
       return NextResponse.json({ success: false, error: "Blueprint es requerido" }, { status: 400 });

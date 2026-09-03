@@ -108,14 +108,14 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
     return {
       id: userProfile?.intervalsAthleteId || "",
-      name: userProfile?.displayName || "German Morales",
+      name: userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta"),
       ctl: 0,
       atl: 0,
       tsb: 0,
       rampRate: 0,
       restingHR: userProfile?.restingHR,
-      run_ftp: userProfile?.runFtp,
-      bike_ftp: userProfile?.bikeFtp,
+      run_ftp: userProfile?.runFtp || (isAdmin ? 327 : 0),
+      bike_ftp: userProfile?.bikeFtp || (isAdmin ? 240 : 0),
       weight: storedWeight ? Number(storedWeight) : userProfile?.weightKg,
       heightCm: storedHeight ? Number(storedHeight) : userProfile?.heightCm,
       gender: storedGender || userProfile?.gender,
@@ -258,8 +258,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            athleteId: athleteId || profile.id || "i442091",
-            apiKey: apiKey || apiKeyCache || "48eje8t1wnj95t0sbjx2oumkq",
+            athleteId: athleteId || profile.id || (isAdmin ? "i442091" : ""),
+            apiKey: apiKey || apiKeyCache || (isAdmin ? "48eje8t1wnj95t0sbjx2oumkq" : ""),
             uid: user?.uid,
             customRunFtp: runFtp || profile.run_ftp,
             customBikeFtp: bikeFtp || profile.bike_ftp,
@@ -305,7 +305,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             name:
               data.profile?.name && data.profile.name !== "Atleta"
                 ? data.profile.name
-                : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "German Morales"),
+                : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta")),
             run_ftp: resolvedRunFtp,
             bike_ftp: resolvedBikeFtp,
           }));
@@ -799,7 +799,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       let storedAthleteId =
         rawStoredAthleteId && rawStoredAthleteId.trim() !== "" && rawStoredAthleteId.trim() !== "undefined" && rawStoredAthleteId.trim() !== "null"
           ? rawStoredAthleteId.trim()
-          : (userProfile?.intervalsAthleteId || profile.id || "i442091");
+          : (userProfile?.intervalsAthleteId || profile.id || (isAdmin ? "i442091" : ""));
 
       let storedApiKey =
         rawStoredApiKey && rawStoredApiKey.trim() !== "" && rawStoredApiKey.trim() !== "undefined" && rawStoredApiKey.trim() !== "null"
@@ -868,31 +868,33 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         resolvedPlans = userProfile.seasonPlans;
       }
 
-      // Si no hay planes en local ni sesión (ej. primer ingreso en celular), consultar Firestore
+      // Si no hay planes en local ni sesión, consultar Firestore solo si existe un atleta válido
       if (resolvedPlans.length === 0) {
         try {
-          const targetAthlete = storedAthleteId || "i442091";
-          const macroRes = await fetch(`/api/macrocycles?athleteId=${targetAthlete}`);
-          if (macroRes.ok) {
-            const macroData = await macroRes.json();
-            if (macroData.success && macroData.macrocycle?.blueprint) {
-              const bp = macroData.macrocycle.blueprint;
-              const restoredPlan: SeasonPlanItem = {
-                id: macroData.macrocycle.id || "plan-active-tokio",
-                planName: bp.cycleTitle || "Macrociclo Activo",
-                goalType: "MARATON_42K",
-                blueprint: bp,
-                startDate: bp.startDate || new Date().toISOString().split("T")[0],
-                endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
-                totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
-                status: "ACTIVE",
-                orderIndex: 0,
-                createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
-              };
-              resolvedPlans = [restoredPlan];
-              if (macroData.macrocycle.primaryRace) {
-                setTargetRaces([macroData.macrocycle.primaryRace]);
-                localStorage.setItem("sgea_target_races", JSON.stringify([macroData.macrocycle.primaryRace]));
+          const targetAthlete = storedAthleteId || userProfile?.intervalsAthleteId || (isAdmin ? "i442091" : "");
+          if (targetAthlete) {
+            const macroRes = await fetch(`/api/macrocycles?athleteId=${targetAthlete}`);
+            if (macroRes.ok) {
+              const macroData = await macroRes.json();
+              if (macroData.success && macroData.macrocycle?.blueprint) {
+                const bp = macroData.macrocycle.blueprint;
+                const restoredPlan: SeasonPlanItem = {
+                  id: macroData.macrocycle.id || "plan-active-tokio",
+                  planName: bp.cycleTitle || "Macrociclo Activo",
+                  goalType: "MARATON_42K",
+                  blueprint: bp,
+                  startDate: bp.startDate || new Date().toISOString().split("T")[0],
+                  endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
+                  totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
+                  status: "ACTIVE",
+                  orderIndex: 0,
+                  createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
+                };
+                resolvedPlans = [restoredPlan];
+                if (macroData.macrocycle.primaryRace) {
+                  setTargetRaces([macroData.macrocycle.primaryRace]);
+                  localStorage.setItem("sgea_target_races", JSON.stringify([macroData.macrocycle.primaryRace]));
+                }
               }
             }
           }
@@ -1132,7 +1134,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         {/* LIENZO PRINCIPAL DEL ATLETA */}
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
         {/* BANNER ONBOARDING */}
-        {!apiKeyCache && !userProfile?.encryptedApiKey && profile.id !== "i442091" && (
+        {!apiKeyCache && !userProfile?.encryptedApiKey && (!isAdmin || profile.id !== "i442091") && (
           <OnboardingBanner onOpenOnboarding={() => setIsOnboardingOpen(true)} />
         )}
 
@@ -1174,8 +1176,8 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
                 blueprint={blueprint}
                 selectedMacroWeekIdx={selectedMacroWeekIdx}
                 onSelectWeek={setSelectedMacroWeekIdx}
-                runFtp={profile.run_ftp || 313}
-                bikeFtp={profile.bike_ftp || 238}
+                runFtp={profile.run_ftp || 0}
+                bikeFtp={profile.bike_ftp || 0}
                 weeklyAvailability={weeklyAvailability}
                 weeklyExecutedTss={weeklyExecutedTss}
                 dailyExecutedActivities={dailyExecutedActivities}
@@ -1274,12 +1276,12 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         {activeNavSection === "physiology" && (
           <AthletePhysiologyView
             athleteId={profile.id}
-            athleteName={profile.name || "German Morales"}
-            email={user?.email || userProfile?.email || "german.morales@pulseai.pro"}
-            runFtp={profile.run_ftp || 327}
-            bikeFtp={profile.bike_ftp || 240}
-            weightKg={profile.weight || 84}
-            heightCm={profile.heightCm || 178}
+            athleteName={profile.name || userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta")}
+            email={user?.email || userProfile?.email || ""}
+            runFtp={profile.run_ftp || (isAdmin ? 327 : 0)}
+            bikeFtp={profile.bike_ftp || (isAdmin ? 240 : 0)}
+            weightKg={profile.weight}
+            heightCm={profile.heightCm}
             birthDate={profile.birthDate}
             gender={profile.gender}
             apiKey={apiKeyCache}

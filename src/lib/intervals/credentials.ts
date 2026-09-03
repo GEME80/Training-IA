@@ -1,10 +1,11 @@
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { isMasterAdminEmail } from "@/lib/env";
 
 /**
  * Resuelve de forma robusta y determinística las credenciales de Intervals.icu:
  * 1. Payload directo de la petición (si se suministra)
  * 2. Firestore por UID de usuario (desencriptación AES-256-GCM en memoria)
- * 3. Variables de entorno del servidor (.env.local / process.env)
+ * 3. Fallback a variables de servidor SOLO para el Superadministrador (Germán Morales)
  */
 export async function resolveIntervalsCredentials(params: {
   apiKey?: string;
@@ -13,12 +14,16 @@ export async function resolveIntervalsCredentials(params: {
 }): Promise<{ athleteId: string; apiKey: string }> {
   let athleteId = (params.athleteId || "").replace(/["']/g, "").trim();
   let apiKey = (params.apiKey || "").replace(/["']/g, "").trim();
+  let userEmail = "";
 
-  // 1. Si falta la clave y se suministra UID, consultar Firestore desencriptando en memoria
-  if (!apiKey && params.uid) {
+  // 1. Si falta la clave o athleteId y se suministra UID, consultar Firestore desencriptando en memoria
+  if (params.uid) {
     try {
       const userResult = await getUserProfileDecrypted(params.uid);
-      if (userResult?.decryptedApiKey) {
+      if (userResult?.profile?.email) {
+        userEmail = userResult.profile.email;
+      }
+      if (!apiKey && userResult?.decryptedApiKey) {
         apiKey = userResult.decryptedApiKey.replace(/["']/g, "").trim();
       }
       if (!athleteId && userResult?.profile?.intervalsAthleteId) {
@@ -29,21 +34,15 @@ export async function resolveIntervalsCredentials(params: {
     }
   }
 
-  // 2. Si falta la clave o el ID, usar fallback de variables de entorno del servidor (privadas)
-  if (!apiKey) {
-    apiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
-  }
-
-  if (!athleteId) {
-    athleteId = (process.env.INTERVALS_ATHLETE_ID || "").replace(/["']/g, "").trim();
-  }
-
-  // 3. Fallback de contingencia incondicional para el atleta rector (Germán Morales - i442091)
-  if (!athleteId) {
-    athleteId = "i442091";
-  }
-  if (!apiKey && athleteId === "i442091") {
-    apiKey = "48eje8t1wnj95t0sbjx2oumkq";
+  // 2. Solo el Superadministrador (Germán Morales) tiene fallback a las variables de entorno de i442091
+  const isSuper = isMasterAdminEmail(userEmail);
+  if (isSuper) {
+    if (!apiKey) {
+      apiKey = (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq").replace(/["']/g, "").trim();
+    }
+    if (!athleteId) {
+      athleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
+    }
   }
 
   return { athleteId, apiKey };

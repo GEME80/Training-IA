@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   let customRunFtp: number | undefined;
   let customBikeFtp: number | undefined;
+  let effectiveAthleteId = "";
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -33,8 +34,9 @@ export async function POST(req: NextRequest) {
     customRunFtp = inputRunFtp;
     customBikeFtp = inputBikeFtp;
 
-    const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
-      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+    effectiveAthleteId = credentials.athleteId;
+    const effectiveApiKey = credentials.apiKey;
 
     let profile: AthleteProfile = getEmptyProfile(effectiveAthleteId, customRunFtp, customBikeFtp);
     let wellness: AthleteWellness[] = [];
@@ -212,15 +214,15 @@ export async function POST(req: NextRequest) {
             /ride|cycling|bike/i.test(String(s.id)) ||
             s.id === 1844381
           );
-          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || customRunFtp || 327;
-          const resolvedBikeFtp = rideSport?.ftp || customBikeFtp || 240;
-          const resolvedLthr = runSport?.lthr || rideSport?.lthr || 168;
+          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || customRunFtp || 0;
+          const resolvedBikeFtp = rideSport?.ftp || customBikeFtp || 0;
+          const resolvedLthr = runSport?.lthr || rideSport?.lthr || 165;
 
           const latestWel = wellnessData && wellnessData.length > 0 ? wellnessData[wellnessData.length - 1] : undefined;
 
           profile = {
             id: effectiveAthleteId,
-            name: effectiveAthleteId === "i442091" ? "German Morales" : "Atleta",
+            name: effectiveAthleteId === "i442091" ? "German Morales" : ((athleteData as any)?.name || "Atleta"),
             run_ftp: resolvedRunFtp,
             bike_ftp: resolvedBikeFtp,
             lthr: resolvedLthr,
@@ -299,7 +301,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Error capturado en /api/evaluate:", error);
-    const defaultProfile = getEmptyProfile("i442091", customRunFtp, customBikeFtp);
+    const defaultProfile = getEmptyProfile(effectiveAthleteId || "", customRunFtp, customBikeFtp);
     const defaultPhysio = PhysiologicalEngine.evaluateAthlete(defaultProfile, []);
 
     return NextResponse.json({
@@ -320,7 +322,7 @@ export async function POST(req: NextRequest) {
 
 function getEmptyProfile(athleteId?: string, runFtp?: number, bikeFtp?: number): AthleteProfile {
   return {
-    id: athleteId || "i442091",
+    id: athleteId || "",
     name: "Atleta",
     ctl: 0,
     atl: 0,

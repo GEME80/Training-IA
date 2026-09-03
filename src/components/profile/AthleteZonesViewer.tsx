@@ -11,9 +11,9 @@ interface AthleteZonesViewerProps {
 }
 
 export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
-  runFtp = 327,
-  bikeFtp = 240,
-  lthr = 168,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr = 165,
   maxHR = 185,
 }) => {
   // 1. ZONAS STRYD RUNNING POWER (Estilo exacto Stryd / Intervals)
@@ -23,54 +23,54 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
       name: "Fácil",
       nameColor: "text-amber-500 dark:text-amber-400",
       pct: "65 - 80 % CP",
-      range: `${Math.round(runFtp * 0.65)} - ${Math.round(runFtp * 0.80)} W`,
+      range: runFtp > 0 ? `${Math.round(runFtp * 0.65)} - ${Math.round(runFtp * 0.80)} W` : "—",
     },
     {
       id: "Z2",
       name: "Moderado",
       nameColor: "text-amber-600 dark:text-amber-300",
       pct: "80 - 90 % CP",
-      range: `${Math.round(runFtp * 0.80)} - ${Math.round(runFtp * 0.90)} W`,
+      range: runFtp > 0 ? `${Math.round(runFtp * 0.80)} - ${Math.round(runFtp * 0.90)} W` : "—",
     },
     {
       id: "Z3",
       name: "Umbral",
       nameColor: "text-orange-500 dark:text-orange-400",
       pct: "90 - 100 % CP",
-      range: `${Math.round(runFtp * 0.90)} - ${runFtp} W`,
+      range: runFtp > 0 ? `${Math.round(runFtp * 0.90)} - ${runFtp} W` : "—",
     },
     {
       id: "Z4",
       name: "Intervalo",
       nameColor: "text-orange-600 dark:text-orange-500",
       pct: "100 - 115 % CP",
-      range: `${runFtp} - ${Math.round(runFtp * 1.15)} W`,
+      range: runFtp > 0 ? `${runFtp} - ${Math.round(runFtp * 1.15)} W` : "—",
     },
     {
       id: "Z5",
       name: "Repetición",
       nameColor: "text-rose-600 dark:text-rose-400",
       pct: "115 - 300 % CP",
-      range: `${Math.round(runFtp * 1.15)}+ W`,
+      range: runFtp > 0 ? `${Math.round(runFtp * 1.15)}+ W` : "—",
     },
     {
       id: "SS",
       name: "Sweet Spot",
       nameColor: "text-teal-600 dark:text-teal-400",
       pct: "84 - 97 % CP",
-      range: `${Math.round(runFtp * 0.84)} - ${Math.round(runFtp * 0.97)} W`,
+      range: runFtp > 0 ? `${Math.round(runFtp * 0.84)} - ${Math.round(runFtp * 0.97)} W` : "—",
     },
   ];
 
   // 2. ZONAS CICLISMO POWER COGGAN
   const cyclingZones = [
-    { id: "Z1", name: "Recuperación", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 55% FTP", range: `< ${Math.round(bikeFtp * 0.55)} W` },
-    { id: "Z2", name: "Resistencia (Fondo)", nameColor: "text-sky-600 dark:text-sky-400", pct: "56 - 75% FTP", range: `${Math.round(bikeFtp * 0.56)} - ${Math.round(bikeFtp * 0.75)} W` },
-    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "76 - 90% FTP", range: `${Math.round(bikeFtp * 0.76)} - ${Math.round(bikeFtp * 0.90)} W` },
-    { id: "Z4", name: "Umbral (FTP)", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "91 - 105% FTP", range: `${Math.round(bikeFtp * 0.91)} - ${Math.round(bikeFtp * 1.05)} W` },
-    { id: "Z5", name: "VO2max", nameColor: "text-amber-600 dark:text-amber-400", pct: "106 - 120% FTP", range: `${Math.round(bikeFtp * 1.06)} - ${Math.round(bikeFtp * 1.20)} W` },
-    { id: "Z6", name: "Cap. Anaeróbica", nameColor: "text-orange-600 dark:text-orange-400", pct: "121 - 150% FTP", range: `${Math.round(bikeFtp * 1.21)} - ${Math.round(bikeFtp * 1.50)} W` },
-    { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 150% FTP", range: `> ${Math.round(bikeFtp * 1.50)} W` },
+    { id: "Z1", name: "Recuperación", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 55% FTP", range: bikeFtp > 0 ? `< ${Math.round(bikeFtp * 0.55)} W` : "—" },
+    { id: "Z2", name: "Resistencia (Fondo)", nameColor: "text-sky-600 dark:text-sky-400", pct: "56 - 75% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.56)} - ${Math.round(bikeFtp * 0.75)} W` : "—" },
+    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "76 - 90% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.76)} - ${Math.round(bikeFtp * 0.90)} W` : "—" },
+    { id: "Z4", name: "Umbral (FTP)", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "91 - 105% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.91)} - ${Math.round(bikeFtp * 1.05)} W` : "—" },
+    { id: "Z5", name: "VO2max", nameColor: "text-amber-600 dark:text-amber-400", pct: "106 - 120% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 1.06)} - ${Math.round(bikeFtp * 1.20)} W` : "—" },
+    { id: "Z6", name: "Cap. Anaeróbica", nameColor: "text-orange-600 dark:text-orange-400", pct: "121 - 150% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 1.21)} - ${Math.round(bikeFtp * 1.50)} W` : "—" },
+    { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 150% FTP", range: bikeFtp > 0 ? `> ${Math.round(bikeFtp * 1.50)} W` : "—" },
   ];
 
   // 3. ZONAS FRECUENCIA CARDÍACA (Intervals / LTHR)

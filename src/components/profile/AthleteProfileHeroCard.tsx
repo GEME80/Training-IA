@@ -25,18 +25,18 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   calculatedAge,
   birthDate,
   gender = "M",
-  weightKg = 84,
-  heightCm = 178,
-  runFtp = 327,
-  bikeFtp = 240,
-  lthr = 168,
-  restingHR = 45,
+  weightKg = 70,
+  heightCm = 175,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr = 165,
+  restingHR = 50,
   maxHR = 185,
   onOpenEditModal,
 }) => {
-  const relativeRunPower = weightKg && runFtp ? (runFtp / weightKg).toFixed(2) : "3.89";
-  const relativeBikePower = weightKg && bikeFtp ? (bikeFtp / weightKg).toFixed(2) : "2.86";
-  const bmi = weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : "26.5";
+  const relativeRunPower = weightKg && runFtp ? (runFtp / weightKg).toFixed(2) : "—";
+  const relativeBikePower = weightKg && bikeFtp ? (bikeFtp / weightKg).toFixed(2) : "—";
+  const bmi = weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : "—";
   const genderLabel = gender === "F" ? "Mujer" : gender === "M" ? "Hombre" : "Atleta";
 
   return (

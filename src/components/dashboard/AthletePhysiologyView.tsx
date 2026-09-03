@@ -47,14 +47,14 @@ interface AthletePhysiologyViewProps {
 }
 
 export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
-  athleteId: initialAthleteId,
-  athleteName: initialAthleteName = "German Morales",
-  email = "german.morales@pulseai.pro",
-  runFtp: initialRunFtp = 327,
-  bikeFtp: initialBikeFtp = 240,
-  weightKg: initialWeight = 84,
-  heightCm: initialHeight = 178,
-  birthDate: initialBirthDate = "1980-08-24",
+  athleteId: initialAthleteId = "",
+  athleteName: initialAthleteName = "Atleta",
+  email = "",
+  runFtp: initialRunFtp = 0,
+  bikeFtp: initialBikeFtp = 0,
+  weightKg: initialWeight = 70,
+  heightCm: initialHeight = 175,
+  birthDate: initialBirthDate = "",
   gender: initialGender = "M",
   apiKey: initialApiKey = "",
   ctl,
@@ -68,8 +68,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
   const [athleteName, setAthleteName] = useState<string>(initialAthleteName);
-  const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 327);
-  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 240);
+  const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
+  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
   const [weightKg, setWeightKg] = useState<number>(initialWeight);
   const [heightCm, setHeightCm] = useState<number>(initialHeight);
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate);

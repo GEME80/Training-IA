@@ -29,16 +29,16 @@ interface SeasonAIGeneratorProps {
 }
 
 export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
-  athleteId = "i442091",
+  athleteId = "",
   weeklyAvailability,
   primaryRace,
   targetRaces = [],
   onSelectPrimaryRace,
   onAddNewRace,
-  ctl = 42,
-  runFtp = 327,
-  bikeFtp = 240,
-  lthr = 168,
+  ctl = 0,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr = 165,
   onGenerateAIPlan,
   onApplyDirectBlueprint,
   onNavigateToProfile,

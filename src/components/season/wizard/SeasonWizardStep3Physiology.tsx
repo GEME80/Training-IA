@@ -17,10 +17,10 @@ interface SeasonWizardStep3PhysiologyProps {
 }
 
 export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyProps> = ({
-  ctl = 42,
-  runFtp = 327,
-  bikeFtp = 240,
-  lthr = 168,
+  ctl = 0,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr = 165,
   periodization,
   onChangePeriodization,
   customPromptText,
@@ -46,21 +46,21 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <span className="text-[9px] text-slate-400 block uppercase">Fitness CTL</span>
             <strong className="text-xs font-black text-slate-900 dark:text-white">
-              {ctl > 0 ? ctl.toFixed(1) : "40.5"}
+              {ctl > 0 ? ctl.toFixed(1) : "—"}
             </strong>
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <span className="text-[9px] text-slate-400 block uppercase">Potencia Stryd</span>
             <strong className="text-xs font-black text-amber-600 dark:text-amber-400">
-              {runFtp > 0 ? `${runFtp}W` : "327W"}
+              {runFtp > 0 ? `${runFtp}W` : "—"}
             </strong>
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <span className="text-[9px] text-slate-400 block uppercase">FTP Ciclismo</span>
             <strong className="text-xs font-black text-cyan-600 dark:text-cyan-400">
-              {bikeFtp > 0 ? `${bikeFtp}W` : "240W"}
+              {bikeFtp > 0 ? `${bikeFtp}W` : "—"}
             </strong>
           </div>
 

@@ -2178,4 +2178,45 @@ flowchart TD
   - `Prueba 2 (Suite de Integración):` `run_test_suite.mjs` $\rightarrow$ **34/34 pruebas superadas (100% PASS)**.
   - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
 
+---
+
+### Versión 3.13 - Aislamiento Absoluto de Datos por Atleta, Purga de Caché Compartida y Estado Cero para Nuevos Usuarios (2026-09-03)
+- **Problema Diagnosticado:**
+  - Al iniciar sesión con un usuario nuevo (ej. `german.morales@fonyou.com`), el dashboard mostraba las métricas de telemetría de Germán Morales (`gerkof@gmail.com`): CTL 39.8, ATL 38.4, TSB +1, Stryd CP 327W, Bike FTP 240W y el macrociclo de 27 semanas de Maratón de Tokio.
+  - **Causas Raíz:**
+    1. *Persistencia Cruzada en LocalStorage:* Al cambiar de cuenta en el mismo dispositivo o navegador móvil, las claves `sgea_*` (macrociclo activo, cadenas de temporada, vatios y atleta ID) no se eliminaban al cerrar sesión ni al detectar un cambio de UID.
+    2. *Fallback Incondicional de Credenciales Intervals:* En `src/lib/intervals/credentials.ts`, si el usuario no tenía configurada su clave o ID de Intervals, la función inyectaba incondicionalmente el atleta `i442091` y la API Key de Germán Morales.
+    3. *Fallback de Macrociclos en API:* En `src/app/api/macrocycles/route.ts` y en `AthleteDashboard.tsx`, cuando `athleteId` estaba vacío se consultaba Firestore usando `"i442091"`, cargando el plan de 27 semanas de Germán.
+    4. *Valores por Defecto Hardcodeados en UI:* En `AthleteDashboard.tsx`, `AthletePhysiologyView.tsx`, `AthleteEditProfileModal.tsx`, `AthleteZonesViewer.tsx`, `AthleteProfileHeroCard.tsx` y el asistente de temporadas, se asumían por defecto los valores `327W`, `240W`, `84kg` y `178cm`.
+- **Solución Implementada:**
+  1. **Purga Automática de Caché al Cerrar Sesión y al Cambiar de UID (`AuthContext.tsx`):**
+     - En `signOutUser()`, se eliminan automáticamente todas las claves `sgea_*` de `localStorage`.
+     - En `syncProfile()`, se registra `sgea_current_uid`. Si el usuario autenticado tiene un UID diferente al almacenado en el dispositivo, se purga de inmediato toda la caché `sgea_*`.
+  2. **Blindaje de Credenciales Intervals (`credentials.ts`):**
+     - El fallback a `i442091` y las variables de entorno de Germán Morales queda **estrictamente restringido al Superadministrador** (`isMasterAdminEmail`).
+     - Para cualquier nuevo atleta sin credenciales, se retornan strings vacíos, evitando cualquier consulta indebida a la cuenta de Intervals de Germán.
+  3. **Aislamiento de Macrociclos en Backend y Frontend (`macrocycles/route.ts`, `AthleteDashboard.tsx`):**
+     - Si `athleteId` no está definido, `/api/macrocycles` no asume `"i442091"` y retorna `macrocycle: null`.
+     - El atleta nuevo ve el estado limpio: *"Sin Plan de Entrenamiento Activo"* con botón para diseñar con IA.
+  4. **Parámetros Fisiológicos en Cero para Atletas Nuevos:**
+     - Un atleta sin calibrar inicia con CTL: 0, ATL: 0, TSB: 0, Stryd CP: 0W (mostrando `—`) y Bike FTP: 0W (mostrando `—`).
+     - Se eliminaron todos los fallbacks fijos a biometrías personales en modales, tarjetas y cálculo de zonas.
+- **Archivos Modificados (< 350 LOC):**
+  - `src/context/AuthContext.tsx`: **348 líneas** (< 350 LOC)
+  - `src/lib/intervals/credentials.ts`: **52 líneas** (< 350 LOC)
+  - `src/app/api/macrocycles/route.ts`: **57 líneas** (< 350 LOC)
+  - `src/app/api/evaluate/route.ts`: **337 líneas** (< 350 LOC)
+  - `src/components/AthleteDashboard.tsx`: **1355 líneas**
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: **332 líneas** (< 350 LOC)
+  - `src/components/profile/AthleteEditProfileModal.tsx`: **421 líneas**
+  - `src/components/profile/AthleteProfileHeroCard.tsx`: **163 líneas** (< 350 LOC)
+  - `src/components/profile/AthleteZonesViewer.tsx`: **215 líneas** (< 350 LOC)
+  - `src/components/season/wizard/SeasonWizardStep3Physiology.tsx`: **167 líneas** (< 350 LOC)
+  - `src/components/season/SeasonAIGenerator.tsx`: **375 líneas**
+- **Validación del Set de Pruebas:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Producción):` `next build` $\rightarrow$ **21/21 páginas generadas exitosamente (Código 0)**.
+  - `Prueba 3 (Suite de Integración):` `run_test_suite.mjs` $\rightarrow$ **34/34 pruebas superadas (100% PASS)**.
+  - `Prueba 4 (Modularidad):` 100% de archivos nuevos y de lógica bajo **< 350 LOC**.
+
 

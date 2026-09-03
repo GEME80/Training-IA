@@ -1885,7 +1885,14 @@ flowchart TD
       1. `pulse-encryption-master-key` (versión 1 activa, AES-256-GCM).
       2. `gemini-api-key` (versión 3 activa, Google AI Studio en `Training-IA`).
     - Consumo optimizado a 2 de las 6 versiones gratuitas mensuales de Google Cloud (**Costo: $0.00/mes**).
-  - **6. Batería de Pruebas Superada al 100%:**
+  - **6. Auditoría FinOps & Gobernanza de Almacenamiento en Google Cloud (Artifact Registry & Cloud Build):**
+    - Verificación y certificación de las políticas de ciclo de vida en `Artifact Registry` (`firebaseapphosting-images` en `us-central1`):
+      * `fah-keep-latest-build`: Conserva estrictamente la última versión en ejecución (`keepCount: 1`).
+      * `fah-delete-automatically`: Purga automática de contenedores intermedios tras 30 minutos (`olderThan: 1800s`).
+      * Tamaño virtual optimizado: **~151.4 MB por imagen**, con layers compartidos sumando ~410 MB (dentro de los 500 MB mensuales gratuitos de Always Free).
+    - Diferenciación de costos certificada: Las filas del *Historial de Compilaciones* de Cloud Build son únicamente metadatos de auditoría con costo $0.00, mientras que los artefactos pesados se auto-depuran en Artifact Registry.
+    - Sanitización de `apphosting.yaml`: Eliminadas variables residuales de Intervals (`INTERVALS_ATHLETE_ID`, `INTERVALS_API_KEY`) para garantizar 100% de aislamiento criptográfico en Firestore vía AES-256-GCM.
+  - **7. Batería de Pruebas Superada al 100%:**
     - Test de simulación con script de auditoría: **Pico en Semana 13 = 32 km exactos**.
     - `tsc --noEmit`: Código 0 (0 errores de tipado).
     - Despliegue automático a `origin/main` en GitHub y compilación en Google Cloud Run.

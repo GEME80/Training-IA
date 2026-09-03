@@ -80,15 +80,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserProfile(data.profile);
         }
       } else {
-        const isMaster = isMasterAdminEmail(fbUser.email);
+        const userEmail = fbUser.email || "";
+        const isMaster = isMasterAdminEmail(userEmail);
         setUserProfile({
           uid: fbUser.uid,
-          email: fbUser.email || "gerkof@gmail.com",
+          email: userEmail,
           displayName: fbUser.displayName || (isMaster ? "Germán Morales" : "Atleta"),
           photoURL: fbUser.photoURL || undefined,
           role: isMaster ? "admin" : "athlete",
           status: isMaster ? "active" : "pending",
-          intervalsAthleteId: isMaster ? "i442091" : undefined,
+          intervalsAthleteId: isMaster ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined,
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -96,10 +97,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.warn("Aviso al sincronizar perfil en AuthContext:", err);
-      const isMaster = isMasterAdminEmail(fbUser.email);
+      const userEmail = fbUser.email || "";
+      const isMaster = isMasterAdminEmail(userEmail);
       setUserProfile({
         uid: fbUser.uid,
-        email: fbUser.email || "gerkof@gmail.com",
+        email: userEmail,
         displayName: fbUser.displayName || (isMaster ? "Germán Morales" : "Atleta"),
         photoURL: fbUser.photoURL || undefined,
         role: isMaster ? "admin" : "athlete",
@@ -187,23 +189,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(result.user);
       await syncProfile(result.user);
     } catch (err: any) {
-      const errorCode = err?.code || "";
-      const errorMsg = err?.message || "Error al iniciar sesión con Google";
-      console.warn("Aviso en signInWithGoogle:", errorCode, errorMsg);
-
-      if (
-        errorCode === "auth/configuration-not-found" ||
-        errorMsg.includes("CONFIGURATION_NOT_FOUND") ||
-        errorCode === "auth/operation-not-allowed" ||
-        errorCode === "auth/invalid-api-key"
-      ) {
-        // Modo resiliente: auto-autenticación como Superadministrador (Germán Morales)
-        console.info("Firebase Auth Google Provider no está activo en Firebase Console. Iniciando sesión como Superadministrador.");
-        loginAsMasterAdminDemo();
-      } else {
-        setError(errorMsg);
-      }
+      const msg = translateAuthError(err);
+      console.warn("Aviso en signInWithGoogle:", msg);
+      setError(msg);
       setLoading(false);
+      throw new Error(msg);
     }
   };
 

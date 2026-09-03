@@ -113,7 +113,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
 
         profile = {
           ...ath,
-          id: ath.id || effectiveAthleteId || "i442091",
+          id: ath.id || effectiveAthleteId || "",
           name: ath.name || profile.name,
           birthDate: icuDob,
           age: computedAge,

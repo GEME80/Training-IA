@@ -4,8 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { MacrocycleView } from "@/components/MacrocycleView";
 import { PhysiologicalCards } from "@/components/PhysiologicalCards";
 import { MacrocyclePreviewTimeline } from "@/components/MacrocyclePreviewTimeline";
-import { ProfileModal } from "@/components/ProfileModal";
-import { SeasonStudioModal, SeasonStudioTab } from "@/components/SeasonStudioModal";
+import { SeasonStudioTab } from "@/components/SeasonStudioModal";
 import { HeadCoachChatDrawer } from "@/components/HeadCoachChatDrawer";
 import { MacrocycleWizardModal } from "@/components/MacrocycleWizardModal";
 import { IntervalsOnboardingModal } from "@/components/IntervalsOnboardingModal";
@@ -44,6 +43,7 @@ import {
 } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { useAuth } from "@/context/AuthContext";
+import { getUserStorage, purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 
 interface AthleteDashboardProps {
   isSettingsOpen: boolean;
@@ -73,6 +73,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   onGeminiConnectedChange,
 }) => {
   const { user, userProfile, isAdmin, signOutUser, refreshProfile } = useAuth();
+  const userStorage = useMemo(() => getUserStorage(user?.uid), [user?.uid]);
   const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
 
   const [activeNavSection, setActiveNavSection] = useState<AthleteSidebarNavSection>("dashboard");
@@ -101,25 +102,20 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   }, [wellnessHistory]);
 
   const [profile, setProfile] = useState<AthleteProfile>(() => {
-    const storedWeight = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_weight_kg") : null;
-    const storedHeight = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_height_cm") : null;
-    const storedGender = typeof localStorage !== "undefined" ? (localStorage.getItem("sgea_gender") as "M" | "F" | "OTHER" | null) : null;
-    const storedBirthDate = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_birth_date") : null;
-
     return {
       id: userProfile?.intervalsAthleteId || "",
-      name: userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta"),
+      name: userProfile?.displayName || user?.displayName || "Atleta",
       ctl: 0,
       atl: 0,
       tsb: 0,
       rampRate: 0,
       restingHR: userProfile?.restingHR,
-      run_ftp: userProfile?.runFtp || (isAdmin ? 327 : 0),
-      bike_ftp: userProfile?.bikeFtp || (isAdmin ? 240 : 0),
-      weight: storedWeight ? Number(storedWeight) : userProfile?.weightKg,
-      heightCm: storedHeight ? Number(storedHeight) : userProfile?.heightCm,
-      gender: storedGender || userProfile?.gender,
-      birthDate: storedBirthDate || userProfile?.birthDate,
+      run_ftp: userProfile?.runFtp || 0,
+      bike_ftp: userProfile?.bikeFtp || 0,
+      weight: userProfile?.weightKg,
+      heightCm: userProfile?.heightCm,
+      gender: userProfile?.gender,
+      birthDate: userProfile?.birthDate,
       visibleMetrics: userProfile?.visibleMetrics,
     };
   });
@@ -187,10 +183,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     bikeFtp?: number;
   }) => {
     setApiKeyCache(data.apiKey);
-    localStorage.setItem("sgea_intervals_api_key", data.apiKey);
-    localStorage.setItem("sgea_athlete_id", data.athleteId);
-    if (data.runFtp) localStorage.setItem("sgea_run_ftp", data.runFtp.toString());
-    if (data.bikeFtp) localStorage.setItem("sgea_bike_ftp", data.bikeFtp.toString());
+    userStorage.setItem("intervals_api_key", data.apiKey);
+    userStorage.setItem("athlete_id", data.athleteId);
+    if (data.runFtp) userStorage.setItem("run_ftp", data.runFtp.toString());
+    if (data.bikeFtp) userStorage.setItem("bike_ftp", data.bikeFtp.toString());
 
     setProfile((prev) => ({
       ...prev,
@@ -252,14 +248,23 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       runFtp?: number,
       bikeFtp?: number
     ) => {
+      const targetAthleteId = athleteId || profile.id || userProfile?.intervalsAthleteId || "";
+      const targetApiKey = apiKey || apiKeyCache || "";
+
+      // Si el atleta no tiene configurado ningún identificador ni clave, no consultar Intervals
+      if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey) {
+        setIsLiveConnected(false);
+        return;
+      }
+
       try {
         setIsRefreshingTelemetry(true);
         const res = await fetch("/api/evaluate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            athleteId: athleteId || profile.id || (isAdmin ? "i442091" : ""),
-            apiKey: apiKey || apiKeyCache || (isAdmin ? "48eje8t1wnj95t0sbjx2oumkq" : ""),
+            athleteId: targetAthleteId,
+            apiKey: targetApiKey,
             uid: user?.uid,
             customRunFtp: runFtp || profile.run_ftp,
             customBikeFtp: bikeFtp || profile.bike_ftp,
@@ -267,7 +272,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           }),
         });
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          setIsLiveConnected(false);
+          return;
+        }
 
         const data = await res.json();
         if (data.success) {
@@ -289,10 +297,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           const resolvedRunFtp = data.profile?.run_ftp || runFtp || profile.run_ftp;
 
           if (data.profile?.bike_ftp) {
-            localStorage.setItem("sgea_bike_ftp", String(data.profile.bike_ftp));
+            userStorage.setItem("bike_ftp", String(data.profile.bike_ftp));
           }
           if (data.profile?.run_ftp) {
-            localStorage.setItem("sgea_run_ftp", String(data.profile.run_ftp));
+            userStorage.setItem("run_ftp", String(data.profile.run_ftp));
           }
 
           setProfile((prev) => ({
@@ -305,13 +313,13 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             name:
               data.profile?.name && data.profile.name !== "Atleta"
                 ? data.profile.name
-                : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta")),
+                : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "Atleta"),
             run_ftp: resolvedRunFtp,
             bike_ftp: resolvedBikeFtp,
           }));
           setPhysioStatus(data.physioStatus);
 
-          const savedBlueprintStr = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_active_blueprint") : null;
+          const savedBlueprintStr = userStorage.getItem("active_blueprint");
           if (savedBlueprintStr) {
             try {
               const parsedBp = JSON.parse(savedBlueprintStr);
@@ -479,8 +487,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       updatedRaces = targetRaces;
     }
 
-    localStorage.setItem("sgea_target_races", JSON.stringify(updatedRaces));
-    localStorage.setItem("sgea_active_blueprint", JSON.stringify(blueprint));
+    userStorage.setJSON("target_races", updatedRaces);
+    userStorage.setJSON("active_blueprint", blueprint);
 
     const newPlanItem: SeasonPlanItem = {
       id: "plan-" + Date.now(),
@@ -507,7 +515,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
     setSeasonPlans(updatedPlans);
     setViewingPlanId(newPlanItem.id);
-    localStorage.setItem("sgea_season_plans_chain", JSON.stringify(updatedPlans));
+    userStorage.setJSON("season_plans", updatedPlans);
 
     let newPhaseInfo = calculateMacrocyclePhase(updatedRaces);
     if (!newPhaseInfo) {
@@ -591,8 +599,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     });
 
     setSeasonPlans(updatedPlans);
-    localStorage.setItem("sgea_season_plans_chain", JSON.stringify(updatedPlans));
-    localStorage.setItem("sgea_active_blueprint", JSON.stringify(updatedBlueprint));
+    userStorage.setJSON("season_plans", updatedPlans);
+    userStorage.setJSON("active_blueprint", updatedBlueprint);
 
     if (macrocyclePhase) {
       setMacrocyclePhase({
@@ -604,13 +612,13 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
   const handleSaveTargetRaces = async (races: TargetRace[]) => {
     setTargetRaces(races);
-    localStorage.setItem("sgea_target_races", JSON.stringify(races));
+    userStorage.setJSON("target_races", races);
     try {
       await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          uid: user?.uid || "demo-user",
+          uid: user?.uid || "",
           email: user?.email || userProfile?.email || "",
           targetRaces: races,
         }),
@@ -623,13 +631,13 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   const handleSaveSeasonPlans = async (plans: SeasonPlanItem[]) => {
     setSeasonPlans(plans);
     if (plans.length > 0) {
-      localStorage.setItem("sgea_season_plans_chain", JSON.stringify(plans));
+      userStorage.setJSON("season_plans", plans);
       if (plans[0].blueprint) {
-        localStorage.setItem("sgea_active_blueprint", JSON.stringify(plans[0].blueprint));
+        userStorage.setJSON("active_blueprint", plans[0].blueprint);
       }
     } else {
-      localStorage.removeItem("sgea_season_plans_chain");
-      localStorage.removeItem("sgea_active_blueprint");
+      userStorage.removeItem("season_plans");
+      userStorage.removeItem("active_blueprint");
       setViewingPlanId(null);
       setMacrocyclePhase(null);
     }
@@ -663,51 +671,51 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     const athleteIdToUse = data.intervalsAthleteId || data.athleteId;
     if (athleteIdToUse) {
       setProfile((p) => ({ ...p, id: athleteIdToUse }));
-      localStorage.setItem("sgea_athlete_id", athleteIdToUse);
+      userStorage.setItem("athlete_id", athleteIdToUse);
     }
     if (data.displayName) {
       setProfile((p) => ({ ...p, name: data.displayName }));
-      localStorage.setItem("sgea_display_name", data.displayName);
+      userStorage.setItem("display_name", data.displayName);
     }
     if (data.apiKey) {
       setApiKeyCache(data.apiKey);
-      localStorage.setItem("sgea_intervals_api_key", data.apiKey);
+      userStorage.setItem("intervals_api_key", data.apiKey);
     }
     if (data.geminiApiKey) {
       setGeminiKeyCache(data.geminiApiKey);
-      localStorage.setItem("sgea_custom_gemini_key", data.geminiApiKey);
+      userStorage.setItem("custom_gemini_key", data.geminiApiKey);
     }
     if (data.runFtp) {
       setProfile((p) => ({ ...p, run_ftp: data.runFtp }));
-      localStorage.setItem("sgea_run_ftp", String(data.runFtp));
+      userStorage.setItem("run_ftp", String(data.runFtp));
     }
     if (data.bikeFtp) {
       setProfile((p) => ({ ...p, bike_ftp: data.bikeFtp }));
-      localStorage.setItem("sgea_bike_ftp", String(data.bikeFtp));
+      userStorage.setItem("bike_ftp", String(data.bikeFtp));
     }
     if (data.heightCm) {
       setProfile((p) => ({ ...p, heightCm: data.heightCm }));
-      localStorage.setItem("sgea_height_cm", String(data.heightCm));
+      userStorage.setItem("height_cm", String(data.heightCm));
     }
     if (data.weightKg) {
       setProfile((p) => ({ ...p, weight: data.weightKg }));
-      localStorage.setItem("sgea_weight_kg", String(data.weightKg));
+      userStorage.setItem("weight_kg", String(data.weightKg));
     }
     if (data.gender) {
       setProfile((p) => ({ ...p, gender: data.gender }));
-      localStorage.setItem("sgea_gender", data.gender);
+      userStorage.setItem("gender", data.gender);
     }
     if (data.birthDate) {
       setProfile((p) => ({ ...p, birthDate: data.birthDate }));
-      localStorage.setItem("sgea_birth_date", data.birthDate);
+      userStorage.setItem("birth_date", data.birthDate);
     }
     if (data.weeklyAvailability) {
       setWeeklyAvailability(data.weeklyAvailability);
-      localStorage.setItem("sgea_weekly_availability", JSON.stringify(data.weeklyAvailability));
+      userStorage.setJSON("weekly_availability", data.weeklyAvailability);
     }
     if (data.visibleMetrics) {
       setVisibleMetrics(data.visibleMetrics);
-      localStorage.setItem("sgea_visible_metrics", JSON.stringify(data.visibleMetrics));
+      userStorage.setJSON("visible_metrics", data.visibleMetrics);
     }
 
     // Persistir de forma segura en Firestore con cifrado AES-256-GCM
@@ -716,15 +724,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          uid: user?.uid || "demo-user",
-          email: user?.email || userProfile?.email || "german.morales@pulseai.pro",
+          uid: user?.uid || "",
+          email: user?.email || userProfile?.email || "",
           displayName: data.displayName || profile.name || user?.displayName || userProfile?.displayName,
           intervalsAthleteId: athleteIdToUse || profile.id,
           rawApiKey: data.apiKey || apiKeyCache,
           runFtp: data.runFtp || profile.run_ftp,
           bikeFtp: data.bikeFtp || profile.bike_ftp,
           weightKg: data.weightKg || profile.weight,
-          heightCm: data.heightCm || profile.heightCm || 178,
+          heightCm: data.heightCm || profile.heightCm,
           birthDate: data.birthDate || profile.birthDate,
           gender: data.gender || profile.gender,
           weeklyAvailability: data.weeklyAvailability || weeklyAvailability,
@@ -752,7 +760,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       : [...visibleMetrics, id];
     if (updated.length === 0) updated = ["ctl"];
     setVisibleMetrics(updated);
-    localStorage.setItem("sgea_visible_metrics", JSON.stringify(updated));
+    userStorage.setJSON("visible_metrics", updated);
     await handleSaveSettings({ visibleMetrics: updated });
   };
 
@@ -793,36 +801,36 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      const rawStoredApiKey = localStorage.getItem("sgea_intervals_api_key");
-      const rawStoredAthleteId = localStorage.getItem("sgea_athlete_id");
+      purgeLegacyGlobalStorage();
+
+      const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
 
       let storedAthleteId =
-        rawStoredAthleteId && rawStoredAthleteId.trim() !== "" && rawStoredAthleteId.trim() !== "undefined" && rawStoredAthleteId.trim() !== "null"
-          ? rawStoredAthleteId.trim()
-          : (userProfile?.intervalsAthleteId || profile.id || (isAdmin ? "i442091" : ""));
+        userProfile?.intervalsAthleteId ||
+        userStorage.getItem("athlete_id") ||
+        (isSuper ? (process.env.NEXT_PUBLIC_DEFAULT_ATHLETE_ID || "") : "");
 
       let storedApiKey =
-        rawStoredApiKey && rawStoredApiKey.trim() !== "" && rawStoredApiKey.trim() !== "undefined" && rawStoredApiKey.trim() !== "null"
-          ? rawStoredApiKey.trim()
-          : "";
+        userStorage.getItem("intervals_api_key") ||
+        "";
 
-      const storedGeminiKey = localStorage.getItem("sgea_custom_gemini_key") || "";
-      const storedRaces = localStorage.getItem("sgea_target_races");
-      const storedPlans = localStorage.getItem("sgea_season_plans_chain");
+      const storedGeminiKey = userStorage.getItem("custom_gemini_key") || "";
+      const storedRaces = userStorage.getJSON<TargetRace[]>("target_races");
+      const storedPlans = userStorage.getJSON<SeasonPlanItem[]>("season_plans");
 
       if (storedApiKey) {
-        localStorage.setItem("sgea_intervals_api_key", storedApiKey);
+        userStorage.setItem("intervals_api_key", storedApiKey);
       }
       if (storedAthleteId) {
-        localStorage.setItem("sgea_athlete_id", storedAthleteId);
+        userStorage.setItem("athlete_id", storedAthleteId);
       }
 
       setApiKeyCache(storedApiKey);
       setGeminiKeyCache(storedGeminiKey);
-      const storedWeight = localStorage.getItem("sgea_weight_kg");
-      const storedHeight = localStorage.getItem("sgea_height_cm");
-      const storedGender = localStorage.getItem("sgea_gender") as "M" | "F" | "OTHER" | null;
-      const storedBirthDate = localStorage.getItem("sgea_birth_date");
+      const storedWeight = userStorage.getItem("weight_kg");
+      const storedHeight = userStorage.getItem("height_cm");
+      const storedGender = userStorage.getItem("gender") as "M" | "F" | "OTHER" | null;
+      const storedBirthDate = userStorage.getItem("birth_date");
 
       const resolvedWeight = storedWeight ? Number(storedWeight) : userProfile?.weightKg;
       const resolvedHeight = storedHeight ? Number(storedHeight) : userProfile?.heightCm;
@@ -838,63 +846,47 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         birthDate: resolvedBirthDate ?? prev.birthDate,
       }));
 
-      if (storedRaces) {
-        try {
-          const parsed = JSON.parse(storedRaces);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTargetRaces(parsed);
-          } else if (userProfile?.targetRaces && Array.isArray(userProfile.targetRaces)) {
-            setTargetRaces(userProfile.targetRaces);
-            localStorage.setItem("sgea_target_races", JSON.stringify(userProfile.targetRaces));
-          }
-        } catch {}
-      } else if (userProfile?.targetRaces && Array.isArray(userProfile.targetRaces)) {
+      if (userProfile?.targetRaces && Array.isArray(userProfile.targetRaces) && userProfile.targetRaces.length > 0) {
         setTargetRaces(userProfile.targetRaces);
-        localStorage.setItem("sgea_target_races", JSON.stringify(userProfile.targetRaces));
+        userStorage.setJSON("target_races", userProfile.targetRaces);
+      } else if (storedRaces && Array.isArray(storedRaces) && storedRaces.length > 0) {
+        setTargetRaces(storedRaces);
+      } else {
+        setTargetRaces([]);
       }
 
-      // Resolver planes de temporada: LocalStorage -> UserProfile -> Firestore API
+      // Resolver planes de temporada: UserProfile -> userStorage -> Firestore API (SOLO si hay storedAthleteId explícito)
       let resolvedPlans: SeasonPlanItem[] = [];
-      if (storedPlans) {
-        try {
-          const parsed = JSON.parse(storedPlans);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            resolvedPlans = parsed;
-          }
-        } catch {}
-      }
-
-      if (resolvedPlans.length === 0 && userProfile?.seasonPlans && Array.isArray(userProfile.seasonPlans) && userProfile.seasonPlans.length > 0) {
+      if (userProfile?.seasonPlans && Array.isArray(userProfile.seasonPlans) && userProfile.seasonPlans.length > 0) {
         resolvedPlans = userProfile.seasonPlans;
+      } else if (storedPlans && Array.isArray(storedPlans) && storedPlans.length > 0) {
+        resolvedPlans = storedPlans;
       }
 
-      // Si no hay planes en local ni sesión, consultar Firestore solo si existe un atleta válido
-      if (resolvedPlans.length === 0) {
+      // Si no hay planes en local ni sesión, consultar Firestore solo si existe un atleta válido explícito
+      if (resolvedPlans.length === 0 && storedAthleteId) {
         try {
-          const targetAthlete = storedAthleteId || userProfile?.intervalsAthleteId || (isAdmin ? "i442091" : "");
-          if (targetAthlete) {
-            const macroRes = await fetch(`/api/macrocycles?athleteId=${targetAthlete}`);
-            if (macroRes.ok) {
-              const macroData = await macroRes.json();
-              if (macroData.success && macroData.macrocycle?.blueprint) {
-                const bp = macroData.macrocycle.blueprint;
-                const restoredPlan: SeasonPlanItem = {
-                  id: macroData.macrocycle.id || "plan-active-tokio",
-                  planName: bp.cycleTitle || "Macrociclo Activo",
-                  goalType: "MARATON_42K",
-                  blueprint: bp,
-                  startDate: bp.startDate || new Date().toISOString().split("T")[0],
-                  endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
-                  totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
-                  status: "ACTIVE",
-                  orderIndex: 0,
-                  createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
-                };
-                resolvedPlans = [restoredPlan];
-                if (macroData.macrocycle.primaryRace) {
-                  setTargetRaces([macroData.macrocycle.primaryRace]);
-                  localStorage.setItem("sgea_target_races", JSON.stringify([macroData.macrocycle.primaryRace]));
-                }
+          const macroRes = await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(storedAthleteId)}`);
+          if (macroRes.ok) {
+            const macroData = await macroRes.json();
+            if (macroData.success && macroData.macrocycle?.blueprint) {
+              const bp = macroData.macrocycle.blueprint;
+              const restoredPlan: SeasonPlanItem = {
+                id: macroData.macrocycle.id || "plan-active",
+                planName: bp.cycleTitle || "Macrociclo Activo",
+                goalType: "MARATON_42K",
+                blueprint: bp,
+                startDate: bp.startDate || new Date().toISOString().split("T")[0],
+                endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
+                totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
+                status: "ACTIVE",
+                orderIndex: 0,
+                createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
+              };
+              resolvedPlans = [restoredPlan];
+              if (macroData.macrocycle.primaryRace) {
+                setTargetRaces([macroData.macrocycle.primaryRace]);
+                userStorage.setJSON("target_races", [macroData.macrocycle.primaryRace]);
               }
             }
           }
@@ -906,10 +898,10 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       if (resolvedPlans.length > 0) {
         setSeasonPlans(resolvedPlans);
         setViewingPlanId(resolvedPlans[0].id);
-        localStorage.setItem("sgea_season_plans_chain", JSON.stringify(resolvedPlans));
+        userStorage.setJSON("season_plans", resolvedPlans);
         if (resolvedPlans[0].blueprint) {
           const bp = resolvedPlans[0].blueprint;
-          localStorage.setItem("sgea_active_blueprint", JSON.stringify(bp));
+          userStorage.setJSON("active_blueprint", bp);
           const currentIdx = bp.currentWeekIndex ?? 0;
           setSelectedMacroWeekIdx(currentIdx);
           if (bp.weeks && bp.weeks[currentIdx]) {
@@ -933,34 +925,36 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
             blueprint: bp,
           });
         }
+      } else {
+        setSeasonPlans([]);
+        setMacrocyclePhase(null);
       }
 
-      const storedAvail = localStorage.getItem("sgea_weekly_availability");
-      if (storedAvail) {
-        try {
-          const parsed = JSON.parse(storedAvail);
-          if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
-            setWeeklyAvailability(parsed);
-          } else if (userProfile?.weeklyAvailability) {
-            setWeeklyAvailability(userProfile.weeklyAvailability);
-            localStorage.setItem("sgea_weekly_availability", JSON.stringify(userProfile.weeklyAvailability));
-          }
-        } catch {}
-      } else if (userProfile?.weeklyAvailability) {
+      const storedAvail = userStorage.getJSON<WeeklyAvailabilityMap>("weekly_availability");
+      if (userProfile?.weeklyAvailability) {
         setWeeklyAvailability(userProfile.weeklyAvailability);
-        localStorage.setItem("sgea_weekly_availability", JSON.stringify(userProfile.weeklyAvailability));
+        userStorage.setJSON("weekly_availability", userProfile.weeklyAvailability);
+      } else if (storedAvail && typeof storedAvail === "object" && Object.keys(storedAvail).length > 0) {
+        setWeeklyAvailability(storedAvail);
       }
 
       setIsLoading(false);
-      refreshTelemetry(storedAthleteId, storedApiKey, profile.run_ftp, profile.bike_ftp);
+
+      if (storedAthleteId || storedApiKey || userProfile?.encryptedApiKey) {
+        refreshTelemetry(storedAthleteId, storedApiKey, profile.run_ftp, profile.bike_ftp);
+      } else {
+        setIsLiveConnected(false);
+      }
     };
 
     init();
-  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.targetRaces, userProfile?.seasonPlans, userProfile?.weeklyAvailability, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate]);
+  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.targetRaces, userProfile?.seasonPlans, userProfile?.weeklyAvailability, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate, userStorage]);
 
-  // Heartbeat de auto-recuperación: Si está desconectado, reintentar silenciosamente cada 10s hasta reconectar
+  // Heartbeat de auto-recuperación: Solo si está desconectado y TIENE credenciales activas configuradas
   useEffect(() => {
     if (isLiveConnected || isLoading) return;
+    const hasCredentials = Boolean(profile.id || apiKeyCache || userProfile?.encryptedApiKey);
+    if (!hasCredentials) return;
 
     let retries = 0;
     const interval = setInterval(async () => {
@@ -973,9 +967,9 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry]);
+  }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry, userProfile?.encryptedApiKey]);
 
-  const isMasterAdmin = isMasterAdminEmail(userProfile?.email || user?.email) || isAdmin;
+  const isMasterAdmin = isMasterAdminEmail(userProfile?.email || user?.email);
   const displayName =
     profile.name && profile.name !== "Atleta"
       ? profile.name
@@ -1134,7 +1128,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         {/* LIENZO PRINCIPAL DEL ATLETA */}
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
         {/* BANNER ONBOARDING */}
-        {!apiKeyCache && !userProfile?.encryptedApiKey && (!isAdmin || profile.id !== "i442091") && (
+        {!apiKeyCache && !userProfile?.encryptedApiKey && (!isMasterAdmin || profile.id !== "i442091") && (
           <OnboardingBanner onOpenOnboarding={() => setIsOnboardingOpen(true)} />
         )}
 
@@ -1276,10 +1270,10 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         {activeNavSection === "physiology" && (
           <AthletePhysiologyView
             athleteId={profile.id}
-            athleteName={profile.name || userProfile?.displayName || user?.displayName || (isAdmin ? "Germán Morales" : "Atleta")}
+            athleteName={profile.name || userProfile?.displayName || user?.displayName || "Atleta"}
             email={user?.email || userProfile?.email || ""}
-            runFtp={profile.run_ftp || (isAdmin ? 327 : 0)}
-            bikeFtp={profile.bike_ftp || (isAdmin ? 240 : 0)}
+            runFtp={profile.run_ftp || 0}
+            bikeFtp={profile.bike_ftp || 0}
             weightKg={profile.weight}
             heightCm={profile.heightCm}
             birthDate={profile.birthDate}

@@ -2217,6 +2217,42 @@ flowchart TD
   - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Producción):` `next build` $\rightarrow$ **21/21 páginas generadas exitosamente (Código 0)**.
   - `Prueba 3 (Suite de Integración):` `run_test_suite.mjs` $\rightarrow$ **34/34 pruebas superadas (100% PASS)**.
-  - `Prueba 4 (Modularidad):` 100% de archivos nuevos y de lógica bajo **< 350 LOC**.
+---
+
+### Versión 3.14 - Arquitectura Multi-Tenant Aislada por UID y Erradicación Total de Fuga de Datos (2026-09-03)
+- **Problema Auditado:**
+  - En entornos compartidos o tras iniciar sesión como SuperAdmin (`gerkof@gmail.com`) y posteriormente acceder con un usuario atleta regular (ej. `german.morales@fonyou.com`) en el mismo navegador, persistían datos de Germán Morales en `localStorage` no aislados por usuario (`sgea_active_blueprint`, `sgea_season_plans_chain`, `sgea_intervals_api_key`, `sgea_athlete_id`), causando que el atleta regular visualizara métricas en vivo, macrociclos y credenciales ajenas.
+  - Varios componentes contenían fallbacks condicionados a `isAdmin` que inyectaban incondicionalmente `i442091`, `48eje8t1wnj95t0sbjx2oumkq`, `327W` y `240W`.
+- **Solución Arquitectural Implementada:**
+  1. **Motor de Almacenamiento Multi-Tenant (`src/lib/storage/userStorage.ts`):**
+     - Se creó la utilidad `getUserStorage(uid)` que aisla estrictamente cualquier clave de almacenamiento en el navegador bajo el prefijo `sgea:user:${uid}:${key}`.
+     - Función `purgeLegacyGlobalStorage()` que detecta y destruye inmediatamente todas las claves globales legacy (`sgea_*` y `sgea:*` que no tengan prefijo de usuario).
+     - Función `purgeAllSessionStorage()` que elimina cualquier rastro de almacenamiento al cerrar sesión o conmutar de usuario.
+  2. **Erradicación de `localStorage` Global en Componentes:**
+     - `AthleteDashboard.tsx`: 100% de operaciones de almacenamiento migradas a `userStorage`.
+     - `SeasonStudioModal.tsx`, `SeasonAIGenerator.tsx`, `ProfileModal.tsx`, `AthletePhysiologyView.tsx`: Refactorizados para usar almacenamiento aislado por UID.
+  3. **Erradicación de Fallbacks de Germán Morales para Roles Administrativos:**
+     - Se eliminó el uso de `(isAdmin ? "i442091" : "")`, `(isAdmin ? 327 : 0)`, `(isAdmin ? 240 : 0)` y `(isAdmin ? "Germán Morales" : "Atleta")`.
+     - Únicamente el Superadministrador explícito validado mediante `isMasterAdminEmail()` conserva acceso a credenciales maestras en endpoints seguros de backend. Cualquier otro usuario (incluyendo administradores regulares) debe registrar y conectar sus propias credenciales.
+  4. **Protección de Telemetría y Heartbeat:**
+     - En `AthleteDashboard.tsx`, `refreshTelemetry()` verifica si existen credenciales válidas antes de enviar peticiones a `/api/evaluate`. Si no hay credenciales, asigna de inmediato `isLiveConnected(false)` sin consultar Intervals.
+     - El heartbeat de auto-recuperación no se activa si el atleta no tiene credenciales configuradas.
+- **Archivos Modificados y Creados (< 350 LOC en modulares):**
+  - `src/lib/storage/userStorage.ts` [NUEVO]: **127 líneas** (< 350 LOC).
+  - `src/app/page.tsx`: **170 líneas** (< 350 LOC).
+  - `src/context/AuthContext.tsx`: **348 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatContext.ts`: **252 líneas** (< 350 LOC).
+  - `src/lib/db/userProfile.ts`: **276 líneas** (< 350 LOC).
+  - `src/app/api/profile/route.ts`: **70 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: **329 líneas** (< 350 LOC).
+  - `src/components/season/SeasonAIGenerator.tsx`: **377 líneas**.
+  - `src/components/AthleteDashboard.tsx`: **1349 líneas**.
+  - `src/components/ProfileModal.tsx`: **512 líneas**.
+  - `src/components/SeasonStudioModal.tsx`: **417 líneas**.
+- **Validación del Set de Pruebas:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Suite de Integración y Multi-Tenant):` `run_test_suite.mjs` $\rightarrow$ **47/47 pruebas superadas (100% PASS)**.
+  - `Prueba 3 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 páginas generadas exitosamente en 2.2s (Código 0)**.
+  - `Prueba 4 (Modularidad):` 100% de archivos modulares bajo **< 350 LOC**.
 
 

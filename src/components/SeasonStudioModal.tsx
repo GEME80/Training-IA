@@ -17,6 +17,9 @@ import { MacrocycleDistanceType } from "@/lib/physiology/macrocycleLibrary";
 import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
 
+import { useAuth } from "@/context/AuthContext";
+import { getUserStorage } from "@/lib/storage/userStorage";
+
 import {
   SeasonPlanGeneratorTab,
   GoalTemplateType,
@@ -61,6 +64,8 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
   onApplyPlan,
   onRegenerateMacrocycle,
 }) => {
+  const { user } = useAuth();
+  const userStorage = useMemo(() => getUserStorage(user?.uid), [user?.uid]);
   const [activeTab, setActiveTab] = useState<SeasonStudioTab>(initialTab);
 
   useEffect(() => {
@@ -81,15 +86,12 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
     if (initialTargetRaces && initialTargetRaces.length > 0) {
       setTargetRaces(initialTargetRaces);
     } else {
-      const stored = localStorage.getItem("sgea_target_races");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) setTargetRaces(parsed);
-        } catch {}
+      const stored = userStorage.getJSON<TargetRace[]>("target_races");
+      if (stored && Array.isArray(stored)) {
+        setTargetRaces(stored);
       }
     }
-  }, [initialTargetRaces, isOpen]);
+  }, [initialTargetRaces, isOpen, userStorage]);
 
   // 2. Estado del Generador de Planes
   const [seasonPlans, setSeasonPlans] = useState<SeasonPlanItem[]>(initialSeasonPlans);
@@ -102,15 +104,12 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
     if (initialSeasonPlans && initialSeasonPlans.length > 0) {
       setSeasonPlans(initialSeasonPlans);
     } else {
-      const stored = localStorage.getItem("sgea_season_plans_chain");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) setSeasonPlans(parsed);
-        } catch {}
+      const stored = userStorage.getJSON<SeasonPlanItem[]>("season_plans");
+      if (stored && Array.isArray(stored)) {
+        setSeasonPlans(stored);
       }
     }
-  }, [initialSeasonPlans, isOpen]);
+  }, [initialSeasonPlans, isOpen, userStorage]);
 
   // Fechas del plan
   const defaultNextMonday = useMemo(() => {
@@ -234,7 +233,7 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
     }
 
     setSeasonPlans(updatedPlans);
-    localStorage.setItem("sgea_season_plans_chain", JSON.stringify(updatedPlans));
+    userStorage.setJSON("season_plans", updatedPlans);
     if (onSaveSeasonPlans) onSaveSeasonPlans(updatedPlans);
 
     if (onApplyPlan) {
@@ -268,7 +267,7 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
     }
 
     setTargetRaces(updated);
-    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
+    userStorage.setJSON("target_races", updated);
     if (onSaveTargetRaces) onSaveTargetRaces(updated);
 
     setNewRaceName("");
@@ -279,14 +278,14 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
   const handleDeleteRace = (id: string) => {
     const updated = targetRaces.filter((r) => r.id !== id);
     setTargetRaces(updated);
-    localStorage.setItem("sgea_target_races", JSON.stringify(updated));
+    userStorage.setJSON("target_races", updated);
     if (onSaveTargetRaces) onSaveTargetRaces(updated);
   };
 
   const handleDeleteSeasonPlan = (id: string) => {
     const updated = seasonPlans.filter((p) => p.id !== id);
     setSeasonPlans(updated);
-    localStorage.setItem("sgea_season_plans_chain", JSON.stringify(updated));
+    userStorage.setJSON("season_plans", updated);
     if (onSaveSeasonPlans) onSaveSeasonPlans(updated);
   };
 

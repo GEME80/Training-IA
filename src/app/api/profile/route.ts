@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
       success: true,
       profile: {
         uid,
-        email: "demo@pulseai.pro",
-        displayName: "Atleta PULSE AI PRO",
-        intervalsAthleteId: "i442091",
+        email: "atleta@pulseai.pro",
+        displayName: "Atleta",
+        intervalsAthleteId: undefined,
         hasApiKey: false,
         trainingFocus: "BUILD",
         weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,

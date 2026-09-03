@@ -15,8 +15,10 @@ import {
   DisciplineType,
   normalizeDisciplines,
 } from "@/lib/gemini/engine";
-import { GeminiModelDto } from "@/app/api/gemini/models/route";
 import { DEFAULT_VISIBLE_METRICS } from "@/lib/intervals/types";
+import { GeminiModelDto } from "@/app/api/gemini/models/route";
+import { useAuth } from "@/context/AuthContext";
+import { getUserStorage } from "@/lib/storage/userStorage";
 
 import { ProfileConnectionsTab } from "./profile/ProfileConnectionsTab";
 import { ProfileAvailabilityTab } from "./profile/ProfileAvailabilityTab";
@@ -72,6 +74,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   weeklyAvailability: initialWeeklyAvailability,
   onSave,
 }) => {
+  const { user } = useAuth();
+  const userStorage = useMemo(() => getUserStorage(user?.uid), [user?.uid]);
+
   const [activeTab, setActiveTab] = useState<ProfileModalTab>(
     initialTab === "intervals" || initialTab === "ai" ? "connections" : initialTab
   );
@@ -88,12 +93,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate || "1988-05-15");
   const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialGender || "M");
-  const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
-  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
-  const [weightKg, setWeightKg] = useState<number>(84);
-  const [restingHR, setRestingHR] = useState<number>(46);
-  const [lthr, setLthr] = useState<number>(168);
+  const [runFtp, setRunFtp] = useState<number>(initialRunFtp);
+  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp);
+  const [weightKg, setWeightKg] = useState<number>(68);
+  const [restingHR, setRestingHR] = useState<number>(45);
   const [maxHR, setMaxHR] = useState<number>(185);
+  const [lthr, setLthr] = useState<number>(168);
 
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
     initialWeeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY
@@ -106,6 +111,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [testingConnection, setTestingConnection] = useState<boolean>(false);
+  const [connectionStatus, setConnectionStatus] = useState<"IDLE" | "SUCCESS" | "ERROR">("IDLE");
+  const [connectionFeedback, setConnectionFeedback] = useState<string>("");
   const [availableModels, setAvailableModels] = useState<GeminiModelDto[]>([]);
   const [loadingModels, setLoadingModels] = useState<boolean>(false);
 
@@ -193,22 +200,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const storedApiKey = localStorage.getItem("sgea_intervals_api_key");
-      const storedAthleteId = localStorage.getItem("sgea_intervals_athlete_id");
-      const storedBirthDate = localStorage.getItem("sgea_birthdate");
-      const storedGender = localStorage.getItem("sgea_gender");
-      const storedRunFtp = localStorage.getItem("sgea_run_ftp");
-      const storedWeight = localStorage.getItem("sgea_athlete_weight");
-      const storedBikeFtp = localStorage.getItem("sgea_bike_ftp");
-      const storedResting = localStorage.getItem("sgea_resting_hr");
-      const storedMaxHR = localStorage.getItem("sgea_max_hr");
-      const storedLthr = localStorage.getItem("sgea_lthr");
-      const storedGeminiKey = localStorage.getItem("sgea_custom_gemini_key");
-      const storedModel = localStorage.getItem("sgea_selected_model");
-      const storedTemp = localStorage.getItem("sgea_temperature");
-      const storedCoach = localStorage.getItem("sgea_coach_profile");
-      const storedAvail = localStorage.getItem("sgea_weekly_availability");
-      const storedVisibleMetrics = localStorage.getItem("sgea_visible_metrics");
+      const storedApiKey = userStorage.getItem("intervals_api_key");
+      const storedAthleteId = userStorage.getItem("athlete_id");
+      const storedBirthDate = userStorage.getItem("birth_date");
+      const storedGender = userStorage.getItem("gender");
+      const storedRunFtp = userStorage.getItem("run_ftp");
+      const storedWeight = userStorage.getItem("weight_kg");
+      const storedBikeFtp = userStorage.getItem("bike_ftp");
+      const storedResting = userStorage.getItem("resting_hr");
+      const storedMaxHR = userStorage.getItem("max_hr");
+      const storedLthr = userStorage.getItem("lthr");
+      const storedGeminiKey = userStorage.getItem("custom_gemini_key");
+      const storedModel = userStorage.getItem("selected_model");
+      const storedTemp = userStorage.getItem("temperature");
+      const storedCoach = userStorage.getItem("coach_profile");
+      const storedAvail = userStorage.getItem("weekly_availability");
+      const storedVisibleMetrics = userStorage.getItem("visible_metrics");
 
       if (storedApiKey) setApiKey(storedApiKey);
       if (storedAthleteId) setAthleteId(storedAthleteId);
@@ -279,7 +286,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const handleToggleMetric = (id: string) => {
     setVisibleMetrics((prev) => {
       const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
-      localStorage.setItem("sgea_visible_metrics", JSON.stringify(next));
+      userStorage.setJSON("visible_metrics", next);
       return next;
     });
   };
@@ -288,25 +295,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
-      localStorage.setItem("sgea_intervals_api_key", apiKey);
-      localStorage.setItem("sgea_intervals_athlete_id", athleteId);
-      localStorage.setItem("sgea_birthdate", birthDate);
-      localStorage.setItem("sgea_gender", gender);
-      localStorage.setItem("sgea_run_ftp", runFtp.toString());
-      localStorage.setItem("sgea_athlete_weight", weightKg.toString());
-      localStorage.setItem("sgea_bike_ftp", bikeFtp.toString());
-      localStorage.setItem("sgea_resting_hr", restingHR.toString());
-      localStorage.setItem("sgea_max_hr", maxHR.toString());
-      localStorage.setItem("sgea_lthr", lthr.toString());
-      localStorage.setItem("sgea_custom_gemini_key", geminiApiKey);
-      localStorage.setItem("sgea_selected_model", selectedModel);
-      localStorage.setItem("sgea_temperature", temperature.toString());
-      localStorage.setItem("sgea_fallback_models", JSON.stringify(fallbackModels));
-      localStorage.setItem("sgea_enable_grounding", enableGrounding ? "true" : "false");
-      localStorage.setItem("sgea_coach_profile", coachProfile);
-      localStorage.setItem("sgea_custom_prompt", customPrompt);
-      localStorage.setItem("sgea_weekly_availability", JSON.stringify(weeklyAvailability));
-      localStorage.setItem("sgea_visible_metrics", JSON.stringify(visibleMetrics));
+      userStorage.setItem("intervals_api_key", apiKey);
+      userStorage.setItem("athlete_id", athleteId);
+      userStorage.setItem("birth_date", birthDate);
+      userStorage.setItem("gender", gender);
+      userStorage.setItem("run_ftp", runFtp.toString());
+      userStorage.setItem("weight_kg", weightKg.toString());
+      userStorage.setItem("bike_ftp", bikeFtp.toString());
+      userStorage.setItem("resting_hr", restingHR.toString());
+      userStorage.setItem("max_hr", maxHR.toString());
+      userStorage.setItem("lthr", lthr.toString());
+      userStorage.setItem("custom_gemini_key", geminiApiKey);
+      userStorage.setItem("selected_model", selectedModel);
+      userStorage.setItem("temperature", temperature.toString());
+      userStorage.setJSON("fallback_models", fallbackModels);
+      userStorage.setItem("enable_grounding", enableGrounding ? "true" : "false");
+      userStorage.setItem("coach_profile", coachProfile);
+      userStorage.setItem("custom_prompt", customPrompt);
+      userStorage.setJSON("weekly_availability", weeklyAvailability);
+      userStorage.setJSON("visible_metrics", visibleMetrics);
 
       await onSave({
         athleteId,

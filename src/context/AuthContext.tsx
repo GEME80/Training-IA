@@ -14,6 +14,7 @@ import {
 import { auth, googleProvider } from "@/lib/firebase/config";
 import { UserProfileData, UserRole, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail, getSuperadminEmail } from "@/lib/env";
+import { purgeLegacyGlobalStorage, purgeAllSessionStorage } from "@/lib/storage/userStorage";
 
 export function translateAuthError(err: any): string {
   const code = err?.code || "";
@@ -64,9 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (typeof window !== "undefined") {
+      purgeLegacyGlobalStorage();
       const activeUid = localStorage.getItem("sgea_current_uid");
-      if (activeUid && activeUid !== fbUser.uid) {
-        Object.keys(localStorage).filter((k) => k.startsWith("sgea_") && k !== "sgea_mock_user").forEach((k) => localStorage.removeItem(k));
+      if (activeUid !== fbUser.uid) {
+        purgeAllSessionStorage();
       }
       localStorage.setItem("sgea_current_uid", fbUser.uid);
     }
@@ -262,9 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.warn("Aviso al cerrar sesión:", err);
     } finally {
-      if (typeof window !== "undefined") {
-        Object.keys(localStorage).filter((k) => k.startsWith("sgea_")).forEach((k) => localStorage.removeItem(k));
-      }
+      purgeAllSessionStorage();
       setUser(null);
       setUserProfile(null);
       setLoading(false);

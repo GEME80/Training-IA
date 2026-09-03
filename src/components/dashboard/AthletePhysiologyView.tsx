@@ -158,9 +158,6 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     };
 
     setWeeklyAvailability(newMap);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("sgea_weekly_availability", JSON.stringify(newMap));
-    }
     await onSave({ weeklyAvailability: newMap });
     showNotification("Matriz semanal guardada con éxito");
   };
@@ -288,7 +285,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         summaryBadge={
           isLiveConnected || !!apiKey ? (
             <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
-              🟢 ACTIVA ({athleteId || "i442091"})
+              🟢 ACTIVA{athleteId ? ` (${athleteId})` : ""}
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 font-mono text-[10px] font-bold border border-rose-500/20">

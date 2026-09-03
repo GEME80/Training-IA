@@ -224,7 +224,7 @@ export async function getUserProfileDecrypted(
 ): Promise<{ profile: UserProfileData; decryptedApiKey: string | null } | null> {
   const superadminEmail = getSuperadminEmail();
 
-  if (uid === "superadmin-root" || uid === "demo-user") {
+  if (uid === "superadmin-root") {
     return {
       profile: {
         uid,

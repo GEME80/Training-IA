@@ -6,6 +6,8 @@ import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { TargetRace, MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
 
+import { useAuth } from "@/context/AuthContext";
+import { getUserStorage } from "@/lib/storage/userStorage";
 import { SeasonWizardStep1Target } from "./wizard/SeasonWizardStep1Target";
 import { SeasonWizardStep2Disciplines } from "./wizard/SeasonWizardStep2Disciplines";
 import { SeasonWizardStep3Physiology } from "./wizard/SeasonWizardStep3Physiology";
@@ -44,6 +46,8 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   onNavigateToProfile,
   isGenerating,
 }) => {
+  const { user } = useAuth();
+  const userStorage = React.useMemo(() => getUserStorage(user?.uid), [user?.uid]);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
 
@@ -133,7 +137,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
       const startDate = getResolvedStartDate();
       const distType = resolveDistTypeFromWizard(targetDistance, trainingApproach);
 
-      const storedApiKey = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_intervals_api_key") || "" : "";
+      const storedApiKey = userStorage.getItem("intervals_api_key") || "";
       try {
         const res = await fetch("/api/macrocycles/generate-ai", {
           method: "POST",
@@ -293,7 +297,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           weeklyAvailability={localWeeklyAvailability}
           onChangeWeeklyAvailability={(newMap) => {
             setLocalWeeklyAvailability(newMap);
-            try { localStorage.setItem("sgea_weekly_availability", JSON.stringify(newMap)); } catch {}
+            try { userStorage.setJSON("weekly_availability", newMap); } catch {}
           }}
           onNavigateToProfile={onNavigateToProfile}
         />

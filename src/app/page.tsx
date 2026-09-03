@@ -8,6 +8,7 @@ import { AthleteDashboard } from "@/components/AthleteDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 
 export default function HomePage() {
   const {
@@ -38,6 +39,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    purgeLegacyGlobalStorage();
     setMounted(true);
   }, []);
 
@@ -116,8 +118,8 @@ export default function HomePage() {
         <div className="min-h-screen flex flex-col justify-between">
           <div>
             <Header
-              athleteName={userProfile?.displayName || user?.displayName || "Germán Morales"}
-              athleteId={userProfile?.intervalsAthleteId || "i442091"}
+              athleteName={userProfile?.displayName || user?.displayName || "Atleta"}
+              athleteId={userProfile?.intervalsAthleteId || ""}
               activeView="admin"
               onSelectView={(v) => setCurrentView(v)}
               onOpenAuthModal={handleOpenAuthModal}

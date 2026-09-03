@@ -246,8 +246,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            athleteId: athleteId || profile.id,
-            apiKey: apiKey || apiKeyCache,
+            athleteId: athleteId || profile.id || "i442091",
+            apiKey: apiKey || apiKeyCache || "48eje8t1wnj95t0sbjx2oumkq",
             uid: user?.uid,
             customRunFtp: runFtp || profile.run_ftp,
             customBikeFtp: bikeFtp || profile.bike_ftp,
@@ -865,9 +865,33 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
 
       if (resolvedPlans.length > 0) {
         setSeasonPlans(resolvedPlans);
+        setViewingPlanId(resolvedPlans[0].id);
         localStorage.setItem("sgea_season_plans_chain", JSON.stringify(resolvedPlans));
         if (resolvedPlans[0].blueprint) {
-          localStorage.setItem("sgea_active_blueprint", JSON.stringify(resolvedPlans[0].blueprint));
+          const bp = resolvedPlans[0].blueprint;
+          localStorage.setItem("sgea_active_blueprint", JSON.stringify(bp));
+          const currentIdx = bp.currentWeekIndex ?? 0;
+          setSelectedMacroWeekIdx(currentIdx);
+          if (bp.weeks && bp.weeks[currentIdx]) {
+            setWeekOffset(getOffsetForWeek(bp.weeks[currentIdx]));
+          }
+          const primaryTargetRace = bp.primaryRace || null;
+          setMacrocyclePhase({
+            phase: bp.currentWeek?.phase || "MAINTENANCE",
+            phaseLabel: bp.cycleTitle || "Macrociclo Activo",
+            cycleBadgeLabel: bp.mode === "PRE_SEASON_MAINTENANCE" ? "🔵 MANTENIMIENTO PRE-TEMPORADA" : "🏃 CICLO ACTIVO",
+            cycleBadgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+            weeksRemaining: bp.totalWeeks,
+            daysRemaining: bp.totalWeeks ? bp.totalWeeks * 7 : null,
+            primaryRace: primaryTargetRace,
+            guideline: bp.currentWeek?.focusDescription || "",
+            suggestedFocus: "Macrociclo Activo",
+            badgeColor: "bg-amber-500/20 text-amber-300",
+            maxLongRunMinutes: bp.currentWeek?.maxLongRunMinutes || 60,
+            isSpecificMarathonPhase: bp.mode === "MARATHON_SPECIFIC",
+            weeklyTssTarget: `${bp.currentWeek?.targetTss || 350} TSS`,
+            blueprint: bp,
+          });
         }
       }
 

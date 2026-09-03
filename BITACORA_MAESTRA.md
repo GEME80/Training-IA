@@ -1944,8 +1944,25 @@ flowchart TD
     - Blindado el resolvedor `resolveIntervalsCredentials` con contingencia incondicional para el atleta rector.
     - Ocultado permanentemente el banner de *"Conecta tu cuenta (Modalidad B)"* cuando el atleta activo es `i442091`.
   - **4. Set de Pruebas Superado:**
-    - `tsc --noEmit`: **Código 0 (0 errores de tipado)**.
-    - `next build`: **Código 0 (21/21 rutas compiladas y optimizadas)**.
+---
+
+### Versión 3.6.2 (Erradicación de Excepción Firestore en /api/auth/sync e Hidratación Completa de Macrociclos en Móvil)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Solucionar el bloqueo que impedía a los navegadores móviles sincronizar la sesión con Google Auth y cargar la vista completa del macrociclo activo de 27 semanas.
+- **Diagnóstico de Causa Raíz:**
+  1. *Excepción 500 en `/api/auth/sync`:* Firestore rechazaba la escritura del documento de usuario porque campos como `photoURL`, `runFtp` o `bikeFtp` contenían valores `undefined` (`Cannot use "undefined" as a Firestore value`). Al fallar `/api/auth/sync`, el contexto de autenticación en cliente entraba en fallback sin datos de planes ni telemetría.
+  2. *Incompletitud en la Hidratación de `blueprint`:* Al recuperar el plan desde `/api/macrocycles`, faltaba vincular `macrocyclePhase`, `viewingPlanId` y `selectedMacroWeekIdx`. En consecuencia, el renderizador del dashboard evaluaba `blueprint` como incompleto y mostraba la tarjeta vacía *"Sin Plan de Entrenamiento Activo"*.
+- **Implementaciones Realizadas:**
+  - **1. Configuración de Resiliencia en Firestore Admin (`admin.ts` & `userProfile.ts`):**
+    - Activado `adminDb.settings({ ignoreUndefinedProperties: true })` en la inicialización del SDK.
+    - Implementada función purificadora `stripUndefined()` que remueve toda llave con valor `undefined` antes de ejecutar `.set(..., { merge: true })`.
+  - **2. Hidratación Plena del Macrociclo en `AthleteDashboard.tsx`:**
+    - Al detectar planes restaurados desde Firestore, se inicializan automáticamente `macrocyclePhase`, `viewingPlanId`, `selectedMacroWeekIdx` y el offset semanal (`weekOffset`).
+    - Blindado el payload de `refreshTelemetry` con fallback incondicional a `i442091` / `48eje8t1wnj95t0sbjx2oumkq` para el atleta rector.
+  - **3. Verificación de Compilación y Calidad:**
+    - `tsc --noEmit`: 0 errores (Código 0).
+    - `next build`: 21/21 rutas optimizadas (Código 0).
+
 
 
 

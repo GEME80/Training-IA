@@ -35,3 +35,10 @@ if (!admin.apps.length) {
 
 export const adminAuth = admin.apps.length ? admin.auth() : null;
 export const adminDb = admin.apps.length ? admin.firestore() : null;
+
+if (adminDb) {
+  try {
+    adminDb.settings({ ignoreUndefinedProperties: true });
+  } catch {}
+}
+

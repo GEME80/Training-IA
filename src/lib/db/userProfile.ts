@@ -17,6 +17,16 @@ export * from "./decisionLogs";
  * Para cualquier otro usuario:
  *   - Registra como "athlete" con status: "pending" (o según pre-autorizaciones).
  */
+function stripUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+  const clean: any = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) {
+      clean[k] = v;
+    }
+  }
+  return clean;
+}
+
 export async function syncUserFromGoogleAuth(userData: {
   uid: string;
   email: string;
@@ -87,7 +97,7 @@ export async function syncUserFromGoogleAuth(userData: {
       updatedAt: now,
     };
 
-    await userRef.set(newProfile);
+    await userRef.set(stripUndefined(newProfile));
     return newProfile;
   }
 
@@ -96,9 +106,12 @@ export async function syncUserFromGoogleAuth(userData: {
   const updates: Partial<UserProfileData> = {
     lastLoginAt: now,
     displayName: userData.displayName || existing.displayName,
-    photoURL: userData.photoURL || existing.photoURL,
     updatedAt: now,
   };
+
+  if (userData.photoURL) {
+    updates.photoURL = userData.photoURL;
+  }
 
   if (isSuperadmin) {
     if (existing.role !== "admin") updates.role = "admin";
@@ -106,7 +119,7 @@ export async function syncUserFromGoogleAuth(userData: {
     if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || "i442091";
   }
 
-  await userRef.set(updates, { merge: true });
+  await userRef.set(stripUndefined(updates), { merge: true });
   return { ...existing, ...updates };
 }
 
@@ -180,7 +193,7 @@ export async function saveUserProfile(
       payloadToSave.encryptedApiKey = encryptSensitiveData(data.rawApiKey.trim());
     }
 
-    await userRef.set(payloadToSave, { merge: true });
+    await userRef.set(stripUndefined(payloadToSave), { merge: true });
   } catch (err) {
     console.warn("Aviso: Guardado en Firestore omitido en modo local:", err instanceof Error ? err.message : err);
   }

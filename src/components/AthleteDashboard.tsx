@@ -31,6 +31,7 @@ import {
   DEFAULT_WEEKLY_AVAILABILITY,
 } from "@/lib/gemini/engine";
 import { AthleteProfile, AthleteWellness, DailyExecutedMap, DEFAULT_VISIBLE_METRICS } from "@/lib/intervals/types";
+import { isMasterAdminEmail } from "@/lib/env";
 import {
   MacrocyclePhaseInfo,
   TargetRace,
@@ -610,7 +611,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: user?.uid || "demo-user",
-          email: user?.email || userProfile?.email || "gerkof@gmail.com",
+          email: user?.email || userProfile?.email || "",
           targetRaces: races,
         }),
       });
@@ -638,7 +639,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: user?.uid || "demo-user",
-          email: user?.email || userProfile?.email || "gerkof@gmail.com",
+          email: user?.email || userProfile?.email || "",
           seasonPlans: plans,
         }),
       });
@@ -972,12 +973,12 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
     return () => clearInterval(interval);
   }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry]);
 
-  const isMasterAdmin = userProfile?.email === "gerkof@gmail.com" || user?.email === "gerkof@gmail.com" || isAdmin;
+  const isMasterAdmin = isMasterAdminEmail(userProfile?.email || user?.email) || isAdmin;
   const displayName =
     profile.name && profile.name !== "Atleta"
       ? profile.name
-      : (userProfile?.displayName || user?.displayName || "German Morales");
-  const email = userProfile?.email || user?.email || "gerkof@gmail.com";
+      : (userProfile?.displayName || user?.displayName || (isMasterAdmin ? "Germán Morales" : "Atleta"));
+  const email = userProfile?.email || user?.email || "";
   const photoURL = userProfile?.photoURL || user?.photoURL;
 
   return (

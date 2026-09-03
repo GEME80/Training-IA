@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateUserStatus, getUserProfileDecrypted, UserStatus } from "@/lib/db/userProfile";
+import { updateUserStatus } from "@/lib/db/adminUsers";
 import { isMasterAdminEmail } from "@/lib/env";
+import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { UserStatus } from "@/lib/db/types";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { targetUid, requesterUid, requesterEmail } = body;
-    const statusToUpdate = (body.newStatus || body.status) as UserStatus;
+    const { targetUid, newStatus, requesterEmail, requesterUid } = body;
 
-    if (!targetUid || !statusToUpdate) {
+    if (!targetUid || !newStatus) {
       return NextResponse.json(
-        { success: false, error: "targetUid y status (o newStatus) son obligatorios." },
+        { success: false, error: "targetUid y newStatus son obligatorios." },
         { status: 400 }
       );
     }
 
-    // Verificar autorización del solicitante
+    const validStatuses: UserStatus[] = ["active", "pending", "disabled"];
+    if (!validStatuses.includes(newStatus)) {
+      return NextResponse.json(
+        { success: false, error: "Estado no válido." },
+        { status: 400 }
+      );
+    }
+
+    // Validación de privilegios
     let isAuthorized = false;
     if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
       isAuthorized = true;
     } else if (requesterUid) {
-      const requesterData = await getUserProfileDecrypted(requesterUid);
-      if (requesterData?.profile.role === "admin" || isMasterAdminEmail(requesterData?.profile.email)) {
+      const requester = await getUserProfileDecrypted(requesterUid);
+      if (requester?.profile.role === "admin" || isMasterAdminEmail(requester?.profile.email)) {
         isAuthorized = true;
       }
     }
@@ -32,23 +41,16 @@ export async function POST(req: NextRequest) {
 
     if (!isAuthorized) {
       return NextResponse.json(
-        { success: false, error: "No autorizado para cambiar el estado de usuarios." },
+        { success: false, error: "No autorizado. Se requieren privilegios de Administrador." },
         { status: 403 }
       );
     }
 
-    const result = await updateUserStatus(
-      targetUid,
-      statusToUpdate,
-      requesterEmail
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: result.message,
-    });
+    const result = await updateUserStatus(targetUid, newStatus, requesterEmail);
+    return NextResponse.json(result);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Error al actualizar estado de usuario";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Error al actualizar estado del atleta";
+    console.error("Error en /api/admin/users/status:", error);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

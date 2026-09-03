@@ -198,3 +198,104 @@ export async function deleteUserFromAdmin(
     message: `Usuario ${userData.displayName || userData.email} eliminado con éxito.`,
   };
 }
+
+export interface PreauthorizeUserParams {
+  email: string;
+  displayName?: string;
+  role?: UserRole;
+  status?: UserStatus;
+  intervalsAthleteId?: string;
+  runFtp?: number;
+  bikeFtp?: number;
+}
+
+/**
+ * Pre-autoriza a un atleta antes de su primer login.
+ * Permite que cuando inicie sesión (con Google o correo), su acceso esté activo de inmediato.
+ */
+export async function preauthorizeUser(
+  params: PreauthorizeUserParams
+): Promise<{ success: boolean; message: string; docId: string }> {
+  const cleanEmail = params.email.trim().toLowerCase();
+  const sanitizedDocId = `preauth_${cleanEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
+  const now = new Date().toISOString();
+
+  if (!adminDb) {
+    return { success: true, message: `Invitación simulada para ${cleanEmail}.`, docId: sanitizedDocId };
+  }
+
+  const preauthRef = adminDb.collection("users").doc(sanitizedDocId);
+  const data: Record<string, any> = {
+    uid: sanitizedDocId,
+    email: cleanEmail,
+    displayName: params.displayName?.trim() || "Atleta Invitado",
+    role: params.role || "athlete",
+    status: params.status || "active",
+    intervalsAthleteId: params.intervalsAthleteId?.trim() || undefined,
+    runFtp: params.runFtp ? Number(params.runFtp) : undefined,
+    bikeFtp: params.bikeFtp ? Number(params.bikeFtp) : undefined,
+    isPreAuthorized: true,
+    createdAt: now,
+    updatedAt: now,
+    lastLoginAt: now,
+  };
+
+  // Limpiar campos undefined
+  const cleanData: Record<string, any> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== undefined) cleanData[k] = v;
+  }
+
+  await preauthRef.set(cleanData, { merge: true });
+
+  return {
+    success: true,
+    message: `Atleta ${params.displayName || cleanEmail} pre-autorizado con éxito.`,
+    docId: sanitizedDocId,
+  };
+}
+
+/**
+ * Actualiza los campos principales de un usuario desde el panel de administración.
+ */
+export async function updateUserDetails(
+  targetUid: string,
+  updates: {
+    displayName?: string;
+    role?: UserRole;
+    status?: UserStatus;
+    intervalsAthleteId?: string;
+    runFtp?: number;
+    bikeFtp?: number;
+  }
+): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) {
+    return { success: true, message: "Usuario actualizado en entorno local." };
+  }
+
+  const userRef = adminDb.collection("users").doc(targetUid);
+  const doc = await userRef.get();
+
+  if (!doc.exists) {
+    throw new Error("Usuario no encontrado.");
+  }
+
+  const cleanUpdates: Record<string, any> = {
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (updates.displayName !== undefined) cleanUpdates.displayName = updates.displayName.trim();
+  if (updates.role !== undefined) cleanUpdates.role = updates.role;
+  if (updates.status !== undefined) cleanUpdates.status = updates.status;
+  if (updates.intervalsAthleteId !== undefined) cleanUpdates.intervalsAthleteId = updates.intervalsAthleteId.trim();
+  if (updates.runFtp !== undefined) cleanUpdates.runFtp = Number(updates.runFtp);
+  if (updates.bikeFtp !== undefined) cleanUpdates.bikeFtp = Number(updates.bikeFtp);
+
+  await userRef.update(cleanUpdates);
+
+  return {
+    success: true,
+    message: "Datos del atleta actualizados con éxito.",
+  };
+}
+

@@ -7,6 +7,7 @@ import { LandingHome } from "@/components/LandingHome";
 import { AthleteDashboard } from "@/components/AthleteDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export default function HomePage() {
   const {
@@ -28,6 +29,13 @@ export default function HomePage() {
   const [seasonStudioTab, setSeasonStudioTab] = useState<"races" | "plan_generator">("plan_generator");
   const [isIntervalsConnected, setIsIntervalsConnected] = useState<boolean>(false);
   const [isGeminiConnected, setIsGeminiConnected] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
+
+  const handleOpenAuthModal = (tab: "login" | "register" = "login") => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpen(true);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -53,21 +61,28 @@ export default function HomePage() {
     return <RestrictedAccessView status="pending" />;
   }
 
-  // 4. Si el usuario no está autenticado -> Mostrar Header unificado + Landing Page pública
-  if (!user && !userProfile) {
+  // 4. Si el usuario no está autenticado -> Mostrar Header unificado + Landing Page pública con AuthModal
+  if (!user) {
     return (
       <div className="min-h-screen bg-transparent text-slate-900 flex flex-col justify-between font-sans">
         <Header
           activeView="landing"
           onSelectView={(v) => setCurrentView(v)}
           onOpenSettings={() => {}}
+          onOpenAuthModal={handleOpenAuthModal}
           isIntervalsConnected={false}
           isGeminiConnected={false}
         />
         <LandingHome
           onLoginWithGoogle={signInWithGoogle}
-          onGoToDashboard={() => setCurrentView("dashboard")}
+          onOpenAuthModal={handleOpenAuthModal}
+          onGoToDashboard={() => handleOpenAuthModal("login")}
           isAuthenticated={false}
+        />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialTab={authModalTab}
         />
       </div>
     );
@@ -83,11 +98,13 @@ export default function HomePage() {
             activeView="landing"
             onSelectView={(v) => setCurrentView(v)}
             onOpenSettings={() => {}}
+            onOpenAuthModal={handleOpenAuthModal}
             isIntervalsConnected={isIntervalsConnected}
             isGeminiConnected={isGeminiConnected}
           />
           <LandingHome
             onLoginWithGoogle={signInWithGoogle}
+            onOpenAuthModal={handleOpenAuthModal}
             onGoToDashboard={() => setCurrentView("dashboard")}
             isAuthenticated={true}
             userEmail={user?.email || userProfile?.email || undefined}
@@ -103,6 +120,7 @@ export default function HomePage() {
               athleteId={userProfile?.intervalsAthleteId || "i442091"}
               activeView="admin"
               onSelectView={(v) => setCurrentView(v)}
+              onOpenAuthModal={handleOpenAuthModal}
               isIntervalsConnected={isIntervalsConnected}
               isGeminiConnected={isGeminiConnected}
             />
@@ -139,6 +157,11 @@ export default function HomePage() {
           onGeminiConnectedChange={(connected) => setIsGeminiConnected(connected)}
         />
       )}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialTab={authModalTab}
+      />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, LayoutDashboard, Home, LogOut, User as UserIcon } from "lucide-react";
+import { Shield, LayoutDashboard, Home, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import { PulseLogo } from "./PulseLogo";
 import { useAuth } from "@/context/AuthContext";
+import { isMasterAdminEmail } from "@/lib/env";
 
 interface HeaderProps {
   athleteName?: string;
@@ -18,23 +19,25 @@ interface HeaderProps {
   isGeminiConnected?: boolean;
   activeView?: "landing" | "dashboard" | "admin";
   onSelectView?: (view: "landing" | "dashboard" | "admin") => void;
+  onOpenAuthModal?: (tab?: "login" | "register") => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   athleteName,
   activeView = "dashboard",
   onSelectView,
+  onOpenAuthModal,
 }) => {
   const { user, userProfile, isAdmin, signOutUser, signInWithGoogle } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
 
-  const displayName = userProfile?.displayName || user?.displayName || athleteName || "Germán Morales";
-  const email = userProfile?.email || user?.email || "gerkof@gmail.com";
+  const displayName = userProfile?.displayName || user?.displayName || athleteName || "Atleta";
+  const email = userProfile?.email || user?.email || "";
   const photoURL = userProfile?.photoURL || user?.photoURL;
   const userRole = userProfile?.role || (isAdmin ? "admin" : "athlete");
   const isLanding = activeView === "landing";
 
-  const isMasterAdmin = email === "gerkof@gmail.com" || isAdmin;
+  const isMasterAdmin = isMasterAdminEmail(email) || isAdmin;
 
   return (
     <header className="sticky top-0 z-40 w-full transition-colors backdrop-blur-xl border-b border-slate-200/80 bg-white/90 text-slate-900 shadow-xs">
@@ -195,14 +198,23 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={signInWithGoogle}
-              className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white px-4 py-2 text-xs font-bold shadow-md shadow-cyan-500/20 transition cursor-pointer"
-            >
-              <UserIcon className="h-3.5 w-3.5" />
-              <span>✨ Iniciar con Google</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => (onOpenAuthModal ? onOpenAuthModal("login") : signInWithGoogle())}
+                className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer"
+              >
+                Iniciar Sesión
+              </button>
+              <button
+                type="button"
+                onClick={() => (onOpenAuthModal ? onOpenAuthModal("register") : signInWithGoogle())}
+                className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white px-3.5 py-1.5 text-xs font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>⚡ Registrarme</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

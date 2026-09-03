@@ -20,12 +20,14 @@ interface LandingHomeProps {
   isAuthenticated?: boolean;
   userEmail?: string;
   userName?: string;
+  onOpenAuthModal?: (tab?: "login" | "register") => void;
 }
 
 export const LandingHome: React.FC<LandingHomeProps> = ({
   onLoginWithGoogle,
   onGoToDashboard,
   isAuthenticated = false,
+  onOpenAuthModal,
 }) => {
   const { error, clearError, user, loginAsMasterAdminDemo } = useAuth();
 
@@ -116,6 +118,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         {/* 2. Hero Section */}
         <LandingHero
           isAuthenticated={isUserAuthenticated}
+          onOpenAuthModal={onOpenAuthModal}
           onLoginWithGoogle={onLoginWithGoogle}
           onGoToDashboard={onGoToDashboard}
         />
@@ -141,6 +144,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         {/* 9. CTA Final */}
         <LandingCtaSection
           isAuthenticated={isUserAuthenticated}
+          onOpenAuthModal={onOpenAuthModal}
           onLoginWithGoogle={onLoginWithGoogle}
           onGoToDashboard={onGoToDashboard}
         />

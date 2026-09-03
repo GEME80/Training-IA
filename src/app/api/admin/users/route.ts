@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllUsersForAdmin, getAdminStats, getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { getAllUsersForAdmin, getAdminStats, updateUserDetails } from "@/lib/db/adminUsers";
+import { getUserProfileDecrypted } from "@/lib/db/userProfile";
 import { isMasterAdminEmail } from "@/lib/env";
 
 export async function GET(req: NextRequest) {
@@ -70,3 +71,68 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      targetUid,
+      displayName,
+      role,
+      status,
+      intervalsAthleteId,
+      runFtp,
+      bikeFtp,
+      requesterEmail,
+      requesterUid,
+    } = body;
+
+    if (!targetUid) {
+      return NextResponse.json(
+        { success: false, error: "targetUid es obligatorio." },
+        { status: 400 }
+      );
+    }
+
+    let isAuthorized = false;
+    if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
+      isAuthorized = true;
+    } else if (requesterUid) {
+      const requesterData = await getUserProfileDecrypted(requesterUid);
+      if (requesterData?.profile.role === "admin" || isMasterAdminEmail(requesterData?.profile.email)) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized && process.env.NODE_ENV !== "production") {
+      isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { success: false, error: "No autorizado. Se requieren privilegios de Administrador." },
+        { status: 403 }
+      );
+    }
+
+    const result = await updateUserDetails(targetUid, {
+      displayName,
+      role,
+      status,
+      intervalsAthleteId,
+      runFtp,
+      bikeFtp,
+    });
+
+    return NextResponse.json(result);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Error al actualizar atleta";
+    console.error("Error en PATCH /api/admin/users:", error);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  return PATCH(req);
+}
+

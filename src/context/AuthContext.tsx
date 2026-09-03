@@ -1,10 +1,45 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { User, signInWithPopup, signOut as fbSignOut, onAuthStateChanged } from "firebase/auth";
+import {
+  User,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
+  signOut as fbSignOut,
+  onAuthStateChanged,
+} from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/config";
-import { UserProfileData, UserRole, UserStatus, MASTER_ATHLETE_SEED } from "@/lib/db/types";
+import { UserProfileData, UserRole, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail, getSuperadminEmail } from "@/lib/env";
+
+export function translateAuthError(err: any): string {
+  const code = err?.code || "";
+  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
+    return "Correo o contraseña incorrectos. Verifica tus credenciales.";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "Este correo ya está registrado. Por favor selecciona 'Iniciar Sesión'.";
+  }
+  if (code === "auth/weak-password") {
+    return "La contraseña es muy débil. Debe tener al menos 6 caracteres.";
+  }
+  if (code === "auth/invalid-email") {
+    return "El formato del correo electrónico no es válido.";
+  }
+  if (code === "auth/popup-closed-by-user") {
+    return "Inicio de sesión con Google cancelado.";
+  }
+  if (code === "auth/network-request-failed") {
+    return "Error de red al conectar con los servidores de autenticación.";
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "El método de autenticación no está habilitado en Firebase Console.";
+  }
+  return err?.message || "Ocurrió un error en la autenticación.";
+}
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +52,9 @@ interface AuthContextType {
   error: string | null;
   clearError: () => void;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, displayName: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   loginAsMasterAdminDemo: () => void;
@@ -33,19 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sincronizar el perfil del usuario con el backend
   const syncProfile = useCallback(async (fbUser: User | null) => {
     if (!fbUser) {
-      const superadminEmail = getSuperadminEmail() || "gerkof@gmail.com";
-      const defaultAdmin: UserProfileData = {
-        uid: "superadmin-root",
-        email: superadminEmail,
-        displayName: "Germán Morales",
-        role: "admin",
-        status: "active",
-        intervalsAthleteId: "i442091",
-        createdAt: "2026-08-01T00:00:00.000Z",
-        lastLoginAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setUserProfile(defaultAdmin);
+      setUserProfile(null);
       setLoading(false);
       return;
     }
@@ -161,6 +187,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithEmail = async (email: string, pass: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      if (!auth) throw new Error("Firebase Auth no está inicializado.");
+      const cred = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), pass);
+      setUser(cred.user);
+      await syncProfile(cred.user);
+    } catch (err: any) {
+      const msg = translateAuthError(err);
+      setError(msg);
+      setLoading(false);
+      throw new Error(msg);
+    }
+  };
+
+  const signUpWithEmail = async (email: string, pass: string, displayName: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      if (!auth) throw new Error("Firebase Auth no está inicializado.");
+      const cred = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), pass);
+      if (displayName.trim()) {
+        await updateProfile(cred.user, { displayName: displayName.trim() });
+      }
+      setUser(cred.user);
+      await syncProfile(cred.user);
+    } catch (err: any) {
+      const msg = translateAuthError(err);
+      setError(msg);
+      setLoading(false);
+      throw new Error(msg);
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    setError(null);
+    if (!auth) throw new Error("Firebase Auth no está inicializado.");
+    try {
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+    } catch (err: any) {
+      const msg = translateAuthError(err);
+      setError(msg);
+      throw new Error(msg);
+    }
+  };
+
   const signOutUser = async () => {
     setLoading(true);
     try {
@@ -185,7 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Método de conveniencia para pruebas del Superadministrador (Germán Morales)
+  // Método de conveniencia para pruebas locales explícitas del Superadministrador
   const loginAsMasterAdminDemo = () => {
     const superadminEmail = getSuperadminEmail();
     const demoAdmin: UserProfileData = {
@@ -228,6 +301,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         clearError,
         signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        sendPasswordReset,
         signOutUser,
         refreshProfile,
         loginAsMasterAdminDemo,

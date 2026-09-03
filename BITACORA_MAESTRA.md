@@ -2110,3 +2110,43 @@ flowchart TD
   - `Prueba 4 (Modularidad):` Todos los archivos nuevos o editados cumplen estrictamente la **Regla 3 (< 350 LOC)**.
   - `Prueba 5 (Auditoría de Lenguaje):` **0 menciones de PMC, 0 menciones de 2.5/gemi**, 100% consistencia con **Google Gemini**.
 
+---
+
+### Versión 3.6 - Blindaje de Autenticación, Erradicación de Fuga de Sesión, Registro Público de Atletas en Home y Endpoints SuperAdmin (2026-09-03)
+- **Problemas Críticos Diagnosticados y Resueltos:**
+  1. **Fuga de Sesión (`gerkof@gmail.com` visible para cualquier visitante no autenticado):**
+     - En `AuthContext.tsx`, la función `syncProfile` ejecutaba un mock de desarrollo (`if (!fbUser) setUserProfile(defaultAdmin)`), asignando automáticamente el perfil de Germán Morales como SuperAdmin a cualquier usuario no logueado o pestaña en incógnito.
+     - Se eliminó el mock: cuando `!fbUser`, el estado es estrictamente `user = null` y `userProfile = null`.
+     - En `src/app/page.tsx`, se endureció la compuerta de acceso (`if (!user)`) para que nadie sin sesión activa de Firebase Auth pueda renderizar el Dashboard ni el Centro de Control.
+  2. **Registro de Atletas y Solicitud de Acceso desde el Home:**
+     - Se agregaron llamados a la acción claros y llamativos en la Landing Page: botón `⚡ Registrarme` en la cabecera (`Header.tsx`), `⚡ Registrarme como Atleta` en el Hero (`LandingHero.tsx`) y `Comenzar Ahora • Solicitar Acceso` en el CTA final (`LandingCtaSection.tsx`).
+     - Se creó el componente `AuthModal.tsx` con soporte de **Autenticación Dual**: Google OAuth + Correo Electrónico y Contraseña (con pestañas para *Iniciar Sesión*, *Registrarme como Atleta* y *Recuperar Contraseña*).
+     - Si el atleta ya fue invitado/preautorizado por el Admin $\rightarrow$ Entra de inmediato con sus métricas precargadas (`status: "active"`).
+     - Si el atleta es nuevo (registro orgánico) $\rightarrow$ Se registra en Firestore con `status: "pending"`, ve la pantalla `RestrictedAccessView` ("Esperando aprobación del entrenador") y el SuperAdmin ve su solicitud para activarlo.
+  3. **Habilitación de Endpoints SuperAdmin en Backend (Corrección de Errores 404/405):**
+     - Se implementó `src/app/api/admin/users/preauthorize/route.ts` (`POST`) para preautorizar atletas e invitaciones desde el SuperAdmin.
+     - Se implementó `src/app/api/admin/users/status/route.ts` (`POST`) para que el SuperAdmin pueda activar, pausar o deshabilitar atletas con 1 clic.
+     - Se implementó `src/app/api/admin/users/delete/route.ts` (`POST`) para eliminar atletas o invitaciones huérfanas con blindaje anti-eliminación para el SuperAdmin raíz.
+     - Se agregó soporte `PATCH` y `PUT` en `src/app/api/admin/users/route.ts` para actualización de parámetros de atletas (`runFtp`, `bikeFtp`, `intervalsAthleteId`, etc.).
+  4. **Limpieza de Fallbacks Hardcodeados:**
+     - En `Header.tsx` y `AthleteDashboard.tsx` se eliminaron asignaciones fijas de `"Germán Morales"` y `"gerkof@gmail.com"`, delegando la identidad a `isMasterAdminEmail()`.
+- **Archivos Creados y Modificados (< 350 LOC):**
+  - `src/components/auth/AuthModal.tsx` [NUEVO]: **327 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/preauthorize/route.ts` [NUEVO]: **58 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/status/route.ts` [NUEVO]: **52 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/delete/route.ts` [NUEVO]: **47 líneas** (< 350 LOC)
+  - `src/app/api/admin/users/route.ts` [MODIFICADO]: **137 líneas** (< 350 LOC)
+  - `src/lib/db/adminUsers.ts` [MODIFICADO]: **302 líneas** (< 350 LOC)
+  - `src/context/AuthContext.tsx` [MODIFICADO]: **324 líneas** (< 350 LOC)
+  - `src/components/Header.tsx` [MODIFICADO]: **224 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHero.tsx` [MODIFICADO]: **102 líneas** (< 350 LOC)
+  - `src/components/landing/LandingCtaSection.tsx` [MODIFICADO]: **56 líneas** (< 350 LOC)
+  - `src/components/LandingHome.tsx` [MODIFICADO]: **156 líneas** (< 350 LOC)
+  - `src/app/page.tsx` [MODIFICADO]: **152 líneas** (< 350 LOC)
+  - `src/components/AthleteDashboard.tsx` [MODIFICADO]: Limpieza de fallbacks residuales.
+- **Validación del Set de Pruebas:**
+  - `Prueba 1 (Tipado Estricto):` `node node_modules/typescript/bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Producción):` `node node_modules/next/dist/bin/next build` $\rightarrow$ **21/21 páginas generadas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` Todos los archivos nuevos y modificados se mantienen estrictamente bajo **< 350 LOC**.
+
+

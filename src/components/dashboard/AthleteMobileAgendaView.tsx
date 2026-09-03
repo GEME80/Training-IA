@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  X,
   Activity,
   Zap,
   Info,
@@ -19,6 +20,8 @@ import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
 import { parseWorkoutDoc } from "../WorkoutChart";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
+import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
+import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
 
 interface AthleteMobileAgendaViewProps {
   blueprint: MacrocycleBlueprint;
@@ -77,14 +80,66 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
     return 0; // Default lunes si no coincide
   }, [daysMap, todayStr]);
 
+  // Totales de carga de la semana activa
+  const { weekPlannedTss, weekExecutedTss } = useMemo(() => {
+    let pTss = 0;
+    let eTss = 0;
+    weekPlan.forEach((item) => {
+      if (!item.isRestDay && item.discipline !== "Descanso") {
+        pTss += item.tss || 0;
+      }
+      const actDay = dailyExecutedActivities[item.date];
+      if (actDay?.totalTss) {
+        eTss += actDay.totalTss;
+      }
+    });
+    return { weekPlannedTss: pTss, weekExecutedTss: eTss };
+  }, [weekPlan, dailyExecutedActivities]);
+
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(todayDayIdx);
 
   const selectedDayData = daysMap[selectedDayIdx] || { date: "", items: [] };
   const selectedDayItems = selectedDayData.items;
   const isTodaySelected = selectedDayData.date === todayStr;
+  const isPastDay = selectedDayData.date ? selectedDayData.date < todayStr : false;
 
   const executedForDay = selectedDayData.date ? dailyExecutedActivities[selectedDayData.date] : undefined;
   const executedActivities: DailyExecutedActivity[] = executedForDay?.activities || [];
+
+  // Emparejamiento coordinado y estricto por disciplina idéntico al motor de PC
+  const { matchedItems, extraActivities } = useMemo(() => {
+    const usedActIds = new Set<string>();
+    const matched = selectedDayItems.map((item) => {
+      const isRest = item.isRestDay || item.discipline === "Descanso";
+      if (isRest || executedActivities.length === 0) {
+        return { item, matchedAct: null as DailyExecutedActivity | null, isRest };
+      }
+
+      let match: DailyExecutedActivity | undefined;
+      if (item.discipline === "Carrera") {
+        match = executedActivities.find(
+          (a) => !usedActIds.has(a.id) && (a.type === "Run" || /run|carrera|trote|trail/i.test(a.type) || /run|carrera|trote|marat|fondo/i.test(a.name))
+        );
+      } else if (item.discipline === "Ciclismo") {
+        match = executedActivities.find(
+          (a) => !usedActIds.has(a.id) && (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) || /ride|ciclismo|bike|rodaje|fondo/i.test(a.name))
+        );
+      } else if (item.discipline === "Fuerza") {
+        match = executedActivities.find(
+          (a) => !usedActIds.has(a.id) && (a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type) || /fuerza|gym|pesas|fortalec/i.test(a.name))
+        );
+      }
+
+      if (match) {
+        usedActIds.add(match.id);
+        return { item, matchedAct: match, isRest: false };
+      }
+      return { item, matchedAct: null as DailyExecutedActivity | null, isRest: false };
+    });
+
+    const extras = executedActivities.filter((a) => !usedActIds.has(a.id));
+    return { matchedItems: matched, extraActivities: extras };
+  }, [selectedDayItems, executedActivities]);
 
   const getDisciplineIcon = (disc: string) => {
     if (disc === "Carrera") return <Footprints className="h-4 w-4 text-amber-500" />;
@@ -96,7 +151,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
 
   return (
     <div className="space-y-3.5 select-none md:hidden animate-fadeIn">
-      {/* 1. Selector de Semana Ergonómico Móvil */}
+      {/* 1. Selector de Semana Ergonómico Móvil con Carga Acumulada */}
       <div className="flex items-center justify-between bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-xs">
         <button
           type="button"
@@ -117,9 +172,9 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
               {currentWeek?.phase || "Base"}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">
-            {currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica"}
-          </span>
+          <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+            Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS
+          </div>
         </div>
 
         <button
@@ -142,7 +197,6 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
           const hasExecution = dayInfo?.date ? !!dailyExecutedActivities[dayInfo.date]?.totalTss : false;
           const firstItem = dayInfo?.items[0];
           const isRest = firstItem?.isRestDay || firstItem?.discipline === "Descanso";
-
           const dayNumber = dayInfo?.date ? dayInfo.date.split("-")[2] : "";
 
           return (
@@ -183,138 +237,40 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
         })}
       </div>
 
-      {/* 3. Tarjeta Principal del Día Seleccionado */}
+      {/* 3. Tarjetas del Día Seleccionado */}
       <div className="space-y-2.5">
-        {selectedDayItems.length === 0 ? (
+        {matchedItems.length === 0 && extraActivities.length === 0 ? (
           <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-            Día sin sesiones programadas.
+            Día de descanso sin sesiones programadas.
           </div>
         ) : (
-          selectedDayItems.map((workout, wIdx) => {
-            const parsedDoc = parseWorkoutDoc(workout.workoutDoc);
-            const isRest = workout.isRestDay || workout.discipline === "Descanso";
-            const executedMatch = executedActivities[wIdx] || executedActivities[0];
-
-            return (
-              <div
+          <>
+            {/* 3.1 Sesiones Planificadas con Emparejamiento Real */}
+            {matchedItems.map(({ item: workout, matchedAct, isRest }, wIdx) => (
+              <AthleteMobileWorkoutCard
                 key={wIdx}
-                onClick={() => onSelectWorkoutModal(workout)}
-                className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all cursor-pointer shadow-xs touch-bounce space-y-3 ${
-                  executedMatch
-                    ? "border-emerald-300 dark:border-emerald-700/60 bg-emerald-50/30"
-                    : isTodaySelected
-                    ? "border-cyan-300 dark:border-cyan-700/60 ring-2 ring-cyan-500/20"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-                }`}
-              >
-                {/* Cabecera de la Sesión */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
-                      {getDisciplineIcon(workout.discipline)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold text-slate-500 uppercase">
-                          {workout.day} • {selectedDayData.date}
-                        </span>
-                        {isTodaySelected && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black uppercase">
-                            Hoy
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                        {workout.workoutName.replace(/\[.*?\]\s*/g, "")}
-                      </h4>
-                    </div>
-                  </div>
-
-                  {executedMatch ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-black border border-emerald-500/20">
-                      <Check className="h-3 w-3" />
-                      Completado
-                    </span>
-                  ) : isRest ? (
-                    <span className="text-[10px] font-mono text-slate-400 font-bold">
-                      Descanso
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 text-[10px] font-bold">
-                      Planificado
-                    </span>
-                  )}
-                </div>
-
-                {/* Métricas Clave de la Sesión */}
-                {!isRest && (
-                  <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl text-center">
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-slate-400 block">Tiempo</span>
-                      <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                        <Activity className="h-3 w-3 text-cyan-500" />
-                        {workout.durationMinutes}m
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-slate-400 block">Carga TSS</span>
-                      <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                        <Zap className="h-3 w-3 text-amber-500" />
-                        {executedMatch?.tss ? `${executedMatch.tss} / ` : ""}{workout.tss || parsedDoc.estimatedTss || 0}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-slate-400 block">Enfoque</span>
-                      <strong className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate block">
-                        {workout.discipline}
-                      </strong>
-                    </div>
-                  </div>
-                )}
-
-                {/* Resumen de Estructura / Stryd */}
-                {workout.workoutDoc && (
-                  <div className="text-[11px] font-mono bg-slate-100/80 dark:bg-slate-800/80 p-2 rounded-xl text-slate-600 dark:text-slate-300 space-y-0.5">
-                    <span className="text-[9px] font-black uppercase text-slate-400 block font-sans">Estructura:</span>
-                    {workout.workoutDoc
-                      .split("\n")
-                      .filter((l) => l.trim().startsWith("-"))
-                      .slice(0, 3)
-                      .map((line, bIdx) => (
-                        <div key={bIdx} className="truncate">
-                          {line.trim()}
-                        </div>
-                      ))}
-                  </div>
-                )}
-
-                {/* Botón Táctil de 1 Toque */}
-                <div className="pt-1 flex items-center justify-between text-xs">
-                  <span className="text-[10px] text-slate-400 font-medium">Toca para ver intervalos y potencia</span>
-                  <span className="text-xs font-bold text-cyan-600 flex items-center gap-0.5">
-                    Ver Detalle →
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        )}
-
-        {/* Actividades Extras no planificadas de ese día */}
-        {executedActivities.length > selectedDayItems.length && (
-          <div className="rounded-2xl p-3 bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 text-xs space-y-1">
-            <span className="text-[10px] font-mono uppercase font-black text-slate-500">
-              Actividad Adicional Registrada:
-            </span>
-            {executedActivities.slice(selectedDayItems.length).map((extra, eIdx) => (
-              <div key={eIdx} className="flex items-center justify-between font-mono">
-                <span className="truncate">{extra.name}</span>
-                <span className="font-bold text-emerald-600">+{extra.tss} TSS</span>
-              </div>
+                workout={workout}
+                matchedAct={matchedAct}
+                isRest={isRest}
+                isCompleted={Boolean(matchedAct)}
+                isOmitted={!matchedAct && isPastDay && !isRest}
+                isTodaySelected={isTodaySelected}
+                selectedDate={selectedDayData.date}
+                onSelectWorkoutModal={onSelectWorkoutModal}
+              />
             ))}
-          </div>
+
+            {/* 3.2 Actividades Extra / No Planificadas (Renderizadas con fidelidad 100% como en PC) */}
+            {extraActivities.map((extraAct) => (
+              <AthleteMobileExtraCard
+                key={extraAct.id}
+                activity={extraAct}
+                dateStr={selectedDayData.date}
+                dayName={dayShortNames[selectedDayIdx]}
+                onSelectWorkoutModal={onSelectWorkoutModal}
+              />
+            ))}
+          </>
         )}
       </div>
     </div>

@@ -1092,7 +1092,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         </header>
 
         {/* LIENZO PRINCIPAL DEL ATLETA */}
-        <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
+        <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
         {/* BANNER ONBOARDING */}
         {!apiKeyCache && !userProfile?.encryptedApiKey && profile.id !== "i442091" && (
           <OnboardingBanner onOpenOnboarding={() => setIsOnboardingOpen(true)} />

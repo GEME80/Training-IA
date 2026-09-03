@@ -1981,12 +1981,28 @@ flowchart TD
     - `tsc --noEmit`: 0 errores de tipado (Código 0).
     - `next build`: 21/21 rutas estáticas y dinámicas compiladas exitosamente (Código 0).
 
-
-
-
-
-
-
+### Versión 3.8 (Paridad Absoluta de Datos PC vs. Móvil, Tarjetas Extra y Ajuste Fluido a Pantalla en Escritorio)
+- **Fecha:** 3 de Septiembre de 2026.
+- **Objetivo Arquitectónico:** Solucionar las discrepancias críticas de visualización y emparejamiento de datos entre la Web Móvil y la Web PC evidenciadas en el Jueves 3 Sep, incorporar soporte completo para actividades extra no planificadas en teléfonos celulares y optimizar la cuadrícula del calendario en PC para encajar al 100% de la pantalla eliminando semanas cortadas y desbordamientos horizontales.
+- **Implementaciones Realizadas:**
+  - **1. Auditoría y Corrección de Emparejamiento por Disciplina en Móvil (`AthleteMobileAgendaView.tsx`):**
+    - Se erradicó el fallback ciego defectuoso `const executedMatch = executedActivities[wIdx] || executedActivities[0];` que asignaba una misma carrera ejecutada a múltiples sesiones planificadas de fuerza y rodillo.
+    - Se unificó el motor de emparejamiento de móvil con el de PC (`AthleteCalendarDayColumn.tsx`), aplicando filtrado estricto por disciplina (`Carrera` $\rightarrow$ `Run`, `Ciclismo` $\rightarrow$ `Ride`, `Fuerza` $\rightarrow$ `WeightTraining`) y seguimiento de IDs consumidos (`usedActIds: Set<string>`).
+    - Las sesiones no ejecutadas en días pasados se marcan honestamente como `✕ Omitida`, mientras que las sesiones del día en curso permanecen en `Planificado` sin absorber TSS ajeno.
+  - **2. Renderizado de Actividades Extra / No Planificadas en Móvil (`AthleteMobileExtraCard.tsx`):**
+    - Creado el componente `AthleteMobileExtraCard` (< 135 LOC) para renderizar como tarjetas de primer nivel las actividades adicionales registradas en Intervals.icu (como *"Cartagena Carrera 10k, 63 TSS"*), con tiempo, distancia, vatios, pulso cardíaco, carga TSS y badge `+ Extra`.
+    - Integrado cálculo en vivo de carga real semanal (`Carga Real: X / Y TSS`) en el selector ergonómico móvil.
+  - **3. Modularización de Tarjetas de Entrenamientos Móviles (`AthleteMobileWorkoutCard.tsx`):**
+    - Extraído `AthleteMobileWorkoutCard` (< 155 LOC) desde `AthleteMobileAgendaView.tsx`, reduciendo el archivo de agenda a 278 líneas para cumplir con holgura la **Regla 3 (< 350 LOC)**.
+  - **4. Ajuste Ergonómico de Pantalla en Escritorio (`AthleteContinuousCalendar.tsx` & `AthleteDashboard.tsx`):**
+    - **Modo "Semana Foco" en PC:** Implementado navegador superior con selector de vista. En modo *Semana Foco* (predeterminado), la pantalla de la computadora muestra exclusivamente la semana activa con sus 7 días encajados al 100% del alto de la ventana, sin que la semana siguiente quede asomada o cortada a la mitad en el borde inferior.
+    - Controles de navegación en PC: `[◀ Anterior] Semana X de 27 [Siguiente ▶]` y botón táctil `[🎯 Ir a Semana Actual]`.
+    - Selector para alternar libremente entre `[ 📅 Semana Foco ]` y `[ 📜 Ver 27 Semanas ]`.
+    - **Grid Fluido Sin Scrollbar:** Reemplazado el ancho forzado `min-w-[1100px]` por una cuadrícula fluida `w-full min-w-[960px] 2xl:min-w-0` y expandido el contenedor principal `<main>` a `max-w-[1550px]`, eliminando las barras de desplazamiento horizontal forzadas en monitores de 1366px y laptops.
+  - **5. Set de Pruebas y Compilación Superado:**
+    - `tsc --noEmit`: 0 errores de tipado (Código 0).
+    - `next build`: 21/21 rutas estáticas y dinámicas compiladas exitosamente (Código 0).
+    - Todas las métricas de LOC por archivo verificadas estrictamente bajo el límite de 350 líneas.
 
 
 

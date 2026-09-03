@@ -110,24 +110,34 @@ flowchart TD
 1. **Cero Código Hardcodeado:** Todos los porcentajes de FTP, zonas, cargas, duraciones y protocolos de test (ej. test de VAM, Test CSS) deben originarse de los modelos tipados y curados bajo `src/lib/ai/knowledge/`. Queda **estrictamente prohibido hardcodear** valores lógicos o descripciones directamente en los componentes de UI o endpoints de API.
 2. **Lenguaje Amigable y Accesible:** Aunque los modelos tienen un alto rigor científico y matemático en el backend, el lenguaje, los títulos y las descripciones mostradas al atleta deben ser claras, positivas, motivadoras y libres de jerga hipertécnica innecesaria (ej. prefiere "Carrera Continua de Soltura" en lugar de "Z1 Depleción LISS").
 3. **Erradicación Absoluta de HYROX:** El sistema está enfocado 100% en deportes de resistencia cíclica pura (Carrera a pie, Trail, Ciclismo y Triatlón) junto con sus momentos de preparación física. Quedan excluidos los modelos o entrenamientos tipo HYROX o "Acondicionamiento Híbrido".
-4. **Leyes Inviolables de Fisiología y Carga (v2.1.0):**
-   - *Cap Estricto de 2h30m (150 min):* Las tiradas largas de maratón/carrera jamás superarán los 150 minutos para evitar daño neuromuscular catabólico.
-   - *Escalado por Nivel (`athleteLevelCaps`):* Todos los modelos deben definir cotas de volumen e intensidad adaptadas al $CTL$ inicial (`BEGINNER`, `INTERMEDIATE`, `ADVANCED_ELITE`).
-   - *Tapering Científico Mujika & Bosquet (`taperingRules`):* 3 semanas para 42K/Ultra/IRONMAN, 2 semanas para 21K/70.3/Gran Fondo, 1.5 semanas para 10K y 1 semana para 5K/Sprint/Crit, preservando el 100% de la intensidad de competición.
+4. **Leyes Inviolables de Fisiología y Carga (v3.5):**
+   - *Cap Fisiológico de Tirada Larga de Maratón (3h / 180 min):* Para 42K Maratón, el fondo cumbre alcanza entre 28 km (debutante, ~165 min) y 32-34 km (intermedio/avanzado, 175-180 min / 20-miler de Canova & Pfitzinger). El techo máximo de seguridad no supera los 180 min (3 horas) para prevenir catabolismo y agotamiento de glucógeno.
+   - *Escalado por Nivel (`athleteLevelCaps`):* Todos los modelos deben definir cotas de volumen e intensidad adaptadas al $CTL$ inicial (`BEGINNER`: 28 km / 165m, `INTERMEDIATE`: 32 km / 175m, `ADVANCED_ELITE`: 36 km / 185m).
+   - *Tapering Científico Mujika & Bosquet (`taperingRules`):* 3 semanas para 42K/Ultra/IRONMAN, 2 semanas para 21K/70.3/Gran Fondo, 1.5 semanas para 10K y 1 semana para 5K/Sprint/Crit, en secuencia decreciente (ej. 32 km $\rightarrow$ 22 km $\rightarrow$ 16 km $\rightarrow$ 42.2 km) preservando el 100% de la intensidad de competición.
    - *Ecosistema Completo de Fuerza (100% SSOT):* Todo workout de fuerza o entrenamiento cruzado debe invocarse desde `strengthAndCrossModels.ts`.
-
 
 ---
 
 ## 🛡️ 7. ARQUITECTURA DE ROBUSTEZ, REDUNDANCIA Y TOLERANCIA A REINICIOS (v3.0)
 1. **Capacidad de Encabezados HTTP (128 KB) a Nivel Sistema:** Toda ejecución del servidor Next.js debe garantizar `NODE_OPTIONS='--max-http-header-size=131072'`. Esta variable está exportada globalmente en `~/.zshrc` y `~/.zprofile`, y blindada en `scripts/start-server.sh` y `package.json` para evitar el error crítico `400 Bad Request (Request Header Fields Too Large)` cuando se acumulan cookies de sesión OAuth.
 2. **Auto-Recuperación Temprana y Purga de Cookies en Cliente:** El `RootLayout` incluye el script interceptor de fase de captura en `<head>` y el componente `<ClientAutoRecovery />`. Si un chunk estático falla o `document.cookie` supera 4 KB, se purgan automáticamente cookies obsoletas antes de la auto-recarga limpia.
-3. **Transpilación Segura y Aislamiento de Módulos:** En `next.config.mjs`, los paquetes cliente de Firebase (`@firebase/*`, `firebase`) deben transpilares en `transpilePackages`, y las librerías de servidor (`firebase-admin`, `@google-cloud/firestore`, `protobufjs`, `google-gax`) deben aislarse en `serverExternalPackages` para evitar fallos `ENOENT` en disco.
+3. **Transpilación Segura y Aislamiento de Módulos:** En `next.config.mjs`, los paquetes cliente de Firebase (`@firebase/*`, `firebase`) deben transpilarse en `transpilePackages`, y las librerías de servidor (`firebase-admin`, `@google-cloud/firestore`, `protobufjs`, `google-gax`) deben aislarse en `serverExternalPackages` para evitar fallos `ENOENT` en disco.
 4. **Límites de Error Nativos del App Router:** Toda la captura de errores debe manejarse en `src/app/error.tsx` y `src/app/global-error.tsx`, previniendo que Next.js recurra al Pages Router heredado (`pages/_document.js` o `./611.js`).
 5. **Cero Bloqueo de UI por Latencia Externa:** Las vistas (Dashboard, Perfil, Season Studio) deben renderizar en 0ms con caché local, resolviendo la telemetría e interacciones de red en segundo plano con timeouts de red máximos de 3.5 segundos.
 6. **Script de Arranque Blindado:** Para reiniciar el servidor tras cambios de código o fallos, usar prioritariamente `npm run start:robust` (o `bash scripts/start-server.sh`), que libera el puerto 3000 y recompila limpiamente.
 7. **Renderizado Dinámico en Root:** En `src/app/layout.tsx`, debe mantenerse incondicionalmente `export const dynamic = "force-dynamic"` y `export const revalidate = 0` para evitar que Next.js almacene en caché shells HTML estáticos (`○ (Static)`) con hashes de scripts desfasados.
 8. **Ruptura Forzada de Caché en Error Boundaries:** En `src/app/error.tsx` y `src/app/global-error.tsx`, ante cualquier `ChunkLoadError`, debe invocarse `window.location.replace(url + '?_v=' + Date.now())` para invalidar la memoria de scripts del navegador y sincronizar transparentemente con los nuevos hashes del servidor.
+
+---
+
+## ☁️ 8. GOBERNANZA DE INFRAESTRUCTURA GCP & SECRET MANAGER (v3.5)
+1. **Consolidación Absoluta en Proyecto Único:** Todo el ecosistema vive y opera exclusivamente en el proyecto rector **`Training-IA` (`training-ia-8f67f`)**. Queda prohibido generar proyectos satélites en Google AI Studio (`gen-lang-client-...`).
+2. **Secretos Estrictos en Secret Manager (Máximo 2 Oficiales):**
+   - `pulse-encryption-master-key`: Llave maestra de 256 bits para cifrado/descifrado AES-256-GCM.
+   - `gemini-api-key`: Clave de API de Gemini consolidada nativamente en `training-ia-8f67f`.
+   - Queda prohibido crear secretos redundantes o dejar versiones antiguas habilitadas. Al actualizar secretos, destruir de inmediato versiones intermedias para mantener el uso dentro de la cuota Always Free (hasta 6 versiones / $0.00).
+3. **Control Financiero:** Facturación configurada exclusivamente en **Modo Prepago ($20.000 COP)** con alertas preventivas.
+4. **Cero Canales Externos:** La plataforma opera de forma 100% web; queda estrictamente prohibida la mención o integración con canales externos no deportivos (como WhatsApp).
 
 
 

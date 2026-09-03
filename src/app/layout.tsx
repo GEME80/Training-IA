@@ -45,26 +45,25 @@ export default function RootLayout({
                 window.addEventListener('error', function(e) {
                   var target = e.target;
                   var isResourceError = target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK');
-                  var isMsgError = e.message && (e.message.indexOf('style') !== -1 || e.message.indexOf('MIME') !== -1 || e.message.indexOf('Loading chunk') !== -1);
+                  var isMsgError = e.message && (e.message.indexOf('style') !== -1 || e.message.indexOf('MIME') !== -1 || e.message.indexOf('Loading chunk') !== -1 || e.message.indexOf('ChunkLoadError') !== -1);
                   if (isResourceError || isMsgError) {
                     var now = Date.now();
                     var last = Number(sessionStorage.getItem('pulse_404_reload') || 0);
-                    if (now - last > 4000) {
-                        sessionStorage.setItem('pulse_404_reload', String(now));
-                        try {
-                          if (document.cookie && document.cookie.length > 4096) {
-                            var cookies = document.cookie.split(';');
-                            for (var i = 0; i < cookies.length; i++) {
-                              var eq = cookies[i].indexOf('=');
-                              var name = eq > -1 ? cookies[i].substr(0, eq).trim() : cookies[i].trim();
-                              document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-                            }
+                    if (now - last > 3000) {
+                      sessionStorage.setItem('pulse_404_reload', String(now));
+                      try {
+                        if (document.cookie && document.cookie.length > 4096) {
+                          var cookies = document.cookie.split(';');
+                          for (var i = 0; i < cookies.length; i++) {
+                            var eq = cookies[i].indexOf('=');
+                            var name = eq > -1 ? cookies[i].substr(0, eq).trim() : cookies[i].trim();
+                            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
                           }
-                        } catch(err) {}
-                        var targetUrl = new URL(window.location.href);
-                        targetUrl.searchParams.set('_v', String(now));
-                        window.location.replace(targetUrl.toString());
-                      }
+                        }
+                      } catch(err) {}
+                      var targetUrl = new URL(window.location.href);
+                      targetUrl.searchParams.set('_v', String(now));
+                      window.location.replace(targetUrl.toString());
                     }
                   }
                 }, true);

@@ -4,7 +4,7 @@ import React from "react";
 import { Footprints, Bike, Dumbbell, Waves, Moon, Check, X, Activity, Zap } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedActivity } from "@/lib/intervals/types";
-import { parseWorkoutDoc } from "../WorkoutChart";
+import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
 
 interface AthleteMobileWorkoutCardProps {
   workout: PlanItem;
@@ -16,6 +16,18 @@ interface AthleteMobileWorkoutCardProps {
   selectedDate: string;
   onSelectWorkoutModal: (item: PlanItem) => void;
 }
+
+const formatDisplayDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const m = parseInt(parts[1], 10) - 1;
+    return `${day} ${months[m] || ""}`;
+  }
+  return dateStr;
+};
 
 const getDisciplineIcon = (disc: string) => {
   if (disc === "Carrera") return <Footprints className="h-4 w-4 text-amber-500" />;
@@ -59,7 +71,7 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-500 uppercase">
-                {workout.day} • {selectedDate}
+                {workout.day} • {formatDisplayDate(selectedDate)}
               </span>
               {isTodaySelected && (
                 <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black uppercase">
@@ -123,19 +135,10 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
         </div>
       )}
 
-      {/* Resumen de Estructura / Stryd */}
+      {/* Gráfica Visual de Intervalos (Igual que en PC) */}
       {workout.workoutDoc && (
-        <div className="text-[11px] font-mono bg-slate-100/80 dark:bg-slate-800/80 p-2 rounded-xl text-slate-600 dark:text-slate-300 space-y-0.5">
-          <span className="text-[9px] font-black uppercase text-slate-400 block font-sans">Estructura:</span>
-          {workout.workoutDoc
-            .split("\n")
-            .filter((l) => l.trim().startsWith("-"))
-            .slice(0, 3)
-            .map((line, bIdx) => (
-              <div key={bIdx} className="truncate">
-                {line.trim()}
-              </div>
-            ))}
+        <div className="py-1">
+          <WorkoutChart workoutDoc={workout.workoutDoc} discipline={workout.discipline} />
         </div>
       )}
 

@@ -27,6 +27,18 @@ const renderActivityIcon = (type: string, name?: string) => {
   return <Dumbbell className="h-4 w-4 text-purple-500" />;
 };
 
+const formatDisplayDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const m = parseInt(parts[1], 10) - 1;
+    return `${day} ${months[m] || ""}`;
+  }
+  return dateStr;
+};
+
 export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
   activity: extra,
   dateStr,
@@ -70,7 +82,7 @@ export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-500 uppercase">
-                {dayName} • {dateStr}
+                {dayName} • {formatDisplayDate(dateStr)}
               </span>
               <span className="px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] font-black uppercase">
                 + Extra

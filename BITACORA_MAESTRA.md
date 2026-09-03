@@ -1969,6 +1969,8 @@ flowchart TD
   - **3. Verificación de Compilación y Calidad:**
     - `tsc --noEmit`: 0 errores (Código 0).
 
+---
+
 ### Versión 3.7 (Panel de Administración 100% Responsive, Tarjetas Táctiles de Atletas y Navegación Móvil Ergonómica)
 - **Fecha:** Septiembre 2026.
 - **Objetivo Arquitectónico:** Transformar la Consola de Administración en una interfaz táctil de alta ergonomía en teléfonos celulares (PWA / Mobile Web), eliminando la sobrecarga vertical de la barra lateral de escritorio y garantizando usabilidad completa en pantallas de 360px a 430px.
@@ -2011,7 +2013,22 @@ flowchart TD
     - `next build`: 21/21 rutas estáticas y dinámicas compiladas exitosamente (Código 0).
     - Todas las métricas de LOC por archivo verificadas estrictamente bajo el límite de 350 líneas.
 
-
-
-
-
+### Versión 3.9 (Igualdad Total de Nomenclatura PC-Móvil y Gráficas de Intervalos en Tarjetas Móviles)
+- **Fecha:** 3 de Septiembre de 2026.
+- **Objetivo Arquitectónico:** Establecer paridad visual y textual absoluta 1:1 entre la experiencia Web PC y Web Móvil, sustituyendo los bloques de texto estáticos de estructura por las gráficas visuales de perfil de intervalos (`WorkoutChart`), unificando las etiquetas de navegación del menú inferior con la barra lateral de escritorio, y humanizando los formatos de fecha a lo largo de toda la aplicación móvil.
+- **Implementaciones Realizadas:**
+  - **1. Gráficas Visuales de Intervalos en Móvil (`AthleteMobileWorkoutCard.tsx`):**
+    - Se eliminó el bloque de texto monoespaciado crudo (`ESTRUCTURA: - 15m 55% FTP...`) de las tarjetas móviles.
+    - Se integró el componente gráfico `<WorkoutChart />`, renderizando las barras de color por zonas de intensidad (Z1-Z5 / Umbral / VO2max) idénticas a las que se muestran en el calendario de PC y en Intervals.icu.
+    - Se preservó el disparador táctil de 1 toque (`Ver Detalle →` o clic en la tarjeta) para acceder a la descripción textual completa, fases de intervalos y objetivos de vatios/ritmo en el modal.
+  - **2. Unificación de Nomenclatura en Barra Inferior Móvil (`AthleteMobileBottomNav.tsx`):**
+    - Sustituido el término genérico *"Hoy"* por *"Mi Dashboard"* (subetiqueta *Telemetría*).
+    - Alineadas las etiquetas restantes con el menú lateral de escritorio: *"Mi Temporada"*, *"Head Coach IA"* y *"Perfil Atleta"*.
+  - **3. Paridad Textual en Selector de Semanas y Días (`AthleteMobileAgendaView.tsx` & `AthleteMobileExtraCard.tsx`):**
+    - Se incorporó en la cabecera de la semana móvil el badge dinámico `SEMANA ACTUAL` y la descripción del enfoque aeróbico de la fase (`currentWeek.focusDescription`), eliminando la disparidad con PC.
+    - En la barra de 7 días, se formatearon las fechas con el mes abreviado legible (`31 Ago`, `1 Sep`, `2 Sep`, `3 Sep`...) en lugar del número aislado con ceros técnicos (`01`, `02`).
+    - En las tarjetas de entrenamientos y actividades extra, la fecha se visualiza con formato amigable (`JUEVES • 3 Sep` con badge `HOY`).
+  - **4. Set de Pruebas Superado:**
+    - `tsc --noEmit`: 0 errores de tipado (Código 0).
+    - `next build`: 21/21 rutas compiladas exitosamente (Código 0).
+    - Todos los archivos respetan estrictamente la **Regla 3 (< 350 LOC)**.

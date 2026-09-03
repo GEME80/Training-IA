@@ -18,27 +18,27 @@ export const AthleteMobileBottomNav: React.FC<AthleteMobileBottomNavProps> = ({
   const tabs = [
     {
       id: "dashboard" as AthleteSidebarNavSection,
-      label: "Hoy",
-      sublabel: "Dashboard",
+      label: "Mi Dashboard",
+      sublabel: "Telemetría",
       icon: LayoutDashboard,
       badge: isIntervalsConnected ? "live" : undefined,
     },
     {
       id: "season_studio" as AthleteSidebarNavSection,
-      label: "Temporada",
+      label: "Mi Temporada",
       sublabel: "Plan Activo",
       icon: Target,
     },
     {
       id: "head_coach" as AthleteSidebarNavSection,
-      label: "Coach IA",
+      label: "Head Coach IA",
       sublabel: "Adaptación",
       icon: Sparkles,
       highlight: true,
     },
     {
       id: "physiology" as AthleteSidebarNavSection,
-      label: "Perfil",
+      label: "Perfil Atleta",
       sublabel: "Fisiología",
       icon: HeartPulse,
     },
@@ -93,7 +93,7 @@ export const AthleteMobileBottomNav: React.FC<AthleteMobileBottomNavProps> = ({
 
               {/* Etiqueta de Texto */}
               <span
-                className={`text-[10px] tracking-tight leading-none mt-1 truncate max-w-[70px] ${
+                className={`text-[9.5px] tracking-tight leading-none mt-1 truncate max-w-[82px] ${
                   isActive ? "font-black" : "font-semibold"
                 }`}
               >

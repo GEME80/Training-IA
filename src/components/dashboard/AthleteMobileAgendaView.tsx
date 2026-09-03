@@ -20,6 +20,7 @@ import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
 import { parseWorkoutDoc } from "../WorkoutChart";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
+import { getMondayOfWeekStr } from "@/lib/dateUtils";
 import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
 import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
 
@@ -36,6 +37,18 @@ interface AthleteMobileAgendaViewProps {
 
 const dayShortNames = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
 
+function formatDayMonthShort(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const m = parseInt(parts[1], 10) - 1;
+    return `${day} ${months[m] || ""}`;
+  }
+  return dateStr;
+}
+
 export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = ({
   blueprint,
   selectedMacroWeekIdx,
@@ -48,6 +61,8 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
 }) => {
   const weeks = blueprint.weeks || [];
   const currentWeek = weeks[selectedMacroWeekIdx] || weeks[0];
+  const currentMonStr = getMondayOfWeekStr();
+  const isCurrentWeek = currentWeek?.startDate === currentMonStr;
 
   // Agrupar items de la semana por fecha/día
   const daysMap = useMemo(() => {
@@ -163,15 +178,23 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        <div className="text-center px-2">
-          <div className="flex items-center justify-center gap-1.5">
+        <div className="text-center px-1 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             <span className="text-xs font-black text-slate-900 dark:text-white">
               Semana {selectedMacroWeekIdx + 1} de {weeks.length}
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
               {currentWeek?.phase || "Base"}
             </span>
+            {isCurrentWeek && (
+              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 uppercase">
+                Semana Actual
+              </span>
+            )}
           </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[240px] mx-auto">
+            {currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica"}
+          </p>
           <div className="text-[10px] font-mono text-slate-500 mt-0.5">
             Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS
           </div>
@@ -197,7 +220,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
           const hasExecution = dayInfo?.date ? !!dailyExecutedActivities[dayInfo.date]?.totalTss : false;
           const firstItem = dayInfo?.items[0];
           const isRest = firstItem?.isRestDay || firstItem?.discipline === "Descanso";
-          const dayNumber = dayInfo?.date ? dayInfo.date.split("-")[2] : "";
+          const dayFormatted = dayInfo?.date ? formatDayMonthShort(dayInfo.date) : "";
 
           return (
             <button
@@ -213,7 +236,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
               }`}
             >
               <span className="text-[9px] font-bold tracking-tight opacity-75">{name}</span>
-              <span className="text-xs font-mono font-black mt-0.5">{dayNumber}</span>
+              <span className="text-[10px] font-mono font-black mt-0.5 leading-none whitespace-nowrap">{dayFormatted}</span>
 
               {/* Indicador de estado */}
               <div className="mt-1 flex items-center justify-center h-2">

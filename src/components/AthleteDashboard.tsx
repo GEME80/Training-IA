@@ -761,7 +761,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento") ||
     blueprint?.cycleTitle?.toLowerCase().includes("salud");
 
-  const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null);
+const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null);
   const weeks = blueprint?.weeks || [];
   const selectedWeek = weeks[selectedMacroWeekIdx] || weeks[0];
   const calculatedWeekNumber = selectedWeek?.weekNumber || (weekOffset >= 0 ? weekOffset + 1 : 1);
@@ -770,24 +770,26 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     const init = async () => {
       setIsLoading(true);
       const rawStoredApiKey = localStorage.getItem("sgea_intervals_api_key");
-      const storedApiKey =
+      const rawStoredAthleteId = localStorage.getItem("sgea_athlete_id");
+
+      let storedAthleteId =
+        rawStoredAthleteId && rawStoredAthleteId.trim() !== "" && rawStoredAthleteId.trim() !== "undefined" && rawStoredAthleteId.trim() !== "null"
+          ? rawStoredAthleteId.trim()
+          : (userProfile?.intervalsAthleteId || profile.id || "i442091");
+
+      let storedApiKey =
         rawStoredApiKey && rawStoredApiKey.trim() !== "" && rawStoredApiKey.trim() !== "undefined" && rawStoredApiKey.trim() !== "null"
           ? rawStoredApiKey.trim()
           : "";
 
-      const rawStoredAthleteId = localStorage.getItem("sgea_athlete_id");
-      const storedAthleteId =
-        rawStoredAthleteId && rawStoredAthleteId.trim() !== "" && rawStoredAthleteId.trim() !== "undefined" && rawStoredAthleteId.trim() !== "null"
-          ? rawStoredAthleteId.trim()
-          : (userProfile?.intervalsAthleteId || profile.id || "");
       const storedGeminiKey = localStorage.getItem("sgea_custom_gemini_key") || "";
       const storedRaces = localStorage.getItem("sgea_target_races");
       const storedPlans = localStorage.getItem("sgea_season_plans_chain");
 
-      if (storedApiKey && !localStorage.getItem("sgea_intervals_api_key")) {
+      if (storedApiKey) {
         localStorage.setItem("sgea_intervals_api_key", storedApiKey);
       }
-      if (storedAthleteId && !localStorage.getItem("sgea_athlete_id")) {
+      if (storedAthleteId) {
         localStorage.setItem("sgea_athlete_id", storedAthleteId);
       }
 
@@ -813,19 +815,60 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         localStorage.setItem("sgea_target_races", JSON.stringify(userProfile.targetRaces));
       }
 
+      // Resolver planes de temporada: LocalStorage -> UserProfile -> Firestore API
+      let resolvedPlans: SeasonPlanItem[] = [];
       if (storedPlans) {
         try {
           const parsed = JSON.parse(storedPlans);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setSeasonPlans(parsed);
-          } else if (userProfile?.seasonPlans && Array.isArray(userProfile.seasonPlans)) {
-            setSeasonPlans(userProfile.seasonPlans);
-            localStorage.setItem("sgea_season_plans_chain", JSON.stringify(userProfile.seasonPlans));
+            resolvedPlans = parsed;
           }
         } catch {}
-      } else if (userProfile?.seasonPlans && Array.isArray(userProfile.seasonPlans)) {
-        setSeasonPlans(userProfile.seasonPlans);
-        localStorage.setItem("sgea_season_plans_chain", JSON.stringify(userProfile.seasonPlans));
+      }
+
+      if (resolvedPlans.length === 0 && userProfile?.seasonPlans && Array.isArray(userProfile.seasonPlans) && userProfile.seasonPlans.length > 0) {
+        resolvedPlans = userProfile.seasonPlans;
+      }
+
+      // Si no hay planes en local ni sesión (ej. primer ingreso en celular), consultar Firestore
+      if (resolvedPlans.length === 0) {
+        try {
+          const targetAthlete = storedAthleteId || "i442091";
+          const macroRes = await fetch(`/api/macrocycles?athleteId=${targetAthlete}`);
+          if (macroRes.ok) {
+            const macroData = await macroRes.json();
+            if (macroData.success && macroData.macrocycle?.blueprint) {
+              const bp = macroData.macrocycle.blueprint;
+              const restoredPlan: SeasonPlanItem = {
+                id: macroData.macrocycle.id || "plan-active-tokio",
+                planName: bp.cycleTitle || "Macrociclo Activo",
+                goalType: "MARATON_42K",
+                blueprint: bp,
+                startDate: bp.startDate || new Date().toISOString().split("T")[0],
+                endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
+                totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
+                status: "ACTIVE",
+                orderIndex: 0,
+                createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
+              };
+              resolvedPlans = [restoredPlan];
+              if (macroData.macrocycle.primaryRace) {
+                setTargetRaces([macroData.macrocycle.primaryRace]);
+                localStorage.setItem("sgea_target_races", JSON.stringify([macroData.macrocycle.primaryRace]));
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Aviso al recuperar macrociclo desde Firestore:", e);
+        }
+      }
+
+      if (resolvedPlans.length > 0) {
+        setSeasonPlans(resolvedPlans);
+        localStorage.setItem("sgea_season_plans_chain", JSON.stringify(resolvedPlans));
+        if (resolvedPlans[0].blueprint) {
+          localStorage.setItem("sgea_active_blueprint", JSON.stringify(resolvedPlans[0].blueprint));
+        }
       }
 
       const storedAvail = localStorage.getItem("sgea_weekly_availability");
@@ -1027,7 +1070,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         {/* LIENZO PRINCIPAL DEL ATLETA */}
         <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
         {/* BANNER ONBOARDING */}
-        {!apiKeyCache && !userProfile?.encryptedApiKey && (
+        {!apiKeyCache && !userProfile?.encryptedApiKey && profile.id !== "i442091" && (
           <OnboardingBanner onOpenOnboarding={() => setIsOnboardingOpen(true)} />
         )}
 

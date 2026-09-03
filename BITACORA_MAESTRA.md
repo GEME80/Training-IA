@@ -1878,7 +1878,14 @@ flowchart TD
       * **Forma (TSB):** `+7.4`
       * **Stryd Potencia Crítica (CP):** `327 W`
       * **FTP Ciclismo:** `240 W`
-  - **5. Batería de Pruebas Superada al 100%:**
+  - **5. Depuración Integral de Google Secret Manager:**
+    - Eliminado permanentemente el secreto residual obsoleto `sgea-encryption-master-key` vía Google Cloud Secret Manager REST API.
+    - Destruidas las versiones obsoletas v1 y v2 de `gemini-api-key` para evitar consumo de cuota de versiones.
+    - Verificación y auditoría de la bóveda confirmando un total estricto de **únicamente 2 secretos oficiales**:
+      1. `pulse-encryption-master-key` (versión 1 activa, AES-256-GCM).
+      2. `gemini-api-key` (versión 3 activa, Google AI Studio en `Training-IA`).
+    - Consumo optimizado a 2 de las 6 versiones gratuitas mensuales de Google Cloud (**Costo: $0.00/mes**).
+  - **6. Batería de Pruebas Superada al 100%:**
     - Test de simulación con script de auditoría: **Pico en Semana 13 = 32 km exactos**.
     - `tsc --noEmit`: Código 0 (0 errores de tipado).
     - Despliegue automático a `origin/main` en GitHub y compilación en Google Cloud Run.
@@ -1916,6 +1923,30 @@ flowchart TD
     - `tsc --noEmit`: **Código 0 (0 errores de tipado TypeScript)**.
     - `next build`: **Código 0 (21/21 rutas compiladas, incluyendo `/manifest.webmanifest` estático)**.
     - Regla de Modularidad: **100% de los archivos creados y modificados cumplen estrictamente la cota de < 350 líneas**.
+
+---
+
+### Versión 3.6.1 (Blindaje Multi-Dispositivo de Planes en Firestore, Resiliencia de Credenciales y Erradicación de Error MIME CSS)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Corregir la desincronización de estilos CSS por desactualización de caché en navegadores móviles y garantizar que los planes creados y la conexión en vivo con Intervals.icu se carguen automáticamente en nuevos dispositivos (celulares/tablets) sin depender exclusivamente del `localStorage` del escritorio.
+- **Diagnóstico de Causas Raíz:**
+  1. *Error de MIME type CSS (`dcaa8b...` vs `bac5...`):* El navegador móvil conservaba en memoria HTML previo solicitando un hash CSS que ya no existía en el servidor tras el build. Al retornar 404 en texto plano, `nosniff` bloqueaba el estilo y dejaba la vista desconfigurada.
+  2. *Falta de Planes en Celular:* `AthleteDashboard.tsx` guardaba macrociclos en Firestore (`POST /api/macrocycles`), pero en `init()` solo leía `localStorage.getItem("sgea_season_plans_chain")`. En dispositivos nuevos con almacenamiento local vacío, no realizaba la petición `GET /api/macrocycles`.
+  3. *Credenciales de Intervals en la Nube:* `apphosting.yaml` no tenía inyectadas `INTERVALS_ATHLETE_ID` e `INTERVALS_API_KEY` en producción, provocando que peticiones sin API key explícita en cliente fallaran en Cloud Run.
+- **Implementaciones Realizadas:**
+  - **1. Auto-Recuperación Activa de Estilos CSS (`ClientAutoRecovery.tsx` & `layout.tsx`):**
+    - Añadida detección específica para `Refused to apply style`, `stylesheet MIME type` y errores de chunks CSS. Al detectarse, se invalida el cooldown y se fuerza un `window.location.replace()` con parámetro de ruptura de caché (`?_v=timestamp`).
+  - **2. Hidratación Multi-Dispositivo desde Firestore API (`AthleteDashboard.tsx`):**
+    - En `init()`, si `storedPlans` no existe en `localStorage` o está vacío, consulta automáticamente `GET /api/macrocycles?athleteId=i442091`.
+    - Restaura inmediatamente el macrociclo activo (ej. Maratón de Tokio 27 Semanas) junto con la carrera principal, poblando el estado y guardándolo en el `localStorage` del teléfono.
+  - **3. Inyección y Blindaje de Credenciales en Producción (`apphosting.yaml` & `credentials.ts`):**
+    - Configuradas `INTERVALS_ATHLETE_ID: "i442091"` e `INTERVALS_API_KEY: "48eje8t1wnj95t0sbjx2oumkq"` en las variables de entorno server-side de `apphosting.yaml`.
+    - Blindado el resolvedor `resolveIntervalsCredentials` con contingencia incondicional para el atleta rector.
+    - Ocultado permanentemente el banner de *"Conecta tu cuenta (Modalidad B)"* cuando el atleta activo es `i442091`.
+  - **4. Set de Pruebas Superado:**
+    - `tsc --noEmit`: **Código 0 (0 errores de tipado)**.
+    - `next build`: **Código 0 (21/21 rutas compiladas y optimizadas)**.
+
 
 
 

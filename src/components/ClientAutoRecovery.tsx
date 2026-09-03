@@ -12,18 +12,21 @@ const RELOAD_COOLDOWN_MS = 10000; // Máximo 1 auto-recarga cada 10 segundos
  */
 export const ClientAutoRecovery: React.FC = () => {
   useEffect(() => {
-    // 1. Manejador de errores globales de carga de scripts y sintaxis
+    // 1. Manejador de errores globales de carga de scripts, estilos y sintaxis
     const handleError = (event: ErrorEvent) => {
       const msg = event.message || "";
-      const isChunkError =
+      const isChunkOrStyleError =
         msg.includes("Loading chunk") ||
         msg.includes("ChunkLoadError") ||
         msg.includes("Unexpected token '<'") ||
         msg.includes("Invalid or unexpected token") ||
-        msg.includes("Cannot find module './");
+        msg.includes("Cannot find module './") ||
+        msg.includes("Refused to apply style") ||
+        msg.includes("stylesheet MIME type") ||
+        msg.includes("MIME type");
 
-      if (isChunkError) {
-        console.warn("🛡️ [ClientAutoRecovery] Desfase de chunks o sesión detectado. Auto-recuperando...", msg);
+      if (isChunkOrStyleError) {
+        console.warn("🛡️ [ClientAutoRecovery] Desfase de chunks o estilos detectado. Auto-recuperando...", msg);
         attemptGracefulReload();
       }
     };
@@ -31,15 +34,18 @@ export const ClientAutoRecovery: React.FC = () => {
     // 2. Manejador de promesas rechazadas (ej. dynamic import fallido)
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const reason = event.reason?.message || String(event.reason || "");
-      const isChunkError =
+      const isChunkOrStyleError =
         reason.includes("Loading chunk") ||
         reason.includes("ChunkLoadError") ||
         reason.includes("Unexpected token '<'") ||
         reason.includes("Invalid or unexpected token") ||
-        reason.includes("Cannot find module './");
+        reason.includes("Cannot find module './") ||
+        reason.includes("Refused to apply style") ||
+        reason.includes("stylesheet MIME type") ||
+        reason.includes("MIME type");
 
-      if (isChunkError) {
-        console.warn("🛡️ [ClientAutoRecovery] Rechazo de módulo detectado. Auto-recuperando...", reason);
+      if (isChunkOrStyleError) {
+        console.warn("🛡️ [ClientAutoRecovery] Rechazo de módulo o estilo detectado. Auto-recuperando...", reason);
         attemptGracefulReload();
       }
     };

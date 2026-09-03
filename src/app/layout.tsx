@@ -44,12 +44,12 @@ export default function RootLayout({
               (function() {
                 window.addEventListener('error', function(e) {
                   var target = e.target;
-                  if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
-                    var src = target.src || target.href || '';
-                    if (src.indexOf('/_next/') !== -1) {
-                      var now = Date.now();
-                      var last = Number(sessionStorage.getItem('pulse_404_reload') || 0);
-                      if (now - last > 4000) {
+                  var isResourceError = target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK');
+                  var isMsgError = e.message && (e.message.indexOf('style') !== -1 || e.message.indexOf('MIME') !== -1 || e.message.indexOf('Loading chunk') !== -1);
+                  if (isResourceError || isMsgError) {
+                    var now = Date.now();
+                    var last = Number(sessionStorage.getItem('pulse_404_reload') || 0);
+                    if (now - last > 4000) {
                         sessionStorage.setItem('pulse_404_reload', String(now));
                         try {
                           if (document.cookie && document.cookie.length > 4096) {

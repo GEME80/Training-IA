@@ -27,3 +27,7 @@ env:
     secret: pulse-encryption-master-key
   - variable: GEMINI_API_KEY
     secret: gemini-api-key
+  - variable: INTERVALS_ATHLETE_ID
+    value: "i442091"
+  - variable: INTERVALS_API_KEY
+    value: "48eje8t1wnj95t0sbjx2oumkq"

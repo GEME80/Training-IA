@@ -38,5 +38,13 @@ export async function resolveIntervalsCredentials(params: {
     athleteId = (process.env.INTERVALS_ATHLETE_ID || "").replace(/["']/g, "").trim();
   }
 
+  // 3. Fallback de contingencia incondicional para el atleta rector (Germán Morales - i442091)
+  if (!athleteId) {
+    athleteId = "i442091";
+  }
+  if (!apiKey && athleteId === "i442091") {
+    apiKey = "48eje8t1wnj95t0sbjx2oumkq";
+  }
+
   return { athleteId, apiKey };
 }

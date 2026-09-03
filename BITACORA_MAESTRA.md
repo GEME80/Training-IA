@@ -1811,7 +1811,7 @@ flowchart TD
     - El archivo monolítico [`AdminUsersTab.tsx`](./src/components/admin/AdminUsersTab.tsx) (anteriormente de 638 líneas) fue descompuesto en 5 módulos desacoplados y enfocados:
       * `AdminUsersTab.tsx` $\rightarrow$ **222 LOC** (Orquestador principal y selector de filtros).
       * `AdminUsersTable.tsx` $\rightarrow$ **214 LOC** (Tabla de atletas, badges y acciones rápidas).
-      * `AdminUserInviteModal.tsx` $\rightarrow$ **238 LOC** (Modal guiado de invitación con copia de mensaje para WhatsApp).
+      * `AdminUserInviteModal.tsx` $\rightarrow$ **238 LOC** (Modal guiado de invitación con copia de mensaje personalizado).
       * `AdminUserEditModal.tsx` $\rightarrow$ **199 LOC** (Edición de perfil, umbrales Stryd CP y Bike FTP).
       * `AdminUserDeleteModal.tsx` $\rightarrow$ **97 LOC** (Modal de confirmación de baja segura).
       * `AdminMethodologyTab.tsx` $\rightarrow$ **89 LOC** (Orquestador unificado de Ciencia & Programas).
@@ -1822,6 +1822,66 @@ flowchart TD
     - `tsc --noEmit`: **Código 0 (0 errores de tipado TypeScript)**.
     - `next build`: **Código 0 (20/20 rutas compiladas en modo dinámico `ƒ`)**.
     - Auditoría de Sintaxis Stryd: **100% cumplimiento de Tiempo + % FTP (cero distancias con % FTP)**.
+
+---
+
+### Versión 3.4 (Paso a Producción Oficial en Google Cloud & Sanitización de Seguridad)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Blindaje de seguridad criptográfica, erradicación de secretos expuestos y despliegue del ambiente productivo en GCP/Firebase con costos controlados.
+- **Implementaciones Realizadas:**
+  - **1. Rebranding Oficial del Servicio a PULSE IA:**
+    - Actualizado el identificador de infraestructura y backend a **`pulse-ia`**.
+    - Configurado el servicio de producción en Firebase App Hosting: `https://pulse-ia--training-ia-8f67f.us-central1.hosted.app`.
+  - **2. Sanitización Criptográfica & Erradicación de Secretos Hardcodeados:**
+    - Eliminada de forma absoluta la API key de Intervals.icu hardcodeada (`48eje8...`) en `credentials.ts`, `AthleteDashboard.tsx` y `ProfileConnectionsTab.tsx`.
+    - Erradicadas todas las variables sensibles con prefijo cliente (`NEXT_PUBLIC_INTERVALS_*`, `NEXT_PUBLIC_GEMINI_*`). Las credenciales ahora viajan exclusivamente cifradas o mediante endpoints server-side en Cloud Run.
+    - Actualizado `next.config.mjs` con cabeceras de seguridad HTTP de nivel bancario (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`).
+  - **3. Aprovisionamiento Automatizado en Google Cloud Platform (GCP):**
+    - Configurada bóveda en **Google Secret Manager** (`projects/training-ia-8f67f/`):
+      * `pulse-encryption-master-key`: Llave maestra de 256 bits para cifrado en reposo AES-256-GCM.
+      * `gemini-api-key`: Clave oficial de Google AI Studio aprovisionada nativamente dentro de `training-ia-8f67f`.
+    - Asignados roles IAM de acceso privado (`Secret Manager Secret Accessor`) al backend de Cloud Run.
+    - Desplegadas reglas de seguridad de Firestore con aislamiento estricto por inquilino (`isOwner(userId)`).
+  - **4. Arquitectura Financiera & Consolidación en GCP:**
+    - Unificación de todo el ecosistema (Next.js, Firestore, Secret Manager, Gemini API) en un único proyecto rector: **`Training-IA` (`training-ia-8f67f`)**.
+    - Depuración y baja de proyectos residuales huérfanos (`gen-lang-client-...`).
+    - Configuración de facturación en **Modo Prepago ($20.000 COP)** con alertas preventivas, garantizando costo $0.00 en reposo y techo financiero infranqueable.
+
+---
+
+### Versión 3.5 (Auditoría Fisiológica de Maratón, Ergonomía UI & Persistencia en Producción)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Calibración científica de la periodización de maratón (Canova + Pfitzinger + Daniels), corrección de bugs de UI/UX y sincronización fluida de telemetría viva.
+- **Implementaciones Realizadas:**
+  - **1. Auditoría y Corrección de Fondo de Maratón (Pico de 32 km):**
+    - **Diagnóstico del Fallo de 19 km:** La auditoría reveló la convergencia de 3 factores restrictivos:
+      * `athleteLevelCaps.BEGINNER` en `marathonModel.ts` tenía erróneamente un límite de 18 km y 110 min (parámetros de Media Maratón).
+      * Cuando el CTL del atleta no había cargado o era evaluado en 0, `volumeScaleFactor` aplicaba una reducción del 60% (`34 km * 0.60 = 20.4 km`), que junto con el tope de tiempo a ritmo Z2 de 5:45 min/km producía un fondo de $\sim 18.3\text{--}19\text{ km}$.
+      * Se aplicaba una doble reducción en `index.ts` tanto por nivel como por factor de volumen.
+    - **Reglas Fisiológicas Re-calibradas para 42K (Canova + Pfitzinger + Daniels):**
+      * `BEGINNER` (Finisher, $\text{CTL} < 35$): Fondo cumbre garantizado de **28 km** (165 min). Ningún maratonista se programa por debajo de 28 km.
+      * `INTERMEDIATE` ($35 \le \text{CTL} \le 65$): Fondo cumbre clásico de **32 km** (175 min / 20-miler de Pfitzinger). *(Aplicable a Germán Morales con CTL = 38.88)*.
+      * `ADVANCED_ELITE` ($\text{CTL} > 65$): Fondo cumbre de **36 km** (185 min / bloque específico Canova).
+      * `maxLongRunMinutesCap`: Ajustado a 180 min (3 horas máximas) como techo fisiológico de seguridad.
+    - **Tapering Progresivo Descendente:** Reordenada la secuencia a descenso armónico:  
+      **32 km** (Sem 13 - Pico) $\rightarrow$ **22 km** (Sem 14) $\rightarrow$ **16 km** (Sem 15) $\rightarrow$ **42.2 km** (Sem 16 - Competición).
+  - **2. Corrección de Sobreescritura de Nombre del Atleta:**
+    - Corregido bug en `AthleteDashboard.tsx` donde el valor de contingencia `"Atleta"` de `/api/evaluate` sobreescribía el nombre real de Google Auth.
+    - Preservado de forma inmutable el nombre del atleta (`Germán Morales`) tanto en estado local como en la cabecera del sistema.
+  - **3. Ergonomía UI: Cierre de Menú Flotante & Diseñador IA en 1 Clic:**
+    - Añadido backdrop transparente en `AthleteDashboard.tsx` y `Header.tsx` que detecta clics exteriores y cierra el menú flotante del avatar de inmediato.
+    - Añadido botón verde parpadeante **`⚡ Generar con IA Ahora`** en la cabecera de la tarjeta del Diseñador y **`Generar Directo (1 Clic)`** en la barra inferior, permitiendo generar el plan de 16 semanas instantáneamente sin tener que recorrer los 4 pasos del formulario.
+  - **4. Conectividad en Vivo de Intervals.icu Certificada:**
+    - Verificada la conexión en producción (`🟢 En Vivo`) extrayendo con éxito la telemetría viva de Germán Morales desde Intervals.icu:
+      * **Fitness (CTL):** `38.88`
+      * **Fatiga (ATL):** `31.52`
+      * **Forma (TSB):** `+7.4`
+      * **Stryd Potencia Crítica (CP):** `327 W`
+      * **FTP Ciclismo:** `240 W`
+  - **5. Batería de Pruebas Superada al 100%:**
+    - Test de simulación con script de auditoría: **Pico en Semana 13 = 32 km exactos**.
+    - `tsc --noEmit`: Código 0 (0 errores de tipado).
+    - Despliegue automático a `origin/main` en GitHub y compilación en Google Cloud Run.
 
 
 

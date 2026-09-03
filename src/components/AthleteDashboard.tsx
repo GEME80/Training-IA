@@ -285,6 +285,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           setProfile((prev) => ({
             ...prev,
             ...data.profile,
+            name:
+              data.profile?.name && data.profile.name !== "Atleta"
+                ? data.profile.name
+                : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "German Morales"),
             run_ftp: resolvedRunFtp,
             bike_ftp: resolvedBikeFtp,
           }));
@@ -864,7 +868,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry]);
 
   const isMasterAdmin = userProfile?.email === "gerkof@gmail.com" || user?.email === "gerkof@gmail.com" || isAdmin;
-  const displayName = profile.name || userProfile?.displayName || user?.displayName || "German Morales";
+  const displayName =
+    profile.name && profile.name !== "Atleta"
+      ? profile.name
+      : (userProfile?.displayName || user?.displayName || "German Morales");
   const email = userProfile?.email || user?.email || "gerkof@gmail.com";
   const photoURL = userProfile?.photoURL || user?.photoURL;
 

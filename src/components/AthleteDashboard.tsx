@@ -929,9 +929,14 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
               </div>
             </button>
 
-            {/* Menú Flotante */}
+            {/* Menú Flotante con Backdrop de Cierre */}
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 text-slate-800 dark:text-slate-200">
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-transparent"
+                  onClick={() => setShowUserDropdown(false)}
+                />
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 text-slate-800 dark:text-slate-200">
                 <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 space-y-0.5">
                   <div className="font-bold text-xs text-slate-900 dark:text-white">{displayName}</div>
                   <div className="text-[11px] text-slate-500 truncate font-mono">{email}</div>
@@ -997,6 +1002,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                   </button>
                 </div>
               </div>
+              </>
             )}
           </div>
         </header>

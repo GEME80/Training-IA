@@ -100,76 +100,82 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </button>
 
-              {/* Menú Desplegable de Usuario */}
+              {/* Menú Desplegable de Usuario con Backdrop de Cierre */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 text-slate-800">
-                  <div className="p-2.5 border-b border-slate-100 space-y-0.5">
-                    <div className="font-bold text-xs text-slate-900">{displayName}</div>
-                    <div className="text-[11px] text-slate-500 truncate font-mono">{email}</div>
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-transparent"
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 text-slate-800">
+                    <div className="p-2.5 border-b border-slate-100 space-y-0.5">
+                      <div className="font-bold text-xs text-slate-900">{displayName}</div>
+                      <div className="text-[11px] text-slate-500 truncate font-mono">{email}</div>
+                    </div>
+
+                    <div className="py-1 space-y-0.5 text-xs">
+                      {/* Opciones exclusivas para el Administrador (gerkof@gmail.com / isAdmin) */}
+                      {isMasterAdmin && (
+                        <>
+                          {onSelectView && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelectView("dashboard");
+                                setShowUserMenu(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-semibold transition cursor-pointer"
+                            >
+                              <LayoutDashboard className="h-4 w-4 text-cyan-600" />
+                              <span>Panel Atleta</span>
+                            </button>
+                          )}
+
+                          {onSelectView && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelectView("admin");
+                                setShowUserMenu(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-purple-700 hover:bg-purple-50 font-semibold transition cursor-pointer"
+                            >
+                              <Shield className="h-4 w-4 text-purple-600" />
+                              <span>Panel Admin</span>
+                            </button>
+                          )}
+
+                          {onSelectView && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelectView("landing");
+                                setShowUserMenu(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-semibold transition cursor-pointer"
+                            >
+                              <Home className="h-4 w-4 text-slate-500" />
+                              <span>Inicio</span>
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Cerrar Sesión */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          signOutUser();
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold transition cursor-pointer"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Cerrar Sesión</span>
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="py-1 space-y-0.5 text-xs">
-                    {/* Opciones exclusivas para el Administrador (gerkof@gmail.com / isAdmin) */}
-                    {isMasterAdmin && (
-                      <>
-                        {onSelectView && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectView("dashboard");
-                              setShowUserMenu(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-semibold transition cursor-pointer"
-                          >
-                            <LayoutDashboard className="h-4 w-4 text-cyan-600" />
-                            <span>Panel Atleta</span>
-                          </button>
-                        )}
-
-                        {onSelectView && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectView("admin");
-                              setShowUserMenu(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-purple-700 hover:bg-purple-50 font-semibold transition cursor-pointer"
-                          >
-                            <Shield className="h-4 w-4 text-purple-600" />
-                            <span>Panel Admin</span>
-                          </button>
-                        )}
-
-                        {onSelectView && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectView("landing");
-                              setShowUserMenu(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-semibold transition cursor-pointer"
-                          >
-                            <Home className="h-4 w-4 text-slate-500" />
-                            <span>Inicio</span>
-                          </button>
-                        )}
-                      </>
-                    )}
-
-                    {/* Cerrar Sesión */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        signOutUser();
-                        setShowUserMenu(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold transition cursor-pointer"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Cerrar Sesión</span>
-                    </button>
-                  </div>
-                </div>
+                </>
               )}
             </div>
           ) : (

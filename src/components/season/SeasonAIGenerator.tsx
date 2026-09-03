@@ -133,12 +133,14 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
       const startDate = getResolvedStartDate();
       const distType = resolveDistTypeFromWizard(targetDistance, trainingApproach);
 
+      const storedApiKey = typeof localStorage !== "undefined" ? localStorage.getItem("sgea_intervals_api_key") || "" : "";
       try {
         const res = await fetch("/api/macrocycles/generate-ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             athleteId,
+            apiKey: storedApiKey,
             runFtp,
             bikeFtp,
             wizardConfig: {
@@ -215,9 +217,21 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
               <p className="text-[11px] text-slate-400 font-mono">Paso {currentStep} de 4 • {steps[currentStep - 1]?.label}</p>
             </div>
           </div>
-          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            Motor Fisiológico v3.2
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleGenerateAI}
+              disabled={isGeneratingPlan || isGenerating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-sm animate-pulse hover:animate-none"
+              title="Generar macrociclo de inmediato con la IA"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{isGeneratingPlan || isGenerating ? "Generando..." : "⚡ Generar con IA Ahora"}</span>
+            </button>
+            <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              Motor v3.2
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-4 gap-1.5 text-xs font-mono">
@@ -327,17 +341,32 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
             </button>
           ) : <div />}
 
-          <button
-            type="button"
-            onClick={() => {
-              if (currentStep === 3) handleGenerateAI();
-              else setCurrentStep((prev) => (prev + 1) as any);
-            }}
-            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
-          >
-            <span>{currentStep === 3 ? "Generar con IA" : "Siguiente"}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {currentStep < 3 && (
+              <button
+                type="button"
+                onClick={handleGenerateAI}
+                disabled={isGeneratingPlan || isGenerating}
+                className="px-4 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-xs font-mono transition cursor-pointer border border-emerald-500/30 flex items-center space-x-1"
+                title="Saltar configuración avanzada y generar con IA de inmediato"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                <span>Generar Directo (1 Clic)</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (currentStep === 3) handleGenerateAI();
+                else setCurrentStep((prev) => (prev + 1) as any);
+              }}
+              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
+            >
+              <span>{currentStep === 3 ? "Generar con IA" : "Siguiente"}</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>

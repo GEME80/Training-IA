@@ -81,15 +81,40 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* 3. Derecha: Perfil de Usuario & Acciones */}
         <div className="flex items-center space-x-2 sm:space-x-3 ml-auto">
-          {activeView === "admin" && onSelectView && (
-            <button
-              type="button"
-              onClick={() => onSelectView("dashboard")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-800 text-xs font-bold transition cursor-pointer"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5 text-cyan-600" />
-              <span>Dashboard Atleta</span>
-            </button>
+          {/* Botones de navegación directa entre vistas */}
+          {(user || userProfile) && onSelectView && (
+            <div className="flex items-center space-x-1.5">
+              {activeView !== "dashboard" && (
+                <button
+                  type="button"
+                  onClick={() => onSelectView("dashboard")}
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-800 text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5 text-cyan-600" />
+                  <span>Panel Atleta</span>
+                </button>
+              )}
+              {isMasterAdmin && activeView !== "admin" && (
+                <button
+                  type="button"
+                  onClick={() => onSelectView("admin")}
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  <Shield className="h-3.5 w-3.5 text-purple-600" />
+                  <span>Panel Admin</span>
+                </button>
+              )}
+              {activeView !== "landing" && (
+                <button
+                  type="button"
+                  onClick={() => onSelectView("landing")}
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  <Home className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Inicio</span>
+                </button>
+              )}
+            </div>
           )}
           {user || userProfile ? (
             <div className="relative">

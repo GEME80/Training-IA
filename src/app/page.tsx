@@ -62,7 +62,7 @@ export default function HomePage() {
   }
 
   // 4. Si el usuario no está autenticado -> Mostrar Header unificado + Landing Page pública con AuthModal
-  if (!user) {
+  if (!user && !userProfile) {
     return (
       <div className="min-h-screen bg-transparent text-slate-900 flex flex-col justify-between font-sans">
         <Header

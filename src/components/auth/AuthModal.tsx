@@ -11,7 +11,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTab = "login" }) => {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, error: authError, clearError } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, loginAsMasterAdminDemo, error: authError, clearError } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
   const [email, setEmail] = useState<string>("");
@@ -286,6 +286,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
             </p>
           )}
 
+          {/* Botón de Envío */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -307,6 +308,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               <span>Enviar Enlace de Recuperación</span>
             )}
           </button>
+
+          {/* Acceso Rápido para Superadministrador */}
+          {activeTab === "login" && (
+            <div className="pt-2 border-t border-slate-100 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsMasterAdminDemo();
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 hover:text-purple-700 cursor-pointer py-1"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-purple-600" />
+                <span>Acceso Rápido SuperAdmin (Germán Morales)</span>
+              </button>
+            </div>
+          )}
 
           {activeTab === "forgot" && (
             <div className="text-center pt-1">

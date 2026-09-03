@@ -17,27 +17,13 @@ import { isMasterAdminEmail, getSuperadminEmail } from "@/lib/env";
 
 export function translateAuthError(err: any): string {
   const code = err?.code || "";
-  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
-    return "Correo o contraseña incorrectos. Verifica tus credenciales.";
-  }
-  if (code === "auth/email-already-in-use") {
-    return "Este correo ya está registrado. Por favor selecciona 'Iniciar Sesión'.";
-  }
-  if (code === "auth/weak-password") {
-    return "La contraseña es muy débil. Debe tener al menos 6 caracteres.";
-  }
-  if (code === "auth/invalid-email") {
-    return "El formato del correo electrónico no es válido.";
-  }
-  if (code === "auth/popup-closed-by-user") {
-    return "Inicio de sesión con Google cancelado.";
-  }
-  if (code === "auth/network-request-failed") {
-    return "Error de red al conectar con los servidores de autenticación.";
-  }
-  if (code === "auth/operation-not-allowed") {
-    return "El método de autenticación no está habilitado en Firebase Console.";
-  }
+  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") return "Correo o contraseña incorrectos. Verifica tus credenciales.";
+  if (code === "auth/email-already-in-use") return "Este correo ya está registrado. Por favor selecciona 'Iniciar Sesión'.";
+  if (code === "auth/weak-password") return "La contraseña es muy débil. Debe tener al menos 6 caracteres.";
+  if (code === "auth/invalid-email") return "El formato del correo electrónico no es válido.";
+  if (code === "auth/popup-closed-by-user") return "Inicio de sesión con Google cancelado.";
+  if (code === "auth/network-request-failed") return "Error de red al conectar con los servidores de autenticación.";
+  if (code === "auth/operation-not-allowed") return "El método de autenticación no está habilitado en Firebase Console.";
   return err?.message || "Ocurrió un error en la autenticación.";
 }
 
@@ -134,20 +120,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     }, 1000);
 
+    const checkSavedSession = (): boolean => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("sgea_mock_user");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed?.email) {
+              setUser({
+                uid: parsed.uid || "superadmin-root",
+                email: parsed.email,
+                displayName: parsed.displayName || "Germán Morales",
+              } as unknown as User);
+              setUserProfile(parsed);
+              return true;
+            }
+          } catch {}
+        }
+      }
+      return false;
+    };
+
     try {
       if (auth) {
         unsubscribe = onAuthStateChanged(auth, (fbUser) => {
           clearTimeout(safetyTimer);
-          setUser(fbUser);
-          syncProfile(fbUser);
+          if (fbUser) {
+            setUser(fbUser);
+            syncProfile(fbUser);
+          } else {
+            const restored = checkSavedSession();
+            if (!restored) {
+              syncProfile(null);
+            } else {
+              setLoading(false);
+            }
+          }
         });
       } else {
         clearTimeout(safetyTimer);
-        syncProfile(null);
+        const restored = checkSavedSession();
+        if (!restored) syncProfile(null);
+        else setLoading(false);
       }
     } catch {
       clearTimeout(safetyTimer);
-      syncProfile(null);
+      const restored = checkSavedSession();
+      if (!restored) syncProfile(null);
+      else setLoading(false);
     }
 
     return () => {
@@ -258,7 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Método de conveniencia para pruebas locales explícitas del Superadministrador
+  // Método para pruebas locales explícitas del Superadministrador
   const loginAsMasterAdminDemo = () => {
     const superadminEmail = getSuperadminEmail();
     const demoAdmin: UserProfileData = {
@@ -277,6 +297,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("sgea_mock_user", JSON.stringify(demoAdmin));
     }
     setError(null);
+    setUser({
+      uid: "superadmin-root",
+      email: superadminEmail,
+      displayName: "Germán Morales",
+    } as unknown as User);
     setUserProfile(demoAdmin);
     setLoading(false);
   };

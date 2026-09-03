@@ -72,6 +72,16 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* 3. Derecha: Perfil de Usuario & Acciones */}
         <div className="flex items-center space-x-2 sm:space-x-3 ml-auto">
+          {activeView === "admin" && onSelectView && (
+            <button
+              type="button"
+              onClick={() => onSelectView("dashboard")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-800 text-xs font-bold transition cursor-pointer"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5 text-cyan-600" />
+              <span>Dashboard Atleta</span>
+            </button>
+          )}
           {user || userProfile ? (
             <div className="relative">
               <button

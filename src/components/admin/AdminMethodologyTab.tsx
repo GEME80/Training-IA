@@ -39,7 +39,7 @@ export const AdminMethodologyTab: React.FC<AdminMethodologyTabProps> = ({
         </div>
 
         {/* Segmented Control de 3 Vías */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shrink-0">
+        <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 overflow-x-auto no-scrollbar touch-bounce shrink-0 max-w-full">
           <button
             type="button"
             onClick={() => setSubTab("programs")}

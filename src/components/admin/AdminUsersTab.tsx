@@ -95,7 +95,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         <button
           type="button"
           onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer"
+          className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer w-full sm:w-auto"
         >
           <UserPlus className="h-4 w-4" />
           <span>+ Invitar / Registrar Atleta</span>
@@ -103,7 +103,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
       </div>
 
       {/* Segmentos Rápidos de Navegación (Tabs por Estado) */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-bounce border-b border-slate-200/80 pb-2.5">
         <button
           type="button"
           onClick={() => setQuickFilter("ALL")}

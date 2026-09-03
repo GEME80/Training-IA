@@ -74,7 +74,7 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
       </div>
 
       {/* SECCIÓN A: MONITOR DE CONSUMO DE TOKENS GEMINI */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-6">
+      <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-200/70 flex items-center justify-center">

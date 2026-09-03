@@ -106,8 +106,8 @@ export default function HomePage() {
               isIntervalsConnected={isIntervalsConnected}
               isGeminiConnected={isGeminiConnected}
             />
-            <main className="py-6 max-w-7xl mx-auto px-4 sm:px-6">
-              <AdminPanel />
+            <main className="py-2.5 sm:py-6 max-w-7xl mx-auto px-2.5 sm:px-6">
+              <AdminPanel onGoBackToDashboard={() => setCurrentView("dashboard")} />
             </main>
           </div>
           <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-center text-xs text-slate-500">

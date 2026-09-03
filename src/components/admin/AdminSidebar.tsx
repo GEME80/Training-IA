@@ -36,7 +36,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onRefreshAll,
 }) => {
   return (
-    <aside className="w-full md:w-64 bg-slate-50/95 border-b md:border-b-0 md:border-r border-slate-200/90 p-5 flex flex-col justify-between shrink-0">
+    <aside className="hidden md:flex md:w-64 bg-slate-50/95 border-r border-slate-200/90 p-5 flex-col justify-between shrink-0">
       <div className="space-y-6">
         {/* Encabezado de la Consola */}
         <div className="space-y-1">

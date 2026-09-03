@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
+import { AdminUserCardMobile } from "./AdminUserCardMobile";
 
 interface AdminUsersTableProps {
   users: AdminUserListItem[];
@@ -42,9 +43,24 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+    <div className="space-y-3">
+      {/* 1. Vista Móvil de Tarjetas Táctiles (< md) */}
+      <div className="block md:hidden space-y-3">
+        {users.map((u) => (
+          <AdminUserCardMobile
+            key={u.uid}
+            user={u}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onStatusChange={onStatusChange}
+          />
+        ))}
+      </div>
+
+      {/* 2. Vista de Tabla Panorámica de Escritorio (md+) */}
+      <div className="hidden md:block rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
           <thead className="bg-slate-50/90 border-b border-slate-200/90 text-[10px] font-mono font-bold uppercase text-slate-500 tracking-wider">
             <tr>
               <th className="py-3.5 px-5">Usuario / Atleta</th>
@@ -209,6 +225,7 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 };

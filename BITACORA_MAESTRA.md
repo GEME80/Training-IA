@@ -1961,7 +1961,26 @@ flowchart TD
     - Blindado el payload de `refreshTelemetry` con fallback incondicional a `i442091` / `48eje8t1wnj95t0sbjx2oumkq` para el atleta rector.
   - **3. Verificación de Compilación y Calidad:**
     - `tsc --noEmit`: 0 errores (Código 0).
-    - `next build`: 21/21 rutas optimizadas (Código 0).
+
+### Versión 3.7 (Panel de Administración 100% Responsive, Tarjetas Táctiles de Atletas y Navegación Móvil Ergonómica)
+- **Fecha:** Septiembre 2026.
+- **Objetivo Arquitectónico:** Transformar la Consola de Administración en una interfaz táctil de alta ergonomía en teléfonos celulares (PWA / Mobile Web), eliminando la sobrecarga vertical de la barra lateral de escritorio y garantizando usabilidad completa en pantallas de 360px a 430px.
+- **Implementaciones Realizadas:**
+  - **1. Navegación Móvil Superior Ergonómica (`AdminPanel.tsx` & `AdminSidebar.tsx`):**
+    - Ocultada la barra lateral vertical de 450px en móviles (`hidden md:flex md:w-64`).
+    - Implementada una cabecera superior móvil compacta (`md:hidden`) con selector deslizante táctil horizontal de 4 pestañas: *Dashboard*, *Atletas* (con contador animado de solicitudes pendientes), *Motor IA* y *Ciencia*.
+    - Incorporado botón táctil de retorno instantáneo `← Dashboard Atleta` tanto en el subheader móvil como en la cabecera principal (`Header.tsx`), permitiendo alternar sin fricción entre atleta y administración.
+  - **2. Vista de Tarjetas Táctiles para Atletas (`AdminUserCardMobile.tsx` & `AdminUsersTable.tsx`):**
+    - Creado componente especializado `AdminUserCardMobile` (< 170 LOC) para renderizar a los usuarios en formato de tarjetas individuales en pantallas pequeñas (`block md:hidden`).
+    - Acciones táctiles ergonómicas: aprobación instantánea de solicitudes con 1 toque, edición de umbrales Stryd CP / Bike FTP, suspensión/reactivación y eliminación.
+    - La tabla panorámica clásica de 5 columnas se preserva exclusivamente en resoluciones de escritorio (`hidden md:block`).
+  - **3. Modularización Estricta de Controles y Prompts de IA (`AdminAIPromptsSection.tsx` & `AdminAISettingsTab.tsx`):**
+    - Desacoplado el editor de instrucciones maestras SSOT en `AdminAIPromptsSection.tsx` (< 250 LOC), reduciendo `AdminAISettingsTab.tsx` de 391 a 174 líneas y asegurando el cumplimiento inflexible de la **Regla 3 (< 350 LOC)** en todos los archivos.
+    - Optimizados textareas, controles segmentados de metodología y tarjetas de consumo de tokens de Gemini para evitar desbordamientos horizontales en dispositivos móviles.
+  - **4. Set de Pruebas Superado:**
+    - `tsc --noEmit`: 0 errores de tipado (Código 0).
+    - `next build`: 21/21 rutas estáticas y dinámicas compiladas exitosamente (Código 0).
+
 
 
 

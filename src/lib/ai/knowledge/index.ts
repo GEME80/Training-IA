@@ -162,10 +162,13 @@ export function calculateProgressiveLongRun(
   let levelMaxMins = Math.min(rules.peakMinutes, maxCapMins);
 
   if (athleteCtl !== undefined && model.athleteLevelCaps) {
-    if (athleteCtl < 30) {
+    const begThreshold = model.athleteLevelCaps.BEGINNER.ctlThresholdMax || 35;
+    const intThreshold = model.athleteLevelCaps.INTERMEDIATE.ctlThresholdMax || 65;
+
+    if (athleteCtl < begThreshold) {
       levelMaxKm = model.athleteLevelCaps.BEGINNER.maxLongRunKm;
       levelMaxMins = model.athleteLevelCaps.BEGINNER.maxLongRunMinutes;
-    } else if (athleteCtl <= 60) {
+    } else if (athleteCtl <= intThreshold) {
       levelMaxKm = model.athleteLevelCaps.INTERMEDIATE.maxLongRunKm;
       levelMaxMins = model.athleteLevelCaps.INTERMEDIATE.maxLongRunMinutes;
     } else {
@@ -174,11 +177,12 @@ export function calculateProgressiveLongRun(
     }
   }
 
-  // Aplicar factor de escala al modelo canónico respetando los caps
-  const scaledStartKm = Math.round(rules.startKm * volumeScaleFactor);
-  const scaledPeakKm = Math.min(levelMaxKm, Math.round(rules.peakKm * volumeScaleFactor));
-  const scaledStartMins = Math.round(rules.startMinutes * volumeScaleFactor);
-  const scaledPeakMins = Math.min(levelMaxMins, Math.round(rules.peakMinutes * volumeScaleFactor));
+  // Aplicar factor de escala al arranque respetando los caps fisiológicos del nivel del atleta
+  const safeVolumeFactor = Math.max(0.80, volumeScaleFactor);
+  const scaledStartKm = Math.round(rules.startKm * safeVolumeFactor);
+  const scaledPeakKm = levelMaxKm;
+  const scaledStartMins = Math.round(rules.startMinutes * safeVolumeFactor);
+  const scaledPeakMins = Math.min(maxCapMins, levelMaxMins);
 
   // 1. Fase de Competición Oficial
   if (phase === "RACE_WEEK" || countdown === 1) {
@@ -196,9 +200,10 @@ export function calculateProgressiveLongRun(
 
   // 2. Fase de Tapering
   if (phase === "TAPER") {
-    const taperIdx = Math.max(0, Math.min(rules.taperKmSequence.length - 1, countdown - 2));
-    const taperKm = Math.round((rules.taperKmSequence[taperIdx] || rules.startKm) * volumeScaleFactor);
-    const taperMins = Math.min(maxCapMins, Math.round((rules.taperMinutesSequence[taperIdx] || rules.startMinutes) * volumeScaleFactor));
+    const taperTotal = model.taperingRules?.taperingWeeks || 3;
+    const taperIdx = Math.max(0, Math.min(rules.taperKmSequence.length - 1, taperTotal - countdown));
+    const taperKm = Math.round((rules.taperKmSequence[taperIdx] || rules.startKm) * safeVolumeFactor);
+    const taperMins = Math.min(maxCapMins, Math.round((rules.taperMinutesSequence[taperIdx] || rules.startMinutes) * safeVolumeFactor));
 
     return {
       km: taperKm,

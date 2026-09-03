@@ -305,7 +305,7 @@ export function generateMacrocycleBlueprint(
         ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
         : "bg-orange-500/25 text-orange-300 border-orange-500/40";
       targetTss = isPeakRecovery ? 380 : 540;
-      maxLongRun = isPeakRecovery ? 75 : 115;
+      maxLongRun = isPeakRecovery ? 90 : 165;
       focus = isPeakRecovery
         ? "Asimilación estratégica: descanso prioritario para consolidar las adaptaciones de los fondos clave."
         : "Máxima preparación: tiradas largas con tramos al ritmo objetivo de tu carrera para ganar confianza y ritmo.";
@@ -319,7 +319,7 @@ export function generateMacrocycleBlueprint(
         ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
         : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
       targetTss = isBuildRecovery ? 340 : 470;
-      maxLongRun = isBuildRecovery ? 65 : 95;
+      maxLongRun = isBuildRecovery ? 75 : 135;
       focus = isBuildRecovery
         ? "Recuperación estratégica: soltamos piernas y recargamos energía antes del siguiente bloque de intensidad."
         : "Ritmo de carrera y potencia: series a ritmo exigente y aumento gradual de la distancia en la tirada larga del fin de semana.";

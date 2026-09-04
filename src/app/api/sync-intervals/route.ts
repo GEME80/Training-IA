@@ -52,41 +52,46 @@ export async function POST(req: NextRequest) {
       endDateStr = sunday.toISOString().split("T")[0];
     }
 
-    // 2. Limpieza de entrenamientos previos [PULSE AI] / [SGEA] para evitar duplicación
-    try {
-      const existingEvents = await client.getEvents(startDateStr, endDateStr);
-      const sgeaEventsToDelete = existingEvents.filter(
-        (e) =>
-          e.id &&
-          e.category === "WORKOUT" &&
-          (e.name?.includes("[PULSE AI]") || e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
-      );
+    const todayStr = new Date().toISOString().split("T")[0];
+    const cleanStartStr = startDateStr < todayStr ? todayStr : startDateStr;
 
-      if (sgeaEventsToDelete.length > 0) {
-        console.log(`Eliminando ${sgeaEventsToDelete.length} entrenamientos previos de [PULSE AI] en el rango ${startDateStr} a ${endDateStr}...`);
-        await Promise.all(
-          sgeaEventsToDelete.map((e) =>
-            client.deleteEvent(e.id!).catch((delErr) => {
-              console.warn(`No se pudo eliminar evento previo ${e.id}:`, delErr);
-            })
-          )
+    // 2. Limpieza de entrenamientos previos [PULSE AI] / [SGEA] para evitar duplicación (solo de hoy en adelante)
+    if (cleanStartStr <= endDateStr) {
+      try {
+        const existingEvents = await client.getEvents(cleanStartStr, endDateStr);
+        const sgeaEventsToDelete = existingEvents.filter(
+          (e) =>
+            e.id &&
+            e.category === "WORKOUT" &&
+            (e.name?.includes("[PULSE AI]") || e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
         );
-      }
-    } catch (cleanErr: any) {
-      console.warn("Aviso al consultar/limpiar eventos previos en Intervals:", cleanErr);
-      if (cleanErr?.message?.includes("401") || cleanErr?.message?.includes("403")) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Credenciales de Intervals.icu incorrectas (401/403). Por favor verifica tu API Key.",
-            isAuthError: true,
-          },
-          { status: 401 }
-        );
+
+        if (sgeaEventsToDelete.length > 0) {
+          console.log(`Eliminando ${sgeaEventsToDelete.length} entrenamientos previos de [PULSE AI] en el rango ${cleanStartStr} a ${endDateStr}...`);
+          await Promise.all(
+            sgeaEventsToDelete.map((e) =>
+              client.deleteEvent(e.id!).catch((delErr) => {
+                console.warn(`No se pudo eliminar evento previo ${e.id}:`, delErr);
+              })
+            )
+          );
+        }
+      } catch (cleanErr: any) {
+        console.warn("Aviso al consultar/limpiar eventos previos en Intervals:", cleanErr);
+        if (cleanErr?.message?.includes("401") || cleanErr?.message?.includes("403")) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Credenciales de Intervals.icu incorrectas (401/403). Por favor verifica tu API Key.",
+              isAuthError: true,
+            },
+            { status: 401 }
+          );
+        }
       }
     }
 
-    // 3. Inserción del nuevo microciclo optimizado
+    // 3. Inserción del nuevo microciclo optimizado (estrictamente a partir de hoy)
     for (const item of plan) {
       // Omitir días de descanso pasivo
       if (item.isRestDay || item.discipline === "Descanso") {
@@ -94,6 +99,10 @@ export async function POST(req: NextRequest) {
       }
 
       const dateStr = item.date || startDateStr;
+      if (dateStr < todayStr) {
+        // Historial inmutable: nunca sobrescribir el pasado en Intervals.icu
+        continue;
+      }
 
       let type: CalendarEvent["type"] = "Run";
       let fallbackSyntax = "";

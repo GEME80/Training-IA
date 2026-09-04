@@ -52,6 +52,14 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
   };
 
   const getActionBadge = (item: PlanItem) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (item.justification?.includes("Historial inmutable") || (item.date && item.date < todayStr)) {
+      return (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+          Historial
+        </span>
+      );
+    }
     if (item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0)) {
       return (
         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">

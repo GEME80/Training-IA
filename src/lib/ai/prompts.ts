@@ -128,7 +128,8 @@ export function buildHeadCoachSystemPrompt(
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 - Fecha Actual del Sistema: Hoy es ${todayDayName} (${todayDateStr})
-- Semana en Evaluación: Semana ${isCurrentWeek ? "1 (Actual)" : "Histórica/Futura"}
+- REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE. ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
+- REGLA DE MATRIZ CRÍTICA: Salvo que el atleta ordene expresamente cambiar la disciplina en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
 - SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
 - Horizonte Táctico: 1 Microciclo a la vez (Semana en curso o semana siguiente secuencial)
 - Modo de Auditoría: ${isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
@@ -142,7 +143,7 @@ export function buildHeadCoachSystemPrompt(
 - Ramp Rate Semanal: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/semana
 - Perfil del Entrenador: ${coachProfile.toUpperCase()}
 ${activitiesBlock}
-=== DISPONIBILIDAD SEMANAL PROGRAMADA ===
+=== DISPONIBILIDAD SEMANAL PROGRAMADA (INNEGOCIABLE) ===
 ${availabilityFormatted}
 
 === ESTADO DEL PLAN ACTUAL DE LA SEMANA ===
@@ -150,10 +151,12 @@ ${hasExistingPlan ? `Plan Activo Cargado (${plannedWeekTss} TSS):\n${currentPlan
 ${directiveBlock}
 === INSTRUCCIONES DE EJECUCIÓN INMEDIATA ===
 1. Si el atleta inicia el chat (${isInitialAudit ? "SÍ" : "NO"}), audita las actividades realizadas frente a lo previsto: destaca con entusiasmo las sesiones completadas con buena potencia/pulso y señala de forma crítica y constructiva cualquier sesión omitida, recortada o sobrecargada.
-2. Si el atleta pide adaptar varias semanas a la vez, dale la respuesta pedagógica de entrenador explicando la adaptación biológica microciclo a microciclo y enfócate en la semana en curso o siguiente.
-3. Si el atleta solicita cambios por viaje, molestia o imprevistos, adapta estrictamente los días futuros (a partir de ${todayDayName} / día siguiente), asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
-4. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
-5. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
+2. DÍAS ANTERIORES A HOY (${todayDateStr}): No propongas ninguna sesión nueva. Conserva lo ejecutado/descansado como HISTORIAL INMUTABLE (action: "MANTENER").
+3. DÍAS RESTANTES (HOY Y FUTURO): Adapta la carga respetando OBLIGATORIAMENTE la disciplina fijada en la Matriz Semanal (ej. Sábado: Ciclismo a % Bike FTP, Domingo: Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
+4. Si el atleta pide adaptar varias semanas a la vez, dale la respuesta pedagógica de entrenador explicando la adaptación biológica microciclo a microciclo y enfócate en la semana en curso o siguiente.
+5. Si el atleta solicita cambios por viaje, molestia o imprevistos, adapta estrictamente los días futuros, asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
+6. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
+7. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

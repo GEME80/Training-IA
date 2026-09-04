@@ -2657,10 +2657,27 @@ flowchart TD
   - `src/components/dashboard/AthletePhysiologyView.tsx`: **313 líneas** (< 350 LOC).
   - `src/components/AthleteDashboard.tsx`: **1464 líneas**.
 - **Set de Pruebas Superado:**
+### Versión 3.26 - Head Coach IA: Congelamiento Estricto de Historial Previo y Cumplimiento Innegociable de Matriz Semanal (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 18:32 COT.
+- **Objetivo Arquitectónico:**
+  1. **Congelamiento de Días Anteriores a Hoy:** Evitar que el Head Coach IA proponga o sobrescriba entrenamientos en días ya pasados de la semana en curso. Los días anteriores a hoy quedan sellados como `HISTORIAL INMUTABLE` con `action: "MANTENER"`, reflejando la sesión realmente ejecutada (con vatios, FC, duración y TSS de Intervals.icu) o el descanso/salto. Las propuestas y adaptaciones aplican estrictamente a partir de hoy (si no se ha ejecutado) y los días restantes de la semana.
+  2. **Cumplimiento Innegociable de la Matriz Semanal de Disponibilidad:** Salvo instrucción expresa del atleta en la conversación para alterar la matriz (ej. "cambia el sábado a carrera"), las disciplinas configuradas por el atleta para cada día (Lunes: Descanso, Martes: Carrera, Miércoles: Ciclismo, Jueves: Descanso/Fuerza, Viernes: Carrera, Sábado: Ciclismo, Domingo: Carrera) se preservan y fuerzan de forma determinística en `suggestedPlan`. Se erradicó la anomalía de asignar carrera en días de ciclismo o descanso.
+  3. **Optimización de UI/UX en Gráfica y Microciclo:** Corrección del colapso de texto en `HeadCoachWorkoutBlockChart` en columnas estrechas de 7 días (reemplazado por formato compacto `45m • 35 TSS` y zona truncada), e incorporación del badge `Historial` en `HeadCoachMicrocycleCard`.
+  4. **Protección de Sincronización a Intervals.icu:** En `/api/sync-intervals`, se blindó la limpieza e inserción para que nunca elimine ni cree sesiones en fechas anteriores a hoy (`dateStr < todayStr`).
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/ai/defaultPrompts.ts`: **102 líneas** (< 350 LOC).
+  - `src/lib/ai/prompts.ts`: **283 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatContext.ts`: **334 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatInference.ts`: **273 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/deterministicFallback.ts`: **306 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachWorkoutBlockChart.tsx`: **103 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`: **196 líneas** (< 350 LOC).
+  - `src/app/api/sync-intervals/route.ts`: **169 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
   - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (según Rule 3).
-  - `Prueba 4 (Verificación en Vivo):` Inspección de API Intervals confirma `sex: "M"`, mapeado a `"M"` (Hombre) sin retroceder a `"OTHER"`.
+  - `Prueba 4 (Inferencia en Vivo con Gemini 3.5 Flash):` Test de inferencia real en `/api/headcoach/chat` confirma que Lunes a Jueves se preservan como `HISTORIAL INMUTABLE` con `action: "MANTENER"`, Sábado se prescribe como Ciclismo en Zona 2 (% Bike FTP) y Domingo como Carrera en Zona 2 (% Stryd CP), respetando rigurosamente la disponibilidad semanal.
 
 
 

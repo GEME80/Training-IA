@@ -1,5 +1,6 @@
 import { buildHeadCoachSystemPrompt } from "@/lib/ai/prompts";
 import { trackGeminiUsage } from "@/lib/ai/telemetry";
+import { normalizeDisciplines } from "@/lib/gemini/engine";
 import { ResolvedChatContext } from "./chatContext";
 import { ChatMessage, HeadCoachChatRequest, HeadCoachChatResponse } from "./types";
 
@@ -21,7 +22,7 @@ export async function executeGeminiInference(
   );
 
   const userPrompt = isInitialAudit
-    ? `Realiza el Dictamen Fisiológico de Cierre de la Semana ${body.weekNumber || 1} y presenta la propuesta estructurada de microciclo para la SEMANA ${ctx.targetPlanningWeekNum} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Pregúntame si apruebo la semana o si deseamos calibrar algo más.`
+    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}) evaluando lo ejecutado hasta hoy y presentando la propuesta adaptada para los días restantes de la semana respetando la matriz semanal. Pregúntame si apruebo la semana o si deseamos calibrar algo más.`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
@@ -128,18 +129,125 @@ export async function executeGeminiInference(
             if (parsed && typeof parsed === "object" && parsed.reply) {
               if (Array.isArray(parsed.suggestedPlan)) {
                 const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+                const allUserText = (messages.map((m) => m.content).join(" ") + " " + userPrompt).toLowerCase();
+
                 parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {
                   const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx], date: "", formattedDate: "" };
+                  const dName = dateInfo.day || dayNamesList[idx];
+                  const itemDate = p.date || dateInfo.date;
+                  const isPast = ctx.isCurrentWeek && Boolean(itemDate && itemDate < ctx.todayDateStr);
+
+                  // 1. DÍAS ANTERIORES A HOY: CONGELAMIENTO HISTÓRICO INMUTABLE
+                  if (isPast) {
+                    const execData = ctx.effectiveExecutedMap[itemDate];
+                    if (execData && execData.activities.length > 0) {
+                      const act = execData.activities[0];
+                      const isRide = /ride|cycling|bike|virtualride/i.test(act.type);
+                      const isWeight = /weight|strength|fuerza/i.test(act.type);
+                      const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : "Carrera";
+                      const pWatts = act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada");
+                      return {
+                        day: dName,
+                        date: itemDate,
+                        formattedDate: dateInfo.formattedDate,
+                        discipline: disc,
+                        workoutName: act.name || `${disc} Completada`,
+                        action: "MANTENER",
+                        powerTarget: pWatts,
+                        tss: execData.totalTss,
+                        durationMinutes: act.movingTimeMin || 0,
+                        justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
+                        workoutStructure: "",
+                      };
+                    }
+
+                    const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
+                    const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
+
+                    if (isRestPlanned) {
+                      return {
+                        day: dName,
+                        date: itemDate,
+                        formattedDate: dateInfo.formattedDate,
+                        discipline: "Descanso",
+                        workoutName: "Descanso Pasivo Realizado",
+                        action: "MANTENER",
+                        powerTarget: "0W",
+                        tss: 0,
+                        durationMinutes: 0,
+                        justification: "Historial inmutable: descanso respetado.",
+                        workoutStructure: "",
+                      };
+                    } else {
+                      return {
+                        day: dName,
+                        date: itemDate,
+                        formattedDate: dateInfo.formattedDate,
+                        discipline: plannedSession.discipline || "Carrera",
+                        workoutName: `Sesión Saltada (${plannedSession.workoutName || plannedSession.title || "Entrenamiento"})`,
+                        action: "MANTENER",
+                        powerTarget: "0 TSS",
+                        tss: 0,
+                        durationMinutes: 0,
+                        justification: "Historial inmutable: sesión no registrada en Intervals.icu.",
+                        workoutStructure: "",
+                      };
+                    }
+                  }
+
+                  // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL DE DISPONIBILIDAD
+                  const dLower = dName.toLowerCase();
+                  const userRequestedChange = allUserText.includes(dLower) && (
+                    allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
+                    allUserText.includes("ciclismo") || allUserText.includes("descanso") || allUserText.includes("rodillo") ||
+                    allUserText.includes("fuerza") || allUserText.includes("modifica")
+                  );
+
+                  const configuredList = normalizeDisciplines(ctx.safeAvailability[dName]);
+                  let safeDiscipline = p.discipline || p.type || "Carrera";
+
+                  if (!userRequestedChange && configuredList.length > 0) {
+                    if (configuredList.length === 1 && configuredList[0] === "Descanso") {
+                      safeDiscipline = "Descanso";
+                    } else if (configuredList.includes("Ciclismo") && !configuredList.includes("Carrera")) {
+                      safeDiscipline = "Ciclismo";
+                    } else if (configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) {
+                      safeDiscipline = "Carrera";
+                    } else if (configuredList.includes("Fuerza") && !configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) {
+                      safeDiscipline = "Fuerza";
+                    }
+                  }
+
+                  const isRest = safeDiscipline === "Descanso";
+                  const safeTss = isRest ? 0 : (typeof p.tss === "number" && p.tss > 0 ? p.tss : (safeDiscipline === "Ciclismo" ? 50 : 45));
+                  const safeDuration = isRest ? 0 : (typeof p.durationMinutes === "number" && p.durationMinutes > 0 ? p.durationMinutes : (safeDiscipline === "Ciclismo" ? 60 : 45));
+
+                  let safePower = p.powerTarget || p.intensity || "";
+                  if (safeDiscipline === "Ciclismo" && (!safePower || safePower.includes("CP") || safePower.includes("Stryd"))) {
+                    const bikeFtp = ctx.profile.bike_ftp || 250;
+                    safePower = `65-72% Bike FTP (${Math.round(bikeFtp * 0.68)}W)`;
+                  } else if (safeDiscipline === "Carrera" && (!safePower || safePower.includes("Bike"))) {
+                    const runFtp = ctx.profile.run_ftp || 320;
+                    safePower = `70-75% Stryd CP (${Math.round(runFtp * 0.72)}W)`;
+                  }
+
+                  let safeName = p.workoutName || p.title || p.name;
+                  if (isRest) {
+                    safeName = "Descanso Pasivo Total";
+                  } else if (!safeName || safeName === "Entrenamiento" || (safeDiscipline === "Ciclismo" && /carrera|rodaje/i.test(safeName))) {
+                    safeName = safeDiscipline === "Ciclismo" ? "Ciclismo Resistencia Base Z2 (Rodillo/Ruta)" : "Carrera Aeróbica Continua Z2";
+                  }
+
                   return {
-                    day: p.day || p.dayOfWeek || dateInfo.day || dayNamesList[idx],
-                    date: p.date || dateInfo.date,
+                    day: dName,
+                    date: itemDate,
                     formattedDate: p.formattedDate || dateInfo.formattedDate,
-                    discipline: p.discipline || p.type || "Carrera",
-                    workoutName: p.workoutName || p.title || p.name || (p.discipline === "Descanso" ? "Descanso Pasivo Total" : "Entrenamiento"),
+                    discipline: safeDiscipline,
+                    workoutName: safeName,
                     action: p.action || "MANTENER",
-                    powerTarget: p.powerTarget || p.intensity || "",
-                    tss: typeof p.tss === "number" ? p.tss : (p.discipline === "Descanso" ? 0 : 40),
-                    durationMinutes: typeof p.durationMinutes === "number" ? p.durationMinutes : (p.discipline === "Descanso" ? 0 : 45),
+                    powerTarget: safePower,
+                    tss: safeTss,
+                    durationMinutes: safeDuration,
                     justification: p.justification || p.description || "",
                     workoutStructure: p.workoutStructure || p.structure || "",
                   };

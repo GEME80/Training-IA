@@ -46,13 +46,54 @@ export function handleDeterministicFallback(
     );
 
     const fallbackGeneratedPlan = rawFallbackPlan.map((p, pIdx) => {
-      const isRest = p.discipline === "Descanso" || p.action === "DESCANSO_ACTIVO";
       const dateInfo = planningWeekDates[pIdx] || { date: "", formattedDate: "" };
+      const itemDate = dateInfo.date || p.date;
+      const isPast = ctx.isCurrentWeek && Boolean(itemDate && itemDate < ctx.todayDateStr);
+
+      if (isPast) {
+        const execData = ctx.effectiveExecutedMap[itemDate];
+        if (execData && execData.activities.length > 0) {
+          const act = execData.activities[0];
+          const isRide = /ride|cycling|bike|virtualride/i.test(act.type);
+          const isWeight = /weight|strength|fuerza/i.test(act.type);
+          const disc: PlanItem["discipline"] = isRide ? "Ciclismo" : isWeight ? "Fuerza" : "Carrera";
+          return {
+            ...p,
+            date: itemDate,
+            formattedDate: dateInfo.formattedDate,
+            discipline: disc,
+            workoutName: act.name || `${disc} Completada`,
+            action: "MANTENER" as const,
+            powerTarget: act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada"),
+            tss: execData.totalTss,
+            durationMinutes: act.movingTimeMin || 0,
+            justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
+          };
+        }
+
+        const plannedSession = Array.isArray(currentPlan) ? currentPlan[pIdx] : null;
+        const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
+        const fallbackDisc: PlanItem["discipline"] = (isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera")) as PlanItem["discipline"];
+        return {
+          ...p,
+          date: itemDate,
+          formattedDate: dateInfo.formattedDate,
+          discipline: fallbackDisc,
+          workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || "Entrenamiento"})`,
+          action: "MANTENER" as const,
+          powerTarget: isRestPlanned ? "0W" : "0 TSS",
+          tss: 0,
+          durationMinutes: 0,
+          justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
+        };
+      }
+
+      const isRest = p.discipline === "Descanso" || p.action === "DESCANSO_ACTIVO";
       const dur = p.durationMinutes || (isRest ? 0 : p.discipline === "Ciclismo" ? 55 : p.discipline === "Fuerza" ? 30 : 45);
       const tssVal = p.tss || (isRest ? 0 : Math.round(dur * 0.75));
       return {
         ...p,
-        date: dateInfo.date || p.date,
+        date: itemDate,
         formattedDate: dateInfo.formattedDate || p.formattedDate,
         durationMinutes: dur,
         tss: tssVal,

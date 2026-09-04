@@ -31,6 +31,7 @@ export interface ResolvedChatContext {
   isDeload: boolean;
   coachStyleDescription: string;
   promptContext: HeadCoachPromptContext;
+  effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }>;
 }
 
 export async function resolveChatContext(body: HeadCoachChatRequest): Promise<ResolvedChatContext> {
@@ -180,8 +181,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const todayDateStr = now.toISOString().split("T")[0];
   const isCurrentWeek = safeOffset === 0;
 
-  const targetPlanningWeekNum = isInitialAudit && isCurrentWeek ? safeWeekNum + 1 : safeWeekNum;
-  const planningWeekDates = isInitialAudit && isCurrentWeek ? getWeekDates(safeOffset + 1) : weekDates;
+  const targetPlanningWeekNum = safeWeekNum;
+  const planningWeekDates = weekDates;
   const planningStartDateStr = planningWeekDates[0]?.formattedDate || "Inicio";
   const planningEndDateStr = planningWeekDates[6]?.formattedDate || "Fin";
 
@@ -328,5 +329,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     isDeload,
     coachStyleDescription,
     promptContext,
+    effectiveExecutedMap,
   };
 }

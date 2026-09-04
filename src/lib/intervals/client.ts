@@ -48,6 +48,7 @@ export class IntervalsClient {
     athleteName?: string;
     athleteId?: string;
     city?: string;
+    gender?: "M" | "F" | "OTHER";
     runFtp?: number;
     bikeFtp?: number;
     restingHR?: number;
@@ -82,6 +83,9 @@ export class IntervalsClient {
       const weight = (anyAthlete.icu_weight as number) || (anyAthlete.weight as number) || undefined;
       const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
       const heightCm = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
+      const rawSex = anyAthlete.sex || anyAthlete.gender || anyAthlete.icu_gender;
+      const normSex = typeof rawSex === "string" ? rawSex.trim().toUpperCase() : "";
+      const gender: "M" | "F" | "OTHER" | undefined = /^(M|MALE|HOMBRE)$/.test(normSex) ? "M" : /^(F|FEMALE|MUJER)$/.test(normSex) ? "F" : /^(OTHER|OTRO)$/.test(normSex) ? "OTHER" : undefined;
       const city = (anyAthlete.city as string) || undefined;
 
       return {
@@ -89,6 +93,7 @@ export class IntervalsClient {
         athleteName,
         athleteId: athlete.id || this.athleteId,
         city,
+        gender,
         runFtp: typeof runFtp === "number" ? runFtp : undefined,
         bikeFtp: typeof bikeFtp === "number" ? bikeFtp : undefined,
         restingHR: typeof restingHR === "number" ? restingHR : undefined,

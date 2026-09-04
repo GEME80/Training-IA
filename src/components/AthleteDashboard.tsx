@@ -115,7 +115,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       bike_ftp: userProfile?.bikeFtp || 0,
       weight: userProfile?.weightKg,
       heightCm: userProfile?.heightCm,
-      gender: userProfile?.gender,
+      gender: userProfile?.gender ?? (userStorage.getItem("gender") as "M" | "F" | "OTHER" | null) ?? undefined,
       birthDate: userProfile?.birthDate,
       visibleMetrics: userProfile?.visibleMetrics,
     };
@@ -316,6 +316,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           if (data.profile?.maxHR) userStorage.setItem("max_hr", String(data.profile.maxHR));
           if (data.profile?.weight) userStorage.setItem("weight_kg", String(data.profile.weight));
           if (data.profile?.heightCm) userStorage.setItem("height_cm", String(data.profile.heightCm));
+          if (data.profile?.gender) userStorage.setItem("gender", data.profile.gender);
 
           setProfile((prev) => ({
             ...prev,

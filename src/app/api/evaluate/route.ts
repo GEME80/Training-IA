@@ -132,7 +132,9 @@ export async function POST(req: NextRequest) {
           const icuFtp = anyAthlete.icu_ftp ?? anyAthlete.bike_ftp;
           const icuRunFtp = anyAthlete.icu_running_ftp ?? anyAthlete.run_ftp;
           const icuDob = anyAthlete.icu_date_of_birth || anyAthlete.dob || anyAthlete.date_of_birth;
-          const icuGender = anyAthlete.icu_gender || anyAthlete.gender;
+          const rawSex = anyAthlete.sex || anyAthlete.gender || anyAthlete.icu_gender;
+          const normSex = typeof rawSex === "string" ? rawSex.trim().toUpperCase() : "";
+          const resolvedGender: "M" | "F" | "OTHER" | undefined = /^(M|MALE|HOMBRE)$/.test(normSex) ? "M" : /^(F|FEMALE|MUJER)$/.test(normSex) ? "F" : /^(OTHER|OTRO)$/.test(normSex) ? "OTHER" : undefined;
 
           const sports = (sportSettingsData && sportSettingsData.length > 0)
             ? sportSettingsData
@@ -187,7 +189,7 @@ export async function POST(req: NextRequest) {
             id: athleteData.id || effectiveAthleteId,
             name: athleteData.name || "Atleta",
             birthDate: icuDob,
-            gender: icuGender === "MALE" || icuGender === "M" ? "M" : icuGender === "FEMALE" || icuGender === "F" ? "F" : "OTHER",
+            gender: resolvedGender,
             age: computedAge,
             ctl: typeof icuCtl === "number" ? icuCtl : undefined,
             atl: typeof icuAtl === "number" ? icuAtl : undefined,

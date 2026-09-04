@@ -7,6 +7,7 @@ export interface AthleteProfile {
   name?: string;
   email?: string;
   gender?: "M" | "F" | "OTHER";
+  sex?: string;
   birthDate?: string; // YYYY-MM-DD
   age?: number;
   weight?: number;

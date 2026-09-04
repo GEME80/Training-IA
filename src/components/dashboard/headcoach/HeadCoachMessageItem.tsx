@@ -11,6 +11,7 @@ export interface HeadCoachMessageData {
   text: string;
   suggestedPlan?: PlanItem[] | null;
   targetWeekNumber?: number;
+  modelUsed?: string;
   timestamp?: string;
 }
 
@@ -125,8 +126,12 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
               <span className="font-black text-slate-900 dark:text-white text-xs tracking-tight">
                 PULSE Head Coach
               </span>
-              <span className="text-[9px] font-mono px-2 py-0.2 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/20">
-                Resistencia Pro
+              <span className={`text-[9px] font-mono px-2 py-0.2 rounded-full font-bold border ${
+                message.modelUsed && message.modelUsed.includes("gemini")
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                  : "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20"
+              }`}>
+                {message.modelUsed || "Resistencia Pro"}
               </span>
             </div>
             {message.timestamp && (

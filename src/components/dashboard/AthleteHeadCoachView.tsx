@@ -132,6 +132,7 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
           text: data.reply || "Microciclo evaluado y calibrado a tus parámetros.",
           suggestedPlan: data.suggestedPlan || null,
           targetWeekNumber: data.targetWeekNumber || activeWeekNumber,
+          modelUsed: data.modelUsed,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, assistantMsg]);

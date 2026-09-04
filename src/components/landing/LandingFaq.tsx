@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight, HelpCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 interface FaqItem {
   q: string;
@@ -10,67 +10,61 @@ interface FaqItem {
 
 const FAQS: FaqItem[] = [
   {
-    q: "¿Cómo adapta la Inteligencia Artificial mi sesión diaria de entrenamiento?",
-    a: "Cada mañana, PULSE AI analiza tu variabilidad de frecuencia cardíaca (HRV), descanso nocturno y fatiga acumulada. Si detecta sobrecarga, recalibra los vatios y la duración de la sesión del día antes de que salgas a entrenar.",
+    q: "¿Cómo adapta la IA mi entrenamiento cada mañana?",
+    a: "PULSE AI analiza tu HRV matutino y descanso nocturno. Si detecta fatiga aguda, recalibra los vatios y duración de la sesión antes de que salgas a entrenar.",
   },
   {
-    q: "¿Se sincroniza directamente con mi reloj Garmin o Coros?",
-    a: "Sí. Mediante la conexión nativa con Intervals.icu, las series estructuradas por potencia (% FTP) se descargan automáticamente en tu reloj para guiarte intervalo a intervalo sin programar nada a mano.",
+    q: "¿Se descarga directamente en mi reloj Garmin o Coros?",
+    a: "Sí. Las series estructuradas viajan automáticamente a tu dispositivo mediante la API de Intervals.icu, sin necesidad de programar nada manualmente.",
   },
   {
-    q: "¿Qué diferencia a PULSE AI de un plan estático de PDF o una app tradicional?",
-    a: "Los planes estáticos no saben si dormiste mal o si tuviste un día estresante. PULSE AI utiliza modelos biológicos continuos y Google Gemini para recalcular tu pico de forma de manera personalizada y dinámica.",
+    q: "¿Es compatible con ciclismo y triatlón?",
+    a: "Totalmente. El sistema cuenta con motores específicos de potencia por vatios (% FTP) en rodillo o ruta, y gestión concurrente para triatlón (70.3 y 140.6).",
   },
   {
-    q: "¿Es apto tanto para corredores como para ciclistas y triatletas?",
-    a: "Totalmente. El sistema cuenta con motores específicos: potencia Stryd y ritmos VDOT para running, 7 zonas de vatios FTP para ciclismo (rodillo y exterior) y gestión concurrente sin fatiga cruzada para triatlón.",
-  },
-  {
-    q: "¿Qué dispositivos y potenciómetros necesito?",
-    a: "Solo requieres un reloj deportivo (Garmin o Coros). Para máxima precisión por vatios, recomendamos potenciómetro Stryd en carrera o potenciómetro/rodillo inteligente en ciclismo. También opera con sensores de pulso convencionales.",
+    q: "¿Qué sensores necesito para empezar?",
+    a: "Solo tu reloj deportivo habitual. Para máxima precisión por vatios, recomendamos potenciómetro Stryd en carrera o medidor de potencia en ciclismo.",
   },
 ];
 
 export const LandingFaq: React.FC = () => {
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
-  const toggleFaq = (index: number) => {
-    setActiveFaq(activeFaq === index ? null : index);
+  const toggle = (idx: number) => {
+    setOpenIdx(openIdx === idx ? null : idx);
   };
 
   return (
-    <section id="faq" className="py-20 px-4 sm:px-6 max-w-4xl mx-auto w-full">
-      <div className="text-center mb-12 space-y-3">
-        <span className="text-xs font-bold font-mono uppercase tracking-widest text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-          Resolución de Dudas
-        </span>
-        <h2 className="text-3xl sm:text-4xl font-black text-slate-950">
+    <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto w-full">
+      <div className="text-center max-w-xl mx-auto mb-10 space-y-2">
+        <span className="text-xs font-bold font-mono uppercase tracking-widest text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
           Preguntas Frecuentes
+        </span>
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-950">
+          Respuestas Claras en Breve
         </h2>
-        <p className="text-sm text-slate-600 font-normal">
-          Todo lo que necesitas saber sobre el entrenamiento adaptativo con PULSE AI PRO.
-        </p>
       </div>
 
-      <div className="space-y-3">
+      {/* Grid Ultra-Compacto: 2 Columnas en Desktop, 1 en Móvil */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
         {FAQS.map((item, idx) => (
           <div
             key={idx}
-            onClick={() => toggleFaq(idx)}
-            className="rounded-2xl p-5 bg-white/90 border border-slate-200/80 hover:border-cyan-300 shadow-xs cursor-pointer transition-all backdrop-blur-xl"
+            className="border-b border-slate-200/80 pb-3 transition-colors cursor-pointer select-none"
+            onClick={() => toggle(idx)}
           >
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+            <div className="flex items-center justify-between gap-3 py-2">
+              <span className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
                 {item.q}
               </span>
-              <ChevronRight
-                className={`h-4 w-4 text-cyan-600 transition-transform duration-200 shrink-0 ${
-                  activeFaq === idx ? "rotate-90" : ""
+              <ChevronDown
+                className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                  openIdx === idx ? "rotate-180 text-cyan-600" : ""
                 }`}
               />
             </div>
-            {activeFaq === idx && (
-              <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3 font-normal animate-in fade-in duration-150">
+            {openIdx === idx && (
+              <p className="text-xs text-slate-600 leading-relaxed pt-1 pb-2 font-normal animate-in fade-in duration-150">
                 {item.a}
               </p>
             )}

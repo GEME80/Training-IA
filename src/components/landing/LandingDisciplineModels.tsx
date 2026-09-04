@@ -1,245 +1,109 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Check,
-  Footprints,
-  Bike,
-  Layers,
-  ArrowUpRight,
-  Zap,
-  Shield,
-  Target,
-  Flame,
-  Timer,
-  Droplets,
-  FlaskConical,
-  LucideIcon,
-} from "lucide-react";
+import { Footprints, Bike, Layers, CheckCircle2, ArrowRight } from "lucide-react";
 
 type DisciplineKey = "running" | "cycling" | "triathlon";
-
-interface BenefitItem {
-  title: string;
-  desc: string;
-  icon: LucideIcon;
-  iconColor: string;
-  iconBg: string;
-}
 
 interface DisciplineData {
   title: string;
   badge: string;
-  subtitle: string;
-  models: Array<{
-    name: string;
-    distance: string;
-    idealFor: string;
-    method: string;
-  }>;
-  benefits: BenefitItem[];
-  highlight: string;
+  desc: string;
+  targets: Array<{ name: string; detail: string; method: string }>;
+  keyTakeaways: string[];
 }
 
 const DISCIPLINES: Record<DisciplineKey, DisciplineData> = {
   running: {
-    title: "Modelos de Carrera a Pie (Running & Trail)",
-    badge: "Potencia Stryd & Ritmos VDOT",
-    subtitle:
-      "Diseñados para romper tus mejores marcas sin caer en sobreentrenamiento ni lesiones en el sóleo o tendón de Aquiles.",
-    models: [
-      {
-        name: "Maratón 42K",
-        distance: "42.195 km",
-        idealFor: "Dominar la distancia reina sin chocar con el muro",
-        method: "Canova & Pfitzinger",
-      },
-      {
-        name: "Media Maratón 21K",
-        distance: "21.097 km",
-        idealFor: "Potencia de crucero en umbral anaeróbico continuo",
-        method: "Jack Daniels & Magness",
-      },
-      {
-        name: "10K / 5K Speed",
-        distance: "5 a 10 km",
-        idealFor: "Velocidad neuromuscular y potencia aeróbica VO2max",
-        method: "Billat & Daniels",
-      },
-      {
-        name: "Trail & Montaña",
-        distance: "25K a Ultra",
-        idealFor: "Desnivel acumulado D+ y fuerza excéntrica en bajada",
-        method: "Jason Koop & Kilian Jornet",
-      },
+    title: "Running & Trail Running",
+    badge: "Potencia Stryd & VDOT",
+    desc: "Planes estructurados por vatios exactos inmunes a pendientes y viento. Llega al día de carrera en tu pico óptimo de forma sin riesgo de rotura de sóleo o Aquiles.",
+    targets: [
+      { name: "Maratón 42K", detail: "Fondos progresivos con bloques a ritmo objetivo", method: "Canova & Pfitz" },
+      { name: "Media Maratón 21K", detail: "Potencia de crucero en umbral anaeróbico", method: "Daniels & Magness" },
+      { name: "10K & 5K Speed", detail: "Velocidad neuromuscular y potencia VO2max", method: "Billat & Daniels" },
+      { name: "Trail & Montaña", detail: "Gestión de desnivel acumulado D+ y fuerza", method: "Koop & Jornet" },
     ],
-    benefits: [
-      {
-        title: "Vatios Reales con Stryd",
-        desc: "Entrena con potencia milimétrica inmune a viento en contra o pendientes.",
-        icon: Zap,
-        iconColor: "text-amber-600",
-        iconBg: "bg-amber-50 border-amber-200/80",
-      },
-      {
-        title: "Fondos Cumbre Progresivos",
-        desc: "Tiradas largas calculadas con cap estricto de 3h para proteger tus articulaciones.",
-        icon: Shield,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-50 border-emerald-200/80",
-      },
-      {
-        title: "Afinamiento (Tapering) Científico",
-        desc: "Reducción precisa de fatiga manteniendo el 100% de la intensidad para volar el día D.",
-        icon: Target,
-        iconColor: "text-cyan-600",
-        iconBg: "bg-cyan-50 border-cyan-200/80",
-      },
+    keyTakeaways: [
+      "Cap estricto de 3 horas en fondos",
+      "Semanas de asimilación biológica 3:1",
+      "Afinamiento (Tapering) de 3 semanas",
     ],
-    highlight: "Sincronización directa de series estructuradas (% FTP + Tiempo) a tu Garmin o Coros.",
   },
   cycling: {
-    title: "Modelos de Ciclismo de Rendimiento",
+    title: "Ciclismo de Rendimiento",
     badge: "7 Zonas de Potencia FTP",
-    subtitle:
-      "Maximiza tus vatios por kilo (W/kg), resiste en puertos prolongados y entrena con precisión en rodillo y carretera.",
-    models: [
-      {
-        name: "Gran Fondo & Resistencia",
-        distance: "80 a 160 km",
-        idealFor: "Densidad de potencia aeróbica y economía mitocondrial Z2",
-        method: "Dr. Andrew Coggan & Allen",
-      },
-      {
-        name: "Escalada & Puertos",
-        distance: "Desnivel + W/kg",
-        idealFor: "Potencia sostenida en subida y series Over-Under",
-        method: "Hunter Allen",
-      },
-      {
-        name: "Criterium & Potencia Corta",
-        distance: "Circuitos rápidos",
-        idealFor: "Aceleraciones repetidas y tolerancia glucolítica",
-        method: "Coggan 7 Zonas",
-      },
+    desc: "Optimiza tus vatios por kilo (W/kg), resiste en puertos prolongados y entrena con precisión matemática en rodillo inteligente o carretera.",
+    targets: [
+      { name: "Gran Fondo & Fondo", detail: "Densidad de potencia y volumen mitocondrial Z2", method: "Coggan & Allen" },
+      { name: "Escalada & Puertos", detail: "Potencia sostenida en subida y Over-Unders", method: "Hunter Allen" },
+      { name: "Criterium & Potencia", detail: "Aceleraciones repetidas y tolerancia lactato", method: "Coggan 7 Zonas" },
+      { name: "Gravel & Mixto", detail: "Cadencia eficiente y tracción de fuerza", method: "Joe Friel" },
     ],
-    benefits: [
-      {
-        title: "Zonas FTP Individualizadas",
-        desc: "Prescripción de vatios calibrados con tests de rampa y 20 min contrarreloj.",
-        icon: Bike,
-        iconColor: "text-cyan-600",
-        iconBg: "bg-cyan-50 border-cyan-200/80",
-      },
-      {
-        title: "Sweetspot sin Sobrecarga",
-        desc: "Bloques de alta densidad aeróbica que multiplican tu fondo sin agotar tus piernas.",
-        icon: Flame,
-        iconColor: "text-amber-600",
-        iconBg: "bg-amber-50 border-amber-200/80",
-      },
-      {
-        title: "Fondo Extensivo Eficiente",
-        desc: "Salidas outdoor con cadencia fluida optimizada para oxidar grasas.",
-        icon: Timer,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-50 border-emerald-200/80",
-      },
+    keyTakeaways: [
+      "Zonas FTP individuales por vatios",
+      "Densidad Sweetspot sin quemar fibras",
+      "Compatible con rodillos y Edge",
     ],
-    highlight: "Compatibilidad con rodillos inteligentes, potenciómetros y ciclocomputadores Edge.",
   },
   triathlon: {
-    title: "Modelos de Triatlón Multidisciplina",
-    badge: "Eficiencia Metabólica Concurrente",
-    subtitle:
-      "Combina natación, ciclismo y carrera a pie en un calendario armónico que evita la interferencia muscular.",
-    models: [
-      {
-        name: "Triatlón Media Distancia 70.3",
-        distance: "1.9k + 90k + 21.1k",
-        idealFor: "Resistencia concurrente y nutrición en carrera",
-        method: "Joe Friel & Dr. Jan Olbrecht",
-      },
-      {
-        name: "Full 140.6 / IRONMAN",
-        distance: "3.8k + 180k + 42.2k",
-        idealFor: "Gestión glucogénica profunda y economía de carrera",
-        method: "Olbrecht & Friel",
-      },
-      {
-        name: "Sprint & Olímpico",
-        distance: "Distancias cortas",
-        idealFor: "Transiciones T1/T2 veloces y potencia anaeróbica",
-        method: "Joe Friel",
-      },
+    title: "Triatlón Multidisciplina",
+    badge: "Gestión de Carga Concurrente",
+    desc: "Combina natación, ciclismo y carrera a pie en un calendario armónico que evita la interferencia muscular y maximiza la velocidad en transiciones.",
+    targets: [
+      { name: "70.3 Media Distancia", detail: "Resistencia concurrente y nutrición en carrera", method: "Friel & Olbrecht" },
+      { name: "Full 140.6 IRONMAN", detail: "Eficiencia glucogénica y economía motriz", method: "Olbrecht & Friel" },
+      { name: "Sprint & Olímpico", detail: "Potencia en transiciones y VO2max agudo", method: "Joe Friel" },
+      { name: "Duatlón", detail: "Transición rápida de carrera a bici y viceversa", method: "Friel Power" },
     ],
-    benefits: [
-      {
-        title: "Sesiones Brick Clave",
-        desc: "Transiciones bici aero a carrera para correr fluido y suelto desde la T2.",
-        icon: Layers,
-        iconColor: "text-cyan-600",
-        iconBg: "bg-cyan-50 border-cyan-200/80",
-      },
-      {
-        title: "Cero Interferencia Negativa",
-        desc: "Compensa el impacto mecánico con el bajo estrés articular del agua.",
-        icon: Droplets,
-        iconColor: "text-emerald-600",
-        iconBg: "bg-emerald-50 border-emerald-200/80",
-      },
-      {
-        title: "Dinámica de Lactato Óptima",
-        desc: "Aplica las leyes de Jan Olbrecht para usar el lactato como tu mayor combustible.",
-        icon: FlaskConical,
-        iconColor: "text-indigo-600",
-        iconBg: "bg-indigo-50 border-indigo-200/80",
-      },
+    keyTakeaways: [
+      "Sesiones Brick clave (Bici aero + Carrera)",
+      "Zonas CSS de natación integradas",
+      "Cinética de lactato Jan Olbrecht",
     ],
-    highlight: "Integración simultánea de ritmo CSS en agua, vatios en bici y potencia Stryd en carrera.",
   },
 };
 
 export const LandingDisciplineModels: React.FC = () => {
-  const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineKey>("running");
-  const data = DISCIPLINES[selectedDiscipline];
+  const [activeTab, setActiveTab] = useState<DisciplineKey>("running");
+  const data = DISCIPLINES[activeTab];
 
   return (
-    <section id="modelos" className="py-20 px-4 sm:px-6 max-w-7xl mx-auto w-full">
-      <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+    <section id="modelos" className="py-16 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto w-full">
+      <div className="text-center max-w-2xl mx-auto mb-10 space-y-2.5">
         <span className="text-xs font-bold font-mono uppercase tracking-widest text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200">
-          Metodologías Deportivas de Élite
+          Metodologías Deportivas
         </span>
-        <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
-          Modelos Específicos para Cada Objetivo
+        <h2 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
+          Modelos por Disciplina
         </h2>
-        <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-          Sin planes genéricos de revista. Cada disciplina cuenta con una arquitectura fisiológica construida por las mayores mentes de la ciencia del ejercicio.
+        <p className="text-sm text-slate-600 font-normal">
+          Selecciona tu disciplina para ver los modelos y objetivos adaptados a tu fisiología.
         </p>
       </div>
 
-      {/* Selector de Pestañas con Iconos Vectoriales */}
-      <div className="flex justify-center mb-10">
-        <div className="inline-flex p-1.5 rounded-2xl bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md gap-1">
+      {/* Selector de Pestañas con Desplazamiento Suave en Móvil */}
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xs backdrop-blur-md overflow-x-auto scrollbar-none snap-x max-w-full">
           <button
             type="button"
-            onClick={() => setSelectedDiscipline("running")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              selectedDiscipline === "running"
-                ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/20"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            onClick={() => setActiveTab("running")}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
+              activeTab === "running"
+                ? "bg-cyan-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             }`}
           >
             <Footprints className="h-4 w-4" />
-            <span>Running & Trail</span>
+            <span>Running</span>
           </button>
           <button
             type="button"
-            onClick={() => setSelectedDiscipline("cycling")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              selectedDiscipline === "cycling"
-                ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            onClick={() => setActiveTab("cycling")}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
+              activeTab === "cycling"
+                ? "bg-amber-500 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             }`}
           >
             <Bike className="h-4 w-4" />
@@ -247,11 +111,11 @@ export const LandingDisciplineModels: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setSelectedDiscipline("triathlon")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-              selectedDiscipline === "triathlon"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            onClick={() => setActiveTab("triathlon")}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
+              activeTab === "triathlon"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
             }`}
           >
             <Layers className="h-4 w-4" />
@@ -260,75 +124,40 @@ export const LandingDisciplineModels: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido Dinámico */}
-      <div className="space-y-8 animate-in fade-in duration-300">
-        <div className="bg-white/90 border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/30 backdrop-blur-xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-mono font-bold text-cyan-700 uppercase tracking-wider">
-                {data.badge}
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-950 mt-1">
-                {data.title}
-              </h3>
-            </div>
-            <span className="text-xs font-medium px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">
-              {data.highlight}
-            </span>
+      {/* Tarjeta Condensada de la Disciplina */}
+      <div className="bg-white/90 border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/30 backdrop-blur-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <div>
+            <span className="text-[10px] font-mono font-bold text-cyan-700 uppercase">{data.badge}</span>
+            <h3 className="text-2xl font-black text-slate-950 mt-0.5">{data.title}</h3>
           </div>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-            {data.subtitle}
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-            {data.models.map((mod, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl p-4 bg-slate-50/90 border border-slate-200/80 hover:border-cyan-300 transition-all flex flex-col justify-between space-y-3"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded">
-                      {mod.distance}
-                    </span>
-                    <ArrowUpRight className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <h4 className="text-base font-bold text-slate-950 mt-2">{mod.name}</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-normal">{mod.idealFor}</p>
-                </div>
-                <div className="border-t border-slate-200 pt-2 text-[11px] font-mono text-slate-600">
-                  <span className="text-slate-400">Método:</span> <strong>{mod.method}</strong>
-                </div>
-              </div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-emerald-800">
+            {data.keyTakeaways.map((item, idx) => (
+              <span key={idx} className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                <span>{item}</span>
+              </span>
             ))}
           </div>
         </div>
 
-        {/* 3 Tarjetas de Beneficios */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {data.benefits.map((ben, idx) => {
-            const Icon = ben.icon;
-            return (
-              <div
-                key={idx}
-                className="bg-white/90 border border-slate-200/80 rounded-3xl p-6 shadow-md shadow-slate-200/20 backdrop-blur-xl flex flex-col justify-between space-y-4 hover:border-cyan-300 transition-all"
-              >
-                <div className="space-y-3">
-                  <div className={`h-11 w-11 rounded-2xl ${ben.iconBg} border flex items-center justify-center`}>
-                    <Icon className={`h-5 w-5 ${ben.iconColor}`} />
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-950">{ben.title}</h4>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    {ben.desc}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 border-t border-slate-100 pt-3">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Adaptación Biológica Garantizada</span>
-                </div>
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl font-normal">
+          {data.desc}
+        </p>
+
+        {/* Grid 2x2 Compacto de Modelos */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          {data.targets.map((target, idx) => (
+            <div key={idx} className="rounded-2xl p-4 bg-slate-50/90 border border-slate-200/80 flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-black text-slate-900">{target.name}</div>
+                <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">{target.detail}</div>
               </div>
-            );
-          })}
+              <span className="text-[10px] font-mono font-bold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
+                {target.method}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </section>

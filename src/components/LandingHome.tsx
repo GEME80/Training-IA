@@ -3,15 +3,12 @@
 import React from "react";
 import { SportCanvasBackground } from "./SportCanvasBackground";
 import { LandingHero } from "./landing/LandingHero";
-import { LandingControlHub } from "./landing/LandingControlHub";
-import { LandingHowItWorks } from "./landing/LandingHowItWorks";
-import { LandingComparisonTable } from "./landing/LandingComparisonTable";
+import { LandingLogoCarousel } from "./landing/LandingLogoCarousel";
+import { LandingProductMockup } from "./landing/LandingProductMockup";
+import { LandingFeaturesGrid } from "./landing/LandingFeaturesGrid";
 import { LandingDisciplineModels } from "./landing/LandingDisciplineModels";
-import { LandingCyclePreview } from "./landing/LandingCyclePreview";
 import { LandingHeadCoaches } from "./landing/LandingHeadCoaches";
-import { LandingEcosystem } from "./landing/LandingEcosystem";
 import { LandingFaq } from "./landing/LandingFaq";
-import { LandingCtaSection } from "./landing/LandingCtaSection";
 import { LandingFooter } from "./landing/LandingFooter";
 import { useAuth } from "@/context/AuthContext";
 import { X, ExternalLink } from "lucide-react";
@@ -117,7 +114,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           </div>
         )}
 
-        {/* 2. Hero Section */}
+        {/* 2. Hero Section (1 solo CTA primario, sin ticker público sobrecargado) */}
         <LandingHero
           isAuthenticated={isUserAuthenticated}
           onOpenAuthModal={onOpenAuthModal}
@@ -125,39 +122,25 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           onGoToDashboard={onGoToDashboard}
         />
 
-        {/* 3. Control Hub y Simulador Interactivo */}
-        <LandingControlHub />
+        {/* 3. Carrusel Continuo Infinito de Logos (Garmin, Coros, Intervals, Stryd, Google Gemini) */}
+        <LandingLogoCarousel />
 
-        {/* 4. Cómo Funciona en 3 Pasos */}
-        <LandingHowItWorks />
+        {/* 4. Mockup Visual en Vivo: Telemetría Real + Gráfica de Intervalos + Veredicto IA */}
+        <LandingProductMockup />
 
-        {/* 5. Tabla Comparativa (Tradicional vs PULSE AI) */}
-        <LandingComparisonTable />
+        {/* 5. Tres Pilares del Sistema (Adaptabilidad Diaria, Cap 3h Lesiones, Sincronización Automática) */}
+        <LandingFeaturesGrid />
 
-        {/* 6. Modelos Deportivos por Disciplina (Running, Ciclismo, Triatlón) */}
+        {/* 6. Modelos Deportivos por Disciplina (Running, Ciclismo, Triatlón en Tabs compactos) */}
         <LandingDisciplineModels />
 
-        {/* 7. Visualizador Gráfico de Ciclos e Intervalos */}
-        <LandingCyclePreview />
-
-        {/* 8. Salón de la Fama de Head Coaches (Fichas de Autoridad) */}
+        {/* 7. Metodólogos de Autoridad (Fichas compactas de Head Coaches) */}
         <LandingHeadCoaches />
 
-        {/* 9. Ecosistema de Dispositivos */}
-        <LandingEcosystem />
-
-        {/* 10. Preguntas Frecuentes (FAQ) */}
+        {/* 8. Preguntas Frecuentes Ultra-Compactas (2 columnas, acordeón limpio) */}
         <LandingFaq />
 
-        {/* 11. CTA Final */}
-        <LandingCtaSection
-          isAuthenticated={isUserAuthenticated}
-          onOpenAuthModal={onOpenAuthModal}
-          onLoginWithGoogle={onLoginWithGoogle}
-          onGoToDashboard={onGoToDashboard}
-        />
-
-        {/* 12. Footer */}
+        {/* 9. Footer Minimalista (Sin botones de registro redundantes) */}
         <LandingFooter />
       </div>
     </div>

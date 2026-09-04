@@ -12,6 +12,10 @@ export const LandingFooter: React.FC = () => {
           PULSE AI PRO © 2026 • Smart Endurance & Performance Coach • Todos los derechos reservados.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-slate-500 font-semibold">
+          <a href="#como-funciona" className="hover:text-cyan-700 transition">
+            Cómo Funciona
+          </a>
+          <span>•</span>
           <a href="#modelos" className="hover:text-cyan-700 transition">
             Modelos
           </a>

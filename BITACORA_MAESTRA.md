@@ -2255,4 +2255,48 @@ flowchart TD
   - `Prueba 3 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 páginas generadas exitosamente en 2.2s (Código 0)**.
   - `Prueba 4 (Modularidad):` 100% de archivos modulares bajo **< 350 LOC**.
 
+---
+
+### Versión 3.15 - Rediseño 360° UX/UI de Home Page, Iconografía Vectorial Lucide, Simulador Interactivo de 3 Escenarios, Flujo en 3 Pasos y Tabla Comparativa (2026-09-03)
+- **Fecha y Hora:** 3 de Septiembre de 2026 - 21:05 COT.
+- **Objetivo Arquitectónico:** Ejecutar una auditoría y rediseño integral de 360° sobre la página de inicio (`LandingHome`), aligerando la densidad textual clínica, eliminando por completo los emojis infantiles por una familia uniforme de iconos vectoriales deportivos de `lucide-react`, incorporando un simulador interactivo de 3 escenarios de fatiga, agregando la sección visual *"Tu Camino al Pico de Forma en 3 Pasos"* y una tabla comparativa de valor contra planes tradicionales en PDF y plataformas como TrainingPeaks.
+- **Diagnóstico y Mejoras Implementadas:**
+  1. **Erradicación de Emojis y Adopción de Iconografía Vectorial (`lucide-react`):**
+     - Se eliminaron todos los emojis crudos en títulos, subtítulos, tickers y botones (`⚡`, `📈`, `🔋`, `📐`, `🤖`, `🏃`, `🚴`, `🏊`, banderas).
+     - Se adoptó un sistema de iconos SVG con contenedores pastel suaves de alto contraste: `TrendingUp`, `Flame`, `BatteryCharging`, `Compass`, `Footprints`, `Bike`, `Layers`, `ShieldCheck`, `Sparkles`.
+  2. **Simulador Interactivo de 3 Escenarios Fisiológicos (`LandingControlHub.tsx` - 223 LOC):**
+     - Selector con botones interactivos para alternar entre:
+       - *Frescura (Día D / Supercompensación):* Forma +14.2, Fatiga 42.0. Dictamen adaptativo para ritmo de carrera.
+       - *Semana de Carga:* Forma -18.5, Fatiga 94.5. Dictamen adaptativo de modulación a Z1 regenerativo para proteger sóleos.
+       - *Descarga 3:1:* Forma +5.2, Fatiga 54.0. Dictamen de reparación celular antes del bloque cumbre.
+  3. **Nueva Sección "Tu Camino al Pico de Forma en 3 Pasos" (`LandingHowItWorks.tsx` - 95 LOC):**
+     - Paso 1: Sincroniza en 30s (Hardware Plug & Play).
+     - Paso 2: Tu Fisiología toma el mando (Inferencia matutina Google Gemini con HRV y sueño).
+     - Paso 3: Entrena con vatios exactos (Series automáticas en el reloj con % FTP y tiempo).
+  4. **Nueva Tabla Comparativa de Alto Impacto (`LandingComparisonTable.tsx` - 118 LOC):**
+     - Matriz de diferenciación de 5 dimensiones comparando: *Planes Estáticos en PDF* vs. *Apps Tradicionales* vs. *PULSE AI PRO*.
+  5. **Aligeramiento de Copywriting y Micro-Copy de Cero Fricción:**
+     - Reducción de textos largos en `LandingHero.tsx`, `LandingDisciplineModels.tsx`, `LandingCyclePreview.tsx`, `LandingHeadCoaches.tsx` y `LandingFaq.tsx`.
+     - Inclusión de micro-copys de tranquilidad: *"Acceso seguro con Google • Sin tarjeta de crédito • Compatible con tu reloj actual"*.
+- **Lista de Archivos Creados / Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/components/LandingHome.tsx` [MODIFICADO]: **165 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHowItWorks.tsx` [NUEVO]: **95 líneas** (< 350 LOC)
+  - `src/components/landing/LandingComparisonTable.tsx` [NUEVO]: **118 líneas** (< 350 LOC)
+  - `src/components/landing/LandingControlHub.tsx` [MODIFICADO]: **223 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHero.tsx` [MODIFICADO]: **127 líneas** (< 350 LOC)
+  - `src/components/landing/LandingDisciplineModels.tsx` [MODIFICADO]: **336 líneas** (< 350 LOC)
+  - `src/components/landing/LandingCyclePreview.tsx` [MODIFICADO]: **213 líneas** (< 350 LOC)
+  - `src/components/landing/LandingHeadCoaches.tsx` [MODIFICADO]: **213 líneas** (< 350 LOC)
+  - `src/components/landing/LandingEcosystem.tsx` [MODIFICADO]: **110 líneas** (< 350 LOC)
+  - `src/components/landing/LandingFaq.tsx` [MODIFICADO]: **82 líneas** (< 350 LOC)
+  - `src/components/landing/LandingCtaSection.tsx` [MODIFICADO]: **60 líneas** (< 350 LOC)
+  - `src/components/landing/LandingFooter.tsx` [MODIFICADO]: **42 líneas** (< 350 LOC)
+  - `src/components/Header.tsx` [MODIFICADO]: **251 líneas** (< 350 LOC)
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 páginas generadas exitosamente en 2.5s (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+  - `Prueba 4 (Diseño):` 0 emojis crudos en textos, 100% consistencia con familia de iconos vectoriales `lucide-react`.
+
+
 

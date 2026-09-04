@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, HelpCircle } from "lucide-react";
 
 interface FaqItem {
   q: string;
@@ -11,23 +11,23 @@ interface FaqItem {
 const FAQS: FaqItem[] = [
   {
     q: "¿Cómo adapta la Inteligencia Artificial mi sesión diaria de entrenamiento?",
-    a: "Cada mañana, PULSE AI analiza tu variabilidad de frecuencia cardíaca (HRV), sueño, fatiga muscular acumulada en los últimos 7 días y nivel de frescura biológica. Si detecta sobrecarga o asimilación incompleta, recalibra los vatios y la duración de la sesión del día antes de que salgas a entrenar.",
+    a: "Cada mañana, PULSE AI analiza tu variabilidad de frecuencia cardíaca (HRV), descanso nocturno y fatiga acumulada. Si detecta sobrecarga, recalibra los vatios y la duración de la sesión del día antes de que salgas a entrenar.",
   },
   {
     q: "¿Se sincroniza directamente con mi reloj Garmin o Coros?",
-    a: "Sí. Mediante la conexión nativa con Intervals.icu, todas las series y bloques estructurados por potencia crítica (% CP) o vatios FTP se descargan automáticamente en tu dispositivo para guiarte paso a paso en cada intervalo sin que tengas que programar nada manualmente.",
+    a: "Sí. Mediante la conexión nativa con Intervals.icu, las series estructuradas por potencia (% FTP) se descargan automáticamente en tu reloj para guiarte intervalo a intervalo sin programar nada a mano.",
   },
   {
     q: "¿Qué diferencia a PULSE AI de un plan estático de PDF o una app tradicional?",
-    a: "Los planes estáticos no saben si dormiste mal, si tuviste un día estresante o si asimilaste la carga antes de tiempo. PULSE AI utiliza modelos biológicos continuos y el razonamiento adaptativo de Google Gemini para recalcular tu pico de forma de manera personalizada y dinámica.",
+    a: "Los planes estáticos no saben si dormiste mal o si tuviste un día estresante. PULSE AI utiliza modelos biológicos continuos y Google Gemini para recalcular tu pico de forma de manera personalizada y dinámica.",
   },
   {
     q: "¿Es apto tanto para corredores como para ciclistas y triatletas?",
-    a: "Totalmente. El sistema cuenta con motores específicos para cada disciplina: potencia Stryd y ritmos VDOT para running, 7 zonas de vatios FTP para ciclismo (rodillo y exterior) y gestión concurrente sin fatiga cruzada para triatlón (70.3, IRONMAN y corto).",
+    a: "Totalmente. El sistema cuenta con motores específicos: potencia Stryd y ritmos VDOT para running, 7 zonas de vatios FTP para ciclismo (rodillo y exterior) y gestión concurrente sin fatiga cruzada para triatlón.",
   },
   {
     q: "¿Qué dispositivos y potenciómetros necesito?",
-    a: "Solo necesitas un reloj deportivo (Garmin o Coros) y, si buscas la máxima precisión milimétrica, un potenciómetro Stryd para carrera a pie o potenciómetro/rodillo inteligente en ciclismo. También funciona perfectamente con pulsómetros ópticos o de banda pectoral.",
+    a: "Solo requieres un reloj deportivo (Garmin o Coros). Para máxima precisión por vatios, recomendamos potenciómetro Stryd en carrera o potenciómetro/rodillo inteligente en ciclismo. También opera con sensores de pulso convencionales.",
   },
 ];
 
@@ -40,7 +40,10 @@ export const LandingFaq: React.FC = () => {
 
   return (
     <section id="faq" className="py-20 px-4 sm:px-6 max-w-4xl mx-auto w-full">
-      <div className="text-center mb-12 space-y-2">
+      <div className="text-center mb-12 space-y-3">
+        <span className="text-xs font-bold font-mono uppercase tracking-widest text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+          Resolución de Dudas
+        </span>
         <h2 className="text-3xl sm:text-4xl font-black text-slate-950">
           Preguntas Frecuentes
         </h2>

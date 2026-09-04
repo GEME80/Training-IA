@@ -4,6 +4,8 @@ import React from "react";
 import { SportCanvasBackground } from "./SportCanvasBackground";
 import { LandingHero } from "./landing/LandingHero";
 import { LandingControlHub } from "./landing/LandingControlHub";
+import { LandingHowItWorks } from "./landing/LandingHowItWorks";
+import { LandingComparisonTable } from "./landing/LandingComparisonTable";
 import { LandingDisciplineModels } from "./landing/LandingDisciplineModels";
 import { LandingCyclePreview } from "./landing/LandingCyclePreview";
 import { LandingHeadCoaches } from "./landing/LandingHeadCoaches";
@@ -92,7 +94,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
                   }}
                   className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-4 py-2.5 text-xs shadow-md cursor-pointer hover:brightness-105"
                 >
-                  <span>🚀 Entrar como Germán Morales</span>
+                  <span>Entrar como Germán Morales</span>
                 </button>
                 <a
                   href="https://console.firebase.google.com/project/training-ia-8f67f/authentication/providers"
@@ -123,25 +125,31 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           onGoToDashboard={onGoToDashboard}
         />
 
-        {/* 3. Control Hub y Telemetría */}
+        {/* 3. Control Hub y Simulador Interactivo */}
         <LandingControlHub />
 
-        {/* 4. Modelos Deportivos por Disciplina (Running, Ciclismo, Triatlón) */}
+        {/* 4. Cómo Funciona en 3 Pasos */}
+        <LandingHowItWorks />
+
+        {/* 5. Tabla Comparativa (Tradicional vs PULSE AI) */}
+        <LandingComparisonTable />
+
+        {/* 6. Modelos Deportivos por Disciplina (Running, Ciclismo, Triatlón) */}
         <LandingDisciplineModels />
 
-        {/* 5. Visualizador Gráfico de Ciclos e Intervalos */}
+        {/* 7. Visualizador Gráfico de Ciclos e Intervalos */}
         <LandingCyclePreview />
 
-        {/* 6. Salón de la Fama de Head Coaches (Biografías) */}
+        {/* 8. Salón de la Fama de Head Coaches (Fichas de Autoridad) */}
         <LandingHeadCoaches />
 
-        {/* 7. Ecosistema de Dispositivos */}
+        {/* 9. Ecosistema de Dispositivos */}
         <LandingEcosystem />
 
-        {/* 8. Preguntas Frecuentes (FAQ) */}
+        {/* 10. Preguntas Frecuentes (FAQ) */}
         <LandingFaq />
 
-        {/* 9. CTA Final */}
+        {/* 11. CTA Final */}
         <LandingCtaSection
           isAuthenticated={isUserAuthenticated}
           onOpenAuthModal={onOpenAuthModal}
@@ -149,7 +157,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           onGoToDashboard={onGoToDashboard}
         />
 
-        {/* 10. Footer */}
+        {/* 12. Footer */}
         <LandingFooter />
       </div>
     </div>

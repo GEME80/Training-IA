@@ -60,7 +60,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* 2. Centro: Enlaces en Landing Page */}
         {isLanding && (
-          <nav className="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-600">
+          <nav className="hidden lg:flex items-center space-x-6 text-sm font-semibold text-slate-600">
+            <a href="#como-funciona" className="hover:text-cyan-700 transition">
+              Cómo Funciona
+            </a>
             <a href="#modelos" className="hover:text-cyan-700 transition">
               Modelos
             </a>

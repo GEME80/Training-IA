@@ -19,10 +19,10 @@ const DISCIPLINES: Record<DisciplineKey, DisciplineData> = {
     badge: "Potencia Stryd & VDOT",
     desc: "Planes estructurados por vatios exactos inmunes a pendientes y viento. Llega al día de carrera en tu pico óptimo de forma sin riesgo de rotura de sóleo o Aquiles.",
     targets: [
-      { name: "Maratón 42K", detail: "Fondos progresivos con bloques a ritmo objetivo", method: "Canova & Pfitz" },
-      { name: "Media Maratón 21K", detail: "Potencia de crucero en umbral anaeróbico", method: "Daniels & Magness" },
-      { name: "10K & 5K Speed", detail: "Velocidad neuromuscular y potencia VO2max", method: "Billat & Daniels" },
-      { name: "Trail & Montaña", detail: "Gestión de desnivel acumulado D+ y fuerza", method: "Koop & Jornet" },
+      { name: "Maratón 42K", detail: "Fondos progresivos y bloques a potencia de ritmo maratón", method: "Renato Canova" },
+      { name: "Media Maratón 21K", detail: "Potencia de crucero en umbral anaeróbico y tempo sostenido", method: "Jack Daniels" },
+      { name: "10K & 5K Velocidad", detail: "Velocidad neuromuscular, VO2max y micro-intervalos", method: "Daniels & Seiler" },
+      { name: "Trail & Ultra Fondo", detail: "Volumen mitocondrial polarizado en Zona 2 y desnivel D+", method: "Stephen Seiler" },
     ],
     keyTakeaways: [
       "Cap estricto de 3 horas en fondos",
@@ -35,10 +35,10 @@ const DISCIPLINES: Record<DisciplineKey, DisciplineData> = {
     badge: "7 Zonas de Potencia FTP",
     desc: "Optimiza tus vatios por kilo (W/kg), resiste en puertos prolongados y entrena con precisión matemática en rodillo inteligente o carretera.",
     targets: [
-      { name: "Gran Fondo & Fondo", detail: "Densidad de potencia y volumen mitocondrial Z2", method: "Coggan & Allen" },
-      { name: "Escalada & Puertos", detail: "Potencia sostenida en subida y Over-Unders", method: "Hunter Allen" },
-      { name: "Criterium & Potencia", detail: "Aceleraciones repetidas y tolerancia lactato", method: "Coggan 7 Zonas" },
-      { name: "Gravel & Mixto", detail: "Cadencia eficiente y tracción de fuerza", method: "Joe Friel" },
+      { name: "Gran Fondo & Resistencia", detail: "Densidad de potencia mitocondrial en Z2 y Sweetspot", method: "Coggan & Seiler" },
+      { name: "Escalada & Puertos", detail: "Potencia sostenida en subida (W/kg) e intervalos Over-Under", method: "Andrew Coggan" },
+      { name: "Criterium & Potencia", detail: "Aceleraciones explosivas de 1-3 min y capacidad anaeróbica", method: "Andrew Coggan" },
+      { name: "Gravel & Fondo Mixto", detail: "Cadencia eficiente de 90-100 rpm y periodización de fuerza", method: "Joe Friel" },
     ],
     keyTakeaways: [
       "Zonas FTP individuales por vatios",
@@ -51,10 +51,10 @@ const DISCIPLINES: Record<DisciplineKey, DisciplineData> = {
     badge: "Gestión de Carga Concurrente",
     desc: "Combina natación, ciclismo y carrera a pie en un calendario armónico que evita la interferencia muscular y maximiza la velocidad en transiciones.",
     targets: [
-      { name: "70.3 Media Distancia", detail: "Resistencia concurrente y nutrición en carrera", method: "Friel & Olbrecht" },
-      { name: "Full 140.6 IRONMAN", detail: "Eficiencia glucogénica y economía motriz", method: "Olbrecht & Friel" },
-      { name: "Sprint & Olímpico", detail: "Potencia en transiciones y VO2max agudo", method: "Joe Friel" },
-      { name: "Duatlón", detail: "Transición rápida de carrera a bici y viceversa", method: "Friel Power" },
+      { name: "Full 140.6 IRONMAN", detail: "Eficiencia glucogénica, oxidación de grasas y ritmo final", method: "Olbrecht & Friel" },
+      { name: "70.3 Media Distancia", detail: "Resistencia concurrente, nutrición y transiciones Brick", method: "Friel & Olbrecht" },
+      { name: "Sprint & Olímpico", detail: "Potencia en bicicleta a ritmo umbral y transición veloz a pie", method: "Friel & Daniels" },
+      { name: "Duatlón", detail: "Transición rápida de carrera a bici y viceversa sin fatiga muscular", method: "Friel & Coggan" },
     ],
     keyTakeaways: [
       "Sesiones Brick clave (Bici aero + Carrera)",

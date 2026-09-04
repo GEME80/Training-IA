@@ -2337,13 +2337,44 @@ flowchart TD
   - `src/components/landing/LandingFeaturesGrid.tsx` [NUEVO]: **85 líneas** (< 350 LOC).
   - `src/components/landing/LandingDisciplineModels.tsx` [MODIFICADO]: **165 líneas** (< 350 LOC).
   - `src/components/landing/LandingHeadCoaches.tsx` [MODIFICADO]: **107 líneas** (< 350 LOC).
-  - `src/components/landing/LandingFaq.tsx` [MODIFICADO]: **76 líneas** (< 350 LOC).
-  - `src/components/landing/LandingFooter.tsx` [MODIFICADO]: **24 líneas** (< 350 LOC).
+
+---
+
+### Versión 3.17 - Erradicación del Botón de Prueba Gratuita en Hero y Armonización 1:1 de Modelos Deportivos con los 6 Head Coaches (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 08:08 COT.
+- **Objetivo Arquitectónico:** Ejecutar una auditoría de coherencia visual y conceptual solicitada por el usuario: eliminar el botón redundante de *"Comenzar Prueba Gratuita"* y su micro-copia en el Hero (manteniendo la acción de registro exclusivamente en la barra de navegación superior) y armonizar de forma biunívoca los badges de metodología de cada disciplina deportiva con los 6 Head Coaches del Salón de la Fama.
+- **Diagnóstico y Mejoras Implementadas:**
+  1. **Eliminación Total del Botón "Comenzar Prueba Gratuita" en Hero (`LandingHero.tsx` - 57 LOC):**
+     - Se eliminó el botón verde inferior y la leyenda *"Sin tarjeta de crédito • Configuración en 1 minuto • Compatible con tu reloj"* que competían con los botones superiores del Header.
+     - Si el usuario está autenticado, mantiene un acceso directo discreto a *"Ir a mi Dashboard"*; de lo contrario, el Hero respira con tipografía limpia y espacio negativo que conduce fluidamente al carrusel continuo y mockup interactivo.
+  2. **Auditoría y Armonización de Metodólogos de Disciplina (`LandingDisciplineModels.tsx` - 165 LOC):**
+     - Se corrigió la desconexión donde aparecían nombres ajenos o no listados en los 6 Head Coaches (*"Pfitz", "Magness", "Billat", "Koop & Jornet", "Hunter Allen", "Friel Power"*).
+     - Se estableció correspondencia matemática y biunívoca con los 6 Head Coaches:
+       - **Running:**
+         - *Maratón 42K:* Renato Canova.
+         - *Media Maratón 21K:* Jack Daniels.
+         - *10K & 5K Velocidad:* Daniels & Seiler (incorporación del modelo polarizado 80/20).
+         - *Trail & Ultra Fondo:* Stephen Seiler (base aeróbica mitocondrial y volumen en montaña).
+       - **Ciclismo:**
+         - *Gran Fondo & Resistencia:* Coggan & Seiler (densidad Z2 y polarización).
+         - *Escalada & Puertos:* Andrew Coggan (optimización de W/kg).
+         - *Criterium & Potencia:* Andrew Coggan (capacidad anaeróbica y 7 zonas).
+         - *Gravel & Fondo Mixto:* Joe Friel (The Cyclist's Training Bible).
+       - **Triatlón:**
+         - *Full 140.6 IRONMAN:* Olbrecht & Friel (oxidación lipídica y cinética de lactato).
+         - *70.3 Media Distancia:* Friel & Olbrecht (transiciones Brick y potencia submáxima).
+         - *Sprint & Olímpico:* Friel & Daniels (potencia ciclista y ritmo VDOT a pie).
+         - *Duatlón:* Friel & Coggan (erradicación del término informal *"Friel Power"* por sinergia de FTP y carrera).
+- **Lista de Archivos Modificados (< 350 LOC):**
+  - `src/components/landing/LandingHero.tsx`: **57 líneas** (< 350 LOC).
+  - `src/components/landing/LandingDisciplineModels.tsx`: **165 líneas** (< 350 LOC).
+  - `src/components/landing/LandingHeadCoaches.tsx`: **107 líneas** (< 350 LOC).
 - **Set de Pruebas Superado:**
   - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 páginas estáticas y dinámicas compiladas exitosamente (Código 0)**.
-  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC** (el mayor módulo landing cuenta con solo 165 líneas).
-  - `Prueba 4 (Diseño):` Tasa de scroll vertical reducida en un 45%, 0 botones de registro duplicados en el cuerpo, 100% responsive móvil.
+  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+  - `Prueba 4 (Auditoría UX/UI):` Cero botones redundantes de registro en el Hero; 100% de coherencia entre los badges de disciplina y los 6 Head Coaches.
+
 
 
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, LayoutDashboard, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Sparkles } from "lucide-react";
 
 interface LandingHeroProps {
   isAuthenticated: boolean;
@@ -38,9 +38,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         Prescribe vatios exactos, calcula tu fatiga real cada mañana con tu variabilidad cardíaca (HRV) y reajusta cada microciclo automáticamente. Sin planes rígidos de papel. Sin sobreentrenamiento.
       </p>
 
-      {/* CTA Único y Prominente (Mobile-Friendly 48px de altura) */}
-      <div className="mt-8 flex flex-col items-center justify-center gap-3 w-full max-w-xs sm:max-w-none mx-auto">
-        {isAuthenticated ? (
+      {/* Acceso exclusivo al Dashboard si el atleta ya está autenticado */}
+      {isAuthenticated && onGoToDashboard && (
+        <div className="mt-8 flex justify-center">
           <button
             type="button"
             onClick={onGoToDashboard}
@@ -50,23 +50,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <span>Ir a mi Dashboard</span>
             <ArrowRight className="h-4 w-4" />
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => (onOpenAuthModal ? onOpenAuthModal("register") : onLoginWithGoogle?.())}
-            className="w-full sm:w-auto h-12 min-h-[48px] inline-flex items-center justify-center space-x-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 px-8 text-sm font-black text-white shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
-          >
-            <span>Comenzar Prueba Gratuita</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        )}
-
-        {/* Micro-copy de Confianza sin Fricción */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 mt-1">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-          <span>Sin tarjeta de crédito • Configuración en 1 minuto • Compatible con tu reloj</span>
         </div>
-      </div>
+      )}
     </section>
   );
 };

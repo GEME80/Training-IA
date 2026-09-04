@@ -54,6 +54,7 @@ export class IntervalsClient {
     maxHR?: number;
     lthr?: number;
     weight?: number;
+    heightCm?: number;
     athlete?: AthleteProfile;
     error?: string;
   }> {
@@ -61,12 +62,26 @@ export class IntervalsClient {
       const athlete = await this.getAthlete();
       const anyAthlete = athlete as unknown as Record<string, unknown>;
       const athleteName = athlete.name || athlete.id || "Atleta";
-      const runFtp = (anyAthlete.icu_running_ftp as number) || (anyAthlete.run_ftp as number) || undefined;
-      const bikeFtp = (anyAthlete.icu_ftp as number) || (anyAthlete.bike_ftp as number) || undefined;
+
+      const sports = (anyAthlete.sportSettings as Array<Record<string, unknown>>) || [];
+      const runSport = sports.find((s) => {
+        const types = s.types as string[] | undefined;
+        return types?.some((t) => /run|running|virtualrun|trailrun/i.test(t)) || /run/i.test(String(s.id));
+      });
+      const rideSport = sports.find((s) => {
+        const types = s.types as string[] | undefined;
+        return types?.some((t) => /ride|cycling|bike|virtualride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id));
+      });
+
+      const mmpModel = runSport?.mmp_model as { criticalPower?: number } | undefined;
+      const runFtp = mmpModel?.criticalPower || (runSport?.ftp as number) || (anyAthlete.icu_running_ftp as number) || (anyAthlete.run_ftp as number) || undefined;
+      const bikeFtp = (rideSport?.ftp as number) || (anyAthlete.icu_ftp as number) || (anyAthlete.bike_ftp as number) || undefined;
       const restingHR = (anyAthlete.icu_resting_hr as number) || (anyAthlete.restingHR as number) || undefined;
-      const maxHR = (anyAthlete.max_hr as number) || (anyAthlete.maxHR as number) || undefined;
-      const lthr = (anyAthlete.lthr as number) || undefined;
+      const lthr = (runSport?.lthr as number) || (rideSport?.lthr as number) || (anyAthlete.lthr as number) || undefined;
+      const maxHR = (runSport?.max_hr as number) || (rideSport?.max_hr as number) || (anyAthlete.max_hr as number) || (anyAthlete.maxHR as number) || undefined;
       const weight = (anyAthlete.icu_weight as number) || (anyAthlete.weight as number) || undefined;
+      const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
+      const heightCm = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
       const city = (anyAthlete.city as string) || undefined;
 
       return {
@@ -80,6 +95,7 @@ export class IntervalsClient {
         maxHR: typeof maxHR === "number" ? maxHR : undefined,
         lthr: typeof lthr === "number" ? lthr : undefined,
         weight: typeof weight === "number" ? weight : undefined,
+        heightCm: typeof heightCm === "number" ? heightCm : undefined,
         athlete,
       };
     } catch (err: unknown) {

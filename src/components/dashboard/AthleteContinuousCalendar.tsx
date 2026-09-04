@@ -19,7 +19,7 @@ interface AthleteContinuousCalendarProps {
   weeklyAvailability?: WeeklyAvailabilityMap;
   weeklyExecutedTss?: number;
   dailyExecutedActivities?: DailyExecutedMap;
-  onOpenAICoach: () => void;
+  onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
 }

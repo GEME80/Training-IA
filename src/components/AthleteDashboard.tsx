@@ -5,7 +5,6 @@ import { MacrocycleView } from "@/components/MacrocycleView";
 import { PhysiologicalCards } from "@/components/PhysiologicalCards";
 import { MacrocyclePreviewTimeline } from "@/components/MacrocyclePreviewTimeline";
 import { SeasonStudioTab } from "@/components/SeasonStudioModal";
-import { HeadCoachChatDrawer } from "@/components/HeadCoachChatDrawer";
 import { MacrocycleWizardModal } from "@/components/MacrocycleWizardModal";
 import { IntervalsOnboardingModal } from "@/components/IntervalsOnboardingModal";
 
@@ -109,7 +108,9 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       atl: 0,
       tsb: 0,
       rampRate: 0,
-      restingHR: userProfile?.restingHR,
+      restingHR: userProfile?.restingHR ?? (Number(userStorage.getItem("resting_hr")) || undefined),
+      lthr: userProfile?.lthr ?? (Number(userStorage.getItem("lthr")) || undefined),
+      maxHR: userProfile?.maxHR ?? (Number(userStorage.getItem("max_hr")) || undefined),
       run_ftp: userProfile?.runFtp || 0,
       bike_ftp: userProfile?.bikeFtp || 0,
       weight: userProfile?.weightKg,
@@ -304,13 +305,17 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
           const resolvedBikeFtp = data.profile?.bike_ftp || bikeFtp || profile.bike_ftp;
           const resolvedRunFtp = data.profile?.run_ftp || runFtp || profile.run_ftp;
+          const resolvedLthr = data.profile?.lthr ?? profile.lthr;
+          const resolvedRestingHR = data.profile?.restingHR ?? profile.restingHR;
+          const resolvedMaxHR = data.profile?.maxHR ?? profile.maxHR;
 
-          if (data.profile?.bike_ftp) {
-            userStorage.setItem("bike_ftp", String(data.profile.bike_ftp));
-          }
-          if (data.profile?.run_ftp) {
-            userStorage.setItem("run_ftp", String(data.profile.run_ftp));
-          }
+          if (data.profile?.bike_ftp) userStorage.setItem("bike_ftp", String(data.profile.bike_ftp));
+          if (data.profile?.run_ftp) userStorage.setItem("run_ftp", String(data.profile.run_ftp));
+          if (data.profile?.lthr) userStorage.setItem("lthr", String(data.profile.lthr));
+          if (data.profile?.restingHR) userStorage.setItem("resting_hr", String(data.profile.restingHR));
+          if (data.profile?.maxHR) userStorage.setItem("max_hr", String(data.profile.maxHR));
+          if (data.profile?.weight) userStorage.setItem("weight_kg", String(data.profile.weight));
+          if (data.profile?.heightCm) userStorage.setItem("height_cm", String(data.profile.heightCm));
 
           setProfile((prev) => ({
             ...prev,
@@ -319,6 +324,9 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             heightCm: data.profile?.heightCm ?? prev.heightCm,
             gender: data.profile?.gender ?? prev.gender,
             birthDate: data.profile?.birthDate ?? prev.birthDate,
+            lthr: resolvedLthr ?? prev.lthr,
+            restingHR: resolvedRestingHR ?? prev.restingHR,
+            maxHR: resolvedMaxHR ?? prev.maxHR,
             name:
               data.profile?.name && data.profile.name !== "Atleta"
                 ? data.profile.name
@@ -326,6 +334,29 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             run_ftp: resolvedRunFtp,
             bike_ftp: resolvedBikeFtp,
           }));
+
+          if (user?.uid && (data.profile?.lthr || data.profile?.restingHR || data.profile?.maxHR || data.profile?.run_ftp || data.profile?.bike_ftp)) {
+            fetch("/api/profile", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                uid: user.uid,
+                email: user.email || userProfile?.email || "",
+                displayName: data.profile?.name || profile.name || userProfile?.displayName,
+                intervalsAthleteId: targetAthleteId,
+                rawApiKey: targetApiKey,
+                runFtp: resolvedRunFtp,
+                bikeFtp: resolvedBikeFtp,
+                lthr: resolvedLthr,
+                restingHR: resolvedRestingHR,
+                maxHR: resolvedMaxHR,
+                weightKg: data.profile?.weight ?? profile.weight,
+                heightCm: data.profile?.heightCm ?? profile.heightCm,
+                birthDate: data.profile?.birthDate ?? profile.birthDate,
+                gender: data.profile?.gender ?? profile.gender,
+              }),
+            }).catch(() => {});
+          }
           setPhysioStatus(data.physioStatus);
 
           const savedBlueprintStr = userStorage.getItem("active_blueprint");
@@ -732,6 +763,18 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       setProfile((p) => ({ ...p, birthDate: data.birthDate }));
       userStorage.setItem("birth_date", data.birthDate);
     }
+    if (data.lthr !== undefined) {
+      setProfile((p) => ({ ...p, lthr: data.lthr }));
+      userStorage.setItem("lthr", String(data.lthr));
+    }
+    if (data.restingHR !== undefined) {
+      setProfile((p) => ({ ...p, restingHR: data.restingHR }));
+      userStorage.setItem("resting_hr", String(data.restingHR));
+    }
+    if (data.maxHR !== undefined) {
+      setProfile((p) => ({ ...p, maxHR: data.maxHR }));
+      userStorage.setItem("max_hr", String(data.maxHR));
+    }
     if (data.weeklyAvailability) {
       setWeeklyAvailability(data.weeklyAvailability);
       userStorage.setJSON("weekly_availability", data.weeklyAvailability);
@@ -754,6 +797,9 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           rawApiKey: data.apiKey || apiKeyCache,
           runFtp: data.runFtp || profile.run_ftp,
           bikeFtp: data.bikeFtp || profile.bike_ftp,
+          lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
+          restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
+          maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
           weightKg: data.weightKg || profile.weight,
           heightCm: data.heightCm || profile.heightCm,
           birthDate: data.birthDate || profile.birthDate,
@@ -872,6 +918,9 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       const rawBikeFtp = userProfile?.bikeFtp ?? (Number(userStorage.getItem("bike_ftp")) || 0);
       const resolvedRunFtp = !isSuper && rawRunFtp === 327 ? 0 : rawRunFtp;
       const resolvedBikeFtp = !isSuper && rawBikeFtp === 240 ? 0 : rawBikeFtp;
+      const rawLthr = userProfile?.lthr ?? (Number(userStorage.getItem("lthr")) || undefined);
+      const rawRestingHR = userProfile?.restingHR ?? (Number(userStorage.getItem("resting_hr")) || undefined);
+      const rawMaxHR = userProfile?.maxHR ?? (Number(userStorage.getItem("max_hr")) || undefined);
 
       setProfile((prev) => ({
         ...prev,
@@ -882,6 +931,9 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         heightCm: resolvedHeight ?? prev.heightCm,
         gender: resolvedGender ?? prev.gender,
         birthDate: resolvedBirthDate ?? prev.birthDate,
+        lthr: rawLthr ?? prev.lthr,
+        restingHR: rawRestingHR ?? prev.restingHR,
+        maxHR: rawMaxHR ?? prev.maxHR,
       }));
 
       if (userProfile?.targetRaces && Array.isArray(userProfile.targetRaces) && userProfile.targetRaces.length > 0) {
@@ -1219,7 +1271,12 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
                 weeklyAvailability={weeklyAvailability}
                 weeklyExecutedTss={weeklyExecutedTss}
                 dailyExecutedActivities={dailyExecutedActivities}
-                onOpenAICoach={() => setActiveNavSection("head_coach")}
+                onOpenAICoach={(weekIdx) => {
+                  if (typeof weekIdx === "number") {
+                    setSelectedMacroWeekIdx(weekIdx);
+                  }
+                  setActiveNavSection("head_coach");
+                }}
                 onSyncWeekToIntervals={handleSyncToIntervals}
                 onSelectWorkoutModal={(item) => setSelectedWorkoutModal(item)}
               />
@@ -1281,12 +1338,19 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
             physioStatus={physioStatus}
             macrocyclePhase={macrocyclePhase}
             weekOffset={weekOffset}
-            weekNumber={calculatedWeekNumber}
+            weekNumber={
+              selectedMacroWeekIdx !== undefined && blueprint?.weeks?.[selectedMacroWeekIdx]
+                ? selectedMacroWeekIdx + 1
+                : calculatedWeekNumber
+            }
             apiKey={apiKeyCache}
             geminiApiKey={geminiKeyCache}
             selectedModel={selectedModelCache}
             temperature={temperatureCache}
             weeklyAvailability={weeklyAvailability}
+            uid={user?.uid}
+            email={user?.email || userProfile?.email}
+            dailyExecutedActivities={dailyExecutedActivities}
             currentPlan={
               activePlan.length > 0
                 ? activePlan
@@ -1322,6 +1386,9 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
             heightCm={profile.heightCm}
             birthDate={profile.birthDate}
             gender={profile.gender}
+            restingHR={profile.restingHR}
+            lthr={profile.lthr}
+            maxHR={profile.maxHR}
             apiKey={apiKeyCache}
             ctl={physioStatus?.ctl || profile.ctl || 0}
             atl={physioStatus?.atl || profile.atl || 0}

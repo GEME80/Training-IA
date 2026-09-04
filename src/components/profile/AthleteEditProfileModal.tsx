@@ -43,12 +43,17 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
   initialData,
   onSave,
 }) => {
+  const normalizeHeight = (h?: number) => {
+    if (!h) return 0;
+    return h < 3 && h > 0 ? Math.round(h * 100) : Math.round(h);
+  };
+
   const [displayName, setDisplayName] = useState(initialData.displayName || "Atleta");
   const [email] = useState(initialData.email || "");
   const [birthDate, setBirthDate] = useState(initialData.birthDate || "");
   const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialData.gender || "M");
   const [weightKg, setWeightKg] = useState<number>(initialData.weightKg || 0);
-  const [heightCm, setHeightCm] = useState<number>(initialData.heightCm || 0);
+  const [heightCm, setHeightCm] = useState<number>(normalizeHeight(initialData.heightCm));
   const [runFtp, setRunFtp] = useState<number>(initialData.runFtp || 0);
   const [bikeFtp, setBikeFtp] = useState<number>(initialData.bikeFtp || 0);
   const [lthr, setLthr] = useState<number>(initialData.lthr || 0);
@@ -68,7 +73,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
       setBirthDate(initialData.birthDate || "");
       setGender(initialData.gender || "M");
       setWeightKg(initialData.weightKg || 0);
-      setHeightCm(initialData.heightCm || 0);
+      setHeightCm(normalizeHeight(initialData.heightCm));
       setRunFtp(initialData.runFtp || 0);
       setBikeFtp(initialData.bikeFtp || 0);
       setLthr(initialData.lthr || 0);

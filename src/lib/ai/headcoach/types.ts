@@ -31,6 +31,8 @@ export interface WorkoutDiff {
 export interface HeadCoachChatRequest {
   athleteId?: string;
   apiKey?: string;
+  uid?: string;
+  email?: string;
   customGeminiKey?: string;
   selectedModel?: string;
   messages?: ChatMessage[];
@@ -40,6 +42,7 @@ export interface HeadCoachChatRequest {
   macrocyclePhase?: MacrocyclePhaseInfo | null;
   weeklyAvailability?: WeeklyAvailabilityMap;
   currentPlan?: PlanItem[];
+  dailyExecutedActivities?: Record<string, any>;
   runFtp?: number;
   bikeFtp?: number;
   isInitialAudit?: boolean;
@@ -66,6 +69,15 @@ export interface HeadCoachChatResponse {
     tsb: string;
     rampRate: string;
     feedback: string;
+    activitiesSummary?: Array<{
+      day: string;
+      date?: string;
+      plannedWorkout?: string;
+      plannedTss: number;
+      actualTss: number;
+      status: "COMPLETED" | "PARTIAL" | "SKIPPED" | "REST_OK" | "PENDING";
+      details: string;
+    }>;
   };
   suggestedPlan?: PlanItem[] | null;
   quickReplies?: string[];

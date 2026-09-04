@@ -61,24 +61,20 @@ export function handleDeterministicFallback(
 
     const fallbackPlannedTss = fallbackGeneratedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
 
-    const auditText = `### 📊 Dictamen Fisiológico • Cierre de Semana
-**Atleta:** ${profile.name || "Atleta"}${profile.age ? ` (${profile.age} años)` : ""}
+    const auditText = `### 🎯 Dictamen del Microciclo • Semana ${targetPlanningWeekNum}
+**Atleta:** ${profile.name || "Atleta"}${profile.age ? ` (${profile.age} años)` : ""} | **Estado TSB:** ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}
 
-- 🔋 **Sensación de Forma (TSB):** ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} • *${formDiagnostic}*
-- 📈 **Fitness (CTL):** ${physioStatus.ctl.toFixed(1)} | **Fatiga (ATL):** ${physioStatus.atl.toFixed(1)}
-- 💓 **Recuperación Cardíaca (HRV):** ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"} • *Pulso reposo: ${profile.restingHR ? `${profile.restingHR} bpm` : "Estable"}*
-- ⚡ **Carga Semana Previa:** ${actualTss} TSS acumulados (${compliancePct}% cumplimiento)
+🟢 **Fortalezas & Disciplina:**
+- Cumplimiento de carga acumulada: **${actualTss} TSS** (${compliancePct}% de asimilación sobre el plan).
+- Fitness consolidado (CTL): **${physioStatus.ctl.toFixed(1)}** con fatiga aguda (ATL) en **${physioStatus.atl.toFixed(1)}**.
+- Recuperación del sistema nervioso (HRV): **${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"}** (balance adecuado para asimilar calidad).
 
----
+⚠️ **Puntos de Atención & Control de Carga:**
+- ${physioStatus.tsb < -15 ? "Tu TSB ha caído a zona de sobrecarga. Vigila el descanso nocturno e hidratación para evitar fatiga residual." : "Ramp Rate en rango controlado. Mantén la disciplina en los ritmos y no te aceleres en los días de trote suave Z1."}
+- Respetar los descansos pasivos programados es innegociable para asimilar las adaptaciones neuromusculares.
 
-### 🎯 Propuesta de Microciclo: Semana ${targetPlanningWeekNum} (~${fallbackPlannedTss} TSS)
-Microciclo calibrado a tus umbrales de potencia${profile.run_ftp ? ` (**Stryd CP ${profile.run_ftp}W**)` : ""}${profile.bike_ftp ? ` y (**Bike FTP ${profile.bike_ftp}W**)` : ""} respetando tu disponibilidad semanal:
-
-${availabilityFormatted}
-
----
-
-¿Apruebas esta planificación o deseas calibrar algún día por viaje o disponibilidad?`;
+⚡ **Propuesta de Microciclo Calibrada (~${fallbackPlannedTss} TSS):**
+Semana estructurada con vatios exactos a tus umbrales${profile.run_ftp ? ` (**Stryd CP ${profile.run_ftp}W**)` : ""}${profile.bike_ftp ? ` y (**Bike FTP ${profile.bike_ftp}W**)` : ""}, respetando tu disponibilidad semanal.`;
 
     return {
       success: true,
@@ -232,6 +228,20 @@ El volumen semanal se recalibra a **${plannedWeekTss - 20} TSS**, manteniendo el
     const bikeWattsStr = profile.bike_ftp ? ` (${Math.round(profile.bike_ftp * 0.65)}W)` : "";
     replyMsg = `### 🚴 Sustitución por Ciclismo Sin Impacto Aplicada
 Para proteger la musculatura y tendones, sustituimos la carrera por **50 minutos de Ciclismo Z2 en Rodillo${bikeWattsStr}**. Mantienes el trabajo aeróbico con cero impacto osteoarticular.`;
+  } else if (
+    lowerMsg.includes("4 semanas") ||
+    lowerMsg.includes("cuatro semanas") ||
+    lowerMsg.includes("mes") ||
+    lowerMsg.includes("varias semanas") ||
+    lowerMsg.includes("siguientes semanas") ||
+    lowerMsg.includes("próximas semanas")
+  ) {
+    replyMsg = `### 🧠 Fundamento Biológico de la Adaptación de Microciclos
+Como tu Head Coach, mi misión es asegurar que cada sesión responda a la **biología viva de tu cuerpo** y no a predicciones estáticas.
+
+La adaptación fisiológica opera **microciclo a microciclo**: la carga adecuada para la Semana 3 o 4 dependerá estrictamente de cómo asimile tu organismo las series y fondos de esta semana y de la siguiente (analizando tu fatiga aguda ATL, TSB y variabilidad HRV en tiempo real).
+
+Para la visión estratégica a largo plazo disponemos del **Plan del Macrociclo**; pero aquí en la trinchera adaptativa, **nos concentramos en afinar la semana en curso o la siguiente**. Clavemos este microciclo y, con tus datos de telemetría real, modularemos la que sigue con precisión milimétrica.`;
   } else {
     replyMsg = `He registrado tus indicaciones ("${lastUserMsg}"). Los parámetros fisiológicos (CTL ${physioStatus.ctl.toFixed(1)}, TSB ${physioStatus.tsb.toFixed(1)}) están equilibrados. ¿Procedemos con la sincronización a Intervals.icu?`;
   }

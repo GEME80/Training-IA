@@ -1,20 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Sparkles,
-  Send,
-  RefreshCw,
-  Check,
-  Bot,
-  User,
-  Activity,
-  ArrowRight,
-} from "lucide-react";
+import { Sparkles, Send, RefreshCw, Activity, CheckCircle2 } from "lucide-react";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
-import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engine";
+import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
+import { HeadCoachQuickActions } from "./headcoach/HeadCoachQuickActions";
+import { HeadCoachMessageItem, HeadCoachMessageData } from "./headcoach/HeadCoachMessageItem";
 
 interface AthleteHeadCoachViewProps {
   profile: AthleteProfile;
@@ -28,6 +22,9 @@ interface AthleteHeadCoachViewProps {
   temperature?: number;
   weeklyAvailability?: WeeklyAvailabilityMap;
   currentPlan: PlanItem[];
+  dailyExecutedActivities?: Record<string, any>;
+  uid?: string;
+  email?: string;
   onApplyPlanAndSync?: (plan?: PlanItem[]) => Promise<void>;
   onPlanUpdate?: (updatedPlan: PlanItem[]) => void;
 }
@@ -40,23 +37,45 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   weekNumber,
   apiKey,
   geminiApiKey,
-  selectedModel = "gemini-2.5-flash",
+  selectedModel = "gemini-3.5-flash",
   temperature = 0.0,
   weeklyAvailability,
   currentPlan,
+  dailyExecutedActivities = {},
+  uid,
+  email,
   onApplyPlanAndSync,
   onPlanUpdate,
 }) => {
-  const [messages, setMessages] = useState<Array<{ id: string; role: "user" | "assistant"; text: string }>>([
+  const [activeWeekNumber, setActiveWeekNumber] = useState<number>(weekNumber || 1);
+  const [isApplying, setIsApplying] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  const initialWelcomeText = `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
+
+Tengo en pantalla tu telemetría en vivo: Fitness CTL ${physioStatus?.ctl?.toFixed(1) ?? "—"}, Fatiga ATL ${physioStatus?.atl?.toFixed(1) ?? "—"} y TSB ${physioStatus?.tsb !== undefined ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)) : "—"}${physioStatus?.currentHrv ? ` (HRV ${physioStatus.currentHrv} ms)` : ""}.
+
+Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macrocyclePhase?.phaseLabel || "Construcción"}).
+
+¿Cómo sientes las piernas tras las actividades de estos días o requieres adaptar el microciclo por viaje, molestia o tiempo?`;
+
+  const [messages, setMessages] = useState<HeadCoachMessageData[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: `¡Hola ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE AI. He analizado tu telemetría viva de Intervals.icu (Fitness CTL: ${physioStatus?.ctl ?? profile.ctl ?? 0}, Fatiga ATL: ${physioStatus?.atl ?? profile.atl ?? 0}, Forma TSB: ${physioStatus?.tsb ?? profile.tsb ?? 0}). ¿Deseas evaluar la asimilación biológica de tu semana o necesitas adaptar algún día por molestias, viaje o disponibilidad?`,
+      text: initialWelcomeText,
+      timestamp: "En vivo",
     },
   ]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (weekNumber && weekNumber !== activeWeekNumber) {
+      setActiveWeekNumber(weekNumber);
+    }
+  }, [weekNumber]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,14 +83,21 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (textToSend?: string) => {
-    const text = textToSend || inputMessage;
-    if (!text.trim() || isLoading) return;
+    const text = (textToSend || inputMessage).trim();
+    if (!text || isLoading) return;
 
-    const userMsg = { id: `user-${Date.now()}`, role: "user" as const, text: text.trim() };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg: HeadCoachMessageData = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    const updatedHistory = [...messages, userMsg];
+    setMessages(updatedHistory);
     if (!textToSend) setInputMessage("");
     setIsLoading(true);
 
@@ -80,29 +106,38 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text.trim(),
-          history: messages.map((m) => ({ role: m.role, content: m.text })),
+          messages: updatedHistory.map((m) => ({ role: m.role, content: m.text })),
           athleteId: profile.id,
           apiKey,
-          geminiApiKey,
+          uid,
+          email,
+          customGeminiKey: geminiApiKey,
           selectedModel,
           temperature,
-          weekOffset,
+          weekOffset: activeWeekNumber - (weekNumber || 1) + weekOffset,
+          weekNumber: activeWeekNumber,
           currentPlan,
+          dailyExecutedActivities,
+          runFtp: profile.run_ftp,
+          bikeFtp: profile.bike_ftp,
+          isInitialAudit: false,
         }),
       });
 
       const data = await res.json();
-      if (data.success && data.message) {
-        const assistantMsg = {
+      if (data.success && (data.reply || data.suggestedPlan)) {
+        const assistantMsg: HeadCoachMessageData = {
           id: `bot-${Date.now()}`,
-          role: "assistant" as const,
-          text: data.message.content || data.message.reasoning || "Dictamen fisiológico completado.",
+          role: "assistant",
+          text: data.reply || "Microciclo evaluado y calibrado a tus parámetros.",
+          suggestedPlan: data.suggestedPlan || null,
+          targetWeekNumber: data.targetWeekNumber || activeWeekNumber,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, assistantMsg]);
 
-        if (data.message.suggestedPlan && onPlanUpdate) {
-          onPlanUpdate(data.message.suggestedPlan);
+        if (data.suggestedPlan && onPlanUpdate) {
+          onPlanUpdate(data.suggestedPlan);
         }
       } else {
         setMessages((prev) => [
@@ -110,7 +145,8 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
           {
             id: `err-${Date.now()}`,
             role: "assistant",
-            text: "Evaluación adaptativa generada: Mantén tu progresión en zonas de potencia Stryd y Bike FTP establecidas para este microciclo.",
+            text: data.error || "Evaluación offline: Mantén tu progresión en zonas de potencia Stryd y Bike FTP establecidas para este microciclo.",
+            timestamp: "Offline",
           },
         ]);
       }
@@ -120,7 +156,8 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          text: "Evaluación offline: Tu balance de carga TSB y rampa semanal se encuentran en rango fisiológico seguro.",
+          text: "No se pudo conectar con el motor de IA. Tu balance TSB se encuentra en rango fisiológico estable.",
+          timestamp: "Offline",
         },
       ]);
     } finally {
@@ -128,81 +165,114 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     }
   };
 
+  const handleApplyAndSync = async (planToSync?: PlanItem[]) => {
+    const finalPlan = planToSync || currentPlan;
+    if (!onApplyPlanAndSync || !finalPlan || finalPlan.length === 0) return;
+
+    setIsApplying(true);
+    setSyncFeedback(null);
+    try {
+      await onApplyPlanAndSync(finalPlan);
+      setSyncFeedback("¡Microciclo sincronizado exitosamente con Intervals.icu!");
+      setTimeout(() => setSyncFeedback(null), 4000);
+    } catch (e: any) {
+      setSyncFeedback(`Error al sincronizar: ${e.message || "Verifica credenciales"}`);
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const weekDates = getWeekDates(activeWeekNumber - (weekNumber || 1) + weekOffset);
+  const startStr = weekDates[0]?.formattedDate;
+  const endStr = weekDates[6]?.formattedDate;
+
   return (
-    <div className="card-gradient rounded-3xl p-3 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-5 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[480px]">
-      {/* CABECERA & HUD DE TELEMETRÍA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4 shrink-0">
-        <div className="flex items-center space-x-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-cyan-500/20 via-emerald-500/20 to-teal-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold border border-cyan-500/30 shadow-inner text-lg">
-            <Sparkles className="h-5 w-5" />
+    <div className="card-gradient rounded-3xl p-3 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[520px]">
+      {/* CABECERA ATLÉTICA PRO & SEMÁFORO PMC */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 shrink-0">
+        <div className="flex items-center space-x-3">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 text-slate-950 flex items-center justify-center font-black shadow-xs border border-emerald-400/40">
+            <Activity className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span>Head Coach Fisiológico en Vivo</span>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                Head Coach Fisiológico
+              </h2>
               <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                GEMINI AI EN LÍNEA
+                EN VIVO
               </span>
-            </h2>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Auditoría adaptativa de asimilación biológica, reprogramación por fatiga o imprevistos y sincronización en 1 clic.
+              Especialista en modulación adaptativa de microciclos, fatiga y asimilación biológica.
             </p>
           </div>
         </div>
 
         {/* Mini-Cinta de Telemetría PMC */}
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 font-bold">
-            📈 CTL: {physioStatus?.ctl ?? profile.ctl ?? 0}
+        <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto no-scrollbar">
+          <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 font-bold shrink-0">
+            📈 CTL: {physioStatus?.ctl?.toFixed(1) ?? profile.ctl ?? 0}
           </span>
-          <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold">
-            ⚡ ATL: {physioStatus?.atl ?? profile.atl ?? 0}
+          <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold shrink-0">
+            ⚡ ATL: {physioStatus?.atl?.toFixed(1) ?? profile.atl ?? 0}
           </span>
-          <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold">
-            🔋 TSB: {physioStatus?.tsb ?? profile.tsb ?? 0}
+          <span className={`px-2.5 py-1 rounded-xl font-bold border shrink-0 ${
+            (physioStatus?.tsb ?? 0) >= 5
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : (physioStatus?.tsb ?? 0) < -20
+              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300"
+              : "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300"
+          }`}>
+            🔋 TSB: {physioStatus?.tsb !== undefined ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)) : 0}
           </span>
         </div>
       </div>
 
-      {/* HISTORIAL DE MENSAJES */}
-      <div className="flex-1 overflow-y-auto space-y-3.5 pr-2">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            {m.role === "assistant" && (
-              <div className="h-8 w-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold text-xs">
-                <Bot className="h-4 w-4" />
-              </div>
-            )}
+      {/* Selector Táctico de Microciclos (Semana en curso vs siguiente) */}
+      <div className="shrink-0">
+        <HeadCoachWeekSelector
+          currentWeekNumber={weekNumber || 1}
+          selectedWeekNumber={activeWeekNumber}
+          totalWeeks={macrocyclePhase?.blueprint?.totalWeeks || 16}
+          onSelectWeek={(wNum) => setActiveWeekNumber(wNum)}
+          startDateStr={startStr}
+          endDateStr={endStr}
+          phaseLabel={macrocyclePhase?.phaseLabel}
+        />
+      </div>
 
-            <div
-              className={`max-w-2xl rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
-                m.role === "user"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-medium"
-                  : "bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200"
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{m.text}</p>
-            </div>
-
-            {m.role === "user" && (
-              <div className="h-8 w-8 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 font-bold text-xs">
-                <User className="h-4 w-4" />
-              </div>
-            )}
+      {/* FEEDBACK DE SINCRONIZACIÓN */}
+      {syncFeedback && (
+        <div className="shrink-0 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span>{syncFeedback}</span>
           </div>
+        </div>
+      )}
+
+      {/* HISTORIAL DE MENSAJES CON CARDS DE MICROCICLO */}
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1 sm:pr-2">
+        {messages.map((m) => (
+          <HeadCoachMessageItem
+            key={m.id}
+            message={m}
+            weekNumber={activeWeekNumber}
+            onApplyAndSync={handleApplyAndSync}
+            isApplying={isApplying}
+          />
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 flex items-center justify-center shrink-0">
-              <Bot className="h-4 w-4" />
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+              <Activity className="h-4 w-4 animate-pulse" />
             </div>
-            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-cyan-600 flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-2 shadow-xs">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              <span>Head Coach analizando respuesta fisiológica y microciclo...</span>
+              <span>Head Coach analizando actividades ejecutadas, fatiga y microciclo...</span>
             </div>
           </div>
         )}
@@ -210,45 +280,12 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
       </div>
 
       {/* ACCIONES RÁPIDAS & INPUT */}
-      <div className="space-y-2.5 shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 text-[11px] overflow-x-auto no-scrollbar pb-1">
-          <button
-            type="button"
-            onClick={() => handleSendMessage("¿Cómo evalúas mi asimilación de fatiga y rampa esta semana?")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
-          >
-            📊 Evaluar Asimilación
-          </button>
+      <div className="space-y-2 shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <HeadCoachQuickActions
+          onSelectAction={(prompt) => handleSendMessage(prompt)}
+          isLoading={isLoading}
+        />
 
-          <button
-            type="button"
-            onClick={() => handleSendMessage("Tuve que viajar por trabajo, ¿cómo reorganizas mi semana?")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
-          >
-            ✈️ Adaptar por Viaje
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSendMessage("Siento sobrecarga en sóleos, ajusta la intensidad a regenerativo")}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold transition cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
-          >
-            🩹 Modulación Sobrecarga
-          </button>
-
-          {onApplyPlanAndSync && (
-            <button
-              type="button"
-              onClick={() => onApplyPlanAndSync(currentPlan)}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black shadow-xs cursor-pointer whitespace-nowrap shrink-0 touch-bounce"
-            >
-              <Check className="h-3.5 w-3.5" />
-              <span>Sincronizar a Intervals</span>
-            </button>
-          )}
-        </div>
-
-        {/* Input con Botón de Envío */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -260,13 +297,13 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Escribe tu consulta al Head Coach (ej: 'Reorganiza el fondo del domingo para el sábado')..."
-            className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-medium text-slate-900 dark:text-white focus:border-cyan-500 focus:outline-none shadow-xs"
+            placeholder="Escribe a tu Head Coach (ej: 'Reorganiza el microciclo porque viajo miércoles y jueves')..."
+            className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-medium text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none shadow-xs"
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isLoading}
-            className="p-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition cursor-pointer disabled:opacity-40 shadow-xs"
+            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold transition cursor-pointer disabled:opacity-40 shadow-xs"
             title="Enviar mensaje"
           >
             <Send className="h-4 w-4" />

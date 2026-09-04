@@ -37,11 +37,14 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const {
     athleteId,
     apiKey,
+    uid,
+    email,
     weekOffset = 0,
     weekNumber = 1,
     macrocyclePhase = null,
     weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY,
     currentPlan = [],
+    dailyExecutedActivities = {},
     runFtp,
     bikeFtp,
     isInitialAudit = false,
@@ -53,7 +56,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const safeOffset = Number(weekOffset) || 0;
 
   const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
-    await resolveIntervalsCredentials({ athleteId, apiKey });
+    await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
   let profile: AthleteProfile = {
     id: effectiveAthleteId,
@@ -182,6 +185,83 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const planningStartDateStr = planningWeekDates[0]?.formattedDate || "Inicio";
   const planningEndDateStr = planningWeekDates[6]?.formattedDate || "Fin";
 
+  // Mapeo unificado de actividades ejecutadas por fecha
+  const effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }> = {};
+  if (dailyExecutedActivities && typeof dailyExecutedActivities === "object") {
+    Object.entries(dailyExecutedActivities).forEach(([dKey, val]: [string, any]) => {
+      effectiveExecutedMap[dKey] = {
+        totalTss: Number(val?.totalTss || 0),
+        activities: Array.isArray(val?.activities) ? val.activities : [],
+      };
+    });
+  }
+  pastActivities.forEach((act: any) => {
+    if (!act.start_date_local) return;
+    const dKey = act.start_date_local.split("T")[0];
+    const tssVal = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
+    const movingMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
+    const watts = act.icu_weighted_avg_watts ?? act.icu_average_watts ?? act.weighted_average_watts ?? act.average_watts ?? act.device_watts;
+    const hr = act.average_heartrate;
+    const distKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
+
+    if (!effectiveExecutedMap[dKey]) {
+      effectiveExecutedMap[dKey] = { totalTss: 0, activities: [] };
+    }
+    const alreadyExists = effectiveExecutedMap[dKey].activities.some((x: any) => x.id === act.id);
+    if (!alreadyExists) {
+      effectiveExecutedMap[dKey].totalTss += tssVal;
+      effectiveExecutedMap[dKey].activities.push({
+        id: act.id,
+        name: act.name,
+        type: act.type,
+        tss: tssVal,
+        movingTimeMin: movingMin,
+        watts: typeof watts === "number" ? Math.round(watts) : undefined,
+        heartrate: typeof hr === "number" ? Math.round(hr) : undefined,
+        distanceKm: distKm,
+      });
+    }
+  });
+
+  // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
+  const auditLines = planningWeekDates.map((wDate, idx) => {
+    const dName = dayNames[idx];
+    const plannedSession = Array.isArray(currentPlan) ? currentPlan[idx] : null;
+    const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
+    const planTss = plannedSession?.tss || 0;
+    const planTitle = plannedSession?.workoutName || plannedSession?.title || (isRestPlanned ? "Descanso Pasivo" : "Entrenamiento");
+    const planDur = plannedSession?.durationMinutes || 0;
+
+    const execData = effectiveExecutedMap[wDate.date];
+    const execTss = execData?.totalTss || 0;
+    const isPast = wDate.date < todayDateStr;
+    const isToday = wDate.date === todayDateStr;
+
+    if (execData && execData.activities.length > 0) {
+      const actSummaries = execData.activities
+        .map((a) => `"${a.name || a.type}" (${a.movingTimeMin || 0}m, ${a.tss || 0} TSS${a.watts ? `, ${a.watts}W` : ""}${a.heartrate ? `, ${a.heartrate} bpm` : ""}${a.distanceKm ? `, ${a.distanceKm} km` : ""})`)
+        .join("; ");
+      const complianceStatus = isRestPlanned
+        ? "⚠️ ACTIVIDAD EN DÍA DE DESCANSO"
+        : execTss >= Math.round(planTss * 0.85)
+        ? "✅ COMPLETADO"
+        : "⚠️ PARCIAL / RECORTADO";
+      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ${actSummaries} -> Total Real: ${execTss} TSS [${complianceStatus}]`;
+    }
+
+    if (isRestPlanned) {
+      return `- ${dName} (${wDate.formattedDate}): Plan: Descanso | Real: Descanso Pasivo (0 TSS) [✅ DESCANSO RESPETADO]`;
+    }
+
+    if (isPast) {
+      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ❌ 0 TSS [SESIÓN SALTADA / NO REGISTRADA]`;
+    }
+
+    return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | [⏳ ${isToday ? "HOY EN CURSO" : "PENDIENTE"}]`;
+  });
+
+  const dailyActivitiesReport = auditLines.join("\n");
+
   const normalizedProfile = (coachProfile || "balanced").toLowerCase();
   const coachStyleDescription =
     normalizedProfile.includes("conserv")
@@ -212,6 +292,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     weeklyAvailability: safeAvailability,
     availabilityFormatted,
     currentPlanSummary,
+    dailyActivitiesReport,
     hasExistingPlan,
     plannedWeekTss,
     actualTss,

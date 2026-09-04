@@ -66,6 +66,7 @@ export interface HeadCoachPromptContext {
   weeklyAvailability: WeeklyAvailabilityMap;
   availabilityFormatted: string;
   currentPlanSummary: string;
+  dailyActivitiesReport?: string;
   hasExistingPlan: boolean;
   plannedWeekTss: number;
   actualTss: number;
@@ -98,6 +99,7 @@ export function buildHeadCoachSystemPrompt(
     macrocyclePhase,
     availabilityFormatted,
     currentPlanSummary,
+    dailyActivitiesReport,
     hasExistingPlan,
     plannedWeekTss,
     actualTss,
@@ -113,6 +115,10 @@ export function buildHeadCoachSystemPrompt(
     ? `\nDIRECTRICES PERSONALIZADAS ADICIONALES DEL ATLETA:\n${customPromptDirective.trim()}\n`
     : "";
 
+  const activitiesBlock = dailyActivitiesReport?.trim()
+    ? `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA (REAL VS. PLANIFICADO DÍA A DÍA) ===\n${dailyActivitiesReport.trim()}\n`
+    : `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA ===\nCarga ejecutada total: ${actualTss} TSS (${compliancePct}% de cumplimiento sobre ${plannedWeekTss} TSS previstos).\n`;
+
   return `${basePrompt}
 
 === CONTEXTO TEMPORAL Y DE PLANIFICACIÓN DEL ATLETA ===
@@ -123,7 +129,8 @@ export function buildHeadCoachSystemPrompt(
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 - Fecha Actual del Sistema: Hoy es ${todayDayName} (${todayDateStr})
 - Semana en Evaluación: Semana ${isCurrentWeek ? "1 (Actual)" : "Histórica/Futura"}
-- SEMANA OBJETIVO A PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
+- SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
+- Horizonte Táctico: 1 Microciclo a la vez (Semana en curso o semana siguiente secuencial)
 - Modo de Auditoría: ${isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
 - Fase de Macrociclo Activa: ${macrocyclePhase?.phaseLabel || "Construcción Aeróbica"} (${macrocyclePhase?.suggestedFocus || "Desarrollo de Capacidad Aeróbica"})
 
@@ -133,10 +140,8 @@ export function buildHeadCoachSystemPrompt(
 - Fatiga Aguda (ATL): ${physioStatus.atl.toFixed(1)}
 - Variabilidad Cardíaca (HRV): ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"} (Rango para asimilación biológica)
 - Ramp Rate Semanal: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/semana
-- Carga Ejecutada en Semana Previa: ${actualTss} TSS (${compliancePct}% de cumplimiento sobre ${plannedWeekTss} TSS previstos)
-- Rango de Carga Prescrita para Semana ${targetPlanningWeekNum}: ~${targetMinTss}-${targetMaxTss} TSS
 - Perfil del Entrenador: ${coachProfile.toUpperCase()}
-
+${activitiesBlock}
 === DISPONIBILIDAD SEMANAL PROGRAMADA ===
 ${availabilityFormatted}
 
@@ -144,10 +149,11 @@ ${availabilityFormatted}
 ${hasExistingPlan ? `Plan Activo Cargado (${plannedWeekTss} TSS):\n${currentPlanSummary}` : "No hay plan estructurado previo. Se debe generar la propuesta completa."}
 ${directiveBlock}
 === INSTRUCCIONES DE EJECUCIÓN INMEDIATA ===
-1. Si el atleta inicia el chat (${isInitialAudit ? "SÍ" : "NO"}), genera el dictamen fisiológico motivador de la semana previa y presenta la propuesta estructurada para la SEMANA ${targetPlanningWeekNum}.
-2. Si el atleta solicita cambios por viaje o imprevistos, adapta estrictamente los días futuros (a partir de ${todayDayName} / día siguiente), asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
-3. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
-4. Genera siempre un JSON válido y bien cerrado.`;
+1. Si el atleta inicia el chat (${isInitialAudit ? "SÍ" : "NO"}), audita las actividades realizadas frente a lo previsto: destaca con entusiasmo las sesiones completadas con buena potencia/pulso y señala de forma crítica y constructiva cualquier sesión omitida, recortada o sobrecargada.
+2. Si el atleta pide adaptar varias semanas a la vez, dale la respuesta pedagógica de entrenador explicando la adaptación biológica microciclo a microciclo y enfócate en la semana en curso o siguiente.
+3. Si el atleta solicita cambios por viaje, molestia o imprevistos, adapta estrictamente los días futuros (a partir de ${todayDayName} / día siguiente), asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
+4. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
+5. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

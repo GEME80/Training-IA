@@ -27,7 +27,7 @@ interface AthleteCalendarWeekRowProps {
   gridTemplate: string;
   currentWeekRef: React.RefObject<HTMLDivElement | null>;
   onSelectWeek: (idx: number) => void;
-  onOpenAICoach: () => void;
+  onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
 }
@@ -265,7 +265,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
           <div className="flex items-center space-x-2">
             <button
               type="button"
-              onClick={onOpenAICoach}
+              onClick={() => onOpenAICoach(wIdx)}
               className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-slate-950 text-xs font-black shadow-xs transition hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" />

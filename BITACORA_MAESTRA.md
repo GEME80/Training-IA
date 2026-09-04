@@ -2538,6 +2538,98 @@ flowchart TD
   - `Prueba 4 (Pureza Disciplinar):` Cero sesiones de natación o ciclismo puro en asignaciones de carrera.
   - `Prueba 5 (Terminología Atletismo):` Cero menciones de "rodaje" en running (reemplazado por "carrera continua", "trote" o "fondo").
 
+---
+
+### Versión 3.23 - Head Coach IA Especialista en Microciclos: Auditoría Día a Día de Actividades Reales, Tono de Entrenador Real y Rediseño Visual Vanguardista (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 17:55 COT.
+- **Objetivo Arquitectónico:**
+  1. Centrar el Head Coach IA quirúrgicamente en la **auditoría y adaptación de microciclos semanales**, operando en un horizonte táctico de 1 microciclo a la vez (semana en curso o siguiente y así sucesivamente).
+  2. Dotar al Agente de una respuesta pedagógica de entrenador ante solicitudes multi-semana, explicando que la adaptación fisiológica opera microciclo a microciclo sobre la telemetría viva del cuerpo y no con predicciones a ciegas.
+  3. Integrar la **auditoría analítica día a día de las actividades ejecutadas en la semana** (TSS por actividad, potencia Stryd/FTP, FC, duración en minutos y cotejo vs. lo planificado).
+  4. Implementar un **tono de entrenador de resistencia real**, con elogios enfáticos ante sesiones bien completadas y disciplina, y llamados de atención firmes y rigurosos ante sesiones omitidas o sobrecargas de riesgo.
+  5. **Erradicar completamente el icono infantil de robot** en favor de una **identidad atlética de élite**: Insignia deportiva Head Coach Pro con anillo cinético de pulso, gráficas de barras de potencia e intervalos escalonadas por zonas (% FTP/CP), selector táctil de semana y tarjeta interactiva del microciclo adaptado con botón de sincronización a Intervals.icu en 1 clic.
+- **Implementaciones Realizadas:**
+  1. **Auditoría Día a Día y Cruce Real vs. Planificado (`chatContext.ts` - 332 LOC, `types.ts` - 87 LOC):**
+     - Mapeo unificado de actividades reales por fecha (`dailyExecutedActivities` y `pastActivities`), extrayendo TSS por actividad, vatios medios, FC media, duración y distancia.
+     - Comparativa día a día: determina si cada sesión fue completada, recortada, omitida o si se respetó el descanso pasivo.
+     - Inyección del reporte detallado `=== ACTIVIDADES EJECUTADAS EN LA SEMANA (REAL VS. PLANIFICADO DÍA A DÍA) ===` en el prompt del sistema.
+     - Propagación de `uid` y `email` para descifrado en memoria de credenciales AES-256-GCM.
+  2. **Persona de Entrenador Real y Pedagogía de Microciclos (`defaultPrompts.ts` - 94 LOC, `prompts.ts` - 280 LOC, `deterministicFallback.ts` - 265 LOC):**
+     - Prompt rector actualizado: exige estructurar dictámenes con `🎯 Dictamen`, `🟢 Fortalezas & Disciplina`, `⚠️ Puntos de Atención & Riesgos` y `⚡ Propuesta de Microciclo`.
+     - Directriz pedagógica: explica la biología de la adaptación cuando el atleta solicita adaptar varias semanas a la vez.
+     - Fallback algorítmico alineado con el tono riguroso y dinámico sin valores hardcodeados.
+  3. **Subcomponentes UI/UX Vanguardistas (`src/components/dashboard/headcoach/`):**
+     - `HeadCoachWorkoutBlockChart.tsx` (101 LOC): Gráfica visual de barras de intensidad por zonas (Z1 a Z5) para entrenamientos estructurados.
+     - `HeadCoachMicrocycleCard.tsx` (187 LOC): Tarjeta interactiva de los 7 días adaptados con vatios Stryd/FTP, TSS, duraciones y botón de 1 clic para aplicar y sincronizar a Intervals.icu.
+     - `HeadCoachWeekSelector.tsx` (100 LOC): Selector táctil para alternar entre "Semana en Curso" y "Próxima Semana" con badge de horizonte.
+     - `HeadCoachQuickActions.tsx` (70 LOC): Chips táctiles de consulta rápida (asimilación, fatiga, viajes, tiempo, rodillo Z2).
+     - `HeadCoachMessageItem.tsx` (162 LOC): Renderizador de mensajes con Insignia Atlética Head Coach Pro y tarjetas integradas.
+  4. **Vista Principal y Calendario Continuo (`AthleteHeadCoachView.tsx` - 315 LOC, `AthleteContinuousCalendar.tsx`, `AthleteCalendarWeekRow.tsx`, `AthleteDashboard.tsx`):**
+     - Cabecera deportiva con Insignia Pro y semáforo PMC de 1 línea (CTL, ATL, TSB, HRV).
+     - Conexión del botón "Head Coach & Adaptación IA" desde cualquier semana del calendario pasando `wIdx` para abrir el Head Coach enfocado en esa semana exacta.
+     - Propagación de `dailyExecutedActivities`, `uid` y `email`.
+- **Lista de Archivos Modificados / Creados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/ai/headcoach/types.ts`: **87 líneas** (< 350 LOC).
+  - `src/lib/ai/defaultPrompts.ts`: **94 líneas** (< 350 LOC).
+  - `src/lib/ai/prompts.ts`: **280 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatContext.ts`: **332 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/deterministicFallback.ts`: **265 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachWorkoutBlockChart.tsx` [NUEVO]: **101 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx` [NUEVO]: **187 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachWeekSelector.tsx` [NUEVO]: **100 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachQuickActions.tsx` [NUEVO]: **70 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachMessageItem.tsx` [NUEVO]: **162 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteHeadCoachView.tsx`: **315 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteCalendarWeekRow.tsx`: **290 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteContinuousCalendar.tsx`: **285 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+  - `Prueba 4 (Auditoría Stryd):` 100% de entrenamientos de potencia en carrera por Tiempo + % FTP/CP.
+---
+
+### Versión 3.24 - Sincronización e Integración Fisiológica Integral: Frecuencia Cardíaca (LTHR, FC Reposo, FC Máx) y Normalización Antropométrica desde Intervals.icu (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 17:55 COT.
+- **Objetivo Arquitectónico:**
+  1. Resolver de forma definitiva la sincronización de las métricas de Frecuencia Cardíaca (`lthr` - Lactate Threshold Heart Rate, `restingHR` - FC Reposo, y `maxHR` - FC Máxima) desde **Intervals.icu** para todos los atletas del sistema.
+  2. Solucionar la causa raíz de extracción en Intervals.icu API v1: los umbrales de carrera y ciclismo (`lthr`, `max_hr`, potencia crítica Stryd `mmp_model.criticalPower`) residen dentro del array de objetos `athlete.sportSettings` (y no en la raíz del atleta, donde permanecen `undefined`), mientras que `icu_resting_hr`, `height` (en metros) e `icu_weight` residen en la raíz.
+  3. Corregir la normalización de la estatura corporal (`heightCm`): Intervals.icu provee la altura en metros (p. ej., `1.85`), lo cual causaba que en la UI y base de datos apareciera erróneamente como `1.85 cm` en lugar de `185 cm`.
+  4. Garantizar el flujo reactivo end-to-end de las métricas de FC a lo largo de toda la cadena: `testConnection` $\rightarrow$ `/api/evaluate` $\rightarrow$ `refreshTelemetry` $\rightarrow$ `AthleteDashboard` $\rightarrow$ `AthletePhysiologyView` $\rightarrow$ `AthleteProfileHeroCard` $\rightarrow$ `AthleteZonesViewer` $\rightarrow$ `AthleteEditProfileModal` $\rightarrow$ Persistencia cifrada en `/api/profile` y `Firestore`.
+- **Implementaciones Realizadas:**
+  1. **Cliente Intervals.icu (`src/lib/intervals/client.ts` - 309 LOC):**
+     - En `testConnection()`, se analiza exhaustivamente `sportSettings` para deportes de Carrera (`run`, `running`, `virtualrun`, `trailrun`) y Ciclismo (`ride`, `cycling`, `bike`, `virtualride`).
+     - Extracción prioritaria de `lthr`, `maxHR`, Stryd CP (`mmp_model.criticalPower` o `ftp`) y Bike FTP.
+     - Extracción de FC Reposo (`icu_resting_hr` o `restingHR`) y peso (`icu_weight` o `weight`).
+     - Normalización automática de estatura (`height < 3 ? Math.round(height * 100) : Math.round(height)`), exportando `heightCm`.
+  2. **Evaluación y Normalización API (`src/app/api/evaluate/route.ts` - 337 LOC):**
+     - Normalización de `heightCm` a centímetros enteros antes de construir el objeto `profile`.
+     - Confirmación de propagación de `lthr`, `maxHR` y `restingHR` en la respuesta JSON.
+  3. **Visor de Fisiología (`src/components/dashboard/AthletePhysiologyView.tsx` - 313 LOC):**
+     - Adición de `restingHR?: number`, `lthr?: number` y `maxHR?: number` a `AthletePhysiologyViewProps`.
+     - Eliminación de estados hardcodeados en `undefined`; inicialización con los props recibidos y `useEffect` reactivos de sincronización.
+     - Propagación directa a `AthleteProfileHeroCard` (resumen visual), `AthleteZonesViewer` (cálculo de 7 zonas de FC) y `AthleteEditProfileModal`.
+  4. **Modal de Edición de Perfil (`src/components/profile/AthleteEditProfileModal.tsx`):**
+     - Normalización automática de altura al abrir o editar (`normalizeHeight`), evitando valores decimales en metros.
+     - Validación bidireccional de `lthr`, `restingHR` y `maxHR`.
+  5. **Contenedor Principal (`src/components/AthleteDashboard.tsx`):**
+     - Estado inicial de `profile`: hidrata `restingHR`, `lthr` y `maxHR` desde `userProfile` o `userStorage`.
+     - `refreshTelemetry`: almacena en `userStorage` (`lthr`, `resting_hr`, `max_hr`, `weight_kg`, `height_cm`), actualiza el estado de `profile` y persiste asíncronamente en `/api/profile` (Firestore).
+     - `handleSaveSettings`: guarda `lthr`, `restingHR` y `maxHR` en estado, `userStorage` y Firestore con cifrado AES-256-GCM.
+     - Pasa `restingHR={profile.restingHR}`, `lthr={profile.lthr}` y `maxHR={profile.maxHR}` a `<AthletePhysiologyView>`.
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/intervals/client.ts`: **309 líneas** (< 350 LOC).
+  - `src/app/api/evaluate/route.ts`: **337 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: **313 líneas** (< 350 LOC).
+  - `src/components/profile/AthleteEditProfileModal.tsx`: **426 líneas**.
+  - `src/components/AthleteDashboard.tsx`: **1459 líneas**.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (según Rule 3).
+  - `Prueba 4 (Fisiología Integral):` Visualización y persistencia de LTHR (168 bpm), FC Reposo (51 bpm) y FC Máx (185 bpm), y cálculo activo de las 7 zonas de FC en `AthleteZonesViewer`.
+
+
 
 
 

@@ -20,6 +20,9 @@ interface AthletePhysiologyViewProps {
   heightCm?: number;
   birthDate?: string;
   gender?: "M" | "F" | "OTHER";
+  restingHR?: number;
+  lthr?: number;
+  maxHR?: number;
   apiKey?: string;
   ctl: number;
   atl: number;
@@ -56,6 +59,9 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   heightCm: initialHeight,
   birthDate: initialBirthDate = "",
   gender: initialGender,
+  restingHR: initialRestingHR,
+  lthr: initialLthr,
+  maxHR: initialMaxHR,
   apiKey: initialApiKey = "",
   ctl,
   atl,
@@ -71,59 +77,37 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
   const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
   const [weightKg, setWeightKg] = useState<number | undefined>(initialWeight);
-  const [heightCm, setHeightCm] = useState<number | undefined>(initialHeight);
+  const [heightCm, setHeightCm] = useState<number | undefined>(
+    initialHeight ? (initialHeight < 3 && initialHeight > 0 ? Math.round(initialHeight * 100) : Math.round(initialHeight)) : undefined
+  );
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate);
   const [gender, setGender] = useState<"M" | "F" | "OTHER" | undefined>(initialGender);
   const [apiKey, setApiKey] = useState<string>(initialApiKey);
-  const [restingHR, setRestingHR] = useState<number | undefined>(undefined);
-  const [lthr, setLthr] = useState<number | undefined>(undefined);
-  const [maxHR, setMaxHR] = useState<number | undefined>(undefined);
+  const [restingHR, setRestingHR] = useState<number | undefined>(initialRestingHR);
+  const [lthr, setLthr] = useState<number | undefined>(initialLthr);
+  const [maxHR, setMaxHR] = useState<number | undefined>(initialMaxHR);
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
     initialAvailability || DEFAULT_WEEKLY_AVAILABILITY
   );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  useEffect(() => { if (initialAvailability) setWeeklyAvailability(initialAvailability); }, [initialAvailability]);
+  useEffect(() => { if (initialAthleteId) setAthleteId(initialAthleteId); }, [initialAthleteId]);
+  useEffect(() => { if (initialApiKey !== undefined) setApiKey(initialApiKey); }, [initialApiKey]);
+  useEffect(() => { if (initialAthleteName) setAthleteName(initialAthleteName); }, [initialAthleteName]);
+  useEffect(() => { if (initialRunFtp !== undefined) setRunFtp(initialRunFtp); }, [initialRunFtp]);
+  useEffect(() => { if (initialBikeFtp !== undefined) setBikeFtp(initialBikeFtp); }, [initialBikeFtp]);
+  useEffect(() => { if (initialWeight !== undefined) setWeightKg(initialWeight); }, [initialWeight]);
   useEffect(() => {
-    if (initialAvailability) {
-      setWeeklyAvailability(initialAvailability);
+    if (initialHeight !== undefined) {
+      setHeightCm(initialHeight < 3 && initialHeight > 0 ? Math.round(initialHeight * 100) : Math.round(initialHeight));
     }
-  }, [initialAvailability]);
-
-  useEffect(() => {
-    if (initialAthleteId) setAthleteId(initialAthleteId);
-  }, [initialAthleteId]);
-
-  useEffect(() => {
-    if (initialApiKey !== undefined) setApiKey(initialApiKey);
-  }, [initialApiKey]);
-
-  useEffect(() => {
-    if (initialAthleteName) setAthleteName(initialAthleteName);
-  }, [initialAthleteName]);
-
-  useEffect(() => {
-    if (initialRunFtp !== undefined) setRunFtp(initialRunFtp);
-  }, [initialRunFtp]);
-
-  useEffect(() => {
-    if (initialBikeFtp !== undefined) setBikeFtp(initialBikeFtp);
-  }, [initialBikeFtp]);
-
-  useEffect(() => {
-    if (initialWeight !== undefined) setWeightKg(initialWeight);
-  }, [initialWeight]);
-
-  useEffect(() => {
-    if (initialHeight !== undefined) setHeightCm(initialHeight);
   }, [initialHeight]);
-
-  useEffect(() => {
-    if (initialBirthDate) setBirthDate(initialBirthDate);
-  }, [initialBirthDate]);
-
-  useEffect(() => {
-    if (initialGender) setGender(initialGender);
-  }, [initialGender]);
+  useEffect(() => { if (initialBirthDate) setBirthDate(initialBirthDate); }, [initialBirthDate]);
+  useEffect(() => { if (initialGender) setGender(initialGender); }, [initialGender]);
+  useEffect(() => { if (initialRestingHR !== undefined) setRestingHR(initialRestingHR); }, [initialRestingHR]);
+  useEffect(() => { if (initialLthr !== undefined) setLthr(initialLthr); }, [initialLthr]);
+  useEffect(() => { if (initialMaxHR !== undefined) setMaxHR(initialMaxHR); }, [initialMaxHR]);
 
   const calculatedAge = React.useMemo(() => {
     if (!birthDate) return undefined;

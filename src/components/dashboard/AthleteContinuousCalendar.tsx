@@ -259,6 +259,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                 wIdx={wIdx}
                 weeksCount={weeks.length}
                 isCurrentWeek={isCurrentWeek}
+                isSelectedWeek={wIdx === selectedMacroWeekIdx}
                 isPastWeek={isPastWeek}
                 calendarWeekNumber={calendarWeekNumber}
                 blueprint={blueprint}

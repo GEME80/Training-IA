@@ -14,6 +14,7 @@ interface AthleteCalendarWeekRowProps {
   wIdx: number;
   weeksCount: number;
   isCurrentWeek: boolean;
+  isSelectedWeek?: boolean;
   isPastWeek: boolean;
   calendarWeekNumber: number;
   blueprint: MacrocycleBlueprint;
@@ -42,6 +43,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   wIdx,
   weeksCount,
   isCurrentWeek,
+  isSelectedWeek,
   isPastWeek,
   calendarWeekNumber,
   blueprint,
@@ -253,10 +255,12 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
         })()}
       </div>
 
-      {/* BARRA INFERIOR DE ACCIONES (Solo en la semana en curso) */}
-      {isCurrentWeek && (
+      {/* BARRA INFERIOR DE ACCIONES (Semana en curso o semana seleccionada) */}
+      {(isCurrentWeek || isSelectedWeek) && (
         <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 px-1">
-          <span className="text-xs text-slate-500 font-mono">Semana en curso sincronizada con Intervals.icu</span>
+          <span className="text-xs text-slate-500 font-mono">
+            {isCurrentWeek ? "Semana en curso sincronizada con Intervals.icu" : `Semana ${wIdx + 1} (${week.phaseLabel || week.phase || "Plan"})`}
+          </span>
 
           <div className="flex items-center space-x-2">
             <button

@@ -5,7 +5,14 @@ import { DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const uid = searchParams.get("uid") || "demo-user";
+    const uid = searchParams.get("uid");
+
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, error: "UID es requerido para consultar el perfil" },
+        { status: 400 }
+      );
+    }
 
     // Si Firebase Admin no está conectado, retornamos estado fallback para pruebas
     try {
@@ -46,7 +53,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      uid = "demo-user",
+      uid,
       email = "atleta@pulseai.pro",
       displayName,
       intervalsAthleteId,
@@ -66,6 +73,13 @@ export async function POST(req: NextRequest) {
       targetRaces,
       seasonPlans,
     } = body;
+
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, error: "UID es requerido para guardar el perfil" },
+        { status: 400 }
+      );
+    }
 
     try {
       await saveUserProfile(uid, {

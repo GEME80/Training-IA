@@ -185,6 +185,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     setApiKeyCache(data.apiKey);
     userStorage.setItem("intervals_api_key", data.apiKey);
     userStorage.setItem("athlete_id", data.athleteId);
+    userStorage.setItem("onboarding_welcomed", "true");
     if (data.runFtp) userStorage.setItem("run_ftp", data.runFtp.toString());
     if (data.bikeFtp) userStorage.setItem("bike_ftp", data.bikeFtp.toString());
 
@@ -967,6 +968,11 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         refreshTelemetry(storedAthleteId, storedApiKey, profile.run_ftp, profile.bike_ftp);
       } else {
         setIsLiveConnected(false);
+        const hasBeenWelcomed = userStorage.getItem("onboarding_welcomed");
+        if (!hasBeenWelcomed && !isSuper) {
+          setIsOnboardingOpen(true);
+          userStorage.setItem("onboarding_welcomed", "true");
+        }
       }
     };
 

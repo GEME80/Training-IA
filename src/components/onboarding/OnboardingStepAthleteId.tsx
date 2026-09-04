@@ -52,7 +52,7 @@ export const OnboardingStepAthleteId: React.FC<OnboardingStepAthleteIdProps> = (
               2
             </span>
             <span>
-              En la parte superior verás tu tarjeta de perfil con tu <strong>Athlete ID</strong> (por ejemplo: <code className="bg-slate-200/70 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">i442091</code> o una serie numérica).
+              En la parte superior verás tu tarjeta de perfil con tu <strong>Athlete ID</strong> (por ejemplo: <code className="bg-slate-200/70 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">i123456</code> o una serie numérica).
             </span>
           </li>
           <li className="flex items-start gap-2.5">
@@ -79,7 +79,7 @@ export const OnboardingStepAthleteId: React.FC<OnboardingStepAthleteIdProps> = (
             type="text"
             value={athleteId}
             onChange={(e) => setAthleteId(e.target.value.trim())}
-            placeholder="Ejemplo: i442091"
+            placeholder="Ejemplo: i123456"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-cyan-500 focus:outline-none transition shadow-2xs"
           />
         </div>

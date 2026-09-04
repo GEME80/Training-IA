@@ -85,13 +85,13 @@ export const ProfileConnectionsTab: React.FC<ProfileConnectionsTabProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
-              Athlete ID (ej. i442091)
+              Athlete ID (ej. i123456)
             </label>
             <input
               type="text"
               value={athleteId}
               onChange={(e) => setAthleteId(e.target.value)}
-              placeholder="i442091"
+              placeholder="Ej. i123456"
               className="mt-1 block w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
             />
           </div>

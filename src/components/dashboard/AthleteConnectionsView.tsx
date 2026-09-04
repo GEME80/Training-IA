@@ -141,7 +141,7 @@ export const AthleteConnectionsView: React.FC<AthleteConnectionsViewProps> = ({
           {/* Athlete ID */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              Athlete ID (ej: i442091)
+              Athlete ID (ej: i123456)
             </label>
             <input
               type="text"

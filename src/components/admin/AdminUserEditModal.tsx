@@ -113,7 +113,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
               type="text"
               value={intervalsId}
               onChange={(e) => setIntervalsId(e.target.value)}
-              placeholder="i442091"
+              placeholder="Ej. i123456"
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-500 focus:bg-white transition"
             />
           </div>

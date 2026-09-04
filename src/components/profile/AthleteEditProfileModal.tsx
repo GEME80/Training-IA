@@ -362,7 +362,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
                 </label>
                 <input
                   type="text"
-                  placeholder="Ej. i442091"
+                  placeholder="Ej. i123456"
                   value={intervalsAthleteId}
                   onChange={(e) => setIntervalsAthleteId(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2 text-xs font-mono text-slate-900 dark:text-white"

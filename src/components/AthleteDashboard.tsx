@@ -250,6 +250,13 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     ) => {
       const targetAthleteId = athleteId || profile.id || userProfile?.intervalsAthleteId || "";
       const targetApiKey = apiKey || apiKeyCache || "";
+      const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
+
+      // BLINDAJE ABSOLUTO: Ningún atleta regular puede consultar la telemetría de Germán Morales
+      if (!isSuper && (targetAthleteId === "i442091" || targetAthleteId.toLowerCase() === "i442091")) {
+        setIsLiveConnected(false);
+        return;
+      }
 
       // Si el atleta no tiene configurado ningún identificador ni clave, no consultar Intervals
       if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey) {
@@ -810,6 +817,12 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         userStorage.getItem("athlete_id") ||
         (isSuper ? (process.env.NEXT_PUBLIC_DEFAULT_ATHLETE_ID || "") : "");
 
+      // BLINDAJE ABSOLUTO: Si no es el Superadmin (Germán Morales), NUNCA hereda i442091
+      if (!isSuper && (storedAthleteId === "i442091" || storedAthleteId.toLowerCase() === "i442091")) {
+        storedAthleteId = "";
+        userStorage.removeItem("athlete_id");
+      }
+
       let storedApiKey =
         userStorage.getItem("intervals_api_key") ||
         "";
@@ -823,6 +836,8 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       }
       if (storedAthleteId) {
         userStorage.setItem("athlete_id", storedAthleteId);
+      } else {
+        userStorage.removeItem("athlete_id");
       }
 
       setApiKeyCache(storedApiKey);
@@ -837,9 +852,16 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       const resolvedGender = storedGender || userProfile?.gender;
       const resolvedBirthDate = storedBirthDate || userProfile?.birthDate;
 
+      const rawRunFtp = userProfile?.runFtp ?? (Number(userStorage.getItem("run_ftp")) || 0);
+      const rawBikeFtp = userProfile?.bikeFtp ?? (Number(userStorage.getItem("bike_ftp")) || 0);
+      const resolvedRunFtp = !isSuper && rawRunFtp === 327 ? 0 : rawRunFtp;
+      const resolvedBikeFtp = !isSuper && rawBikeFtp === 240 ? 0 : rawBikeFtp;
+
       setProfile((prev) => ({
         ...prev,
         id: storedAthleteId,
+        run_ftp: resolvedRunFtp,
+        bike_ftp: resolvedBikeFtp,
         weight: resolvedWeight ?? prev.weight,
         heightCm: resolvedHeight ?? prev.heightCm,
         gender: resolvedGender ?? prev.gender,
@@ -863,10 +885,11 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         resolvedPlans = storedPlans;
       }
 
-      // Si no hay planes en local ni sesión, consultar Firestore solo si existe un atleta válido explícito
-      if (resolvedPlans.length === 0 && storedAthleteId) {
+      // Si no hay planes en local ni sesión, consultar Firestore solo si existe un atleta válido explícito y no ajeno
+      if (resolvedPlans.length === 0 && storedAthleteId && (isSuper || storedAthleteId !== "i442091")) {
         try {
-          const macroRes = await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(storedAthleteId)}`);
+          const userEmailParam = encodeURIComponent(userProfile?.email || user?.email || "");
+          const macroRes = await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(storedAthleteId)}&requesterEmail=${userEmailParam}`);
           if (macroRes.ok) {
             const macroData = await macroRes.json();
             if (macroData.success && macroData.macrocycle?.blueprint) {

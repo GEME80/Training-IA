@@ -43,6 +43,12 @@ export async function resolveIntervalsCredentials(params: {
     if (!athleteId) {
       athleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
     }
+  } else {
+    // BLINDAJE ABSOLUTO: Ningún atleta regular puede consultar la cuenta de Germán Morales (i442091)
+    if (athleteId === "i442091" || apiKey === (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq")) {
+      athleteId = "";
+      apiKey = "";
+    }
   }
 
   return { athleteId, apiKey };

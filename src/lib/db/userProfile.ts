@@ -96,6 +96,16 @@ export async function syncUserFromGoogleAuth(userData: {
       }
     }
 
+    // BLINDAJE: Si el nuevo atleta no es superadmin, jamás hereda i442091 ni valores de Germán
+    if (!isSuperadmin) {
+      if (existingData.intervalsAthleteId === "i442091") existingData.intervalsAthleteId = undefined;
+      if (existingData.runFtp === 327 && existingData.bikeFtp === 240) {
+        existingData.runFtp = undefined;
+        existingData.bikeFtp = undefined;
+      }
+      preAuthAthleteId = undefined;
+    }
+
     // Registro de nuevo usuario consolidado
     const newProfile: UserProfileData = {
       uid: userData.uid,
@@ -134,6 +144,14 @@ export async function syncUserFromGoogleAuth(userData: {
     if (existing.role !== "admin") updates.role = "admin";
     if (existing.status !== "active") updates.status = "active";
     if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || "i442091";
+  } else {
+    // BLINDAJE: Purgar inmediatamente si el usuario regular tenía i442091 o credenciales ajenas
+    if (existing.intervalsAthleteId === "i442091") {
+      updates.intervalsAthleteId = undefined;
+      updates.encryptedApiKey = undefined;
+      if (existing.runFtp === 327) updates.runFtp = undefined;
+      if (existing.bikeFtp === 240) updates.bikeFtp = undefined;
+    }
   }
 
   await userRef.set(stripUndefined(updates), { merge: true });
@@ -254,6 +272,15 @@ export async function getUserProfileDecrypted(
     }
 
     const profile = doc.data() as UserProfileData;
+    const isSuper = isMasterAdminEmail(profile.email);
+
+    if (!isSuper && profile.intervalsAthleteId === "i442091") {
+      profile.intervalsAthleteId = undefined;
+      profile.encryptedApiKey = undefined;
+      if (profile.runFtp === 327) profile.runFtp = undefined;
+      if (profile.bikeFtp === 240) profile.bikeFtp = undefined;
+    }
+
     let decryptedApiKey: string | null = null;
 
     if (profile.encryptedApiKey) {

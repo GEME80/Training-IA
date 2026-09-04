@@ -20,7 +20,7 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
      * FASE CONSTRUCCIÓN: Fondos estructurados de 22 a 28 km (110 a 145 minutos) con bloques continuos a Ritmo Maratón (78-83% Stryd CP).
      * FASE PICO / SIMULACIÓN RECTORA: Fondos clave de 28 a 34 km (135 a 175 minutos) para máxima economía de carrera y durabilidad.
      * FASE TAPERING: Reducción gradual a 18 km (85m), 14 km (65m) y 10 km (45m).
-     * FASE MANTENIMIENTO: Rodajes controlados de 12 a 16 km (60 a 80 minutos).
+     * FASE MANTENIMIENTO: Carreras continuas controladas de 12 a 16 km (60 a 80 minutos).
    - En cada sesión prescribe siempre la DISTANCIA ESTIMADA EN KM y la DURACIÓN EN MINUTOS en el nombre (ej. 'Tirada Larga Progresiva (22 km / 1h45m) @ 75% CP').
    - El 'workoutDoc' debe contener bloques detallados cuyas sumas de minutos coincidan exactamente con la duración real prescrita.
 
@@ -28,7 +28,7 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
    - Si el atleta entrena por Potencia: Prescribe en % CP y vatios exactos con base en el Stryd CP / Bike FTP.
    - Si entrena por Frecuencia Cardíaca: Prescribe en % LTHR, pulsaciones bpm y zonas Z1 a Z5.
    - Si entrena por Ritmo: Prescribe en min/km objetivos y rangos de velocidad.
-   - Si entrena por Sensaciones (RPE): Prescribe en Escala de Borg 1-10 (RPE 4-5 rodaje cómodo, RPE 7-8 ritmo maratón, RPE 9 umbral).
+   - Si entrena por Sensaciones (RPE): Prescribe en Escala de Borg 1-10 (RPE 4-5 carrera continua cómoda, RPE 7-8 ritmo maratón, RPE 9 umbral).
 
 4. REGLA DE NO INTERVENCIÓN ("MANTENER PLAN"):
    - Si la telemetría viva muestra balance óptimo (TSB positivo +5 a +25 y HRV en equilibrio) y el microciclo actual cumple los objetivos de la fase, DICTAMINA EXPLÍCITAMENTE MANTENER EL PLAN ACTIVO. No modifiques ni reinventes entrenamientos innecesariamente.
@@ -86,7 +86,7 @@ PRINCIPIOS DE AUDITORÍA CONTINUA Y MODULACIÓN DE CARGA DIARIA:
 
 3. PROTOCOLO DE SUSTITUCIÓN REACTIVA INMEDIATA:
    - Si el atleta presenta un déficit de recuperación crítico o fatiga aguda (TSB < -20, HRV en caída libre o dolor muscular en sóleo/isquios):
-     * Sustituye de inmediato cualquier sesión de calidad por un Rodaje Regenerativo en Zona 1 o Ciclismo Z2 en Rodillo sin impacto osteoarticular.
+     * Sustituye de inmediato cualquier sesión de calidad por un Trote Regenerativo en Zona 1 o Ciclismo Z2 en Rodillo sin impacto osteoarticular.
      * Si la fatiga es severa, prescribe Descanso Pasivo Total (0 TSS) con hidratación y movilidad miofascial.
 
 4. RETROALIMENTACIÓN AL HEAD COACH:

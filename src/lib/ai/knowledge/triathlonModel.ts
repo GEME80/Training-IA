@@ -81,7 +81,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     triggerMinWKgThreshold: 3.1,
     substituteBikeZ2WeeklyMin: 60,
     waterSessionWeeklyMin: 45,
-    notes: "Preserva articulaciones alternando rodaje aeróbico con natación técnica o rodillo Z2.",
+    notes: "Preserva articulaciones alternando carrera continua aeróbica con natación técnica o rodillo Z2.",
   },
   recommendedStrengthModelIds: ["strength_spring_ankle_soleus", "strength_pelvic_core_prehab", "water_hydrotherapy_strength"],
   recommendedCrossTrainingModelIds: ["cross_bike_z2_mito", "water_regenerative_aqua_run", "cross_bike_hiit_vo2"],
@@ -90,16 +90,16 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Natación CSS Aeróbica Específica (1.800m)",
-          powerTarget: "CSS Aeróbico (CSS + 3s/100m)",
-          justification: "Fondo de brazos e hidrodinámica a ritmo de crucero de medio maratón de agua.",
-          workoutDoc: "Warmup\n- 300m Nado Suave Z1\n- 4x 50m Técnica (Punto muerto c/15s desc)\n\nMain\n- 4x 300m Ritmo CSS + 3s/100m c/20s desc\n\nCooldown\n- 100m Suave Espalda / Pecho",
+          name: "Series de Ritmo Progresivo en Carrera (4x4m @ 88-90% CP)",
+          powerTarget: "88-90% CP",
+          justification: "Eficiencia de carrera continua a ritmo medio y economía metabólica.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n4x\n- 4m 88% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
         },
         {
-          name: "Series de Umbral en Rodillo / Bici (3x10m @ 88% FTP)",
-          powerTarget: "88% FTP",
-          justification: "Desarrollo de potencia aeróbica específica sin impacto osteoarticular.",
-          workoutDoc: "Warmup\n- 15m 55% FTP\n\n3x\n- 10m 88% FTP\n- 3m 55% FTP\n\nCooldown\n- 10m 50% FTP",
+          name: "Fartlek Progresivo de Cambios de Ritmo Aeróbico (40m)",
+          powerTarget: "70-88% CP",
+          justification: "Variabilidad biomecánica y desarrollo de potencia aeróbica en carrera a pie.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 85% FTP\n- 2m 65% FTP\n\nCooldown\n- 8m 60% FTP",
         },
         {
           name: "Series de Capacidad Aeróbica en Carrera (5x3m @ 90% CP)",
@@ -196,7 +196,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Z1-Z2 Aeróbico de Soltura (40m)",
+        name: "Carrera Continua Z1-Z2 Aeróbica de Soltura (40m)",
         powerTarget: "70% CP",
         justification: "Oxigenación celular y soltura de piernas sin impacto excesivo.",
         workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 5m 60% FTP",
@@ -217,7 +217,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
         durationMin: 40,
       },
       {
-        name: "Rodaje Regenerativo Suave (35m Z1)",
+        name: "Trote Regenerativo Suave (35m Z1)",
         powerTarget: "65% CP",
         justification: "Lavado muscular y recuperación activa entre sesiones clave.",
         workoutDoc: "Warmup\n- 8m 60% FTP\n\nMain\n- 22m 65% FTP\n\nCooldown\n- 5m 55% FTP",

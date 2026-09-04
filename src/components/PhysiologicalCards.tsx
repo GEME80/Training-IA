@@ -83,7 +83,7 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-600" />
           <div>
             <strong className="text-red-700">Riesgo de Fatiga Alta: </strong>
-            TSB crítico ({Number(status.tsb).toFixed(1)}). Se sugiere rodaje Z1 o descanso.
+            TSB crítico ({Number(status.tsb).toFixed(1)}). Se sugiere trote suave Z1 o descanso.
           </div>
         </div>
       )}

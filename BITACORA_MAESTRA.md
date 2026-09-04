@@ -2481,6 +2481,63 @@ flowchart TD
   - `Prueba 3 (Auditoría Stryd):` **100% de entrenamientos de potencia en carrera por Tiempo + % FTP/CP**.
   - `Prueba 4 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
 
+---
+
+### Versión 3.22 - Blindaje de Pureza en Disciplina de Carrera (Cero Natación en Running) y Erradicación de "Rodaje" en Atletismo (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 17:30 COT.
+- **Objetivo Arquitectónico:**
+  1. Garantizar pureza biológica estricta en los entrenamientos de carrera a pie: eliminar cualquier posibilidad de que un día asignado a la disciplina de Carrera prescriba sesiones de natación o ciclismo puro por cruce de catálogo o modelos.
+  2. Erradicar en su totalidad el término "rodaje" cuando se refiera al atletismo/running en todo el ecosistema de la plataforma (modelos, generadores deterministas, prompts de IA, fisiología y componentes de UI), sustituyéndolo por la terminología técnica y natural en español: *"Carrera continua"* (aeróbica, suave, progresiva, cómoda), *"Trote"* (suave, regenerativo) o *"Fondo"*.
+- **Implementaciones Realizadas:**
+  1. **Blindaje en Motor de Plantillas (`macrocycleTemplates.ts` - 324 LOC):**
+     - Identificado origen de filtración: `TRIATHLON_MODEL` y `TRIATHLON_SHORT_MODEL` alojaban sesiones de `Natación CSS` dentro de `workoutVariations.qualityWorkouts.base`. Al llamarse `selectQualityWorkout` para un día de Carrera (`disc === "Carrera"`), se asignaba dicha sesión de natación rotulada como carrera.
+     - Implementado filtro de pureza `runOnly`: descarta estrictamente cualquier sesión que contenga términos de natación (`nataci`, `nado`, `swim`, `brazada`, `css`) o ciclismo puro, con fallback a intervalos de potencia en carrera.
+     - Actualizados los nombres de sesiones en bici a "Pedaleo Ciclista".
+  2. **Curaduría y Purificación de Modelos Científicos (`src/lib/ai/knowledge/`):**
+     - `triathlonModel.ts` (250 LOC): Eliminadas sesiones de natación y rodillo de `qualityWorkouts.base`. Reemplazadas por series progresivas en carrera y fartlek aeróbico. Erradicado "rodaje" en notas y recuperación.
+     - `triathlonFullAndShortModels.ts` (341 LOC): Erradicadas sesiones de natación CSS y ciclismo extensivo de `qualityWorkouts.base`. Sustituidas por series de potencia en carrera y tempo. Erradicado "rodaje" en workouts y notas.
+     - `fiveAndTenKModels.ts` (333 LOC): Sustituido "rodaje" por "carrera continua" y "trote" en directrices y prescripciones.
+     - `trailModel.ts` (159 LOC): Sustituido "rodaje" por "carrera continua suave" y "trote regenerativo".
+     - `marathonModel.ts` (336 LOC): Sustituido "rodaje" por "carrera continua progresiva", "carrera continua aeróbica" y "trote regenerativo".
+     - `longevityModel.ts` (144 LOC): Sustituido "rodaje" por "carrera continua" y "trote suave".
+     - `cyclingSpecialtyModels.ts` (327 LOC): Sustituido "rodaje" por "pedaleo suave / ágil".
+     - `athleteMomentsModels.ts` (493 LOC): Sustituido "rodaje" por "carrera continua" y "trote regenerativo".
+     - `index.ts` (338 LOC): Título de tapering actualizado a "Carrera Continua de Puesta a Punto Tapering".
+  3. **Motores de Decisión, Prompts y Generador Determinista:**
+     - `deterministicPlanGenerator.ts` (317 LOC): Sustituido "rodaje" por "Carrera Continua Z1-Z2", "Trote Suave Z1 Regenerativo" y "Carrera Continua Progresiva".
+     - `defaultPrompts.ts` (94 LOC): Actualizados lineamientos maestros de IA para prescribir "carrera continua" y "trote regenerativo".
+     - `chatContext.ts` (251 LOC): Actualizado diagnóstico de fatiga a "carreras continuas suaves".
+     - `athleteMomentMacrocycles.ts` (193 LOC): Descripciones actualizadas a "carreras continuas".
+     - `macrocycleWizard.ts` & `macrocycle.ts`: Descripciones de semanas y focus normalizados a "carreras continuas".
+     - `engine.ts` (258 LOC): Alerta de sobreentrenamiento ajustada a "trote Z1 regenerativo".
+  4. **Componentes de Interfaz de Usuario:**
+     - `WeeklyPlanner.tsx`: Default de activación cambiado a "Carrera Continua Progresiva Stryd".
+     - `MacrocycleWizardModal.tsx`: Texto de opción de mantenimiento cambiado a "carreras continuas en Z1-Z2".
+     - `PhysiologicalCards.tsx`: Alerta de fatiga cambiada a "trote suave Z1 o descanso".
+     - `SeasonWizardStep2Disciplines.tsx`: Subtítulo de Solo Running cambiado a "carreras continuas suaves".
+     - `LandingControlHub.tsx`: Veredicto del coach cambiado a "trote regenerativo en Z1".
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/physiology/macrocycleTemplates.ts`: **324 líneas** (< 350 LOC).
+  - `src/lib/gemini/deterministicPlanGenerator.ts`: **317 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/triathlonModel.ts`: **250 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/triathlonFullAndShortModels.ts`: **341 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/fiveAndTenKModels.ts`: **333 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/trailModel.ts`: **159 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/marathonModel.ts`: **336 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/longevityModel.ts`: **144 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/cyclingSpecialtyModels.ts`: **327 líneas** (< 350 LOC).
+  - `src/lib/ai/knowledge/index.ts`: **338 líneas** (< 350 LOC).
+  - `src/lib/ai/defaultPrompts.ts`: **94 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatContext.ts`: **251 líneas** (< 350 LOC).
+  - `src/lib/physiology/athleteMomentMacrocycles.ts`: **193 líneas** (< 350 LOC).
+  - `src/lib/physiology/engine.ts`: **258 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+  - `Prueba 4 (Pureza Disciplinar):` Cero sesiones de natación o ciclismo puro en asignaciones de carrera.
+  - `Prueba 5 (Terminología Atletismo):` Cero menciones de "rodaje" en running (reemplazado por "carrera continua", "trote" o "fondo").
+
 
 
 

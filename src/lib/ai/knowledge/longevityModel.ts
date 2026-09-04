@@ -68,7 +68,7 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Rodaje Progresivo Z1-Z2 con 4 Strides (45m)",
+          name: "Carrera Continua Progresiva Z1-Z2 con 4 Strides (45m)",
           powerTarget: "72% CP + 110% CP",
           justification: "Estímulo de reactividad de sóleo sin acumular fatiga residual.",
           workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\n4x\n- 20s 110% FTP\n- 40s 55% FTP\n\nCooldown\n- 5m 60% FTP",
@@ -84,7 +84,7 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
       ],
       peak: [
         {
-          name: "Rodaje Aeróbico Z2 Estable con Cadencia Óptima (50m)",
+          name: "Carrera Continua Aeróbica Z2 Estable con Cadencia Óptima (50m)",
           powerTarget: "72% CP",
           justification: "Durabilidad mitocondrial pura.",
           workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 35m 72% FTP\n\nCooldown\n- 5m 60% FTP",
@@ -92,7 +92,7 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
       ],
       taper: [
         {
-          name: "Rodaje Suave Regenerativo (35m)",
+          name: "Trote Suave Regenerativo (35m)",
           powerTarget: "65% CP",
           justification: "Oxigenación y descarga articular.",
           workoutDoc: "Warmup\n- 5m 60% FTP\n\nMain\n- 25m 65% FTP\n\nCooldown\n- 5m 55% FTP",

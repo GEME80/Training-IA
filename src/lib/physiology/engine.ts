@@ -111,7 +111,7 @@ export class PhysiologicalEngine {
     if (tsb < -25 || (hrvZScore !== null && hrvZScore < -1.5)) {
       status = "OVERTRAINING_RISK";
       recommendations.push(
-        "🚨 ALERTA: Fatiga aguda crítica o caída significativa del tono parasimpático (HRV Z-Score < -1.5). Se aconseja convertir la sesión clave en rodaje Z1 regenerativo o descanso pasivo."
+        "🚨 ALERTA: Fatiga aguda crítica o caída significativa del tono parasimpático (HRV Z-Score < -1.5). Se aconseja convertir la sesión clave en trote Z1 regenerativo o descanso pasivo."
       );
     }
     // 2. Fatiga moderada / zona de precaución
@@ -204,7 +204,7 @@ export class PhysiologicalEngine {
     // Carrera por Potencia Stryd (% FTP / CP)
     const typeLower = workoutType.toLowerCase();
 
-    // 1. Rodaje con Strides / Progresiones reactivas
+    // 1. Carrera Continua con Strides / Progresiones reactivas
     if (typeLower.includes("stride") || typeLower.includes("recta") || typeLower.includes("progresion")) {
       return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\n5x\n- 20s 115% FTP\n- 40s 60% FTP\n\nCooldown\n- 5m 62% FTP`;
     }
@@ -247,12 +247,12 @@ export class PhysiologicalEngine {
       return `Warmup\n- 15m 72% FTP\n\nMain\n- 1h15m 78% FTP\n- 20m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
     }
 
-    // 7. Rodaje Regenerativo
+    // 7. Trote Regenerativo
     if (typeLower.includes("regenerativ") || typeLower.includes("suave") || typeLower.includes("recovery")) {
       return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 10m 60% FTP`;
     }
 
-    // Rodaje Base Progresivo por defecto
+    // Carrera Continua Base Progresiva por defecto
     return `Warmup\n- 10m 68% FTP\n\nMain\n- 25m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
   }
 }

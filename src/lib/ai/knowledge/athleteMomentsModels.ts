@@ -33,7 +33,7 @@ export const BASE_GPP_MODEL: CuratedTrainingModel = {
       focusDescription: "Añadir cuestas cortas y tramos de ritmo alegre sin acumular fatiga excesiva.",
       weeklyTssRange: { min: 280, max: 370 },
       longRunGuideline: "Tiradas de 75 a 105 min con sensaciones ligeras.",
-      recommendedIntensityZones: ["Cuestas de Potencia (95% CP)", "Rodaje Z2"],
+      recommendedIntensityZones: ["Cuestas de Potencia (95% CP)", "Carrera Continua Z2"],
     },
     {
       phaseKey: "PEAK",
@@ -50,7 +50,7 @@ export const BASE_GPP_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.0,
       focusDescription: "Asimilación 2:1.",
       weeklyTssRange: { min: 180, max: 240 },
-      longRunGuideline: "Rodaje suave de 50 min.",
+      longRunGuideline: "Carrera continua suave de 50 min.",
       recommendedIntensityZones: ["Regenerativo"],
     },
   ],
@@ -77,10 +77,10 @@ export const BASE_GPP_MODEL: CuratedTrainingModel = {
       ],
       build: [
         {
-          name: "Rodaje Progresivo Cómodo con 5 Rectas (50m)",
+          name: "Carrera Continua Progresiva Cómoda con 5 Rectas (50m)",
           powerTarget: "72% CP + Rectas @ 105% CP",
           justification: "Aporta chispa y reactividad al pie.",
-          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nRodaje Continuo\n- 30m 72% FTP\n\nRectas de Activación\n5x\n- 20s 105% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
+          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nCarrera Continua\n- 30m 72% FTP\n\nRectas de Activación\n5x\n- 20s 105% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
         },
       ],
       peak: [],
@@ -194,10 +194,10 @@ export const GENERAL_BUILD_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Suave de Asimilación (40m)",
+        name: "Carrera Continua Suave de Asimilación (40m)",
         powerTarget: "68% CP",
         justification: "Oxigena la musculatura.",
-        workoutDoc: "Rodaje Continuo\n- 40m 68% FTP",
+        workoutDoc: "Carrera Continua\n- 40m 68% FTP",
         durationMin: 40,
       },
     ],
@@ -263,10 +263,10 @@ export const SPEED_BLOCK_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Rodaje Ágil + 6 Rectas Progresivas (40m)",
+          name: "Carrera Continua Ágil + 6 Rectas Progresivas (40m)",
           powerTarget: "72% CP + Rectas @ 108% CP",
           justification: "Estimula la cadencia rápida sin fatiga.",
-          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nRodaje Continuo\n- 20m 72% FTP\n\nRectas de Activación\n6x\n- 20s 108% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
+          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nCarrera Continua\n- 20m 72% FTP\n\nRectas de Activación\n6x\n- 20s 108% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
         },
       ],
       build: [

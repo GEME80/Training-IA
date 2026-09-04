@@ -60,23 +60,15 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
     { ...RUN_TEST_5K_VAM, recommendedWeekIndex: 3 },
   ],
   longRunRules: {
-    startKm: 8,
-    peakKm: 14,
-    startMinutes: 45,
-    peakMinutes: 70,
-    targetIntensityPercentCpOrFtp: "85-90% Bike FTP + 88-94% Stryd CP en transición",
-    description: "Carrera combinada con ciclismo de fin de semana con ritmo dinámico y 1 semana de tapering.",
-    taperKmSequence: [7],
-    taperMinutesSequence: [35],
+    startKm: 8, peakKm: 14, startMinutes: 45, peakMinutes: 70,
+    targetIntensityPercentCpOrFtp: "70-75% Stryd CP",
+    description: "Tirada dominical suave progresiva de 8 a 14 km (45-70 min).",
+    taperKmSequence: [9, 5], taperMinutesSequence: [45, 25],
   },
-  maxLongRunMinutesCap: 70,
-  taperingRules: {
-    taperingWeeks: 1,
-    volumeDropSequencePercent: [0.35],
-    maintainRacePaceIntensity: true,
-  },
+  maxLongRunMinutesCap: 75,
+  taperingRules: { taperingWeeks: 2, volumeDropSequencePercent: [0.30, 0.55], maintainRacePaceIntensity: true },
   athleteLevelCaps: {
-    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 8, maxLongRunMinutes: 50, tssScaleFactor: 0.85 },
+    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 9, maxLongRunMinutes: 50, tssScaleFactor: 0.85 },
     INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 11, maxLongRunMinutes: 60, tssScaleFactor: 0.95 },
     ADVANCED_ELITE: { ctlThresholdMax: Infinity, maxLongRunKm: 14, maxLongRunMinutes: 70, tssScaleFactor: 1.10 },
   },
@@ -87,10 +79,16 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Natación CSS Aeróbica Específica (1.800m)",
-          powerTarget: "CSS Aeróbico (CSS + 3s/100m)",
-          justification: "Eficiencia hidrodinámica y soltura de brazada a ritmo CSS de crucero.",
-          workoutDoc: "Warmup\n- 300m Nado Suave\n- 4x 50m Técnica (Punto muerto c/15s desc)\n\nMain\n- 4x 300m CSS + 3s/100m c/20s desc\n\nCooldown\n- 200m Suave Espalda / Pecho",
+          name: "Series de Ritmo Progresivo en Carrera (5x3m @ 90% CP)",
+          powerTarget: "90% CP",
+          justification: "Eficiencia aeróbica y cadencia de carrera a pie controlada.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
+        },
+        {
+          name: "Fartlek de Cambios de Ritmo Aeróbico (40m)",
+          powerTarget: "72-88% CP",
+          justification: "Aceleraciones controladas y soltura neuromuscular en carrera.",
+          workoutDoc: "Warmup\n- 10m 65% FTP\n\n5x\n- 2m 88% FTP\n- 2m 65% FTP\n\nCooldown\n- 10m 60% FTP",
         },
       ],
       build: [
@@ -130,17 +128,17 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Suave Aeróbico Z1-Z2 (35m)",
+        name: "Carrera Continua Suave Aeróbica Z1-Z2 (35m)",
         powerTarget: "68% CP",
         justification: "Oxigenación muscular sin impacto excesivo tras las sesiones intensas.",
-        workoutDoc: "Calentamiento\n- 8m 60% FTP\n\nRodaje Cómodo\n- 22m 68% FTP\n\nEnfriamiento\n- 5m 55% FTP",
+        workoutDoc: "Calentamiento\n- 8m 60% FTP\n\nCarrera Cómoda\n- 22m 68% FTP\n\nEnfriamiento\n- 5m 55% FTP",
         durationMin: 35,
       },
       {
         name: "Carrera Continua Z2 + 4 Strides (40m)",
         powerTarget: "70% CP + Strides @ 100% CP",
         justification: "Reactividad neuromuscular ligera y soltura de piernas.",
-        workoutDoc: "Calentamiento\n- 10m 62% FTP\n\nRodaje Principal\n- 22m 70% FTP\n\n4x\n- 20s 100% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 4m 55% FTP",
+        workoutDoc: "Calentamiento\n- 10m 62% FTP\n\nCarrera Principal\n- 22m 70% FTP\n\n4x\n- 20s 100% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 4m 55% FTP",
         durationMin: 40,
       },
     ],
@@ -228,21 +226,13 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
     { ...RUN_TEST_STRYD_3_9, recommendedWeekIndex: 4 },
   ],
   longRunRules: {
-    startKm: 14,
-    peakKm: 28,
-    startMinutes: 80,
-    peakMinutes: 150, // Cap estricto de 2h30m para el bloque de carrera a pie
+    startKm: 14, peakKm: 28, startMinutes: 80, peakMinutes: 150,
     targetIntensityPercentCpOrFtp: "68-73% Bike FTP + 72-76% Stryd CP en carrera",
     description: "Progresión de carrera hasta 28 km (máximo 150 min) con gran volumen previo de ciclismo y 3 semanas de tapering.",
-    taperKmSequence: [18, 12, 6],
-    taperMinutesSequence: [95, 65, 35],
+    taperKmSequence: [18, 12, 6], taperMinutesSequence: [95, 65, 35],
   },
   maxLongRunMinutesCap: 150,
-  taperingRules: {
-    taperingWeeks: 3,
-    volumeDropSequencePercent: [0.20, 0.40, 0.65],
-    maintainRacePaceIntensity: true,
-  },
+  taperingRules: { taperingWeeks: 3, volumeDropSequencePercent: [0.20, 0.40, 0.65], maintainRacePaceIntensity: true },
   athleteLevelCaps: {
     BEGINNER: { ctlThresholdMax: 40, maxLongRunKm: 18, maxLongRunMinutes: 120, tssScaleFactor: 0.80 },
     INTERMEDIATE: { ctlThresholdMax: 75, maxLongRunKm: 24, maxLongRunMinutes: 135, tssScaleFactor: 0.95 },
@@ -262,16 +252,16 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Natación Extensiva CSS de Resistencia (2.500m)",
-          powerTarget: "CSS Extensivo (CSS + 4s/100m)",
-          justification: "Adaptación del aparato cardiovascular a la natación continua de 3.800m sin fatiga de brazos.",
-          workoutDoc: "Warmup\n- 400m Nado Suave Z1\n- 4x 50m Técnica (Remada c/15s desc)\n\nMain\n- 5x 400m Ritmo CSS + 4s/100m c/25s desc\n\nCooldown\n- 100m Suave Espalda",
+          name: "Series de Ritmo Maratón en Carrera (4x2.000m @ 82-84% CP)",
+          powerTarget: "82-84% CP",
+          justification: "Economía de carrera continua y eficiencia mecánica en ritmo objetivo.",
+          workoutDoc: "Warmup\n- 15m 65% FTP\n\n4x\n- 10m 83% FTP\n- 3m 60% FTP\n\nCooldown\n- 8m 60% FTP",
         },
         {
-          name: "Ciclismo Aeróbico Extensivo con Cadencia Fluida (2h30m @ 68% FTP)",
-          powerTarget: "68% FTP",
-          justification: "Dosificación estricta Iron (68% FTP). Acostumbra el cuerpo a la oxidación de ácidos grasos.",
-          workoutDoc: "Warmup\n- 20m 55% FTP\n\nRodaje Continuo en Zona 2 (Postura Aero)\n- 1h50m 68% FTP\n\nCooldown\n- 20m 50% FTP",
+          name: "Carrera Progresiva Controlada en Zona 2 (50m)",
+          powerTarget: "70-78% CP",
+          justification: "Construcción de fondo aeróbico sin fatiga neuromuscular excesiva.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\nMain\n- 30m 75% FTP\n\nCooldown\n- 8m 60% FTP",
         },
       ],
       build: [
@@ -293,10 +283,10 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
 
       taper: [
         {
-          name: "Rodaje de Afinamiento con Toques de Ritmo (1h45m)",
+          name: "Pedaleo Ágil de Afinamiento con Toques de Ritmo (1h15m)",
           powerTarget: "70% FTP con toques",
           justification: "Mantiene la sensación de pedaleo sin gastar energía.",
-          workoutDoc: "Calentamiento\n- 20m 55% FTP\n\nPedaleo Cómodo con 3x 5m @ 72% FTP\n- 1h10m 65% FTP\n\nEnfriamiento\n- 15m 50% FTP",
+          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nPedaleo Cómodo con 3x 3m @ 72% FTP\n- 50m 65% FTP\n\nEnfriamiento\n- 10m 50% FTP",
         },
       ],
     },
@@ -311,17 +301,17 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Aeróbico de Soltura y Capilarización (45m)",
+        name: "Carrera Continua Aeróbica de Soltura (45m)",
         powerTarget: "68% CP",
         justification: "Oxigenación celular y soltura muscular suave.",
-        workoutDoc: "Calentamiento\n- 10m 60% FTP\n\nRodaje Continuo\n- 30m 68% FTP\n\nEnfriamiento\n- 5m 55% FTP",
+        workoutDoc: "Calentamiento\n- 10m 60% FTP\n\nCarrera Continua\n- 30m 68% FTP\n\nEnfriamiento\n- 5m 55% FTP",
         durationMin: 45,
       },
       {
         name: "Carrera Continua Z2 + 4 Strides Ligeros (50m)",
         powerTarget: "70% CP + Strides @ 100% CP",
         justification: "Mantiene la elasticidad del tendón de Aquiles sin generar fatiga glucogénica.",
-        workoutDoc: "Calentamiento\n- 12m 60% FTP\n\nRodaje Cómodo\n- 30m 70% FTP\n\n4x\n- 20s 100% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 4m 55% FTP",
+        workoutDoc: "Calentamiento\n- 12m 60% FTP\n\nCarrera Cómoda\n- 30m 70% FTP\n\n4x\n- 20s 100% FTP\n- 40s 55% FTP\n\nEnfriamiento\n- 4m 55% FTP",
         durationMin: 50,
       },
     ],

@@ -58,7 +58,7 @@ const SCENARIOS: Record<ScenarioKey, ScenarioData> = {
     strydPower: "330 W",
     bikeFtp: "258 W",
     coachVerdict:
-      "Pico de fatiga detectado tras sesiones de calidad consecutivas. El Head Coach reconvierte la tirada a rodaje regenerativo en Z1 para proteger sóleos y tendones de Aquiles.",
+      "Pico de fatiga detectado tras sesiones de calidad consecutivas. El Head Coach reconvierte la tirada a trote regenerativo en Z1 para proteger sóleos y tendones de Aquiles.",
     weekLabel: "Semana 10 • Bloque de Choque",
   },
   deload: {

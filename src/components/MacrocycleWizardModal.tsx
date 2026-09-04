@@ -444,7 +444,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                           {bridgeStrategy === "MAINTENANCE" && <CheckCircle2 className="h-4 w-4 text-amber-400" />}
                         </div>
                         <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
-                          Consolidación de base aeróbica, estabilidad de carga (CTL) y consistencia semanal con rodajes en Z1-Z2 y toques de potencia neuromuscular sin fatiga residual hasta el {timeline.kickoffDateStr}.
+                          Consolidación de base aeróbica, estabilidad de carga (CTL) y consistencia semanal con carreras continuas en Z1-Z2 y toques de potencia neuromuscular sin fatiga residual hasta el {timeline.kickoffDateStr}.
                         </p>
                         <div className="mt-2 text-[10px] font-mono text-amber-300/80 bg-amber-500/10 px-2 py-0.5 rounded w-fit border border-amber-500/20">
                           Estructura: 3 Carrera + 1 Ciclismo + 1 Fuerza + 2 Descanso

@@ -31,7 +31,7 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
     {
       id: "Solo Running",
       title: "Solo Running (Puro Asfalto)",
-      subtitle: "Preparación enfocada 100% en correr, con rodajes suaves, series de ritmo y tiradas largas.",
+      subtitle: "Preparación enfocada 100% en correr, con carreras continuas suaves, series de ritmo y tiradas largas.",
       icon: Footprints,
       badge: "Específico Maratón",
     },

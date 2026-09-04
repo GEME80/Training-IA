@@ -130,7 +130,7 @@ export function generateWizardMacrocycle(
       let maxLongRunMinutes = isRecovery ? 45 : 55;
       let focusDescription = isRecovery
         ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-        : "Mantenimiento equilibrado: rodajes cómodos, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
+        : "Mantenimiento equilibrado: carreras continuas cómodas, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
 
       if (moment === "base_building") {
         phase = i < Math.floor(totalWeeks / 2) ? "BASE_1" : "BASE_2";
@@ -142,7 +142,7 @@ export function generateWizardMacrocycle(
         maxLongRunMinutes = isRecovery ? 50 : 70;
         focusDescription = isRecovery
           ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-          : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+          : "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
       } else if (moment === "post_race_recovery") {
         phase = "RECOVERY";
         phaseLabel = "Recuperación Post-Carrera";
@@ -355,7 +355,7 @@ export function generateWizardMacrocycle(
       maxLongRun = isRecovery ? 55 : 75;
       focus = isRecovery
         ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-        : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+        : "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
     }
 
     const isCurrent = currentMonday.getTime() === weekMon.getTime();

@@ -109,7 +109,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       const disc = defaultDisciplines[item.day] || "Carrera";
       item.discipline = disc;
       item.isRestDay = false;
-      item.workoutName = disc === "Carrera" ? "Rodaje Progresivo Stryd" : disc === "Ciclismo" ? "Ciclismo Z2 Base" : "Fuerza Sóleo";
+      item.workoutName = disc === "Carrera" ? "Carrera Continua Progresiva Stryd" : disc === "Ciclismo" ? "Ciclismo Z2 Base" : "Fuerza Sóleo";
       item.action = "MODIFICAR";
       item.isCustomized = true;
       item.justification = "Reactivado manualmente por el atleta.";

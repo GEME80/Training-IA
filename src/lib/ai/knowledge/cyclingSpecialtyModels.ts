@@ -135,7 +135,7 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Muy Suave de Recuperación (35m)",
+        name: "Pedaleo Suave de Recuperación (35m)",
         powerTarget: "52% FTP",
         justification: "Mueve las piernas con mínimo estrés.",
         workoutDoc: "Pedaleo Suave\n- 35m 52% FTP",
@@ -252,10 +252,10 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Rodaje Ágil con Aceleraciones de Cadencia (50m)",
+          name: "Pedaleo Ágil con Aceleraciones de Cadencia (50m)",
           powerTarget: "70% FTP + Aceleraciones @ 110% FTP",
           justification: "Mejora la velocidad de pedaleo sin fatigar en exceso.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nRodaje Principal\n- 20m 70% FTP\n\nAceleraciones\n5x\n- 30s 110% FTP (100+ rpm)\n- 1m30s 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
+          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nPedaleo Principal\n- 20m 70% FTP\n\nAceleraciones\n5x\n- 30s 110% FTP (100+ rpm)\n- 1m30s 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
         },
       ],
       build: [

@@ -231,7 +231,7 @@ export function generateDeterministicAnalysis(
         date: dateInfo.date,
         formattedDate: dateInfo.formattedDate,
         discipline: "Carrera",
-        workoutName: "Rodaje Z1-Z2 + 5 Strides Reactivos (45m)",
+        workoutName: "Carrera Continua Z1-Z2 + 5 Strides Reactivos (45m)",
         action: "MANTENER",
         durationMinutes: 45,
         tss: 42,
@@ -285,15 +285,15 @@ export function generateDeterministicAnalysis(
       formattedDate: dateInfo.formattedDate,
       discipline: "Carrera",
       workoutName: isFatigued
-        ? "Rodaje Suave Z1 Regenerativo Stryd (35m)"
-        : "Rodaje Progresivo Z1-Z2 Stryd (45m)",
+        ? "Trote Suave Z1 Regenerativo Stryd (35m)"
+        : "Carrera Continua Progresiva Z1-Z2 Stryd (45m)",
       action: isFatigued ? "MODIFICAR" : "MANTENER",
       durationMinutes: isFatigued ? 35 : 45,
       tss: isFatigued ? 26 : 38,
       powerTarget: `${Math.round(runFtp * 0.70)}W (70% CP)`,
       justification: isFatigued
         ? "Atenuación a Z1 para proteger tono parasimpático y acelerar recuperación."
-        : "Rodaje aeróbico base para consistencia de fitness.",
+        : "Carrera aeróbica base para consistencia de fitness.",
       workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70, phase),
       isRestDay: false,
     };

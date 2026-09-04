@@ -50,7 +50,7 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.10,
       focusDescription: "Llegar a la prueba con las piernas descansadas, frescas y con máxima reactividad.",
       weeklyTssRange: { min: 140, max: 200 },
-      longRunGuideline: "Rodaje muy suave de 6 a 8 km con 3 rectas progresivas.",
+      longRunGuideline: "Carrera continua muy suave de 6 a 8 km con 3 rectas progresivas.",
       recommendedIntensityZones: ["Activación Suave", "Trote Regenerativo"],
     },
   ],
@@ -85,10 +85,10 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         {
-          name: "Rodaje Suave + Rectas Progresivas de Zancada (45m)",
+          name: "Carrera Continua Suave + Rectas Progresivas de Zancada (45m)",
           powerTarget: "72% CP + Rectas @ 105% CP",
           justification: "Mejora la elasticidad del pie y la cadencia sin fatiga acumulada.",
-          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nRodaje Principal\n- 25m 72% FTP\n\nRectas de Activación\n5x\n- 25s 105% FTP\n- 45s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
+          workoutDoc: "Calentamiento\n- 10m 65% FTP\n\nCarrera Continua Principal\n- 25m 72% FTP\n\nRectas de Activación\n5x\n- 25s 105% FTP\n- 45s 55% FTP\n\nEnfriamiento\n- 5m 60% FTP",
         },
       ],
       build: [
@@ -136,7 +136,7 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
         name: "Trote Muy Suave Regenerativo (35m)",
         powerTarget: "65% CP",
         justification: "Favorece la recuperación y asimilación del entrenamiento previo.",
-        workoutDoc: "Rodaje Continuo Cómodo\n- 35m 65% FTP",
+        workoutDoc: "Carrera Continua Cómoda\n- 35m 65% FTP",
         durationMin: 35,
       },
     ],
@@ -215,7 +215,7 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.10,
       focusDescription: "Reducir la fatiga para llegar con máxima chispa y ligereza al día de la prueba.",
       weeklyTssRange: { min: 160, max: 240 },
-      longRunGuideline: "Rodaje cómodo de 8 a 10 km con toques de ritmo.",
+      longRunGuideline: "Carrera continua cómoda de 8 a 10 km con toques de ritmo.",
       recommendedIntensityZones: ["Activación Corta", "Trote Suave"],
     },
   ],
@@ -299,10 +299,10 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
     ],
     recoveryAerobicWorkouts: [
       {
-        name: "Rodaje Regenerativo Cómodo (40m)",
+        name: "Trote Regenerativo Cómodo (40m)",
         powerTarget: "68% CP",
         justification: "Suma minutos de trabajo aeróbico con mínimo impacto.",
-        workoutDoc: "Rodaje Suave Continuo\n- 40m 68% FTP",
+        workoutDoc: "Carrera Continua Suave\n- 40m 68% FTP",
         durationMin: 40,
       },
     ],

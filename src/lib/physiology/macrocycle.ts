@@ -336,7 +336,7 @@ export function generateMacrocycleBlueprint(
       maxLongRun = isBaseRecovery ? 55 : 75;
       focus = isBaseRecovery
         ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-        : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+        : "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
     }
 
     const isCurrent = currentMonday.getTime() === weekMon.getTime();
@@ -461,7 +461,7 @@ export function getCleanFocusDescription(
   if (!rawFocus) {
     return isRecovery
       ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-      : "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+      : "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
   }
 
   const lower = rawFocus.toLowerCase();
@@ -470,7 +470,7 @@ export function getCleanFocusDescription(
     if (isRecovery || lower.includes("asimilación") || lower.includes("balance de frescura")) {
       return "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas.";
     }
-    return "Construcción de base aeróbica: rodajes suaves continuos y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
+    return "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
   }
 
   if (lower.includes("miofibrilar") || lower.includes("meseta de ctl") || lower.includes("durabilidad aeróbica") || lower.includes("lactato z4")) {
@@ -499,7 +499,7 @@ export function getCleanFocusDescription(
     if (isRecovery) {
       return "Descanso y regeneración: mantener el hábito sin acumular fatiga física ni mental.";
     }
-    return "Mantenimiento equilibrado: rodajes cómodos, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
+    return "Mantenimiento equilibrado: carreras continuas cómodas, fuerza preventiva y ritmo constante para mantener un excelente nivel físico.";
   }
 
   return rawFocus;

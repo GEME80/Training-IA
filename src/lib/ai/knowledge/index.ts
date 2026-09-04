@@ -208,7 +208,7 @@ export function calculateProgressiveLongRun(
     return {
       km: taperKm,
       minutes: taperMins,
-      workoutName: `Rodaje de Puesta a Punto Tapering (${taperKm} km / ${taperMins}m Z1-Z2)`,
+      workoutName: `Carrera Continua de Puesta a Punto Tapering (${taperKm} km / ${taperMins}m Z1-Z2)`,
       powerTarget: "70-74% CP (Z2 Suave conservando ritmo de carrera)",
       workoutDoc: `Warmup\n- 15m 65% FTP\n\nMain\n- ${Math.max(10, taperMins - 25)}m 72% FTP\n\nCooldown\n- 10m 60% FTP`,
       isPeakBlock: false,

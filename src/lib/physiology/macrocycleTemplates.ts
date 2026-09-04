@@ -15,19 +15,42 @@ function selectQualityWorkout(
   const posInBlock = (weekNumber - 1) % 4;
   const blockIndex = Math.floor((weekNumber - 1) / 4);
 
+  let rawList = vars.base;
   if (phase === "PEAK") {
-    const list = vars.peak && vars.peak.length > 0 ? vars.peak : vars.build;
+    rawList = vars.peak && vars.peak.length > 0 ? vars.peak : vars.build;
+  } else if (phase === "BUILD") {
+    rawList = vars.build && vars.build.length > 0 ? vars.build : vars.base;
+  } else if (phase === "TAPER" || phase === "RACE_WEEK") {
+    rawList = vars.taper && vars.taper.length > 0 ? vars.taper : vars.base;
+  }
+
+  // BLINDAJE ATLETISMO: Filtrar estrictamente para evitar que sesiones de natación o ciclismo puro se asignen a carrera
+  const runOnly = (rawList || []).filter((w) => {
+    const txt = (w.name + " " + w.justification + " " + w.workoutDoc).toLowerCase();
+    const isSwim = txt.includes("nataci") || txt.includes("nado") || txt.includes("swim") || txt.includes("brazada") || txt.includes("css ");
+    const isPureBike = txt.includes("ciclismo") && !txt.includes("carrera") && !txt.includes("run") && !txt.includes("brick");
+    return !isSwim && !isPureBike;
+  });
+
+  const list = runOnly.length > 0 ? runOnly : [
+    {
+      name: "Series de Potencia Crítica en Carrera (5x3m @ 90% CP)",
+      powerTarget: "90% CP",
+      justification: "Estímulo de calidad aeróbica en carrera a pie con aclaramiento eficiente de lactato.",
+      workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
+    }
+  ];
+
+  if (phase === "PEAK") {
     return list[(blockIndex * 2 + posInBlock) % list.length] || list[0];
   }
   if (phase === "BUILD") {
-    const list = vars.build && vars.build.length > 0 ? vars.build : vars.base;
     return list[(weekNumber - 1) % list.length] || list[0];
   }
   if (phase === "TAPER" || phase === "RACE_WEEK") {
-    const list = vars.taper && vars.taper.length > 0 ? vars.taper : vars.base;
     return list[blockIndex % list.length] || list[0];
   }
-  return vars.base[(weekNumber - 1) % vars.base.length] || vars.base[0];
+  return list[(weekNumber - 1) % list.length] || list[0];
 }
 
 function buildRestDay(day: string, dateStr: string, formattedDate: string): PlanItem {
@@ -113,7 +136,7 @@ export function generateWeekTemplate(
         if (disc === "Ciclismo") {
           result.push({
             day, date: dateStr, formattedDate, discipline: "Ciclismo",
-            workoutName: "Rodaje Ciclista de Soltura & Ajuste Mecánico (30m Z1)", action: "MANTENER", durationMinutes: 30, tss: 18,
+            workoutName: "Pedaleo Ciclista de Soltura & Ajuste Mecánico (30m Z1)", action: "MANTENER", durationMinutes: 30, tss: 18,
             powerTarget: `${Math.round(bikeFtp * 0.55)}W (55% FTP)`, justification: "Verificación de cambios, presión de ruedas y soltura de piernas.",
             workoutDoc: "Warmup\n- 10m 50% FTP\n\nMain\n- 15m 55% FTP con 2x30s 80% FTP\n\nCooldown\n- 5m 45% FTP", isRestDay: false,
           });
@@ -200,7 +223,7 @@ export function generateWeekTemplate(
           let rideMins = 90, rideTitle = "Fondo Resistencia Ciclismo", rideJust = "Volumen mitocondrial continuo.", rideTarget = `${Math.round(bikeFtp * 0.65)}W (65% FTP)`;
           if (phase === "TAPER") {
             rideMins = weekNumber % 2 === 0 ? 45 : 55;
-            rideTitle = `Rodaje Ciclista de Descarga Pre-Carrera (${rideMins}m Z1)`;
+            rideTitle = `Pedaleo Ciclista de Descarga Pre-Carrera (${rideMins}m Z1)`;
             rideJust = "Soltura de piernas sin fatiga metabólica.";
             rideTarget = `${Math.round(bikeFtp * 0.58)}W (58% FTP)`;
           } else if (isRecovery) {

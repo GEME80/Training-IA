@@ -26,7 +26,7 @@ export const ATHLETE_MOMENT_MACROCYCLES: MacrocycleDefinition[] = [
       "Ciclismo complementario para sumar fondo sin impacto",
     ],
     keyWorkoutsSummary: [
-      "Rodajes continuos en Zona 2 relajada",
+      "Carreras continuas en Zona 2 relajada",
       "Fondos progresivos suaves de 60 a 100 minutos",
       "Cuestas cortas de fuerza e impulsión",
       "Fuerza de piernas, sóleo y abdomen",
@@ -91,7 +91,7 @@ export const ATHLETE_MOMENT_MACROCYCLES: MacrocycleDefinition[] = [
       "Rectas progresivas de zancada con descanso completo",
       "Micro-series de 300m a ritmo vivo",
       "Ejercicios pliométricos suaves de tobillo",
-      "Rodajes suaves de soltura",
+      "Carreras continuas suaves de soltura",
     ],
     recommendedFor: "Atletas que se sienten pesados o quieren ganar chispa y soltura.",
     phaseRatios: { base: 0.50, build: 0.50, peak: 0.0, taper: 0.0 },
@@ -181,7 +181,7 @@ export const ATHLETE_MOMENT_MACROCYCLES: MacrocycleDefinition[] = [
       "Cero fatiga residual",
     ],
     keyWorkoutsSummary: [
-      "Rodajes cómodos con rectas progresivas",
+      "Carreras continuas cómodas con rectas progresivas",
       "Salidas de bicicleta en Zona 2",
       "Fuerza de sóleo, espalda y abdomen",
       "Semanas de asimilación periódicas",

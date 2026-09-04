@@ -195,7 +195,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       ? "Frescura sobresaliente y piernas ligeras. Momento ideal para absorber calidad sin fatiga residual."
       : physioStatus.tsb >= -5
       ? "Estado de forma equilibrado. Ritmo óptimo de progresión aeróbica y asimilación de volumen."
-      : "Fatiga acumulada moderada. Priorizaremos rodajes suaves y trabajo cruzado para proteger articulaciones.";
+      : "Fatiga acumulada moderada. Priorizaremos carreras continuas suaves y trabajo cruzado para proteger articulaciones.";
 
   const promptContext: HeadCoachPromptContext = {
     profile,

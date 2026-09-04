@@ -47,8 +47,8 @@ export const TRAIL_ULTRA_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.10,
       focusDescription: "Reducción sustancial de impacto y desnivel para restaurar ligamentos y tendones.",
       weeklyTssRange: { min: 200, max: 280 },
-      longRunGuideline: "Rodajes suaves de 45-60m en terreno llano o blando.",
-      recommendedIntensityZones: ["Rodaje Regenerativo", "Movilidad Articular"],
+      longRunGuideline: "Carreras continuas suaves de 45-60m en terreno llano o blando.",
+      recommendedIntensityZones: ["Trote Regenerativo", "Movilidad Articular"],
     },
   ],
   mandatoryTests: [
@@ -107,7 +107,7 @@ export const TRAIL_ULTRA_MODEL: CuratedTrainingModel = {
       ],
       taper: [
         {
-          name: "Rodaje Suave en Llano con Strides (35m)",
+          name: "Carrera Continua Suave en Llano con Strides (35m)",
           powerTarget: "70% CP",
           justification: "Soltura articular sin carga excéntrica.",
           workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 20m 70% FTP\n\nCooldown\n- 5m 60% FTP",

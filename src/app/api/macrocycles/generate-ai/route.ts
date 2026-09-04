@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       athleteId,
       apiKey,
       uid,
+      email,
       customGeminiKey,
       selectedModel,
       wizardConfig,
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
-      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+      await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
     let profile: AthleteProfile = {
       id: effectiveAthleteId,

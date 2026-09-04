@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       athleteId,
       apiKey,
       uid,
+      email,
       customRunFtp: inputRunFtp,
       customBikeFtp: inputBikeFtp,
       weekOffset = 0,
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     customRunFtp = inputRunFtp;
     customBikeFtp = inputBikeFtp;
 
-    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
     effectiveAthleteId = credentials.athleteId;
     const effectiveApiKey = credentials.apiKey;
 

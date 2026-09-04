@@ -11,10 +11,11 @@ export async function resolveIntervalsCredentials(params: {
   apiKey?: string;
   athleteId?: string;
   uid?: string;
+  email?: string;
 }): Promise<{ athleteId: string; apiKey: string }> {
   let athleteId = (params.athleteId || "").replace(/["']/g, "").trim();
   let apiKey = (params.apiKey || "").replace(/["']/g, "").trim();
-  let userEmail = "";
+  let userEmail = (params.email || "").trim();
 
   // 1. Si falta la clave o athleteId y se suministra UID, consultar Firestore desencriptando en memoria
   if (params.uid) {

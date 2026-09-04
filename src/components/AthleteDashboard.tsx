@@ -274,6 +274,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             athleteId: targetAthleteId,
             apiKey: targetApiKey,
             uid: user?.uid,
+            email: user?.email || userProfile?.email || "",
             customRunFtp: runFtp || profile.run_ftp,
             customBikeFtp: bikeFtp || profile.bike_ftp,
             skipAI: true,
@@ -371,12 +372,23 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   const handleSyncToIntervals = async (planToSync: PlanItem[]) => {
     setIsSyncing(true);
     try {
+      const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
+      const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
+
+      if (!profile.id && !isSuper) {
+        setSettingsTab("intervals");
+        setIsSettingsOpen(true);
+        throw new Error("Por favor configura tu Athlete ID de Intervals.icu en Ajustes antes de sincronizar.");
+      }
+
       const res = await fetch("/api/sync-intervals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteId: profile.id,
-          apiKey: apiKeyCache,
+          apiKey: activeApiKey,
+          uid: user?.uid,
+          email: user?.email || userProfile?.email || "",
           plan: planToSync,
         }),
       });
@@ -441,12 +453,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
     setIsSyncing(true);
     try {
+      const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
       const res = await fetch("/api/sync-intervals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteId: profile.id,
-          apiKey: apiKeyCache,
+          apiKey: activeApiKey,
+          uid: user?.uid,
+          email: user?.email || userProfile?.email || "",
           plan: fullCyclePlan,
         }),
       });
@@ -816,7 +831,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       let storedAthleteId =
         userProfile?.intervalsAthleteId ||
         userStorage.getItem("athlete_id") ||
-        (isSuper ? (process.env.NEXT_PUBLIC_DEFAULT_ATHLETE_ID || "") : "");
+        (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || process.env.NEXT_PUBLIC_DEFAULT_ATHLETE_ID || "i442091") : "");
 
       // BLINDAJE ABSOLUTO: Si no es el Superadmin (Germán Morales), NUNCA hereda i442091
       if (!isSuper && (storedAthleteId === "i442091" || storedAthleteId.toLowerCase() === "i442091")) {
@@ -826,7 +841,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
 
       let storedApiKey =
         userStorage.getItem("intervals_api_key") ||
-        "";
+        (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "") : "");
 
       const storedGeminiKey = userStorage.getItem("custom_gemini_key") || "";
       const storedRaces = userStorage.getJSON<TargetRace[]>("target_races");
@@ -1315,13 +1330,15 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
             visibleMetrics={visibleMetrics}
             isLiveConnected={isLiveConnected}
             onTestConnection={async (testAthleteId) => {
+              const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
               const res = await fetch("/api/test-connection", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   athleteId: testAthleteId || profile.id,
-                  apiKey: apiKeyCache,
+                  apiKey: activeApiKey,
                   uid: user?.uid,
+                  email: user?.email || userProfile?.email || "",
                 }),
               });
               const data = await res.json();

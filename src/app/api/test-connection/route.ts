@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { athleteId, apiKey, uid } = body || {};
+    const { athleteId, apiKey, uid, email } = body || {};
 
     const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
-      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+      await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
     if (!effectiveAthleteId || !effectiveApiKey) {
       return NextResponse.json(

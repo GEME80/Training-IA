@@ -7,10 +7,10 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, uid, plan } = body;
+    const { athleteId, apiKey, uid, email, plan } = body;
 
     const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
-      await resolveIntervalsCredentials({ athleteId, apiKey, uid });
+      await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
     if (!effectiveApiKey) {
       return NextResponse.json(

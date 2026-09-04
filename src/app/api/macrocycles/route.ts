@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     // BLINDAJE: El macrociclo de Tokio i442091 pertenece única y exclusivamente al Superadmin
-    if (athleteId === "i442091" && requesterEmail && !isMasterAdminEmail(requesterEmail)) {
+    if (athleteId === "i442091" && (!requesterEmail || !isMasterAdminEmail(requesterEmail))) {
       return NextResponse.json({
         success: true,
         macrocycle: null,

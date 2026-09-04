@@ -48,11 +48,13 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         photoURL: data.photoURL,
         role: data.role || (isSuper ? "admin" : "athlete"),
         status: data.status || (isSuper ? "active" : "pending"),
-        intervalsAthleteId: data.intervalsAthleteId || (isSuper ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined),
-        hasIntervalsKey: Boolean(data.encryptedApiKey),
+        intervalsAthleteId: (!isSuper && data.intervalsAthleteId === "i442091")
+          ? undefined
+          : (data.intervalsAthleteId || (isSuper ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined)),
+        hasIntervalsKey: Boolean(data.encryptedApiKey && (isSuper || data.intervalsAthleteId !== "i442091")),
         isPreAuthorized: Boolean((data as unknown as { isPreAuthorized?: boolean }).isPreAuthorized || (data.uid || doc.id).startsWith("preauth_")),
-        runFtp: data.runFtp,
-        bikeFtp: data.bikeFtp,
+        runFtp: (!isSuper && data.runFtp === 327) ? undefined : data.runFtp,
+        bikeFtp: (!isSuper && data.bikeFtp === 240) ? undefined : data.bikeFtp,
         createdAt: data.createdAt || new Date().toISOString(),
         lastLoginAt: data.lastLoginAt || new Date().toISOString(),
       };

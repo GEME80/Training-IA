@@ -91,14 +91,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [coachProfile, setCoachProfile] = useState<string>("olympic");
   const [customPrompt] = useState<string>("");
 
-  const [birthDate, setBirthDate] = useState<string>(initialBirthDate || "1988-05-15");
+  const [birthDate, setBirthDate] = useState<string>(initialBirthDate || "");
   const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialGender || "M");
-  const [runFtp, setRunFtp] = useState<number>(initialRunFtp);
-  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp);
-  const [weightKg, setWeightKg] = useState<number>(68);
-  const [restingHR, setRestingHR] = useState<number>(45);
-  const [maxHR, setMaxHR] = useState<number>(185);
-  const [lthr, setLthr] = useState<number>(168);
+  const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
+  const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
+  const [weightKg, setWeightKg] = useState<number>(0);
+  const [restingHR, setRestingHR] = useState<number>(0);
+  const [maxHR, setMaxHR] = useState<number>(0);
+  const [lthr, setLthr] = useState<number>(0);
 
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
     initialWeeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY
@@ -117,17 +117,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [loadingModels, setLoadingModels] = useState<boolean>(false);
 
   const calculatedAge = useMemo(() => {
-    if (!birthDate) return 38;
+    if (!birthDate) return 0;
     const dob = new Date(birthDate);
-    if (isNaN(dob.getTime())) return 38;
+    if (isNaN(dob.getTime())) return 0;
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
-    return age > 0 ? age : 38;
+    return age > 0 ? age : 0;
   }, [birthDate]);
 
-  const tanakaMaxHR = useMemo(() => Math.round(208 - 0.7 * calculatedAge), [calculatedAge]);
+  const tanakaMaxHR = useMemo(() => (calculatedAge > 0 ? Math.round(208 - 0.7 * calculatedAge) : 0), [calculatedAge]);
 
   const relativePower = useMemo(() => {
     if (runFtp > 0 && weightKg > 0) return (runFtp / weightKg).toFixed(2);

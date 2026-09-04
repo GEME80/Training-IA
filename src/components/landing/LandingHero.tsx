@@ -38,8 +38,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         Prescribe vatios exactos, calcula tu fatiga real cada mañana con tu variabilidad cardíaca (HRV) y reajusta cada microciclo automáticamente. Sin planes rígidos de papel. Sin sobreentrenamiento.
       </p>
 
-      {/* Acceso exclusivo al Dashboard si el atleta ya está autenticado */}
-      {isAuthenticated && onGoToDashboard && (
+      {/* Acceso al Dashboard o Registro para Atletas */}
+      {isAuthenticated && onGoToDashboard ? (
         <div className="mt-8 flex justify-center">
           <button
             type="button"
@@ -49,6 +49,24 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             <LayoutDashboard className="h-4 w-4 text-white" />
             <span>Ir a mi Dashboard</span>
             <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => (onOpenAuthModal ? onOpenAuthModal("register") : onLoginWithGoogle?.())}
+            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 px-7 py-3.5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
+          >
+            <span>Registrarme como Atleta</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => (onOpenAuthModal ? onOpenAuthModal("login") : onLoginWithGoogle?.())}
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 px-6 py-3.5 text-sm font-bold text-slate-800 shadow-xs hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
+          >
+            <span>Iniciar Sesión</span>
           </button>
         </div>
       )}

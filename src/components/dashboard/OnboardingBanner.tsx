@@ -42,7 +42,7 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ onOpenOnboar
               <div className="text-[11px]">
                 <strong className="block text-slate-900 dark:text-slate-100 font-bold">1. Tu Athlete ID</strong>
                 <span className="text-slate-500 dark:text-slate-400">
-                  Visible en la cabecera de tu perfil en Intervals.icu (ej: <code className="font-mono text-cyan-700 dark:text-cyan-300 font-bold">i123456</code>).
+                  En Ajustes de Intervals.icu en la <strong>parte inferior derecha</strong> (ej: <code className="font-mono text-cyan-700 dark:text-cyan-300 font-bold">i123456</code>).
                 </span>
               </div>
             </div>

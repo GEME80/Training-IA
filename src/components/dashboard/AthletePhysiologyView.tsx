@@ -52,10 +52,10 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   email = "",
   runFtp: initialRunFtp = 0,
   bikeFtp: initialBikeFtp = 0,
-  weightKg: initialWeight = 70,
-  heightCm: initialHeight = 175,
+  weightKg: initialWeight,
+  heightCm: initialHeight,
   birthDate: initialBirthDate = "",
-  gender: initialGender = "M",
+  gender: initialGender,
   apiKey: initialApiKey = "",
   ctl,
   atl,
@@ -70,14 +70,14 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [athleteName, setAthleteName] = useState<string>(initialAthleteName);
   const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
   const [bikeFtp, setBikeFtp] = useState<number>(initialBikeFtp || 0);
-  const [weightKg, setWeightKg] = useState<number>(initialWeight);
-  const [heightCm, setHeightCm] = useState<number>(initialHeight);
+  const [weightKg, setWeightKg] = useState<number | undefined>(initialWeight);
+  const [heightCm, setHeightCm] = useState<number | undefined>(initialHeight);
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate);
-  const [gender, setGender] = useState<"M" | "F" | "OTHER">(initialGender);
+  const [gender, setGender] = useState<"M" | "F" | "OTHER" | undefined>(initialGender);
   const [apiKey, setApiKey] = useState<string>(initialApiKey);
-  const [restingHR, setRestingHR] = useState<number>(45);
-  const [lthr, setLthr] = useState<number>(168);
-  const [maxHR, setMaxHR] = useState<number>(185);
+  const [restingHR, setRestingHR] = useState<number | undefined>(undefined);
+  const [lthr, setLthr] = useState<number | undefined>(undefined);
+  const [maxHR, setMaxHR] = useState<number | undefined>(undefined);
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
     initialAvailability || DEFAULT_WEEKLY_AVAILABILITY
   );
@@ -102,19 +102,19 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   }, [initialAthleteName]);
 
   useEffect(() => {
-    if (initialRunFtp) setRunFtp(initialRunFtp);
+    if (initialRunFtp !== undefined) setRunFtp(initialRunFtp);
   }, [initialRunFtp]);
 
   useEffect(() => {
-    if (initialBikeFtp) setBikeFtp(initialBikeFtp);
+    if (initialBikeFtp !== undefined) setBikeFtp(initialBikeFtp);
   }, [initialBikeFtp]);
 
   useEffect(() => {
-    if (initialWeight) setWeightKg(initialWeight);
+    if (initialWeight !== undefined) setWeightKg(initialWeight);
   }, [initialWeight]);
 
   useEffect(() => {
-    if (initialHeight) setHeightCm(initialHeight);
+    if (initialHeight !== undefined) setHeightCm(initialHeight);
   }, [initialHeight]);
 
   useEffect(() => {
@@ -126,8 +126,9 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   }, [initialGender]);
 
   const calculatedAge = React.useMemo(() => {
-    if (!birthDate) return 46;
+    if (!birthDate) return undefined;
     const diff = Date.now() - new Date(birthDate).getTime();
+    if (isNaN(diff) || diff <= 0) return undefined;
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   }, [birthDate]);
 
@@ -244,15 +245,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         iconColor="text-amber-500"
         summaryBadge={
           <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
-            {runFtp}W CP • {bikeFtp}W FTP
+            {runFtp > 0 ? `${runFtp}W CP` : "Sin CP"} • {bikeFtp > 0 ? `${bikeFtp}W FTP` : "Sin FTP"}
           </span>
         }
       >
         <AthleteZonesViewer
           runFtp={runFtp}
           bikeFtp={bikeFtp}
-          lthr={lthr}
-          maxHR={maxHR}
+          lthr={lthr || 0}
+          maxHR={maxHR || 0}
         />
       </AthleteCollapsibleSection>
 

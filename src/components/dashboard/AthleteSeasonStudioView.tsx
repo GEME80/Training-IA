@@ -30,9 +30,9 @@ interface AthleteSeasonStudioViewProps {
 
 export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = ({
   athleteId,
-  runFtp = 313,
-  bikeFtp = 238,
-  lthr = 168,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr = 0,
   ctl = 0,
   weeklyAvailability,
   targetRaces,

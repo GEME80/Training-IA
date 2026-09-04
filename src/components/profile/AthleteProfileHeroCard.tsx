@@ -6,7 +6,7 @@ import { Footprints, Bike, HeartPulse, Moon, Edit3, Zap, Activity } from "lucide
 interface AthleteProfileHeroCardProps {
   athleteName: string;
   email?: string;
-  calculatedAge: number;
+  calculatedAge?: number;
   birthDate?: string;
   gender?: "M" | "F" | "OTHER";
   weightKg?: number;
@@ -21,22 +21,22 @@ interface AthleteProfileHeroCardProps {
 
 export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   athleteName,
-  email = "german.morales@pulseai.pro",
+  email = "",
   calculatedAge,
   birthDate,
-  gender = "M",
-  weightKg = 70,
-  heightCm = 175,
+  gender,
+  weightKg,
+  heightCm,
   runFtp = 0,
   bikeFtp = 0,
-  lthr = 165,
-  restingHR = 50,
-  maxHR = 185,
+  lthr,
+  restingHR,
+  maxHR,
   onOpenEditModal,
 }) => {
-  const relativeRunPower = weightKg && runFtp ? (runFtp / weightKg).toFixed(2) : "—";
-  const relativeBikePower = weightKg && bikeFtp ? (bikeFtp / weightKg).toFixed(2) : "—";
-  const bmi = weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : "—";
+  const relativeRunPower = weightKg && weightKg > 0 && runFtp && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "—";
+  const relativeBikePower = weightKg && weightKg > 0 && bikeFtp && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "—";
+  const bmi = weightKg && weightKg > 0 && heightCm && heightCm > 0 ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : "—";
   const genderLabel = gender === "F" ? "Mujer" : gender === "M" ? "Hombre" : "Atleta";
 
   return (
@@ -48,12 +48,12 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
           <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-cyan-500 flex items-center justify-center text-white font-black text-lg shadow-sm">
-            {athleteName.slice(0, 2).toUpperCase()}
+            {(athleteName || "AT").slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-black text-slate-900 dark:text-white">
-                {athleteName}
+                {athleteName || "Atleta"}
               </h3>
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
                 PRO ATHLETE
@@ -65,11 +65,11 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400 pt-0.5">
-              <span>{calculatedAge} años ({genderLabel})</span>
+              <span>{calculatedAge && calculatedAge > 0 ? `${calculatedAge} años` : "Edad sin configurar"} {gender ? `(${genderLabel})` : ""}</span>
               <span>•</span>
-              <span>{weightKg} kg</span>
+              <span>{weightKg && weightKg > 0 ? `${weightKg} kg` : "— kg"}</span>
               <span>•</span>
-              <span>{heightCm} cm</span>
+              <span>{heightCm && heightCm > 0 ? `${heightCm} cm` : "— cm"}</span>
               <span>•</span>
               <span className="text-slate-400">IMC {bmi}</span>
             </div>
@@ -100,7 +100,13 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {runFtp || 313} <span className="text-xs text-slate-400 font-sans">W</span>
+              {runFtp && runFtp > 0 ? (
+                <>
+                  {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
+                </>
+              ) : (
+                <span className="text-slate-400 font-medium text-base">— W</span>
+              )}
             </span>
             <span className="text-[9px] font-mono text-slate-400">Potencia Crítica</span>
           </div>
@@ -117,7 +123,13 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {bikeFtp || 238} <span className="text-xs text-slate-400 font-sans">W</span>
+              {bikeFtp && bikeFtp > 0 ? (
+                <>
+                  {bikeFtp} <span className="text-xs text-slate-400 font-sans">W</span>
+                </>
+              ) : (
+                <span className="text-slate-400 font-medium text-base">— W</span>
+              )}
             </span>
             <span className="text-[9px] font-mono text-slate-400">Umbral Funcional</span>
           </div>
@@ -130,11 +142,17 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               <HeartPulse className="h-3.5 w-3.5 text-rose-500" />
               FC Umbral (LTHR)
             </span>
-            <span className="text-[10px] font-mono text-rose-600 font-bold">Máx {maxHR}</span>
+            <span className="text-[10px] font-mono text-rose-600 font-bold">{maxHR && maxHR > 0 ? `Máx ${maxHR}` : "Sin Máx"}</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {lthr || 168} <span className="text-xs text-slate-400 font-sans">bpm</span>
+              {lthr && lthr > 0 ? (
+                <>
+                  {lthr} <span className="text-xs text-slate-400 font-sans">bpm</span>
+                </>
+              ) : (
+                <span className="text-slate-400 font-medium text-base">— bpm</span>
+              )}
             </span>
             <span className="text-[9px] font-mono text-slate-400">Lactato Z4</span>
           </div>
@@ -151,7 +169,13 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {restingHR || 45} <span className="text-xs text-slate-400 font-sans">bpm</span>
+              {restingHR && restingHR > 0 ? (
+                <>
+                  {restingHR} <span className="text-xs text-slate-400 font-sans">bpm</span>
+                </>
+              ) : (
+                <span className="text-slate-400 font-medium text-base">— bpm</span>
+              )}
             </span>
             <span className="text-[9px] font-mono text-slate-400">Recuperación</span>
           </div>

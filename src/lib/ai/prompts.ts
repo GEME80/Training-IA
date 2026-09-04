@@ -212,9 +212,9 @@ export function buildMacrocycleArchitectSystemPrompt(
 - Atleta: ${profile.name || "Atleta"}
 - Edad: ${profile.age ? `${profile.age} años` : "No especificada"} | Género: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}
 - CTL Actual (Fitness): ${physioStatus.ctl.toFixed(1)} | ATL (Fatiga): ${physioStatus.atl.toFixed(1)} | TSB (Forma): ${physioStatus.tsb.toFixed(1)}
-- Stryd Potencia Crítica (Run CP): ${profile.run_ftp ? `${profile.run_ftp} W` : "327 W"}
-- Bike FTP: ${profile.bike_ftp ? `${profile.bike_ftp} W` : "240 W"}
-- Frecuencia Cardíaca Umbral (LTHR): ${profile.lthr ? `${profile.lthr} bpm` : "168 bpm"}
+- Stryd Potencia Crítica (Run CP): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado / Usar Ritmo"}
+- Bike FTP: ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado / Usar RPE"}
+- Frecuencia Cardíaca Umbral (LTHR): ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 
 === PARÁMETROS DEL PLAN RECTOR SOLICITADO POR EL ATLETA ===
 - Evento / Desafío: ${config.hasRace || config.raceName ? `Competición (${config.raceName || "Carrera Objetivo"}, Distancia: ${config.targetDistance || config.raceDistance || "42.2k"})` : `Foco de Temporada (${config.athleteMoment || "Construcción de Base"})`}

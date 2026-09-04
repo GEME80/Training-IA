@@ -148,8 +148,8 @@ export async function POST(req: NextRequest) {
           );
 
           // Prioridad absoluta a los valores en vivo de Intervals.icu
-          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || icuRunFtp || customRunFtp || anyAthlete.run_ftp || 313;
-          const resolvedBikeFtp = rideSport?.ftp || icuFtp || customBikeFtp || anyAthlete.bike_ftp || 238;
+          const resolvedRunFtp = runSport?.mmp_model?.criticalPower || runSport?.ftp || icuRunFtp || customRunFtp || anyAthlete.run_ftp || 0;
+          const resolvedBikeFtp = rideSport?.ftp || icuFtp || customBikeFtp || anyAthlete.bike_ftp || 0;
 
           let computedAge: number | undefined = undefined;
           if (icuDob) {

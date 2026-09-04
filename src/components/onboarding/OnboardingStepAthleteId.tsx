@@ -52,7 +52,7 @@ export const OnboardingStepAthleteId: React.FC<OnboardingStepAthleteIdProps> = (
               2
             </span>
             <span>
-              En la parte superior verás tu tarjeta de perfil con tu <strong>Athlete ID</strong> (por ejemplo: <code className="bg-slate-200/70 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">i123456</code> o una serie numérica).
+              En la página de Ajustes, deslízate hacia abajo hasta la <strong>parte inferior derecha</strong> (sección de tu cuenta y claves API), donde verás tu <strong>Athlete ID</strong> (por ejemplo: <code className="bg-slate-200/70 dark:bg-slate-800 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">i123456</code> o una serie numérica).
             </span>
           </li>
           <li className="flex items-start gap-2.5">

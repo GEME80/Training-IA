@@ -13,8 +13,8 @@ interface AthleteZonesViewerProps {
 export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
   runFtp = 0,
   bikeFtp = 0,
-  lthr = 165,
-  maxHR = 185,
+  lthr = 0,
+  maxHR = 0,
 }) => {
   // 1. ZONAS STRYD RUNNING POWER (Estilo exacto Stryd / Intervals)
   const strydZones = [
@@ -75,13 +75,13 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
 
   // 3. ZONAS FRECUENCIA CARDÍACA (Intervals / LTHR)
   const hrZones = [
-    { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: `0 - ${Math.round(lthr * 0.83)} bpm` },
-    { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: `${Math.round(lthr * 0.83) + 1} - ${Math.round(lthr * 0.88)} bpm` },
-    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: `${Math.round(lthr * 0.88) + 1} - ${Math.round(lthr * 0.92)} bpm` },
-    { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: `${Math.round(lthr * 0.93)} - ${Math.round(lthr * 0.98)} bpm` },
-    { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: `${Math.round(lthr * 0.98) + 1} - ${lthr} bpm` },
-    { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: `${lthr + 1} - ${Math.round(lthr * 1.03)} bpm` },
-    { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: `${Math.round(lthr * 1.04)} - ${maxHR} bpm` },
+    { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: lthr > 0 ? `0 - ${Math.round(lthr * 0.83)} bpm` : "—" },
+    { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.83) + 1} - ${Math.round(lthr * 0.88)} bpm` : "—" },
+    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.88) + 1} - ${Math.round(lthr * 0.92)} bpm` : "—" },
+    { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.93)} - ${Math.round(lthr * 0.98)} bpm` : "—" },
+    { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.98) + 1} - ${lthr} bpm` : "—" },
+    { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: lthr > 0 ? `${lthr + 1} - ${Math.round(lthr * 1.03)} bpm` : "—" },
+    { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: lthr > 0 ? `${Math.round(lthr * 1.04)} - ${maxHR > 0 ? `${maxHR} bpm` : "Máx"}` : "—" },
   ];
 
   return (
@@ -111,7 +111,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             </div>
             <div className="text-right">
               <span className="text-xs font-black font-mono text-amber-600 dark:text-amber-400">
-                {runFtp} W
+                {runFtp > 0 ? `${runFtp} W` : "— W"}
               </span>
               <span className="block text-[9px] font-mono text-slate-400">CP</span>
             </div>
@@ -149,7 +149,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             </div>
             <div className="text-right">
               <span className="text-xs font-black font-mono text-sky-600 dark:text-sky-400">
-                {bikeFtp} W
+                {bikeFtp > 0 ? `${bikeFtp} W` : "— W"}
               </span>
               <span className="block text-[9px] font-mono text-slate-400">FTP</span>
             </div>
@@ -182,12 +182,12 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
                 <h5 className="text-xs font-black text-slate-900 dark:text-white">
                   Frecuencia Cardíaca
                 </h5>
-                <span className="text-[10px] font-mono text-slate-400">LTHR {lthr} bpm</span>
+                <span className="text-[10px] font-mono text-slate-400">{lthr > 0 ? `LTHR ${lthr} bpm` : "Sin LTHR"}</span>
               </div>
             </div>
             <div className="text-right">
               <span className="text-xs font-black font-mono text-rose-600 dark:text-rose-400">
-                {lthr} bpm
+                {lthr > 0 ? `${lthr} bpm` : "— bpm"}
               </span>
               <span className="block text-[9px] font-mono text-slate-400">Umbral</span>
             </div>

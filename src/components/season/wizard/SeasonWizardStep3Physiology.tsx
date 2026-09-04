@@ -67,7 +67,7 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <span className="text-[9px] text-slate-400 block uppercase">Umbral FC (LTHR)</span>
             <strong className="text-xs font-black text-rose-600 dark:text-rose-400">
-              {lthr > 0 ? `${lthr} bpm` : "168 bpm"}
+              {lthr > 0 ? `${lthr} bpm` : "—"}
             </strong>
           </div>
         </div>

@@ -2375,6 +2375,80 @@ flowchart TD
   - `Prueba 3 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
   - `Prueba 4 (Auditoría UX/UI):` Cero botones redundantes de registro en el Hero; 100% de coherencia entre los badges de disciplina y los 6 Head Coaches.
 
+---
+
+### Versión 3.18 - Blindaje de Sesiones Multi-Tenant, Espacio Aislado por Atleta y Onboarding Educativo (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 09:30 COT.
+- **Objetivo Arquitectónico:** Solucionar la persistencia cruzada de perfiles donde nuevos atletas visualizaban los datos del atleta rector (`gerkof@gmail.com`), aislar el almacenamiento en cliente con espacios independientes por UID, e implementar un sistema de onboarding interactivo y educativo para guiar la obtención de credenciales de Intervals.icu.
+- **Implementaciones Realizadas:**
+  1. **Aislamiento Multi-Tenant y Storage Prefijado (`userStorage.ts` - 127 LOC):**
+     - Creación de `userStorage.ts` con almacenamiento con espacio de nombres unívoco: `sgea:user:${safeUid}:${key}`.
+     - Erradicación de lecturas y escrituras globales desprotegidas en `localStorage`.
+     - Purga automática de sesiones y almacenamiento legacy al cambiar de usuario (`purgeLegacyGlobalStorage`, `purgeAllSessionStorage`).
+  2. **Erradicación de Fuga de Sesión y Mock Admin en AuthContext (`AuthContext.tsx` - 348 LOC):**
+     - Eliminado el mock automático de admin para estados no autenticados.
+     - Implementación de flujos nativos con contraseña y reseteo (`signInWithEmail`, `signUpWithEmail`, `sendPasswordReset`).
+  3. **Protección en API de Perfil (`src/app/api/profile/route.ts`):**
+     - Erradicado el fallback inseguro a `"demo-user"`. Exigencia obligatoria de UID en todas las peticiones GET y POST (HTTP 400 en caso de ausencia).
+  4. **Banner Educativo Permanente y Modal Guiado de Onboarding (`OnboardingBanner.tsx` - 145 LOC, `AthleteDashboard.tsx`):**
+     - Rediseñado el banner superior para nuevos atletas sin conexión a Intervals.icu, explicando el valor de la telemetría en vivo y la sincronización con Garmin, Polar, Suunto, Coros y Strava.
+     - Apertura inteligente y no intrusiva del modal interactivo de 3 pasos en el primer inicio de sesión del atleta (`onboarding_welcomed`).
+
+---
+
+### Versión 3.19 - Erradicación de Biometría Dummy en Cuentas Sin Calibrar y Corrección de Ubicación de Athlete ID (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 10:00 COT.
+- **Objetivo Arquitectónico:** Eliminar completamente los valores predeterminados de prueba en perfiles de atleta sin configurar (46 años, 70 kg, 175 cm, IMC 22.9, Stryd CP 313W, Bike FTP 238W, LTHR 168 bpm, FC Reposo 45 bpm) garantizando que ningún atleta vea datos ficticios hasta que realice su calibración o vinculación, y corregir las instrucciones de ubicación del Athlete ID en Intervals.icu.
+- **Implementaciones Realizadas:**
+  1. **Limpieza de Defaults en Hero Card de Perfil (`AthleteProfileHeroCard.tsx`):**
+     - Eliminación de operadores ternarios de fallback (`runFtp || 313` $\rightarrow$ `runFtp > 0 ? ... : "— W"`).
+     - Valores sin configurar se renderizan limpiamente como `— W`, `— bpm`, `— kg`, `— cm`, `—` (IMC) y `Edad sin configurar`.
+  2. **Vista de Fisiología y Visor de Zonas (`AthletePhysiologyView.tsx` - 330 LOC, `AthleteZonesViewer.tsx`):**
+     - Eliminadas inicializaciones de prueba; los campos arrancan en blanco o `0`, y las zonas se muestran como `" — "` hasta calibrar umbrales reales.
+     - El badge superior muestra `Sin CP • Sin FTP` si los valores son nulos o cero.
+  3. **Corrección de Ubicación de Athlete ID en Intervals.icu:**
+     - Actualizado en `OnboardingStepAthleteId.tsx` y `OnboardingBanner.tsx`: se especifica textualmente que el Athlete ID se encuentra en la **parte inferior derecha** de la página de Ajustes (sección de cuenta y claves API), y no en la parte superior.
+
+---
+
+### Versión 3.20 - Resolución del Error 401 en Sincronización con Intervals.icu y Desplazamiento Dinámico de Acciones Semanales (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 11:15 COT.
+- **Objetivo Arquitectónico:** Resolver el error HTTP 401 que ocurría al pulsar "Sincronizar la semana con Intervals", garantizar la propagación de credenciales cifradas y habilitar el desplazamiento automático semana a semana de las barras de acciones con soporte de sincronización anticipada.
+- **Implementaciones Realizadas:**
+  1. **Resolución Unificada de Credenciales (`credentials.ts` - 56 LOC):**
+     - `resolveIntervalsCredentials` ahora acepta y procesa `email?: string` y `uid?: string`.
+     - Si la petición corresponde al Superadministrador (`gerkof@gmail.com`), adopta automáticamente las credenciales seguras del servidor sin falsos positivos de bloqueo.
+     - Para atletas regulares, se consulta Firestore y se descifra la clave AES-256-GCM en memoria en el servidor.
+  2. **Propagación en Endpoints de Integración:**
+     - `/api/sync-intervals`, `/api/sync-settings`, `/api/test-connection`, `/api/macrocycles/generate-ai` y `/api/evaluate` ahora reciben `uid` y `email`.
+  3. **Dashboard de Atleta (`AthleteDashboard.tsx`):**
+     - En `handleSyncToIntervals` y `handleSyncFullMacrocycleToIntervals`, se envía `apiKeyCache || userStorage.getItem("intervals_api_key")`, junto con `uid: user?.uid` y `email: user?.email || userProfile?.email`.
+     - Validación amigable preventiva antes de sincronizar si un atleta no ha ingresado su ID.
+  4. **Desplazamiento Dinámico y Sincronización Anticipada de Semanas (`AthleteCalendarWeekRow.tsx` - 290 LOC, `AthleteContinuousCalendar.tsx` - 285 LOC):**
+     - La semana actual se calcula en tiempo real a partir del lunes actual del sistema (`getMondayOfWeekStr()`), desplazando la barra activa semana a semana de forma 100% automática.
+     - Se añadió la propiedad `isSelectedWeek` para que cualquier semana seleccionada o visualizada en Modo Foco despliegue también los botones **"Head Coach & Adaptación IA"** y **"Sincronizar a Intervals"**, permitiendo sincronizaciones anticipadas de microciclos futuros.
+- **Lista de Archivos Modificados / Creados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/storage/userStorage.ts`: **127 líneas** (< 350 LOC).
+  - `src/lib/intervals/credentials.ts`: **56 líneas** (< 350 LOC).
+  - `src/app/api/sync-intervals/route.ts`: **160 líneas** (< 350 LOC).
+  - `src/app/api/sync-settings/route.ts`: **114 líneas** (< 350 LOC).
+  - `src/app/api/test-connection/route.ts`: **30 líneas** (< 350 LOC).
+  - `src/app/api/macrocycles/generate-ai/route.ts`: **108 líneas** (< 350 LOC).
+  - `src/app/api/evaluate/route.ts`: **336 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteCalendarWeekRow.tsx`: **290 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteContinuousCalendar.tsx`: **285 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: **330 líneas** (< 350 LOC).
+  - `src/components/profile/AthleteProfileHeroCard.tsx`: **183 líneas** (< 350 LOC).
+  - `src/components/dashboard/OnboardingBanner.tsx`: **145 líneas** (< 350 LOC).
+  - `src/components/onboarding/OnboardingStepAthleteId.tsx`: **92 líneas** (< 350 LOC).
+  - `PROJECT_RULES.md`: **150 líneas**.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Suite de Seguridad e Integración):` **56/56 pruebas superadas (100% PASS)**.
+  - `Prueba 4 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+
+
 
 
 

@@ -292,11 +292,19 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
           <span className="font-bold text-slate-700 dark:text-slate-300">Duración del Macrociclo:</span>
           <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500 text-white font-black">{weeksCount} Semanas</span>
         </div>
-        <input type="range" min={4} max={maxSliderWeeks} step={1} value={weeksCount} onChange={(e) => onChangeWeeksCount(Number(e.target.value))} className="w-full accent-emerald-500 cursor-pointer pt-1" />
-        <div className="flex justify-between text-[9px] font-mono text-slate-400">
-          <span>4 sem (Mínimo)</span>
-          <span>{maxSliderWeeks === 16 ? "16 sem (Estándar)" : maxSliderWeeks === 20 ? "20 sem (Maratón)" : "36 sem (Máx)"}</span>
-        </div>
+        {primaryRace?.date ? (
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">
+            🎯 Calculado automáticamente hasta la semana de la carrera ({primaryRace.name}).
+          </p>
+        ) : (
+          <>
+            <input type="range" min={4} max={maxSliderWeeks} step={1} value={weeksCount} onChange={(e) => onChangeWeeksCount(Number(e.target.value))} className="w-full accent-emerald-500 cursor-pointer pt-1" />
+            <div className="flex justify-between text-[9px] font-mono text-slate-400">
+              <span>4 sem (Mínimo)</span>
+              <span>{maxSliderWeeks === 16 ? "16 sem (Estándar)" : maxSliderWeeks === 20 ? "20 sem (Maratón)" : "36 sem (Máx)"}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

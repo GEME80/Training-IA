@@ -12,6 +12,11 @@ import { SeasonWizardStep1Target } from "./wizard/SeasonWizardStep1Target";
 import { SeasonWizardStep2Disciplines } from "./wizard/SeasonWizardStep2Disciplines";
 import { SeasonWizardStep3Physiology } from "./wizard/SeasonWizardStep3Physiology";
 import { SeasonWizardStep4Preview } from "./wizard/SeasonWizardStep4Preview";
+import {
+  getResolvedStartDate,
+  calculateWeeksToRace,
+  resolveDistTypeFromWizard,
+} from "./wizard/seasonWizardHelpers";
 
 interface SeasonAIGeneratorProps {
   athleteId?: string;
@@ -31,7 +36,7 @@ interface SeasonAIGeneratorProps {
 }
 
 export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
-  athleteId = "",
+  athleteId,
   weeklyAvailability,
   primaryRace,
   targetRaces = [],
@@ -40,7 +45,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   ctl = 0,
   runFtp = 0,
   bikeFtp = 0,
-  lthr = 165,
+  lthr = 0,
   onGenerateAIPlan,
   onApplyDirectBlueprint,
   onNavigateToProfile,
@@ -60,13 +65,28 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   const [startDateMode, setStartDateMode] = useState<"CURRENT_WEEK" | "NEXT_WEEK" | "CUSTOM">("CURRENT_WEEK");
   const [customStartDate, setCustomStartDate] = useState<string>("");
 
+  const [trainingApproach, setTrainingApproach] = useState<string>("Entrenamiento Cruzado");
+  const [periodization, setPeriodization] = useState<"2:1" | "3:1" | "CONTINUO">("2:1");
+  const [customPromptText, setCustomPromptText] = useState("");
+  const [localWeeklyAvailability, setLocalWeeklyAvailability] = useState<WeeklyAvailabilityMap>(weeklyAvailability || {});
+  const [generatedBlueprint, setGeneratedBlueprint] = useState<MacrocycleBlueprint | null>(null);
+  const [aiNotes, setAiNotes] = useState<string[]>([]);
+
+  const steps = [
+    { num: 1, label: "Objetivo" },
+    { num: 2, label: "Disciplinas" },
+    { num: 3, label: "Fisiología" },
+    { num: 4, label: "Resultado" },
+  ];
+
+  const resolvedStartDate = React.useMemo(
+    () => getResolvedStartDate(startDateMode, customStartDate),
+    [startDateMode, customStartDate]
+  );
+
   const [weeksCount, setWeeksCount] = useState<number>(() => {
     if (!primaryRace?.date) return 16;
-    const raceDate = new Date(primaryRace.date + "T00:00:00");
-    const diff = raceDate.getTime() - new Date().getTime();
-    if (diff <= 0) return 16;
-    const w = Math.ceil(diff / (1000 * 60 * 60 * 24 * 7));
-    return Math.max(4, Math.min(w, 40));
+    return calculateWeeksToRace(primaryRace.date, getResolvedStartDate("CURRENT_WEEK"));
   });
 
   React.useEffect(() => {
@@ -74,67 +94,18 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
       setPlanTitle(`Macrociclo para ${primaryRace.name} (${primaryRace.distance?.toUpperCase()})`);
       setTargetDistance(primaryRace.distance || "42k");
       if (primaryRace.date) {
-        const raceDate = new Date(primaryRace.date + "T00:00:00");
-        const diff = raceDate.getTime() - new Date().getTime();
-        if (diff > 0) {
-          const w = Math.ceil(diff / (1000 * 60 * 60 * 24 * 7));
-          setWeeksCount(Math.max(4, Math.min(w, 40)));
-        }
+        const exactWeeks = calculateWeeksToRace(primaryRace.date, resolvedStartDate);
+        setWeeksCount(exactWeeks);
       }
     }
-  }, [primaryRace]);
-
-  const [trainingApproach, setTrainingApproach] = useState<string>("Entrenamiento Cruzado");
-  const [periodization, setPeriodization] = useState<"2:1" | "3:1" | "CONTINUO">("2:1");
-  const [customPromptText, setCustomPromptText] = useState<string>("");
-  const [localWeeklyAvailability, setLocalWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
-    weeklyAvailability || {
-      Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Carrera", "Fuerza"],
-      Jueves: ["Carrera", "Fuerza"], Viernes: ["Carrera", "Fuerza"], Sábado: ["Ciclismo"], Domingo: ["Carrera"],
-    }
-  );
-
-  const [generatedBlueprint, setGeneratedBlueprint] = useState<MacrocycleBlueprint | null>(null);
-  const [aiNotes, setAiNotes] = useState<string[]>([]);
-
-  const steps = [
-    { num: 1, label: "Objetivo" }, { num: 2, label: "Disciplinas" },
-    { num: 3, label: "Fisiología" }, { num: 4, label: "Preview IA" },
-  ];
-
-  const getResolvedStartDate = (): string => {
-    if (startDateMode === "CUSTOM" && customStartDate) return customStartDate;
-    const now = new Date();
-    const currentDay = now.getDay();
-    if (startDateMode === "NEXT_WEEK") {
-      const diff = now.getDate() + (currentDay === 0 ? 1 : 8 - currentDay);
-      return new Date(now.setDate(diff)).toISOString().split("T")[0];
-    }
-    const diff = now.getDate() - (currentDay === 0 ? 6 : currentDay - 1);
-    return new Date(now.setDate(diff)).toISOString().split("T")[0];
-  };
-
-  const resolveDistTypeFromWizard = (dist: string, approach?: string): any => {
-    const d = (dist || "").toLowerCase();
-    const a = (approach || "").toLowerCase();
-    if (d.includes("sprint") || d.includes("olimp") || d === "triathlon_short") return "triathlon_short";
-    if (d.includes("140.6") || d.includes("1406") || d.includes("full") || d.includes("iron") || d === "triathlon_1406" || a.includes("iron")) return "triathlon_1406";
-    if (d.includes("triat") || d === "triathlon_703" || d.includes("70.3") || d.includes("703") || a.includes("triat")) return "triathlon_703";
-    if (d.includes("bici") || d.includes("cicli") || d.includes("fondo") || d === "cycling_fondo" || a.includes("cicli")) return "cycling_fondo";
-    if (d.includes("trail") || d.includes("ultra") || d === "trail_50k" || a.includes("trail")) return "trail_50k";
-    if (d.includes("21")) return "21k";
-    if (d.includes("10")) return "10k";
-    if (d.includes("5")) return "5k";
-    if (d.includes("maint") || a.includes("mantenimiento")) return "maintenance";
-    return "42k";
-  };
+  }, [primaryRace, resolvedStartDate]);
 
   const handleGenerateAI = async () => {
     setIsGeneratingPlan(true);
     setCurrentStep(4);
 
     try {
-      const startDate = getResolvedStartDate();
+      const startDate = resolvedStartDate;
       const distType = resolveDistTypeFromWizard(targetDistance, trainingApproach);
 
       const storedApiKey = userStorage.getItem("intervals_api_key") || "";

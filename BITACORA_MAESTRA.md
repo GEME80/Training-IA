@@ -2448,6 +2448,40 @@ flowchart TD
   - `Prueba 3 (Suite de Seguridad e Integración):` **56/56 pruebas superadas (100% PASS)**.
   - `Prueba 4 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
 
+---
+
+### Versión 3.21 - Solución Definitiva de Anclaje a Fecha de Carrera, Sincronización Dinámica de Semanas ("Esta Semana" vs "Próxima Semana") y Remediación de Datos (2026-09-04)
+- **Fecha y Hora:** 4 de Septiembre de 2026 - 17:05 COT.
+- **Objetivo Arquitectónico:** Blindar de forma definitiva el cálculo y la generación de macrociclos para que NUNCA culminen en días o semanas posteriores a la fecha de la carrera objetivo; sincronizar reactivamente el número exacto de semanas en el Asistente según la elección del atleta ("Esta Semana", "Próxima Semana" o "Fecha Específica"); y sanear los registros de base de datos para Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com`).
+- **Implementaciones Realizadas:**
+  1. **Blindaje en Motor Rector de Macrociclos (`macrocycleGenerator.ts` - 284 LOC):**
+     - Si `config.primaryRace?.date` está presente, la duración `totalWeeks` se ancla matemáticamente a la fecha de la carrera: `Math.round((raceMonday - startMonday) / 7) + 1`.
+     - Esto anula cualquier valor desfasado o manual entrante, garantizando que el último microciclo (`countdown = 1`) sea obligatoriamente la semana de la carrera (`RACE_WEEK`) y culmine en el día del evento, sin semanas ni días posteriores.
+  2. **Módulo de Cálculo Inmutable y Pistas de Tiempo (`seasonWizardHelpers.ts` - 73 LOC [NUEVO]):**
+     - Creado módulo desacoplado con `getResolvedStartDate`, `calculateWeeksToRace` y `resolveDistTypeFromWizard`.
+     - Funciones puras que no mutan fechas del sistema y calculan con precisión la cantidad de semanas completas hasta el lunes de la carrera.
+  3. **Reactividad Dinámica en el Asistente IA (`SeasonAIGenerator.tsx` - 350 LOC):**
+     - Sincronización instantánea de `weeksCount` ante cambios de `startDateMode` (`CURRENT_WEEK` vs `NEXT_WEEK` vs `CUSTOM`) o `primaryRace`.
+     - Si el atleta arranca la "Próxima Semana" (ej. 7 Sep), el asistente calcula automáticamente las 8 semanas exactas hasta el 1 de Noviembre, en vez de arrastrar 9 semanas desde la fecha del sistema.
+  4. **Bloqueo Informativo en UI del Wizard (`SeasonWizardStep1Target.tsx` - 312 LOC):**
+     - Al existir una carrera con fecha vinculada, el slider manual se oculta/bloquea en favor de un indicador claro y motivador: *"🎯 Calculado automáticamente hasta la semana de la carrera ({primaryRace.name})"*.
+  5. **Remediación en Base de Datos de Juan Pablo Vásquez (`1xk8WMacb2hE4ts2NC3tiUGZtfd2`):**
+     - Plan regenerado a 8 semanas exactas (7 de Septiembre al 1 de Noviembre de 2026).
+     - Semana 8 fijada como `RACE_WEEK` (Competición Oficial Triseries Paipa, 1 de Noviembre).
+     - Subcolecciones `macrocycles`, `meta/active_macrocycle` y `seasonPlans` sincronizadas.
+     - Campo `heightCm` normalizado de `1.76` a `176` cm.
+- **Lista de Archivos Modificados / Creados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/physiology/macrocycleGenerator.ts`: **284 líneas** (< 350 LOC).
+  - `src/components/season/wizard/seasonWizardHelpers.ts` [NUEVO]: **73 líneas** (< 350 LOC).
+  - `src/components/season/SeasonAIGenerator.tsx`: **350 líneas** (<= 350 LOC).
+  - `src/components/season/wizard/SeasonWizardStep1Target.tsx`: **312 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Auditoría Stryd):` **100% de entrenamientos de potencia en carrera por Tiempo + % FTP/CP**.
+  - `Prueba 4 (Modularidad):` 100% de archivos bajo **< 350 LOC**.
+
+
 
 
 

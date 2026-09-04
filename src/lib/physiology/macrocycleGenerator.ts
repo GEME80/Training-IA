@@ -97,8 +97,17 @@ export function generateCustomMacrocycleBlueprint(
   const startMonday = getMonday(startRaw);
 
   let totalWeeks = config.weeksCount || def.defaultWeeks;
-  if (!config.weeksCount) {
-    const endTarget = config.endDate || config.primaryRace?.date;
+  // BLINDAJE DEFINITIVO: Si hay una carrera objetivo con fecha, la carrera fija la duración exacta
+  if (config.primaryRace?.date) {
+    const raceRaw = new Date(config.primaryRace.date + "T00:00:00");
+    const raceMonday = getMonday(raceRaw);
+    const diffMs = raceMonday.getTime() - startMonday.getTime();
+    if (diffMs >= 0) {
+      // El macrociclo culmina exactamente el domingo de la semana de la carrera (cero días/semanas posteriores)
+      totalWeeks = Math.round(diffMs / (1000 * 60 * 60 * 24 * 7)) + 1;
+    }
+  } else if (!config.weeksCount) {
+    const endTarget = config.endDate;
     if (endTarget) {
       const endRaw = new Date(endTarget + "T00:00:00");
       const endMonday = getMonday(endRaw);

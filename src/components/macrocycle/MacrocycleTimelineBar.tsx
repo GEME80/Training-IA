@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 
-import { getMondayOfWeekStr } from "@/lib/dateUtils";
+import { getMondayOfWeekStr, getLocalTodayStr } from "@/lib/dateUtils";
 
 interface MacrocycleTimelineBarProps {
   blueprint: MacrocycleBlueprint;
@@ -41,6 +41,7 @@ export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
   }, []);
 
   const currentMonStr = React.useMemo(() => getMondayOfWeekStr(), []);
+  const todayStr = React.useMemo(() => getLocalTodayStr(), []);
 
   const getPhaseBadge = (phase: string, isRecoveryWeek?: boolean) => {
     if (isRecoveryWeek) {
@@ -145,8 +146,8 @@ export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
             const isSelected = selectedIndex === idx;
             const phaseBadge = getPhaseBadge(w.phase, w.isRecoveryWeek);
 
-            const isCurrentWeek = w.startDate === currentMonStr || (blueprint.currentWeekIndex !== undefined && idx === blueprint.currentWeekIndex);
-            const isPastWeek = w.startDate < currentMonStr && !isCurrentWeek;
+            const isCurrentWeek = w.startDate === currentMonStr || (w.startDate <= todayStr && todayStr <= w.endDate);
+            const isPastWeek = w.endDate < todayStr;
 
             return (
               <button

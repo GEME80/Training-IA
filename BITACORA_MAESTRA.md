@@ -2679,6 +2679,43 @@ flowchart TD
   - `Prueba 3 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (según Rule 3).
   - `Prueba 4 (Inferencia en Vivo con Gemini 3.5 Flash):` Test de inferencia real en `/api/headcoach/chat` confirma que Lunes a Jueves se preservan como `HISTORIAL INMUTABLE` con `action: "MANTENER"`, Sábado se prescribe como Ciclismo en Zona 2 (% Bike FTP) y Domingo como Carrera en Zona 2 (% Stryd CP), respetando rigurosamente la disponibilidad semanal.
 
+---
+
+### Versión 3.27 - Sincronización Dinámica de la Semana Actual en el Dashboard y Macrociclo por Fecha Calendario Real (2026-09-07)
+- **Fecha y Hora:** 7 de Septiembre de 2026 - 19:42 COT.
+- **Objetivo Arquitectónico:**
+  1. **Causa Raíz Diagnosticada:** El Dashboard mostraba "Semana 1 de 27 BASE_1" (31 Ago – 6 Sep) a pesar de estar en Lunes 7 de Septiembre de 2026 (Semana 2: 7 Sep – 13 Sep). Esto ocurría porque al generarse el macrociclo (el 31 de agosto) se grababa estáticamente `currentWeekIndex: 0` en el blueprint dentro de `userStorage` y Firestore. En cada recarga posterior, `AthleteDashboard.tsx` inicializaba o leía `bp.currentWeekIndex ?? 0`, fijando la vista permanentemente en la Semana 1 sin tener en cuenta el transcurso natural del tiempo.
+  2. **Anomalía en los Componentes de Calendario:** `AthleteContinuousCalendar`, `MacrocycleTimelineBar` y `AthleteHeroBanner` evaluaban `isCurrentWeek` contra el índice estático `wIdx === blueprint.currentWeekIndex`, provocando que el botón "Ir a Semana Actual" y los badges señalaran la semana del pasado.
+- **Implementaciones Realizadas:**
+  1. **Módulo Atómico de Sincronización (`src/lib/physiology/macrocycleSync.ts` - 70 LOC):**
+     - Función `resolveCurrentWeekIndex(weeks, refDate)`: Calcula el lunes de la semana actual y localiza el índice de la semana comparando fechas ISO (`startDate === currentMondayStr` o `startDate <= todayStr && todayStr <= endDate`). Si la fecha actual supera el fin del macrociclo o es previa al inicio, ajusta de forma controlada a los extremos.
+     - Función `syncBlueprintToCurrentDate(blueprint, refDate)`: Retorna una copia fresca e inmutable del blueprint actualizando dinámicamente `currentWeekIndex`, `currentWeek`, y recomputando para cada microciclo sus atributos `isCurrentWeek`, `isPastWeek` e `isFutureWeek` en función del día actual.
+  2. **Contenedor Principal (`src/components/AthleteDashboard.tsx`):**
+     - Inicialización perezosa de `selectedMacroWeekIdx` resolviendo el índice dinámico según la fecha de hoy.
+     - En `refreshTelemetry`: Pasa el blueprint activo recuperado por `syncBlueprintToCurrentDate`.
+     - En `handleApplyMacrocycle`: Sincroniza el blueprint antes de almacenarlo en `userStorage` y enviarlo a Firestore.
+     - En la restauración de planes de usuario/Firestore: Mapea `resolvedPlans` con `syncBlueprintToCurrentDate` y selecciona automáticamente la semana actual según calendario.
+  3. **Calendario Continuo (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 285 LOC):**
+     - Reemplazo de índices estáticos por comparación de fechas ISO en `isCurrentWeek` e `isPastWeek`.
+     - Botón "Ir a Semana Actual" enriquecido con `resolveCurrentWeekIndex(weeks)`.
+  4. **Línea de Tiempo y Espacio de Trabajo (`src/components/macrocycle/MacrocycleTimelineBar.tsx` - 207 LOC & `MacrocycleActiveWeekWorkspace.tsx`):**
+     - Detección reactiva de semanas pasadas y presente basada en la fecha ISO de hoy.
+  5. **Hero Banner de Temporada (`src/components/dashboard/AthleteHeroBanner.tsx` - 197 LOC):**
+     - Selección de planes actualizada para saltar automáticamente a `resolveCurrentWeekIndex(plan.blueprint.weeks)`.
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/physiology/macrocycleSync.ts`: **70 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteContinuousCalendar.tsx`: **285 líneas** (< 350 LOC).
+  - `src/components/dashboard/AthleteHeroBanner.tsx`: **197 líneas** (< 350 LOC).
+  - `src/components/macrocycle/MacrocycleTimelineBar.tsx`: **207 líneas** (< 350 LOC).
+  - `src/components/macrocycle/MacrocycleActiveWeekWorkspace.tsx`: 483 líneas.
+  - `src/components/AthleteDashboard.tsx`: 1487 líneas.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` Todos los archivos nuevos y modificados de componentes cumplen rigurosamente con **< 350 LOC** (Rule 3).
+  - `Prueba 4 (Verificación Fisiológica y Temporal):` Al evaluarse con la fecha de hoy Lunes 7 de Septiembre de 2026, la semana actual se resuelve automáticamente en el índice 1 (`2026-09-07` a `2026-09-13`), mostrando "Semana 2 de 27" y marcando la Semana 1 (`2026-08-31` a `2026-09-06`) como finalizada en el historial.
+
+
 
 
 

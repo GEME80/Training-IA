@@ -40,6 +40,7 @@ import {
   getOffsetForWeek,
   getCleanFocusDescription,
 } from "@/lib/physiology/macrocycle";
+import { resolveCurrentWeekIndex, syncBlueprintToCurrentDate } from "@/lib/physiology/macrocycleSync";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { useAuth } from "@/context/AuthContext";
 import { getUserStorage, purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
@@ -125,7 +126,20 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   const [agentDecision, setAgentDecision] = useState<AgentDecisionOutput | null>(null);
   const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
   const [weekOffset, setWeekOffset] = useState<number>(0);
-  const [selectedMacroWeekIdx, setSelectedMacroWeekIdx] = useState<number>(0);
+  const [selectedMacroWeekIdx, setSelectedMacroWeekIdx] = useState<number>(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = userStorage.getItem("active_blueprint") || localStorage.getItem("sgea_active_blueprint");
+        if (saved) {
+          const bp = JSON.parse(saved);
+          if (bp && Array.isArray(bp.weeks)) {
+            return resolveCurrentWeekIndex(bp.weeks);
+          }
+        }
+      }
+    } catch {}
+    return 0;
+  });
   const [targetRaces, setTargetRaces] = useState<TargetRace[]>([]);
   const [seasonPlans, setSeasonPlans] = useState<SeasonPlanItem[]>([]);
   const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
@@ -363,12 +377,14 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           const savedBlueprintStr = userStorage.getItem("active_blueprint");
           if (savedBlueprintStr) {
             try {
-              const parsedBp = JSON.parse(savedBlueprintStr);
+              let parsedBp = JSON.parse(savedBlueprintStr);
               if (parsedBp && Array.isArray(parsedBp.weeks)) {
+                parsedBp = syncBlueprintToCurrentDate(parsedBp);
                 parsedBp.weeks = parsedBp.weeks.map((w: any) => ({
                   ...w,
                   focusDescription: getCleanFocusDescription(w.focusDescription, w.phase, w.isRecoveryWeek || w.microcycleType === "DESCARGA_ASIMILACION"),
                 }));
+                userStorage.setJSON("active_blueprint", parsedBp);
               }
               setMacrocyclePhase((prev) => {
                 if (prev && prev.blueprint) return prev;
@@ -542,20 +558,22 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       updatedRaces = targetRaces;
     }
 
+    const syncedBlueprint = syncBlueprintToCurrentDate(blueprint);
+
     userStorage.setJSON("target_races", updatedRaces);
-    userStorage.setJSON("active_blueprint", blueprint);
+    userStorage.setJSON("active_blueprint", syncedBlueprint);
 
     const newPlanItem: SeasonPlanItem = {
       id: "plan-" + Date.now(),
-      planName: blueprint.cycleTitle,
+      planName: syncedBlueprint.cycleTitle,
       goalType: "MARATON_42K",
-      blueprint,
-      startDate: blueprint.startDate || new Date().toISOString().split("T")[0],
-      endDate: blueprint.weeks?.[blueprint.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0],
-      totalWeeks: blueprint.totalWeeks || 16,
+      blueprint: syncedBlueprint,
+      startDate: syncedBlueprint.startDate || new Date().toISOString().split("T")[0],
+      endDate: syncedBlueprint.weeks?.[syncedBlueprint.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0],
+      totalWeeks: syncedBlueprint.totalWeeks || 16,
       status: calculatePlanStatus(
-        blueprint.startDate || new Date().toISOString().split("T")[0],
-        blueprint.weeks?.[blueprint.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0]
+        syncedBlueprint.startDate || new Date().toISOString().split("T")[0],
+        syncedBlueprint.weeks?.[syncedBlueprint.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0]
       ),
       orderIndex: options?.mode === "CHAIN" ? seasonPlans.length : 0,
       createdAt: new Date().toISOString(),
@@ -575,23 +593,23 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     let newPhaseInfo = calculateMacrocyclePhase(updatedRaces);
     if (!newPhaseInfo) {
       newPhaseInfo = {
-        phase: blueprint.currentWeek?.phase || "MAINTENANCE",
-        phaseLabel: blueprint.cycleTitle,
-        cycleBadgeLabel: blueprint.mode === "PRE_SEASON_MAINTENANCE" ? "🔵 MANTENIMIENTO PRE-TEMPORADA" : "🏃 CICLO ACTIVO",
+        phase: syncedBlueprint.currentWeek?.phase || "MAINTENANCE",
+        phaseLabel: syncedBlueprint.cycleTitle,
+        cycleBadgeLabel: syncedBlueprint.mode === "PRE_SEASON_MAINTENANCE" ? "🔵 MANTENIMIENTO PRE-TEMPORADA" : "🏃 CICLO ACTIVO",
         cycleBadgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-        weeksRemaining: blueprint.totalWeeks,
-        daysRemaining: blueprint.totalWeeks * 7,
-        primaryRace: primaryRace || blueprint.primaryRace,
-        guideline: blueprint.currentWeek?.focusDescription || "",
+        weeksRemaining: syncedBlueprint.totalWeeks,
+        daysRemaining: syncedBlueprint.totalWeeks * 7,
+        primaryRace: primaryRace || syncedBlueprint.primaryRace,
+        guideline: syncedBlueprint.currentWeek?.focusDescription || "",
         suggestedFocus: "Macrociclo Activo",
         badgeColor: "bg-amber-500/20 text-amber-300",
-        maxLongRunMinutes: blueprint.currentWeek?.maxLongRunMinutes || 60,
-        isSpecificMarathonPhase: blueprint.mode === "MARATHON_SPECIFIC",
-        weeklyTssTarget: `${blueprint.currentWeek?.targetTss || 350} TSS`,
-        blueprint,
+        maxLongRunMinutes: syncedBlueprint.currentWeek?.maxLongRunMinutes || 60,
+        isSpecificMarathonPhase: syncedBlueprint.mode === "MARATHON_SPECIFIC",
+        weeklyTssTarget: `${syncedBlueprint.currentWeek?.targetTss || 350} TSS`,
+        blueprint: syncedBlueprint,
       };
     }
-    newPhaseInfo.blueprint = blueprint;
+    newPhaseInfo.blueprint = syncedBlueprint;
     setMacrocyclePhase(newPhaseInfo);
 
     try {
@@ -600,8 +618,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteId: profile.id,
-          blueprint,
-          primaryRace: primaryRace || blueprint.primaryRace,
+          blueprint: syncedBlueprint,
+          primaryRace: primaryRace || syncedBlueprint.primaryRace,
           source,
         }),
       });
@@ -609,10 +627,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       console.warn("Aviso al persistir macrociclo en Firestore:", dbErr);
     }
 
-    const initialWeekIdx = blueprint.currentWeekIndex ?? 0;
+    const initialWeekIdx = syncedBlueprint.currentWeekIndex ?? 0;
     setSelectedMacroWeekIdx(initialWeekIdx);
-    if (blueprint.weeks && blueprint.weeks[initialWeekIdx]) {
-      setWeekOffset(getOffsetForWeek(blueprint.weeks[initialWeekIdx]));
+    if (syncedBlueprint.weeks && syncedBlueprint.weeks[initialWeekIdx]) {
+      setWeekOffset(getOffsetForWeek(syncedBlueprint.weeks[initialWeekIdx]));
     } else {
       setWeekOffset(0);
     }
@@ -988,11 +1006,17 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       }
 
       if (resolvedPlans.length > 0) {
-        setSeasonPlans(resolvedPlans);
-        setViewingPlanId(resolvedPlans[0].id);
-        userStorage.setJSON("season_plans", resolvedPlans);
-        if (resolvedPlans[0].blueprint) {
-          const bp = resolvedPlans[0].blueprint;
+        const syncedPlans = resolvedPlans.map((p) => {
+          if (p.blueprint) {
+            return { ...p, blueprint: syncBlueprintToCurrentDate(p.blueprint) };
+          }
+          return p;
+        });
+        setSeasonPlans(syncedPlans);
+        setViewingPlanId(syncedPlans[0].id);
+        userStorage.setJSON("season_plans", syncedPlans);
+        if (syncedPlans[0].blueprint) {
+          const bp = syncedPlans[0].blueprint;
           userStorage.setJSON("active_blueprint", bp);
           const currentIdx = bp.currentWeekIndex ?? 0;
           setSelectedMacroWeekIdx(currentIdx);

@@ -16,6 +16,7 @@ import {
   MacrocycleBlueprint,
   calculatePlanStatus,
 } from "@/lib/physiology/macrocycle";
+import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 
 interface AthleteHeroBannerProps {
   seasonPlans: SeasonPlanItem[];
@@ -74,7 +75,7 @@ export const AthleteHeroBanner: React.FC<AthleteHeroBannerProps> = ({
               <React.Fragment key={plan.id}>
                 <button
                   type="button"
-                  onClick={() => onSelectPlan(plan.id, plan.blueprint?.currentWeekIndex || 0)}
+                  onClick={() => onSelectPlan(plan.id, plan.blueprint?.weeks ? resolveCurrentWeekIndex(plan.blueprint.weeks) : (plan.blueprint?.currentWeekIndex || 0))}
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                     isSelected
                       ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm ring-2 ring-amber-500"

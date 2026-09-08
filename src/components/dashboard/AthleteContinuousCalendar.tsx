@@ -7,6 +7,7 @@ import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { getLocalTodayStr, getMondayOfWeekStr } from "@/lib/dateUtils";
+import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { AthleteCalendarWeekRow } from "./AthleteCalendarWeekRow";
 import { AthleteMobileAgendaView } from "./AthleteMobileAgendaView";
 
@@ -184,7 +185,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
             <button
               type="button"
               onClick={() => {
-                const currentIdx = weeks.findIndex((w) => w.startDate === currentMonStr);
+                const currentIdx = resolveCurrentWeekIndex(weeks);
                 if (currentIdx !== -1) onSelectWeek(currentIdx);
               }}
               className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition cursor-pointer"
@@ -247,9 +248,8 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           ).map((week, idx) => {
             const wIdx = desktopMode === "focus" && mobileMode !== "grid" ? selectedMacroWeekIdx : idx;
             const isCurrentWeek =
-              week.startDate === currentMonStr ||
-              (blueprint.currentWeekIndex !== undefined && wIdx === blueprint.currentWeekIndex);
-            const isPastWeek = week.startDate < currentMonStr && !isCurrentWeek;
+              week.startDate === currentMonStr || (week.startDate <= todayStr && todayStr <= week.endDate);
+            const isPastWeek = week.endDate < todayStr;
             const calendarWeekNumber = getWeekOfYear(week.startDate);
 
             return (

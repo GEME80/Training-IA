@@ -83,8 +83,9 @@ export const MacrocycleActiveWeekWorkspace: React.FC<MacrocycleActiveWeekWorkspa
   };
 
   const currentMonStr = getMondayOfWeekStr();
-  const isCurrent = selectedWeek.isCurrentWeek ?? (selectedWeek.startDate === currentMonStr || selectedIndex === blueprint.currentWeekIndex);
-  const isPast = selectedWeek.isPastWeek ?? (selectedWeek.startDate < currentMonStr);
+  const todayStr = getLocalTodayStr();
+  const isCurrent = selectedWeek.isCurrentWeek ?? (selectedWeek.startDate === currentMonStr || (selectedWeek.startDate <= todayStr && todayStr <= selectedWeek.endDate));
+  const isPast = selectedWeek.isPastWeek ?? (selectedWeek.endDate < todayStr);
 
   const plannedTss = selectedWeekPlan.reduce((acc, curr) => acc + (curr.tss || parseWorkoutDoc(curr.workoutDoc).estimatedTss || 0), 0) || 284;
   const isCurrentSelectedWeek = selectedIndex === (blueprint.currentWeekIndex || 0);

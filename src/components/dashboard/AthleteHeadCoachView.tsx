@@ -4,18 +4,22 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Send, RefreshCw, Activity, CheckCircle2 } from "lucide-react";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
-import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
+import { MacrocycleBlueprint, MacrocyclePhaseInfo, getOffsetForWeek } from "@/lib/physiology/macrocycle";
+import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
+import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engine";
 import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
 import { HeadCoachQuickActions } from "./headcoach/HeadCoachQuickActions";
 import { HeadCoachMessageItem, HeadCoachMessageData } from "./headcoach/HeadCoachMessageItem";
+import { HeadCoachHeader } from "./headcoach/HeadCoachHeader";
 
 interface AthleteHeadCoachViewProps {
   profile: AthleteProfile;
   physioStatus: PhysiologicalStatus | null;
   macrocyclePhase: MacrocyclePhaseInfo | null;
-  weekOffset: number;
-  weekNumber: number;
+  blueprint?: MacrocycleBlueprint | null;
+  weekOffset?: number;
+  weekNumber?: number;
   apiKey?: string;
   geminiApiKey?: string;
   selectedModel?: string;
@@ -33,7 +37,8 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   profile,
   physioStatus,
   macrocyclePhase,
-  weekOffset,
+  blueprint,
+  weekOffset = 0,
   weekNumber,
   apiKey,
   geminiApiKey,
@@ -47,15 +52,28 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   onApplyPlanAndSync,
   onPlanUpdate,
 }) => {
-  const [activeWeekNumber, setActiveWeekNumber] = useState<number>(weekNumber || 1);
+  const effectiveBlueprint = blueprint || macrocyclePhase?.blueprint || null;
+  const currentWeekIdx = effectiveBlueprint?.weeks && effectiveBlueprint.weeks.length > 0
+    ? resolveCurrentWeekIndex(effectiveBlueprint.weeks)
+    : 0;
+  const realCurrentWeekNumber = effectiveBlueprint?.weeks?.[currentWeekIdx]?.weekNumber ?? (currentWeekIdx + 1);
+
+  const [activeWeekNumber, setActiveWeekNumber] = useState<number>(() => {
+    return weekNumber && weekNumber > 0 ? weekNumber : realCurrentWeekNumber;
+  });
   const [isApplying, setIsApplying] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
-  const initialWelcomeText = `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
+  const selectedWeekIdx = Math.max(0, activeWeekNumber - 1);
+  const selectedWeekData = effectiveBlueprint?.weeks?.[selectedWeekIdx];
+  const activePhaseLabel = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Construcción";
+
+  const getWelcomeText = (wNum: number, phase: string) =>
+    `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
 
 Tengo en pantalla tu telemetría en vivo: Fitness CTL ${physioStatus?.ctl?.toFixed(1) ?? "—"}, Fatiga ATL ${physioStatus?.atl?.toFixed(1) ?? "—"} y TSB ${physioStatus?.tsb !== undefined ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)) : "—"}${physioStatus?.currentHrv ? ` (HRV ${physioStatus.currentHrv} ms)` : ""}.
 
-Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macrocyclePhase?.phaseLabel || "Construcción"}).
+Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
 
 ¿Cómo sientes las piernas tras las actividades de estos días o requieres adaptar el microciclo por viaje, molestia o tiempo?`;
 
@@ -63,7 +81,7 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
     {
       id: "welcome",
       role: "assistant",
-      text: initialWelcomeText,
+      text: getWelcomeText(weekNumber && weekNumber > 0 ? weekNumber : realCurrentWeekNumber, activePhaseLabel),
       timestamp: "En vivo",
     },
   ]);
@@ -71,11 +89,24 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Sincronizar semana activa cuando cambia el macrociclo o weekNumber por navegación
   useEffect(() => {
-    if (weekNumber && weekNumber !== activeWeekNumber) {
+    if (weekNumber && weekNumber > 0) {
       setActiveWeekNumber(weekNumber);
+    } else if (realCurrentWeekNumber && realCurrentWeekNumber > 0) {
+      setActiveWeekNumber(realCurrentWeekNumber);
     }
-  }, [weekNumber]);
+  }, [weekNumber, realCurrentWeekNumber]);
+
+  // Actualizar el saludo inicial si aún no se ha iniciado la conversación
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].id === "welcome") {
+        return [{ ...prev[0], text: getWelcomeText(activeWeekNumber, activePhaseLabel) }];
+      }
+      return prev;
+    });
+  }, [activeWeekNumber, activePhaseLabel, profile.name, physioStatus?.ctl, physioStatus?.atl, physioStatus?.tsb, physioStatus?.currentHrv]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,6 +133,23 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
     setIsLoading(true);
 
     try {
+      const calculatedOffset = selectedWeekData
+        ? getOffsetForWeek(selectedWeekData)
+        : (activeWeekNumber - realCurrentWeekNumber);
+
+      const effectivePlanForWeek = (activeWeekNumber === realCurrentWeekNumber && currentPlan && currentPlan.length > 0)
+        ? currentPlan
+        : selectedWeekData
+        ? generateWeekTemplate(
+            selectedWeekData,
+            profile.run_ftp,
+            profile.bike_ftp,
+            (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
+            (effectiveBlueprint?.distanceType as any) || "MARATON_42K",
+            profile.ctl
+          )
+        : currentPlan;
+
       const res = await fetch("/api/headcoach/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,9 +162,9 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
           customGeminiKey: geminiApiKey,
           selectedModel,
           temperature,
-          weekOffset: activeWeekNumber - (weekNumber || 1) + weekOffset,
+          weekOffset: calculatedOffset,
           weekNumber: activeWeekNumber,
-          currentPlan,
+          currentPlan: effectivePlanForWeek,
           dailyExecutedActivities,
           runFtp: profile.run_ftp,
           bikeFtp: profile.bike_ftp,
@@ -183,64 +231,36 @@ Estamos enfocados en el **Microciclo de la Semana ${activeWeekNumber}** (${macro
     }
   };
 
-  const weekDates = getWeekDates(activeWeekNumber - (weekNumber || 1) + weekOffset);
-  const startStr = weekDates[0]?.formattedDate;
-  const endStr = weekDates[6]?.formattedDate;
+  let startStr: string | undefined;
+  let endStr: string | undefined;
+
+  if (selectedWeekData?.startDate && selectedWeekData?.endDate) {
+    const sD = new Date(selectedWeekData.startDate + "T00:00:00");
+    const eD = new Date(selectedWeekData.endDate + "T00:00:00");
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    startStr = `${sD.getDate()} ${months[sD.getMonth()]}`;
+    endStr = `${eD.getDate()} ${months[eD.getMonth()]}`;
+  } else {
+    const weekDates = getWeekDates(activeWeekNumber - realCurrentWeekNumber);
+    startStr = weekDates[0]?.formattedDate;
+    endStr = weekDates[6]?.formattedDate;
+  }
 
   return (
     <div className="card-gradient rounded-3xl p-3 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[520px]">
       {/* CABECERA ATLÉTICA PRO & SEMÁFORO PMC */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 text-slate-950 flex items-center justify-center font-black shadow-xs border border-emerald-400/40">
-            <Activity className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                Head Coach Fisiológico
-              </h2>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                EN VIVO
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Especialista en modulación adaptativa de microciclos, fatiga y asimilación biológica.
-            </p>
-          </div>
-        </div>
-
-        {/* Mini-Cinta de Telemetría PMC */}
-        <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto no-scrollbar">
-          <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 font-bold shrink-0">
-            📈 CTL: {physioStatus?.ctl?.toFixed(1) ?? profile.ctl ?? 0}
-          </span>
-          <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold shrink-0">
-            ⚡ ATL: {physioStatus?.atl?.toFixed(1) ?? profile.atl ?? 0}
-          </span>
-          <span className={`px-2.5 py-1 rounded-xl font-bold border shrink-0 ${
-            (physioStatus?.tsb ?? 0) >= 5
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-              : (physioStatus?.tsb ?? 0) < -20
-              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300"
-              : "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300"
-          }`}>
-            🔋 TSB: {physioStatus?.tsb !== undefined ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)) : 0}
-          </span>
-        </div>
-      </div>
+      <HeadCoachHeader physioStatus={physioStatus} profile={profile} />
 
       {/* Selector Táctico de Microciclos (Semana en curso vs siguiente) */}
       <div className="shrink-0">
         <HeadCoachWeekSelector
-          currentWeekNumber={weekNumber || 1}
+          currentWeekNumber={realCurrentWeekNumber}
           selectedWeekNumber={activeWeekNumber}
-          totalWeeks={macrocyclePhase?.blueprint?.totalWeeks || 16}
+          totalWeeks={effectiveBlueprint?.totalWeeks || macrocyclePhase?.blueprint?.totalWeeks || 16}
           onSelectWeek={(wNum) => setActiveWeekNumber(wNum)}
           startDateStr={startStr}
           endDateStr={endStr}
-          phaseLabel={macrocyclePhase?.phaseLabel}
+          phaseLabel={activePhaseLabel}
         />
       </div>
 

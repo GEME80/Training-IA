@@ -2715,6 +2715,45 @@ flowchart TD
   - `Prueba 3 (Modularidad):` Todos los archivos nuevos y modificados de componentes cumplen rigurosamente con **< 350 LOC** (Rule 3).
   - `Prueba 4 (Verificación Fisiológica y Temporal):` Al evaluarse con la fecha de hoy Lunes 7 de Septiembre de 2026, la semana actual se resuelve automáticamente en el índice 1 (`2026-09-07` a `2026-09-13`), mostrando "Semana 2 de 27" y marcando la Semana 1 (`2026-08-31` a `2026-09-06`) como finalizada en el historial.
 
+---
+
+### Versión 3.28 - Head Coach IA: Sincronización Automática por Fecha Calendario Real de la Semana en Curso y Microciclo Activo (2026-09-07)
+- **Fecha y Hora:** 7 de Septiembre de 2026 - 19:51 COT.
+- **Objetivo Arquitectónico:**
+  1. **Causa Raíz Diagnosticada en Head Coach:** La vista de `AthleteHeadCoachView` y el selector táctico `HeadCoachWeekSelector` mostraban de forma fija "Semana en Curso (1)" y "Microciclo 1 de 27 (31 Ago al 6 Sep)" con el saludo "Estamos enfocados en el Microciclo de la Semana 1", a pesar de encontrarse en la Semana 2 del calendario real (7 Sep al 13 Sep).
+  2. **Causas Técnicas:**
+     - `AthleteHeadCoachView` dependía de un prop estático `weekNumber` que reflejaba la semana seleccionada en el preview (`selectedMacroWeekIdx + 1`) en lugar de la semana real en curso según calendario.
+     - `AthleteHeadCoachView` inicializaba el saludo de bienvenida en el estado inicial de React (`messages[0]`), por lo que nunca recalculaba el texto si la semana real era la Semana 2.
+     - Las fechas de inicio y fin en el selector se calculaban con una fórmula frágil de offsets (`getWeekDates`) en lugar de extraerse directamente del blueprint activo del atleta (`startDate` y `endDate` reales del microciclo).
+     - Al cambiar de semana o solicitar adaptaciones al Head Coach, no se adaptaba la plantilla del microciclo correspondiente a la semana seleccionada.
+- **Implementaciones Realizadas:**
+  1. **Vista de Head Coach Adaptada (`src/components/dashboard/AthleteHeadCoachView.tsx` - 336 LOC):**
+     - Recibe `blueprint?: MacrocycleBlueprint | null` directamente desde el dashboard.
+     - Resuelve `realCurrentWeekNumber` dinámicamente mediante `resolveCurrentWeekIndex(effectiveBlueprint.weeks)`. Para la fecha de hoy (7 de Septiembre de 2026), resuelve con precisión quirúrgica `currentWeekNumber = 2`.
+     - `activeWeekNumber` arranca en la semana real en curso y se sincroniza reactivamente.
+     - El saludo inicial se actualiza dinámicamente reflejando la semana activa y su fase fisiológica real ("Estamos enfocados en el Microciclo de la Semana 2 (BASE_1)").
+     - Las fechas de `HeadCoachWeekSelector` se extraen de forma determinística del blueprint (`7 Sep al 13 Sep` para Semana 2, `14 Sep al 20 Sep` para Semana 3), garantizando exactitud absoluta.
+     - Al chatear con el Head Coach, la plantilla de microciclo enviada (`currentPlan`) y el offset temporal (`weekOffset`) se generan específicamente para la semana seleccionada mediante `generateWeekTemplate` y `getOffsetForWeek`.
+  2. **Sub-componente Modular de Cabecera (`src/components/dashboard/headcoach/HeadCoachHeader.tsx` - 66 LOC):**
+     - Extraído para mantener `AthleteHeadCoachView` estrictamente por debajo del límite de 350 líneas (336 LOC, cumpliendo Rule 3).
+  3. **Navegación en Dashboard (`src/components/AthleteDashboard.tsx`):**
+     - Tanto en la barra lateral de escritorio (`AthleteSidebar`), en los botones de acción rápida (`onOpenCoachChat`, `onOpenHeadCoach`) y en la barra inferior móvil (`AthleteMobileBottomNav`), el acceso a `head_coach` sincroniza automáticamente `selectedMacroWeekIdx` y `weekOffset` con la semana actual en calendario.
+     - Almacenamiento y restauración en Firestore actualizados con `syncBlueprintToCurrentDate`.
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/components/dashboard/AthleteHeadCoachView.tsx`: **336 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachHeader.tsx`: **66 líneas** (< 350 LOC).
+  - `src/components/AthleteDashboard.tsx`: 1528 líneas.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos creados y modificados bajo **< 350 LOC** (Rule 3).
+  - `Prueba 4 (Verificación Temporal en Head Coach):`
+    - "Semana en Curso": **(2)** (`7 Sep al 13 Sep`).
+    - "Próxima Semana": **(3)** (`14 Sep al 20 Sep`).
+    - Encabezado: **Microciclo 2 de 27** con fase activa.
+    - Saludo del Head Coach: **"Estamos enfocados en el Microciclo de la Semana 2"**.
+
+
 
 
 

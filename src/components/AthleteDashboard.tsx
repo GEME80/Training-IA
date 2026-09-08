@@ -980,14 +980,14 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
           if (macroRes.ok) {
             const macroData = await macroRes.json();
             if (macroData.success && macroData.macrocycle?.blueprint) {
-              const bp = macroData.macrocycle.blueprint;
+              const bp = syncBlueprintToCurrentDate(macroData.macrocycle.blueprint);
               const restoredPlan: SeasonPlanItem = {
                 id: macroData.macrocycle.id || "plan-active",
                 planName: bp.cycleTitle || "Macrociclo Activo",
                 goalType: "MARATON_42K",
                 blueprint: bp,
                 startDate: bp.startDate || new Date().toISOString().split("T")[0],
-                endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || bp.endDate || new Date().toISOString().split("T")[0],
+                endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0],
                 totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
                 status: "ACTIVE",
                 orderIndex: 0,
@@ -1018,7 +1018,7 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
         if (syncedPlans[0].blueprint) {
           const bp = syncedPlans[0].blueprint;
           userStorage.setJSON("active_blueprint", bp);
-          const currentIdx = bp.currentWeekIndex ?? 0;
+          const currentIdx = resolveCurrentWeekIndex(bp.weeks);
           setSelectedMacroWeekIdx(currentIdx);
           if (bp.weeks && bp.weeks[currentIdx]) {
             setWeekOffset(getOffsetForWeek(bp.weeks[currentIdx]));
@@ -1103,11 +1103,29 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       {/* SIDEBAR IZQUIERDO DEPORTIVO */}
       <AthleteSidebar
         activeSection={activeNavSection}
-        onSelectSection={(section) => setActiveNavSection(section)}
+        onSelectSection={(section) => {
+          if (section === "head_coach" && blueprint?.weeks && blueprint.weeks.length > 0) {
+            const currentIdx = resolveCurrentWeekIndex(blueprint.weeks);
+            setSelectedMacroWeekIdx(currentIdx);
+            if (blueprint.weeks[currentIdx]) {
+              setWeekOffset(getOffsetForWeek(blueprint.weeks[currentIdx]));
+            }
+          }
+          setActiveNavSection(section);
+        }}
         isIntervalsConnected={isLiveConnected}
         isGeminiConnected={Boolean(geminiKeyCache || isLiveConnected)}
         onOpenSeasonStudio={() => setActiveNavSection("season_studio")}
-        onOpenCoachChat={() => setActiveNavSection("head_coach")}
+        onOpenCoachChat={() => {
+          if (blueprint?.weeks && blueprint.weeks.length > 0) {
+            const currentIdx = resolveCurrentWeekIndex(blueprint.weeks);
+            setSelectedMacroWeekIdx(currentIdx);
+            if (blueprint.weeks[currentIdx]) {
+              setWeekOffset(getOffsetForWeek(blueprint.weeks[currentIdx]));
+            }
+          }
+          setActiveNavSection("head_coach");
+        }}
         onOpenSettingsTab={(tab) => {
           setActiveNavSection("physiology");
         }}
@@ -1351,8 +1369,16 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
               handleApplyMacrocycle(newBlueprint, undefined, "WIZARD_CUSTOM", options)
             }
             onNavigateToDashboard={() => setActiveNavSection("dashboard")}
-            onNavigateToProfile={() => setActiveNavSection("physiology")}
-            onOpenHeadCoach={() => setActiveNavSection("head_coach")}
+            onOpenHeadCoach={() => {
+              if (blueprint?.weeks && blueprint.weeks.length > 0) {
+                const currentIdx = resolveCurrentWeekIndex(blueprint.weeks);
+                setSelectedMacroWeekIdx(currentIdx);
+                if (blueprint.weeks[currentIdx]) {
+                  setWeekOffset(getOffsetForWeek(blueprint.weeks[currentIdx]));
+                }
+              }
+              setActiveNavSection("head_coach");
+            }}
           />
         )}
 
@@ -1362,11 +1388,12 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
             profile={profile}
             physioStatus={physioStatus}
             macrocyclePhase={macrocyclePhase}
+            blueprint={blueprint}
             weekOffset={weekOffset}
             weekNumber={
               selectedMacroWeekIdx !== undefined && blueprint?.weeks?.[selectedMacroWeekIdx]
                 ? selectedMacroWeekIdx + 1
-                : calculatedWeekNumber
+                : (blueprint?.weeks ? resolveCurrentWeekIndex(blueprint.weeks) + 1 : calculatedWeekNumber)
             }
             apiKey={apiKeyCache}
             geminiApiKey={geminiKeyCache}
@@ -1477,7 +1504,16 @@ const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null)
       {/* BARRA DE NAVEGACIÓN INFERIOR MÓVIL (PWA APP TABS) */}
       <AthleteMobileBottomNav
         activeSection={activeNavSection}
-        onSelectSection={(section) => setActiveNavSection(section)}
+        onSelectSection={(section) => {
+          if (section === "head_coach" && blueprint?.weeks && blueprint.weeks.length > 0) {
+            const currentIdx = resolveCurrentWeekIndex(blueprint.weeks);
+            setSelectedMacroWeekIdx(currentIdx);
+            if (blueprint.weeks[currentIdx]) {
+              setWeekOffset(getOffsetForWeek(blueprint.weeks[currentIdx]));
+            }
+          }
+          setActiveNavSection(section);
+        }}
         isIntervalsConnected={isLiveConnected}
       />
       </div>

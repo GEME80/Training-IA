@@ -173,7 +173,7 @@ ${directiveBlock}
      * En "reply", actúa como un Head Coach humano experto: (a) Tranquiliza al atleta, (b) PREGUNTA qué días específicos viaja y si tendrá acceso a cinta/zapatillas o descanso total, y (c) En "quickReplies", ofrece opciones interactivas concretas para responder en 1 toque (ej. "Viajo Jueves y Viernes (Descanso total)", "Viajo Miércoles y Jueves", "Tendré cinta de hotel").
      * Mantén el plan existente sin inventar días hasta que el atleta te confirme sus fechas.
    - Si el atleta YA ESPECIFICÓ los días de viaje y medios, recalibra asignando Descanso o la sesión viable en esos días exactos y protegiendo el estímulo principal el fin de semana.
-9. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
+9. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP. En "suggestedPlan", el campo "workoutStructure" es OBLIGATORIO con pasos estructurados para el reloj (ej. "- Calentamiento: 15m @ 65% CP\\n- Intervalos...").
 10. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
 }
 

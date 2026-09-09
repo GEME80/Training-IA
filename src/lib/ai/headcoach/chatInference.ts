@@ -76,9 +76,9 @@ export async function executeGeminiInference(
       mappedModel,
       ...userFallbacks,
       "gemini-3.5-flash",
-      "gemini-3.6-flash",
+      "gemini-2.5-flash",
     ].filter(Boolean))
-  ).slice(0, 2);
+  ).slice(0, 3);
 
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
 
@@ -110,7 +110,7 @@ export async function executeGeminiInference(
               temperature: safeTemp,
             },
           }),
-          signal: AbortSignal.timeout(25000),
+          signal: AbortSignal.timeout(35000),
         }
       );
 
@@ -250,6 +250,29 @@ export async function executeGeminiInference(
                     }
                   }
 
+                  let safeStructure = p.workoutStructure || p.structure || "";
+                  if (!safeStructure && !isRest && safeDuration > 0) {
+                    if (safeDiscipline === "Carrera") {
+                      if (/umbral|series|interval/i.test(safeName)) {
+                        safeStructure = `- Calentamiento: 15m @ 65-70% Stryd CP\n- 4x:\n  - Intervalo Umbral: 6m @ 98-102% Stryd CP\n  - Recuperación: 2m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP`;
+                      } else if (/fartlek/i.test(safeName)) {
+                        safeStructure = `- Calentamiento: 15m @ 65% Stryd CP\n- 6x:\n  - Fartlek Cambio: 2m @ 95-98% Stryd CP\n  - Recuperación: 1m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP`;
+                      } else if (/larga|fondo|marat/i.test(safeName)) {
+                        safeStructure = `- Fondo Base Aeróbico: 55m @ 70-75% Stryd CP\n- Bloque Progresivo Maratón: 20m @ 80-84% Stryd CP\n- Enfriamiento: 15m @ 65% Stryd CP`;
+                      } else {
+                        safeStructure = `- Rodaje Continuo Z2: ${safeDuration}m @ ${safePower || "70-75% Stryd CP"}`;
+                      }
+                    } else if (safeDiscipline === "Ciclismo") {
+                      if (/sweetspot/i.test(safeName)) {
+                        safeStructure = `- Calentamiento: 15m @ 60% Bike FTP\n- 2x:\n  - SweetSpot: 15m @ 88-93% Bike FTP\n  - Recuperación: 5m @ 55% Bike FTP\n- Enfriamiento: 10m @ 55% Bike FTP`;
+                      } else {
+                        safeStructure = `- Rodillo / Ciclismo Z2: ${safeDuration}m @ ${safePower || "60-68% Bike FTP"}`;
+                      }
+                    } else if (safeDiscipline === "Fuerza") {
+                      safeStructure = `- Movilidad articular & Core: 10m\n- Fuerza Funcional (Sóleo, Isquios, Glúteos): 25m\n- Vuelta a la calma: 10m`;
+                    }
+                  }
+
                   return {
                     day: dName,
                     date: itemDate,
@@ -261,7 +284,7 @@ export async function executeGeminiInference(
                     tss: safeTss,
                     durationMinutes: safeDuration,
                     justification: p.justification || p.description || "",
-                    workoutStructure: p.workoutStructure || p.structure || "",
+                    workoutStructure: safeStructure,
                   };
                 });
               }

@@ -67,7 +67,8 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
      * 🎯 **Ajuste Fisiológico Propuesto**: Resumen de los estímulos diferenciados asignados a los días restantes.
 
 10. FORMATO DE SALIDA (JSON ESTRICTO):
-   - Devuelve siempre un objeto JSON válido con los campos: "reply", "actionType", "reasoning", "suggestedPlan", "workoutDiff" y "quickReplies".`,
+   - Devuelve siempre un objeto JSON válido con los campos: "reply", "actionType", "reasoning", "suggestedPlan", "workoutDiff" y "quickReplies".
+   - En cada elemento de "suggestedPlan", incluye obligatoriamente: "day", "date", "discipline", "workoutName", "action", "powerTarget", "tss", "durationMinutes", "justification" y "workoutStructure" con pasos estructurados para el reloj.`,
 
   macrocyclePrompt: `Eres el Diseñador Arquitectónico de Macrociclos (PULSE Macrocycle Architect) de PULSE AI PRO.
 

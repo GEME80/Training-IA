@@ -45,6 +45,9 @@ export interface HeadCoachChatRequest {
   dailyExecutedActivities?: Record<string, any>;
   runFtp?: number;
   bikeFtp?: number;
+  birthDate?: string;
+  gender?: string;
+  weight?: number;
   isInitialAudit?: boolean;
   coachProfile?: string;
   customPrompt?: string;

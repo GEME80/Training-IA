@@ -108,12 +108,13 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
             const now = new Date();
             let age = now.getFullYear() - birth.getFullYear();
             const monthDiff = now.getMonth() - birth.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
-              age--;
-            }
+            if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
             if (age > 0 && age < 120) computedAge = age;
           }
         }
+
+        const resolvedSex = anyAth.sex === "M" || anyAth.gender === "M" ? "M" : (anyAth.sex === "F" || anyAth.gender === "F" ? "F" : ath.gender);
+        const resolvedWeight = anyAth.weight || (wellness[0] as any)?.weight || ath.weight;
 
         profile = {
           ...ath,
@@ -121,6 +122,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           name: ath.name || profile.name,
           birthDate: icuDob,
           age: computedAge,
+          gender: resolvedSex,
+          weight: resolvedWeight ? Number(resolvedWeight) : undefined,
+          restingHR: anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
+          maxHR: anyAth.max_hr || anyAth.maxHR || ath.maxHR,
+          lthr: anyAth.lthr || ath.lthr,
           run_ftp: runSport?.ftp || ath.icu_running_ftp || ath.run_ftp || (runFtp ? Number(runFtp) : undefined),
           bike_ftp: rideSport?.ftp || ath.icu_ftp || ath.bike_ftp || (bikeFtp ? Number(bikeFtp) : undefined),
         };
@@ -262,6 +268,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   });
 
   const dailyActivitiesReport = auditLines.join("\n");
+  const activitiesTssBreakdown = Object.entries(effectiveExecutedMap)
+    .flatMap(([dKey, val]) => val.activities.map((a: any) => `  - [${dKey}] "${a.name || a.type}" (${a.type}): ${a.tss || 0} TSS en ${a.movingTimeMin || 0}m${a.watts ? ` @ ${a.watts}W` : ""}${a.heartrate ? ` (FC ${a.heartrate} bpm)` : ""}`))
+    .join("\n") || "  (No hay actividades registradas en el periodo)";
 
   const normalizedProfile = (coachProfile || "balanced").toLowerCase();
   const coachStyleDescription =
@@ -294,6 +303,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     availabilityFormatted,
     currentPlanSummary,
     dailyActivitiesReport,
+    activitiesTssBreakdown,
     hasExistingPlan,
     plannedWeekTss,
     actualTss,

@@ -31,6 +31,24 @@ export async function POST(req: NextRequest) {
           tsb: ctx.physioStatus.tsb.toFixed(1),
           rampRate: Number(ctx.physioStatus.rampRate || 0).toFixed(1),
           feedback: ctx.formDiagnostic,
+          demographics: {
+            age: ctx.profile.age,
+            gender: ctx.profile.gender,
+            weight: ctx.profile.weight,
+            wkgRun: ctx.profile.run_ftp && ctx.profile.weight ? Number((ctx.profile.run_ftp / ctx.profile.weight).toFixed(2)) : undefined,
+            wkgBike: ctx.profile.bike_ftp && ctx.profile.weight ? Number((ctx.profile.bike_ftp / ctx.profile.weight).toFixed(2)) : undefined,
+          },
+          activitiesBreakdown: Object.entries(ctx.effectiveExecutedMap).flatMap(([dKey, val]) =>
+            val.activities.map((a: any) => ({
+              name: a.name || a.type,
+              type: a.type || "Run",
+              date: dKey,
+              tss: a.tss || 0,
+              movingTimeMin: a.movingTimeMin || 0,
+              watts: a.watts,
+              heartrate: a.heartrate,
+            }))
+          ),
         },
         suggestedPlan: parsed.suggestedPlan || null,
         quickReplies: parsed.quickReplies || [

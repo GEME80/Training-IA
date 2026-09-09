@@ -22,7 +22,7 @@ export async function executeGeminiInference(
   );
 
   const userPrompt = isInitialAudit
-    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}) evaluando lo ejecutado hasta hoy y presentando la propuesta adaptada para los días restantes de la semana respetando la matriz semanal. Pregúntame si apruebo la semana o si deseamos calibrar algo más.`
+    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Declara primero si se continúa el plan previsto para la semana o la siguiente, o si se propone un nuevo plan/adaptación evaluado con la matriz semanal. Asegura que los trabajos propuestos sean diferentes y variados, audita el TSS por actividad y toma en cuenta los datos demográficos (edad máster, peso, W/kg).`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
@@ -234,8 +234,20 @@ export async function executeGeminiInference(
                   let safeName = p.workoutName || p.title || p.name;
                   if (isRest) {
                     safeName = "Descanso Pasivo Total";
-                  } else if (!safeName || safeName === "Entrenamiento" || (safeDiscipline === "Ciclismo" && /carrera|rodaje/i.test(safeName))) {
-                    safeName = safeDiscipline === "Ciclismo" ? "Ciclismo Resistencia Base Z2 (Rodillo/Ruta)" : "Carrera Aeróbica Continua Z2";
+                  } else if (!safeName || safeName === "Entrenamiento" || /rodaje de activaci|aer[oó]bica continua z2/i.test(safeName)) {
+                    if (safeDiscipline === "Ciclismo") {
+                      safeName = dName === "Sábado"
+                        ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia"
+                        : "Ciclismo - Resistencia Base Z2 & Cadencia Dinámica";
+                    } else if (safeDiscipline === "Fuerza") {
+                      safeName = "Fuerza Neuromuscular, Core & Cadena Posterior";
+                    } else {
+                      if (dName === "Martes") safeName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
+                      else if (dName === "Jueves") safeName = "Carrera - Fartlek Progresivo Z2-Z4";
+                      else if (dName === "Viernes") safeName = "Carrera - Trote Regenerativo Z1 & Capilarización";
+                      else if (dName === "Domingo") safeName = "Carrera - Tirada Larga Progresiva con Bloque Maratón";
+                      else safeName = "Carrera - Rodaje Base Aeróbico Z2";
+                    }
                   }
 
                   return {

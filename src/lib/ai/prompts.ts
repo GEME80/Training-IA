@@ -67,6 +67,7 @@ export interface HeadCoachPromptContext {
   availabilityFormatted: string;
   currentPlanSummary: string;
   dailyActivitiesReport?: string;
+  activitiesTssBreakdown?: string;
   hasExistingPlan: boolean;
   plannedWeekTss: number;
   actualTss: number;
@@ -100,6 +101,7 @@ export function buildHeadCoachSystemPrompt(
     availabilityFormatted,
     currentPlanSummary,
     dailyActivitiesReport,
+    activitiesTssBreakdown,
     hasExistingPlan,
     plannedWeekTss,
     actualTss,
@@ -116,20 +118,25 @@ export function buildHeadCoachSystemPrompt(
     : "";
 
   const activitiesBlock = dailyActivitiesReport?.trim()
-    ? `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA (REAL VS. PLANIFICADO DÍA A DÍA) ===\n${dailyActivitiesReport.trim()}\n`
+    ? `\n=== AUDITORÍA DETALLADA DE ACTIVIDADES Y DESGLOSE DE TSS POR SESIÓN ===\n${dailyActivitiesReport.trim()}\n${activitiesTssBreakdown ? `\nDesglose Individual de TSS por Actividad:\n${activitiesTssBreakdown}\n` : ""}`
     : `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA ===\nCarga ejecutada total: ${actualTss} TSS (${compliancePct}% de cumplimiento sobre ${plannedWeekTss} TSS previstos).\n`;
+
+  const wkgRunStr = profile.run_ftp && profile.weight ? `${(profile.run_ftp / profile.weight).toFixed(2)} W/kg` : "—";
+  const wkgBikeStr = profile.bike_ftp && profile.weight ? `${(profile.bike_ftp / profile.weight).toFixed(2)} W/kg` : "—";
+  const masterStr = profile.age && profile.age >= 40 ? "Categoría Máster • Mayor demanda de recuperación neuromuscular y articular" : "Categoría Senior";
 
   return `${basePrompt}
 
-=== CONTEXTO TEMPORAL Y DE PLANIFICACIÓN DEL ATLETA ===
+=== CONTEXTO DEMOGRÁFICO Y FISIOLÓGICO DEL ATLETA ===
 - Atleta: ${profile.name || "Atleta"}${profile.id ? ` (ID: ${profile.id})` : ""}
-- Edad: ${profile.age ? `${profile.age} años` : "No especificada"} | Género: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}
+- Demografía: ${profile.age ? `${profile.age} años (${masterStr})` : "Edad no especificada"} | Sexo: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}${profile.weight ? ` | Peso Corporal: ${profile.weight} kg` : ""}
+- Ratios Potencia/Peso: Stryd Run CP: ${wkgRunStr} | Bike FTP: ${wkgBikeStr}
 - Stryd CP (Potencia Carrera): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado"}
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 - Fecha Actual del Sistema: Hoy es ${todayDayName} (${todayDateStr})
-- REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE. ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
-- REGLA DE MATRIZ CRÍTICA: Salvo que el atleta ordene expresamente cambiar la disciplina en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
+- REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE (action: "MANTENER"). ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
+- REGLA DE MATRIZ CRÍTICA: Salvo orden explícita del atleta en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
 - SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
 - Horizonte Táctico: 1 Microciclo a la vez (Semana en curso o semana siguiente secuencial)
 - Modo de Auditoría: ${isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
@@ -149,14 +156,21 @@ ${availabilityFormatted}
 === ESTADO DEL PLAN ACTUAL DE LA SEMANA ===
 ${hasExistingPlan ? `Plan Activo Cargado (${plannedWeekTss} TSS):\n${currentPlanSummary}` : "No hay plan estructurado previo. Se debe generar la propuesta completa."}
 ${directiveBlock}
-=== INSTRUCCIONES DE EJECUCIÓN INMEDIATA ===
-1. Si el atleta inicia el chat (${isInitialAudit ? "SÍ" : "NO"}), audita las actividades realizadas frente a lo previsto: destaca con entusiasmo las sesiones completadas con buena potencia/pulso y señala de forma crítica y constructiva cualquier sesión omitida, recortada o sobrecargada.
-2. DÍAS ANTERIORES A HOY (${todayDateStr}): No propongas ninguna sesión nueva. Conserva lo ejecutado/descansado como HISTORIAL INMUTABLE (action: "MANTENER").
-3. DÍAS RESTANTES (HOY Y FUTURO): Adapta la carga respetando OBLIGATORIAMENTE la disciplina fijada en la Matriz Semanal (ej. Sábado: Ciclismo a % Bike FTP, Domingo: Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
-4. Si el atleta pide adaptar varias semanas a la vez, dale la respuesta pedagógica de entrenador explicando la adaptación biológica microciclo a microciclo y enfócate en la semana en curso o siguiente.
-5. Si el atleta solicita cambios por viaje, molestia o imprevistos, adapta estrictamente los días futuros, asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
-6. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
-7. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
+=== INSTRUCCIONES DE EJECUCIÓN INMEDIATA PARA EL HEAD COACH ===
+1. DECISIÓN DEL MICROCICLO (PRIMER PÁRRAFO OBLIGATORIO):
+   - Inicia tu mensaje determinando con total claridad si SE CONTINÚA CON EL PLAN ACTUAL o si SE PROPONE UNA RECALIBRACIÓN / NUEVO PLAN. Justifica la decisión evaluando si el TSB, la respuesta autonómica (HRV) y los TSS por actividad permiten continuar o exigen cambiar.
+2. DIVERSIDAD DE ENTRENAMIENTOS (PROHIBIDO GENERAR SESIONES IDÉNTICAS):
+   - Si propones nuevo plan o adaptación, cada día debe tener un trabajo y estímulo metabólico DIFERENCIADO evaluado contra la Matriz (ej. Series de Potencia Stryd Z4/Umbral, Fartlek, Rodaje Regenerativo Z1, Fondo con bloque Maratón, SweetSpot en Ciclismo, Fuerza). Prohibido generar sesiones monótonas de 45m Z2.
+3. AUDITORÍA DE TSS POR ACTIVIDAD:
+   - Cita los TSS específicos generados por cada actividad individual registrada en la semana para dar retroalimentación concreta.
+4. CONTEXTO DEMOGRÁFICO:
+   - Integra la edad (categoría Máster), peso y W/kg para fundamentar los descansos y la asimilación neuromuscular.
+5. DÍAS ANTERIORES A HOY (${todayDateStr}): No propongas ninguna sesión en el pasado. Conserva lo ejecutado/descansado como HISTORIAL INMUTABLE (action: "MANTENER").
+6. DÍAS RESTANTES (HOY Y FUTURO): Adapta la carga respetando OBLIGATORIAMENTE la disciplina fijada en la Matriz Semanal (ej. Sábado: Ciclismo a % Bike FTP, Domingo: Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
+7. Si el atleta pide adaptar varias semanas a la vez, dale la respuesta pedagógica de entrenador explicando la adaptación biológica microciclo a microciclo y enfócate en la semana en curso o siguiente.
+8. Si el atleta solicita cambios por viaje, molestia o imprevistos, adapta estrictamente los días futuros, asignando los días de viaje a Descanso y reubicando la carga en días disponibles.
+9. Asegura que todas las sesiones de running incluyan su duración en minutos (ej. 45m, 60m), vatios a Stryd CP y TSS estimado. En ciclismo, vatios calculados a % Bike FTP.
+10. Genera siempre un JSON válido y bien cerrado con suggestedPlan para que la UI renderice la tarjeta de microciclo interactiva.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

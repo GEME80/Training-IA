@@ -89,33 +89,67 @@ export function handleDeterministicFallback(
       }
 
       const isRest = p.discipline === "Descanso" || p.action === "DESCANSO_ACTIVO";
+      const dayName = p.day || (planningWeekDates[pIdx]?.day) || "Día";
+      let workoutName = p.workoutName || p.title;
+      if (isRest) {
+        workoutName = "Descanso Pasivo Total";
+      } else if (!workoutName || workoutName === "Entrenamiento" || /rodaje de activaci|aer[oó]bica continua z2/i.test(workoutName)) {
+        if (p.discipline === "Ciclismo") {
+          workoutName = dayName === "Sábado" ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia" : "Ciclismo - Resistencia Base Z2 & Cadencia Dinámica";
+        } else if (p.discipline === "Fuerza") {
+          workoutName = "Fuerza Neuromuscular, Core & Cadena Posterior";
+        } else {
+          if (dayName === "Martes") workoutName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
+          else if (dayName === "Jueves") workoutName = "Carrera - Fartlek Progresivo Z2-Z4";
+          else if (dayName === "Viernes") workoutName = "Carrera - Trote Regenerativo Z1 & Capilarización";
+          else if (dayName === "Domingo") workoutName = "Carrera - Tirada Larga Progresiva con Bloque Maratón";
+          else workoutName = "Carrera - Rodaje Base Aeróbico Z2";
+        }
+      }
+
       const dur = p.durationMinutes || (isRest ? 0 : p.discipline === "Ciclismo" ? 55 : p.discipline === "Fuerza" ? 30 : 45);
       const tssVal = p.tss || (isRest ? 0 : Math.round(dur * 0.75));
       return {
         ...p,
         date: itemDate,
         formattedDate: dateInfo.formattedDate || p.formattedDate,
+        workoutName,
+        title: workoutName,
         durationMinutes: dur,
         tss: tssVal,
       };
     });
 
     const fallbackPlannedTss = fallbackGeneratedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
+    const masterLabel = profile.age && profile.age >= 40 ? "Categoría Máster" : "Categoría Senior";
+    const wkgRun = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
+    const isContinuityViable = hasExistingPlan && physioStatus.tsb >= -12 && compliancePct >= 80;
 
-    const auditText = `### 🎯 Dictamen del Microciclo • Semana ${targetPlanningWeekNum}
-**Atleta:** ${profile.name || "Atleta"}${profile.age ? ` (${profile.age} años)` : ""} | **Estado TSB:** ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}
+    const decisionHeader = isContinuityViable
+      ? `### 📋 Decisión del Microciclo: 🟢 CONTINUIDAD DEL PLAN PROGRAMADO\nTu asimilación biológica es óptima (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Mantenemos el plan previsto para los días restantes.`
+      : `### 📋 Decisión del Microciclo: ⚠️ PROPUESTA DE RECALIBRACIÓN / NUEVO PLAN\n${hasExistingPlan ? "Debido a la fatiga acumulada o sesiones omitidas, no es óptimo continuar el plan original idéntico. Reestructuramos la carga con sesiones diferenciadas." : "No se encontró un plan previo activo; generamos una propuesta estructurada a medida respetando tu matriz semanal."}`;
+
+    const auditText = `${decisionHeader}
+
+🧬 **Contexto Biológico & Demográfico:**
+- **Atleta:** ${profile.name || "Atleta"}${profile.age ? ` (${profile.age} años - ${masterLabel})` : ""}${profile.weight ? ` | **Peso:** ${profile.weight} kg` : ""}
+- **Potencia Relativa:** Carrera ${profile.run_ftp ? `${profile.run_ftp}W${wkgRun}` : "—"} | Ciclismo ${profile.bike_ftp ? `${profile.bike_ftp}W` : "—"}
+
+⚡ **Auditoría Fisiológica & TSS por Actividad:**
+- Carga acumulada ejecutada: **${actualTss} TSS** (${compliancePct}% de cumplimiento sobre el objetivo).
+- Balance de fatiga (TSB): **${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}** | ATL: **${physioStatus.atl.toFixed(1)}** | CTL: **${physioStatus.ctl.toFixed(1)}**.
+- Recuperación del sistema nervioso (HRV): **${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"}** (balance adecuado para asimilar calidad).
 
 🟢 **Fortalezas & Disciplina:**
-- Cumplimiento de carga acumulada: **${actualTss} TSS** (${compliancePct}% de asimilación sobre el plan).
-- Fitness consolidado (CTL): **${physioStatus.ctl.toFixed(1)}** con fatiga aguda (ATL) en **${physioStatus.atl.toFixed(1)}**.
-- Recuperación del sistema nervioso (HRV): **${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"}** (balance adecuado para asimilar calidad).
+- Cumplimiento de carga acumulada en el rango fisiológico programado.
+- Respeto de los descansos pasivos para asimilación neuromuscular.
 
 ⚠️ **Puntos de Atención & Control de Carga:**
 - ${physioStatus.tsb < -15 ? "Tu TSB ha caído a zona de sobrecarga. Vigila el descanso nocturno e hidratación para evitar fatiga residual." : "Ramp Rate en rango controlado. Mantén la disciplina en los ritmos y no te aceleres en los días de trote suave Z1."}
-- Respetar los descansos pasivos programados es innegociable para asimilar las adaptaciones neuromusculares.
+- En atletas ${masterLabel.toLowerCase()}, el tiempo de asimilación articular exige no encadenar dos días de calidad consecutivos.
 
-⚡ **Propuesta de Microciclo Calibrada (~${fallbackPlannedTss} TSS):**
-Semana estructurada con vatios exactos a tus umbrales${profile.run_ftp ? ` (**Stryd CP ${profile.run_ftp}W**)` : ""}${profile.bike_ftp ? ` y (**Bike FTP ${profile.bike_ftp}W**)` : ""}, respetando tu disponibilidad semanal.`;
+🎯 **Propuesta Adaptada del Microciclo (~${fallbackPlannedTss} TSS):**
+Semana estructurada con estímulos diferenciados (Umbral Stryd CP, Rodillo SweetSpot / Fondo Z2, Tirada Larga con ritmo sostenido y Descanso) evaluados estrictamente contra tu matriz semanal.`;
 
     return {
       success: true,

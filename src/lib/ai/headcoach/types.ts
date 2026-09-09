@@ -78,7 +78,24 @@ export interface HeadCoachChatResponse {
       status: "COMPLETED" | "PARTIAL" | "SKIPPED" | "REST_OK" | "PENDING";
       details: string;
     }>;
+    demographics?: {
+      age?: number;
+      gender?: string;
+      weight?: number;
+      wkgRun?: number;
+      wkgBike?: number;
+    };
+    activitiesBreakdown?: Array<{
+      name: string;
+      type: string;
+      date: string;
+      tss: number;
+      movingTimeMin: number;
+      watts?: number;
+      heartrate?: number;
+    }>;
   };
+  planDecision?: "CONTINUE_PLAN" | "ADAPT_PLAN" | "NEW_PLAN";
   suggestedPlan?: PlanItem[] | null;
   quickReplies?: string[];
   modelUsed?: string;

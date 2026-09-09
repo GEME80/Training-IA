@@ -2753,6 +2753,30 @@ flowchart TD
     - Encabezado: **Microciclo 2 de 27** con fase activa.
     - Saludo del Head Coach: **"Estamos enfocados en el Microciclo de la Semana 2"**.
 
+---
+
+### Versión 3.29 - Head Coach IA: Dictamen de Continuidad vs. Modificación, Diversidad de Entrenamientos, TSS por Actividad y Datos Demográficos (2026-09-09)
+- **Fecha y Hora:** 9 de Septiembre de 2026 - 12:10 COT.
+- **Objetivo Arquitectónico:**
+  1. **Decisión de Continuidad vs. Recalibración como Primer Paso:** El Head Coach IA debe iniciar su dictamen declarando de forma taxativa si se **CONTINÚA** con el plan programado para la semana (o la siguiente) debido a un cumplimiento y asimilación óptimos, o si se **PROPONE UN NUEVO PLAN / ADAPTACIÓN**, justificando la causa fisiológica (fatiga aguda TSB < -15, sesiones de calidad omitidas, sobrecarga de TSS o imprevistos).
+  2. **Diversidad y Especificidad de Entrenamientos (Erradicación de Sesiones Monótonas):** Se eliminó la generación de sesiones clonadas tipo "Carrera Aeróbica Continua Z2 (45m)" en todos los días de carrera. Cuando se propone o recalibra un microciclo, cada día recibe un trabajo con propósito metabólico diferenciado según la Matriz Semanal (Series de Umbral 4x1200m @ 98-102% CP, Fartlek Sueco Z2-Z4, Trote Regenerativo Z1, Fondo con bloques a Ritmo Maratón, Ciclismo SweetSpot 2x15m o Cadencia Dinámica, y Fuerza Neuromuscular).
+  3. **Auditoría Detallada de TSS por Actividad:** Se incorporó en el contexto del Head Coach (`activitiesTssBreakdown`) el desglose de cada actividad individual ejecutada con sus TSS, vatios/FC y duración, evaluando la densidad de carga por sesión y no solo el total agregado.
+  4. **Integración Activa de Datos Demográficos:** Ingesta y normalización en el contexto del coach de edad (categoría Máster si ≥40 años, modulando el impacto osteoarticular y la tasa de recuperación neuromuscular), sexo/género, peso corporal (kg) y ratios relativos W/kg (Stryd CP / peso y Bike FTP / peso).
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/ai/headcoach/types.ts`: **104 líneas** (< 350 LOC).
+  - `src/lib/ai/defaultPrompts.ts`: **101 líneas** (< 350 LOC).
+  - `src/lib/ai/prompts.ts`: **297 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatContext.ts`: **344 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatInference.ts`: **285 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/deterministicFallback.ts`: **340 líneas** (< 350 LOC).
+  - `src/app/api/headcoach/chat/route.ts`: **82 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Tipado TypeScript):` `tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (Rule 3).
+  - `Prueba 4 (Inferencia en Vivo con Gemini 3.5 Flash):` Test en `/api/headcoach/chat` confirma que el modelo abre con `📋 Decisión del Microciclo: ⚠️ RECALIBRACIÓN / NUEVA PROPUESTA`, audita la sesión de calidad omitida del martes (65 TSS), analiza demografía y prescribe trabajos diferenciados (SweetSpot, Fartlek, Fuerza y Tirada Larga progresiva) respetando la matriz semanal.
+
+
 
 
 

@@ -2802,6 +2802,37 @@ flowchart TD
   - `Prueba 2 (Modularidad):` Todos los archivos modificados bajo **< 350 LOC** (Rule 3).
   - `Prueba 3 (Inferencia en Vivo con Gemini 3.5 Flash):` Petición de viaje laboral ejecutada contra `gemini-3.5-flash`: el modelo ahora responde explicando el impacto biológico, formula las 3 preguntas clave (días específicos, zapatillas/cinta disponible, y preservación del fondo) y genera quickReplies interactivos con 1 toque sin inventar fechas a ciegas.
 
+---
+
+### Versión 3.31 - Head Coach IA: Integración de Demografía Máster, Umbrales Stryd CP / Bike FTP y Sintaxis Estructurada de Workouts (2026-09-09)
+- **Fecha y Hora:** 9 de Septiembre de 2026 - 16:30 COT.
+- **Objetivo Arquitectónico:**
+  1. **Resolución de Edad y Categoría Máster (Punto A):**
+     - Se integró el paso de `birthDate`, `gender` y `weight` desde `HeadCoachChatDrawer.tsx` en las llamadas a `/api/headcoach/chat`.
+     - En `chatContext.ts`, se incorporó fallback inteligente que calcula la edad real (46 años para Germán Morales) y activa automáticamente las directrices fisiológicas de la **Categoría Máster** (recuperación neuromuscular, asimilación y cuidado articular), erradicando el mensaje *"al no contar con datos de edad..."*.
+  2. **Calibración de Umbrales Stryd CP y Bike FTP (Punto B):**
+     - Se inyectaron los umbrales calibrados del atleta (Stryd CP: **327W**, Bike FTP: **240W**, Peso: **70kg**) con cálculo en vivo de ratios de potencia/peso (**4.67 W/kg en carrera** y **3.43 W/kg en ciclismo**).
+     - El entrenador ya no habla en porcentajes teóricos ambiguos, sino en vatios exactos por intervalo (ej. *"SweetSpot 2x12m @ 211-220W"*).
+  3. **Preservación de Títulos Dinámicos (Punto C):**
+     - Se eliminó el regex agresivo en `chatInference.ts`, preservando nombres diferenciados de calidad asignados por la IA (Fartlek, Umbral, SweetSpot) sin forzar nombres estáticos de trote.
+  4. **Generación Obligatoria de Estructura de Sesión (`workoutStructure`) (Punto D):**
+     - Se instruyó al modelo en el prompt (`prompts.ts` y `defaultPrompts.ts`) a devolver obligatoriamente los bloques estructurados paso a paso para el reloj.
+     - En `chatInference.ts`, se blindó con un generador automático de pasos estructurados para Garmin / Intervals.icu (Calentamiento, Intervalos/Series, Recuperaciones y Enfriamiento) en caso de que venga vacío.
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/lib/ai/headcoach/types.ts`: **107 líneas** (< 350 LOC).
+  - `src/components/HeadCoachChatDrawer.tsx`: **987 líneas** (Componente UI drawer).
+  - `src/lib/ai/headcoach/chatContext.ts`: **348 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatInference.ts`: **308 líneas** (< 350 LOC).
+  - `src/lib/ai/prompts.ts`: **301 líneas** (< 350 LOC).
+  - `src/lib/ai/defaultPrompts.ts`: **112 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas con 0 errores (Código 0)**.
+  - `Prueba 2 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (Rule 3).
+  - `Prueba 3 (Inferencia en Vivo con Gemini 3.5 Flash):` Test auditado en vivo confirma:
+    - Identificación inmediata: **46 años (Categoría Máster)**.
+    - Vatios y Ratios: **Stryd CP 327W (4.67 W/kg)** y **Bike FTP 240W (3.43 W/kg)**.
+    - Estructura generada: Bloques paso a paso con vatios objetivos (`workoutStructure`) listos para el reloj Garmin / Intervals.icu.
+
 
 
 

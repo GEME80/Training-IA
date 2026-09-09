@@ -55,27 +55,39 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
     const todayStr = new Date().toISOString().split("T")[0];
     if (item.justification?.includes("Historial inmutable") || (item.date && item.date < todayStr)) {
       return (
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+        <span
+          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shrink-0 truncate max-w-[65px]"
+          title="Historial inmutable"
+        >
           Historial
         </span>
       );
     }
     if (item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0)) {
       return (
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+        <span
+          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 truncate max-w-[65px]"
+          title="Descanso"
+        >
           Descanso
         </span>
       );
     }
     if (item.action === "MODIFICAR" || item.action === "REDUCIR_INTENSIDAD") {
       return (
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-          Modificado
+        <span
+          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0 truncate max-w-[65px]"
+          title="Modificado"
+        >
+          Adaptado
         </span>
       );
     }
     return (
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+      <span
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0 truncate max-w-[65px]"
+        title="En Plan"
+      >
         En Plan
       </span>
     );
@@ -113,8 +125,14 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
         </div>
       </div>
 
-      {/* Grid de los 7 Días del Microciclo */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+      {/* Indicador de Desplazamiento */}
+      <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-0.5">
+        <span>👉 Desliza horizontalmente para ver los 7 días</span>
+        <span>Toca cualquier día para expandir</span>
+      </div>
+
+      {/* Tira Horizontal Desplazable de los 7 Días del Microciclo */}
+      <div className="flex items-stretch overflow-x-auto no-scrollbar gap-2.5 pb-2 pt-1 px-0.5 snap-x">
         {plan.map((item, idx) => {
           const isExpanded = expandedDay === idx;
           const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
@@ -123,16 +141,16 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
             <div
               key={idx}
               onClick={() => setExpandedDay(isExpanded ? null : idx)}
-              className={`rounded-xl p-2.5 transition-all cursor-pointer border ${
+              className={`w-[136px] sm:w-[145px] shrink-0 snap-start rounded-xl p-2.5 transition-all cursor-pointer border flex flex-col justify-between overflow-hidden ${
                 isRest
-                  ? "bg-slate-50/70 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800/80 opacity-80"
+                  ? "bg-slate-50/70 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800/80 opacity-85"
                   : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 shadow-2xs hover:border-emerald-500/40"
               } space-y-2`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5">
+              <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center space-x-1 min-w-0">
                   {getDisciplineIcon(item.discipline)}
-                  <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">
+                  <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate">
                     {item.day?.slice(0, 3) || "Día"}
                   </span>
                 </div>
@@ -140,11 +158,14 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
               </div>
 
               <div>
-                <p className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-1">
+                <p
+                  className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-2 min-h-[30px] leading-tight"
+                  title={item.workoutName || item.title || "Entrenamiento"}
+                >
                   {item.workoutName || item.title || "Entrenamiento"}
                 </p>
                 {item.formattedDate && (
-                  <p className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                  <p className="text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
                     {item.formattedDate}
                   </p>
                 )}

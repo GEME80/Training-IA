@@ -29,7 +29,7 @@ export const HeadCoachQuickActions: React.FC<HeadCoachQuickActionsProps> = ({
       id: "travel",
       label: "Reorganizar por Viaje",
       icon: <Plane className="h-3.5 w-3.5 text-sky-500" />,
-      prompt: "Tengo un viaje laboral de 2 días. Reorganiza mi semana colocando descanso en los días de viaje sin perder el fondo.",
+      prompt: "Tengo un viaje laboral esta semana. ¿Cómo deberíamos reorganizar el microciclo según los días en que viaje y los recursos que tenga disponibles?",
     },
     {
       id: "time",

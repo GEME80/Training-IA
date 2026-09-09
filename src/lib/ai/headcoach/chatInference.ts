@@ -234,7 +234,7 @@ export async function executeGeminiInference(
                   let safeName = p.workoutName || p.title || p.name;
                   if (isRest) {
                     safeName = "Descanso Pasivo Total";
-                  } else if (!safeName || safeName === "Entrenamiento" || /rodaje de activaci|aer[oó]bica continua z2/i.test(safeName)) {
+                  } else if (!safeName || safeName === "Entrenamiento" || /^(rodaje|sesi[oó]n|entrenamiento)$/i.test(safeName.trim())) {
                     if (safeDiscipline === "Ciclismo") {
                       safeName = dName === "Sábado"
                         ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia"
@@ -244,7 +244,7 @@ export async function executeGeminiInference(
                     } else {
                       if (dName === "Martes") safeName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
                       else if (dName === "Jueves") safeName = "Carrera - Fartlek Progresivo Z2-Z4";
-                      else if (dName === "Viernes") safeName = "Carrera - Trote Regenerativo Z1 & Capilarización";
+                      else if (dName === "Viernes") safeName = "Carrera - Fartlek Dinámico & Capilarización";
                       else if (dName === "Domingo") safeName = "Carrera - Tirada Larga Progresiva con Bloque Maratón";
                       else safeName = "Carrera - Rodaje Base Aeróbico Z2";
                     }

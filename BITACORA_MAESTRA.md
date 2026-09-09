@@ -2776,6 +2776,32 @@ flowchart TD
   - `Prueba 3 (Modularidad):` 100% de archivos modificados bajo **< 350 LOC** (Rule 3).
   - `Prueba 4 (Inferencia en Vivo con Gemini 3.5 Flash):` Test en `/api/headcoach/chat` confirma que el modelo abre con `📋 Decisión del Microciclo: ⚠️ RECALIBRACIÓN / NUEVA PROPUESTA`, audita la sesión de calidad omitida del martes (65 TSS), analiza demografía y prescribe trabajos diferenciados (SweetSpot, Fartlek, Fuerza y Tirada Larga progresiva) respetando la matriz semanal.
 
+---
+
+### Versión 3.30 - Head Coach UI/UX: Carrusel de Microciclo Responsive sin Desbordamiento y Flujo de Clarificación Conversacional en Viajes (2026-09-09)
+- **Fecha y Hora:** 9 de Septiembre de 2026 - 16:05 COT.
+- **Objetivo Arquitectónico:**
+  1. **Corrección Visual de Tarjetas de Entrenamiento (HeadCoachMicrocycleCard):**
+     - Se sustituyó la cuadrícula fija `md:grid-cols-7` (que forzaba columnas diminutas de 75px en el drawer de chat provocando que las insignias "Historial" y "En Plan" se desbordaran lateralmente invadiendo tarjetas adyacentes) por un carrusel horizontal fluido con snap (`flex overflow-x-auto no-scrollbar gap-2.5 snap-x`).
+     - Cada tarjeta diaria cuenta ahora con ancho mínimo garantizado (`w-[136px] sm:w-[145px] shrink-0 snap-start`) y `overflow-hidden`.
+     - Las insignias de acción se ajustaron con `shrink-0 truncate max-w-[65px] text-[9px]` garantizando que jamás se salgan de los bordes.
+     - Los títulos de sesión ahora disponen de `line-clamp-2 min-h-[30px]`, eliminando el corte prematuro de texto ("TEST D...", "Indoor..").
+  2. **Protocolo de Clarificación Conversacional en Imprevistos y Viajes:**
+     - Se corrigió el comportamiento donde la IA inventaba arbitrariamente los días de viaje (asumiendo jueves y viernes sin preguntar) cuando el atleta pulsaba el chip de viaje o daba indicaciones ambiguas.
+     - Se incorporó la **Regla de Clarificación de Viajes** en `defaultPrompts.ts` y `prompts.ts`: si el usuario menciona viaje o imprevisto sin indicar los días exactos ni el equipamiento disponible (zapatillas, gimnasio o descanso total), el Head Coach **no inventa días** ni reestructura a ciegas; en su lugar, actúa como un entrenador empático preguntando los días específicos, la disponibilidad de medios y ofreciendo opciones interactivas en `quickReplies`.
+     - Se actualizó el chip en `HeadCoachQuickActions.tsx` para iniciar este diálogo guiado de diagnóstico.
+     - En `chatInference.ts`, se eliminó el regex agresivo que sobreescribía sesiones dinámicas de Fartlek o activación con títulos genéricos de trote regenerativo.
+- **Lista de Archivos Modificados y Conteo de Líneas (< 350 LOC):**
+  - `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`: **216 líneas** (< 350 LOC).
+  - `src/components/dashboard/headcoach/HeadCoachQuickActions.tsx`: **70 líneas** (< 350 LOC).
+  - `src/lib/ai/defaultPrompts.ts`: **111 líneas** (< 350 LOC).
+  - `src/lib/ai/headcoach/chatInference.ts`: **285 líneas** (< 350 LOC).
+  - `src/lib/ai/prompts.ts`: **301 líneas** (< 350 LOC).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (Compilación Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas con 0 errores (Código 0)**.
+  - `Prueba 2 (Modularidad):` Todos los archivos modificados bajo **< 350 LOC** (Rule 3).
+  - `Prueba 3 (Inferencia en Vivo con Gemini 3.5 Flash):` Petición de viaje laboral ejecutada contra `gemini-3.5-flash`: el modelo ahora responde explicando el impacto biológico, formula las 3 preguntas clave (días específicos, zapatillas/cinta disponible, y preservación del fondo) y genera quickReplies interactivos con 1 toque sin inventar fechas a ciegas.
+
 
 
 

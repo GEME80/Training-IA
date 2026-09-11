@@ -1,6 +1,6 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v3.34)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v3.36)
 
-Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas en un nuevo chat sin generar reprocesos.
+Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas sin generar reprocesos.
 
 ---
 
@@ -8,28 +8,31 @@ Este documento contiene la **auditoría forense de la arquitectura actual del si
 
 ```mermaid
 radar
-    title "Evaluación de Madurez Arquitectónica (SGEA v3.34)"
-    "Modularidad UI (< 350 LOC)" : 100
+    title "Evaluación de Madurez Arquitectónica (SGEA v3.36)"
+    "Modularidad UI & Modelos (< 350 LOC)" : 100
     "Type Safety (TypeScript Estricto)" : 100
     "Seguridad & Criptografía (AES-256-GCM)" : 95
-    "Capa de Conocimiento Científico (SSOT)" : 100
-    "Desacoplamiento de Hooks/Servicios" : 100
+    "Capa de Ciencia Deportiva (18 Modelos SSOT)" : 100
+    "Escalabilidad Universal Multi-Deporte" : 100
+    "Motor Anti-Repetición & Rotación Coprima" : 100
+    "Desacoplamiento Hooks/Servicios" : 100
     "Validación de Schemas API (Zod)" : 100
     "Gobernanza FinOps & Caché SWR" : 100
-    "Testing Unitario Automatizado" : 50
+    "Suites de Pruebas Fisiológicas Forenses" : 95
     "Observabilidad & Structured Logging" : 65
 ```
 
 | Dimensión de Ingeniería | Estado Actual | Cumplimiento | Diagnóstico Arquitectónico |
 | :--- | :---: | :---: | :--- |
-| **Modularidad de Componentes** | 🟢 Excelente | **100%** | Todos los monolitos fueron descompuestos en submódulos atómicos (< 350 LOC). `AthleteDashboard.tsx` reducido a **145 LOC** (< 160 LOC). |
-| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Interfaces unificadas en `types.ts`. |
-| **Seguridad & Multiusuario** | 🟢 Excelente | **95%** | Cifrado AES-256-GCM en reposo para API Keys de Intervals.icu en Cloud Firestore, reglas de seguridad por `uid` y autenticación Google OAuth. |
-| **Capa de Ciencia Deportiva** | 🟢 Excelente | **100%** | Desacoplamiento total del código en `src/lib/ai/knowledge/` con modelos de Canova, Daniels, Pfitzinger, Coggan, Friel, Olbrecht, Seiler y Attia. |
-| **Capa de Hooks & Servicios** | 🟢 Excelente | **100%** | **FASES 2 Y 3 COMPLETADAS:** Custom Hooks (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`) y Servicios Backend (`telemetryService`, `intervalsSyncService`). |
-| **Validación de Schemas API** | 🟢 Excelente | **100%** | **FASE 2 COMPLETADA:** Schemas declarativos con `Zod` blindando `/api/evaluate`, `/api/profile` y `/api/sync-intervals`. |
+| **Modularidad de Componentes y Modelos** | 🟢 Excelente | **100%** | 100% de archivos UI, APIs, servicios y modelos científicos < 350 LOC. `AthleteDashboard.tsx` en **145 LOC** (< 160 LOC) y controladores API en $\le 71\text{ LOC}$ ($\le 80\text{ LOC}$). |
+| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Interfaces unificadas y retrocompatibles. |
+| **Seguridad & Multiusuario** | 🟢 Excelente | **95%** | Cifrado AES-256-GCM en reposo para API Keys en Cloud Firestore, reglas de seguridad por `uid`, fallback seguro en variables de entorno y auth Google OAuth. |
+| **Ciencia Deportiva & Escalabilidad Universal** | 🟢 Excelente | **100%** | **FASE 4 COMPLETADA:** 18 modelos SSOT (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Short/70.3/140.6) con $\ge 4-6$ variantes por bloque metabólico, tests duales y 100% Stryd syntax compliance. |
+| **Motor Anti-Repetición & Flexibilidad** | 🟢 Excelente | **100%** | **FASE 4 COMPLETADA:** Algoritmo de rotación de paso coprimo $\gcd(L, s) = 1$, progresión Bloque II en ciclos > 12 semanas y soporte para carrera en Sábado o Domingo con descanso post-carrera. |
+| **Capa de Hooks & Servicios** | 🟢 Excelente | **100%** | **FASES 2 Y 3 COMPLETADAS:** Custom Hooks (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`) y Servicios Backend (`telemetryService`, `intervalsSyncService`, `macrocycleApiService`). |
+| **Validación de Schemas API** | 🟢 Excelente | **100%** | **FASE 2 COMPLETADA:** Schemas declarativos con `Zod` blindando `/api/evaluate`, `/api/profile`, `/api/sync-intervals` y `/api/macrocycles`. |
 | **Gobernanza FinOps & SWR** | 🟢 Excelente | **100%** | **FASE 3 COMPLETADA:** Caché en memoria SWR (TTL 3 min), Dirty Checking en Firestore y condensador de contexto (`contextCondenser.ts`, -70% tokens). |
-| **Testing Automatizado** | 🔴 Pendiente | **50%** | Contamos con validación de compilación de producción (Gate 2 y 3), pero carecemos de tests unitarios automatizados (`Vitest`) para los algoritmos fisiológicos. |
+| **Testing y Validación Fisiológica** | 🟢 Maduro | **90%** | Suites automatizadas (`test_universal_scalability.ts` y `test_juan_plan.ts`) validando 12 compuertas y 448 entrenamientos. Pendiente runner unitario Vitest en CI. |
 | **Logging y Observabilidad** | 🟡 Aceptable | **65%** | Uso de `console.log` estándar en servidor en lugar de un logger estructurado compatible con Google Cloud Logging. |
 
 ---
@@ -98,7 +101,31 @@ radar
 
 ---
 
-### 🟢 MEJORA 6: Logger Estructurado para Google Cloud Logging
+### 🟢 MEJORA 6: Auditoría Integral de Triatlón, Inyección Dual de Tests y Días de Carrera Flexibles [✅ COMPLETADA AL 100%]
+* **Estado:** ✅ **COMPLETADA EN FASE 4 (v3.35)**.
+* **Impacto:** Resuelve el caso de estudio de Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com` / Triseries Paipa 2026):
+  - Inyección dual simultánea de Test CSS natación (400m + 200m) y Test 20m FTP ciclismo en Semana 2.
+  - Domingo de semana 8 corregido de ultra-maratón lesivo a Triatlón oficial (150 min, 210 TSS, 3 sectores con T1/T2).
+  - Duración y TSS dinámicos para entrenamientos Bricks (85-115 min, 85-110 TSS).
+  - Gobernanza de credenciales en `credentials.ts` y erradicación de dummies en `macrocycleAI.ts`.
+  - Desacoplamiento de `macrocycleApiService.ts` (109 LOC) y ruta `/api/macrocycles/generate-ai` (13 LOC $\le 80$ LOC).
+  - *(Referencia histórica completa en `BITACORA_MAESTRA.md:v3.35`)*.
+
+---
+
+### 🟢 MEJORA 7: Escalabilidad Universal Multi-Deporte, Catálogos Modulares (< 350 LOC) y Motor Anti-Repetición Coprimo [✅ COMPLETADA AL 100%]
+* **Estado:** ✅ **COMPLETADA EN FASE 4 (v3.36)**.
+* **Impacto:** Escalabilidad universal a cualquier atleta, cualquier distancia y cualquier carrera:
+  - 18 modelos canónicos modulares en `src/lib/ai/knowledge/` (< 350 LOC cada uno): 5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Sprint/Olímpico/70.3/140.6.
+  - Motor anti-repetición de paso coprimo $s = \text{getCoprimeStride}(L, 2)$ garantizando cero sesiones idénticas consecutivas y sufijo `(Progresión Bloque II)` en ciclos de 16-24 semanas.
+  - Días de carrera flexibles: Sábado oficial si `primaryRaceDate` es sábado con Domingo post-carrera descanso activo; Domingo oficial en caso contrario.
+  - Cumplimiento universal de la ley de sintaxis Stryd (0 infracciones de distancia con % CP/FTP en 448 entrenamientos auditados).
+  - Suite automatizada `test_universal_scalability.ts` validando 13 resoluciones de carrera, profundidad $\ge 4-6$, cero duplicados y 0 violaciones Stryd.
+  - *(Referencia histórica completa en `BITACORA_MAESTRA.md:v3.36`)*.
+
+---
+
+### 🟢 MEJORA 8: Logger Estructurado para Google Cloud Logging
 * **Prioridad:** BAJA-MEDIA.
 * **Impacto:** Observabilidad profesional en GCP Cloud Run / Firebase App Hosting.
 * **Archivos a Crear:**

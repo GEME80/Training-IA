@@ -1,4 +1,4 @@
-# ⚡ SGEA Pro (v3.34) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.36) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica y Prescripción Adaptativa con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
@@ -7,8 +7,10 @@
 
 - 📊 **Calendario Continuo & Telemetría Banister:** Visualización de carga en vivo estilo Intervals.icu con seguimiento de Fitness (CTL), Fatiga (ATL), Forma (TSB) y Balance de Carga semanal.
 - 🤖 **Head Coach Digital con IA (Google Gemini):** Análisis cualitativo y cuantitativo del estado del atleta, adaptación de microciclos y chat interactivo con diffing de workouts.
-- 🎯 **Suite de Modelos Científicos Curados (SSOT):** Periodización basada en Renato Canova, Jack Daniels, Pete Pfitzinger, Dr. Andrew Coggan, Joe Friel, Jan Olbrecht y Dr. Stephen Seiler (80/20).
-- ⚡ **Integración Nativa con Stryd & Garmin:** Prescripción exacta en vatios (% FTP / CP) + tiempo, eliminando cualquier desfase en relojes Garmin.
+- 🎯 **Escalabilidad Universal Multi-Deporte (SSOT):** 18 modelos especializados que cubren cualquier distancia: 5K, 10K, 21K, 42K, Trail/Ultra, Ciclismo (Fondo, Escalada, Criterium) y Triatlón (Sprint, Olímpico, 70.3, 140.6) para planes de 4 a 24+ semanas.
+- 🔄 **Motor Anti-Repetición con Rotación Coprima:** Algoritmo matemático $\gcd(L, s) = 1$ para variación continua semana tras semana sin sesiones idénticas consecutivas y sufijo dinámico `(Progresión Bloque II)` en ciclos extendidos.
+- 📅 **Día de Carrera Flexible (Sábado o Domingo):** Ubicación automática de la competición oficial en Sábado o Domingo con asignación de descanso regenerativo post-carrera.
+- ⚡ **Integración Nativa con Stryd & Garmin (100% Legal):** Prescripción estricta por Tiempo + % CP/FTP en carrera (cero distancias con % CP), auditada en 448 entrenamientos generados.
 - 🔄 **Capa de Servicios & Controladores Delgados:** Lógica desacoplada en `src/lib/services/` con rutas API ultraligeras ($\le 30\text{ LOC}$) y validación declarativa estricta con **Zod**.
 - 💰 **Gobernanza FinOps & Compresión de Contexto:** Condensador de actividades ejecutadas a formato tabular ultra-denso (`contextCondenser.ts`), ahorrando **~70% en tokens** de entrada a Gemini.
 - 🚀 **Resiliencia SWR & Firestore Dirty Checking:** Caché en memoria de telemetría (TTL 3 min) y control de mutaciones con `useRef` para eliminar llamadas y escrituras redundantes.
@@ -51,8 +53,10 @@ flowchart TD
         CC[contextCondenser.ts: FinOps ~70% Token Reduction]
     end
 
-    subgraph Knowledge_Layer [" Capa de Conocimiento Científico SSOT "]
-        KM[src/lib/ai/knowledge/ - 12 Modelos Fisiológicos Curados]
+    subgraph Knowledge_Layer [" Capa de Conocimiento Científico SSOT & Motor Fisiológico "]
+        KM[src/lib/ai/knowledge/ - 18 Modelos Científicos Modulares]
+        MTH[macrocycleTemplateHelpers.ts: Rotación Coprima & Calibración Multi-Deporte]
+        KM --> MTH
     end
 
     subgraph Cloud_Services [" Servicios Cloud & Persistencia "]
@@ -63,7 +67,7 @@ flowchart TD
 
     Frontend_App <--> API_Layer
     API_Layer --> Service_Layer
-    Service_Layer --> KM
+    Service_Layer --> Knowledge_Layer
     Service_Layer <--> INT
     Service_Layer <--> FS
     CHAT --> CC --> GEM
@@ -118,11 +122,11 @@ IA Training/
 │   ├── context/                   # Contextos globales (AuthContext)
 │   ├── hooks/                     # Custom Hooks (useAthleteTelemetry, useSeasonPlans, useIntervalsSync)
 │   └── lib/                       # Lógica de negocio y motores fisiológicos
-│       ├── ai/                    # Inferencia de IA, contextCondenser (FinOps), fallback
-│       │   └── knowledge/         # Modelos científicos SSOT (Canova, Daniels, Coggan)
+│       ├── ai/                    # Inferencia de IA, contextCondenser (FinOps), prompts
+│       │   └── knowledge/         # 18 Modelos científicos SSOT modulares (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón)
 │       ├── db/                    # Persistencia Firestore y AES-256-GCM
 │       ├── intervals/             # Cliente HTTP para Intervals.icu API
-│       ├── physiology/            # Algoritmos de Banister, macrociclos y templates
+│       ├── physiology/            # Banister, macrociclos, rotación coprima anti-repetición y calibración multi-deporte
 │       ├── services/              # Capa de Servicios Backend (TelemetryService, IntervalsSyncService)
 │       └── validation/            # Esquemas de validación declarativos con Zod (schemas.ts)
 ```

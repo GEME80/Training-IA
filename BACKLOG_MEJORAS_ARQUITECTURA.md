@@ -1,4 +1,4 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v2.5)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v3.34)
 
 Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas en un nuevo chat sin generar reprocesos.
 
@@ -8,26 +8,28 @@ Este documento contiene la **auditoría forense de la arquitectura actual del si
 
 ```mermaid
 radar
-    title "Evaluación de Madurez Arquitectónica (SGEA v2.5)"
-    "Modularidad UI (< 350 LOC)" : 95
+    title "Evaluación de Madurez Arquitectónica (SGEA v3.34)"
+    "Modularidad UI (< 350 LOC)" : 100
     "Type Safety (TypeScript Estricto)" : 100
     "Seguridad & Criptografía (AES-256-GCM)" : 95
     "Capa de Conocimiento Científico (SSOT)" : 100
-    "Desacoplamiento de Hooks/Servicios" : 70
-    "Validación de Schemas API (Zod)" : 60
+    "Desacoplamiento de Hooks/Servicios" : 100
+    "Validación de Schemas API (Zod)" : 100
+    "Gobernanza FinOps & Caché SWR" : 100
     "Testing Unitario Automatizado" : 50
     "Observabilidad & Structured Logging" : 65
 ```
 
 | Dimensión de Ingeniería | Estado Actual | Cumplimiento | Diagnóstico Arquitectónico |
 | :--- | :---: | :---: | :--- |
-| **Modularidad de Componentes** | 🟢 Excelente | **100%** | Todos los monolitos fueron descompuestos en submódulos atómicos (< 350 LOC). `AthleteDashboard.tsx` reducido a **141 LOC** (< 160 LOC). |
-| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Interfaces unificadas en `types.ts`. |
+| **Modularidad de Componentes** | 🟢 Excelente | **100%** | Todos los monolitos fueron descompuestos en submódulos atómicos (< 350 LOC). `AthleteDashboard.tsx` reducido a **145 LOC** (< 160 LOC). |
+| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Interfaces unificadas en `types.ts`. |
 | **Seguridad & Multiusuario** | 🟢 Excelente | **95%** | Cifrado AES-256-GCM en reposo para API Keys de Intervals.icu en Cloud Firestore, reglas de seguridad por `uid` y autenticación Google OAuth. |
 | **Capa de Ciencia Deportiva** | 🟢 Excelente | **100%** | Desacoplamiento total del código en `src/lib/ai/knowledge/` con modelos de Canova, Daniels, Pfitzinger, Coggan, Friel, Olbrecht, Seiler y Attia. |
-| **Capa de Hooks & Servicios** | 🟢 Excelente | **100%** | **FASE 2 COMPLETADA:** Custom Hooks implementados (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`). |
+| **Capa de Hooks & Servicios** | 🟢 Excelente | **100%** | **FASES 2 Y 3 COMPLETADAS:** Custom Hooks (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`) y Servicios Backend (`telemetryService`, `intervalsSyncService`). |
 | **Validación de Schemas API** | 🟢 Excelente | **100%** | **FASE 2 COMPLETADA:** Schemas declarativos con `Zod` blindando `/api/evaluate`, `/api/profile` y `/api/sync-intervals`. |
-| **Testing Automatizado** | 🔴 Pendiente | **50%** | Contamos con validación de compilación de producción, pero carecemos de tests unitarios automatizados (`Vitest`) para los algoritmos fisiológicos. |
+| **Gobernanza FinOps & SWR** | 🟢 Excelente | **100%** | **FASE 3 COMPLETADA:** Caché en memoria SWR (TTL 3 min), Dirty Checking en Firestore y condensador de contexto (`contextCondenser.ts`, -70% tokens). |
+| **Testing Automatizado** | 🔴 Pendiente | **50%** | Contamos con validación de compilación de producción (Gate 2 y 3), pero carecemos de tests unitarios automatizados (`Vitest`) para los algoritmos fisiológicos. |
 | **Logging y Observabilidad** | 🟡 Aceptable | **65%** | Uso de `console.log` estándar en servidor en lugar de un logger estructurado compatible con Google Cloud Logging. |
 
 ---
@@ -110,23 +112,26 @@ radar
 Todo agente o desarrollador que ejecute este backlog en el próximo chat debe acatar estrictamente las siguientes restricciones:
 
 1. **Presupuestos de Líneas (LOC Budgets):**
-   - Nuevos Custom Hooks (`src/hooks/`): Máximo **100 a 150 LOC**.
+   - Rutas API (`src/app/api/**/route.ts`): Máximo **$\le 80\text{ LOC}$**.
+   - Servicios de Negocio (`src/lib/services/*.ts`): Máximo **$\le 250\text{ LOC}$**.
+   - Custom Hooks (`src/hooks/`): Máximo **$\le 350\text{ LOC}$** (ideal $\le 150-300$).
    - Componentes UI refactorizados (`AthleteDashboard.tsx`): Máximo **< 160 LOC**.
    - Esquemas Zod (`src/lib/validation/`): Máximo **< 120 LOC**.
 2. **Edición Quirúrgica (Surgical Edits):** No modificar handlers de cálculo ni romper tipos consolidados.
-3. **Pipeline de 5 Puertas:** Validar `tsc --noEmit` (código 0) y `npm run build` (código 0) en cada paso.
+3. **Pipeline de 5 Puertas:** Validar `./node_modules/.bin/tsc --noEmit` (código 0) y `npm run build` (código 0) en cada paso.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│               PROMPT SUGERIDO PARA EL CHAT DE REFACTORIZACIÓN          │
+│               PROMPT SUGERIDO PARA EL CHAT DE TESTING AUTOMATIZADO     │
 └────────────────────────────────────────────────────────────────────────┘
-"Actúa como el Ingeniero Senior de Software y Arquitecto Backend del SGEA.
-Vamos a ejecutar la FASE 2 del Plan Maestro implementando las mejoras del
+"Actúa como el Ingeniero Senior de Software y Auditor Técnico QA del SGEA.
+Vamos a ejecutar la FASE 4 del Plan Maestro implementando la MEJORA 4 del
 documento BACKLOG_MEJORAS_ARQUITECTURA.md:
-1. Crear los Custom Hooks (useAthleteTelemetry, useSeasonPlans, useIntervalsSync) respetando el límite de < 150 LOC.
-2. Refactorizar AthleteDashboard.tsx para usar estos hooks y reducirlo a < 160 LOC.
-3. Implementar validación con Zod en las API routes (/api/evaluate, /api/profile).
-4. Ejecutar el Set de Pruebas (tsc --noEmit + npm run build) y actualizar BITACORA_MAESTRA.md.
-Confirma la lectura de PROJECT_RULES.md y BACKLOG_MEJORAS_ARQUITECTURA.md para iniciar con el primer paso."
+1. Configurar Vitest en el proyecto sin romper Next.js 15 App Router.
+2. Implementar la suite de tests unitarios en src/__tests__/ (banisterEngine,
+   tanakaFormula, strydSyntaxValidator, progressiveLongRun, cryptoAES256).
+3. Ejecutar el Set de Pruebas (vitest run + tsc --noEmit + npm run build)
+   y registrar los resultados en BITACORA_MAESTRA.md (v3.35).
+Confirma la lectura de PROJECT_RULES.md y BACKLOG_MEJORAS_ARQUITECTURA.md."
 ```
 

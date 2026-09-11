@@ -63,9 +63,12 @@ export function calculateWeeksToRace(raceDateStr: string, startStr: string): num
 export function resolveDistTypeFromWizard(dist: string, approach?: string): MacrocycleDistanceType {
   const d = (dist || "").toLowerCase();
   const a = (approach || "").toLowerCase();
-  if (d.includes("sprint") || d.includes("olimp") || d === "triathlon_short") return "triathlon_short";
+  const combined = `${d} ${a}`;
+  const isTri = /triat|triath|triseries|tri-series/i.test(combined);
+
+  if (d.includes("sprint") || d.includes("olimp") || d === "triathlon_short" || (isTri && (combined.includes("short") || combined.includes("olimp") || combined.includes("sprint") || combined.includes("paipa")))) return "triathlon_short";
   if (d.includes("140.6") || d.includes("1406") || d.includes("full") || d.includes("iron") || d === "triathlon_1406" || a.includes("iron")) return "triathlon_1406";
-  if (d.includes("triat") || d === "triathlon_703" || d.includes("70.3") || d.includes("703") || a.includes("triat")) return "triathlon_703";
+  if (isTri || d === "triathlon_703" || d.includes("70.3") || d.includes("703")) return "triathlon_703";
   if (d.includes("bici") || d.includes("cicli") || d.includes("fondo") || d === "cycling_fondo" || a.includes("cicli")) return "cycling_fondo";
   if (d.includes("trail") || d.includes("ultra") || d === "trail_50k" || a.includes("trail")) return "trail_50k";
   if (d.includes("21")) return "21k";

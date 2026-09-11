@@ -29,7 +29,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.36,
       focusDescription: "Ritmo de competición 70.3 en bici (75-80% FTP) seguido de carrera a pie en transición (Brick 80-84% CP).",
       weeklyTssRange: { min: 460, max: 580 },
-      longRunGuideline: "Brick de fin de semana: 2h30m-3h Ciclismo @ 75% FTP + 25-35m Carrera @ 82% CP.",
+      longRunGuideline: "Brick de fin de semana: 2h15m-2h45m Ciclismo @ 76-80% FTP + 25-35m Carrera @ 82% CP.",
       recommendedIntensityZones: ["Brick Race Pace", "Sweetspot Bici", "Tempo Carrera"],
     },
     {
@@ -38,7 +38,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
       percentageDuration: 0.16,
       focusDescription: "Simulación de transiciones T1 y T2, estrategia nutricional y puesta a punto de ritmo.",
       weeklyTssRange: { min: 480, max: 600 },
-      longRunGuideline: "Tiradas clave y ensayo de ritmos de carrera con nutrición programada.",
+      longRunGuideline: "Tiradas clave y ensayo de ritmos de carrera con nutrición programada (60g CHO/h).",
       recommendedIntensityZones: ["Simulación 70.3", "Zonas Específicas"],
     },
     {
@@ -107,13 +107,31 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           justification: "Aclaramiento eficiente de lactato y soltura neuromuscular.",
           workoutDoc: "Warmup\n- 15m 68% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 10m 60% FTP",
         },
+        {
+          name: "Tempo Aeróbico en Cuestas Suaves (45m @ 82% CP)",
+          powerTarget: "82% CP",
+          justification: "Fuerza específica sin sobrecarga articular excéntrica.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\nMain\n- 25m 82% FTP\n\nCooldown\n- 8m 60% FTP",
+        },
+        {
+          name: "Intervalos de Potencia Crítica Media (3x6m @ 88% CP)",
+          powerTarget: "88% CP",
+          justification: "Sostenibilidad de ritmo de medio maratón de triatlón.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n3x\n- 6m 88% FTP\n- 3m 60% FTP\n\nCooldown\n- 8m 60% FTP",
+        },
+        {
+          name: "Fartlek Aeróbico Progresivo 2-1m @ 75-88% CP (40m)",
+          powerTarget: "75-88% CP",
+          justification: "Transiciones de intensidad submáxima en carrera aeróbica.",
+          workoutDoc: "Warmup\n- 10m 65% FTP\n\n6x\n- 2m 85% FTP\n- 1m 70% FTP\n\nCooldown\n- 6m 60% FTP",
+        },
       ],
       build: [
         {
           name: "Transición Brick Específica 70.3 (1h30m Bici @ 78% FTP + 25m Run @ 82% CP)",
           powerTarget: "78% FTP Bici + 82% CP Carrera",
           justification: "Transición T2 rápida (< 5m). Adaptación neuromuscular a la carrera con pre-fatiga de pedaleo.",
-          workoutDoc: "Bloque 1: Ciclismo 70.3 Pace\n- 1h30m 78% FTP\n\nTransición T2 Expres (< 5 min)\n\nBloque 2: Carrera de Transición (Primeros 10m @ 180 spm)\n- 25m 82% FTP",
+          workoutDoc: "Bloque 1: Ciclismo 70.3 Pace\n- 1h30m 78% FTP\n\nTransición T2 Exprés (< 5 min)\n\nBloque 2: Carrera de Transición (Primeros 10m @ 180 spm)\n- 25m 82% FTP",
         },
         {
           name: "Sweetspot Bike (3x12m @ 88% FTP) + Trote Transición (20m)",
@@ -133,15 +151,26 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           justification: "Simulación de fatiga acumulada en tren inferior previa a la carrera.",
           workoutDoc: "Bloque 1: Ciclismo Fondo Z2\n- 1h45m 76% FTP\n\nTransición T2 (< 5 min)\n\nBloque 2: Carrera Transición 70.3\n- 30m 82% FTP",
         },
+        {
+          name: "Series de Ritmo de Competición en Carrera (4x 2.000m @ 84% CP)",
+          powerTarget: "84% CP",
+          justification: "Automatización del ritmo de crucero con 2m de recuperación.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n4x\n- 9m 84% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
+        },
+        {
+          name: "Brick Dinámico de Umbral (1h20m Bici con 2x15m @ 85% FTP + 20m Run)",
+          powerTarget: "85% FTP + 84% CP",
+          justification: "Tolerancia al lactato en acoples aerodinámicos y salida a pie inmediata.",
+          workoutDoc: "Bloque 1: Bici\n- 15m 55% FTP\n2x\n- 15m 85% FTP\n- 5m 55% FTP\n- 15m 65% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera\n- 20m 84% FTP",
+        },
       ],
       peak: [
         {
           name: "Simulación de Ritmo 70.3 (2h Bici @ 80% FTP + 35m Run @ 83% CP)",
           powerTarget: "80% FTP + 83% CP",
-          justification: "Ensayo general de potencia de pedaleo (80% FTP max), nutrición (60g CHO/h) y ritmo de carrera.",
-          workoutDoc: "Bloque 1: Ciclismo 70.3 Race Pace\n- 2h00m 80% FTP\n\nTransición T2 Expres (< 5 min)\n\nBloque 2: Carrera Ritmo 70.3\n- 35m 83% FTP",
+          justification: "Ensayo general de potencia de pedaleo (80% FTP máx), nutrición (60g CHO/h) y ritmo de carrera.",
+          workoutDoc: "Bloque 1: Ciclismo 70.3 Race Pace\n- 2h00m 80% FTP\n\nTransición T2 Exprés (< 5 min)\n\nBloque 2: Carrera Ritmo 70.3\n- 35m 83% FTP",
         },
-
         {
           name: "Brick de Alta Intensidad (1h15m Bici con 3x8m @ 88% + 25m Run @ 84% CP)",
           powerTarget: "88% FTP + 84% CP",
@@ -154,6 +183,18 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           justification: "Último ajuste de calzado, calcetines, hidratación y sensación de piernas.",
           workoutDoc: "Bloque 1: Ciclismo Estable\n- 1h30m 78% FTP\n\nBloque 2: Carrera Viva\n- 25m 83% FTP",
         },
+        {
+          name: "Series de Afinamiento Pre-Competición en Carrera (3x 1.500m @ 85% CP)",
+          powerTarget: "85% CP",
+          justification: "Toque de ritmo con descanso completo (2m30s).",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\n3x\n- 6m30s 85% FTP\n- 2m30s 50% FTP\n\nCooldown\n- 8m 55% FTP",
+        },
+        {
+          name: "Mini-Brick de Reactividad (45m Bici con 3x2m @ 85% FTP + 15m Run)",
+          powerTarget: "85% FTP + 83% CP",
+          justification: "Reactividad a 10 días de la prueba sin agotar reservas de glucógeno.",
+          workoutDoc: "Bloque 1: Bici\n- 25m 60% FTP\n3x\n- 2m 85% FTP\n- 2m 50% FTP\n- 8m 60% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera\n- 15m 83% FTP",
+        },
       ],
       taper: [
         {
@@ -161,6 +202,24 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           powerTarget: "85% FTP + 85% CP",
           justification: "Frescura y reactividad pre-competición.",
           workoutDoc: "Bloque 1: Bici\n- 20m 60% FTP\n3x\n- 1m 85% FTP\n- 2m 50% FTP\n\nBloque 2: Carrera\n- 10m 68% FTP\n3x\n- 30s 85% FTP\n- 1m 55% FTP",
+        },
+        {
+          name: "Trote de Chispa Pre-Carrera (25m con 4 Strides @ 90% CP)",
+          powerTarget: "90% CP",
+          justification: "Activación refleja y despertar neuromuscular con cero fatiga.",
+          workoutDoc: "Warmup\n- 15m 65% FTP\n\n4x\n- 20s 90% FTP\n- 40s 50% FTP\n\nCooldown\n- 6m 55% FTP",
+        },
+        {
+          name: "Pedaleo Suave con Toques de Ritmo 70.3 (35m Bici con 2x2m @ 80% FTP)",
+          powerTarget: "80% FTP con toques",
+          justification: "Sensación de biela y verificación de presión de ruedas.",
+          workoutDoc: "Warmup\n- 15m 55% FTP\n2x\n- 2m 80% FTP\n- 3m 50% FTP\n\nCooldown\n- 10m 50% FTP",
+        },
+        {
+          name: "Activación Despertar Neuromuscular Pre-Evento (15m Run suave)",
+          powerTarget: "68% CP",
+          justification: "Reactividad articular el día previo.",
+          workoutDoc: "Warmup\n- 10m 62% FTP\n\n2x\n- 20s 85% FTP\n- 40s 50% FTP\n\nCooldown\n- 3m 50% FTP",
         },
       ],
     },
@@ -185,6 +244,20 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
         justification: "Mantenimiento del tono neuromuscular y volumen aeróbico.",
         workoutDoc: "Warmup\n- 10m 55% FTP\n\nMain\n- 35m 65% FTP\n4x\n- 30s 95% FTP\n- 1m30s 50% FTP\n\nCooldown\n- 5m 50% FTP",
         durationMin: 55,
+      },
+      {
+        name: "Ciclismo de Umbral Fraccionado (50m con 3x8m @ 92-95% FTP)",
+        powerTarget: "92-95% FTP",
+        justification: "Elevación de potencia en el sector de ciclismo contrarreloj.",
+        workoutDoc: "Warmup\n- 12m 55% FTP\n\n3x\n- 8m 93% FTP\n- 3m 50% FTP\n\nCooldown\n- 8m 50% FTP",
+        durationMin: 50,
+      },
+      {
+        name: "Ciclismo en Posición Aero Sostenida (50m @ 72% FTP)",
+        powerTarget: "72% FTP",
+        justification: "Confort y economía aerodinámica en acoples.",
+        workoutDoc: "Warmup\n- 12m 55% FTP\n\nMain (Posición Aero)\n- 30m 72% FTP (88 rpm)\n\nCooldown\n- 8m 50% FTP",
+        durationMin: 50,
       },
       {
         name: "Ciclismo Z1-Z2 Regenerativo de Soltura (40m)",
@@ -222,6 +295,20 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
         justification: "Lavado muscular y recuperación activa entre sesiones clave.",
         workoutDoc: "Warmup\n- 8m 60% FTP\n\nMain\n- 22m 65% FTP\n\nCooldown\n- 5m 55% FTP",
         durationMin: 35,
+      },
+      {
+        name: "Carrera Aeróbica Progresiva Z1 a Z2 (40m de 65% a 74% CP)",
+        powerTarget: "65-74% CP",
+        justification: "Activación mitocondrial progresiva.",
+        workoutDoc: "Warmup\n- 10m 62% FTP\n\nMain\n- 25m 70% FTP\n- 5m 74% FTP\n\nCooldown\n- 5m 55% FTP",
+        durationMin: 40,
+      },
+      {
+        name: "Trote Corto de Oxigenación y Descarga (30m @ 62% CP)",
+        powerTarget: "62% CP",
+        justification: "Soltura neuromuscular breve.",
+        workoutDoc: "Warmup\n- 5m 55% FTP\n\nMain\n- 20m 62% FTP\n\nCooldown\n- 5m Caminata",
+        durationMin: 30,
       },
     ],
     strengthWorkouts: [

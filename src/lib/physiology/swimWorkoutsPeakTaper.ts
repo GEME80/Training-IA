@@ -1,0 +1,130 @@
+import { SwimWorkoutDefinition } from "./swimWorkoutsBaseBuild";
+
+export const PEAK_SWIM_WORKOUTS: SwimWorkoutDefinition[] = [
+  {
+    name: "Simulación de Gran Travesía a Ritmo de Carrera (55m)",
+    focus: "Ensayo General de Nado Continuo y Navegación",
+    durationMin: 55,
+    tss: 48,
+    justification: "Consolidación del ritmo específico con técnica de avistamiento.",
+    workoutDoc: "Calentamiento\n- 200m Suave + 4x 50m avistamiento\n\nBloque Cumbre\n- 1x 1.000m Continuo @ Ritmo Objetivo\n- 2m Descanso e hidratación\n- 4x 150m @ Ritmo Carrera c/20s\n\nEnfriamiento\n- 200m Suave",
+  },
+  {
+    name: "Natación de Afinamiento & Chispa Neuromuscular (40m)",
+    focus: "Sensibilidad de Agua y Velocidad Reactiva sin Fatiga",
+    durationMin: 40,
+    tss: 34,
+    justification: "Mantiene la velocidad punta y la sensación hidrodinámica reduciendo el estrés metabólico.",
+    workoutDoc: "Calentamiento\n- 300m Progresivo\n\nCambios de Ritmo (6x)\n- 25m All-Out Sprint con técnica perfecta\n- 75m Muy Suave c/35s\n\nEnfriamiento\n- 200m Soltura",
+  },
+  {
+    name: "Simulación Específica de Boyas & Cambios de Ritmo (45m)",
+    focus: "Giros de Boya con Aceleración y Retorno a Ritmo Crucero",
+    durationMin: 45,
+    tss: 41,
+    justification: "Adaptación biomecánica a los giros de boya en aguas abiertas.",
+    workoutDoc: "Calentamiento\n- 250m Progresivo\n\nBloque Boyas\n- 5x 150m Ritmo Carrera con aceleración de 15m al inicio de cada 50m c/20s\n\nEnfriamiento\n- 150m Suave",
+  },
+  {
+    name: "Natación Broken Race Simulation (45m)",
+    focus: "Simulación de la Dinámica Completa de Salida y Crucero",
+    durationMin: 45,
+    tss: 42,
+    justification: "Simulación del ritmo de salida fuerte, crucero estable y aceleración previa a T1.",
+    workoutDoc: "Calentamiento\n- 250m Suave\n\nSimulación (2x)\n- 100m Salida Fuerte @ 90%\n- 200m Crucero @ 80%\n- 100m Progresivo final c/1m desc\n\nEnfriamiento\n- 200m Suave",
+  },
+  {
+    name: "Natación de Eficiencia Hidrodinámica & SWOLF (45m)",
+    focus: "Conteo de Brazadas y Economía Propulsiva",
+    durationMin: 45,
+    tss: 38,
+    justification: "Conteo de brazadas y economía propulsiva a ritmo de carrera.",
+    workoutDoc: "Calentamiento\n- 300m Suave\n\nSWOLF (4x)\n- 200m @ Ritmo Carrera con número mínimo de brazadas c/25s\n\nEnfriamiento\n- 200m Suave",
+  },
+  {
+    name: "Natación Reactiva Pre-Competición & Salidas T1 (40m)",
+    focus: "Toque de Velocidad y Reactividad Previa al Evento",
+    durationMin: 40,
+    tss: 33,
+    justification: "Toque de reactividad neuromuscular a pocos días del evento.",
+    workoutDoc: "Calentamiento\n- 300m Suave\n\nActivación\n- 4x 50m (25m Ritmo Carrera + 25m Suave)\n- 4x 25m Sprint c/40s\n\nEnfriamiento\n- 200m Soltura total",
+  },
+];
+
+export const TAPER_SWIM_WORKOUTS: SwimWorkoutDefinition[] = [
+  {
+    name: "Natación de Descarga & Sensibilidad Acuática (35m)",
+    focus: "Sensaciones Frescas y Soltura Pre-Competición",
+    durationMin: 35,
+    tss: 26,
+    justification: "Conserva el 'tacto' del agua sin gastar glucógeno.",
+    workoutDoc: "Calentamiento\n- 250m Cómodo\n\nActivación (4x)\n- 50m (15m Rápido + 35m Muy Suave) c/20s\n\nEnfriamiento\n- 150m Regenerativo",
+  },
+  {
+    name: "Natación de Chispa Corta & Toques Pre-Carrera (30m)",
+    focus: "Velocidad Pura con Recuperación Completa",
+    durationMin: 30,
+    tss: 22,
+    justification: "Reactividad neuromuscular con cero fatiga metabólica.",
+    workoutDoc: "Calentamiento\n- 200m Suave\n\nToques (4x)\n- 25m Ritmo Carrera con salida ágil c/30s\n\nEnfriamiento\n- 150m Soltura",
+  },
+  {
+    name: "Natación de Conexión Hidrodinámica & Sensaciones (35m)",
+    focus: "Flotabilidad, Crol y Espalda Relajada",
+    durationMin: 35,
+    tss: 24,
+    justification: "Lavado muscular y soltura de cintura escapular.",
+    workoutDoc: "Calentamiento\n- 200m Nado Suave\n\nSensaciones\n- 3x 100m Alternando crol y espalda c/20s\n- 4x 25m Ritmo crucero fluido c/30s\n\nEnfriamiento\n- 100m Soltura",
+  },
+  {
+    name: "Natación de Afinamiento y Soltura de Hombros (30m)",
+    focus: "Alineación y Brazada Ligera",
+    durationMin: 30,
+    tss: 20,
+    justification: "Mantenimiento del tono postural de hombros sin esfuerzo.",
+    workoutDoc: "Calentamiento\n- 200m Suave\n\nSoltura\n- 3x 50m Progresivos suaves c/30s\n\nEnfriamiento\n- 150m Relajado",
+  },
+  {
+    name: "Natación Shakeout Pre-Carrera (25m)",
+    focus: "Activación Suave de Agua el Día Previo",
+    durationMin: 25,
+    tss: 16,
+    justification: "Sensación de agua en lago o piscina sin fatiga.",
+    workoutDoc: "Nado Continuo y Suave\n- 400m Cómodo y fluido\n- 4x 25m Aceleración suave c/30s\n- 100m Soltura",
+  },
+];
+
+export const RECOVERY_SWIM_WORKOUTS: SwimWorkoutDefinition[] = [
+  {
+    name: "Natación Regenerativa & Descarga Articular (35m)",
+    focus: "Recuperación Activa y Soltura Miofascial",
+    durationMin: 35,
+    tss: 22,
+    justification: "Elimina la pesadez muscular de las piernas tras fondos de bici y carrera.",
+    workoutDoc: "Nado Suave Continuo y Variado\n- 200m Crol suave\n- 100m Espalda suave\n- 4x 50m Pull Buoy cómodo c/15s\n- 100m Soltura total",
+  },
+  {
+    name: "Natación Aeróbica Suave & Respiración Bilateral (35m)",
+    focus: "Relajación Torácica y Flotabilidad",
+    durationMin: 35,
+    tss: 23,
+    justification: "Apertura de la caja torácica y lavado de lactato con apoyo hidrodinámico.",
+    workoutDoc: "Calentamiento\n- 200m Nado Lento\n\nBloque Respiración\n- 4x 100m Suave crol y espalda c/20s\n- 4x 50m Nado con aletas suaves c/15s\n\nEnfriamiento\n- 100m Relajado",
+  },
+  {
+    name: "Natación Regenerativa con Aletas Suaves (35m)",
+    focus: "Descarga de Tren Inferior y Propulsión Ligera",
+    durationMin: 35,
+    tss: 22,
+    justification: "Facilita la circulación linfática con mínimo esfuerzo muscular.",
+    workoutDoc: "Nado con Aletas\n- 300m Suave continuo crol\n- 4x 50m Espalda con aletas c/20s\n- 200m Soltura sin material",
+  },
+  {
+    name: "Natación de Descarga Lumbar & Flotabilidad (30m)",
+    focus: "Descompresión Espinal en Agua",
+    durationMin: 30,
+    tss: 18,
+    justification: "Apoyo con Pull Buoy para descansar la espalda baja.",
+    workoutDoc: "Nado con Pull Buoy\n- 400m Suave continuo muy lento\n- 100m Espalda suave\n- 100m Soltura y respiraciones profundas",
+  },
+];

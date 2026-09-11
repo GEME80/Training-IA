@@ -95,7 +95,7 @@ export class MacrocycleAIEngine {
       `Periodización en ${baseBlueprint.weeks.length} semanas estructuradas con ratio ${isPreventive ? "Preventivo (2:1)" : "Estándar (3:1)"} para asimilación biológica.`,
       `Pauta de Tirada Larga: ${curatedModel.longRunRules.description} (${curatedModel.longRunRules.targetIntensityPercentCpOrFtp}).`,
       `Tests de Campo Fisiológicos programados: ${curatedModel.mandatoryTests.map((t) => `Sem ${t.recommendedWeekIndex} (${t.testName})`).join(", ") || "Calibración continua"}.`,
-      `Calibración por vatios: Stryd CP ${profile.run_ftp || 327}W y Bike FTP ${profile.bike_ftp || 240}W.`,
+      `Calibración por vatios: Stryd CP ${profile.run_ftp ? `${profile.run_ftp}W` : "Pendiente de calibración (Test Sem 2)"} y Bike FTP ${profile.bike_ftp ? `${profile.bike_ftp}W` : "Pendiente de calibración (Test Sem 2)"}.`,
     ];
 
     if (!apiKey) {

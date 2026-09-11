@@ -23,6 +23,8 @@ export * from "./cyclingModel";
 export * from "./cyclingSpecialtyModels";
 export * from "./triathlonModel";
 export * from "./triathlonFullAndShortModels";
+export * from "./triathlonShortModel";
+export * from "./triathlon1406Model";
 export * from "./trailModel";
 export * from "./longevityModel";
 export * from "./athleteMomentsModels";
@@ -84,14 +86,19 @@ export function resolveTrainingModel(params: {
     return BASE_GPP_MODEL;
   }
 
-  // 2. Triatlón
+  // 2. Triatlón (Detección robusta multilingüe: Triseries, Tri-Series, Triathlon, Triatlón, Ironman)
+  const isTriathlon = /triat|triath|triseries|tri-series|ironman|70\.3|703|140\.6|1406/i.test(combined);
+
   if (combined.includes("140.6") || combined.includes("1406") || combined.includes("full_iron") || combined.includes("ironman full") || combined.includes("triathlon_1406")) {
     return TRIATHLON_140_6_MODEL;
   }
-  if (combined.includes("sprint") || combined.includes("olimp") || combined.includes("triathlon_short") || combined.includes("triathlon_sprint") || combined.includes("triathlon_olympic")) {
+  if (combined.includes("70.3") || combined.includes("703") || combined.includes("medio iron") || combined.includes("half iron") || combined.includes("triathlon_703")) {
+    return TRIATHLON_70_3_MODEL;
+  }
+  if (combined.includes("sprint") || combined.includes("olimp") || combined.includes("triathlon_short") || combined.includes("triathlon_sprint") || combined.includes("triathlon_olympic") || combined.includes("triseries") || combined.includes("paipa")) {
     return TRIATHLON_SHORT_MODEL;
   }
-  if (combined.includes("triatl") || combined.includes("70.3") || combined.includes("703") || combined.includes("triathlon_703") || combined.includes("ironman")) {
+  if (isTriathlon) {
     return TRIATHLON_70_3_MODEL;
   }
 

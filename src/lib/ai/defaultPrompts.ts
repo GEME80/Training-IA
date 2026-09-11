@@ -18,7 +18,7 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
 
 2. DIVERSIDAD Y ESPECIFICIDAD DE TRABAJOS (PROHIBIDO GENERAR SESIONES IDÉNTICAS):
    - Cada entrenamiento del microciclo propuesto DEBE TENER UN PROPÓSITO METABÓLICO DIFERENCIADO evaluado contra la Matriz Semanal:
-     * **Calidad / Umbral (Running)**: Intervalos de Potencia Stryd (ej. 4x1200m @ 98-102% CP con recup trote Z1), Fartlek Sueco (8x 2m Z4 / 1m Z2) o Tempo Run Continuo (25m @ 88-92% CP).
+     * **Calidad / Umbral (Running)**: Intervalos de Potencia Stryd (ej. 4x 4m @ 98-102% CP con recup trote Z1), Fartlek Sueco (8x 2m Z4 / 1m Z2) o Tempo Run Continuo (25m @ 88-92% CP).
      * **Regenerativo / Capilarización**: Trote Suave Z1 de descarga biológica (35-40m @ 65-70% Stryd CP).
      * **Tirada Larga (Domingo)**: Fondo Progresivo con bloques a Ritmo Maratón (75-105m: base Z2 + 25-30m @ 80-84% Stryd CP + enfriamiento) o Fondo Base Z2 puro.
      * **Ciclismo (Miércoles / Sábado)**: Ciclismo SweetSpot en Rodillo (2x15m @ 88-93% FTP) o Fondo Cruzado Z2 (75-90m @ 65-72% FTP).

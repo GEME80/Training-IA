@@ -39,14 +39,15 @@ export async function resolveIntervalsCredentials(params: {
   const isSuper = isMasterAdminEmail(userEmail);
   if (isSuper) {
     if (!apiKey) {
-      apiKey = (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq").replace(/["']/g, "").trim();
+      apiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
     }
     if (!athleteId) {
       athleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
     }
   } else {
     // BLINDAJE ABSOLUTO: Ningún atleta regular puede consultar la cuenta de Germán Morales (i442091)
-    if (athleteId === "i442091" || apiKey === (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq")) {
+    const masterApiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
+    if (athleteId === "i442091" || (masterApiKey && apiKey === masterApiKey)) {
       athleteId = "";
       apiKey = "";
     }

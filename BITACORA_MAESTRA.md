@@ -2889,53 +2889,53 @@ flowchart TD
 
 ---
 
-### Versión 3.34 - Fase 3: Desacoplamiento de Capa de Servicios Backend, Controladores Delgados (< 35 LOC), Gobernanza FinOps y Caché SWR (2026-09-11)
-- **Fecha y Hora:** 11 de Septiembre de 2026 - 11:35 COT.
+### Versión 3.34 - Fase 3: Desacoplamiento de Capa de Servicios Backend, Controladores Delgados (< 35 LOC), Gobernanza FinOps, Caché SWR y Sincronización Documental Integral (2026-09-11)
+- **Fecha y Hora:** 11 de Septiembre de 2026 - 12:00 COT.
 - **Objetivo Arquitectónico:**
   1. **Capa de Servicios de Negocio (`src/lib/services/`):**
      - Creación de `src/lib/services/telemetryService.ts` (205 LOC): Lógica desacoplada de telemetría de Intervals.icu, agregación de actividades, cálculo de TSS ejecutado semanal, inferencia de wellness y fallback de degradación elegante.
      - Creación de `src/lib/services/intervalsSyncService.ts` (136 LOC): Resolución de credenciales del atleta, cálculo de ventana temporal, purga de entrenamientos previos duplicados y publicación de sesiones estructuradas.
+     - Creación de `src/lib/services/macrocycleApiService.ts` (109 LOC): Desacoplamiento de la orquestación y sanitización de generación de macrociclos IA.
   2. **Controladores Delgados en Rutas API (< 80 LOC):**
-     - `src/app/api/evaluate/route.ts` reducido de 338 LOC a **29 LOC**: Validación declarativa con Zod y delegación a `TelemetryService.evaluateAthlete`.
-     - `src/app/api/sync-intervals/route.ts` reducido de 176 LOC a **30 LOC**: Validación declarativa con Zod y delegación a `IntervalsSyncService.syncPlan`.
+     - `src/app/api/evaluate/route.ts` reducido a **29 LOC**: Validación con Zod y delegación a `TelemetryService.evaluateAthlete`.
+     - `src/app/api/sync-intervals/route.ts` reducido a **30 LOC**: Validación con Zod y delegación a `IntervalsSyncService.syncPlan`.
+     - `src/app/api/macrocycles/generate-ai/route.ts` reducido a **13 LOC**: Delegación directa a `MacrocycleApiService.generatePlan`.
   3. **Gobernanza FinOps y Optimización de Costos de IA:**
      - Creación de `src/lib/ai/contextCondenser.ts` (97 LOC): Compresor de contexto que condensa actividades ejecutadas en un formato tabular ultra-denso, reduciendo en un **~70% el consumo de tokens** en prompts enviados a Gemini.
      - Refactorización de `src/lib/ai/headcoach/chatContext.ts` (314 LOC) para usar `buildCondensedExecutedMap`, reduciendo duplicidad y acelerando el tiempo de respuesta del Head Coach.
   4. **Caché en Memoria SWR y Persistencia con Dirty Checking:**
-     - En `src/hooks/useAthleteTelemetry.ts`:
+     - En `src/hooks/useAthleteTelemetry.ts` (323 LOC):
        - Caché SWR en memoria con TTL de 3 minutos para telemetría, mitigando peticiones redundantes y protegiendo las cuotas de Intervals.icu.
        - Dirty checking mediante `useRef` en la persistencia del perfil (`persistProfileToApi`), eliminando mutaciones PUT innecesarias a Firestore cuando los datos no han variado.
-  5. **Actualización de Gobernanza (`PROJECT_RULES.md` Sección 10):**
-     - Inclusión de la Capa de Servicios en la Tabla de Presupuestos de Código (LOC Budgets).
-     - Establecimiento del límite de controladores API a $\le 80\text{ LOC}$.
-     - Adición de la **Ley 5: Gobernanza FinOps y Resiliencia SWR (Token Minimizer & Write Deduplication)**.
+  5. **Modularización Preventiva de Fisiología & Modelos Científicos SSOT (< 350 LOC):**
+     - Descomposición de `triathlonFullAndShortModels.ts` en `triathlon1406Model.ts` (334 LOC) y `triathlonShortModel.ts` (327 LOC).
+     - Modularización de `swimWorkoutPool.ts` (74 LOC) extrayendo catálogos en `swimWorkoutsBaseBuild.ts` (110 LOC) y `swimWorkoutsPeakTaper.ts` (130 LOC).
+     - Modularización de `macrocycleTemplates.ts` (261 LOC) extrayendo lógica auxiliar en `macrocycleTemplateHelpers.ts` (174 LOC).
+  6. **Sincronización Documental Integral y Erradicación de Duplicidad:**
+     - `README.md`: Actualizado con la arquitectura v3.34, flujo de Capa de Servicios, mapa de carpetas exacto y comandos de verificación.
+     - `PROJECT_RULES.md`: Actualizado el Prompt Maestro a v3.34, incorporada la Capa de Servicios en la Tabla de Presupuestos (LOC) y formalizada la Ley 5 (FinOps & SWR).
+     - `BACKLOG_MEJORAS_ARQUITECTURA.md`: Radar de madurez técnica actualizado (100% en modularidad, type safety, SSOT, hooks, servicios, zod, FinOps y SWR) y matriz de ejecución apuntando a la Fase 4 (Vitest).
 - **Lista de Archivos Creados y Modificados:**
   - `src/lib/services/telemetryService.ts` (**205 líneas**) $\rightarrow$ Nuevo servicio de telemetría (< 250 LOC).
   - `src/lib/services/intervalsSyncService.ts` (**136 líneas**) $\rightarrow$ Nuevo servicio de sincronización (< 250 LOC).
+  - `src/lib/services/macrocycleApiService.ts` (**109 líneas**) $\rightarrow$ Nuevo servicio de macrociclos (< 250 LOC).
   - `src/lib/ai/contextCondenser.ts` (**97 líneas**) $\rightarrow$ Nuevo compresor de contexto FinOps (< 150 LOC).
   - `src/app/api/evaluate/route.ts` (**29 líneas**) $\rightarrow$ Reducido a controlador delgado (< 80 LOC).
   - `src/app/api/sync-intervals/route.ts` (**30 líneas**) $\rightarrow$ Reducido a controlador delgado (< 80 LOC).
+  - `src/app/api/macrocycles/generate-ai/route.ts` (**13 líneas**) $\rightarrow$ Reducido a controlador delgado (< 80 LOC).
   - `src/lib/ai/headcoach/chatContext.ts` (**314 líneas**) $\rightarrow$ Integración de condensador FinOps (< 350 LOC).
   - `src/hooks/useAthleteTelemetry.ts` (**323 líneas**) $\rightarrow$ Incorporación de caché SWR y dirty checking (< 350 LOC).
+  - `src/lib/ai/knowledge/triathlon1406Model.ts` (**334 líneas**) $\rightarrow$ Modelo modularizado (< 350 LOC).
+  - `src/lib/ai/knowledge/triathlonShortModel.ts` (**327 líneas**) $\rightarrow$ Modelo modularizado (< 350 LOC).
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts` (**174 líneas**) $\rightarrow$ Módulo auxiliar (< 350 LOC).
+  - `src/lib/physiology/swimWorkoutsBaseBuild.ts` (**110 líneas**) $\rightarrow$ Catálogo modular (< 350 LOC).
+  - `src/lib/physiology/swimWorkoutsPeakTaper.ts` (**130 líneas**) $\rightarrow$ Catálogo modular (< 350 LOC).
+  - `README.md` $\rightarrow$ Documentación central sincronizada a v3.34.
   - `PROJECT_RULES.md` $\rightarrow$ Actualizada Sección 10 con la 5ª Ley y presupuestos de servicios y APIs.
-  - `BACKLOG_MEJORAS_ARQUITECTURA.md` $\rightarrow$ Actualizada Mejora 5 como completada al 100%.
+  - `BACKLOG_MEJORAS_ARQUITECTURA.md` $\rightarrow$ Actualizada evaluación de madurez y roadmap hacia Fase 4.
 - **Set de Pruebas Superado:**
   - `Prueba 1 (Tipado TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación de Producción Next.js):` `next build` $\rightarrow$ **21/21 rutas compiladas con éxito (Código 0)**.
-  - `Prueba 3 (Modularidad & LOC Budgets):` Controladores API en 29 y 30 LOC ($\le 80\text{ LOC}$), `AthleteDashboard.tsx` en 145 LOC (< 160 LOC), 100% de archivos < 350 LOC.
+  - `Prueba 3 (Modularidad & LOC Budgets):` Controladores API en 13, 29 y 30 LOC ($\le 80\text{ LOC}$), `AthleteDashboard.tsx` en 145 LOC (< 160 LOC), 100% de archivos intervenidos < 350 LOC.
   - `Prueba 4 (FinOps & Token Optimization):` Reducción comprobada de huella de contexto de actividades a Gemini.
   - `Prueba 5 (Auditoría de Sintaxis Stryd):` Confirmado que no existen prescripciones de distancia con `% FTP`.
-
-
-
-
-
-
-
-
-
-
-
-
-
-

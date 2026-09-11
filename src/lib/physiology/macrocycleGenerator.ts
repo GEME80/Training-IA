@@ -218,10 +218,15 @@ export function generateCustomMacrocycleBlueprint(
 
     const targetTss = calculateProgressiveWeeklyTss(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, dynamicTssBaseline);
 
-    const scheduledTest = curatedModel.mandatoryTests.find(t => t.recommendedWeekIndex === weekNumber);
-    const testBadge = scheduledTest ? `🧪 ${scheduledTest.testName} • ` : "";
+    const scheduledTests = curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber);
+    const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests.map(t => t.testName).join(" & ")} • ` : "";
 
-    const focusDescription = `${testBadge}${phaseLabel}: Tirada dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
+    const isTri = curatedModel.sportCategory === "Triathlon";
+    const isRaceWeekNow = countdown === 1;
+    const raceNote = isRaceWeekNow && isTri
+      ? `🏆 Competición Oficial Triatlón: Natación + T1 + Ciclismo + T2 + Carrera. Estrategia nutricional y transiciones ágiles.`
+      : `${phaseLabel}: Tirada dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
+    const focusDescription = `${testBadge}${raceNote}`;
 
     const isPast = weekMon.getTime() < currentMonday.getTime();
     const isCurrent = currentMonday.getTime() === weekMon.getTime();

@@ -9,6 +9,7 @@ import {
   getCoprimeStride,
   buildRestDay,
   selectQualityWorkout,
+  resolveRaceWorkout,
   resolveRaceSundayWorkout,
   resolveWeekendRide,
 } from "./macrocycleTemplateHelpers";
@@ -21,7 +22,8 @@ export function generateWeekTemplate(
   bikeFtp?: number,
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType?: MacrocycleDistanceType,
-  athleteCtl?: number
+  athleteCtl?: number,
+  primaryRaceDate?: string
 ): PlanItem[] {
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const weekStart = new Date(week.startDate + "T00:00:00");
@@ -53,8 +55,18 @@ export function generateWeekTemplate(
     const discList: string[] = Array.isArray(rawDisc) ? (rawDisc.length > 0 ? [...rawDisc] : ["Descanso"]) : [rawDisc || "Descanso"];
 
     if (isRaceWeek) {
-      if (day === "Domingo") {
-        result.push(resolveRaceSundayWorkout({ curatedModel, longRun, dateStr, formattedDate, runFtp, bikeFtp }));
+      const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
+      if (isTargetRaceDay) {
+        result.push(resolveRaceWorkout({ curatedModel, longRun, dateStr, formattedDate, day, runFtp, bikeFtp }));
+        continue;
+      }
+
+      if (primaryRaceDate && dateStr > primaryRaceDate && day === "Domingo") {
+        result.push({
+          day, date: dateStr, formattedDate, discipline: "Descanso",
+          workoutName: "Descanso Post-Competición & Celebración", action: "MANTENER", durationMinutes: 0, tss: 0,
+          justification: "Recuperación biológica y asimilación del esfuerzo competitivo.", isRestDay: true,
+        });
         continue;
       }
 

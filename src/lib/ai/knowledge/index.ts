@@ -88,14 +88,17 @@ export function resolveTrainingModel(params: {
 
   // 2. Triatlón (Detección robusta multilingüe: Triseries, Tri-Series, Triathlon, Triatlón, Ironman)
   const isTriathlon = /triat|triath|triseries|tri-series|ironman|70\.3|703|140\.6|1406/i.test(combined);
+  const has703 = /70\.3|703|medio iron|half iron|medio-iron|triathlon_703/i.test(combined);
+  const has1406 = (/140\.6|1406|full_iron|full-iron|ironman full|triathlon_1406/i.test(combined) || (/ironman/i.test(combined) && !has703));
+  const hasShort = /sprint|olimp|triathlon_short|triathlon_sprint|triathlon_olympic|triseries|paipa|corto|short/i.test(combined);
 
-  if (combined.includes("140.6") || combined.includes("1406") || combined.includes("full_iron") || combined.includes("ironman full") || combined.includes("triathlon_1406")) {
+  if (has1406) {
     return TRIATHLON_140_6_MODEL;
   }
-  if (combined.includes("70.3") || combined.includes("703") || combined.includes("medio iron") || combined.includes("half iron") || combined.includes("triathlon_703")) {
+  if (has703) {
     return TRIATHLON_70_3_MODEL;
   }
-  if (combined.includes("sprint") || combined.includes("olimp") || combined.includes("triathlon_short") || combined.includes("triathlon_sprint") || combined.includes("triathlon_olympic") || combined.includes("triseries") || combined.includes("paipa")) {
+  if (hasShort) {
     return TRIATHLON_SHORT_MODEL;
   }
   if (isTriathlon) {
@@ -103,37 +106,37 @@ export function resolveTrainingModel(params: {
   }
 
   // 3. Trail & Montaña
-  if (combined.includes("trail") || combined.includes("ultra") || combined.includes("montaña") || combined.includes("utmb") || combined.includes("trail_50k")) {
+  if (/trail|ultra|montaña|utmb|skyrun|chicamocha|merrell|\b(50|60|70|80|100)\s*k(m)?\b/i.test(combined)) {
     return TRAIL_ULTRA_MODEL;
   }
 
   // 4. Ciclismo
-  if (combined.includes("escalada") || combined.includes("climb") || combined.includes("puertos") || combined.includes("cycling_climbing") || combined.includes("montaña_bici")) {
+  if (/escalada|climb|puertos|cycling_climbing|montaña_bici|letras|linea|patios/i.test(combined)) {
     return CYCLING_CLIMBING_MODEL;
   }
-  if (combined.includes("crit") || combined.includes("criterium") || combined.includes("cycling_criterium") || combined.includes("sprint_bici") || combined.includes("arrancadas")) {
+  if (/crit|criterium|cycling_criterium|sprint_bici|arrancadas|velodromo|pista/i.test(combined)) {
     return CYCLING_CRITERIUM_MODEL;
   }
-  if (combined.includes("bici") || combined.includes("cicli") || combined.includes("fondo") || combined.includes("gravel") || combined.includes("gran fondo") || combined.includes("cycling_fondo")) {
+  if (/bici|cicli|fondo|gravel|gran fondo|cycling_fondo|gfny|letape|l'etape|etapé|ruta colombia/i.test(combined)) {
     return CYCLING_GRAN_FONDO_MODEL;
   }
 
   // 5. Running
-  if (combined.includes("5k") || combined.includes("five_k") || combined.includes("velocidad 5")) {
+  if (/\b5\s*k(m)?\b|five_k|cinco k/i.test(combined)) {
     return FIVE_K_SPEED_MODEL;
   }
-  if (combined.includes("10k") || combined.includes("ten_k") || combined.includes("diez")) {
+  if (/\b10\s*k(m)?\b|ten_k|diez k/i.test(combined)) {
     return TEN_K_ROAD_MODEL;
   }
-  if (combined.includes("21k") || combined.includes("media") || combined.includes("half") || combined.includes("medio marat")) {
+  if (/\b21(\.1)?\s*k(m)?\b|media|half|medio marat/i.test(combined)) {
     return HALF_MARATHON_21K_MODEL;
   }
-  if (combined.includes("42k") || combined.includes("marat") || combined.includes("42.2")) {
+  if (/\b42(\.2)?\s*k(m)?\b|marat|marath|boston|berlin|chicago|valencia|nueva york/i.test(combined)) {
     return MARATHON_42K_MODEL;
   }
 
   // 6. Salud / Longevidad / Mantenimiento
-  if (combined.includes("salud") || combined.includes("manten") || combined.includes("longev") || combined.includes("maintenance")) {
+  if (/salud|manten|longev|maintenance/i.test(combined)) {
     return BASE_LONGEVITY_MODEL;
   }
 

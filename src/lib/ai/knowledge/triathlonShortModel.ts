@@ -124,7 +124,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo a Ritmo Olímpico\n- 15m Calentamiento 55% FTP\n- 45m 86% FTP\n- 15m 60% FTP\n\nTransición T2 Exprés (< 3 min)\n\nBloque 2: Carrera Inmediata (Primeros 5m @ 185 spm)\n- 20m 90% FTP",
         },
         {
-          name: "Series Específicas de Ritmo Olímpico en Carrera (4x 1.500m @ 92% CP)",
+          name: "Series Específicas de Ritmo Olímpico en Carrera (4x 6m @ 92% CP)",
           powerTarget: "92% CP",
           justification: "Automatización del ritmo de 10 km en triatlón con 2m de recuperación.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n4x\n- 6m 92% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -136,7 +136,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Bici Fraccionada\n- 15m 55% FTP\n3x\n- 6m 92% FTP\n- 2m 55% FTP\n- 11m 65% FTP\n\nTransición T2 Exprés (< 2 min)\n\nBloque 2: Carrera Viva\n- 15m 92% FTP",
         },
         {
-          name: "Series de Potencia Aeróbica Fraccionada (5x 800m @ 95% CP)",
+          name: "Series de Potencia Aeróbica Fraccionada (5x 3m @ 95% CP)",
           powerTarget: "95% CP",
           justification: "Densidad de VO2max en carrera a pie con 90s de trote suave.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 95% FTP\n- 1m30s 55% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -148,7 +148,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo Progresivo\n- 15m 55% FTP\n- 40m 84% FTP\n- 15m 60% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera\n- 20m 90% FTP",
         },
         {
-          name: "Intervalos Mixtos de Umbral y Salida T2 (6x 600m @ 94% CP)",
+          name: "Intervalos Mixtos de Umbral y Salida T2 (6x 2m30s @ 94% CP)",
           powerTarget: "94% CP",
           justification: "Cadencia rápida (185 spm) y adaptación a cambios de ritmo.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n6x\n- 2m30s 94% FTP\n- 1m30s 55% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -168,7 +168,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo Sprint\n- 10m 55% FTP\n- 25m 92% FTP\n- 10m 60% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera Sprint\n- 15m 94% FTP",
         },
         {
-          name: "Series de Afinamiento Rápido en Pista (5x 600m @ 94% CP)",
+          name: "Series de Afinamiento Rápido en Pista (5x 2m15s @ 94% CP)",
           powerTarget: "94% CP",
           justification: "Toque de chispa neuromuscular con descanso completo para preservar frescura.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 2m15s 94% FTP\n- 2m 50% FTP\n\nCooldown\n- 8m 55% FTP",
@@ -180,7 +180,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Bici Dinámica\n- 20m 60% FTP\n4x\n- 30s 95% FTP\n- 1m30s 50% FTP\n- 12m 65% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera Ágil\n- 12m 92% FTP",
         },
         {
-          name: "Afinamiento de Ritmo de Competición (3x 1.000m @ 92% CP)",
+          name: "Afinamiento de Ritmo de Competición (3x 4m @ 92% CP)",
           powerTarget: "92% CP",
           justification: "Sensación de paso de carrera sin fatiga a 7-10 días del evento.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n3x\n- 4m 92% FTP\n- 2m30s 50% FTP\n\nCooldown\n- 8m 55% FTP",

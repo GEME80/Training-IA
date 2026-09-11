@@ -161,7 +161,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n- 35m 72% FTP\n- 20m 84% FTP\n\nCooldown\n- 5m 60% FTP",
         },
         {
-          name: "Intervalos Canova Combinados (4km @ 82% + 3km @ 84% + 2km @ 88% CP)",
+          name: "Intervalos Canova Combinados (20m @ 82% + 15m @ 84% + 10m @ 88% CP)",
           powerTarget: "82% a 88% CP",
           justification: "Aceleración final y reclutamiento de fibras rápidas en fatiga.",
           workoutDoc: "Warmup\n- 12m 68% FTP\n\nMain\n- 20m 82% FTP\n- 5m 65% FTP\n- 15m 84% FTP\n- 5m 65% FTP\n- 10m 88% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -175,10 +175,22 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           workoutDoc: "Warmup\n- 15m 68% FTP\n\n4x\n- 30s 105% FTP\n- 1m 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
-          name: "Puesta a Punto a Ritmo de Carrera (30m con 3x1000m @ 82% CP)",
+          name: "Puesta a Punto a Ritmo de Carrera (30m con 3x4m @ 82% CP)",
           powerTarget: "82% CP",
           justification: "Recordatorio biomecánico de ritmo maratón sin fatiga metabólica.",
-          workoutDoc: "Warmup\n- 12m 68% FTP\n\n3x\n- 5m 82% FTP\n- 2m 55% FTP\n\nCooldown\n- 5m 60% FTP",
+          workoutDoc: "Warmup\n- 12m 68% FTP\n\n3x\n- 4m 82% FTP\n- 2m 55% FTP\n\nCooldown\n- 5m 60% FTP",
+        },
+        {
+          name: "Rodaje Suave con Toques de Ritmo Maratón (25m con 2x5m @ 80% CP)",
+          powerTarget: "80% CP en toques",
+          justification: "Afinamiento y confirmación de sensaciones de apoyo y soltura.",
+          workoutDoc: "Warmup\n- 10m 68% FTP\n\n2x\n- 5m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 5m 60% FTP",
+        },
+        {
+          name: "Soltura Regenerativa Pre-Maratón (20m con 4 Strides @ 105% CP)",
+          powerTarget: "68% CP + Strides",
+          justification: "Movilización ligera y contacto ágil con el suelo 48h antes de la competición.",
+          workoutDoc: "Warmup\n- 6m 60% FTP\n\nMain\n- 10m 68% FTP\n\n4x\n- 20s 105% FTP\n- 40s 55% FTP\n\nCooldown\n- 2m 55% FTP",
         },
       ],
     },
@@ -307,30 +319,6 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   },
 };
 
-export const HALF_MARATHON_21K_MODEL: CuratedTrainingModel = {
-  ...MARATHON_42K_MODEL,
-  modelId: "HALF_MARATHON_21K",
-  displayName: "PULSE 21K Half-Marathon Elite (Daniels + Magness)",
-  targetDistanceKm: 21.1,
-  longRunRules: {
-    startKm: 10,
-    peakKm: 22,
-    startMinutes: 55,
-    peakMinutes: 110,
-    targetIntensityPercentCpOrFtp: "70-76% CP en base y 84-88% CP en ritmo medio maratón",
-    description: "Progresión de 10km a 22km (sobredistancia 100%) con tramos de ritmo tempo y 2 semanas de tapering.",
-    taperKmSequence: [14, 8],
-    taperMinutesSequence: [70, 40],
-  },
-  taperingRules: {
-    taperingWeeks: 2,
-    volumeDropSequencePercent: [0.25, 0.50],
-    maintainRacePaceIntensity: true,
-  },
-  athleteLevelCaps: {
-    BEGINNER: { ctlThresholdMax: 30, maxLongRunKm: 14, maxLongRunMinutes: 80, tssScaleFactor: 0.80 },
-    INTERMEDIATE: { ctlThresholdMax: 60, maxLongRunKm: 18, maxLongRunMinutes: 95, tssScaleFactor: 0.95 },
-    ADVANCED_ELITE: { ctlThresholdMax: Infinity, maxLongRunKm: 22, maxLongRunMinutes: 110, tssScaleFactor: 1.10 },
-  },
-};
+export { HALF_MARATHON_21K_MODEL } from "./halfMarathonModel";
+
 

@@ -117,7 +117,7 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
           workoutDoc: "Warmup\n- 15m 65% FTP\n\nMain\n- 20m 78% FTP\n- 15m 70% FTP\n\nCooldown\n- 5m 60% FTP",
         },
         {
-          name: "Intervalos Largos de Control de Cadena Posterior (4x 1.500m @ 82% CP)",
+          name: "Intervalos Largos de Control de Cadena Posterior (4x 7m30s @ 82% CP)",
           powerTarget: "82% CP",
           justification: "Frecuencia de zancada constante (180 spm) en fatiga.",
           workoutDoc: "Warmup\n- 15m 65% FTP\n\n4x\n- 7m30s 82% FTP\n- 2m30s 60% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -169,7 +169,7 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo Largo con Avituallamiento Oficial de Carrera\n- 5h00m @ 70% FTP\n\nTransición T2 Exprés (< 5 min)\n\nBloque 2: Carrera a Pie de Transición\n- 30m @ 74% FTP",
         },
         {
-          name: "Series de Afinamiento a Ritmo de Maratón Iron (3x 2.000m @ 76% CP)",
+          name: "Series de Afinamiento a Ritmo de Maratón Iron (3x 10m @ 76% CP)",
           powerTarget: "76% CP",
           justification: "Memorización del paso de carrera sin desgaste mitocondrial.",
           workoutDoc: "Warmup\n- 15m 65% FTP\n\n3x\n- 10m 76% FTP\n- 3m 55% FTP\n\nCooldown\n- 8m 55% FTP",

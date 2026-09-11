@@ -152,7 +152,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo Fondo Z2\n- 1h45m 76% FTP\n\nTransición T2 (< 5 min)\n\nBloque 2: Carrera Transición 70.3\n- 30m 82% FTP",
         },
         {
-          name: "Series de Ritmo de Competición en Carrera (4x 2.000m @ 84% CP)",
+          name: "Series de Ritmo de Competición en Carrera (4x 9m @ 84% CP)",
           powerTarget: "84% CP",
           justification: "Automatización del ritmo de crucero con 2m de recuperación.",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n4x\n- 9m 84% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
@@ -184,7 +184,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           workoutDoc: "Bloque 1: Ciclismo Estable\n- 1h30m 78% FTP\n\nBloque 2: Carrera Viva\n- 25m 83% FTP",
         },
         {
-          name: "Series de Afinamiento Pre-Competición en Carrera (3x 1.500m @ 85% CP)",
+          name: "Series de Afinamiento Pre-Competición en Carrera (3x 6m30s @ 85% CP)",
           powerTarget: "85% CP",
           justification: "Toque de ritmo con descanso completo (2m30s).",
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n3x\n- 6m30s 85% FTP\n- 2m30s 50% FTP\n\nCooldown\n- 8m 55% FTP",

@@ -66,9 +66,11 @@ export function resolveDistTypeFromWizard(dist: string, approach?: string): Macr
   const combined = `${d} ${a}`;
   const isTri = /triat|triath|triseries|tri-series/i.test(combined);
 
+  const has703 = /70\.3|703|half|medio/i.test(combined);
   if (d.includes("sprint") || d.includes("olimp") || d === "triathlon_short" || (isTri && (combined.includes("short") || combined.includes("olimp") || combined.includes("sprint") || combined.includes("paipa")))) return "triathlon_short";
-  if (d.includes("140.6") || d.includes("1406") || d.includes("full") || d.includes("iron") || d === "triathlon_1406" || a.includes("iron")) return "triathlon_1406";
-  if (isTri || d === "triathlon_703" || d.includes("70.3") || d.includes("703")) return "triathlon_703";
+  if (d.includes("70.3") || d.includes("703") || d === "triathlon_703" || (isTri && has703)) return "triathlon_703";
+  if (d.includes("140.6") || d.includes("1406") || d.includes("full") || (d.includes("iron") && !has703) || d === "triathlon_1406" || (a.includes("iron") && !has703)) return "triathlon_1406";
+  if (isTri) return "triathlon_703";
   if (d.includes("bici") || d.includes("cicli") || d.includes("fondo") || d === "cycling_fondo" || a.includes("cicli")) return "cycling_fondo";
   if (d.includes("trail") || d.includes("ultra") || d === "trail_50k" || a.includes("trail")) return "trail_50k";
   if (d.includes("21")) return "21k";

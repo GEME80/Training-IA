@@ -2939,3 +2939,101 @@ flowchart TD
   - `Prueba 3 (Modularidad & LOC Budgets):` Controladores API en 13, 29 y 30 LOC ($\le 80\text{ LOC}$), `AthleteDashboard.tsx` en 145 LOC (< 160 LOC), 100% de archivos intervenidos < 350 LOC.
   - `Prueba 4 (FinOps & Token Optimization):` Reducción comprobada de huella de contexto de actividades a Gemini.
   - `Prueba 5 (Auditoría de Sintaxis Stryd):` Confirmado que no existen prescripciones de distancia con `% FTP`.
+
+---
+
+### Versión 3.35 - Auditoría Integral de Atleta de Pruebas (Juan Pablo Vásquez), Blindaje de Modelos Triatlón, Rotación Coprima Anti-Repetición, Tests Duales y Gobernanza de Seguridad (2026-09-11)
+- **Fecha y Hora:** 11 de Septiembre de 2026 - 17:15 COT.
+- **Caso de Estudio Fisiológico:** Atleta Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com`), objetivo **Triseries Paipa 2026** (Triatlón Sprint/Olímpico, Lago Sochagota, 2,525 msnm, 1 Nov 2026).
+- **Hallazgos Críticos Detectados por Agentes Especializados y Resueltos al 100%:**
+  1. **Resolución Canónica de Modelo Triatlón:** El token `"triseries"` no coincidía con `"triatl"` y causaba fallback indeseado al modelo de Maratón Canova 42K. Se implementó detección omnicomprensiva en `resolveTrainingModel` y `seasonWizardHelpers.ts` reconociendo `"triseries"`, `"paipa"` y distancias cortas hacia `TRIATHLON_SHORT_MODEL`.
+  2. **Día de Competición en Domingo de Race Week:** El domingo de semana 8 prescribía una tirada lesiva de carrera continua de 51.5 km (ultra-maratón). Se reformuló mediante `resolveRaceSundayWorkout` asignando `activityType: "Triatlón"`, 150m de duración, 210 TSS, con desglose explícito de los 3 sectores (Natación 1.5 km, Ciclismo 40 km, Carrera 10 km) y transiciones T1 y T2.
+  3. **Erradicación de Repetición Semana a Semana (Algoritmo de Rotación Coprima):**
+     - Se expandieron los catálogos de `TRIATHLON_SHORT_MODEL`, `TRIATHLON_70_3_MODEL` y `TRIATHLON_140_6_MODEL` a 4-6 sesiones variadas por fase metabólica.
+     - Se crearon `swimWorkoutsBaseBuild.ts` y `swimWorkoutsPeakTaper.ts` sumando 27 sesiones de nado ricas y diferenciadas.
+     - Se modularizó `strengthWorkoutPool.ts` con 21 sesiones neuromusculares específicas para triatlón y carrera.
+     - Se implementó la fórmula de paso coprimo $s = \gcd(L, 2) = 1 \implies s=2 \text{ ó } 3$, garantizando cobertura hamiltoniana cíclica completa sin duplicados idénticos en semanas consecutivas.
+  4. **Inyección Dual de Tests Fisiológicos (Semana 2):** Se resolvió el bug de `.find()` permitiendo la coexistencia simultánea de Test CSS de Natación (400m + 200m) y Test 20 Minutos FTP de Ciclismo en la Semana 2, documentados en `focusDescription`.
+  5. **Duración y TSS Realistas en Bricks:** Los entrenamientos combinados (bici + carrera) ahora calculan automáticamente su duración combinada real (85-115 min) y carga fisiológica (85-110 TSS) en lugar de un valor plano de 50 min.
+  6. **Gobernanza de Credenciales y Sintaxis Stryd:**
+     - Se eliminó el literal de clave API en `src/lib/intervals/credentials.ts`, dependiendo exclusivamente de `process.env.INTERVALS_API_KEY`.
+     - Se sustituyeron los valores biométricos ficticios (327W / 240W) en `src/lib/gemini/macrocycleAI.ts` por placeholders condicionales para atletas no calibrados.
+     - Se corrigió la sintaxis en `src/lib/ai/defaultPrompts.ts` cambiando `4x1200m @ 98-102% CP` por `4x 4m @ 98-102% CP`.
+  7. **Arquitectura y Presupuesto de Líneas de Código (< 350 LOC):**
+     - Nuevo servicio `src/lib/services/macrocycleApiService.ts` (109 LOC).
+     - Controlador `src/app/api/macrocycles/generate-ai/route.ts` reducido a 13 LOC ($\le 80$ LOC).
+     - 100% de los 18 archivos creados o modificados se mantienen estrictamente bajo el límite de 350 LOC.
+- **Lista Completa de Archivos Intervenidos:**
+  - `src/lib/ai/knowledge/triathlonShortModel.ts` (**327 líneas**) $\rightarrow$ Nuevo modelo Sprint/Olímpico con 33 sesiones variadas.
+  - `src/lib/ai/knowledge/triathlon1406Model.ts` (**334 líneas**) $\rightarrow$ Nuevo modelo 140.6 Full Distance.
+  - `src/lib/ai/knowledge/triathlonFullAndShortModels.ts` (**7 líneas**) $\rightarrow$ Re-exportador barrel modular.
+  - `src/lib/ai/knowledge/triathlonModel.ts` (**337 líneas**) $\rightarrow$ Modelo 70.3 Middle Distance enriquecido.
+  - `src/lib/ai/knowledge/index.ts` (**343 líneas**) $\rightarrow$ Selector omnicomprensivo con soporte Triseries/Paipa.
+  - `src/components/season/wizard/seasonWizardHelpers.ts` (**80 líneas**) $\rightarrow$ Mapeo unificado de tipos de distancia.
+  - `src/lib/physiology/swimWorkoutsBaseBuild.ts` (**110 líneas**) $\rightarrow$ Biblioteca de nado Base/Build.
+  - `src/lib/physiology/swimWorkoutsPeakTaper.ts` (**130 líneas**) $\rightarrow$ Biblioteca de nado Peak/Taper.
+  - `src/lib/physiology/swimWorkoutPool.ts` (**74 líneas**) $\rightarrow$ Selector con rotación coprima.
+  - `src/lib/physiology/strengthWorkoutPool.ts` (**241 líneas**) $\rightarrow$ Biblioteca y selector de fuerza funcional.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts` (**175 líneas**) $\rightarrow$ Helpers de calidad, bricks, tiradas y race day.
+  - `src/lib/physiology/macrocycleTemplates.ts` (**262 líneas**) $\rightarrow$ Generador semanal con inyección dual de tests.
+  - `src/lib/physiology/macrocycleGenerator.ts` (**290 líneas**) $\rightarrow$ Orquestador de macrociclo adaptativo.
+  - `src/lib/ai/defaultPrompts.ts` (**112 líneas**) $\rightarrow$ Sintaxis Stryd 100% legal (tiempo + % CP).
+  - `src/lib/gemini/macrocycleAI.ts` (**179 líneas**) $\rightarrow$ Erradicación de métricas dummy.
+  - `src/lib/intervals/credentials.ts` (**57 líneas**) $\rightarrow$ Blindaje de clave API en entorno.
+  - `src/lib/services/macrocycleApiService.ts` (**109 líneas**) $\rightarrow$ Desacoplamiento de orquestación IA.
+  - `src/app/api/macrocycles/generate-ai/route.ts` (**13 líneas**) $\rightarrow$ Controlador delgado (< 80 LOC).
+- **Set de Pruebas Superado (100% de Éxito):**
+  - `Prueba 1 (Tipado TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **21/21 rutas compiladas con éxito (Código 0)**.
+  - `Prueba 3 (Modularidad & LOC Budgets):` Todos los archivos $< 350$ LOC, ruta API en 13 LOC ($\le 80$ LOC).
+  - `Prueba 4 (Suite de Pruebas Forense Fisiológica):` `scratch/test_juan_plan.ts` superó las 7 compuertas con 100% de éxito:
+    - ✅ Compuerta 1: `resolveTrainingModel` resuelve Triseries, 70.3, 140.6, Sprint y 42k con precisión.
+    - ✅ Compuerta 2: Profundidad de catálogo $\ge 5$ variantes por fase.
+    - ✅ Compuerta 3: Generación del macrociclo de 8 semanas para Juan Pablo Vásquez.
+    - ✅ Compuerta 4: Inyección simultánea de Test CSS de Natación y Test FTP de Ciclismo en Semana 2.
+    - ✅ Compuerta 5: Domingo de Semana 8 configurado como Triatlón (150 min, 210 TSS, T1/T2, 3 sectores).
+    - ✅ Compuerta 6: Cero repeticiones idénticas consecutivas de Martes a Sábado a lo largo de las 8 semanas.
+    - ✅ Compuerta 7: Cumplimiento estricto de la ley de sintaxis Stryd (0 infracciones de distancia con % CP).
+
+---
+
+### Versión 3.36 - Escalabilidad Universal Multi-Deporte: 5K, 10K, 21K, 42K, Trail, Ciclismo y Triatlón con Cero Repetición, Días de Carrera Flexibles (Sábado/Domingo) y Cumplimiento Universal Stryd (2026-09-11)
+- **Fecha y Hora:** 11 de Septiembre de 2026 - 17:35 COT.
+- **Directiva:** "Estas mejoras deben funcionar para cualquier atleta o nuevas carreras. Que sea escalable".
+- **Alcance de la Escalabilidad Universal Implementada:**
+  1. **Resolución Universal de Modelos por Palabras Clave y Distancia:**
+     - Regexes con límites de palabra (`/\b5\s*k(m)?\b/i`, `/\b10\s*k(m)?\b/i`, `/\b21(\.1)?\s*k(m)?\b/i`, `/\b42(\.2)?\s*k(m)?\b/i`, `/\b(50|60|70|80|100)\s*k(m)?\b/i`).
+     - Detección de carreras de ruta, montaña, ciclismo y triatlón de renombre mundial (GFNY, L'Etape, Alto de Letras, UTMB, Chicamocha, Boston, Berlín, Cartagena 70.3, Cozumel, etc.).
+     - Desambiguación precisa entre Ironman completo (140.6) y Middle Distance (70.3).
+  2. **Catálogos de Entrenamiento Profundos y Variados en Todas las Disciplinas:**
+     - `src/lib/ai/knowledge/fiveKModel.ts` (**301 líneas**): 5 Base, 5 Build, 4 Peak, 4 Taper, 5 Midweek Bike, 5 Recovery Run.
+     - `src/lib/ai/knowledge/tenKModel.ts` (**309 líneas**): 5 Base, 5 Build, 4 Peak, 4 Taper, 5 Midweek Bike, 5 Recovery Run.
+     - `src/lib/ai/knowledge/halfMarathonModel.ts` (**328 líneas**): 5 Base, 5 Build, 4 Peak, 4 Taper, 5 Midweek Bike, 5 Recovery Run.
+     - `src/lib/ai/knowledge/marathonModel.ts` (**324 líneas**): 4 Base, 4 Build, 4 Peak, 4 Taper, 6 Midweek Bike, 5 Recovery Run. Re-exportador de 21K.
+     - `src/lib/ai/knowledge/cyclingModel.ts` (**307 líneas**): 5 Base, 5 Build, 4 Peak, 4 Taper, 5 Midweek Bike, 5 Recovery Run.
+     - `src/lib/ai/knowledge/trailModel.ts` (**302 líneas**): 5 Base, 5 Build, 4 Peak, 4 Taper, 5 Midweek Bike, 5 Recovery Run.
+     - `src/lib/ai/knowledge/triathlonShortModel.ts` (**327 líneas**): 6 Base, 6 Build, 5 Peak, 4 Taper, 6 Midweek Bike, 6 Recovery Run.
+     - `src/lib/ai/knowledge/triathlonModel.ts` (**337 líneas**): 6 Base, 6 Build, 5 Peak, 4 Taper, 6 Midweek Bike, 6 Recovery Run.
+     - `src/lib/ai/knowledge/triathlon1406Model.ts` (**334 líneas**): 6 Base, 6 Build, 5 Peak, 4 Taper, 6 Midweek Bike, 6 Recovery Run.
+  3. **Motor Anti-Repetición con Paso Coprimo y Progresión Avanzada:**
+     - Algoritmo $s = \text{getCoprimeStride}(L, 2)$ garantizando $\gcd(L, s) = 1$.
+     - En macrociclos de 16 a 24 semanas donde se completa una ronda, las sesiones avanzadas reciben automáticamente el sufijo `(Progresión Bloque II)` con justificación fisiológica consolidada.
+  4. **Flexibilidad Total en el Día de Competición (Sábado o Domingo):**
+     - Si el evento oficial ocurre en Sábado (`primaryRaceDate` en sábado), el entrenamiento oficial `🏆 COMPETICIÓN OBJETIVO` se programa el Sábado y el Domingo se asigna a `Descanso Post-Competición & Celebración`.
+     - Si la carrera es el Domingo o no se especifica día, se ubica canónicamente el Domingo.
+     - Duraciones y TSS calibrados multi-deporte en `resolveRaceWorkout`: Triatlón (150m/310m/660m), Ciclismo (252m), Trail (275m), 5K (25m), 10K (50m), 21K (105m), 42K (210m).
+  5. **Auditoría y Erradicación Total de Violaciones de Sintaxis Stryd:**
+     - Se auditaron todos los modelos reemplazando las 10 prescripciones de distancia con `% CP/FTP` por duraciones en tiempo (ej. `4x 1.500m @ 92%` $\rightarrow$ `4x 6m @ 92% CP`).
+     - 448 entrenamientos auditados a lo largo de 5 deportes simulados con **CERO violaciones**.
+  6. **Cumplimiento Estricto de Presupuesto de Líneas de Código (< 350 LOC):**
+     - 100% de los 19 archivos intervenidos o creados se mantienen bajo 350 líneas de código.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas estáticas y dinámicas compiladas (Código 0)**.
+  - `Prueba 3 (Suite Universal Multi-Deporte):` `test_universal_scalability.ts` $\rightarrow$ **5/5 bloques de validación superados**:
+    - ✅ Test 1: Resolución de palabras clave (13 casos de prueba en todas las disciplinas).
+    - ✅ Test 2: Profundidad de catálogo $\ge 4-5$ en 9 modelos deportivos.
+    - ✅ Test 3: Cero repeticiones consecutivas en simulaciones de 8 a 16 semanas para 5K, 10K, Trail, Ciclismo y Triatlón 140.6.
+    - ✅ Test 4: Manejo flexible de carrera en Sábado vs. Domingo.
+    - ✅ Test 5: Ley universal Stryd (0 violaciones en 448 entrenamientos).
+  - `Prueba 4 (Regresión Específica Triseries Paipa Juan Pablo Vásquez):` `test_juan_plan.ts` superó las 7 compuertas con 100% de éxito.

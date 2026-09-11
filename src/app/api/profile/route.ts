@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveUserProfile, getUserProfileDecrypted } from "@/lib/db/userProfile";
 import { DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
+import { ProfileUpdateRequestSchema } from "@/lib/validation/schemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,7 +52,20 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.json().catch(() => ({}));
+    const parseResult = ProfileUpdateRequestSchema.safeParse(rawBody);
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Payload de actualización de perfil inválido",
+          validationErrors: parseResult.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       uid,
       email = "atleta@pulseai.pro",
@@ -72,14 +86,7 @@ export async function POST(req: NextRequest) {
       visibleMetrics,
       targetRaces,
       seasonPlans,
-    } = body;
-
-    if (!uid) {
-      return NextResponse.json(
-        { success: false, error: "UID es requerido para guardar el perfil" },
-        { status: 400 }
-      );
-    }
+    } = parseResult.data;
 
     try {
       await saveUserProfile(uid, {
@@ -95,8 +102,8 @@ export async function POST(req: NextRequest) {
         weightKg: weightKg !== undefined && weightKg !== null ? Number(weightKg) : undefined,
         heightCm: heightCm !== undefined && heightCm !== null ? Number(heightCm) : undefined,
         birthDate,
-        gender,
-        trainingFocus,
+        gender: gender ?? undefined,
+        trainingFocus: trainingFocus ?? undefined,
         weeklyAvailability,
         visibleMetrics,
         targetRaces,

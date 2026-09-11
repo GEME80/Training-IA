@@ -52,6 +52,8 @@ export interface UserScopedStorage {
   clear(): void;
 }
 
+export type UserStorage = UserScopedStorage;
+
 export function getUserStorage(uid?: string | null): UserScopedStorage {
   const safeUid = (uid || "").trim();
 

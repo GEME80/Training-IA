@@ -5,6 +5,7 @@ import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDa
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { buildCondensedExecutedMap } from "@/lib/ai/contextCondenser";
 import { HeadCoachChatRequest } from "./types";
 
 export interface ResolvedChatContext {
@@ -196,43 +197,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const planningStartDateStr = planningWeekDates[0]?.formattedDate || "Inicio";
   const planningEndDateStr = planningWeekDates[6]?.formattedDate || "Fin";
 
-  // Mapeo unificado de actividades ejecutadas por fecha
-  const effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }> = {};
-  if (dailyExecutedActivities && typeof dailyExecutedActivities === "object") {
-    Object.entries(dailyExecutedActivities).forEach(([dKey, val]: [string, any]) => {
-      effectiveExecutedMap[dKey] = {
-        totalTss: Number(val?.totalTss || 0),
-        activities: Array.isArray(val?.activities) ? val.activities : [],
-      };
-    });
-  }
-  pastActivities.forEach((act: any) => {
-    if (!act.start_date_local) return;
-    const dKey = act.start_date_local.split("T")[0];
-    const tssVal = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
-    const movingMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
-    const watts = act.icu_weighted_avg_watts ?? act.icu_average_watts ?? act.weighted_average_watts ?? act.average_watts ?? act.device_watts;
-    const hr = act.average_heartrate;
-    const distKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
-
-    if (!effectiveExecutedMap[dKey]) {
-      effectiveExecutedMap[dKey] = { totalTss: 0, activities: [] };
-    }
-    const alreadyExists = effectiveExecutedMap[dKey].activities.some((x: any) => x.id === act.id);
-    if (!alreadyExists) {
-      effectiveExecutedMap[dKey].totalTss += tssVal;
-      effectiveExecutedMap[dKey].activities.push({
-        id: act.id,
-        name: act.name,
-        type: act.type,
-        tss: tssVal,
-        movingTimeMin: movingMin,
-        watts: typeof watts === "number" ? Math.round(watts) : undefined,
-        heartrate: typeof hr === "number" ? Math.round(hr) : undefined,
-        distanceKm: distKm,
-      });
-    }
-  });
+  // Mapeo unificado y optimizado de actividades ejecutadas por fecha (FinOps & High Density)
+  const effectiveExecutedMap = buildCondensedExecutedMap(pastActivities, dailyExecutedActivities);
 
   // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
   const auditLines = planningWeekDates.map((wDate, idx) => {

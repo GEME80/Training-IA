@@ -136,14 +136,137 @@ flowchart TD
 
 ---
 
-## ☁️ 8. GOBERNANZA DE INFRAESTRUCTURA GCP & SECRET MANAGER (v3.5)
-1. **Consolidación Absoluta en Proyecto Único:** Todo el ecosistema vive y opera exclusivamente en el proyecto rector **`Training-IA` (`training-ia-8f67f`)**. Queda prohibido generar proyectos satélites en Google AI Studio (`gen-lang-client-...`).
-2. **Secretos Estrictos en Secret Manager (Máximo 2 Oficiales):**
-   - `pulse-encryption-master-key`: Llave maestra de 256 bits para cifrado/descifrado AES-256-GCM.
-   - `gemini-api-key`: Clave de API de Gemini consolidada nativamente en `training-ia-8f67f`.
-   - Queda prohibido crear secretos redundantes o dejar versiones antiguas habilitadas. Al actualizar secretos, destruir de inmediato versiones intermedias para mantener el uso dentro de la cuota Always Free (hasta 6 versiones / $0.00).
-3. **Control Financiero:** Facturación configurada exclusivamente en **Modo Prepago ($20.000 COP)** con alertas preventivas.
-4. **Cero Canales Externos:** La plataforma opera de forma 100% web; queda estrictamente prohibida la mención o integración con canales externos no deportivos (como WhatsApp).
+## 🤖 9. ARQUITECTURA INTEGRAL DE AGENTES Y SUBAGENTES (RUNTIME & DESARROLLO)
 
+El sistema opera bajo un modelo de **Doble Capa de Agentes** para garantizar tanto el rigor científico con el atleta como la excelencia técnica del código:
 
+```mermaid
+flowchart TD
+    subgraph CAPA_RUNTIME [" CAPA 1: AGENTES DE IA EN TIEMPO DE EJECUCIÓN (DEPORTIVOS) "]
+        A1["Agente 01: PULSE Live Coach (Head Coach Adaptativo /api/headcoach/chat)"]
+        A2["Agente 02: PULSE Macrocycle Architect (Periodizador /api/macrocycles/generate-ai)"]
+        A3["Agente 03: PULSE Daily Physio Auditor (Evaluador /api/evaluate)"]
+        A4["Agente 04: PULSE Program Library Curator (Curador de Catálogo /api/admin/programs)"]
+    end
 
+    subgraph CAPA_DEV [" CAPA 2: AGENTES DE INGENIERÍA, ARQUITECTURA & QA (DESARROLLO) "]
+        ORQ["👑 Agente Principal: Lead Architect & Systems Orchestrator"]
+        BE["⚙️ Agente Lead Backend & Motores Fisiológicos (Subagentes: Sync, Security, LLM, Math)"]
+        FE["🎨 Agente Lead Frontend & Sports UX/UI (Subagentes: Calendar, Season, Chat, Profile)"]
+        QA["🛡️ Agente Lead Auditor Técnico, QA & Debugging (Subagentes: Types, Ports, Stryd, Crypto)"]
+        ORQ --> BE
+        ORQ --> FE
+        ORQ --> QA
+    end
+```
+
+### 🏃 9.1. Capa 1: Agentes de IA en Runtime (Fisiología y Entrenamiento)
+1. **Agente 01 — `PULSE Live Coach` (Head Coach Fisiológico On-Demand):**
+   - **Endpoint:** `POST /api/headcoach/chat` | **Jurisdicción:** `src/lib/ai/headcoach/` y `src/components/HeadCoachChatDrawer.tsx`.
+   - **Contexto Requerido (Input):** Biometría (edad, peso, categoría máster), umbrales (Stryd CP 327W / Bike FTP 240W), telemetría Banister en vivo (CTL, ATL, TSB, HRV Z-Score, sueño), desglose de actividades ejecutadas día a día vs planeadas, matriz semanal snapshot y fase de macrociclo.
+   - **Salida Estructurada (Output):** Dictamen fisiológico en markdown, array de `quickReplies` contextuales de 1 toque, objeto `workoutDiff` para sustitución visual y `workoutStructure` con pasos estructurados para el reloj Garmin / Intervals.icu.
+2. **Agente 02 — `PULSE Macrocycle Architect` (Periodizador de Temporada):**
+   - **Endpoint:** `POST /api/macrocycles/generate-ai` | **Jurisdicción:** `src/lib/physiology/macrocycleGenerator.ts` y `src/lib/ai/knowledge/`.
+   - **Contexto Requerido (Input):** Carrera objetivo (A/B/C), distancia, fecha límite, fecha de inicio seleccionada, matriz de 7 días y modelos científicos SSOT (`marathonModel`, `triathlonModel`, `cyclingModel`).
+   - **Salida Estructurada (Output):** Macrociclo completo (8 a 40 semanas) con fases encadenadas (GPP + Específico), curva matemática continua de TSS, CTL peak proyectado y tiradas progresivas con cotas máximas según nivel (`athleteLevelCaps`).
+3. **Agente 03 — `PULSE Daily Physio Auditor` (Diagnóstico de Carga):**
+   - **Endpoint:** `POST /api/evaluate` | **Jurisdicción:** `src/lib/physiology/engine.ts` y `src/lib/intervals/client.ts`.
+   - **Contexto Requerido (Input):** Wellness diario de Intervals.icu (rMSSD, RHR, sueño, fatiga, DOMS), actividades de los últimos 90 días y potencia ejecutada.
+   - **Salida Estructurada (Output):** Estado fisiológico (`FRESH`, `OPTIMAL`, `OVERLOAD`, `EXTREME_FATIGUE`), factor de desacoplamiento aeróbico EF y recomendación de modulación inmediata (Z1 o descanso).
+4. **Agente 04 — `PULSE Program Library Curator` (Curador del Catálogo):**
+   - **Endpoint:** `POST /api/admin/programs` | **Jurisdicción:** `src/lib/physiology/macrocycleLibrary.ts`.
+   - **Contexto Requerido (Input):** Parámetros de disciplina, nivel del atleta y duración en semanas.
+   - **Salida Estructurada (Output):** Programas maestros estructurados con inyección de protocolos de test de campo en semanas 2 y 8.
+
+---
+
+### 💻 9.2. Capa 2: Agentes Especializados de Ingeniería y Desarrollo
+1. **Agente Lead Backend & Motores Fisiológicos:**
+   - **Jurisdicción:** `src/app/api/`, `src/lib/intervals/`, `src/lib/db/`, `src/lib/ai/`, `src/lib/physiology/`.
+   - **Subagentes:**
+     - *Subagente 1.1 (Intervals Sync Engine):* Sincronización bidireccional, sanitización de credenciales y manejo de timeouts.
+     - *Subagente 1.2 (Cloud Persistence & Security):* Cifrado AES-256-GCM, transacciones en Cloud Firestore y guardas de SuperAdmin.
+     - *Subagente 1.3 (Physiological LLM Orchestrator):* Enrutamiento de modelos Gemini (3.5 Flash / 3.0), manejo de fallback determinista y límites de tokens.
+     - *Subagente 1.4 (Periodization & Macrocycle Generator):* Algoritmos de balance 3:1, cálculo de CTL y asignación progresiva de volumen.
+2. **Agente Lead Frontend & Sports UX/UI Specialist:**
+   - **Jurisdicción:** `src/components/`, `src/app/`, layout, Tailwind CSS, SVG.
+   - **Subagentes:**
+     - *Subagente 2.1 (Continuous Calendar & PMC Telemetry):* Cuadrícula de 8 columnas, doble tarjeta (planeado vs ejecutado) y mini-cintas PMC.
+     - *Subagente 2.2 (Season Studio & SVG Curves):* Gráfica interactiva de temporada con tooltip en Glassmorphism y gestor de carreras A/B/C.
+     - *Subagente 2.3 (Head Coach Chat & Workout Diffing):* Interfaz de chat interactivo, drawer responsivo y visualizador de diffing de sesiones.
+     - *Subagente 2.4 (Biometrics & Zones Configurator):* Visor tabular de zonas (Stryd CP, Bike FTP, FC LTHR) y matriz de disponibilidad semanal.
+3. **Agente Lead Auditor Técnico, QA & Debugging:**
+   - **Jurisdicción:** `tsconfig.json`, `next.config.mjs`, `package.json`, tests, scripts de despliegue.
+   - **Subagentes:**
+     - *Subagente 3.1 (Type Safety Sentinel):* Ejecución estricta de `tsc --noEmit` y erradicación de `any`.
+     - *Subagente 3.2 (Port & Process Governor):* Garantía de puerto `3000` exclusivo (`npm run dev:clean`) y eliminación de procesos zombis.
+     - *Subagente 3.3 (Stryd Workout Syntax Validator):* Auditoría estricta de que **ningún** workout use distancia con `% FTP`.
+     - *Subagente 3.4 (Security & Modular Architecture Auditor):* Control estricto del límite de **350 líneas por archivo**, desacoplamiento de dependencias y auditoría de `firestore.rules`.
+
+---
+
+## 📏 10. PRESUPUESTOS DE CÓDIGO (LOC BUDGETS) Y PROTOCOLO ANTI-REFACTORIZACIONES DESTRUCTIVAS
+
+Para evitar la deuda técnica, la degradación del rendimiento de los LLMs y los ciclos de retrabajo ("reprocesos"), todo desarrollo en el SGEA debe acatar este estándar:
+
+```mermaid
+flowchart LR
+    subgraph PRESUPUESTO [" 1. Presupuestos de Código (LOC) "]
+        UI["UI: $\le 200$ (Max 350)"]
+        HK["Hooks: $\le 100$ (Max 150)"]
+        API["APIs: $\le 80$ (Max 120)"]
+        SRV["Services: $\le 150$ (Max 200)"]
+    end
+
+    subgraph PROTOCOLO [" 2. Protocolo Quirúrgico "]
+        P1["Edición Quirúrgica"]
+        P2["Extracción Preventiva a 250 LOC"]
+        P3["Contratos Tipados Inmutables"]
+    end
+
+    subgraph PIPELINE [" 3. 5-Gate Quality Pipeline "]
+        G1["LOC Check"] --> G2["tsc --noEmit"]
+        G2 --> G3["next build"]
+        G3 --> G4["Scope Audit"]
+        G4 --> G5["Bitácora Sync"]
+    end
+
+    PRESUPUESTO --> PROTOCOLO --> PIPELINE
+```
+
+### 📊 10.1. Tabla Oficial de Presupuestos de Código (LOC Budgets)
+| Tipo de Archivo / Capa | Límite Objetivo Recomendado | Límite Inviolable (Hard Cap) | Acción Mandatoria al Superar Límite |
+| :--- | :---: | :---: | :--- |
+| **Componentes de UI / Vistas (`.tsx`)** | $\le 200\text{ LOC}$ | **$350\text{ LOC}$** | Extraer sub-componentes atómicos en `src/components/{dominio}/`. |
+| **Custom Hooks de Estado (`use*.ts`)** | $\le 100\text{ LOC}$ | **$150\text{ LOC}$** | Dividir por responsabilidad única (ej. `useTelemetry`, `usePlans`). |
+| **Rutas API Backend (`src/app/api/**/route.ts`)** | $\le 60\text{ LOC}$ | **$80\text{ LOC}$** | Controladores delgados obligatorios; delegar 100% a la Capa de Servicios en `src/lib/services/`. |
+| **Capa de Servicios de Negocio (`src/lib/services/*.ts`)** | $\le 150\text{ LOC}$ | **$250\text{ LOC}$** | Aislar por dominio (ej. `telemetryService.ts`, `intervalsSyncService.ts`). |
+| **Servicios Backend / Base de Datos** | $\le 150\text{ LOC}$ | **$200\text{ LOC}$** | Aislar por entidad o subdominio en `src/lib/db/`. |
+| **Modelos Científicos Fisiológicos SSOT** | $\le 180\text{ LOC}$ | **$250\text{ LOC}$** | Crear un archivo por disciplina o momento en `src/lib/ai/knowledge/`. |
+| **Tipos e Interfaces (`types.ts`)** | $\le 80\text{ LOC}$ | **$120\text{ LOC}$** | Agrupar tipos por dominio, evitando mega-archivos monolíticos. |
+
+---
+
+### 🛡️ 10.2. Las 5 Leyes Anti-Refactorizaciones Destructivas ("Zero-Rework Protocol")
+1. **La Regla de la Edición Quirúrgica (Surgical Edits):**
+   - Ante solicitudes puntuales (cambiar un color, botón, texto o margen), el agente tiene **estrictamente prohibido reescribir el archivo completo** o modificar los hooks y funciones fisiológicas asociadas. Debe intervenir únicamente las líneas exactas del cambio.
+2. **Extracción Preventiva Temprana (A las 250 LOC):**
+   - No esperar a que un archivo alcance el límite crítico de 350 líneas para modularizarlo. Al llegar a **250 líneas**, cualquier nueva sub-característica **debe nacer en un archivo nuevo**.
+3. **Patrón Container-Presenter (Orquestador vs. Presentador):**
+   - El archivo contenedor principal (ej. `AthleteDashboard.tsx`, `AthleteContinuousCalendar.tsx`) actúa únicamente como **Orquestador** (< 150 LOC) gestionando estado y callbacks; los submódulos hijos son puramente **Presentadores** que renderizan y emiten eventos.
+4. **Inmutabilidad de Contratos Tipados:**
+   - Queda prohibido renombrar campos en interfaces consolidadas (`PlanItem`, `AthleteProfile`, `MacrocycleBlueprint`). Si se requiere una nueva propiedad, se agrega como opcional (`?`) preservando 100% de retrocompatibilidad.
+5. **Gobernanza FinOps y Resiliencia SWR (Token Minimizer & Write Deduplication):**
+   - **Compresión de Contexto FinOps (`src/lib/ai/contextCondenser.ts`):** Reducción de listas masivas de actividades a cadenas de texto condensadas de alta densidad, ahorrando ~70% de tokens de entrada en prompts a Gemini.
+   - **Caché en Memoria SWR en Cliente (TTL 3 min en `useAthleteTelemetry.ts`):** Las consultas de telemetría recientes se sirven desde caché en memoria para proteger cuotas de API de Intervals.icu y evitar degradación por re-render.
+   - **Dirty Checking de Persistencia (`useRef` en cliente):** Solo emitir mutaciones HTTP PUT/POST a Firestore o APIs si el estado serializado ha cambiado respecto a la última sincronización, eliminando escrituras fantasma y sobrecostos de base de datos.
+
+---
+
+### 🧪 10.3. Pipeline de Calidad de 5 Puertas (5-Gate Quality Pipeline)
+Todo agente debe verificar secuencialmente antes de dar por cerrada cualquier tarea:
+- **Gate 1 (LOC Budget):** Verificar que ningún archivo modificado o creado supere las **350 líneas** (y API routes $\le 80\text{ LOC}$).
+- **Gate 2 (Type Safety):** Ejecutar `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **Debe retornar código 0 (cero errores)**.
+- **Gate 3 (Production Build):** Ejecutar `npm run build` $\rightarrow$ **Todas las rutas compilan y empaquetan con éxito**.
+- **Gate 4 (Scope Integrity):** Confirmar con `git diff` que no se tocaron archivos fuera del alcance acordado.
+- **Gate 5 (Master Log Sync):** Registrar la intervención en `BITACORA_MAESTRA.md` con fecha, archivos modificados y resultados de pruebas.

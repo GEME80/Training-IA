@@ -130,11 +130,20 @@ radar
 * **Impacto:** Observabilidad profesional en GCP Cloud Run / Firebase App Hosting.
 * **Archivos a Crear:**
   - `[NEW] src/lib/logger.ts`: Logger tipado con niveles `info`, `warn`, `error` que emita objetos JSON estructurados `{ severity, timestamp, message, context, userId }`.
-* **Beneficio:** Diagnóstico inmediato en la consola de Google Cloud Platform ante cualquier error en producción.
+---
+
+### 🟢 MEJORA 9: Blindaje Quirúrgico Multi-Atleta y Protocolo SSOT para Agentes [✅ COMPLETADA AL 100% EN v3.40]
+* **Estado:** ✅ **COMPLETADA EN v3.40**.
+* **Impacto:** 
+  - **Filtro Quirúrgico de Borrado:** Reemplazado en `src/lib/services/intervalsSyncService.ts` el chequeo riesgoso `e.description?.includes("FTP")` por el filtro estricto sobre `e.name?.startsWith("[PULSE AI]") || e.name?.startsWith("[SGEA]")`.
+  - **Aislamiento Multi-Atleta:** Toda llamada a Intervals.icu se ejecuta exclusivamente contra el `athleteId` autenticado (`https://intervals.icu/api/v1/athlete/{athleteId}/events`). Es criptográficamente imposible que un atleta toque o borre los eventos de otro.
+  - **Protocolo SSOT para Agentes:** Establecido en `PROJECT_RULES.md` (§ 9.3) y creado `scratch/athlete_ssot.js` para consultar métricas vivas en tiempo real. Prohibición absoluta de datos quemados o ficticios en scripts y prompts.
+  - **Desambiguación Jerárquica:** Reordenado `src/lib/ai/knowledge/index.ts` para que eventos de running con entrenamiento cruzado (ej. "Maratón cruzado con ciclismo") resuelvan a `MARATHON_42K_MODEL` sin ser absorbidos erróneamente por ciclismo.
 
 ---
 
 ## 📋 3. Matriz de Ejecución y Restricciones Inviolables (LOC Budgets & Zero-Rework)
+
 
 Todo agente o desarrollador que ejecute este backlog en el próximo chat debe acatar estrictamente las siguientes restricciones:
 

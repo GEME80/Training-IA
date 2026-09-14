@@ -110,7 +110,21 @@ export function resolveTrainingModel(params: {
     return TRAIL_ULTRA_MODEL;
   }
 
-  // 4. Ciclismo
+  // 4. Running
+  if (/\b42(\.2)?\s*k(m)?\b|marat|marath|boston|berlin|chicago|valencia|nueva york/i.test(combined)) {
+    return MARATHON_42K_MODEL;
+  }
+  if (/\b21(\.1)?\s*k(m)?\b|media|half|medio marat/i.test(combined)) {
+    return HALF_MARATHON_21K_MODEL;
+  }
+  if (/\b10\s*k(m)?\b|ten_k|diez k/i.test(combined)) {
+    return TEN_K_ROAD_MODEL;
+  }
+  if (/\b5\s*k(m)?\b|five_k|cinco k/i.test(combined)) {
+    return FIVE_K_SPEED_MODEL;
+  }
+
+  // 5. Ciclismo
   if (/escalada|climb|puertos|cycling_climbing|montaña_bici|letras|linea|patios/i.test(combined)) {
     return CYCLING_CLIMBING_MODEL;
   }
@@ -119,20 +133,6 @@ export function resolveTrainingModel(params: {
   }
   if (/bici|cicli|fondo|gravel|gran fondo|cycling_fondo|gfny|letape|l'etape|etapé|ruta colombia/i.test(combined)) {
     return CYCLING_GRAN_FONDO_MODEL;
-  }
-
-  // 5. Running
-  if (/\b5\s*k(m)?\b|five_k|cinco k/i.test(combined)) {
-    return FIVE_K_SPEED_MODEL;
-  }
-  if (/\b10\s*k(m)?\b|ten_k|diez k/i.test(combined)) {
-    return TEN_K_ROAD_MODEL;
-  }
-  if (/\b21(\.1)?\s*k(m)?\b|media|half|medio marat/i.test(combined)) {
-    return HALF_MARATHON_21K_MODEL;
-  }
-  if (/\b42(\.2)?\s*k(m)?\b|marat|marath|boston|berlin|chicago|valencia|nueva york/i.test(combined)) {
-    return MARATHON_42K_MODEL;
   }
 
   // 6. Salud / Longevidad / Mantenimiento

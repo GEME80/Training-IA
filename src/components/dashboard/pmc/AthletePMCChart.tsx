@@ -75,14 +75,19 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
             </button>
           </div>
 
-          {/* HUD DERECHO (EXACTO INTERVALS) */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold self-end md:self-auto bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+          {/* HUD DERECHO (EXACTO INTERVALS CON COMPARATIVA PLAN) */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-xs font-bold self-end md:self-auto bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
             <span className="text-slate-600 dark:text-slate-300 font-black">
               {formatPmcHeaderDate(activePoint?.date)}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400">Aptitud:</span>
               <span className="text-sky-500 font-black">{activePoint?.ctl ?? "—"}</span>
+              {activePoint?.plannedCtl !== undefined && (
+                <span className="text-amber-500 text-[11px] font-bold">
+                  (Plan: {activePoint.plannedCtl})
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400">Fatiga:</span>

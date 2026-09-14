@@ -7,6 +7,12 @@ export interface PMCDataPoint {
   atl: number;
   tsb: number;
   rampRate: number;
+  // Métricas Esperadas / Planificadas por el Macrociclo
+  plannedCtl?: number;
+  plannedAtl?: number;
+  plannedTsb?: number;
+  plannedRampRate?: number;
+  isInPlanWindow?: boolean;
   isProjected: boolean;
   tss?: number;
   label?: string;
@@ -22,6 +28,12 @@ export interface PMCHistoricalSummary {
   lastKnownCtl: number;
   lastKnownAtl: number;
   lastKnownTsb: number;
+  // Métricas de Comparativa Planificado vs Real
+  plannedCtlToday?: number;
+  ctlGapToday?: number;
+  planCompliancePercent?: number;
+  planStartDate?: string;
+  raceDate?: string;
 }
 
 export type PMCTimeframe = "3m" | "6m" | "1y";
@@ -87,23 +99,77 @@ export function computePMCHistoricalSummary(wellness: AthleteWellness[]): PMCHis
 }
 
 /**
- * Genera la serie temporal combinada de Pasado Real + Proyección Futura de Banister
+ * Genera la serie temporal combinada con Histórico Real y Curva Esperada del Plan (Banister)
  */
 export function generatePMCSeries(
   wellness: AthleteWellness[],
   blueprint: MacrocycleBlueprint | null,
-  timeframe: PMCTimeframe = "6m",
+  timeframe: PMCTimeframe = "1y",
   includeProjection: boolean = true
 ): { points: PMCDataPoint[]; summary: PMCHistoricalSummary } {
   const summary = computePMCHistoricalSummary(wellness);
 
   // 1. Filtrar histórico según ventana temporal seleccionada
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   const daysBack = timeframe === "3m" ? 90 : timeframe === "6m" ? 180 : 365;
   const cutoffDate = new Date(today);
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
   const cutoffStr = cutoffDate.toISOString().split("T")[0];
 
+  // 2. Si hay macrociclo activo, computar la trayectoria planificada día a día desde blueprint.startDate
+  const plannedMap = new Map<string, { ctl: number; atl: number; tsb: number; ramp: number }>();
+  let plannedStartCtl = summary.lastKnownCtl || 35;
+
+  if (blueprint && blueprint.weeks && blueprint.weeks.length > 0) {
+    const planStartStr = blueprint.startDate || blueprint.weeks[0]?.startDate || todayStr;
+    summary.planStartDate = planStartStr;
+    summary.raceDate = blueprint.raceDate || blueprint.primaryRace?.date || undefined;
+
+    // Buscar el CTL real que tenía el atleta en la fecha de inicio del plan
+    const matchStart = wellness.find((w) => w.date === planStartStr);
+    if (matchStart && typeof matchStart.ctl === "number") {
+      plannedStartCtl = matchStart.ctl;
+    }
+
+    let runPlannedCtl = plannedStartCtl;
+    let runPlannedAtl = matchStart && typeof matchStart.atl === "number" ? matchStart.atl : plannedStartCtl;
+    const planCursor = new Date(planStartStr + "T12:00:00");
+    const dayWeights = [0.10, 0.15, 0.15, 0.05, 0.15, 0.25, 0.15];
+
+    blueprint.weeks.forEach((week) => {
+      const weeklyTss = week.targetTss || 350;
+      for (let d = 0; d < 7; d++) {
+        const dStr = planCursor.toISOString().split("T")[0];
+        const dayTss = Math.round(weeklyTss * dayWeights[d]);
+
+        const prevPlannedCtl = runPlannedCtl;
+        runPlannedCtl = runPlannedCtl + (dayTss - runPlannedCtl) / 42;
+        runPlannedAtl = runPlannedAtl + (dayTss - runPlannedAtl) / 7;
+        const plannedTsb = runPlannedCtl - runPlannedAtl;
+        const plannedRamp = Math.round((runPlannedCtl - prevPlannedCtl) * 7 * 10) / 10;
+
+        plannedMap.set(dStr, {
+          ctl: Math.round(runPlannedCtl * 10) / 10,
+          atl: Math.round(runPlannedAtl * 10) / 10,
+          tsb: Math.round(plannedTsb * 10) / 10,
+          ramp: plannedRamp,
+        });
+
+        planCursor.setDate(planCursor.getDate() + 1);
+      }
+    });
+
+    // Comparativa HOY
+    const todayPlan = plannedMap.get(todayStr);
+    if (todayPlan) {
+      summary.plannedCtlToday = todayPlan.ctl;
+      summary.ctlGapToday = Math.round((summary.lastKnownCtl - todayPlan.ctl) * 10) / 10;
+      summary.planCompliancePercent = todayPlan.ctl > 0 ? Math.min(130, Math.round((summary.lastKnownCtl / todayPlan.ctl) * 100)) : 100;
+    }
+  }
+
+  // 3. Puntos históricos reales
   const historicalPoints: PMCDataPoint[] = (wellness || [])
     .filter((w) => w.date >= cutoffStr)
     .map((w) => {
@@ -111,12 +177,19 @@ export function generatePMCSeries(
       const atl = typeof w.atl === "number" ? w.atl : 0;
       const tsb = typeof w.tsb === "number" ? w.tsb : (ctl - atl);
       const ramp = typeof w.rampRate === "number" ? Math.round(w.rampRate * 10) / 10 : 0;
+      const planVal = plannedMap.get(w.date);
+
       return {
         date: w.date,
         ctl: Math.round(ctl * 10) / 10,
         atl: Math.round(atl * 10) / 10,
         tsb: Math.round(tsb * 10) / 10,
         rampRate: ramp,
+        plannedCtl: planVal?.ctl,
+        plannedAtl: planVal?.atl,
+        plannedTsb: planVal?.tsb,
+        plannedRampRate: planVal?.ramp,
+        isInPlanWindow: Boolean(planVal),
         isProjected: false,
         tss: w.ctlLoad,
       };
@@ -130,7 +203,7 @@ export function generatePMCSeries(
     return { points: historicalPoints, summary };
   }
 
-  // 2. Proyección Futura aplicando modelo de Banister (tau1=42, tau2=7)
+  // 4. Proyección Futura desde HOY hasta el final del macrociclo
   const projectedPoints: PMCDataPoint[] = [];
   let currentCtl = historicalPoints.length > 0
     ? historicalPoints[historicalPoints.length - 1].ctl
@@ -141,31 +214,30 @@ export function generatePMCSeries(
 
   const lastDateStr = historicalPoints.length > 0
     ? historicalPoints[historicalPoints.length - 1].date
-    : today.toISOString().split("T")[0];
+    : todayStr;
   
-  const cursorDate = new Date(lastDateStr);
+  const cursorDate = new Date(lastDateStr + "T12:00:00");
+  const remainingWeeks = blueprint.weeks.filter((w) => !w.isPastWeek);
+  const weeksToProject = remainingWeeks.length > 0 ? remainingWeeks : blueprint.weeks;
 
-  blueprint.weeks.forEach((week, wIdx) => {
+  weeksToProject.forEach((week, wIdx) => {
     const weeklyTargetTss = week.targetTss || 350;
-    // Distribución representativa semanal (más carga fin de semana y midweek)
-    const dayTssWeights = [0.10, 0.15, 0.15, 0.05, 0.15, 0.25, 0.15];
+    const dayWeights = [0.10, 0.15, 0.15, 0.05, 0.15, 0.25, 0.15];
 
     for (let d = 0; d < 7; d++) {
       cursorDate.setDate(cursorDate.getDate() + 1);
       const dateStr = cursorDate.toISOString().split("T")[0];
-      const dailyTss = Math.round(weeklyTargetTss * dayTssWeights[d]);
+      const dailyTss = Math.round(weeklyTargetTss * dayWeights[d]);
 
-      // Ecuaciones de Banister / Coggan
       const prevCtl = currentCtl;
       currentCtl = currentCtl + (dailyTss - currentCtl) / 42;
       currentAtl = currentAtl + (dailyTss - currentAtl) / 7;
       const currentTsb = currentCtl - currentAtl;
 
-      // Estimación de rampa semanal
       const refPoint = projectedPoints[projectedPoints.length - 7] || historicalPoints[historicalPoints.length - 1];
       const projectedRamp = refPoint ? Math.round((currentCtl - refPoint.ctl) * 10) / 10 : Math.round((currentCtl - prevCtl) * 7 * 10) / 10;
-
-      const isLastDay = wIdx === blueprint.weeks.length - 1 && d === 6;
+      const planVal = plannedMap.get(dateStr);
+      const isLastDay = wIdx === weeksToProject.length - 1 && d === 6;
 
       projectedPoints.push({
         date: dateStr,
@@ -173,6 +245,11 @@ export function generatePMCSeries(
         atl: Math.round(currentAtl * 10) / 10,
         tsb: Math.round(currentTsb * 10) / 10,
         rampRate: projectedRamp,
+        plannedCtl: planVal?.ctl ?? Math.round(currentCtl * 10) / 10,
+        plannedAtl: planVal?.atl ?? Math.round(currentAtl * 10) / 10,
+        plannedTsb: planVal?.tsb ?? Math.round(currentTsb * 10) / 10,
+        plannedRampRate: planVal?.ramp ?? projectedRamp,
+        isInPlanWindow: true,
         isProjected: true,
         tss: dailyTss,
         label: isLastDay ? (blueprint.primaryRace?.name || "Carrera") : undefined,

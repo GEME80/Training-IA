@@ -3069,3 +3069,51 @@ flowchart TD
   - Presupuestos de código: Todos los archivos modificados $\le 344$ LOC ($< 350$ LOC) y API routes $\le 64$ LOC ($\le 80$ LOC).
   - `scratch/run_biometrics_test.js`: Validación exitosa de cálculo biométrico, W/kg e intercambio de 5 campos.
 
+### Versión 3.38 - Anclaje Fisiológico en el Histórico de 365 Días (Intervals.icu) y Calibración Inversa de Banister para Macrociclos (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 15:40 COT.
+- **Directiva:** "Revisando ya el macrociclo está mal calculado porque nunca sube a los TSS que he tenido históricos. Para esto actualicemos la documentación con los cambios realizados y mejoremos nuestro proceso de macrociclos tomando más datos históricos de los atletas. Analiza toda la documentación y usemos los agentes requeridos".
+- **Diagnóstico y Causa Raíz de la Ceguera Histórica:**
+  1. **Aplanamiento y Colapso de CTL:** Previamente, `macrocycleGenerator.ts` calculaba `dynamicTssBaseline = hasRealCtl ? Math.round(athleteCtl * 7 * 0.95) : 280`. Para un atleta con CTL actual de 37.5, esto fijaba una base de solo 249 TSS/semana. En `calculateProgressiveWeeklyTss`, el inicio era de 219 TSS/sem y el pico apenas 323 TSS/sem.
+  2. **Efecto de Desentrenamiento en Carrera:** Debido a que el estado estacionario asintótico de Banister con 249 TSS/sem es $CTL_\infty = 249 / 7 = 35.5$, al aplicar el tapering de 2 semanas el CTL proyectado colapsaba a **32.7 en el día de la carrera** (por debajo del estado físico actual del atleta), ignorando por completo que el atleta cuenta con un motor aeróbico demostrado de **86.9 Peak CTL** en los últimos 365 días (con picos de ATL > 130 y 19,426 TSS anuales).
+  3. **Rotura en la Cadena de Datos:** Aunque `pmcEngine.ts` calculaba `computePMCHistoricalSummary(wellness)` para la gráfica, esta información (`peakCtlLastYear`, `annualVolumeTss`, `maxAtlRecorded`, `avgRampRate`) se descartaba y no llegaba a `generateCustomMacrocycleBlueprint` ni a `MacrocycleAIGenerator`.
+- **Solución Arquitectónica y Fisiológica Implementada:**
+  1. **Ecuación Inversa de Banister y Cálculo de Pico Realista (`calculateTargetPeakCtl`):**
+     - Se deduce la fórmula matemática de balance de carga continua:
+       $$TSS_{semanal} = 7 \cdot CTL_t + 45.07 \cdot RampRate$$
+       $$TargetPeakWeeklyTss = 7 \cdot TargetPeakCtl + 45 \cdot 1.5$$
+       $$StartWeeklyTss = 7 \cdot currentCtl + 45 \cdot 1.8$$
+     - Si el atleta tiene antecedentes de alto volumen ($PeakCTL_{365d} \ge 65$) pero parte de un CTL menor por asimilación o período entre temporadas, el motor asigna una tasa de rampa segura de $+2.8\text{ a }+3.2$ CTL/semana (frente a $+2.0\text{ a }+2.2$ estándar).
+     - Para el caso de Juan Pablo Vásquez / Germán Morales hacia Triseries Paipa 70.3 (16 semanas), el sistema fija un `TargetPeakCtl = 78` y progresión semanal de:
+       - Semana 1 (Base): 344 TSS/semana.
+       - Semana 14 (Pico): 644 TSS/semana.
+       - Semana 16 (Competición): 270 TSS/semana (Tapering proporcional).
+       - Simulación Banister resultante: Pico CTL de 71.6 y Día de Carrera con **64.8 CTL y TSB de +13.2** (frescura óptima de competición).
+  2. **Cableado de Telemetría Histórica de Extremo a Extremo:**
+     - `src/hooks/useAthleteTelemetry.ts`: Genera y memoiza `historicalSummary: PMCHistoricalSummary` desde `wellnessHistory` (365 días).
+     - `src/components/dashboard/AthleteDashboardViewRouter.tsx`: Despacha `historicalMetrics={telemetry.historicalSummary}` a `AthleteSeasonStudioView`.
+     - `src/components/dashboard/AthleteSeasonStudioView.tsx`: Recibe `historicalMetrics` y lo transfiere a `<SeasonAIGenerator>` y a `generateCustomMacrocycleBlueprint`.
+     - `src/components/season/SeasonAIGenerator.tsx`: Envía `historicalMetrics` al endpoint `/api/macrocycles/generate-ai` y al fallback local.
+     - `src/lib/services/macrocycleApiService.ts`: Incorpora `historicalMetrics` con tolerancia a fallos offline o desprovistos de conexión.
+     - `src/lib/gemini/macrocycleAI.ts`: Inyecta métricas históricas al prompt del modelo Gemini y al generador fisiológico.
+     - `src/lib/physiology/macrocycleGenerator.ts`: Recibe `historicalMetrics` en `athleteMetrics` y ejecuta `calculateTargetPeakCtl`.
+     - `src/lib/ai/knowledge/index.ts`: `calculateProgressiveWeeklyTss` recibe `options?: { startTss?: number; peakTss?: number }` para respetar la calibración Banister.
+  3. **Correcciones de Gobernanza de Código y Stryd:**
+     - `src/lib/ai/knowledge/athleteMomentsModels.ts:180`: Corregida la prescripción de distancia `- 1000mtr 100% FTP` a duración en tiempo `- 4m 100% FTP` (cumplimiento estricto de sintaxis Stryd).
+     - `src/lib/ai/headcoach/deterministicFallback.ts:233, 240, 247`: Erradicada la potencia hardcodeada `327W` en favor de la interpolación dinámica del perfil del atleta (`profile.run_ftp ? ... : "100% CP"`).
+- **Gobernanza de Costos y Presupuestos de Código:**
+  - **Coste de Base de Datos:** **$0 USD adicional en Firestore**. Todo el cálculo de 365 días se efectúa en memoria en el cliente / edge sin escrituras redundantes.
+  - **Presupuesto de Código (< 350 LOC):**
+    - `src/lib/ai/knowledge/index.ts`: 346 líneas.
+    - `src/lib/physiology/macrocycleGenerator.ts`: 343 líneas.
+    - `src/lib/physiology/macrocycleWizard.ts`: 347 líneas.
+    - `src/hooks/useAthleteTelemetry.ts`: 346 líneas.
+    - `src/components/dashboard/AthleteSeasonStudioView.tsx`: 342 líneas.
+    - `src/components/season/SeasonAIGenerator.tsx`: 345 líneas.
+    - `src/lib/ai/headcoach/deterministicFallback.ts`: 341 líneas.
+    - `src/lib/services/macrocycleApiService.ts`: 155 líneas.
+- **Validaciones Automatizadas Superadas:**
+  - `test_historical_macrocycle.ts`: Verificación de rampa semanal, target peak CTL (78 pts), inicio en 344 TSS, pico en 644 TSS, asimilación y frescura en carrera con TSB de +13.2.
+  - `tsc --noEmit`: 0 errores de tipado en todo el repositorio.
+  - `npm run build`: Compilación de producción Next.js 15 exitosa (20/20 rutas generadas, Código 0).
+
+

@@ -125,6 +125,15 @@ flowchart TD
    - *Escalado por Nivel (`athleteLevelCaps`):* Todos los modelos deben definir cotas de volumen e intensidad adaptadas al $CTL$ inicial (`BEGINNER`: 28 km / 165m, `INTERMEDIATE`: 32 km / 175m, `ADVANCED_ELITE`: 36 km / 185m).
    - *Tapering Científico Mujika & Bosquet (`taperingRules`):* 3 semanas para 42K/Ultra/IRONMAN, 2 semanas para 21K/70.3/Gran Fondo, 1.5 semanas para 10K y 1 semana para 5K/Sprint/Crit, en secuencia decreciente (ej. 32 km $\rightarrow$ 22 km $\rightarrow$ 16 km $\rightarrow$ 42.2 km) preservando el 100% de la intensidad de competición.
    - *Ecosistema Completo de Fuerza (100% SSOT):* Todo workout de fuerza o entrenamiento cruzado debe invocarse desde `strengthAndCrossModels.ts`.
+   - *Gobernanza de Carga Histórica Demostrada en Macrociclos (v3.38):*
+     - Queda terminantemente prohibido calcular el baseline de TSS semanal de un macrociclo asumiendo únicamente el CTL puntual actual sin consultar el histórico de los últimos 365 días (`peakCtlLastYear`, `annualVolumeTss`, `maxAtlRecorded`, `avgRampRate`).
+     - Si un atleta posee antecedentes de carga demostrada ($PeakCTL \ge 65$), el generador no debe aplanar el plan ni provocar desentrenamiento previo a la carrera (ej. finalizar en 32 CTL cuando su motor es de 86.9 CTL).
+     - El volumen semanal se calcula mediante la **Ecuación Inversa de Banister**:
+       $$TSS_{semanal} = 7 \cdot CTL_t + 45.07 \cdot RampRate$$
+       $$TargetPeakWeeklyTss = 7 \cdot TargetPeakCtl + 45 \cdot 1.5$$
+       $$StartWeeklyTss = 7 \cdot currentCtl + 45 \cdot 1.8$$
+     - El tapering debe reducir volumen progresivamente preservando la intensidad de competición, para entregar al atleta en el día de carrera con **TSB positivo (+5 a +15)** y retención óptima del CTL pico.
+     - **Presupuesto Financiero Inviolable:** La telemetría histórica de 365 días debe computarse 100% en memoria en el cliente o edge, garantizando **$0 USD adicional de coste en Firestore**.
 
 ---
 

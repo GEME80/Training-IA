@@ -84,9 +84,9 @@ export class MacrocycleAIEngine {
         age: profile.age,
         // ✅ Matriz Semanal del Atleta propagada al motor generador
         weeklyAvailability: config.weeklyAvailability as any,
+        // ✅ Telemetría Histórica de 365 días para rampa Banister
+        historicalMetrics: options?.historicalProfile || (config as any).historicalMetrics,
       },
-
-
     });
 
     // Anotar los tests fisiológicos programados en los focusDescription de las semanas correspondientes

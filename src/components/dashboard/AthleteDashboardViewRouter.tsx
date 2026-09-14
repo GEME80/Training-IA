@@ -91,6 +91,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         restingHR={telemetry.profile.restingHR}
         maxHR={telemetry.profile.maxHR}
         weeklyAvailability={season.weeklyAvailability}
+        historicalMetrics={telemetry.historicalSummary}
         targetRaces={season.targetRaces}
         seasonPlans={season.seasonPlans}
         onSaveTargetRaces={season.handleSaveTargetRaces}

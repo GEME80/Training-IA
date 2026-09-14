@@ -23,6 +23,7 @@ export interface MacrocycleAiRequestBody {
   restingHR?: number;
   maxHR?: number;
   lthr?: number;
+  historicalMetrics?: any;
 }
 
 export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody) {
@@ -127,7 +128,9 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
   profile.tsb = physioStatus.tsb;
   profile.rampRate = physioStatus.rampRate;
 
-  const historicalProfile = computePMCHistoricalSummary(wellness);
+  const historicalProfile = wellness.length > 0
+    ? computePMCHistoricalSummary(wellness)
+    : (body.historicalMetrics || (wizardConfig as any)?.historicalMetrics);
 
   const aiResult = await MacrocycleAIEngine.generatePersonalizedMacrocycle(
     profile,

@@ -18,6 +18,7 @@ import {
   calculateProgressiveLongRun,
   calculateProgressiveWeeklyTss,
 } from "../ai/knowledge";
+import { PMCHistoricalSummary } from "./pmcEngine";
 
 export interface CustomMacrocycleConfig {
   definitionId?: string;
@@ -43,38 +44,71 @@ export interface CustomMacrocycleConfig {
     age?: number;
     gender?: "M" | "F" | "OTHER";
     weeklyAvailability?: WeeklyAvailabilityMap;
+    historicalMetrics?: PMCHistoricalSummary;
   };
 }
 
 export function getMonday(d: Date): Date {
   const date = new Date(d);
   const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
+  date.setDate(date.getDate() - day + (day === 0 ? -6 : 1));
   date.setHours(0, 0, 0, 0);
   return date;
 }
 
-export function formatDate(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
+export function formatDate(d: Date): string { return d.toISOString().split("T")[0]; }
 
 export function formatRange(start: Date, end: Date): string {
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   return `${start.getDate()} ${months[start.getMonth()]} - ${end.getDate()} ${months[end.getMonth()]}`;
 }
 
-/**
- * Calcula el factor de escala de volumen según el CTL real del atleta.
- * Evita prescribir volúmenes lesivos para principiantes (CTL=0) o corredores en retorno.
- */
 export function resolveVolumeScaleFactor(ctl?: number): number {
-  if (!ctl || ctl <= 0) return 0.60;  // sin datos o sin actividad → carga mínima segura
-  if (ctl <= 15) return 0.65;          // principiante / recuperación de lesión
-  if (ctl <= 30) return 0.78;          // intermedio bajo
-  if (ctl <= 50) return 0.90;          // intermedio
-  if (ctl <= 70) return 1.00;          // avanzado (modelo canónico del SSOT)
-  return 1.12;                          // élite
+  if (!ctl || ctl <= 0) return 0.60;
+  if (ctl <= 15) return 0.65;
+  if (ctl <= 30) return 0.78;
+  if (ctl <= 50) return 0.90;
+  if (ctl <= 70) return 1.00;
+  return 1.12;
+}
+
+export interface PeakCtlCalculationInput {
+  currentCtl: number;
+  peakCtlLastYear?: number;
+  totalWeeks?: number;
+  weeksCount?: number;
+  historicalMetrics?: PMCHistoricalSummary;
+  sportCategory?: string;
+  targetDistanceKm?: number;
+}
+
+export function calculateTargetPeakCtl(input: PeakCtlCalculationInput): {
+  targetPeakCtl: number; targetPeakWeeklyTss: number; startWeeklyTss: number; weeklyRampRate: number;
+} {
+  const currentCtl = Math.max(12, input.currentCtl || 30);
+  const histPeak = input.peakCtlLastYear || input.historicalMetrics?.peakCtlLastYear;
+  const peakLastYear = histPeak && histPeak > currentCtl ? histPeak : currentCtl * 1.30;
+
+  let eventMinCtl = 48, eventOptimalCtl = 68;
+  if (input.targetDistanceKm && input.targetDistanceKm > 100) {
+    eventMinCtl = input.targetDistanceKm > 150 ? 82 : 68;
+    eventOptimalCtl = input.targetDistanceKm > 150 ? 100 : 80;
+  } else if (input.targetDistanceKm && input.targetDistanceKm <= 55) {
+    eventMinCtl = 45; eventOptimalCtl = 60;
+  }
+
+  const buildWeeks = Math.max(2, (input.totalWeeks || input.weeksCount || 12) - 2);
+  const hasStrongEngine = peakLastYear >= 65 && currentCtl < peakLastYear * 0.80;
+  const safeRampRate = hasStrongEngine ? 3.2 : 2.2;
+  const attainableCtl = currentCtl + buildWeeks * safeRampRate;
+  const safeCeiling = Math.min(peakLastYear * 1.02, eventOptimalCtl + 10);
+
+  const targetPeakCtl = Math.round(Math.min(safeCeiling, Math.max(eventMinCtl, attainableCtl)) * 10) / 10;
+  const targetPeakWeeklyTss = Math.round(7 * targetPeakCtl + 45 * 1.5);
+  const startWeeklyTss = Math.round(7 * currentCtl + 45 * 1.8);
+  const weeklyRampRate = Math.round(((targetPeakCtl - currentCtl) / buildWeeks) * 10) / 10;
+
+  return { targetPeakCtl, targetPeakWeeklyTss, startWeeklyTss, weeklyRampRate };
 }
 
 /**
@@ -131,8 +165,17 @@ export function generateCustomMacrocycleBlueprint(
   const recoveryModulo = isConservative ? 3 : 4;
 
   const athleteCtl = config.athleteMetrics?.ctl;
+  const historicalMetrics = config.athleteMetrics?.historicalMetrics;
   const hasRealCtl = typeof athleteCtl === "number" && athleteCtl > 10;
   const dynamicTssBaseline = hasRealCtl ? Math.round(athleteCtl * 7 * 0.95) : 280;
+
+  const peakPlanCalc = calculateTargetPeakCtl({
+    currentCtl: athleteCtl || 35,
+    peakCtlLastYear: historicalMetrics?.peakCtlLastYear,
+    totalWeeks,
+    sportCategory: curatedModel.sportCategory,
+    targetDistanceKm: curatedModel.targetDistanceKm,
+  });
 
   // Factor de escala de volumen por CTL real del atleta (anti-lesión)
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
@@ -217,7 +260,15 @@ export function generateCustomMacrocycleBlueprint(
     // Cálculo dinámico progresivo desde el modelo curado (SSOT) con volumeScaleFactor y athleteCtl
     const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown, volumeScaleFactor, athleteCtl);
 
-    const targetTss = calculateProgressiveWeeklyTss(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, dynamicTssBaseline);
+    const targetTss = calculateProgressiveWeeklyTss(
+      curatedModel,
+      weekNumber,
+      totalWeeks,
+      isRecoveryWeek,
+      phase,
+      dynamicTssBaseline,
+      { startTss: peakPlanCalc.startWeeklyTss, peakTss: peakPlanCalc.targetPeakWeeklyTss }
+    );
 
     const scheduledTests = curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber);
     const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests.map(t => t.testName).join(" & ")} • ` : "";
@@ -226,6 +277,8 @@ export function generateCustomMacrocycleBlueprint(
     const isRaceWeekNow = countdown === 1;
     const raceNote = isRaceWeekNow && isTri
       ? `🏆 Competición Oficial Triatlón: Natación + T1 + Ciclismo + T2 + Carrera. Estrategia nutricional y transiciones ágiles.`
+      : curatedModel.sportCategory === "Cycling"
+      ? `${phaseLabel}: Fondo dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`
       : `${phaseLabel}: Tirada dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;
 

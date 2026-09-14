@@ -5,6 +5,7 @@ import { Sparkles, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { TargetRace, MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
+import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
 
 import { useAuth } from "@/context/AuthContext";
 import { getUserStorage } from "@/lib/storage/userStorage";
@@ -13,9 +14,7 @@ import { SeasonWizardStep2Disciplines } from "./wizard/SeasonWizardStep2Discipli
 import { SeasonWizardStep3Physiology } from "./wizard/SeasonWizardStep3Physiology";
 import { SeasonWizardStep4Preview } from "./wizard/SeasonWizardStep4Preview";
 import {
-  getResolvedStartDate,
-  calculateWeeksToRace,
-  resolveDistTypeFromWizard,
+  getResolvedStartDate, calculateWeeksToRace, resolveDistTypeFromWizard,
 } from "./wizard/seasonWizardHelpers";
 
 interface SeasonAIGeneratorProps {
@@ -35,6 +34,7 @@ interface SeasonAIGeneratorProps {
   gender?: "M" | "F" | "OTHER";
   restingHR?: number;
   maxHR?: number;
+  historicalMetrics?: PMCHistoricalSummary;
   onGenerateAIPlan: (userPrompt: string, weeksCount: number, primaryDiscipline: string) => Promise<void>;
   onApplyDirectBlueprint?: (blueprint: MacrocycleBlueprint, planTitle: string) => void;
   onNavigateToProfile?: () => void;
@@ -58,6 +58,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   gender,
   restingHR,
   maxHR,
+  historicalMetrics,
   onGenerateAIPlan,
   onApplyDirectBlueprint,
   onNavigateToProfile,
@@ -127,13 +128,13 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             athleteId, apiKey: storedApiKey, runFtp, bikeFtp,
-            weightKg, heightCm, birthDate, gender, restingHR, maxHR, lthr,
+            weightKg, heightCm, birthDate, gender, restingHR, maxHR, lthr, historicalMetrics,
             wizardConfig: {
               targetDistance: distType, weeksCount, startDate, hasRace: !!primaryRace,
               raceName: primaryRace?.name || planTitle, raceDate: primaryRace?.date || "", raceDistance: distType,
               raceGoal: primaryRace?.goalTarget || "Pico de forma óptimo",
               trainingApproach, periodization, customPrompt: customPromptText,
-              weeklyAvailability: localWeeklyAvailability,
+              weeklyAvailability: localWeeklyAvailability, historicalMetrics,
             },
           }),
         });
@@ -158,7 +159,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
         distanceType: distType, startDate, weeksCount,
         customGoal: `${planTitle}. Enfoque: ${trainingApproach}.`,
         periodization: periodization as any, primaryRace: primaryRace || undefined,
-        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability: localWeeklyAvailability },
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability: localWeeklyAvailability, historicalMetrics },
       });
 
       setGeneratedBlueprint(bp);

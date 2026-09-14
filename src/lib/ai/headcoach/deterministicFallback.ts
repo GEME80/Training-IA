@@ -222,6 +222,7 @@ Semana estructurada con estímulos diferenciados (Umbral Stryd CP, Rodillo Sweet
     };
     modifiedPlan[targetDayIdx] = adaptedSession;
 
+    const runFtpDisplay = profile.run_ftp ? `${profile.run_ftp}W` : "100% CP";
     workoutDiff = {
       dayName: "Martes",
       dayIndex: targetDayIdx,
@@ -230,21 +231,21 @@ Semana estructurada con estímulos diferenciados (Umbral Stryd CP, Rodillo Sweet
         title: prevSession.workoutName || prevSession.title || "Series VO2max",
         durationMinutes: prevSession.durationMinutes || 60,
         tss: prevSession.tss || 65,
-        intensity: `${profile.run_ftp ?? 327}W (% CP)`,
+        intensity: profile.run_ftp ? `${profile.run_ftp}W (% CP)` : "100% CP",
         activityType: "Run",
       },
       proposed: {
         title: "Carrera Condensada con Intervalos de Umbral",
         durationMinutes: 40,
         tss: 45,
-        intensity: `3x 6m @ 100% Stryd CP (${profile.run_ftp ?? 327}W)`,
+        intensity: `3x 6m @ 100% Stryd CP (${runFtpDisplay})`,
         activityType: "Run",
         workoutStructure: adaptedSession.workoutStructure,
       },
     };
 
     replyMsg = `### ⚡ Adaptación de Tiempo Aplicada (Martes)
-He condensado la sesión de calidad a **40 minutos exactos** manteniendo el estímulo principal con **3 series de 6 min al 100% Stryd CP (${profile.run_ftp ?? 327}W)**.
+He condensado la sesión de calidad a **40 minutos exactos** manteniendo el estímulo principal con **3 series de 6 min al 100% Stryd CP (${runFtpDisplay})**.
 
 El volumen semanal se recalibra a **${plannedWeekTss - 20} TSS**, manteniendo el balance de fatiga perfecto para el resto de la semana.`;
   } else if (lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici") || lowerMsg.includes("molestia") || lowerMsg.includes("dolor")) {

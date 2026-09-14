@@ -9,6 +9,7 @@ import { SeasonActivePlanCard } from "../season/SeasonActivePlanCard";
 import { SeasonProgramLibrary, ProgramTemplate, PROGRAM_TEMPLATES } from "../season/SeasonProgramLibrary";
 import { SeasonAIGenerator } from "../season/SeasonAIGenerator";
 import { SeasonRacesTab } from "../season/SeasonRacesTab";
+import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
 
 interface AthleteSeasonStudioViewProps {
   athleteId: string;
@@ -23,6 +24,7 @@ interface AthleteSeasonStudioViewProps {
   restingHR?: number;
   maxHR?: number;
   weeklyAvailability?: WeeklyAvailabilityMap;
+  historicalMetrics?: PMCHistoricalSummary;
   targetRaces: TargetRace[];
   seasonPlans: SeasonPlanItem[];
   onSaveTargetRaces: (races: TargetRace[]) => void;
@@ -47,6 +49,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   restingHR,
   maxHR,
   weeklyAvailability,
+  historicalMetrics,
   targetRaces,
   seasonPlans,
   onSaveTargetRaces,
@@ -78,11 +81,9 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     return targetRaces.find((r) => r.priority === "A") || (targetRaces.length > 0 ? targetRaces[0] : null);
   }, [targetRaces, selectedRaceId]);
 
-  const [newRaceName, setNewRaceName] = useState("");
-  const [newRaceDate, setNewRaceDate] = useState("");
+  const [newRaceName, setNewRaceName] = useState(""), [newRaceDate, setNewRaceDate] = useState("");
   const [newRaceDistance, setNewRaceDistance] = useState<TargetRace["distance"]>("42k");
-  const [newRacePriority, setNewRacePriority] = useState<"A" | "B" | "C">("A");
-  const [newRaceGoal, setNewRaceGoal] = useState("");
+  const [newRacePriority, setNewRacePriority] = useState<"A" | "B" | "C">("A"), [newRaceGoal, setNewRaceGoal] = useState("");
 
   const showNotification = (msg: string) => {
     setSuccessMessage(msg);
@@ -110,7 +111,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   const handleAddNewRaceInline = (race: TargetRace) => {
     onSaveTargetRaces([...targetRaces, race]);
     setSelectedRaceId(race.id);
-    showNotification(`¡Carrera "${race.name}" vinculada!`);
+    showNotification(`Carrera "${race.name}" guardada como objetivo.`);
   };
 
   const handleDeleteRace = (id: string) => {
@@ -128,7 +129,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     const blueprint = generateCustomMacrocycleBlueprint({
       distanceType: (prog.discipline === "Triatlón" ? "triathlon_703" : prog.discipline === "Carrera" ? "42k" : "maintenance"),
       startDate, weeksCount: prog.weeks, customGoal: prog.name, primaryRace: primaryRace || undefined,
-      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability },
+      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
     });
 
     if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -153,7 +154,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       const blueprint = generateCustomMacrocycleBlueprint({
         distanceType: (primaryDiscipline.toLowerCase().includes("triatl") ? "triathlon_703" : "42k"),
         startDate, weeksCount, customGoal: userPrompt, primaryRace: primaryRace || undefined,
-        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability },
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
       });
 
       if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -164,7 +165,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
         totalWeeks: weeksCount, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
       };
       onSaveSeasonPlans([newPlanItem]);
-      showNotification("¡Macrociclo generado y aplicado!");
+      showNotification("¡Macrociclo personalizado activado!");
     } finally {
       setIsGeneratingAI(false);
     }
@@ -306,6 +307,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                     gender={gender}
                     restingHR={restingHR}
                     maxHR={maxHR}
+                    historicalMetrics={historicalMetrics}
                     onGenerateAIPlan={handleGenerateAIPlan}
                     onApplyDirectBlueprint={handleApplyDirectBlueprint}
                     onNavigateToProfile={onNavigateToProfile}

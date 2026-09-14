@@ -5,6 +5,7 @@ import { AthleteProfile, AthleteWellness, DailyExecutedMap, DEFAULT_VISIBLE_METR
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { isMasterAdminEmail } from "@/lib/env";
 import { UserStorage, purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
+import { computePMCHistoricalSummary, PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
 
 interface UseAthleteTelemetryProps {
   user: any;
@@ -62,6 +63,10 @@ export function useAthleteTelemetry({
     if (!wellnessHistory?.length) return null;
     const reversed = [...wellnessHistory].reverse();
     return reversed.find((w) => w.sleepQuality !== undefined || w.sleepSecs !== undefined || w.hrv !== undefined || w.restingHR !== undefined) || reversed[0];
+  }, [wellnessHistory]);
+
+  const historicalSummary: PMCHistoricalSummary = useMemo(() => {
+    return computePMCHistoricalSummary(wellnessHistory);
   }, [wellnessHistory]);
 
   const [profile, setProfile] = useState<AthleteProfile>(() => ({
@@ -332,6 +337,7 @@ export function useAthleteTelemetry({
 
   return {
     profile, setProfile, physioStatus, setPhysioStatus, wellnessHistory, latestWellness,
+    historicalSummary,
     weeklyExecutedTss, dailyExecutedActivities, isLiveConnected, setIsLiveConnected,
     isRefreshingTelemetry, isLoading, apiKeyCache, geminiKeyCache, visibleMetrics,
     isOnboardingOpen, setIsOnboardingOpen, refreshTelemetry, handleToggleMetric,

@@ -279,7 +279,7 @@ export function calculateProgressiveLongRun(
 
 
 /**
- * Calcula el TSS semanal con progresión aritmética continua sin escalones planos
+ * Calcula el TSS semanal con progresión continua anclada a Banister e histórico
  */
 export function calculateProgressiveWeeklyTss(
   model: CuratedTrainingModel,
@@ -287,29 +287,27 @@ export function calculateProgressiveWeeklyTss(
   totalWeeks: number,
   isRecoveryWeek: boolean,
   phase: string,
-  baselineTss: number = 320
+  baselineTss: number = 320,
+  overrides?: { startTss?: number; peakTss?: number }
 ): number {
-  if (phase === "RACE_WEEK") {
-    return Math.round(baselineTss * 0.45);
-  }
+  const targetPeakTss = overrides?.peakTss || (baselineTss * model.tssProgressionRules.peakTssRatio);
+  const startTss = overrides?.startTss || (baselineTss * model.tssProgressionRules.startTssRatio);
 
+  if (phase === "RACE_WEEK") return Math.round(targetPeakTss * 0.42);
   if (phase === "TAPER") {
-    const taperProgress = (totalWeeks - weekNumber) / 3;
-    return Math.round(baselineTss * (0.55 + taperProgress * 0.20));
+    const taperTotal = Math.max(1, model.taperingRules?.taperingWeeks || 2);
+    const taperProgress = Math.max(0, (totalWeeks - weekNumber) / taperTotal);
+    return Math.round(targetPeakTss * (0.55 + taperProgress * 0.15));
   }
 
-  const peakTargetWeek = Math.max(3, totalWeeks - 3);
+  const peakTargetWeek = Math.max(3, totalWeeks - (model.taperingRules?.taperingWeeks || 2));
   const progressRatio = Math.min(1, Math.max(0, (weekNumber - 1) / (peakTargetWeek - 1)));
-  const targetPeakTss = baselineTss * model.tssProgressionRules.peakTssRatio;
-  const startTss = baselineTss * model.tssProgressionRules.startTssRatio;
-
   let weekTss = Math.round(startTss + progressRatio * (targetPeakTss - startTss));
 
   if (isRecoveryWeek) {
     weekTss = Math.round(weekTss * (1 - model.tssProgressionRules.recoveryDropPercent));
   }
-
-  return Math.max(160, weekTss);
+  return Math.max(180, weekTss);
 }
 
 /**

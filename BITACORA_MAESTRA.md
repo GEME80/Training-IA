@@ -3150,5 +3150,23 @@ flowchart TD
   - `tsc --noEmit`: 0 errores de compilación de TypeScript.
   - `npm run build`: Next.js 15 producción compilado con 20/20 rutas estáticas y dinámicas (Código 0).
 
-
-
+### Versión 3.40 - Blindaje Quirúrgico Multi-Atleta de Borrado y Protocolo SSOT para Agentes Deportivos (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 16:45 COT.
+- **Directivas:** "Revisa un plan de borrado sin afectar cada atleta que es un plan diferente adicional porque trae datos erróneos de biotipo si lo cambié a 82kg y 185cm" y "Revisa para que los scripts de los agentes no tomen información que no es la real del atleta".
+- **Alcance de la Solución de Gobernanza y Blindaje:**
+  1. **Blindaje Quirúrgico de Sincronización y Borrado en Intervals.icu (`src/lib/services/intervalsSyncService.ts`):**
+     - Se eliminó el filtro permisivo previo `e.description?.includes("FTP")` que podía coincidir con entrenamientos de Zwift o actividades externas del atleta.
+     - Se restringió la condición de eliminación de forma estricta y quirúrgica a eventos con prefijo de la plataforma:
+       `e.name?.startsWith("[PULSE AI]") || e.name?.startsWith("[SGEA]")`.
+     - Se garantiza el **Aislamiento Multi-Atleta Total**: cada petición se ejecuta exclusivamente sobre el `athleteId` del atleta actual (`https://intervals.icu/api/v1/athlete/{athleteId}/events`). Es criptográfica y técnicamente imposible que un atleta toque o borre los eventos de otro.
+  2. **Protocolo de Verdad Única (SSOT) para Agentes y Scripts (`PROJECT_RULES.md` Sección 9.3):**
+     - Prohibición absoluta de datos quemados (*hardcodeados*) o mocks ficticios en scripts de diagnóstico, pruebas o prompts de subagentes.
+     - Creación de la herramienta unificada `scratch/athlete_ssot.js`: consulta en tiempo real la telemetría viva de Intervals.icu y el perfil en base de datos para cualquier atleta (CTL, ATL, TSB, rampa, histórico y eventos).
+     - Erradicación y eliminación de archivos de prueba obsoletos en `scratch/` que contenían datos dummy antiguos (`84 kg`, `178 cm`).
+  3. **Confirmación del Biotipo Real del Atleta Rector (Germán Morales `gerkof@gmail.com`):**
+     - Métricas 100% dinámicas tomadas de la fuente de verdad: Peso: **82 kg**, Altura: **185 cm** (IMC: 23.96 normopeso), Stryd CP: **327W** (3.99 W/kg), Bike FTP: **240W**, FC Umbral: **168 ppm**, FC Reposo: **49 ppm**, FC Máx: **185 ppm**.
+- **Presupuesto de Código (< 350 LOC):**
+  - `src/lib/services/intervalsSyncService.ts`: **135 líneas** ($< 350\text{ LOC}$).
+- **Validaciones Superadas:**
+  - `tsc --noEmit`: 0 errores de tipado en todo el repositorio.
+  - `npm run build`: Compilación de producción Next.js 15 exitosa (20/20 rutas, Código 0).

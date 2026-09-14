@@ -63,7 +63,7 @@ export class IntervalsSyncService {
           (e) =>
             e.id &&
             e.category === "WORKOUT" &&
-            (e.name?.includes("[PULSE AI]") || e.name?.includes("[SGEA]") || e.description?.includes("Stryd") || e.description?.includes("FTP"))
+            (e.name?.startsWith("[PULSE AI]") || e.name?.startsWith("[SGEA]"))
         );
 
         if (sgeaEventsToDelete.length > 0) {

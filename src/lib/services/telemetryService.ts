@@ -68,11 +68,11 @@ export class TelemetryService {
         try {
           const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
           const today = new Date();
-          const past365Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365);
+          const past370Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 370);
           const past30Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
           const next7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
 
-          const oldestWellnessStr = formatLocalDateToYMD(past365Days);
+          const oldestWellnessStr = formatLocalDateToYMD(past370Days);
           const oldestActivitiesStr = formatLocalDateToYMD(past30Days);
           const newestStr = getLocalTodayStr();
           const futureStr = formatLocalDateToYMD(next7Days);
@@ -118,7 +118,11 @@ export class TelemetryService {
 
           if (athleteData) {
             isLive = true;
-            wellness = wellnessData;
+            wellness = (wellnessData || []).map((w: any) => ({
+              ...w,
+              id: w.id || w.date,
+              date: w.date || w.id,
+            }));
             events = calendarEvents;
 
             const runSport = (sportSettingsData || []).find((s: any) =>

@@ -18,19 +18,8 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  const W = 1100;
-  const H = 500;
-  const padL = 75;
-  const padR = 115;
-  
-  // 3 Paneles
-  const p1Top = 18;
-  const p1Bottom = 220; // Panel 1: Carga (CTL/ATL)
-  const p2Top = 234;
-  const p2Bottom = 372; // Panel 2: Forma (TSB)
-  const p3Top = 384;
-  const p3Bottom = 458; // Panel 3: Rampa
-  const axisBottom = 482;
+  const W = 1100, H = 500, padL = 75, padR = 115;
+  const p1Top = 18, p1Bottom = 220, p2Top = 234, p2Bottom = 372, p3Top = 384, p3Bottom = 458, axisBottom = 482;
 
   const todayIdx = points.findIndex((p) => p.label === "Hoy");
   const splitIdx = todayIdx !== -1 ? todayIdx : points.findIndex((p) => p.isProjected) - 1;
@@ -186,9 +175,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
         {/* Leyenda y valores derecha Panel 1 */}
         {activePoint && (
           <g>
-            <text x={W - padR + 10} y={scaleP1(70) - 26} fill="#64748b" fontSize="10" fontWeight="bold">
-              {activePoint.date.split("-").slice(1).join("/")}
-            </text>
+            <text x={W - padR + 10} y={scaleP1(70) - 26} fill="#64748b" fontSize="10" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
             <text x={W - padR + 10} y={scaleP1(70) - 12} fill="#94a3b8" fontSize="9">Aptitud Real</text>
             <text x={W - padR + 10} y={scaleP1(70) + 2} fill="#0284c7" fontSize="12" fontWeight="900">{activePoint.ctl}</text>
             {activePoint.plannedCtl !== undefined && (
@@ -202,38 +189,25 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
           </g>
         )}
 
-        {/* ======================================================== */}
-        {/* PANEL 2: FORMA (TSB) CON BANDAS FRIEL OFICIALES          */}
-        {/* ======================================================== */}
-        <rect x={padL} y={p2Top} width={W - padL - padR} height={scaleP2(20) - p2Top} fill="#fef3c7" fillOpacity="0.4" />
-        <rect x={padL} y={scaleP2(20)} width={W - padL - padR} height={scaleP2(5) - scaleP2(20)} fill="#e0f2fe" fillOpacity="0.4" />
-        <rect x={padL} y={scaleP2(5)} width={W - padL - padR} height={scaleP2(-10) - scaleP2(5)} fill="#ffffff" />
-        <rect x={padL} y={scaleP2(-10)} width={W - padL - padR} height={scaleP2(-30) - scaleP2(-10)} fill="#dcfce7" fillOpacity="0.4" />
-        <rect x={padL} y={scaleP2(-30)} width={W - padL - padR} height={p2Bottom - scaleP2(-30)} fill="#fee2e2" fillOpacity="0.4" />
-
+        {/* PANEL 2: FORMA (TSB) CON BANDAS FRIEL */}
+        {[
+          { y1: p2Top, y2: scaleP2(20), fill: "#fef3c7" },
+          { y1: scaleP2(20), y2: scaleP2(5), fill: "#e0f2fe" },
+          { y1: scaleP2(5), y2: scaleP2(-10), fill: "#ffffff" },
+          { y1: scaleP2(-10), y2: scaleP2(-30), fill: "#dcfce7" },
+          { y1: scaleP2(-30), y2: p2Bottom, fill: "#fee2e2" },
+        ].map((b, i) => (
+          <rect key={`friel-b-${i}`} x={padL} y={b.y1} width={W - padL - padR} height={b.y2 - b.y1} fill={b.fill} fillOpacity={b.fill === "#ffffff" ? 1 : 0.4} />
+        ))}
         <rect x={padL} y={p2Top} width={W - padL - padR} height={p2Bottom - p2Top} fill="none" stroke="#f1f5f9" strokeWidth="1" />
         <line x1={padL} y1={scaleP2(0)} x2={W - padR} y2={scaleP2(0)} stroke="#cbd5e1" strokeDasharray="3 3" strokeWidth="1" />
-
-        {[20, 5, -10, -30].map((tick) => (
-          <g key={`p2-${tick}`}>
-            <line x1={padL} y1={scaleP2(tick)} x2={W - padR} y2={scaleP2(tick)} stroke="#e2e8f0" strokeDasharray="2 2" strokeWidth="0.6" />
-            <text x={padL - 6} y={scaleP2(tick) + 3} textAnchor="end" fill="#94a3b8" fontSize="9" fontFamily="monospace">
-              {tick}
-            </text>
+        {[20, 5, -10, -30].map((t) => (
+          <g key={`p2-${t}`}>
+            <line x1={padL} y1={scaleP2(t)} x2={W - padR} y2={scaleP2(t)} stroke="#e2e8f0" strokeDasharray="2 2" strokeWidth="0.6" />
+            <text x={padL - 6} y={scaleP2(t) + 3} textAnchor="end" fill="#94a3b8" fontSize="9" fontFamily="monospace">{t}</text>
           </g>
         ))}
-
-        <text
-          x={-(p2Top + (p2Bottom - p2Top) / 2)}
-          y={18}
-          transform="rotate(-90)"
-          textAnchor="middle"
-          fill="#94a3b8"
-          fontSize="10"
-          fontWeight="bold"
-        >
-          Forma
-        </text>
+        <text x={-(p2Top + (p2Bottom - p2Top) / 2)} y={18} transform="rotate(-90)" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">Forma</text>
 
         {/* Curva Real Multicolor de TSB */}
         {points.map((p, idx) => {
@@ -268,56 +242,41 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
           />
         )}
 
-        <g>
-          <text x={W - padR + 10} y={scaleP2(25)} fill="#d97706" fontSize="9" fontWeight="bold">Transición</text>
-          <text x={W - padR + 10} y={scaleP2(12)} fill="#0284c7" fontSize="9" fontWeight="bold">Fresco</text>
-          <text x={W - padR + 10} y={scaleP2(-2)} fill="#64748b" fontSize="9" fontWeight="bold">Zona gris</text>
-          <text x={W - padR + 10} y={scaleP2(-20)} fill="#16a34a" fontSize="9" fontWeight="bold">Óptimo</text>
-          <text x={W - padR + 10} y={scaleP2(-37)} fill="#dc2626" fontSize="9" fontWeight="bold">Alto Riesgo</text>
+        <g fontSize="9" fontWeight="bold">
+          {[
+            { y: 25, f: "#d97706", t: "Transición" }, { y: 12, f: "#0284c7", t: "Fresco" },
+            { y: -2, f: "#64748b", t: "Zona gris" }, { y: -20, f: "#16a34a", t: "Óptimo" },
+            { y: -37, f: "#dc2626", t: "Alto Riesgo" },
+          ].map((z, i) => (
+            <text key={`tsb-z-${i}`} x={W - padR + 10} y={scaleP2(z.y)} fill={z.f}>{z.t}</text>
+          ))}
         </g>
 
-        {/* ======================================================== */}
-        {/* PANEL 3: RAMPA SEMANAL (RAMP RATE BARS)                  */}
-        {/* ======================================================== */}
+        {/* PANEL 3: RAMPA SEMANAL (RAMP RATE BARS) */}
         <rect x={padL} y={p3Top} width={W - padL - padR} height={p3Bottom - p3Top} fill="#ffffff" stroke="#f1f5f9" strokeWidth="1" />
         <line x1={padL} y1={p3Zero} x2={W - padR} y2={p3Zero} stroke="#94a3b8" strokeWidth="1" />
-        <text x={padL - 6} y={scaleP3(8) + 3} textAnchor="end" fill="#94a3b8" fontSize="8" fontFamily="monospace">8.0</text>
-        <text x={padL - 6} y={p3Zero + 3} textAnchor="end" fill="#94a3b8" fontSize="8" fontFamily="monospace">0</text>
-        <text x={padL - 6} y={scaleP3(-8) + 3} textAnchor="end" fill="#94a3b8" fontSize="8" fontFamily="monospace">-8</text>
-
-        <text
-          x={-(p3Top + (p3Bottom - p3Top) / 2)}
-          y={18}
-          transform="rotate(-90)"
-          textAnchor="middle"
-          fill="#94a3b8"
-          fontSize="10"
-          fontWeight="bold"
-        >
-          Ramp
-        </text>
+        {[8, 0, -8].map((v) => (
+          <text key={`p3-${v}`} x={padL - 6} y={scaleP3(v) + 3} textAnchor="end" fill="#94a3b8" fontSize="8" fontFamily="monospace">{v}</text>
+        ))}
+        <text x={-(p3Top + (p3Bottom - p3Top) / 2)} y={18} transform="rotate(-90)" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">Ramp</text>
 
         {points.map((p, idx) => {
-          const isFut = idx > pastEnd;
-          if (isFut && !showProjection) return null;
+          if (idx > pastEnd && !showProjection) return null;
           const x = scaleX(idx);
           const w = Math.max(1.8, (W - padL - padR) / points.length);
           const y = scaleP3(p.rampRate);
           const isPos = p.rampRate >= 0;
-          const barH = Math.max(1, Math.abs(y - p3Zero));
-          const barY = isPos ? y : p3Zero;
-
           return (
             <rect
               key={`ramp-bar-${idx}`}
               x={x - w / 2}
-              y={barY}
+              y={isPos ? y : p3Zero}
               width={w}
-              height={barH}
+              height={Math.max(1, Math.abs(y - p3Zero))}
               fill={isPos ? "#bbf7d0" : "#bae6fd"}
               stroke={isPos ? "#22c55e" : "#06b6d4"}
               strokeWidth="0.8"
-              fillOpacity={isFut ? 0.4 : 0.85}
+              fillOpacity={idx > pastEnd ? 0.4 : 0.85}
             />
           );
         })}
@@ -338,19 +297,18 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
         )}
 
         {/* EJE X: ETIQUETAS DE TIEMPO / MESES */}
-        {points.filter((_, i) => i % Math.ceil(points.length / 12) === 0).map((p, idx) => {
+        {points.filter((_, i) => i % Math.max(1, Math.floor(points.length / 12)) === 0).slice(0, 13).map((p, idx) => {
           const d = new Date(p.date + "T12:00:00");
-          const mName = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+          const isNewYear = d.getMonth() === 0;
+          const mName = isNewYear ? `${d.getFullYear()}` : d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
           return (
-            <text key={`month-${idx}`} x={scaleX(points.indexOf(p))} y={axisBottom} textAnchor="middle" fill="#64748b" fontSize="10">
+            <text key={`month-${idx}`} x={scaleX(points.indexOf(p))} y={axisBottom} textAnchor="middle" fill={isNewYear ? "#0284c7" : "#64748b"} fontWeight={isNewYear ? "bold" : "normal"} fontSize="10">
               {mName}
             </text>
           );
         })}
 
-        {/* ======================================================== */}
-        {/* LÍNEAS DE HITOS: INICIO PLAN Y HOY                       */}
-        {/* ======================================================== */}
+        {/* HITOS: INICIO PLAN Y HOY */}
         {planStartIdx >= 0 && (
           <g>
             <line x1={scaleX(planStartIdx)} y1={p1Top} x2={scaleX(planStartIdx)} y2={p3Bottom} stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="3 3" />
@@ -358,7 +316,6 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
             <text x={scaleX(planStartIdx)} y={p1Top - 4} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="900">INICIO PLAN</text>
           </g>
         )}
-
         {splitIdx >= 0 && (
           <g>
             <line x1={scaleX(splitIdx)} y1={p1Top} x2={scaleX(splitIdx)} y2={p3Bottom} stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" />
@@ -367,19 +324,12 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
           </g>
         )}
 
-        {/* ======================================================== */}
-        {/* SEGUIMIENTO MAGNÉTICO ALINEADO CON EL MOUSE (CROSSHAIR)   */}
-        {/* ======================================================== */}
+        {/* SEGUIMIENTO MAGNÉTICO ALINEADO CON EL MOUSE (CROSSHAIR) */}
         {activePoint && (
           <g>
             <line x1={scaleX(activeIdx)} y1={p1Top} x2={scaleX(activeIdx)} y2={p3Bottom} stroke="#0f172a" strokeWidth="1.2" />
-            {/* Pill de fecha superior sobre la línea */}
             <rect x={scaleX(activeIdx) - 26} y={p1Top - 14} width="52" height="13" rx="3" fill="#0f172a" />
-            <text x={scaleX(activeIdx)} y={p1Top - 4} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="bold">
-              {activePoint.date.split("-").slice(1).join("/")}
-            </text>
-
-            {/* Puntos en curvas */}
+            <text x={scaleX(activeIdx)} y={p1Top - 4} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
             <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.ctl)} r="3.5" fill="#0284c7" stroke="#fff" strokeWidth="1.5" />
             {activePoint.plannedCtl !== undefined && (
               <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.plannedCtl)} r="3" fill="#f59e0b" stroke="#fff" strokeWidth="1.2" />

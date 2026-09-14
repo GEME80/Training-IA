@@ -127,7 +127,7 @@ export function generatePMCSeries(
     summary.raceDate = blueprint.raceDate || blueprint.primaryRace?.date || undefined;
 
     // Buscar el CTL real que tenía el atleta en la fecha de inicio del plan
-    const matchStart = wellness.find((w) => w.date === planStartStr);
+    const matchStart = wellness.find((w) => (w.date || w.id) === planStartStr);
     if (matchStart && typeof matchStart.ctl === "number") {
       plannedStartCtl = matchStart.ctl;
     }
@@ -171,16 +171,20 @@ export function generatePMCSeries(
 
   // 3. Puntos históricos reales
   const historicalPoints: PMCDataPoint[] = (wellness || [])
-    .filter((w) => w.date >= cutoffStr)
+    .filter((w) => {
+      const date = w.date || w.id;
+      return Boolean(date && date >= cutoffStr);
+    })
     .map((w) => {
+      const date = (w.date || w.id)!;
       const ctl = typeof w.ctl === "number" ? w.ctl : 0;
       const atl = typeof w.atl === "number" ? w.atl : 0;
       const tsb = typeof w.tsb === "number" ? w.tsb : (ctl - atl);
       const ramp = typeof w.rampRate === "number" ? Math.round(w.rampRate * 10) / 10 : 0;
-      const planVal = plannedMap.get(w.date);
+      const planVal = plannedMap.get(date);
 
       return {
-        date: w.date,
+        date,
         ctl: Math.round(ctl * 10) / 10,
         atl: Math.round(atl * 10) / 10,
         tsb: Math.round(tsb * 10) / 10,

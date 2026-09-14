@@ -174,7 +174,13 @@ export class IntervalsClient {
       );
     }
 
-    return (await res.json()) as AthleteWellness[];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data.map((item: any) => ({
+      ...item,
+      id: item.id || item.date,
+      date: item.date || item.id,
+    })) as AthleteWellness[];
   }
 
   /**

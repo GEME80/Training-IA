@@ -27,6 +27,8 @@ interface AthleteDashboardOverviewProps {
   onSyncWeekToIntervals: (plan: PlanItem[]) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
   onOpenSeasonStudio: () => void;
+  onRefreshTelemetry?: () => Promise<void>;
+  isRefreshingTelemetry?: boolean;
 }
 
 export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> = ({
@@ -46,6 +48,8 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   onSyncWeekToIntervals,
   onSelectWorkoutModal,
   onOpenSeasonStudio,
+  onRefreshTelemetry,
+  isRefreshingTelemetry,
 }) => {
   const [activeTab, setActiveTab] = useState<"overview" | "pmc">("overview");
 
@@ -161,6 +165,8 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
             wellnessHistory={wellnessHistory}
             blueprint={blueprint}
             athleteName={profile.name}
+            onRefresh={onRefreshTelemetry}
+            isRefreshing={isRefreshingTelemetry}
           />
         </div>
       )}

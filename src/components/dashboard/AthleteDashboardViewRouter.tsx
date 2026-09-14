@@ -62,6 +62,16 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         onSyncWeekToIntervals={sync.handleSyncToIntervals}
         onSelectWorkoutModal={onSelectWorkoutModal}
         onOpenSeasonStudio={() => onNavigateTo("season_studio")}
+        onRefreshTelemetry={() =>
+          telemetry.refreshTelemetry(
+            telemetry.profile.id,
+            telemetry.apiKeyCache,
+            telemetry.profile.run_ftp,
+            telemetry.profile.bike_ftp,
+            true
+          )
+        }
+        isRefreshingTelemetry={telemetry.isRefreshingTelemetry}
       />
     );
   }

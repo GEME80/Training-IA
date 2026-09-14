@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, RefreshCw } from "lucide-react";
 import { AthleteWellness } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generatePMCSeries, PMCTimeframe, PMCDataPoint } from "@/lib/physiology/pmcEngine";
@@ -12,6 +12,8 @@ interface AthletePMCChartProps {
   wellnessHistory: AthleteWellness[];
   blueprint: MacrocycleBlueprint | null;
   athleteName?: string;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 function formatPmcHeaderDate(dateStr?: string): string {
@@ -26,6 +28,8 @@ function formatPmcHeaderDate(dateStr?: string): string {
 export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
   wellnessHistory,
   blueprint,
+  onRefresh,
+  isRefreshing,
 }) => {
   const [timeframe, setTimeframe] = useState<PMCTimeframe>("1y");
   const [showProjection, setShowProjection] = useState<boolean>(true);
@@ -142,6 +146,19 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
               <span>Proyección a Carrera</span>
             </label>
+
+            {onRefresh && (
+              <button
+                type="button"
+                disabled={isRefreshing}
+                onClick={onRefresh}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer disabled:opacity-50 border border-slate-200 dark:border-slate-700/50"
+                title="Sincronizar telemetría de 365 días desde Intervals.icu"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-sky-500 ${isRefreshing ? "animate-spin" : ""}`} />
+                <span>{isRefreshing ? "Cargando 365d..." : "Sincronizar (365d)"}</span>
+              </button>
+            )}
           </div>
         </div>
 

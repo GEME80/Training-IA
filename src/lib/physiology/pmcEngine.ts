@@ -6,6 +6,7 @@ export interface PMCDataPoint {
   ctl: number;
   atl: number;
   tsb: number;
+  rampRate: number;
   isProjected: boolean;
   tss?: number;
   label?: string;
@@ -109,11 +110,13 @@ export function generatePMCSeries(
       const ctl = typeof w.ctl === "number" ? w.ctl : 0;
       const atl = typeof w.atl === "number" ? w.atl : 0;
       const tsb = typeof w.tsb === "number" ? w.tsb : (ctl - atl);
+      const ramp = typeof w.rampRate === "number" ? Math.round(w.rampRate * 10) / 10 : 0;
       return {
         date: w.date,
         ctl: Math.round(ctl * 10) / 10,
         atl: Math.round(atl * 10) / 10,
         tsb: Math.round(tsb * 10) / 10,
+        rampRate: ramp,
         isProjected: false,
         tss: w.ctlLoad,
       };
@@ -153,9 +156,14 @@ export function generatePMCSeries(
       const dailyTss = Math.round(weeklyTargetTss * dayTssWeights[d]);
 
       // Ecuaciones de Banister / Coggan
+      const prevCtl = currentCtl;
       currentCtl = currentCtl + (dailyTss - currentCtl) / 42;
       currentAtl = currentAtl + (dailyTss - currentAtl) / 7;
       const currentTsb = currentCtl - currentAtl;
+
+      // Estimación de rampa semanal
+      const refPoint = projectedPoints[projectedPoints.length - 7] || historicalPoints[historicalPoints.length - 1];
+      const projectedRamp = refPoint ? Math.round((currentCtl - refPoint.ctl) * 10) / 10 : Math.round((currentCtl - prevCtl) * 7 * 10) / 10;
 
       const isLastDay = wIdx === blueprint.weeks.length - 1 && d === 6;
 
@@ -164,6 +172,7 @@ export function generatePMCSeries(
         ctl: Math.round(currentCtl * 10) / 10,
         atl: Math.round(currentAtl * 10) / 10,
         tsb: Math.round(currentTsb * 10) / 10,
+        rampRate: projectedRamp,
         isProjected: true,
         tss: dailyTss,
         label: isLastDay ? (blueprint.primaryRace?.name || "Carrera") : undefined,

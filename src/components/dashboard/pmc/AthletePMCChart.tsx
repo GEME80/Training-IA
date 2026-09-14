@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { TrendingUp, Activity, Zap, BatteryCharging, Sparkles, ShieldAlert, Award } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Sparkles } from "lucide-react";
 import { AthleteWellness } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generatePMCSeries, PMCTimeframe, PMCDataPoint } from "@/lib/physiology/pmcEngine";
+import { AthletePMCKpiCards } from "./AthletePMCKpiCards";
 
 interface AthletePMCChartProps {
   wellnessHistory: AthleteWellness[];
@@ -15,359 +16,302 @@ interface AthletePMCChartProps {
 export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
   wellnessHistory,
   blueprint,
-  athleteName,
 }) => {
   const [timeframe, setTimeframe] = useState<PMCTimeframe>("6m");
   const [showProjection, setShowProjection] = useState<boolean>(true);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   const { points, summary } = useMemo(() => {
     return generatePMCSeries(wellnessHistory, blueprint, timeframe, showProjection);
   }, [wellnessHistory, blueprint, timeframe, showProjection]);
 
-  // Dimensiones del gráfico SVG responsive
-  const svgWidth = 900;
-  const svgHeight = 280;
-  const padL = 45;
-  const padR = 25;
-  const padT = 20;
-  const padB = 30;
+  // Dimensiones del gráfico de 3 paneles
+  const W = 1000;
+  const H = 480;
+  const padL = 50;
+  const padR = 40;
+  const p1Top = 15;
+  const p1Bottom = 220; // Panel 1: CTL & ATL
+  const p2Top = 235;
+  const p2Bottom = 365; // Panel 2: TSB
+  const p3Top = 380;
+  const p3Bottom = 450; // Panel 3: Rampa
+  const axisBottom = 475;
 
-  // Escala Y unificada con margen para CTL, ATL y TSB
-  const { minY, maxY } = useMemo(() => {
-    if (points.length === 0) return { minY: -40, maxY: 100 };
-    let minVal = 0;
-    let maxVal = 50;
-    points.forEach((p) => {
-      minVal = Math.min(minVal, p.tsb, p.ctl, p.atl);
-      maxVal = Math.max(maxVal, p.ctl, p.atl, p.tsb);
-    });
-    return {
-      minY: Math.floor(Math.min(minVal - 10, -40)),
-      maxY: Math.ceil(Math.max(maxVal + 15, 80)),
-    };
-  }, [points]);
-
-  const scaleX = (idx: number) => {
-    if (points.length <= 1) return padL;
-    return padL + (idx / (points.length - 1)) * (svgWidth - padL - padR);
-  };
-
-  const scaleY = (val: number) => {
-    const range = maxY - minY || 1;
-    return padB + (1 - (val - minY) / range) * (svgHeight - padT - padB);
-  };
-
-  // Separar puntos en pasado y proyección
   const todayIdx = points.findIndex((p) => p.label === "Hoy");
   const splitIdx = todayIdx !== -1 ? todayIdx : points.findIndex((p) => p.isProjected) - 1;
+  const activeIdx = hoveredIdx !== null ? hoveredIdx : (splitIdx >= 0 ? splitIdx : points.length - 1);
+  const activePoint: PMCDataPoint | null = points[activeIdx] || null;
 
-  const makePath = (accessor: (p: PMCDataPoint) => number, start: number, end: number) => {
+  // Escalas Panel 1 (CTL/ATL 0 a 120+)
+  const maxLoad = useMemo(() => {
+    let m = 60;
+    points.forEach((p) => { m = Math.max(m, p.ctl, p.atl); });
+    return Math.ceil((m + 15) / 20) * 20;
+  }, [points]);
+
+  const scaleX = (i: number) => {
+    if (points.length <= 1) return padL;
+    return padL + (i / (points.length - 1)) * (W - padL - padR);
+  };
+  const scaleP1 = (val: number) => p1Bottom - (Math.max(0, val) / maxLoad) * (p1Bottom - p1Top);
+
+  // Escalas Panel 2 (TSB -40 a +30)
+  const scaleP2 = (val: number) => {
+    const minT = -40;
+    const maxT = 30;
+    const norm = (Math.max(minT, Math.min(maxT, val)) - minT) / (maxT - minT);
+    return p2Bottom - norm * (p2Bottom - p2Top);
+  };
+
+  // Escalas Panel 3 (Rampa -8 a +8)
+  const scaleP3 = (val: number) => {
+    const norm = (Math.max(-8, Math.min(8, val)) - (-8)) / 16;
+    return p3Bottom - norm * (p3Bottom - p3Top);
+  };
+  const p3ZeroY = scaleP3(0);
+
+  // Path generators
+  const pastEnd = splitIdx >= 0 ? splitIdx : points.length - 1;
+  const futureStart = splitIdx >= 0 ? splitIdx : 0;
+
+  const makeLine = (fn: (p: PMCDataPoint) => number, start: number, end: number, scaleFn: (v: number) => number) => {
     if (points.length === 0 || start < 0 || end < start) return "";
     let d = "";
     for (let i = start; i <= end && i < points.length; i++) {
       const x = scaleX(i);
-      const y = scaleY(accessor(points[i]));
+      const y = scaleFn(fn(points[i]));
       d += i === start ? `M ${x.toFixed(1)} ${y.toFixed(1)}` : ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d;
   };
 
-  const pastEnd = splitIdx >= 0 ? splitIdx : points.length - 1;
-  const futureStart = splitIdx >= 0 ? splitIdx : 0;
+  const makeArea = (start: number, end: number) => {
+    if (points.length === 0 || start < 0 || end < start) return "";
+    let d = `M ${scaleX(start).toFixed(1)} ${p1Bottom}`;
+    for (let i = start; i <= end && i < points.length; i++) {
+      d += ` L ${scaleX(i).toFixed(1)} ${scaleP1(points[i].ctl).toFixed(1)}`;
+    }
+    d += ` L ${scaleX(end).toFixed(1)} ${p1Bottom} Z`;
+    return d;
+  };
 
-  const ctlPastPath = makePath((p) => p.ctl, 0, pastEnd);
-  const ctlFuturePath = makePath((p) => p.ctl, futureStart, points.length - 1);
+  // Meses en eje X
+  const monthLabels = useMemo(() => {
+    const res: Array<{ x: number; label: string }> = [];
+    let lastM = "";
+    points.forEach((p, idx) => {
+      const m = p.date.substring(5, 7);
+      if (m !== lastM) {
+        lastM = m;
+        const d = new Date(p.date + "T12:00:00");
+        const name = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+        res.push({ x: scaleX(idx), label: name.charAt(0).toUpperCase() + name.slice(1) });
+      }
+    });
+    return res;
+  }, [points]);
 
-  const atlPastPath = makePath((p) => p.atl, 0, pastEnd);
-  const atlFuturePath = makePath((p) => p.atl, futureStart, points.length - 1);
-
-  const tsbPastPath = makePath((p) => p.tsb, 0, pastEnd);
-  const tsbFuturePath = makePath((p) => p.tsb, futureStart, points.length - 1);
-
-  const zeroY = scaleY(0);
-  const yMinus30 = scaleY(-30);
-  const yPlus15 = scaleY(15);
-
-  const activePoint = hoveredIdx !== null && points[hoveredIdx] ? points[hoveredIdx] : null;
-  const lastPoint = points[points.length - 1];
+  const handleSvgMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current || points.length === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * W;
+    const ratio = Math.max(0, Math.min(1, (clickX - padL) / (W - padL - padR)));
+    const idx = Math.round(ratio * (points.length - 1));
+    setHoveredIdx(idx);
+  };
 
   return (
     <div className="space-y-4">
-      {/* TARJETAS KPI RESUMEN HISTÓRICO 365 DÍAS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">
-            <span>Peak CTL (365d)</span>
-            <Award className="h-4 w-4 text-sky-500" />
+      {/* 4 TARJETAS KPI DE RESUMEN EJECUTIVO */}
+      <AthletePMCKpiCards summary={summary} targetPoint={points[points.length - 1] || null} />
+
+      {/* CUADRO NEGRO PERMANENTE / HUD DE TELEMETRÍA (ESTILO INTERVALS.ICU) */}
+      <div className="rounded-2xl bg-slate-950 text-white p-3 sm:p-4 border border-slate-800 shadow-xl flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-400 text-xs font-black uppercase tracking-wider border border-sky-500/30">
+            {activePoint?.label === "Hoy" ? "HOY" : activePoint?.isProjected ? "Proyección" : "Histórico"}
           </div>
-          <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-1.5">
-            <span>{summary.peakCtlLastYear}</span>
-            <span className="text-[10px] text-slate-400 font-semibold">pts techo</span>
-          </div>
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium truncate">
-            Motor demostrado por el atleta
-          </p>
+          <span className="text-sm font-black text-slate-200">
+            📅 {activePoint?.date ? new Date(activePoint.date + "T12:00:00").toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "—"}
+          </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">
-            <span>CTL Actual vs Meta</span>
-            <Activity className="h-4 w-4 text-sky-500" />
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-bold">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+            <span className="text-slate-400">Aptitud (CTL):</span>
+            <span className="text-sky-400 text-sm font-black">{activePoint?.ctl ?? "—"}</span>
           </div>
-          <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-1.5">
-            <span>{summary.lastKnownCtl}</span>
-            <span className="text-xs text-slate-400 font-bold">➔</span>
-            <span className="text-sky-500">{lastPoint?.ctl ?? summary.lastKnownCtl}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+            <span className="text-slate-400">Fatiga (ATL):</span>
+            <span className="text-purple-400 text-sm font-black">{activePoint?.atl ?? "—"}</span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Proyección a día de carrera
-          </p>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">
-            <span>Forma TSB Objetivo</span>
-            <BatteryCharging className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span className="text-slate-400">Forma (TSB):</span>
+            <span className={`text-sm font-black ${(activePoint?.tsb ?? 0) >= 0 ? "text-emerald-400" : "text-amber-400"}`}>
+              {activePoint?.tsb !== undefined ? (activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb) : "—"}
+            </span>
           </div>
-          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 flex items-baseline gap-1.5">
-            <span>{lastPoint?.tsb && lastPoint.tsb > 0 ? `+${lastPoint.tsb}` : lastPoint?.tsb ?? summary.lastKnownTsb}</span>
-            <span className="text-[10px] text-slate-400 font-semibold">Frescura</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span className="text-slate-400">Rampa Semanal:</span>
+            <span className={`text-sm font-black ${(activePoint?.rampRate ?? 0) >= 0 ? "text-emerald-400" : "text-sky-400"}`}>
+              {activePoint?.rampRate !== undefined ? (activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate) : "0"} pts/sem
+            </span>
           </div>
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
-            Pico de supercompensación (Friel)
-          </p>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">
-            <span>Rampa Asimilada</span>
-            <TrendingUp className="h-4 w-4 text-amber-500" />
-          </div>
-          <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-1.5">
-            <span>+{summary.avgRampRate}</span>
-            <span className="text-[10px] text-slate-400 font-semibold">pts/sem</span>
-          </div>
-          <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-medium">
-            Suelo seguro TSB: {summary.minTsbRecorded}
-          </p>
         </div>
       </div>
 
-      {/* CONTROLES DEL GRÁFICO (TIME-FRAME + PROYECCIÓN) */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
-        <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700/50">
+      {/* CONTROLES DE RANGO */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700/50 shadow-xs">
           {(["3m", "6m", "1y"] as PMCTimeframe[]).map((tf) => (
             <button
               key={tf}
               type="button"
               onClick={() => setTimeframe(tf)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
                 timeframe === tf
                   ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
             >
-              {tf === "3m" ? "3 Meses" : tf === "6m" ? "6 Meses (Recomendado)" : "1 Año"}
+              {tf === "3m" ? "3 Meses" : tf === "6m" ? "6 Meses (Recomendado)" : "1 Año Completo"}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showProjection}
-              onChange={(e) => setShowProjection(e.target.checked)}
-              className="rounded text-sky-600 focus:ring-sky-500 h-3.5 w-3.5 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
-            />
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>Ver Proyección Banister a Carrera</span>
-          </label>
-        </div>
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showProjection}
+            onChange={(e) => setShowProjection(e.target.checked)}
+            className="rounded text-sky-600 focus:ring-sky-500 h-4 w-4 border-slate-300 dark:border-slate-700"
+          />
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <span>Ver Proyección Banister a Carrera</span>
+        </label>
       </div>
 
-      {/* CONTENEDOR DEL GRÁFICO SVG NATIVO */}
-      <div className="relative rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-5 shadow-xs overflow-hidden">
-        {points.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
-            <Activity className="h-8 w-8 animate-pulse text-sky-500" />
-            <span>Cargando telemetría PMC de Intervals.icu...</span>
-          </div>
-        ) : (
-          <div className="w-full overflow-x-auto">
-            <svg
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-              className="w-full h-64 sm:h-72 select-none"
-              onMouseLeave={() => setHoveredIdx(null)}
-            >
-              <defs>
-                {/* Gradiente Zona Roja Sobrecarga */}
-                <linearGradient id="dangerZone" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.18" />
-                </linearGradient>
-                {/* Gradiente Zona Frescura Óptima */}
-                <linearGradient id="freshZone" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.12" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
-                </linearGradient>
-              </defs>
+      {/* CONTENEDOR EXPANDIDO DEL GRÁFICO SVG NATIVO */}
+      <div className="relative rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm overflow-hidden">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-[440px] sm:h-[480px] select-none cursor-crosshair"
+          onMouseMove={handleSvgMove}
+          onMouseLeave={() => setHoveredIdx(null)}
+          onTouchMove={(e) => {
+            if (e.touches[0]) handleSvgMove({ clientX: e.touches[0].clientX } as any);
+          }}
+        >
+          <defs>
+            <linearGradient id="ctlAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0284c7" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
 
-              {/* FRIDA ZONES (Sombreado Fisiológico Joe Friel) */}
-              {/* Zona Frescura (> +15 TSB) */}
-              <rect x={padL} y={padT} width={svgWidth - padL - padR} height={Math.max(0, yPlus15 - padT)} fill="url(#freshZone)" />
-              {/* Zona Sobrecarga (< -30 TSB) */}
-              <rect x={padL} y={yMinus30} width={svgWidth - padL - padR} height={Math.max(0, svgHeight - padB - yMinus30)} fill="url(#dangerZone)" />
+          {/* PANEL 1: CARGA DE ENTRENAMIENTO (FITNESS / FATIGA) */}
+          <rect x={padL} y={p1Top} width={W - padL - padR} height={p1Bottom - p1Top} fill="#f8fafc" fillOpacity="0.5" rx="4" />
+          <text x={padL + 8} y={p1Top + 14} fill="#64748b" fontSize="11" fontWeight="bold">Carga de entrenamiento por día (Fitness / Fatiga)</text>
+          {[0, 30, 60, 90, 120].filter(v => v <= maxLoad).map(v => (
+            <g key={v}>
+              <line x1={padL} y1={scaleP1(v)} x2={W - padR} y2={scaleP1(v)} stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth="0.8" />
+              <text x={padL - 6} y={scaleP1(v) + 3} textAnchor="end" fill="#94a3b8" fontSize="9" fontWeight="bold">{v}</text>
+            </g>
+          ))}
+          {/* Área azul sombreada CTL */}
+          <path d={makeArea(0, pastEnd)} fill="url(#ctlAreaGrad)" />
+          {/* Curvas Panel 1 */}
+          <path d={makeLine(p => p.ctl, 0, pastEnd, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2.5" />
+          <path d={makeLine(p => p.atl, 0, pastEnd, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.8" />
+          {showProjection && splitIdx >= 0 && (
+            <>
+              <path d={makeLine(p => p.ctl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2.5" strokeDasharray="5 4" strokeOpacity="0.8" />
+              <path d={makeLine(p => p.atl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.8" strokeDasharray="5 4" strokeOpacity="0.8" />
+            </>
+          )}
 
-              {/* LÍNEA DE CERO TSB */}
-              <line x1={padL} y1={zeroY} x2={svgWidth - padR} y2={zeroY} stroke="#94a3b8" strokeDasharray="3 3" strokeWidth="1" strokeOpacity="0.5" />
-              <text x={padL - 6} y={zeroY + 3} textAnchor="end" fill="#94a3b8" fontSize="10" fontWeight="bold">0</text>
+          {/* PANEL 2: FORMA (TSB) CON BANDAS FRIEL */}
+          <rect x={padL} y={p2Top} width={W - padL - padR} height={scaleP2(20) - p2Top} fill="#fed7aa" fillOpacity="0.25" />
+          <rect x={padL} y={scaleP2(20)} width={W - padL - padR} height={scaleP2(5) - scaleP2(20)} fill="#bae6fd" fillOpacity="0.25" />
+          <rect x={padL} y={scaleP2(5)} width={W - padL - padR} height={scaleP2(-10) - scaleP2(5)} fill="#f1f5f9" fillOpacity="0.3" />
+          <rect x={padL} y={scaleP2(-10)} width={W - padL - padR} height={scaleP2(-30) - scaleP2(-10)} fill="#bbf7d0" fillOpacity="0.25" />
+          <rect x={padL} y={scaleP2(-30)} width={W - padL - padR} height={p2Bottom - scaleP2(-30)} fill="#fecdd3" fillOpacity="0.3" />
+          <text x={padL + 8} y={p2Top + 14} fill="#64748b" fontSize="11" fontWeight="bold">Forma (TSB)</text>
+          {/* Etiquetas Friel derecha */}
+          <text x={W - padR + 6} y={scaleP2(22)} fill="#d97706" fontSize="8" fontWeight="bold">Transición</text>
+          <text x={W - padR + 6} y={scaleP2(12)} fill="#0284c7" fontSize="8" fontWeight="bold">Fresco</text>
+          <text x={W - padR + 6} y={scaleP2(-2)} fill="#64748b" fontSize="8" fontWeight="bold">Zona gris</text>
+          <text x={W - padR + 6} y={scaleP2(-20)} fill="#16a34a" fontSize="8" fontWeight="bold">Óptimo</text>
+          <text x={W - padR + 6} y={scaleP2(-34)} fill="#dc2626" fontSize="8" fontWeight="bold">Alto Riesgo</text>
+          {/* Línea 0 TSB */}
+          <line x1={padL} y1={scaleP2(0)} x2={W - padR} y2={scaleP2(0)} stroke="#94a3b8" strokeDasharray="3 3" strokeWidth="1" />
+          <path d={makeLine(p => p.tsb, 0, pastEnd, scaleP2)} fill="none" stroke="#10b981" strokeWidth="2" />
+          {showProjection && splitIdx >= 0 && (
+            <path d={makeLine(p => p.tsb, futureStart, points.length - 1, scaleP2)} fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="5 4" strokeOpacity="0.8" />
+          )}
 
-              {/* GUÍAS HORIZONTALES */}
-              <line x1={padL} y1={yMinus30} x2={svgWidth - padR} y2={yMinus30} stroke="#ef4444" strokeDasharray="2 2" strokeWidth="0.8" strokeOpacity="0.4" />
-              <text x={padL - 6} y={yMinus30 + 3} textAnchor="end" fill="#ef4444" fontSize="9" fontWeight="bold">-30</text>
+          {/* PANEL 3: RAMPA SEMANAL (RAMP RATE BARS) */}
+          <rect x={padL} y={p3Top} width={W - padL - padR} height={p3Bottom - p3Top} fill="#f8fafc" fillOpacity="0.5" rx="3" />
+          <text x={padL + 8} y={p3Top + 12} fill="#64748b" fontSize="10" fontWeight="bold">Rampa semanal (CTL / sem)</text>
+          <line x1={padL} y1={p3ZeroY} x2={W - padR} y2={p3ZeroY} stroke="#94a3b8" strokeWidth="1" />
+          <text x={padL - 6} y={p3ZeroY + 3} textAnchor="end" fill="#94a3b8" fontSize="8" fontWeight="bold">0</text>
+          <text x={padL - 6} y={scaleP3(6) + 3} textAnchor="end" fill="#16a34a" fontSize="8" fontWeight="bold">+6</text>
+          <text x={padL - 6} y={scaleP3(-6) + 3} textAnchor="end" fill="#0284c7" fontSize="8" fontWeight="bold">-6</text>
 
-              <line x1={padL} y1={yPlus15} x2={svgWidth - padR} y2={yPlus15} stroke="#10b981" strokeDasharray="2 2" strokeWidth="0.8" strokeOpacity="0.4" />
-              <text x={padL - 6} y={yPlus15 + 3} textAnchor="end" fill="#10b981" fontSize="9" fontWeight="bold">+15</text>
+          {/* Barras de Rampa */}
+          {points.map((p, idx) => {
+            const x = scaleX(idx);
+            const w = Math.max(1.8, (W - padL - padR) / points.length);
+            const y = scaleP3(p.rampRate);
+            const isPos = p.rampRate >= 0;
+            const barH = Math.max(1, Math.abs(y - p3ZeroY));
+            const barY = isPos ? y : p3ZeroY;
+            return (
+              <rect
+                key={p.date}
+                x={x - w / 2}
+                y={barY}
+                width={w}
+                height={barH}
+                fill={isPos ? "#4ade80" : "#38bdf8"}
+                fillOpacity={p.isProjected ? 0.5 : 0.85}
+              />
+            );
+          })}
 
-              {/* LÍNEA VERTICAL 'HOY' */}
-              {splitIdx >= 0 && (
-                <g>
-                  <line
-                    x1={scaleX(splitIdx)}
-                    y1={padT}
-                    x2={scaleX(splitIdx)}
-                    y2={svgHeight - padB}
-                    stroke="#0284c7"
-                    strokeWidth="1.5"
-                    strokeDasharray="4 4"
-                  />
-                  <rect
-                    x={scaleX(splitIdx) - 22}
-                    y={padT - 12}
-                    width="44"
-                    height="16"
-                    rx="4"
-                    fill="#0284c7"
-                  />
-                  <text
-                    x={scaleX(splitIdx)}
-                    y={padT}
-                    textAnchor="middle"
-                    fill="#ffffff"
-                    fontSize="9"
-                    fontWeight="900"
-                  >
-                    HOY
-                  </text>
-                </g>
-              )}
+          {/* EJE X: MESES */}
+          {monthLabels.map((m, i) => (
+            <text key={i} x={m.x} y={axisBottom} textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="bold">
+              {m.label}
+            </text>
+          ))}
 
-              {/* CURVAS PMC: PASADO (SÓLIDO) */}
-              <path d={atlPastPath} fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" />
-              <path d={ctlPastPath} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" />
-              <path d={tsbPastPath} fill="none" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" />
+          {/* LÍNEA 'HOY' */}
+          {splitIdx >= 0 && (
+            <g>
+              <line x1={scaleX(splitIdx)} y1={p1Top} x2={scaleX(splitIdx)} y2={p3Bottom} stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" />
+              <rect x={scaleX(splitIdx) - 18} y={p1Top - 12} width="36" height="15" rx="3" fill="#0284c7" />
+              <text x={scaleX(splitIdx)} y={p1Top - 1} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="900">HOY</text>
+            </g>
+          )}
 
-              {/* CURVAS PMC: FUTURO PROYECTADO (PUNTEADO BANISTER) */}
-              {showProjection && splitIdx >= 0 && (
-                <>
-                  <path d={atlFuturePath} fill="none" stroke="#a855f7" strokeWidth="2" strokeDasharray="4 3" strokeOpacity="0.85" />
-                  <path d={ctlFuturePath} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="4 3" strokeOpacity="0.85" />
-                  <path d={tsbFuturePath} fill="none" stroke="#10b981" strokeWidth="1.8" strokeDasharray="4 3" strokeOpacity="0.85" />
-                </>
-              )}
-
-              {/* INTERACCIÓN TÁCTIL / RATÓN (HOTSPOTS) */}
-              {points.map((p, idx) => (
-                <rect
-                  key={p.date}
-                  x={scaleX(idx) - (svgWidth / points.length) / 2}
-                  y={padT}
-                  width={svgWidth / points.length}
-                  height={svgHeight - padT - padB}
-                  fill="transparent"
-                  className="cursor-pointer"
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onTouchStart={() => setHoveredIdx(idx)}
-                />
-              ))}
-
-              {/* MIRA INTERACTIVA AL HACER HOVER */}
-              {hoveredIdx !== null && activePoint && (
-                <g>
-                  <line
-                    x1={scaleX(hoveredIdx)}
-                    y1={padT}
-                    x2={scaleX(hoveredIdx)}
-                    y2={svgHeight - padB}
-                    stroke="#64748b"
-                    strokeWidth="1"
-                    strokeDasharray="2 2"
-                  />
-                  {/* Puntos en intersección */}
-                  <circle cx={scaleX(hoveredIdx)} cy={scaleY(activePoint.ctl)} r="4" fill="#0ea5e9" stroke="#fff" strokeWidth="1.5" />
-                  <circle cx={scaleX(hoveredIdx)} cy={scaleY(activePoint.atl)} r="3.5" fill="#a855f7" stroke="#fff" strokeWidth="1.5" />
-                  <circle cx={scaleX(hoveredIdx)} cy={scaleY(activePoint.tsb)} r="3" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
-                </g>
-              )}
-            </svg>
-          </div>
-        )}
-
-        {/* TOOLTIP INTERACTIVO FLOTANTE */}
-        {activePoint && hoveredIdx !== null && (
-          <div
-            className="absolute top-4 pointer-events-none z-20 bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md rounded-xl p-2.5 shadow-xl border border-slate-700/60 text-xs space-y-1 transition-all"
-            style={{
-              left: `${Math.min(Math.max(scaleX(hoveredIdx) / svgWidth * 100, 15), 80)}%`,
-              transform: "translateX(-50%)",
-            }}
-          >
-            <div className="flex items-center justify-between gap-3 border-b border-slate-700 pb-1">
-              <span className="font-bold">{activePoint.date}</span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${activePoint.isProjected ? "bg-amber-500/20 text-amber-300" : "bg-sky-500/20 text-sky-300"}`}>
-                {activePoint.isProjected ? "Proyección Banister" : "Histórico Real"}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5 pt-0.5 font-semibold">
-              <div className="text-sky-400">CTL: <span className="font-black text-white">{activePoint.ctl}</span></div>
-              <div className="text-purple-400">ATL: <span className="font-black text-white">{activePoint.atl}</span></div>
-              <div className={activePoint.tsb >= 0 ? "text-emerald-400" : "text-amber-400"}>
-                TSB: <span className="font-black text-white">{activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb}</span>
-              </div>
-            </div>
-            {activePoint.tss !== undefined && activePoint.tss > 0 && (
-              <div className="text-[10px] text-slate-400">TSS diario estimado: {activePoint.tss} pts</div>
-            )}
-          </div>
-        )}
-
-        {/* LEYENDA DEL GRÁFICO */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1.5 font-bold text-sky-600 dark:text-sky-400">
-              <span className="w-3 h-1 bg-sky-500 rounded-full"></span>
-              <span>Aptitud (CTL - Fitness)</span>
-            </div>
-            <div className="flex items-center gap-1.5 font-bold text-purple-600 dark:text-purple-400">
-              <span className="w-3 h-1 bg-purple-500 rounded-full"></span>
-              <span>Fatiga (ATL - Fatigue)</span>
-            </div>
-            <div className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
-              <span className="w-3 h-1 bg-emerald-500 rounded-full"></span>
-              <span>Forma (TSB - Form)</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-[11px] text-slate-400">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500/40"></span> &gt;+15 Frescura
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-red-500/40"></span> &lt;-30 Sobrecarga
-            </span>
-          </div>
-        </div>
+          {/* CURSOR INTERACTIVO TRACKING */}
+          {activeIdx !== null && (
+            <g>
+              <line x1={scaleX(activeIdx)} y1={p1Top} x2={scaleX(activeIdx)} y2={p3Bottom} stroke="#0f172a" strokeWidth="1.2" strokeDasharray="3 3" />
+              <circle cx={scaleX(activeIdx)} cy={scaleP1(points[activeIdx].ctl)} r="4" fill="#0284c7" stroke="#fff" strokeWidth="1.5" />
+              <circle cx={scaleX(activeIdx)} cy={scaleP1(points[activeIdx].atl)} r="3.5" fill="#9333ea" stroke="#fff" strokeWidth="1.5" />
+              <circle cx={scaleX(activeIdx)} cy={scaleP2(points[activeIdx].tsb)} r="3.5" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
+            </g>
+          )}
+        </svg>
       </div>
     </div>
   );

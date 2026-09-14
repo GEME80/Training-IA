@@ -4,6 +4,7 @@ import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness } from "@/lib/intervals/types";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { computePMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
 
 export interface MacrocycleAiRequestBody {
   athleteId?: string;
@@ -61,12 +62,12 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
     try {
       const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
       const today = new Date();
-      const past90 = new Date();
-      past90.setDate(today.getDate() - 90);
+      const past365 = new Date();
+      past365.setDate(today.getDate() - 365);
 
       const [ath, wel, sports] = await Promise.all([
         client.getAthlete().catch(() => null),
-        client.getWellness(past90.toISOString().split("T")[0], today.toISOString().split("T")[0]).catch(() => []),
+        client.getWellness(past365.toISOString().split("T")[0], today.toISOString().split("T")[0]).catch(() => []),
         client.getSportSettings().catch(() => []),
       ]);
 
@@ -96,6 +97,7 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
 
         const rawH = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
         const normH = rawH ? (rawH < 3 ? Math.round(rawH * 100) : Math.round(rawH)) : undefined;
+        const latestWel = wel.length > 0 ? wel[wel.length - 1] : undefined;
 
         profile = {
           ...ath,
@@ -104,9 +106,9 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
           birthDate: icuDob,
           age: computedAge,
           gender: body.gender || (storedUser?.profile.gender as any) || anyAth.sex || anyAth.gender,
-          weight: body.weightKg || storedUser?.profile.weightKg || ath.weight || (wel[0] as any)?.weight,
+          weight: body.weightKg || storedUser?.profile.weightKg || ath.weight || (latestWel as any)?.weight,
           heightCm: body.heightCm || storedUser?.profile.heightCm || normH,
-          restingHR: (wel[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
+          restingHR: (latestWel as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
           maxHR: anyAth.max_hr || anyAth.maxHR || ath.maxHR,
           lthr: runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath.lthr,
           run_ftp: runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp,
@@ -125,6 +127,8 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
   profile.tsb = physioStatus.tsb;
   profile.rampRate = physioStatus.rampRate;
 
+  const historicalProfile = computePMCHistoricalSummary(wellness);
+
   const aiResult = await MacrocycleAIEngine.generatePersonalizedMacrocycle(
     profile,
     physioStatus,
@@ -135,6 +139,7 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
     {
       geminiApiKey: customGeminiKey,
       selectedModel,
+      historicalProfile,
     }
   );
 

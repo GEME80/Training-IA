@@ -68,11 +68,11 @@ export class TelemetryService {
         try {
           const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
           const today = new Date();
-          const past60Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 60);
+          const past365Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365);
           const past30Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
           const next7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
 
-          const oldestWellnessStr = formatLocalDateToYMD(past60Days);
+          const oldestWellnessStr = formatLocalDateToYMD(past365Days);
           const oldestActivitiesStr = formatLocalDateToYMD(past30Days);
           const newestStr = getLocalTodayStr();
           const futureStr = formatLocalDateToYMD(next7Days);
@@ -146,13 +146,15 @@ export class TelemetryService {
             const normHeight = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
             const resolvedHeight = storedUser?.profile.heightCm || normHeight;
 
+            const latestWellness = wellness.length > 0 ? wellness[wellness.length - 1] : undefined;
+
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
-            const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (wellness[0] as any)?.weight;
+            const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
             const resolvedRunFtp = customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0);
             const resolvedBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
 
             // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
-            const intervalsRestingHR = (wellness[0] as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
+            const intervalsRestingHR = (latestWellness as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
             const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
             const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
 

@@ -179,6 +179,8 @@ ${directiveBlock}
 
 import { resolveTrainingModel } from "./knowledge";
 
+import { PMCHistoricalSummary } from "../physiology/pmcEngine";
+
 export interface MacrocyclePromptContext {
   profile: AthleteProfile;
   physioStatus: PhysiologicalStatus;
@@ -189,6 +191,7 @@ export interface MacrocyclePromptContext {
     weeklyAvailability?: WeeklyAvailabilityMap;
   };
   customPromptDirective?: string;
+  historicalProfile?: PMCHistoricalSummary;
 }
 
 /**
@@ -198,7 +201,7 @@ export function buildMacrocycleArchitectSystemPrompt(
   basePrompt: string = DEFAULT_PROMPTS.macrocyclePrompt,
   ctx: MacrocyclePromptContext
 ): string {
-  const { profile, physioStatus, config, customPromptDirective } = ctx;
+  const { profile, physioStatus, config, customPromptDirective, historicalProfile } = ctx;
 
   const curatedModel = resolveTrainingModel({
     targetDistance: config.targetDistance,
@@ -227,6 +230,16 @@ export function buildMacrocycleArchitectSystemPrompt(
         .join("\n")}\n`
     : "";
 
+  const historicalBlock = historicalProfile && historicalProfile.recordedDaysCount > 0
+    ? `\n=== HISTÓRICO ANUAL DE TELEMETRÍA (365 DÍAS) ===
+- Techo Aeróbico Demostrado (Peak CTL Último Año): ${historicalProfile.peakCtlLastYear} pts
+- Fatiga Máxima Asimilada (Max ATL): ${historicalProfile.maxAtlRecorded} pts
+- Suelo de Forma Histórico (Mínimo TSB): ${historicalProfile.minTsbRecorded} (Evitar caídas críticas de sobrecarga)
+- Tasa de Rampa Asimilada en Progresión: +${historicalProfile.avgRampRate.toFixed(1)} CTL/semana
+- Volumen Total Anual Registrado: ${historicalProfile.annualVolumeTss} TSS en ${historicalProfile.recordedDaysCount} días
+- DIRECTRIZ DEL HEAD COACH: Utiliza el Techo Histórico (${historicalProfile.peakCtlLastYear} CTL) para calibrar el volumen sin subestimar al atleta, y mantén el TSB siempre por encima de ${historicalProfile.minTsbRecorded}.\n`
+    : "";
+
   return `${basePrompt}
 
 === MODELO CIENTÍFICO RECTOR APLICADO (GROUNDING CURADO) ===
@@ -243,8 +256,7 @@ export function buildMacrocycleArchitectSystemPrompt(
 - CTL Actual (Fitness): ${physioStatus.ctl.toFixed(1)} | ATL (Fatiga): ${physioStatus.atl.toFixed(1)} | TSB (Forma): ${physioStatus.tsb.toFixed(1)}
 - Stryd Potencia Crítica (Run CP): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado / Usar Ritmo"}
 - Bike FTP: ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado / Usar RPE"}
-- Pulso Cardíaco: LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"} | FC Reposo: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"}${curatedModel.biotypeCrossTrainingRule ? `\n- Regla de Biotipo (${curatedModel.displayName}): ${curatedModel.biotypeCrossTrainingRule.notes}` : ""}
-
+- Pulso Cardíaco: LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"} | FC Reposo: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"}${curatedModel.biotypeCrossTrainingRule ? `\n- Regla de Biotipo (${curatedModel.displayName}): ${curatedModel.biotypeCrossTrainingRule.notes}` : ""}${historicalBlock}
 === PARÁMETROS DEL PLAN RECTOR SOLICITADO POR EL ATLETA ===
 - Evento / Desafío: ${config.hasRace || config.raceName ? `Competición (${config.raceName || "Carrera Objetivo"}, Distancia: ${config.targetDistance || config.raceDistance || "42.2k"})` : `Foco de Temporada (${config.athleteMoment || "Construcción de Base"})`}
 - Fecha de la Carrera: ${config.raceDate || "No definida"}

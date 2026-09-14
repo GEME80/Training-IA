@@ -6,6 +6,7 @@ import { generateCustomMacrocycleBlueprint } from "../physiology/macrocycleGener
 import { trackGeminiUsage } from "../ai/telemetry";
 import { buildMacrocycleArchitectSystemPrompt, DEFAULT_PROMPTS } from "../ai/prompts";
 import { resolveTrainingModel, computePhaseWeeksDistribution } from "../ai/knowledge";
+import { PMCHistoricalSummary } from "../physiology/pmcEngine";
 
 export interface AIMacrocycleResponse {
   success: boolean;
@@ -31,6 +32,7 @@ export class MacrocycleAIEngine {
       geminiApiKey?: string;
       selectedModel?: string;
       customPrompt?: string;
+      historicalProfile?: PMCHistoricalSummary;
     }
   ): Promise<AIMacrocycleResponse> {
     const rawApiKey = options?.geminiApiKey || process.env.GEMINI_API_KEY;
@@ -127,6 +129,7 @@ export class MacrocycleAIEngine {
             weeksCount: baseBlueprint.weeks.length,
           },
           customPromptDirective: options?.customPrompt,
+          historicalProfile: options?.historicalProfile,
         }
       );
 

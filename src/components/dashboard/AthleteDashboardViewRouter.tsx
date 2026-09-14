@@ -46,6 +46,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         physioStatus={telemetry.physioStatus}
         profile={telemetry.profile}
         latestWellness={telemetry.latestWellness}
+        wellnessHistory={telemetry.wellnessHistory}
         visibleMetrics={telemetry.visibleMetrics}
         onToggleMetric={telemetry.handleToggleMetric}
         blueprint={season.blueprint}

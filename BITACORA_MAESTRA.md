@@ -3116,4 +3116,39 @@ flowchart TD
   - `tsc --noEmit`: 0 errores de tipado en todo el repositorio.
   - `npm run build`: Compilación de producción Next.js 15 exitosa (20/20 rutas generadas, Código 0).
 
+### Versión 3.39 - Actualización Automática Universal de Macrociclos en Runtime y Reactivación de Memoria Aeróbica para `gerkof@gmail.com` y Todos los Atletas (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 15:55 COT.
+- **Directiva:** "Actualiza el plan de gerkof@gmail.com y que esta solución quede para todos los atletas".
+- **Alcance de la Solución Universal Implementada:**
+  1. **Actualización del Plan de Germán Morales (`gerkof@gmail.com` / `i442091`):**
+     - **Carrera Objetivo Detectada en Intervals.icu:** `[PULSE AI] 🏆 COMPETICIÓN OBJETIVO: MARATÓN (42.195 km)` programada para el **1 de Noviembre de 2026** (7 semanas desde el 14 de Septiembre de 2026).
+     - **Métricas Históricas Ancladas:** CTL actual: 37.5, Peak CTL último año: 86.9, Volumen anual: 19,426 TSS.
+     - **Plan Generado y Proyectado (7 Semanas):**
+       - Semana 1 (14-20 Sep, Base Específica): **371 TSS**.
+       - Semana 2 (21-27 Sep, Base Específica): **413 TSS**.
+       - Semana 3 (28 Sep - 4 Oct, Construcción): **456 TSS**.
+       - Semana 4 (5-11 Oct, Asimilación 3:1): **359 TSS**.
+       - Semana 5 (12-18 Oct, Fondo Cumbre Clave): **498 TSS** (Tirada Larga: 158m).
+       - Semana 6 (19-25 Oct, Fondo Cumbre Clave): **498 TSS** (Tirada Larga: 158m).
+       - Semana 7 (26 Oct - 1 Nov, Competición Oficial 42K): **209 TSS** (Tirada Larga: 210m).
+     - **Simulación Banister Validad:** El CTL se eleva de 37.5 a un pico de **54.4 CTL** y entrega al atleta el 1 de Noviembre con **50.6 CTL y TSB positivo de +5.1** (en lugar de los 32.7 CTL desentrenados anteriores).
+  2. **Reactivación de Memoria Aeróbica y Tapering en Ciclos Cortos / Express ($\le 8$ Semanas):**
+     - Para macrociclos cortos ($\le 8$ semanas) en atletas con motor probado ($PeakCTL_{365d} \ge 65$), la tasa de rampa segura se ajusta a **4.8 CTL/semana** (asimilación de memoria muscular y mitocondrial).
+     - El tapering para ciclos express se calibra proporcionalmente a **1 semana de puesta a punto + 1 semana de carrera** (evitando que 3 semanas de taper consuman el 43% del tiempo disponible).
+  3. **Mecanismo de Detección y Actualización Automática Universal en Runtime (`src/hooks/useSeasonPlans.ts`):**
+     - `useSeasonPlans` ahora recibe `ctl` y `historicalMetrics: telemetry.historicalSummary`.
+     - Al inicializar o cargar los planes del usuario (`initPlans`), si el atleta cuenta con historial demostrado ($PeakCTL_{365d} \ge 60$) pero su plan activo tiene un pico subdimensionado ($PeakTSS < 480$), el sistema **recalibra automáticamente el blueprint** mediante `generateCustomMacrocycleBlueprint` con anclaje Banister.
+     - Guarda el blueprint corregido en `userStorage` (`season_plans`, `active_blueprint`) y lo persiste al backend mediante `persistProfileField`.
+     - Si un atleta tiene carrera objetivo registrada pero ningún plan activo, el sistema auto-genera el plan inicial anclado a su histórico.
+  4. **Cumplimiento Estricto de Presupuesto de Código (< 350 LOC):**
+     - `src/hooks/useSeasonPlans.ts`: **349 líneas** ($< 350\text{ LOC}$).
+     - `src/lib/physiology/macrocycleGenerator.ts`: **344 líneas** ($< 350\text{ LOC}$).
+     - `src/components/AthleteDashboard.tsx`: **147 líneas** ($< 350\text{ LOC}$).
+- **Validaciones Superadas:**
+  - `generate_german_plan.ts`: Simulación Banister validada con éxito (37.5 $\rightarrow$ 54.4 peak $\rightarrow$ 50.6 carrera, TSB +5.1).
+  - `run_historical_test.js`: Macrociclo largo de 16 semanas validado (Peak 74.2 CTL, Carrera 67.0 CTL, TSB +14.1).
+  - `tsc --noEmit`: 0 errores de compilación de TypeScript.
+  - `npm run build`: Next.js 15 producción compilado con 20/20 rutas estáticas y dinámicas (Código 0).
+
+
 

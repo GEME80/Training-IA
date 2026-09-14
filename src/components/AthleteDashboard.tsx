@@ -67,6 +67,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     profileId: telemetry.profile.id,
     runFtp: telemetry.profile.run_ftp,
     bikeFtp: telemetry.profile.bike_ftp,
+    ctl: telemetry.profile.ctl,
+    historicalMetrics: telemetry.historicalSummary,
     apiKeyCache: telemetry.apiKeyCache,
     refreshTelemetry: telemetry.refreshTelemetry,
     setSyncNotification: sync.setSyncNotification,

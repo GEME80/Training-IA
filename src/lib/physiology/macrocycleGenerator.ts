@@ -99,13 +99,13 @@ export function calculateTargetPeakCtl(input: PeakCtlCalculationInput): {
 
   const buildWeeks = Math.max(2, (input.totalWeeks || input.weeksCount || 12) - 2);
   const hasStrongEngine = peakLastYear >= 65 && currentCtl < peakLastYear * 0.80;
-  const safeRampRate = hasStrongEngine ? 3.2 : 2.2;
+  const safeRampRate = hasStrongEngine ? (buildWeeks <= 6 ? 4.8 : 3.4) : 2.2;
   const attainableCtl = currentCtl + buildWeeks * safeRampRate;
   const safeCeiling = Math.min(peakLastYear * 1.02, eventOptimalCtl + 10);
 
   const targetPeakCtl = Math.round(Math.min(safeCeiling, Math.max(eventMinCtl, attainableCtl)) * 10) / 10;
   const targetPeakWeeklyTss = Math.round(7 * targetPeakCtl + 45 * 1.5);
-  const startWeeklyTss = Math.round(7 * currentCtl + 45 * 1.8);
+  const startWeeklyTss = Math.round(7 * currentCtl + 45 * (hasStrongEngine ? 2.4 : 1.8));
   const weeklyRampRate = Math.round(((targetPeakCtl - currentCtl) / buildWeeks) * 10) / 10;
 
   return { targetPeakCtl, targetPeakWeeklyTss, startWeeklyTss, weeklyRampRate };
@@ -185,10 +185,11 @@ export function generateCustomMacrocycleBlueprint(
   const gppWeeksCount = Math.max(0, totalWeeks - maxSpecificWeeks);
   const effectiveSpecificWeeks = totalWeeks - gppWeeksCount;
 
+  const rawTaper = curatedModel.taperingRules?.taperingWeeks
+    ? Math.round(curatedModel.taperingRules.taperingWeeks)
+    : Math.max(2, Math.round(effectiveSpecificWeeks * 0.15));
   const taperWeeksCount = isEventDriven
-    ? (curatedModel.taperingRules?.taperingWeeks
-        ? Math.round(curatedModel.taperingRules.taperingWeeks)
-        : Math.max(2, Math.round(effectiveSpecificWeeks * Math.max(0.15, (curatedModel.phaseDistributions.find(p => p.phaseKey === "TAPER")?.percentageDuration || 0.15)))))
+    ? Math.min(rawTaper, Math.max(1, Math.floor(effectiveSpecificWeeks * 0.25)))
     : 0;
   const peakWeeksCount = isEventDriven ? Math.max(2, Math.round(effectiveSpecificWeeks * (curatedModel.phaseDistributions.find(p => p.phaseKey === "PEAK")?.percentageDuration || 0.18))) : 0;
   const specificBaseBuild = Math.max(2, effectiveSpecificWeeks - taperWeeksCount - peakWeeksCount);

@@ -29,6 +29,12 @@ interface SeasonAIGeneratorProps {
   runFtp?: number;
   bikeFtp?: number;
   lthr?: number;
+  weightKg?: number;
+  heightCm?: number;
+  birthDate?: string;
+  gender?: "M" | "F" | "OTHER";
+  restingHR?: number;
+  maxHR?: number;
   onGenerateAIPlan: (userPrompt: string, weeksCount: number, primaryDiscipline: string) => Promise<void>;
   onApplyDirectBlueprint?: (blueprint: MacrocycleBlueprint, planTitle: string) => void;
   onNavigateToProfile?: () => void;
@@ -46,6 +52,12 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   runFtp = 0,
   bikeFtp = 0,
   lthr = 0,
+  weightKg,
+  heightCm,
+  birthDate,
+  gender,
+  restingHR,
+  maxHR,
   onGenerateAIPlan,
   onApplyDirectBlueprint,
   onNavigateToProfile,
@@ -114,22 +126,13 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            athleteId,
-            apiKey: storedApiKey,
-            runFtp,
-            bikeFtp,
+            athleteId, apiKey: storedApiKey, runFtp, bikeFtp,
+            weightKg, heightCm, birthDate, gender, restingHR, maxHR, lthr,
             wizardConfig: {
-              targetDistance: distType,
-              weeksCount,
-              startDate,
-              hasRace: !!primaryRace,
-              raceName: primaryRace?.name || planTitle,
-              raceDate: primaryRace?.date || "",
-              raceDistance: distType,
+              targetDistance: distType, weeksCount, startDate, hasRace: !!primaryRace,
+              raceName: primaryRace?.name || planTitle, raceDate: primaryRace?.date || "", raceDistance: distType,
               raceGoal: primaryRace?.goalTarget || "Pico de forma óptimo",
-              trainingApproach,
-              periodization,
-              customPrompt: customPromptText,
+              trainingApproach, periodization, customPrompt: customPromptText,
               weeklyAvailability: localWeeklyAvailability,
             },
           }),
@@ -152,13 +155,10 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
       }
 
       const bp = generateCustomMacrocycleBlueprint({
-        distanceType: distType,
-        startDate,
-        weeksCount,
+        distanceType: distType, startDate, weeksCount,
         customGoal: `${planTitle}. Enfoque: ${trainingApproach}.`,
-        periodization: periodization as any,
-        primaryRace: primaryRace || undefined,
-        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weeklyAvailability: localWeeklyAvailability },
+        periodization: periodization as any, primaryRace: primaryRace || undefined,
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability: localWeeklyAvailability },
       });
 
       setGeneratedBlueprint(bp);
@@ -276,16 +276,11 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
 
       {currentStep === 3 && (
         <SeasonWizardStep3Physiology
-          ctl={ctl}
-          runFtp={runFtp}
-          bikeFtp={bikeFtp}
-          lthr={lthr}
-          periodization={periodization}
-          onChangePeriodization={setPeriodization}
-          customPromptText={customPromptText}
-          onChangeCustomPromptText={setCustomPromptText}
-          onGeneratePlan={handleGenerateAI}
-          isGenerating={isGeneratingPlan || isGenerating}
+          ctl={ctl} runFtp={runFtp} bikeFtp={bikeFtp} lthr={lthr}
+          weightKg={weightKg} heightCm={heightCm} birthDate={birthDate} gender={gender} restingHR={restingHR} maxHR={maxHR}
+          periodization={periodization} onChangePeriodization={setPeriodization}
+          customPromptText={customPromptText} onChangeCustomPromptText={setCustomPromptText}
+          onGeneratePlan={handleGenerateAI} isGenerating={isGeneratingPlan || isGenerating}
         />
       )}
 

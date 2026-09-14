@@ -237,11 +237,13 @@ export function buildMacrocycleArchitectSystemPrompt(
 
 === TELEMETRÍA Y UMBRALES BIOLÓGICOS DEL ATLETA (INTERVALS.ICU) ===
 - Atleta: ${profile.name || "Atleta"}
-- Edad: ${profile.age ? `${profile.age} años` : "No especificada"} | Género: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}
+- Demografía: ${profile.age ? `${profile.age} años` : "Edad no especificada"} | Género: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}
+- Antropometría: Peso: ${profile.weight ? `${profile.weight} kg` : "No especificado"} | Altura: ${profile.heightCm ? `${profile.heightCm} cm` : "No especificada"}${profile.weight && profile.heightCm ? ` | IMC: ${(profile.weight / Math.pow(profile.heightCm / 100, 2)).toFixed(1)}` : ""}
+- Ratios Potencia/Peso: Stryd Run CP: ${profile.run_ftp && profile.weight ? `${(profile.run_ftp / profile.weight).toFixed(2)} W/kg` : "—"} | Bike FTP: ${profile.bike_ftp && profile.weight ? `${(profile.bike_ftp / profile.weight).toFixed(2)} W/kg` : "—"}
 - CTL Actual (Fitness): ${physioStatus.ctl.toFixed(1)} | ATL (Fatiga): ${physioStatus.atl.toFixed(1)} | TSB (Forma): ${physioStatus.tsb.toFixed(1)}
 - Stryd Potencia Crítica (Run CP): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado / Usar Ritmo"}
 - Bike FTP: ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado / Usar RPE"}
-- Frecuencia Cardíaca Umbral (LTHR): ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
+- Pulso Cardíaco: LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"} | FC Reposo: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"}${curatedModel.biotypeCrossTrainingRule ? `\n- Regla de Biotipo (${curatedModel.displayName}): ${curatedModel.biotypeCrossTrainingRule.notes}` : ""}
 
 === PARÁMETROS DEL PLAN RECTOR SOLICITADO POR EL ATLETA ===
 - Evento / Desafío: ${config.hasRace || config.raceName ? `Competición (${config.raceName || "Carrera Objetivo"}, Distancia: ${config.targetDistance || config.raceDistance || "42.2k"})` : `Foco de Temporada (${config.athleteMoment || "Construcción de Base"})`}

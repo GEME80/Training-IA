@@ -73,6 +73,12 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         bikeFtp={telemetry.profile.bike_ftp || 0}
         lthr={telemetry.profile.lthr || 0}
         ctl={telemetry.physioStatus?.ctl || telemetry.profile.ctl || 0}
+        weightKg={telemetry.profile.weight}
+        heightCm={telemetry.profile.heightCm}
+        birthDate={telemetry.profile.birthDate}
+        gender={telemetry.profile.gender}
+        restingHR={telemetry.profile.restingHR}
+        maxHR={telemetry.profile.maxHR}
         weeklyAvailability={season.weeklyAvailability}
         targetRaces={season.targetRaces}
         seasonPlans={season.seasonPlans}

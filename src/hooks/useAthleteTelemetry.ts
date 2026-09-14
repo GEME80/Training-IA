@@ -134,23 +134,13 @@ export function useAthleteTelemetry({
 
           setProfile((prev) => ({
             ...prev, ...p,
-            weight: p.weight ?? prev.weight, heightCm: p.heightCm ?? prev.heightCm,
-            gender: p.gender ?? prev.gender, birthDate: p.birthDate ?? prev.birthDate,
+            weight: prev.weight ?? p.weight, heightCm: prev.heightCm ?? p.heightCm,
+            gender: prev.gender ?? p.gender, birthDate: prev.birthDate ?? p.birthDate,
             lthr: resLthr ?? prev.lthr, restingHR: resRhr ?? prev.restingHR, maxHR: resMax ?? prev.maxHR,
             name: p.name && p.name !== "Atleta" ? p.name : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "Atleta"),
             run_ftp: resRun, bike_ftp: resBike,
           }));
 
-          if (user?.uid && (p.lthr || p.restingHR || p.maxHR || p.run_ftp || p.bike_ftp)) {
-            persistProfileToApi({
-              uid: user.uid, email: user.email || userProfile?.email || "",
-              displayName: p.name || profile.name || userProfile?.displayName,
-              intervalsAthleteId: targetAthleteId, rawApiKey: targetApiKey,
-              runFtp: resRun, bikeFtp: resBike, lthr: resLthr, restingHR: resRhr, maxHR: resMax,
-              weightKg: p.weight ?? profile.weight, heightCm: p.heightCm ?? profile.heightCm,
-              birthDate: p.birthDate ?? profile.birthDate, gender: p.gender ?? profile.gender,
-            });
-          }
           setPhysioStatus(data.physioStatus);
         }
       } catch (err) {
@@ -159,7 +149,7 @@ export function useAthleteTelemetry({
         setIsRefreshingTelemetry(false);
       }
     },
-    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, isSuper, onLiveConnectedChange, user?.email, user?.uid, userProfile?.displayName, userProfile?.email, userProfile?.encryptedApiKey, userProfile?.intervalsAthleteId, userStorage, persistProfileToApi]
+    [profile.id, profile.run_ftp, profile.bike_ftp, apiKeyCache, isSuper, onLiveConnectedChange, user?.email, user?.uid, userProfile?.displayName, userProfile?.email, userProfile?.encryptedApiKey, userProfile?.intervalsAthleteId, userStorage]
   );
 
   const handleSaveSettings = async (data: any) => {
@@ -183,18 +173,45 @@ export function useAthleteTelemetry({
     if (data.geminiApiKey) { setGeminiKeyCache(data.geminiApiKey); userStorage.setItem("custom_gemini_key", data.geminiApiKey); }
     if (data.visibleMetrics) { setVisibleMetrics(data.visibleMetrics); userStorage.setJSON("visible_metrics", data.visibleMetrics); }
 
+    const effectiveWeight = data.weightKg !== undefined ? data.weightKg : profile.weight;
+    const effectiveHeight = data.heightCm !== undefined ? data.heightCm : profile.heightCm;
+    const effectiveRunFtp = data.runFtp || profile.run_ftp;
+    const effectiveBikeFtp = data.bikeFtp || profile.bike_ftp;
+    const effectiveBirth = data.birthDate || profile.birthDate;
+    const effectiveGender = data.gender || profile.gender;
+    const targetApiKey = data.apiKey || apiKeyCache || userStorage.getItem("intervals_api_key") || "";
+
     await persistProfileToApi({
       uid: user?.uid || "", email: user?.email || userProfile?.email || "",
       displayName: data.displayName || profile.name || user?.displayName || userProfile?.displayName,
-      intervalsAthleteId: athleteIdToUse || profile.id, rawApiKey: data.apiKey || apiKeyCache,
-      runFtp: data.runFtp || profile.run_ftp, bikeFtp: data.bikeFtp || profile.bike_ftp,
+      intervalsAthleteId: athleteIdToUse || profile.id, rawApiKey: targetApiKey,
+      runFtp: effectiveRunFtp, bikeFtp: effectiveBikeFtp,
       lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
       restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
       maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
-      weightKg: data.weightKg || profile.weight, heightCm: data.heightCm || profile.heightCm,
-      birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
+      weightKg: effectiveWeight, heightCm: effectiveHeight,
+      birthDate: effectiveBirth, gender: effectiveGender,
       weeklyAvailability: data.weeklyAvailability, visibleMetrics: data.visibleMetrics || visibleMetrics,
     });
+
+    // Sincronizar los 5 campos maestros hacia Intervals.icu en segundo plano
+    if (targetApiKey && (athleteIdToUse || profile.id)) {
+      fetch("/api/sync-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athleteIdToUse || profile.id,
+          apiKey: targetApiKey,
+          uid: user?.uid,
+          email: user?.email || userProfile?.email || "",
+          runFtp: effectiveRunFtp,
+          bikeFtp: effectiveBikeFtp,
+          weightKg: effectiveWeight,
+          birthDate: effectiveBirth,
+          gender: effectiveGender,
+        }),
+      }).catch((syncErr) => console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr));
+    }
 
     if (refreshProfile) {
       try { await refreshProfile(); } catch (authErr) { console.warn("Aviso al refrescar perfil en AuthContext:", authErr); }

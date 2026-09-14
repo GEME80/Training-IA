@@ -4,6 +4,7 @@ import { AthleteProfile, AthleteWellness, CalendarEvent, DailyExecutedMap } from
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { EvaluateRequest } from "@/lib/validation/schemas";
+import { getUserProfileDecrypted } from "@/lib/db/userProfile";
 
 export interface TelemetryEvaluationResult {
   success: boolean;
@@ -51,6 +52,7 @@ export class TelemetryService {
 
     let effectiveAthleteId = "";
     try {
+      const storedUser = uid ? await getUserProfileDecrypted(uid).catch(() => null) : null;
       const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
       effectiveAthleteId = credentials.athleteId;
       const effectiveApiKey = credentials.apiKey;
@@ -126,9 +128,8 @@ export class TelemetryService {
               s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id))
             );
 
-            const isGermanMorales = athleteData.id === "i442091" || Boolean(email && /german|gerkof/i.test(email));
             const anyAthlete = athleteData as any;
-            const icuDob = anyAthlete.icu_date_of_birth || anyAthlete.dob || anyAthlete.date_of_birth || (isGermanMorales ? "1980-03-24" : undefined);
+            const icuDob = anyAthlete.icu_date_of_birth || anyAthlete.dob || anyAthlete.date_of_birth || storedUser?.profile.birthDate;
             let calculatedAge: number | undefined = undefined;
             if (icuDob) {
               const birth = new Date(icuDob);
@@ -141,22 +142,33 @@ export class TelemetryService {
               }
             }
 
-            const fallbackWeight = athleteData.weight || (wellness[0] as any)?.weight || (isGermanMorales ? 70 : undefined);
-            const fallbackRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || (isGermanMorales ? 327 : 0));
-            const fallbackBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || (isGermanMorales ? 240 : 0));
+            const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
+            const normHeight = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
+            const resolvedHeight = storedUser?.profile.heightCm || normHeight;
+
+            // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
+            const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (wellness[0] as any)?.weight;
+            const resolvedRunFtp = customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0);
+            const resolvedBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
+
+            // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
+            const intervalsRestingHR = (wellness[0] as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
+            const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
+            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
 
             profile = {
               ...athleteData,
-              name: athleteData.name || (isGermanMorales ? "Germán Morales" : "Atleta"),
+              name: athleteData.name || storedUser?.profile.displayName || "Atleta",
               birthDate: icuDob,
               age: calculatedAge,
-              gender: anyAthlete.sex || anyAthlete.gender || (isGermanMorales ? "M" : undefined),
-              weight: fallbackWeight,
-              restingHR: anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR,
-              maxHR: anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR,
-              lthr: anyAthlete.lthr || athleteData.lthr,
-              run_ftp: fallbackRunFtp,
-              bike_ftp: fallbackBikeFtp,
+              gender: (storedUser?.profile.gender as any) || anyAthlete.sex || anyAthlete.gender,
+              weight: resolvedWeight ? Number(resolvedWeight) : undefined,
+              heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
+              restingHR: intervalsRestingHR ? Number(intervalsRestingHR) : undefined,
+              maxHR: intervalsMaxHR ? Number(intervalsMaxHR) : undefined,
+              lthr: intervalsLthr ? Number(intervalsLthr) : undefined,
+              run_ftp: resolvedRunFtp,
+              bike_ftp: resolvedBikeFtp,
             };
           }
         } catch (clientErr) {

@@ -52,6 +52,10 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     birthDate,
     gender,
     weight,
+    height,
+    restingHR,
+    maxHR,
+    lthr,
     isInitialAudit = false,
     coachProfile = "balanced",
     customPrompt = "",
@@ -72,6 +76,13 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     rampRate: 0,
     run_ftp: runFtp ? Number(runFtp) : undefined,
     bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
+    weight: weight ? Number(weight) : undefined,
+    heightCm: height ? Number(height) : undefined,
+    birthDate,
+    gender: (gender === "M" || gender === "F" || gender === "OTHER") ? gender : undefined,
+    restingHR: restingHR ? Number(restingHR) : undefined,
+    maxHR: maxHR ? Number(maxHR) : undefined,
+    lthr: lthr ? Number(lthr) : undefined,
   };
   let wellness: AthleteWellness[] = [];
   let pastActivities: ActivitySummary[] = [];
@@ -116,22 +127,25 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         }
         if (!computedAge && isGerman) computedAge = 46;
 
-        const resolvedSex: "M" | "F" | "OTHER" = (anyAth.sex === "M" || anyAth.gender === "M" || gender === "M") ? "M" : ((anyAth.sex === "F" || anyAth.gender === "F" || gender === "F") ? "F" : "M");
-        const resolvedWeight = anyAth.weight || (wellness[0] as any)?.weight || ath?.weight || weight || (isGerman ? 70 : 68);
-        const resolvedRunFtp = runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || (runFtp ? Number(runFtp) : undefined) || (isGerman ? 327 : 300);
-        const resolvedBikeFtp = rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || (bikeFtp ? Number(bikeFtp) : undefined) || (isGerman ? 240 : 230);
+        const resolvedSex: "M" | "F" | "OTHER" = (gender === "M" || anyAth.sex === "M" || anyAth.gender === "M") ? "M" : ((gender === "F" || anyAth.sex === "F" || anyAth.gender === "F") ? "F" : "M");
+        const rawHeight = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
+        const resolvedHeight = (body as any).height || (rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined);
+        const resolvedWeight = weight || anyAth.weight || (wellness[0] as any)?.weight || ath?.weight;
+        const resolvedRunFtp = (runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0;
+        const resolvedBikeFtp = (bikeFtp ? Number(bikeFtp) : undefined) || rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || 0;
 
         profile = {
           ...ath,
           id: ath?.id || effectiveAthleteId || "",
-          name: ath?.name || profile.name || (isGerman ? "Germán Morales" : "Atleta"),
-          birthDate: icuDob,
+          name: ath?.name || profile.name || "Atleta",
+          birthDate: birthDate || icuDob,
           age: computedAge,
           gender: resolvedSex,
           weight: resolvedWeight ? Number(resolvedWeight) : undefined,
-          restingHR: anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || 48,
-          maxHR: anyAth.max_hr || anyAth.maxHR || ath?.maxHR || 185,
-          lthr: anyAth.lthr || ath?.lthr || 168,
+          heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
+          restingHR: restingHR || (wellness[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || 48,
+          maxHR: maxHR || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || 185,
+          lthr: lthr || anyAth.lthr || ath?.lthr || 168,
           run_ftp: resolvedRunFtp,
           bike_ftp: resolvedBikeFtp,
         };

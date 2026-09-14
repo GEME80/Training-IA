@@ -3037,3 +3037,35 @@ flowchart TD
     - ✅ Test 4: Manejo flexible de carrera en Sábado vs. Domingo.
     - ✅ Test 5: Ley universal Stryd (0 violaciones en 448 entrenamientos).
   - `Prueba 4 (Regresión Específica Triseries Paipa Juan Pablo Vásquez):` `test_juan_plan.ts` superó las 7 compuertas con 100% de éxito.
+
+### Versión 3.37 - Blindaje de Persistencia Biométrica (Peso/Altura) y Contrato de Intercambio Bidireccional con Intervals.icu (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 10:15 COT.
+- **Directiva:** "Analiza que esté tomando todos los datos del atleta para crear los planes y asegurar que el perfil tome los datos y los guarde ya que realizo cambios en el peso, altura y no funciona. También revisa qué datos enviamos a intervals y cuáles recibimos para crear bien el perfil del atleta. Recordemos que los datos que le enviamos a intervals son los de Stryd, FTP bici, peso, edad y sexo. El resto se toma de intervals".
+- **Diagnóstico y Corrección de la Causa Raíz:**
+  1. **Eliminación del Fallback a 70kg:** Erradicado el fallback hardcodeado `fallbackWeight = isGermanMorales ? 70 : undefined` en `src/lib/services/telemetryService.ts`. Ahora `getUserProfileDecrypted(uid)` y el almacenamiento local actúan como SSOT inmutable.
+  2. **Ruptura del Bucle de Sobrescritura en Hook:** `src/hooks/useAthleteTelemetry.ts` ejecutaba `persistProfileToApi` dentro de `refreshTelemetry` con un closure desactualizado que revertía ediciones manuales. Se eliminó esta llamada redundante y se protegieron `prev.weight` y `prev.heightCm`.
+  3. **Incorporación Completa de `heightCm`:** Se integró la altura en cm en `AthleteProfile`, `telemetryService.ts`, `macrocycleGenerator.ts` (`athleteMetrics.heightCm`), `macrocycleAI.ts`, `chatContext.ts` y componentes visuales.
+- **Definición Estricta del Contrato con Intervals.icu:**
+  - **Datos Enviados a Intervals.icu (5 Campos Maestros SSOT Local):**
+    1. **Stryd CP / Run FTP:** `icu_running_ftp` + ajuste de deporte carrera `ftp`.
+    2. **Bike FTP:** `icu_ftp` + ajuste de deporte ciclismo `ftp`.
+    3. **Peso Corporal:** `weight`.
+    4. **Fecha de Nacimiento / Edad:** `icu_date_of_birth` / `dob`.
+    5. **Sexo / Género:** `sex` / `gender`.
+  - **Datos Leídos desde Intervals.icu (SSOT Externo):**
+    - `ctl` (Fitness), `atl` (Fatiga), `tsb` (Forma), `rampRate`.
+    - `lthr` (Umbral de lactato / Frecuencia cardíaca umbral).
+    - `restingHR` / `icu_resting_hr` (Frecuencia cardíaca en reposo).
+    - `maxHR` / `max_hr` (Frecuencia cardíaca máxima).
+    - Variabilidad Cardíaca (`hrv` rMSSD / Z-Score), sueño, métricas de wellness y actividades ejecutadas con archivos `.FIT`.
+- **Integración Biométrica en Macrociclos y Agentes:**
+  - **Season Studio & Wizard (`SeasonWizardStep3Physiology.tsx` y `SeasonAIGenerator.tsx`):** Muestran el panel con Peso, Altura, IMC, Edad, FC Máx, FC Reposo, LTHR y ratios W/kg en tiempo real.
+  - **Prompt Rector de Macrociclos (`prompts.ts`):** Inyecta demografía completa, IMC, ratios W/kg para Stryd y Bici, LTHR, FC Reposo, FC Máx y reglas de biotipo.
+  - **Head Coach API (`/api/headcoach/chat/route.ts` y `chatContext.ts`):** Recibe y procesa `weight`, `height`, `birthDate`, `gender`, `restingHR`, `maxHR`, `lthr`.
+  - **Endpoint de Sincronización (`/api/sync-settings/route.ts`):** Refactorizado en 58 LOC ($\le 80$ LOC) despachando únicamente los 5 campos maestros.
+- **Validaciones Superadas:**
+  - `tsc --noEmit`: 0 errores de tipado (Código 0).
+  - `npm run build`: 24 rutas dinámicas y estáticas generadas con éxito (Código 0).
+  - Presupuestos de código: Todos los archivos modificados $\le 344$ LOC ($< 350$ LOC) y API routes $\le 64$ LOC ($\le 80$ LOC).
+  - `scratch/run_biometrics_test.js`: Validación exitosa de cálculo biométrico, W/kg e intercambio de 5 campos.
+

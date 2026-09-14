@@ -48,6 +48,10 @@ export interface HeadCoachChatRequest {
   birthDate?: string;
   gender?: string;
   weight?: number;
+  height?: number;
+  restingHR?: number;
+  maxHR?: number;
+  lthr?: number;
   isInitialAudit?: boolean;
   coachProfile?: string;
   customPrompt?: string;

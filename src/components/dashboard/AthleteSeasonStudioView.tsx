@@ -16,6 +16,12 @@ interface AthleteSeasonStudioViewProps {
   bikeFtp?: number;
   lthr?: number;
   ctl?: number;
+  weightKg?: number;
+  heightCm?: number;
+  birthDate?: string;
+  gender?: "M" | "F" | "OTHER";
+  restingHR?: number;
+  maxHR?: number;
   weeklyAvailability?: WeeklyAvailabilityMap;
   targetRaces: TargetRace[];
   seasonPlans: SeasonPlanItem[];
@@ -34,6 +40,12 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   bikeFtp = 0,
   lthr = 0,
   ctl = 0,
+  weightKg,
+  heightCm,
+  birthDate,
+  gender,
+  restingHR,
+  maxHR,
   weeklyAvailability,
   targetRaces,
   seasonPlans,
@@ -116,7 +128,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     const blueprint = generateCustomMacrocycleBlueprint({
       distanceType: (prog.discipline === "Triatlón" ? "triathlon_703" : prog.discipline === "Carrera" ? "42k" : "maintenance"),
       startDate, weeksCount: prog.weeks, customGoal: prog.name, primaryRace: primaryRace || undefined,
-      athleteMetrics: { ctl, runFtp, bikeFtp, weeklyAvailability },
+      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability },
     });
 
     if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -141,7 +153,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       const blueprint = generateCustomMacrocycleBlueprint({
         distanceType: (primaryDiscipline.toLowerCase().includes("triatl") ? "triathlon_703" : "42k"),
         startDate, weeksCount, customGoal: userPrompt, primaryRace: primaryRace || undefined,
-        athleteMetrics: { ctl, runFtp, bikeFtp, weeklyAvailability },
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability },
       });
 
       if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -288,6 +300,12 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                     runFtp={runFtp}
                     bikeFtp={bikeFtp}
                     lthr={lthr}
+                    weightKg={weightKg}
+                    heightCm={heightCm}
+                    birthDate={birthDate}
+                    gender={gender}
+                    restingHR={restingHR}
+                    maxHR={maxHR}
                     onGenerateAIPlan={handleGenerateAIPlan}
                     onApplyDirectBlueprint={handleApplyDirectBlueprint}
                     onNavigateToProfile={onNavigateToProfile}

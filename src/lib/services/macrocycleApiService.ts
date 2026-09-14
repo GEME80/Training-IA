@@ -3,6 +3,7 @@ import { IntervalsClient } from "@/lib/intervals/client";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness } from "@/lib/intervals/types";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { getUserProfileDecrypted } from "@/lib/db/userProfile";
 
 export interface MacrocycleAiRequestBody {
   athleteId?: string;
@@ -14,6 +15,13 @@ export interface MacrocycleAiRequestBody {
   wizardConfig?: any;
   runFtp?: number;
   bikeFtp?: number;
+  weightKg?: number;
+  heightCm?: number;
+  birthDate?: string;
+  gender?: "M" | "F" | "OTHER";
+  restingHR?: number;
+  maxHR?: number;
+  lthr?: number;
 }
 
 export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody) {
@@ -29,18 +37,23 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
     bikeFtp,
   } = body;
 
+  const storedUser = uid ? await getUserProfileDecrypted(uid).catch(() => null) : null;
   const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
     await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
   let profile: AthleteProfile = {
     id: effectiveAthleteId,
-    name: "Atleta",
+    name: storedUser?.profile.displayName || "Atleta",
     ctl: 0,
     atl: 0,
     tsb: 0,
     rampRate: 0,
-    run_ftp: runFtp,
-    bike_ftp: bikeFtp,
+    run_ftp: runFtp || storedUser?.profile.runFtp,
+    bike_ftp: bikeFtp || storedUser?.profile.bikeFtp,
+    weight: body.weightKg || storedUser?.profile.weightKg,
+    heightCm: body.heightCm || storedUser?.profile.heightCm,
+    birthDate: body.birthDate || storedUser?.profile.birthDate,
+    gender: body.gender || (storedUser?.profile.gender as any),
   };
   let wellness: AthleteWellness[] = [];
 
@@ -67,12 +80,37 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
           /ride|cycling|bike/i.test(String(s.id))
         );
 
+        const anyAth = ath as any;
+        const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || body.birthDate || storedUser?.profile.birthDate;
+        let computedAge: number | undefined = undefined;
+        if (icuDob) {
+          const b = new Date(icuDob);
+          if (!isNaN(b.getTime())) {
+            const now = new Date();
+            let a = now.getFullYear() - b.getFullYear();
+            const mDiff = now.getMonth() - b.getMonth();
+            if (mDiff < 0 || (mDiff === 0 && now.getDate() < b.getDate())) a--;
+            if (a > 0 && a < 120) computedAge = a;
+          }
+        }
+
+        const rawH = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
+        const normH = rawH ? (rawH < 3 ? Math.round(rawH * 100) : Math.round(rawH)) : undefined;
+
         profile = {
           ...ath,
           id: ath.id || effectiveAthleteId || "",
           name: ath.name || profile.name,
-          run_ftp: runSport?.ftp || ath.icu_running_ftp || ath.run_ftp || runFtp,
-          bike_ftp: rideSport?.ftp || ath.icu_ftp || ath.bike_ftp || bikeFtp,
+          birthDate: icuDob,
+          age: computedAge,
+          gender: body.gender || (storedUser?.profile.gender as any) || anyAth.sex || anyAth.gender,
+          weight: body.weightKg || storedUser?.profile.weightKg || ath.weight || (wel[0] as any)?.weight,
+          heightCm: body.heightCm || storedUser?.profile.heightCm || normH,
+          restingHR: (wel[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
+          maxHR: anyAth.max_hr || anyAth.maxHR || ath.maxHR,
+          lthr: runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath.lthr,
+          run_ftp: runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp,
+          bike_ftp: rideSport?.ftp || anyAth.icu_ftp || ath.bike_ftp || bikeFtp || storedUser?.profile.bikeFtp,
         };
       }
       wellness = wel;

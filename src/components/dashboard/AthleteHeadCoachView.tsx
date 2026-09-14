@@ -168,6 +168,13 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
           dailyExecutedActivities,
           runFtp: profile.run_ftp,
           bikeFtp: profile.bike_ftp,
+          weight: profile.weight,
+          height: profile.heightCm,
+          birthDate: profile.birthDate,
+          gender: profile.gender,
+          restingHR: profile.restingHR,
+          maxHR: profile.maxHR,
+          lthr: profile.lthr,
           isInitialAudit: false,
         }),
       });

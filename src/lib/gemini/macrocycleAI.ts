@@ -74,7 +74,12 @@ export class MacrocycleAIEngine {
         runFtp: profile.run_ftp,
         bikeFtp: profile.bike_ftp,
         weightKg: profile.weight,
+        heightCm: profile.heightCm,
         lthr: profile.lthr,
+        restingHR: profile.restingHR,
+        maxHR: profile.maxHR,
+        gender: profile.gender,
+        age: profile.age,
         // ✅ Matriz Semanal del Atleta propagada al motor generador
         weeklyAvailability: config.weeklyAvailability as any,
       },

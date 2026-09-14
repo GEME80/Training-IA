@@ -8,6 +8,12 @@ interface SeasonWizardStep3PhysiologyProps {
   runFtp?: number;
   bikeFtp?: number;
   lthr?: number;
+  weightKg?: number;
+  heightCm?: number;
+  birthDate?: string;
+  gender?: "M" | "F" | "OTHER";
+  restingHR?: number;
+  maxHR?: number;
   periodization: "2:1" | "3:1" | "CONTINUO";
   onChangePeriodization: (p: "2:1" | "3:1" | "CONTINUO") => void;
   customPromptText: string;
@@ -21,6 +27,12 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
   runFtp = 0,
   bikeFtp = 0,
   lthr = 165,
+  weightKg,
+  heightCm,
+  birthDate,
+  gender,
+  restingHR,
+  maxHR,
   periodization,
   onChangePeriodization,
   customPromptText,
@@ -28,17 +40,26 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
   onGeneratePlan,
   isGenerating,
 }) => {
+  const wkgRun = weightKg && runFtp ? (runFtp / weightKg).toFixed(2) : undefined;
+  const wkgBike = weightKg && bikeFtp ? (bikeFtp / weightKg).toFixed(2) : undefined;
+  const bmi = weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : undefined;
+  const calculatedAge = React.useMemo(() => {
+    if (!birthDate) return undefined;
+    const diff = Date.now() - new Date(birthDate).getTime();
+    return !isNaN(diff) && diff > 0 ? Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25)) : undefined;
+  }, [birthDate]);
+
   return (
     <div className="space-y-4 animate-fadeIn">
-      {/* 1. TELEMETRÍA FISIOLÓGICA MINIMALISTA */}
-      <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
+      {/* 1. TELEMETRÍA FISIOLÓGICA & BIOMETRÍA DEL ATLETA */}
+      <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-800 dark:text-slate-200">
           <span className="flex items-center gap-1.5">
             <Activity className="h-4 w-4 text-emerald-500" />
-            Tus Datos Fisiológicos Actuales
+            Parámetros Biométricos & Umbrales Activos
           </span>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
-            Intervals.icu en vivo
+            Intervals.icu + Perfil Cloud
           </span>
         </div>
 
@@ -51,26 +72,39 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <span className="text-[9px] text-slate-400 block uppercase">Potencia Stryd</span>
+            <span className="text-[9px] text-slate-400 block uppercase">Stryd CP</span>
             <strong className="text-xs font-black text-amber-600 dark:text-amber-400">
               {runFtp > 0 ? `${runFtp}W` : "—"}
             </strong>
+            {wkgRun && <span className="block text-[9px] text-amber-500 font-bold">{wkgRun} W/kg</span>}
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <span className="text-[9px] text-slate-400 block uppercase">FTP Ciclismo</span>
+            <span className="text-[9px] text-slate-400 block uppercase">FTP Bici</span>
             <strong className="text-xs font-black text-cyan-600 dark:text-cyan-400">
               {bikeFtp > 0 ? `${bikeFtp}W` : "—"}
             </strong>
+            {wkgBike && <span className="block text-[9px] text-cyan-500 font-bold">{wkgBike} W/kg</span>}
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <span className="text-[9px] text-slate-400 block uppercase">Umbral FC (LTHR)</span>
+            <span className="text-[9px] text-slate-400 block uppercase">LTHR (Umbral FC)</span>
             <strong className="text-xs font-black text-rose-600 dark:text-rose-400">
               {lthr > 0 ? `${lthr} bpm` : "—"}
             </strong>
+            {restingHR && <span className="block text-[9px] text-slate-400">Reposo: {restingHR}</span>}
           </div>
         </div>
+
+        {/* Fila secundaria: Antropometría (Peso, Altura, IMC, Edad) */}
+        {(weightKg || heightCm || calculatedAge) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+            <span>⚖️ <strong>{weightKg ? `${weightKg} kg` : "— kg"}</strong></span>
+            <span>📏 <strong>{heightCm ? `${heightCm} cm` : "— cm"}</strong>{bmi ? ` (IMC ${bmi})` : ""}</span>
+            <span>🎂 <strong>{calculatedAge ? `${calculatedAge} años` : "Edad sin definir"}</strong>{gender ? ` (${gender === "M" ? "H" : gender === "F" ? "M" : "O"})` : ""}</span>
+            {maxHR && <span>❤️ Máx: <strong>{maxHR} bpm</strong></span>}
+          </div>
+        )}
       </div>
 
       {/* 2. RITMO DE PROGRESIÓN Y RECUPERACIÓN (LENGUAJE CLARO Y AMIGABLE) */}

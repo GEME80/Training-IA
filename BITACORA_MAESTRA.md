@@ -3170,3 +3170,158 @@ flowchart TD
 - **Validaciones Superadas:**
   - `tsc --noEmit`: 0 errores de tipado en todo el repositorio.
   - `npm run build`: Compilación de producción Next.js 15 exitosa (20/20 rutas, Código 0).
+
+### Versión 3.41 - Suite Integral de Agentes Fisiológicos, Coaches de Fortalecimiento (S&C) y Gobernanza de Código (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 17:05 COT.
+- **Directivas:** "falta la actualizacion de loas metodologias deportivas", "COMO AGENTE PRINCIPAL VAMOS A MEJORAR TODA NUESTRA DOCUMENTACION QUE TENEMOS", "me faltan agentes de fortalecimiento para cada disciplina", "actualicemos con los nuevos agentes los que propuso mas los de fortalecimiento", "analiza para adicionar en la documentacion las mejores practicas de desarrollo en cantidad de lineas de codigo, evitar refactorizaciones".
+- **Alcance de la Solución de Arquitectura y Documentación:**
+  1. **Suite de 8 Agentes Fisiológicos de Runtime:**
+     - **Agente 01 (`PULSE Live Coach`):** Coach adaptativo on-demand conversacional en `/api/headcoach/chat`.
+     - **Agente 02 (`PULSE Macrocycle Architect`):** Generador de periodización macrocíclica en `/api/macrocycles/generate-ai`.
+     - **Agente 03 (`PULSE Daily Physio Auditor`):** Auditor de carga Banister y Z-score HRV en `/api/evaluate`.
+     - **Agente 04 (`PULSE Program Library Curator`):** Generador de catálogo maestro de programas predefinidos.
+     - **Agente 05 (`PULSE Long-Term Adaptation Profiler`):** Perfilador de memoria y asimilación biológica a 365 días.
+     - **Agente 06 (`PULSE Race Debrief & Threshold Recalibrator`):** Auditor de debriefing de carrera y recalibrador de Stryd CP / Bike FTP.
+     - **Agente 07 (`PULSE Intra-Workout Fueling & Hydration Strategist`):** Estratega de carbohidratos (60-90g CHO/h), sodio y líquidos.
+     - **Agente 08 (`PULSE Dynamic Mobility & Neuromuscular Warmup Engine`):** Motor de calentamiento neuromuscular estructurado en reloj.
+  2. **Suite de 5 Coaches de Fortalecimiento Especializados (S&C):**
+     - **Agente S1 (`Running & Marathon Strength Coach`):** Sóleo excéntrico, tendón de Aquiles, Stryd LSS, glúteo medio y reducción de GCT.
+     - **Agente S2 (`Cycling & Climbing Strength Coach`):** Torque en cuádriceps, glúteo mayor, 50-60 rpm en subida y postura isométrica aero.
+     - **Agente S3 (`Triathlon Multi-Sport Strength Coach`):** Manguito rotador (hombro del nadador), core hidrodinámico y fuerza neuromuscular de transición (*Brick*).
+     - **Agente S4 (`Trail & Ultra Mountain Strength Coach`):** Fuerza excéntrica pesada para bajadas (+1.000m D-), peroneos para terreno irregular y bastones.
+     - **Agente S5 (`Prehab, Longevity & Injury Rehab Coach`):** Isométricos pesados para tendinopatías, equilibrio H:Q, Peter Attia (masa magra) y Tim Gabbett (ACWR $\le 1.3$).
+  3. **Jerarquía de Agentes Lead de Ingeniería y sus 12 Subagentes:**
+     - Lead Backend & Motores Fisiológicos (Subagentes 1.1 al 1.4).
+     - Lead Frontend & UX/UI Deportiva (Subagentes 2.1 al 2.4).
+     - Lead Auditor Técnico, QA & Debugging (Subagentes 3.1 al 3.4).
+  4. **Protocolo de Presupuestos de Código (LOC Budgets) y Zero-Rework:**
+     - Tabla oficial de presupuestos de código ($\le 200$ UI, $\le 100$ Hooks, $\le 80$ APIs, $\le 150$ Services, Límite Inviolable 350 LOC).
+     - Las 5 leyes anti-refactorizaciones destructivas (Edición Quirúrgica, Extracción Preventiva a 250 LOC, Container-Presenter, Inmutabilidad de Contratos y FinOps Token Minimizer).
+     - Pipeline de Calidad de 5 Puertas (Gate 1: LOC $\le 350$, Gate 2: `tsc --noEmit`, Gate 3: `next build`, Gate 4: Scope Integrity, Gate 5: Master Log Sync).
+  5. **Backlog de Mejoras Arquitectónicas:**
+     - Creación de `BACKLOG_MEJORAS_ARQUITECTURA.md` con 6 épicas priorizadas para el siguiente ciclo técnico.
+- **Validaciones Superadas:**
+  - `tsc --noEmit`: 0 errores de compilación de TypeScript (Código 0).
+  - `npm run build`: Compilación de producción Next.js 15 exitosa (Código 0).
+
+---
+
+## 16. Ecosistema Integral de Agentes Inteligentes y Fortalecimiento Deportivo
+
+```
+                                      JERARQUÍA MULTI-AGENTE SGEA
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                       PULSE HEAD COACH (ORQUESTADOR)                                  │
+└───────────────────────────────────────────────────┬────────────────────────────────────────────────────┘
+                                                    │
+             ┌──────────────────────────────────────┼──────────────────────────────────────┐
+             │                                      │                                      │
+             ▼                                      ▼                                      ▼
+┌─────────────────────────┐            ┌─────────────────────────┐            ┌─────────────────────────┐
+│  CAPA 1: FISIOLÓGICA    │            │  CAPA 2: FORTALECIMIENTO│            │  CAPA 3: INGENIERÍA     │
+│  (8 Agentes de Runtime) │            │  (5 Coaches S&C)        │            │  (3 Leads & 12 Subags)  │
+│  • Live Coach           │            │  • S1: Running / Maratón│            │  • Lead Backend         │
+│  • Macrocycle Architect │            │  • S2: Cycling / Puerto │            │  • Lead Frontend UX/UI  │
+│  • Daily Physio Auditor │            │  • S3: Triathlon Multi  │            │  • Lead QA & Debugging  │
+│  • Library Curator      │            │  • S4: Trail / D- Excen │            │                         │
+│  • 365d Profiler        │            │  • S5: Prehab/Longevity │            │                         │
+│  • Race Debrief/Recalib │            │                         │            │                         │
+│  • Fueling & Hydration  │            │                         │            │                         │
+│  • Dynamic Warmup/Mob   │            │                         │            │                         │
+└─────────────────────────┘            └─────────────────────────┘            └─────────────────────────┘
+```
+
+### 16.1. Matriz de Prescripción de Fortalecimiento (S&C) por Disciplina
+| Agente S&C | Foco Biomecánico Principal | Ejercicios Clave Prescritos | Métricas de Impacto |
+| :--- | :--- | :--- | :--- |
+| **S1: Running** | Sóleo, Aquiles, Cadena Posterior | Elevaciones de talón excéntricas, Hip Thrust pesado, Saltos pliométricos reactivos | Stryd LSS $\uparrow$, GCT $< 210\text{ms}$, kJ/km $\downarrow$ |
+| **S2: Cycling** | Cuádriceps (fase empuje), Glúteo mayor, Core lumbar | Sentadilla pesada 80% 1RM, Prensa unilateral, Plancha prona isométrica 60s | Torque en subida ($50\text{--}60\text{ rpm}$), W/kg $\uparrow$ |
+| **S3: Triathlon** | Dorsal ancho, Manguito rotador, Transición Brick | Jalón al pecho, Rotaciones externas con banda, Squats con salto post-rodillo | Prevención *Swimmer's Shoulder*, Ritmo post-T2 |
+| **S4: Trail** | Cuádriceps excéntrico (D-), Peroneos de tobillo | Sentadilla búlgara con descenso lento (4s), Trabajo propioceptivo en BOSU | Mitigación daño excéntrico (DOMS), Estabilidad articular |
+| **S5: Prehab** | Isometría de tendones, Equilibrio H:Q, Masa magra | Spanish Squats isométricos (45s), Curl femoral nórdico, Peso muerto rumano | $\text{ACWR} \le 1.3$, Cero bajas por sobreuso |
+
+---
+
+### Versión 3.42 - Motor Dinámico de Generación de Planes según Atleta y Matriz con Agentes Especializados (S&C, Fueling y Warmup) (2026-09-14)
+- **Fecha y Hora:** 14 de Septiembre de 2026 - 19:25 COT.
+- **Directiva:** "revisa la documentacion y vamso a trabajar en los planes que se generan segin el atleta y su matriz de entrenamiento. vamos a revisar como se generan lo planes y con los agentres espcializados que tenemos mejorarlos".
+- **Alcance de la Solución de Arquitectura y Optimización:**
+  1. **Asignación Dinámica de Tiradas Largas y Fondos (`resolveLongRunDay`, `resolveLongRideDay`):**
+     - En `src/lib/physiology/macrocycleTemplateHelpers.ts`: Detección inteligente del fin de semana según la matriz semanal del atleta.
+     - Si el atleta programa Carrera en Sábado y Descanso en Domingo (o Ciclismo), la Tirada Larga se ubica dinámicamente el Sábado, erradicando la omisión histórica de tiradas largas dominicales.
+     - Coordinación concurrente: Si el atleta realiza Carrera en Sábado y Ciclismo en Domingo (o viceversa), se sincronizan Tirada Larga y Fondo Ciclista con protección neuromuscular.
+  2. **Implementación y Cableado de la Suite de 5 Coaches S&C (`src/lib/physiology/specializedStrengthCoaches.ts`):**
+     - Módulo atómico (223 LOC, $< 350\text{ LOC}$) con rotación coprima sin repeticiones consecutivas:
+       * **Agente S1 (`Running & Marathon Strength Coach`):** Sóleo excéntrico, tendón de Aquiles, LSS Stryd, glúteo medio y cadena posterior propulsiva.
+       * **Agente S2 (`Cycling & Climbing Strength Coach`):** Torque en cuádriceps, glúteo mayor, 50-60 rpm en subida y resistencia postural aero.
+       * **Agente S3 (`Triathlon Multi-Sport Strength Coach`):** Manguito rotador (prevención de hombro de nadador), core hidrodinámico y fuerza neuromuscular de transición (*Brick Strength*).
+       * **Agente S4 (`Trail & Ultra Mountain Strength Coach`):** Absorción excéntrica de cuádriceps para descensos (+1.000m D-), estabilidad de tobillo/peroneos y brazos para bastones.
+       * **Agente S5 (`Prehab, Longevity & Injury Rehab Coach`):** Isométricos analgésicos de tendón (45s), equilibrio H:Q y masa magra (Peter Attia / Tim Gabbett).
+     - Conectado a `macrocycleTemplates.ts` y `deterministicPlanGenerator.ts` resolviendo la disciplina rectora del atleta.
+  3. **Integración de Agente 07 (Fueling) y Agente 08 (Warmup Neuromuscular) (`src/lib/physiology/workoutEnhancers.ts`):**
+     - Módulo atómico (64 LOC, $< 350\text{ LOC}$):
+       * **Agente 07 (Fueling & Hydration):** Prescribe carbohidratos específicos (60-90g CHO/h), sales de sodio (400-700mg Na+/h) y tasa hídrica en entrenamientos $> 75\text{ min}$.
+       * **Agente 08 (Dynamic Mobility & Neuromuscular Warmup):** Inyecta movilidad de tobillo/cadera, pogo hops y sóleo excéntrico en el calentamiento de reloj para sesiones de calidad y tiradas largas.
+  4. **Presupuestos de Código Rigurosamente Cumplidos (< 350 LOC):**
+     - `specializedStrengthCoaches.ts`: **223 LOC** ($< 350$).
+     - `workoutEnhancers.ts`: **64 LOC** ($< 350$).
+     - `macrocycleTemplateHelpers.ts`: **261 LOC** ($< 350$).
+     - `macrocycleTemplates.ts`: **304 LOC** ($< 350$).
+     - `deterministicPlanGenerator.ts`: **327 LOC** ($< 350$).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas estáticas y dinámicas compiladas (Código 0)**.
+  - `Prueba 3 (Suite de Validación Matriz y Agentes):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**:
+
+---
+
+### Versión 3.43 - Auditoría de Aislamiento Multi-Atleta, Blindaje de Datos Reales y Certificación de Calendarios (2026-09-15)
+- **Fecha y Hora:** 15 de Septiembre de 2026 - 08:15 COT.
+- **Directiva:** "revisa que no hayan borrado los datos de borraste de juan.vasquez.1983@gmail.com. adiconal revisa que no tengamos ningun script de peuba de nuestrods agentes con informacion erronea de las carretas o datos de los atletas. para las pruebas que realicemos siempre deben ser con los datos reales de los atletas. revisa las mejoras".
+- **Alcance de la Solución y Hallazgos:**
+  1. **Certificación de Integridad de Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com`):**
+     - Se auditó el script de purga histórica (`scratch/purge_old_nov_plan.ts`).
+     - Se verificó que operó única y exclusivamente sobre el atleta `i442091` (Germán Morales) en la API REST de Intervals.icu.
+     - En ningún momento se enviaron peticiones para otro atleta ni se realizaron operaciones destructivas en Firestore.
+     - Los datos y el evento de competición de Juan Pablo Vásquez para el **1 de Noviembre de 2026 (Triseries Paipa 2026, Triatlón Olímpico)** están 100% íntegros y a salvo.
+  2. **Auditoría y Corrección Integral de Scripts de Prueba (`scratch/`):**
+     - **Corrección en `update_both_macrocycles.ts`:** Se erradicó la fecha errónea de Noviembre 2026 para Germán Morales (`gerkof@gmail.com`), configurando su carrera real y verídica: **Maratón de Tokio 2027 (42.195 km, 7 de Marzo de 2027, 25 semanas, Stryd CP 327W, Bike FTP 240W, 82 kg, 46 años)**.
+     - Se confirmó la parametrización de Juan Pablo Vásquez: **Triseries Paipa 2026 (51.5 km, 1 de Noviembre de 2026, 7 semanas, Stryd CP 275W, Bike FTP 215W, 74 kg, 43 años)**.
+     - Se verificó que todos los scripts de prueba (`test_athlete_matrix_plans.ts`) utilicen rigurosamente los datos biométricos reales de los atletas.
+  3. **Certificación de Mejoras de la Suite de Agentes Especializados (v3.42):**
+     - S1 a S5 Strength & Conditioning Coaches validados con rotación coprima y especificidad de disciplina.
+     - Agente 07 (Fueling > 75 min) y Agente 08 (Warmup neuromuscular) activos en tiradas largas y sesiones clave.
+     - Ubicación dinámica de fondos según la matriz de disponibilidad (Sábado vs Domingo).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas (Código 0)**.
+  - `Prueba 3 (Suite de Validación Matriz y Agentes):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
+  - `Prueba 4 (Ejecución Macrociclos Tokio y Paipa):` `scratch/update_both_macrocycles.ts` $\rightarrow$ **Ambos atletas generados con fechas y métricas reales (Código 0)**.
+
+---
+
+### Versión 3.44 - Saneamiento Integral y Des-quemado de Datos en Agentes y Servicios (2026-09-15)
+- **Fecha y Hora:** 15 de Septiembre de 2026 - 09:00 COT.
+- **Directiva:** "revisa los scrips que tenemos de los agentes para que no tengan informacion quemada".
+- **Alcance del Saneamiento y Erradicación de Datos Quemados:**
+  1. **Agente Head Coach Context (`chatContext.ts` - 334 LOC):**
+     - Erradicado `isGerman` y fallback a fecha de nacimiento quemada (`1980-03-24`) y edad fija (`46`).
+     - Reemplazado por cálculo dinámico de edad vía fecha de nacimiento (`icu_date_of_birth` o perfil).
+     - Erradicados valores cardíacos quemados (`restingHR: 48, maxHR: 185, lthr: 168`). Reemplazados por telemetría viva de Intervals.icu / fórmula Tanaka de edad (`208 - 0.7 * age`) / estimación de umbral (`maxHR * 0.88`).
+  2. **Plan de Respaldo Determinístico (`deterministicFallback.ts` - 344 LOC):**
+     - Erradicada la imposición rígida de `"42k"` y `"SPECIFIC_MARATHON"`.
+     - Ahora resuelve dinámicamente la distancia de la competición del atleta (`primaryRace.distance`), la matriz de disponibilidad (detección de natación $\rightarrow$ `triathlon_short`) y la fase real del macrociclo (`macroPhase.phase` / `isDeload`).
+  3. **Gateway de Conexiones Admin (`admin/connections/route.ts` - 167 LOC):**
+     - Erradicado `i442091` hardcodeado en la prueba de latencia de API. Ahora usa `process.env.INTERVALS_ATHLETE_ID`.
+  4. **Servicio de Usuarios Admin (`admin/users/route.ts` - 141 LOC):**
+     - Erradicado fallback con datos personales fijos. Ahora usa `getSuperadminEmail()` y variables de entorno del sistema.
+  5. **Módulos de Autenticación y Perfil (`AuthContext.tsx`, `adminUsers.ts`, `userProfile.ts`, `db/types.ts`):**
+     - Erradicados literales estáticos en fallbacks locales (`displayName`, `intervalsAthleteId`), sustituyéndolos por variables dinámicas de entorno (`SUPERADMIN_NAME`, `NEXT_PUBLIC_INTERVALS_ATHLETE_ID`).
+  6. **Cumplimiento Invariable de la Regla 3 (< 350 LOC):**
+     - Todos los 10 archivos intervenidos se mantienen estrictamente por debajo de 350 LOC.
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
+  - `Prueba 3 (Suite de Validación Matriz y Agentes):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
+  - `Prueba 4 (Verificación de Macrociclos Dinámicos):` `scratch/update_both_macrocycles.ts` $\rightarrow$ **Generación multi-atleta validada (Código 0)**.
+

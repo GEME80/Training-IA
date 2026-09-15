@@ -55,7 +55,7 @@ export function useAdminPanelData() {
 
   const getAuthParams = useCallback(() => {
     const currentUid = user?.uid || userProfile?.uid || "superadmin-root";
-    const currentEmail = user?.email || userProfile?.email || "gerkof@gmail.com";
+    const currentEmail = user?.email || userProfile?.email || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "";
     return { requesterUid: currentUid, requesterEmail: currentEmail };
   }, [user, userProfile]);
 

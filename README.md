@@ -1,4 +1,4 @@
-# ⚡ SGEA Pro (v3.36) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.41) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica y Prescripción Adaptativa con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
@@ -6,16 +6,68 @@
 ## 🌟 Características Principales
 
 - 📊 **Calendario Continuo & Telemetría Banister:** Visualización de carga en vivo estilo Intervals.icu con seguimiento de Fitness (CTL), Fatiga (ATL), Forma (TSB) y Balance de Carga semanal.
-- 🤖 **Head Coach Digital con IA (Google Gemini):** Análisis cualitativo y cuantitativo del estado del atleta, adaptación de microciclos y chat interactivo con diffing de workouts.
+- 🤖 **Ecosistema Multi-Agente con IA (Google Gemini):** 8 Agentes Fisiológicos en Runtime, 5 Coaches de Fortalecimiento (S&C) y 3 Agentes Lead de Ingeniería con 12 subagentes.
 - 🎯 **Escalabilidad Universal Multi-Deporte (SSOT):** 18 modelos especializados que cubren cualquier distancia: 5K, 10K, 21K, 42K, Trail/Ultra, Ciclismo (Fondo, Escalada, Criterium) y Triatlón (Sprint, Olímpico, 70.3, 140.6) para planes de 4 a 24+ semanas.
-- 🔄 **Motor Anti-Repetición con Rotación Coprima:** Algoritmo matemático $\gcd(L, s) = 1$ para variación continua semana tras semana sin sesiones idénticas consecutivas y sufijo dinámico `(Progresión Bloque II)` en ciclos extendidos.
+- 🏋️ **Suite Especializada de Fortalecimiento (S&C):** Agentes de fuerza biomecánica dedicados para Running, Ciclismo, Triatlón, Trail y Prehab/Longevidad.
+- 🔄 **Motor Anti-Repetición con Rotación Coprima:** Algoritmo matemático $\gcd(L, s) = 1$ para variación continua semana tras semana sin sesiones idénticas consecutivas.
 - 📅 **Día de Carrera Flexible (Sábado o Domingo):** Ubicación automática de la competición oficial en Sábado o Domingo con asignación de descanso regenerativo post-carrera.
-- ⚡ **Integración Nativa con Stryd & Garmin (100% Legal):** Prescripción estricta por Tiempo + % CP/FTP en carrera (cero distancias con % CP), auditada en 448 entrenamientos generados.
-- 🔄 **Capa de Servicios & Controladores Delgados:** Lógica desacoplada en `src/lib/services/` con rutas API ultraligeras ($\le 30\text{ LOC}$) y validación declarativa estricta con **Zod**.
-- 💰 **Gobernanza FinOps & Compresión de Contexto:** Condensador de actividades ejecutadas a formato tabular ultra-denso (`contextCondenser.ts`), ahorrando **~70% en tokens** de entrada a Gemini.
+- ⚡ **Integración Nativa con Stryd & Garmin (100% Legal):** Prescripción estricta por Tiempo + % CP/FTP en carrera (cero distancias con % CP).
+- 🔄 **Capa de Servicios & Controladores Delgados:** Lógica desacoplada en `src/lib/services/` con rutas API ultraligeras ($\le 30\text{ LOC}$) y validación declarativa con **Zod**.
+- 💰 **Gobernanza FinOps & Compresión de Contexto:** Condensador de actividades ejecutadas a formato tabular ultra-denso (`contextCondenser.ts`), ahorrando **~70% en tokens**.
 - 🚀 **Resiliencia SWR & Firestore Dirty Checking:** Caché en memoria de telemetría (TTL 3 min) y control de mutaciones con `useRef` para eliminar llamadas y escrituras redundantes.
 - 🔒 **Seguridad y Criptografía:** Autenticación Google OAuth vía Firebase Auth y almacenamiento de API Keys en Cloud Firestore cifradas con **AES-256-GCM**.
-- 🛠️ **Arquitectura 100% Modular:** Todos los componentes UI desacoplados en submódulos atómicos (< 350 líneas de código) y `AthleteDashboard.tsx` en **145 LOC** (< 160 LOC).
+- 🛠️ **Arquitectura 100% Modular:** Presupuesto estricto de código (< 350 LOC por archivo) y `AthleteDashboard.tsx` en **145 LOC** (< 160 LOC).
+
+---
+
+## 🤖 Ecosistema Integral de Agentes Inteligentes
+
+```
+                                      JERARQUÍA MULTI-AGENTE SGEA
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                       PULSE HEAD COACH (ORQUESTADOR)                                  │
+└───────────────────────────────────────────────────┬────────────────────────────────────────────────────┘
+                                                    │
+             ┌──────────────────────────────────────┼──────────────────────────────────────┐
+             │                                      │                                      │
+             ▼                                      ▼                                      ▼
+┌─────────────────────────┐            ┌─────────────────────────┐            ┌─────────────────────────┐
+│  CAPA 1: FISIOLÓGICA    │            │  CAPA 2: FORTALECIMIENTO│            │  CAPA 3: INGENIERÍA     │
+│  (8 Agentes de Runtime) │            │  (5 Coaches S&C)        │            │  (3 Leads & 12 Subags)  │
+│  • Live Coach           │            │  • S1: Running / Maratón│            │  • Lead Backend         │
+│  • Macrocycle Architect │            │  • S2: Cycling / Puerto │            │  • Lead Frontend UX/UI  │
+│  • Daily Physio Auditor │            │  • S3: Triathlon Multi  │            │  • Lead QA & Debugging  │
+│  • Library Curator      │            │  • S4: Trail / D- Excen │            │                         │
+│  • 365d Profiler        │            │  • S5: Prehab/Longevity │            │                         │
+│  • Race Debrief/Recalib │            │                         │            │                         │
+│  • Fueling & Hydration  │            │                         │            │                         │
+│  • Dynamic Warmup/Mob   │            │                         │            │                         │
+└─────────────────────────┘            └─────────────────────────┘            └─────────────────────────┘
+```
+
+### 🧠 Capa 1: Los 8 Agentes Fisiológicos de Runtime
+1. **Agente 01 (`PULSE Live Coach`):** Coach adaptativo conversacional on-demand en `/api/headcoach/chat`.
+2. **Agente 02 (`PULSE Macrocycle Architect`):** Generador de periodización macrocíclica en `/api/macrocycles/generate-ai`.
+3. **Agente 03 (`PULSE Daily Physio Auditor`):** Auditor de carga Banister y Z-score HRV en `/api/evaluate`.
+4. **Agente 04 (`PULSE Program Library Curator`):** Generador de catálogo maestro de programas predefinidos.
+5. **Agente 05 (`PULSE Long-Term Adaptation Profiler`):** Perfilador de memoria y asimilación biológica a 365 días.
+6. **Agente 06 (`PULSE Race Debrief & Threshold Recalibrator`):** Auditor de debriefing post-carrera y recalibrador de Stryd CP / Bike FTP.
+7. **Agente 07 (`PULSE Intra-Workout Fueling & Hydration Strategist`):** Estratega de carbohidratos (60-90g CHO/h), sodio y líquidos.
+8. **Agente 08 (`PULSE Dynamic Mobility & Neuromuscular Warmup Engine`):** Motor de calentamiento neuromuscular estructurado en reloj.
+
+### 🏋️ Capa 2: Suite de 5 Coaches de Fortalecimiento Especializados (S&C)
+| Agente S&C | Foco Biomecánico | Prescripción Clave | Métrica de Impacto |
+| :--- | :--- | :--- | :--- |
+| **S1: Running** | Sóleo, Aquiles, Stryd LSS, Glúteo Medio | Elevaciones excéntricas de talón, Hip Thrust, Pliometría reactiva | Stryd LSS $\uparrow$, GCT $< 210\text{ ms}$, $\text{kJ/km} \downarrow$ |
+| **S2: Cycling** | Cuádriceps (fase empuje), Glúteo mayor, Core lumbar | Sentadilla pesada 80% 1RM, Prensa unilateral, Plancha prona isométrica | Torque subida ($50\text{--}60\text{ rpm}$), W/kg $\uparrow$ |
+| **S3: Triathlon** | Dorsal ancho, Manguito rotador, Transición Brick | Jalón al pecho, Rotaciones externas banda, Squats con salto post-rodillo | Prevención *Swimmer's Shoulder*, Ritmo post-T2 |
+| **S4: Trail** | Cuádriceps excéntrico (D-), Peroneos de tobillo | Sentadilla búlgara con descenso lento (4s), Propiocepción en BOSU | Mitigación daño excéntrico (DOMS), Estabilidad |
+| **S5: Prehab** | Isometría de tendones, Equilibrio H:Q, Masa magra | Spanish Squats isométricos (45s), Curl femoral nórdico, Peso muerto rumano | $\text{ACWR} \le 1.3$, Cero bajas por sobreuso |
+
+### 💻 Capa 3: Agentes Lead de Ingeniería & 12 Subagentes
+- **Lead Backend & Motores Fisiológicos:** Subagente 1.1 (Intervals Sync Engine), Subagente 1.2 (Cloud Persistence & AES-256), Subagente 1.3 (LLM FinOps), Subagente 1.4 (Periodization Engine).
+- **Lead Frontend & UX/UI Deportiva:** Subagente 2.1 (Continuous Calendar), Subagente 2.2 (Custom Hooks & SWR Cache), Subagente 2.3 (Head Coach Chat), Subagente 2.4 (Biometrics & Zones).
+- **Lead Auditor Técnico, QA & Debugging:** Subagente 3.1 (Type Safety Sentinel), Subagente 3.2 (Port 3000 Governor), Subagente 3.3 (Stryd Syntax Validator), Subagente 3.4 (Modular & LOC Budget Auditor).
 
 ---
 
@@ -148,3 +200,4 @@ npm run build
 
 ## 📄 Licencia y Derechos
 Desarrollado para la optimización biomecánica y fisiológica de atletas de resistencia.
+

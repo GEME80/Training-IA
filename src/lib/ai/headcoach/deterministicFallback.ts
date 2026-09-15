@@ -28,21 +28,24 @@ export function handleDeterministicFallback(
   } = ctx;
 
   if (isInitialAudit) {
+    const macroPhase = ctx.promptContext.macrocyclePhase;
+    const hasSwim = Object.values(safeAvailability).some((v: any) =>
+      Array.isArray(v) ? v.includes("Natacion") : v === "Natacion"
+    );
+    const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
+
     const defaultWeekBlueprint = {
       weekNumber: targetPlanningWeekNum,
-      phase: "SPECIFIC_MARATHON" as const,
-      focusDescription: "Desarrollo de potencia aeróbica y resistencia específica",
+      phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
+      focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
       targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
       microcycleType: isDeload ? ("RECOVERY" as const) : ("LOAD" as const),
-      maxLongRunMinutes: 75,
+      maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
     };
 
     const rawFallbackPlan = generateWeekTemplate(
-      defaultWeekBlueprint as any,
-      profile.run_ftp,
-      profile.bike_ftp,
-      safeAvailability,
-      "42k" as any
+      defaultWeekBlueprint as any, profile.run_ftp, profile.bike_ftp,
+      safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date
     );
 
     const fallbackGeneratedPlan = rawFallbackPlan.map((p, pIdx) => {

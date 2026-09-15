@@ -1,4 +1,4 @@
-import { PlanItem } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 
@@ -223,4 +223,39 @@ export function resolveWeekendRide(params: {
   }
 
   return { rideMins, rideTitle, rideJust, rideTarget };
+}
+
+/**
+ * Resuelve dinámicamente el día óptimo para la Tirada Larga de Carrera
+ * respetando la matriz semanal del atleta (fin de semana o último día disponible).
+ */
+export function resolveLongRunDay(availability: WeeklyAvailabilityMap = {}): string {
+  const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const runDays = days.filter((d) => {
+    const raw = availability[d];
+    const list = Array.isArray(raw) ? raw : [raw];
+    return list.includes("Carrera");
+  });
+  if (runDays.includes("Domingo")) return "Domingo";
+  if (runDays.includes("Sábado")) return "Sábado";
+  return runDays[runDays.length - 1] || "Domingo";
+}
+
+/**
+ * Resuelve dinámicamente el día óptimo para el Fondo de Ciclismo
+ * coordinando con la Tirada Larga para prevenir interferencias concurrentes.
+ */
+export function resolveLongRideDay(availability: WeeklyAvailabilityMap = {}): string {
+  const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const bikeDays = days.filter((d) => {
+    const raw = availability[d];
+    const list = Array.isArray(raw) ? raw : [raw];
+    return list.includes("Ciclismo");
+  });
+  const rawDom = availability["Domingo"];
+  const runsSunday = (Array.isArray(rawDom) ? rawDom : [rawDom]).includes("Carrera");
+  if (bikeDays.includes("Sábado") && runsSunday) return "Sábado";
+  if (bikeDays.includes("Domingo")) return "Domingo";
+  if (bikeDays.includes("Sábado")) return "Sábado";
+  return bikeDays[bikeDays.length - 1] || "Sábado";
 }

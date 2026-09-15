@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     // 3. Test en vivo de Intervals.icu Gateway API
     const intervalsApiKey = (process.env.INTERVALS_API_KEY || "").trim();
-    const intervalsAthleteId = "i442091";
+    const intervalsAthleteId = (process.env.INTERVALS_ATHLETE_ID || "0").trim();
     let intervalsStatus = "UNKNOWN";
     let intervalsLatencyMs = 0;
     let intervalsDetails: Record<string, unknown> = {};

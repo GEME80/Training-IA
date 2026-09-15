@@ -68,7 +68,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   const handleStatusChange = async (targetUid: string, targetEmail: string, newStatus: UserStatus) => {
     try {
       const requesterUid = user?.uid || userProfile?.uid || "superadmin-root";
-      const requesterEmail = user?.email || userProfile?.email || "gerkof@gmail.com";
+      const requesterEmail = user?.email || userProfile?.email || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "";
 
       const res = await fetch("/api/admin/users/status", {
         method: "POST",
@@ -229,7 +229,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         onSuccess={onRefresh}
         showMessage={showMessage}
         requesterUid={user?.uid || userProfile?.uid || "superadmin-root"}
-        requesterEmail={user?.email || userProfile?.email || "gerkof@gmail.com"}
+        requesterEmail={user?.email || userProfile?.email || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || ""}
       />
     </div>
   );

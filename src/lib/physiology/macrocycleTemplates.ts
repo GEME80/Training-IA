@@ -5,6 +5,8 @@ import { resolveTrainingModel, calculateProgressiveLongRun } from "../ai/knowled
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool";
 import { selectStrengthWorkout } from "./strengthWorkoutPool";
+import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches";
+import { enhanceWorkoutDocWithFuelingAndWarmup } from "./workoutEnhancers";
 import {
   getCoprimeStride,
   buildRestDay,
@@ -12,9 +14,11 @@ import {
   resolveRaceWorkout,
   resolveRaceSundayWorkout,
   resolveWeekendRide,
+  resolveLongRunDay,
+  resolveLongRideDay,
 } from "./macrocycleTemplateHelpers";
 
-export { selectQualityWorkout };
+export { selectQualityWorkout, selectStrengthWorkout };
 
 export function generateWeekTemplate(
   week: MacrocycleWeek,
@@ -37,6 +41,8 @@ export function generateWeekTemplate(
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber);
   const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor);
+  const longRunDay = resolveLongRunDay(availability);
+  const longRideDay = resolveLongRideDay(availability);
 
   const result: PlanItem[] = [];
   let bikeTestInjected = false;
@@ -156,7 +162,13 @@ export function generateWeekTemplate(
 
       if (disc === "Fuerza") {
         strengthCount++;
-        const st = selectStrengthWorkout(phase, weekNumber, isRecovery, strengthCount);
+        const st = resolveSpecializedStrengthWorkout({
+          sportCategory: curatedModel.sportCategory,
+          phase,
+          weekNumber,
+          isRecovery,
+          sessionIndex: strengthCount,
+        });
         result.push({
           day, date: dateStr, formattedDate, discipline: "Fuerza",
           workoutName: st.name, action: "MANTENER", durationMinutes: st.durationMin, tss: st.tss,
@@ -178,16 +190,23 @@ export function generateWeekTemplate(
           continue;
         }
 
-        if (day === "Sábado" || day === "Domingo") {
+        if (day === longRideDay || day === "Sábado" || day === "Domingo") {
           const { rideMins, rideTitle, rideJust, rideTarget } = resolveWeekendRide({
             distanceType, phase, weekNumber, isRecovery, bikeFtp,
+          });
+          const baseRideDoc = `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
+          const enrichedRideDoc = enhanceWorkoutDocWithFuelingAndWarmup({
+            workoutDoc: baseRideDoc,
+            durationMinutes: rideMins,
+            sport: "Ciclismo",
+            isQualityOrLong: true,
           });
 
           result.push({
             day, date: dateStr, formattedDate, discipline: "Ciclismo",
             workoutName: rideTitle, action: "MANTENER", durationMinutes: rideMins,
             tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
-            workoutDoc: `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`, isRestDay: false,
+            workoutDoc: enrichedRideDoc, isRestDay: false,
           });
           continue;
         }
@@ -208,7 +227,7 @@ export function generateWeekTemplate(
 
       if (disc === "Carrera") {
         runCount++;
-        const runTest = scheduledTests.find((t) => t.sport === "Run" && !runTestInjected && day !== "Domingo");
+        const runTest = scheduledTests.find((t) => t.sport === "Run" && !runTestInjected && day !== longRunDay);
         if (runTest) {
           runTestInjected = true;
           result.push({
@@ -219,19 +238,25 @@ export function generateWeekTemplate(
           continue;
         }
 
-        if (day === "Domingo") {
+        if (day === longRunDay) {
+          const enrichedLongRunDoc = enhanceWorkoutDocWithFuelingAndWarmup({
+            workoutDoc: longRun.workoutDoc,
+            durationMinutes: longRun.minutes,
+            sport: "Carrera",
+            isQualityOrLong: true,
+          });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera",
             workoutName: longRun.workoutName, action: "MANTENER", durationMinutes: longRun.minutes,
             tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)),
             powerTarget: longRun.powerTarget,
-            justification: `Tirada dominical progresiva de ${longRun.km} km (Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
-            workoutDoc: longRun.workoutDoc, isRestDay: false,
+            justification: `Tirada progresiva de ${longRun.km} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
+            workoutDoc: enrichedLongRunDoc, isRestDay: false,
           });
           continue;
         }
 
-        if (runCount === 1 && !isRecovery && phase !== "TAPER") {
+        if (runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay) {
           const q = selectQualityWorkout(phase, weekNumber, curatedModel);
           const isBrick = q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición");
           let dur = 50;
@@ -243,10 +268,16 @@ export function generateWeekTemplate(
             else if (q.name.includes("50m")) { dur = 65; tss = 70; }
             else { dur = 75; tss = 75; }
           }
+          const enrichedQualityDoc = enhanceWorkoutDocWithFuelingAndWarmup({
+            workoutDoc: q.workoutDoc,
+            durationMinutes: dur,
+            sport: "Carrera",
+            isQualityOrLong: true,
+          });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", activityType: isBrick ? "Brick" : "Carrera",
             workoutName: q.name, action: "MANTENER", durationMinutes: dur, tss,
-            powerTarget: q.powerTarget, justification: q.justification, workoutDoc: q.workoutDoc, isRestDay: false,
+            powerTarget: q.powerTarget, justification: q.justification, workoutDoc: enrichedQualityDoc, isRestDay: false,
           });
           continue;
         }

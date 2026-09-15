@@ -94,8 +94,8 @@ export interface DecisionLog {
  * Los datos se resuelven dinámicamente según variables de entorno.
  */
 export const MASTER_ATHLETE_SEED: Partial<UserProfileData> = {
-  displayName: "Germán Morales",
-  intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || "i442091",
+  displayName: process.env.SUPERADMIN_NAME || "Administrador",
+  intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || undefined,
   role: "admin",
   status: "active",
   weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,

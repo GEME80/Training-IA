@@ -111,9 +111,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           /ride|cycling|bike/i.test(String(s.id))
         );
 
-        const isGerman = effectiveAthleteId === "i442091" || Boolean(email && /german|gerkof/i.test(email));
         const anyAth = (ath || {}) as any;
-        const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || birthDate || (isGerman ? "1980-03-24" : undefined);
+        const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || birthDate;
         let computedAge: number | undefined = undefined;
         if (icuDob) {
           const birth = new Date(icuDob);
@@ -125,7 +124,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
             if (age > 0 && age < 120) computedAge = age;
           }
         }
-        if (!computedAge && isGerman) computedAge = 46;
+        if (!computedAge && (body as any).age) {
+          computedAge = Number((body as any).age);
+        }
 
         const resolvedSex: "M" | "F" | "OTHER" = (gender === "M" || anyAth.sex === "M" || anyAth.gender === "M") ? "M" : ((gender === "F" || anyAth.sex === "F" || anyAth.gender === "F") ? "F" : "M");
         const rawHeight = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
@@ -133,6 +134,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const resolvedWeight = weight || anyAth.weight || (wellness[0] as any)?.weight || ath?.weight;
         const resolvedRunFtp = (runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0;
         const resolvedBikeFtp = (bikeFtp ? Number(bikeFtp) : undefined) || rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || 0;
+
+        // Fisiología dinámica calculada (no quemada): Tanaka 208 - 0.7 * age si hay edad
+        const defaultMaxHr = computedAge ? Math.round(208 - 0.7 * computedAge) : 185;
+        const defaultLthr = Math.round(defaultMaxHr * 0.88);
+        const defaultRestingHr = 55;
 
         profile = {
           ...ath,
@@ -143,9 +149,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           gender: resolvedSex,
           weight: resolvedWeight ? Number(resolvedWeight) : undefined,
           heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
-          restingHR: restingHR || (wellness[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || 48,
-          maxHR: maxHR || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || 185,
-          lthr: lthr || anyAth.lthr || ath?.lthr || 168,
+          restingHR: restingHR || (wellness[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
+          maxHR: maxHR || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr,
+          lthr: lthr || anyAth.lthr || ath?.lthr || defaultLthr,
           run_ftp: resolvedRunFtp,
           bike_ftp: resolvedBikeFtp,
         };

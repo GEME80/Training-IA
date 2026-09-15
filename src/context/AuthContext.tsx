@@ -96,11 +96,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserProfile({
           uid: fbUser.uid,
           email: userEmail,
-          displayName: fbUser.displayName || (isMaster ? "Germán Morales" : "Atleta"),
+          displayName: fbUser.displayName || (isMaster ? (process.env.NEXT_PUBLIC_SUPERADMIN_NAME || "Administrador") : "Atleta"),
           photoURL: fbUser.photoURL || undefined,
           role: isMaster ? "admin" : "athlete",
           status: isMaster ? "active" : "pending",
-          intervalsAthleteId: isMaster ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined,
+          intervalsAthleteId: isMaster ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || undefined) : undefined,
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -280,13 +280,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Método para pruebas locales explícitas del Superadministrador
   const loginAsMasterAdminDemo = () => {
     const superadminEmail = getSuperadminEmail();
+    const superadminName = process.env.NEXT_PUBLIC_SUPERADMIN_NAME || "Administrador";
     const demoAdmin: UserProfileData = {
       uid: "superadmin-root",
       email: superadminEmail,
-      displayName: "Germán Morales",
+      displayName: superadminName,
       role: "admin",
       status: "active",
-      intervalsAthleteId: "i442091",
+      intervalsAthleteId: process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || undefined,
       createdAt: "2026-08-01T00:00:00.000Z",
       lastLoginAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -299,7 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({
       uid: "superadmin-root",
       email: superadminEmail,
-      displayName: "Germán Morales",
+      displayName: superadminName,
     } as unknown as User);
     setUserProfile(demoAdmin);
     setLoading(false);

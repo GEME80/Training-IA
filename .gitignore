@@ -6,6 +6,7 @@
 
 # Testing
 /coverage
+/scratch/
 
 # Next.js build output
 /.next/

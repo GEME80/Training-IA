@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllUsersForAdmin, getAdminStats, updateUserDetails } from "@/lib/db/adminUsers";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
-import { isMasterAdminEmail } from "@/lib/env";
+import { isMasterAdminEmail, getSuperadminEmail } from "@/lib/env";
 
 export async function GET(req: NextRequest) {
   try {
@@ -45,17 +45,20 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.warn("Aviso en /api/admin/users, retornando superadmin por defecto:", error);
+    const fallbackEmail = getSuperadminEmail() || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "admin@pulse-ai.pro";
+    const fallbackAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
+
     return NextResponse.json({
       success: true,
       users: [
         {
           uid: "superadmin-root",
-          email: "gerkof@gmail.com",
-          displayName: "Germán Morales",
+          email: fallbackEmail,
+          displayName: "Administrador del Sistema",
           role: "admin",
           status: "active",
-          intervalsAthleteId: "i442091",
-          hasIntervalsKey: true,
+          intervalsAthleteId: fallbackAthleteId,
+          hasIntervalsKey: Boolean(process.env.INTERVALS_API_KEY),
           createdAt: "2026-08-01T00:00:00.000Z",
           lastLoginAt: new Date().toISOString(),
         },

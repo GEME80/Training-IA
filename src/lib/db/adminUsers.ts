@@ -17,10 +17,10 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
   const defaultSuperadmin: AdminUserListItem = {
     uid: "superadmin-root",
     email: superadminEmail,
-    displayName: "Germán Morales",
+    displayName: process.env.SUPERADMIN_NAME || "Administrador",
     role: "admin",
     status: "active",
-    intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || "i442091",
+    intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || undefined,
     hasIntervalsKey: !!process.env.INTERVALS_API_KEY,
     createdAt: "2026-08-01T00:00:00.000Z",
     lastLoginAt: new Date().toISOString(),
@@ -41,17 +41,18 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
       if (!emailKey) return;
 
       const isSuper = isMasterAdminEmail(emailKey);
+      const masterAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
       const item: AdminUserListItem = {
         uid: data.uid || doc.id,
         email: emailKey,
-        displayName: data.displayName || (isSuper ? "Germán Morales" : "Atleta"),
+        displayName: data.displayName || (isSuper ? (process.env.SUPERADMIN_NAME || "Administrador") : "Atleta"),
         photoURL: data.photoURL,
         role: data.role || (isSuper ? "admin" : "athlete"),
         status: data.status || (isSuper ? "active" : "pending"),
-        intervalsAthleteId: (!isSuper && data.intervalsAthleteId === "i442091")
+        intervalsAthleteId: (!isSuper && data.intervalsAthleteId === masterAthleteId)
           ? undefined
-          : (data.intervalsAthleteId || (isSuper ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined)),
-        hasIntervalsKey: Boolean(data.encryptedApiKey && (isSuper || data.intervalsAthleteId !== "i442091")),
+          : (data.intervalsAthleteId || (isSuper ? masterAthleteId : undefined)),
+        hasIntervalsKey: Boolean(data.encryptedApiKey && (isSuper || data.intervalsAthleteId !== masterAthleteId)),
         isPreAuthorized: Boolean((data as unknown as { isPreAuthorized?: boolean }).isPreAuthorized || (data.uid || doc.id).startsWith("preauth_")),
         runFtp: (!isSuper && data.runFtp === 327) ? undefined : data.runFtp,
         bikeFtp: (!isSuper && data.bikeFtp === 240) ? undefined : data.bikeFtp,

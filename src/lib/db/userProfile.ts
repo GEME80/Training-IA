@@ -41,11 +41,11 @@ export async function syncUserFromGoogleAuth(userData: {
     return {
       uid: userData.uid,
       email: userData.email,
-      displayName: userData.displayName || (isSuperadmin ? "Germán Morales" : "Atleta"),
+      displayName: userData.displayName || (isSuperadmin ? (process.env.SUPERADMIN_NAME || "Administrador") : "Atleta"),
       photoURL: userData.photoURL || undefined,
       role: isSuperadmin ? "admin" : "athlete",
       status: isSuperadmin ? "active" : "pending",
-      intervalsAthleteId: isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined,
+      intervalsAthleteId: isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
       createdAt: now,
       lastLoginAt: now,
@@ -60,7 +60,7 @@ export async function syncUserFromGoogleAuth(userData: {
     // Verificar si existía un pre-registro o whitelist para este correo
     let preAuthRole: UserRole = isSuperadmin ? "admin" : "athlete";
     let preAuthStatus: UserStatus = isSuperadmin ? "active" : "pending";
-    let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || "i442091") : undefined;
+    let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined;
     let preAuthRunFtp: number | undefined = undefined;
     let preAuthBikeFtp: number | undefined = undefined;
 
@@ -143,7 +143,7 @@ export async function syncUserFromGoogleAuth(userData: {
   if (isSuperadmin) {
     if (existing.role !== "admin") updates.role = "admin";
     if (existing.status !== "active") updates.status = "active";
-    if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || "i442091";
+    if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
   } else {
     // BLINDAJE: Purgar inmediatamente si el usuario regular tenía i442091 o credenciales ajenas
     if (existing.intervalsAthleteId === "i442091") {
@@ -247,10 +247,10 @@ export async function getUserProfileDecrypted(
       profile: {
         uid,
         email: superadminEmail,
-        displayName: "Germán Morales",
+        displayName: process.env.SUPERADMIN_NAME || "Administrador",
         role: "admin",
         status: "active",
-        intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || "i442091",
+        intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || undefined,
         createdAt: "2026-08-01T00:00:00.000Z",
         lastLoginAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

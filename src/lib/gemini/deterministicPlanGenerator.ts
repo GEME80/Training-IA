@@ -1,6 +1,7 @@
 import { AthleteProfile } from "../intervals/types";
 import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
 import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
+import { resolveSpecializedStrengthWorkout } from "../physiology/specializedStrengthCoaches";
 import {
   AgentDecisionOutput,
   PlanItem,
@@ -205,17 +206,26 @@ export function generateDeterministicAnalysis(
 
     // 4. Fuerza
     if (disc === "Fuerza") {
+      const distStr = macrocyclePhase?.primaryRace?.distance || "";
+      const sportCat = distStr.includes("tri") ? "Triathlon" : distStr.includes("bike") || distStr.includes("cycl") ? "Cycling" : distStr.includes("trail") ? "Trail" : "Running";
+      const st = resolveSpecializedStrengthWorkout({
+        sportCategory: sportCat,
+        phase,
+        weekNumber: 1,
+        isRecovery: isFatigued,
+      });
       return {
         day,
         date: dateInfo.date,
         formattedDate: dateInfo.formattedDate,
         discipline: "Fuerza",
-        workoutName: "Fuerza Sóleo / Pliometría Reactiva (30m)",
+        workoutName: st.name,
         action: "MANTENER",
-        durationMinutes: 30,
-        tss: 25,
-        justification: "Optimización neuromuscular, rigidez del tendón de Aquiles y prevención de lesiones.",
-        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("WeightTraining", "STRENGTH"),
+        durationMinutes: st.durationMin,
+        tss: st.tss,
+        powerTarget: st.focus,
+        justification: st.justification,
+        workoutDoc: st.workoutDoc,
         isRestDay: false,
       };
     }

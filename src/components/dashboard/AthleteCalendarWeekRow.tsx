@@ -5,9 +5,10 @@ import { Sparkles, RefreshCw, Footprints, Bike } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { WeeklyAvailabilityMap, PlanItem } from "@/lib/gemini/engine";
-import { DailyExecutedMap } from "@/lib/intervals/types";
+import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { parseWorkoutDoc } from "../WorkoutChart";
 import { AthleteCalendarDayColumn } from "./AthleteCalendarDayColumn";
+import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 
 interface AthleteCalendarWeekRowProps {
   week: MacrocycleWeek;
@@ -23,6 +24,7 @@ interface AthleteCalendarWeekRowProps {
   effectiveAvailability: WeeklyAvailabilityMap;
   weeklyExecutedTss: number;
   dailyExecutedActivities: DailyExecutedMap;
+  calendarEvents?: CalendarEvent[];
   todayStr: string;
   gridTemplate: string;
   currentWeekRef: React.RefObject<HTMLDivElement | null>;
@@ -52,6 +54,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   effectiveAvailability,
   weeklyExecutedTss,
   dailyExecutedActivities,
+  calendarEvents,
   todayStr,
   gridTemplate,
   currentWeekRef,
@@ -60,7 +63,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   onSyncWeekToIntervals,
   onSelectWorkoutModal,
 }) => {
-  const weekPlan = generateWeekTemplate(
+  const rawWeekPlan = generateWeekTemplate(
     week,
     runFtp,
     bikeFtp,
@@ -68,6 +71,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
     blueprint.athleteCtlAtCreation
   );
+  const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents);
 
   let totalMins = 0;
   let plannedTss = 0;

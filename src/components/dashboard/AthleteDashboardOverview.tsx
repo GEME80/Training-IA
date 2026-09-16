@@ -6,7 +6,7 @@ import { PhysiologicalCards } from "@/components/PhysiologicalCards";
 import { AthleteContinuousCalendar } from "./AthleteContinuousCalendar";
 import { AthletePMCChart } from "./pmc/AthletePMCChart";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
-import { AthleteProfile, AthleteWellness, DailyExecutedMap } from "@/lib/intervals/types";
+import { AthleteProfile, AthleteWellness, DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 
@@ -23,6 +23,7 @@ interface AthleteDashboardOverviewProps {
   weeklyAvailability: WeeklyAvailabilityMap;
   weeklyExecutedTss: number;
   dailyExecutedActivities: DailyExecutedMap;
+  calendarEvents?: CalendarEvent[];
   onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals: (plan: PlanItem[]) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
@@ -44,6 +45,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   weeklyAvailability,
   weeklyExecutedTss,
   dailyExecutedActivities,
+  calendarEvents,
   onOpenAICoach,
   onSyncWeekToIntervals,
   onSelectWorkoutModal,
@@ -126,6 +128,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
               weeklyAvailability={weeklyAvailability}
               weeklyExecutedTss={weeklyExecutedTss}
               dailyExecutedActivities={dailyExecutedActivities}
+              calendarEvents={calendarEvents}
               onOpenAICoach={onOpenAICoach}
               onSyncWeekToIntervals={onSyncWeekToIntervals}
               onSelectWorkoutModal={onSelectWorkoutModal}

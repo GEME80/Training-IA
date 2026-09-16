@@ -12,10 +12,10 @@ export type WeeklyAvailabilityMap = Record<string, DisciplineType[] | Discipline
 
 export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
   Lunes: ["Descanso"],
-  Martes: ["Carrera"],
-  Miércoles: ["Ciclismo"],
-  Jueves: ["Fuerza"],
-  Viernes: ["Carrera"],
+  Martes: ["Ciclismo", "Fuerza"],
+  Miércoles: ["Carrera", "Fuerza"],
+  Jueves: ["Ciclismo", "Fuerza"],
+  Viernes: ["Carrera", "Fuerza"],
   Sábado: ["Ciclismo"],
   Domingo: ["Carrera"],
 };

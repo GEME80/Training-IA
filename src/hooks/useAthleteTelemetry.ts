@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { AthleteProfile, AthleteWellness, DailyExecutedMap, DEFAULT_VISIBLE_METRICS } from "@/lib/intervals/types";
+import { AthleteProfile, AthleteWellness, CalendarEvent, DailyExecutedMap, DEFAULT_VISIBLE_METRICS } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { isMasterAdminEmail } from "@/lib/env";
 import { UserStorage, purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
@@ -36,6 +36,7 @@ export function useAthleteTelemetry({
   );
 
   const [wellnessHistory, setWellnessHistory] = useState<AthleteWellness[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [weeklyExecutedTss, setWeeklyExecutedTss] = useState<number>(0);
   const [dailyExecutedActivities, setDailyExecutedActivities] = useState<DailyExecutedMap>({});
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
@@ -126,6 +127,7 @@ export function useAthleteTelemetry({
           if (typeof data.executedWeeklyTss === "number") setWeeklyExecutedTss(data.executedWeeklyTss);
           if (data.dailyExecutedActivities) setDailyExecutedActivities(data.dailyExecutedActivities);
           if (Array.isArray(data.wellness)) setWellnessHistory(data.wellness);
+          if (Array.isArray(data.events)) setCalendarEvents(data.events);
 
           const p = data.profile || {};
           const [resBike, resRun] = [p.bike_ftp || bikeFtp || profile.bike_ftp, p.run_ftp || runFtp || profile.run_ftp];
@@ -336,11 +338,9 @@ export function useAthleteTelemetry({
   }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry, userProfile?.encryptedApiKey]);
 
   return {
-    profile, setProfile, physioStatus, setPhysioStatus, wellnessHistory, latestWellness,
-    historicalSummary,
-    weeklyExecutedTss, dailyExecutedActivities, isLiveConnected, setIsLiveConnected,
+    profile, setProfile, physioStatus, setPhysioStatus, wellnessHistory, latestWellness, historicalSummary,
+    weeklyExecutedTss, dailyExecutedActivities, calendarEvents, setCalendarEvents, isLiveConnected, setIsLiveConnected,
     isRefreshingTelemetry, isLoading, apiKeyCache, geminiKeyCache, visibleMetrics,
-    isOnboardingOpen, setIsOnboardingOpen, refreshTelemetry, handleToggleMetric,
-    handleSaveSettings, handleOnboardingSuccess,
+    isOnboardingOpen, setIsOnboardingOpen, refreshTelemetry, handleToggleMetric, handleSaveSettings, handleOnboardingSuccess,
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { MacrocycleBlueprint, TargetRace } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
@@ -101,7 +101,7 @@ export function useIntervalsSync({
         week,
         runFtp,
         bikeFtp,
-        (blueprint.availabilitySnapshot as any) || weeklyAvailability,
+        resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
         (blueprint.distanceType || primaryRace?.distance) as any,
         ctl
       );

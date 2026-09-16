@@ -4,12 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { CalendarDays, Table, Smartphone, ChevronLeft, ChevronRight, Compass } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
-import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem } from "@/lib/gemini/engine";
-import { DailyExecutedMap } from "@/lib/intervals/types";
+import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { getLocalTodayStr, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { AthleteCalendarWeekRow } from "./AthleteCalendarWeekRow";
 import { AthleteMobileAgendaView } from "./AthleteMobileAgendaView";
+import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 
 interface AthleteContinuousCalendarProps {
   blueprint: MacrocycleBlueprint;
@@ -20,6 +21,7 @@ interface AthleteContinuousCalendarProps {
   weeklyAvailability?: WeeklyAvailabilityMap;
   weeklyExecutedTss?: number;
   dailyExecutedActivities?: DailyExecutedMap;
+  calendarEvents?: CalendarEvent[];
   onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
@@ -48,6 +50,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY,
   weeklyExecutedTss = 0,
   dailyExecutedActivities = {},
+  calendarEvents = [],
   onOpenAICoach,
   onSyncWeekToIntervals,
   onSelectWorkoutModal,
@@ -73,8 +76,10 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
 
   // Semana activa para la vista de agenda móvil
   const activeWeekForAgenda = weeks[selectedMacroWeekIdx] || weeks[0];
-  const effectiveAvailability = (blueprint.availabilitySnapshot as any) || weeklyAvailability;
-  const activeWeekPlan = activeWeekForAgenda
+  const effectiveAvailability = resolveEffectiveAvailability(
+    (blueprint.availabilitySnapshot as any) || weeklyAvailability
+  );
+  const rawActiveWeekPlan = activeWeekForAgenda
     ? generateWeekTemplate(
         activeWeekForAgenda,
         runFtp,
@@ -83,6 +88,9 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
         (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
         blueprint.athleteCtlAtCreation
       )
+    : [];
+  const activeWeekPlan = activeWeekForAgenda
+    ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents)
     : [];
 
   return (
@@ -268,6 +276,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                 effectiveAvailability={effectiveAvailability}
                 weeklyExecutedTss={weeklyExecutedTss}
                 dailyExecutedActivities={dailyExecutedActivities}
+                calendarEvents={calendarEvents}
                 todayStr={todayStr}
                 gridTemplate={gridTemplate}
                 currentWeekRef={currentWeekRef}

@@ -70,18 +70,20 @@ export class TelemetryService {
           const today = new Date();
           const past370Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 370);
           const past30Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
-          const next7Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
+          const past14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 14);
+          const next60Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 60);
 
           const oldestWellnessStr = formatLocalDateToYMD(past370Days);
           const oldestActivitiesStr = formatLocalDateToYMD(past30Days);
+          const oldestEventsStr = formatLocalDateToYMD(past14Days);
           const newestStr = getLocalTodayStr();
-          const futureStr = formatLocalDateToYMD(next7Days);
+          const futureEventsStr = formatLocalDateToYMD(next60Days);
           const thisMondayStr = getMondayOfWeekStr(today);
 
           const [athleteData, wellnessData, calendarEvents, sportSettingsData, activitiesData] = await Promise.all([
             client.getAthlete().catch((err) => { console.warn("Aviso al consultar atleta:", err); return null; }),
             client.getWellness(oldestWellnessStr, newestStr).catch((err) => { console.warn("Aviso wellness:", err); return []; }),
-            client.getEvents(newestStr, futureStr).catch((err) => { console.warn("Aviso eventos:", err); return []; }),
+            client.getEvents(oldestEventsStr, futureEventsStr).catch((err) => { console.warn("Aviso eventos:", err); return []; }),
             client.getSportSettings().catch((err) => { console.warn("Aviso sportSettings:", err); return []; }),
             client.getActivities(oldestActivitiesStr, newestStr).catch((err) => { console.warn("Aviso actividades:", err); return []; }),
           ]);

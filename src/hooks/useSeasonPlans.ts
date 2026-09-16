@@ -7,7 +7,7 @@ import {
 } from "@/lib/physiology/macrocycle";
 import { resolveCurrentWeekIndex, syncBlueprintToCurrentDate, syncAndCalibrateBlueprint } from "@/lib/physiology/macrocycleSync";
 import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
-import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { UserStorage } from "@/lib/storage/userStorage";
 import { isMasterAdminEmail } from "@/lib/env";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
@@ -83,7 +83,7 @@ export function useSeasonPlans({
   });
 
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
-    userProfile?.weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY
+    resolveEffectiveAvailability(userProfile?.weeklyAvailability)
   );
   const [macrocyclePhase, setMacrocyclePhase] = useState<MacrocyclePhaseInfo | null>(() => calculateMacrocyclePhase([]));
 

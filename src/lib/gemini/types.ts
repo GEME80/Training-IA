@@ -9,13 +9,32 @@ export function normalizeDisciplines(val?: DisciplineType[] | DisciplineType): D
 
 export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
   Lunes: ["Descanso"],
-  Martes: ["Carrera"],
-  Miércoles: ["Ciclismo"],
-  Jueves: ["Fuerza"],
-  Viernes: ["Carrera"],
+  Martes: ["Ciclismo", "Fuerza"],
+  Miércoles: ["Carrera", "Fuerza"],
+  Jueves: ["Ciclismo", "Fuerza"],
+  Viernes: ["Carrera", "Fuerza"],
   Sábado: ["Ciclismo"],
   Domingo: ["Carrera"],
 };
+
+export function isLegacyAvailability(avail?: WeeklyAvailabilityMap): boolean {
+  if (!avail) return true;
+  const t = normalizeDisciplines(avail["Martes"]);
+  const w = normalizeDisciplines(avail["Miércoles"]);
+  const th = normalizeDisciplines(avail["Jueves"]);
+  return (
+    t.length === 1 && t[0] === "Carrera" &&
+    w.length === 1 && w[0] === "Ciclismo" &&
+    th.length === 1 && th[0] === "Fuerza"
+  );
+}
+
+export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): WeeklyAvailabilityMap {
+  if (!avail || isLegacyAvailability(avail)) {
+    return DEFAULT_WEEKLY_AVAILABILITY;
+  }
+  return avail;
+}
 
 export interface PlanItem {
   id?: string;

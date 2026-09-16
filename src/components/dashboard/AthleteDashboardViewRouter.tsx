@@ -6,8 +6,9 @@ import { AthleteSeasonStudioView } from "./AthleteSeasonStudioView";
 import { AthleteHeadCoachView } from "./AthleteHeadCoachView";
 import { AthletePhysiologyView } from "./AthletePhysiologyView";
 import { AthleteSidebarNavSection } from "./AthleteSidebar";
-import { PlanItem } from "@/lib/gemini/engine";
+import { PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
+import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 
 interface AthleteDashboardViewRouterProps {
   activeNavSection: AthleteSidebarNavSection;
@@ -55,6 +56,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         weeklyAvailability={season.weeklyAvailability}
         weeklyExecutedTss={telemetry.weeklyExecutedTss}
         dailyExecutedActivities={telemetry.dailyExecutedActivities}
+        calendarEvents={telemetry.calendarEvents}
         onOpenAICoach={(idx) => {
           if (typeof idx === "number") season.setSelectedMacroWeekIdx(idx);
           onNavigateTo("head_coach");
@@ -127,13 +129,17 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           activePlan.length > 0
             ? activePlan
             : season.selectedWeek
-            ? generateWeekTemplate(
+            ? hydrateWeekPlanFromEvents(
                 season.selectedWeek,
-                telemetry.profile.run_ftp,
-                telemetry.profile.bike_ftp,
-                (season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability,
-                (season.macrocyclePhase?.blueprint?.distanceType || season.primaryRace?.distance) as any,
-                telemetry.profile.ctl
+                generateWeekTemplate(
+                  season.selectedWeek,
+                  telemetry.profile.run_ftp,
+                  telemetry.profile.bike_ftp,
+                  resolveEffectiveAvailability((season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability),
+                  (season.macrocyclePhase?.blueprint?.distanceType || season.primaryRace?.distance) as any,
+                  telemetry.profile.ctl
+                ),
+                telemetry.calendarEvents
               )
             : []
         }

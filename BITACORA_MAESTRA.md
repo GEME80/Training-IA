@@ -3402,6 +3402,38 @@ flowchart TD
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
   - `Prueba 3 (Suite de Matriz & Agentes SGEA):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
 
+---
+
+### Versión 3.48 - Telemetría Fisiológica Avanzada, Streams de Series Temporales y Gráfica Interactiva Multi-Métrica de Intervals.icu (2026-09-16)
+- **Fecha y Hora:** 16 de Septiembre de 2026 - 15:50 COT.
+- **Directiva:** "podemos mejorar los datos de los trabajos que hemos realializado como grafiocas de frecuencia o que datos nos pueda dar intervals de cada trabajo. adjunto una inagen de intervals"
+- **Contexto del Atleta:**
+  - Inspección del entrenamiento de referencia del usuario (captura de Intervals.icu adjunta): miércoles 16 de septiembre de 2026, 6.58 km, 36:45 con Garmin Forerunner 970.
+  - Métricas avanzadas de Intervals.icu analizadas: NP 282W, Potencia Media 265W, FC Media 130 bpm, FC Máx 160 bpm, TRIMP 43, EF (Efficiency Factor) 2.04, Cardiac Decoupling (D) 13.6%, Ritmo 5:35/km, GAP (Grade Adjusted Pace) 5:34/km, Cadencia 82 spm, Longitud de Zancada 1.09m, Desnivel +41m, Calorías 476 kcal, TSS 46.
+  - Streams continuos segundo a segundo sincronizados: Ritmo/Velocidad, Potencia, Frecuencia Cardíaca, Cadencia y Altitud.
+- **Alcance y Cambios Implementados:**
+  1. **Enriquecimiento del Modelo de Datos (`src/lib/intervals/types.ts` - 199 LOC):**
+     - Ampliación de `DailyExecutedActivity` con campos: `weightedWatts` (NP), `maxHeartrate`, `paceStr`, `gapPaceStr`, `intensityPercent`, `efficiencyFactor` (EF), `cardiacDecoupling` (D%), `cadence`, `strideLengthM`, `elevationGainM`, `calories`, `workKj`, `rpe`, `feel`, `deviceName`.
+     - Definición de tipos de streaming: `ActivityStreamPoint` y `ActivityStreamsData`.
+  2. **Cliente API Intervals (`src/lib/intervals/client.ts` - 340 LOC):**
+     - Incorporación del método `getActivityStreams(activityId, types)` hacia el endpoint `GET /api/v1/athlete/{athleteId}/activities/{activityId}/streams`.
+  3. **Mapeo Telemetría en Ingesta (`src/lib/services/telemetryService.ts` - 246 LOC):**
+     - Mapeo completo en `syncIntervalsDailyWorkouts` de todos los campos analíticos provistos por el API de Intervals.icu.
+  4. **Endpoint API On-Demand (`src/app/api/activities/[id]/streams/route.ts` - 59 LOC):**
+     - Servicio de streaming on-demand protegido con autenticación de sesión y resolución dinámica de credenciales Intervals del atleta (`resolveIntervalsCredentials`).
+  5. **Componente de Gráfica Interactiva Multi-Métrica (`src/components/macrocycle/ActivityTelemetryChart.tsx` - 334 LOC):**
+     - Renderizado SVG reactivo de alta resolución con curvas de Frecuencia Cardíaca (gradiente carmesí translúcido), Potencia en vatios (gradiente ámbar) y Perfil de Altitud (gradiente pizarra).
+     - Filtros interactivos por píldoras (*Todas*, *FC 💓*, *Potencia ⚡*, *Altitud ⛰️*).
+     - Tooltip dinámico por cursor con interpolación del segundo exacto (mm:ss), FC, vatios y metros sobre el nivel del mar.
+  6. **Integración en Modal de Detalle de Sesión (`src/components/macrocycle/WorkoutDetailModal.tsx` - 324 LOC):**
+     - Rejilla completa de 8 bloques métricos: Ritmo & GAP, Potencia Media & Normalizada (NP), Frecuencia Cardíaca Media & Máxima, Factor de Eficiencia (EF) & Desacople Cardíaco (D%), Cadencia & Longitud de Zancada, Desnivel Positivo & Calorías, Duración Real & % Intensidad, Dispositivo Garmin/Stryd utilizado & Sensación RPE.
+     - Incrustación directa del componente `<ActivityTelemetryChart />` por actividad real ejecutada.
+  7. **Cumplimiento Estricto de Reglas de Arquitectura (< 350 LOC):**
+     - Todos los archivos nuevos y modificados se encuentran estrictamente por debajo de las 350 líneas de código.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente incluyendo `/api/activities/[id]/streams` (Código 0)**.
+
 
 
 

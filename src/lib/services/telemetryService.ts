@@ -96,19 +96,42 @@ export class TelemetryService {
             const heartrate = act.average_heartrate;
             const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
 
+            const weightedWatts = act.icu_weighted_avg_watts ?? act.weighted_average_watts;
+            const paceStr = act.average_speed && act.average_speed > 0.5 ? `${Math.floor(1000 / act.average_speed / 60)}:${String(Math.round((1000 / act.average_speed) % 60)).padStart(2, "0")}/km` : undefined;
+            const gapSpeed = act.gap ?? act.icu_gap;
+            const gapPaceStr = gapSpeed && gapSpeed > 0.5 ? `${Math.floor(1000 / gapSpeed / 60)}:${String(Math.round((1000 / gapSpeed) % 60)).padStart(2, "0")}/km` : undefined;
+            const efficiencyFactor = act.icu_efficiency_factor ?? (watts && heartrate ? Number((watts / heartrate).toFixed(2)) : undefined);
+            const cardiacDecoupling = typeof act.icu_cardiac_decoupling === "number" ? Number(act.icu_cardiac_decoupling.toFixed(1)) : undefined;
+
             if (!dailyExecutedActivities[dateKey]) {
               dailyExecutedActivities[dateKey] = { date: dateKey, totalTss: 0, activities: [] };
             }
             dailyExecutedActivities[dateKey].totalTss += tss;
             dailyExecutedActivities[dateKey].activities.push({
-              id: act.id,
+              id: String(act.id),
               name: act.name,
               type: act.type,
               tss,
               movingTimeMin,
+              elapsedTimeMin: act.elapsed_time ? Math.round(act.elapsed_time / 60) : undefined,
               watts: typeof watts === "number" ? Math.round(watts) : undefined,
+              weightedWatts: typeof weightedWatts === "number" ? Math.round(weightedWatts) : undefined,
               heartrate: typeof heartrate === "number" ? Math.round(heartrate) : undefined,
+              maxHeartrate: typeof act.max_heartrate === "number" ? Math.round(act.max_heartrate) : undefined,
               distanceKm,
+              paceStr,
+              gapPaceStr,
+              intensityPercent: act.icu_intensity ? Math.round(act.icu_intensity * (act.icu_intensity <= 1 ? 100 : 1)) : undefined,
+              efficiencyFactor,
+              cardiacDecoupling,
+              cadence: typeof act.average_cadence === "number" ? Math.round(act.average_cadence) : undefined,
+              strideLengthM: typeof act.average_stride_length === "number" ? Number(act.average_stride_length.toFixed(2)) : undefined,
+              elevationGainM: typeof act.total_elevation_gain === "number" ? Math.round(act.total_elevation_gain) : undefined,
+              calories: typeof act.calories === "number" ? Math.round(act.calories) : undefined,
+              workKj: typeof act.joules === "number" ? Math.round(act.joules / 1000) : undefined,
+              rpe: act.perceived_exertion,
+              feel: typeof act.feel === "string" ? act.feel : act.feel ? (act.feel >= 4 ? "Bueno" : act.feel === 3 ? "Normal" : "Exigente") : undefined,
+              deviceName: act.device_name,
             });
 
             if (dateKey >= thisMondayStr && dateKey <= newestStr) {

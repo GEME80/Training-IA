@@ -153,9 +153,40 @@ export interface DailyExecutedActivity {
   type: string;
   tss: number;
   movingTimeMin: number;
+  elapsedTimeMin?: number;
   watts?: number;
-  heartrate?: number;
+  weightedWatts?: number; // Potencia Normalizada (NP)
+  heartrate?: number; // FC media (bpm)
+  maxHeartrate?: number; // FC máxima (bpm)
   distanceKm?: number;
+  paceStr?: string; // e.g. "5:35/km"
+  gapPaceStr?: string; // Grade Adjusted Pace e.g. "5:34/km"
+  intensityPercent?: number; // IF %
+  efficiencyFactor?: number; // EF = Watts / HR
+  cardiacDecoupling?: number; // Desacoplamiento cardíaco D%
+  cadence?: number; // Cadencia rpm / spm
+  strideLengthM?: number; // Zancada en metros
+  elevationGainM?: number; // Desnivel positivo en m
+  calories?: number;
+  workKj?: number;
+  rpe?: number; // Perceived exertion 1-10
+  feel?: string; // Sensaciones (ej. "Bueno", "Excelente")
+  deviceName?: string; // e.g. "Garmin Forerunner 970"
+}
+
+export interface ActivityStreamPoint {
+  timeSec: number;
+  heartrate?: number;
+  watts?: number;
+  paceSecPerKm?: number;
+  cadence?: number;
+  altitude?: number;
+}
+
+export interface ActivityStreamsData {
+  activityId: string;
+  totalTimeSec: number;
+  points: ActivityStreamPoint[];
 }
 
 export interface DailyExecutedSummary {
@@ -165,3 +196,4 @@ export interface DailyExecutedSummary {
 }
 
 export type DailyExecutedMap = Record<string, DailyExecutedSummary>;
+

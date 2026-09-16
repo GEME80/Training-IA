@@ -317,4 +317,24 @@ export class IntervalsClient {
 
     return (await res.json()) as AthleteProfile;
   }
+
+  /**
+   * Obtiene los streams de telemetría continua (FC, potencia, ritmo, altitud, cadencia) de una actividad.
+   */
+  async getActivityStreams(
+    activityId: string,
+    types: string[] = ["time", "heartrate", "watts", "velocity_smooth", "cadence", "altitude"]
+  ): Promise<any[]> {
+    const url = new URL(`${BASE_URL}/activity/${activityId}/streams`);
+    if (types.length > 0) url.searchParams.set("types", types.join(","));
+    const res = await this.safeFetch(url.toString(), {
+      method: "GET",
+      headers: getAuthHeader(this.apiKey),
+    });
+    if (!res.ok) {
+      throw new Error(`Error al consultar streams de actividad ${activityId} (${res.status}): ${res.statusText}`);
+    }
+    return (await res.json()) as any[];
+  }
 }
+

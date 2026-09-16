@@ -16,10 +16,13 @@ import {
   Zap,
   Heart,
   Smile,
+  Flame,
+  Mountain,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
+import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 
 interface WorkoutDetailModalProps {
   workout: PlanItem | null;
@@ -114,7 +117,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
         {/* Header del Modal */}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
           <div className="flex items-center space-x-2.5">
@@ -162,49 +165,97 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               </span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {displayActivities.map((act, aIdx) => (
-                <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-900 dark:text-white text-xs truncate">{act.name}</span>
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Smile className="h-3.5 w-3.5 text-amber-500" />
-                      RPE 4 (Sensación Óptima)
+                <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-black text-slate-900 dark:text-white truncate max-w-[260px]">{act.name}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      {act.deviceName || "Intervals Sync"}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] text-slate-400 block uppercase">Tiempo</span>
-                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                        <Activity className="h-3 w-3 text-cyan-500" />
-                        {act.movingTimeMin}m
+                  {/* Métricas Avanzadas Intervals */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Ritmo / GAP</span>
+                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1 font-bold">
+                        <Footprints className="h-3 w-3 text-amber-500" />
+                        {act.paceStr ? `${act.paceStr}/km` : `${act.distanceKm || 0}km`}
                       </strong>
+                      {act.gapPaceStr && <span className="text-[9px] text-slate-500 block">GAP {act.gapPaceStr}/km</span>}
                     </div>
 
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] text-slate-400 block uppercase">Potencia</span>
-                      <strong className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Potencia (W)</span>
+                      <strong className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-bold">
                         <Zap className="h-3 w-3 text-amber-500" />
                         {act.watts ? `${act.watts}W` : "—"}
                       </strong>
+                      {act.weightedWatts && <span className="text-[9px] text-amber-500 block">NP {act.weightedWatts}W</span>}
                     </div>
 
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] text-slate-400 block uppercase">Cardio</span>
-                      <strong className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Cardio (FC)</span>
+                      <strong className="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-bold">
                         <Heart className="h-3 w-3 text-rose-500" />
-                        {act.heartrate ? `${act.heartrate}bpm` : "—"}
+                        {act.heartrate ? `${act.heartrate} bpm` : "—"}
                       </strong>
+                      {act.maxHeartrate && <span className="text-[9px] text-rose-500 block">Máx {act.maxHeartrate} bpm</span>}
                     </div>
 
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] text-slate-400 block uppercase">Distancia</span>
-                      <strong className="text-slate-800 dark:text-slate-200">
-                        {act.distanceKm ? `${act.distanceKm} km` : "—"}
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Eficiencia / D%</span>
+                      <strong className="text-cyan-600 dark:text-cyan-400 flex items-center gap-1 font-bold">
+                        <Activity className="h-3 w-3 text-cyan-500" />
+                        {act.efficiencyFactor ? `EF ${act.efficiencyFactor}` : `${act.movingTimeMin}m`}
                       </strong>
+                      {act.cardiacDecoupling !== undefined && (
+                        <span className="text-[9px] text-cyan-500 block">D {act.cardiacDecoupling}%</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Cadencia / Paso</span>
+                      <strong className="text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-bold">
+                        {act.cadence ? `${act.cadence} spm` : "—"}
+                      </strong>
+                      {act.strideLengthM && <span className="text-[9px] text-slate-500 block">Zancada {act.strideLengthM}m</span>}
+                    </div>
+
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Desnivel / Calorías</span>
+                      <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                        <Mountain className="h-3 w-3 text-emerald-500" />
+                        {act.elevationGainM !== undefined ? `+${act.elevationGainM}m` : "—"}
+                      </strong>
+                      {act.calories && (
+                        <span className="text-[9px] text-slate-500 block flex items-center gap-0.5">
+                          <Flame className="h-2.5 w-2.5 text-orange-500" /> {act.calories} kcal
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Duración Real</span>
+                      <strong className="text-slate-800 dark:text-slate-200 block font-bold">
+                        {act.movingTimeMin} min ({act.distanceKm || 0} km)
+                      </strong>
+                      {act.intensityPercent && <span className="text-[9px] text-slate-500 block">Intensidad {act.intensityPercent}%</span>}
+                    </div>
+
+                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
+                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Sensación / RPE</span>
+                      <strong className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-bold">
+                        <Smile className="h-3 w-3 text-amber-500" />
+                        {act.rpe ? `RPE ${act.rpe}/10` : "RPE 4"}
+                      </strong>
+                      <span className="text-[9px] text-slate-500 block">{act.feel ? `Feel: ${act.feel}` : "Óptimo"}</span>
                     </div>
                   </div>
+
+                  {/* Gráfico Interactivo de Telemetría (Streams) */}
+                  {act.id && <ActivityTelemetryChart activityId={act.id} />}
                 </div>
               ))}
             </div>

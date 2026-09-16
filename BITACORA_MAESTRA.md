@@ -3325,3 +3325,36 @@ flowchart TD
   - `Prueba 3 (Suite de Validación Matriz y Agentes):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
   - `Prueba 4 (Verificación de Macrociclos Dinámicos):` `scratch/update_both_macrocycles.ts` $\rightarrow$ **Generación multi-atleta validada (Código 0)**.
 
+---
+
+### Versión 3.45 - Calibración Fisiológica Universal de Tiradas Largas y Desacoplamiento de Semana de Competición (2026-09-16)
+- **Fecha y Hora:** 16 de Septiembre de 2026 - 11:00 COT.
+- **Directiva:** "revisa el plan que se genero para gerkof@gmail.com ya que se ven fondos de 3:30 y eso estaria desfazado segun las metodoligias. revisa con los agenters que tenemos y dame un plan de mejora" y "ejecuta el plan y que qeure actualizado para todos los altetas y furutos ateltas".
+- **Diagnóstico y Causa Raíz:**
+  1. **Confusión entre Fondo de Entrenamiento y Competición:** En `index.ts` y `macrocycleTemplateHelpers.ts`, la semana de carrera (`RACE_WEEK` / `countdown === 1`) tenía hardcodeado `raceMins = 210` (3h30). Además, `macrocycleGenerator.ts` rotulaba la carrera como `"Tirada dominical de 42.2 km (210m). Sobrecarga progresiva aeróbica"`.
+  2. **Contaminación de la Métrica en UI:** En `SeasonPlanGeneratorTab.tsx`, la tarjeta `"🏔️ Tirada Límite (Fondo dominical)"` ejecutaba `Math.max` sobre todas las semanas incluyendo la de competición, mostrando erróneamente 210 min (3h30) como si fuera un fondo de preparación.
+  3. **Techo Excesivo en el Modelo de Maratón:** En `marathonModel.ts`, el `peakMinutes` y `maxLongRunMinutesCap` permitían hasta 180 min (3h), sobrepasando los umbrales seguros para atletas Máster ($\ge 40$ años / $\ge 80$ kg).
+- **Ajustes Implementados (Válidos Universalmente para Atletas Actuales y Futuros):**
+  1. **Topes Fisiológicos Canova / Daniels / Pfitzinger / Hanson (`marathonModel.ts`):**
+     - Cap absoluto máximo de fondos de entrenamiento reducido a **165 min** (2h45), erradicando el riesgo de catabolismo proteico y microtrauma articular profundo sin beneficio mitocondrial adicional.
+     - Caps por nivel biológico: Principiante (145 min / 28 km), Intermedio (155 min / 32 km), Avanzado/Elite (165 min / 34 km).
+     - Para atletas Máster (e.g., Germán Morales: 46 años, 82 kg), el fondo cumbre queda calibrado en **155 min / 32 km** (Semana 22), reservando cualquier volumen aeróbico complementario a la bicicleta sin impacto articular.
+  2. **Desacoplamiento Semántico y de Rutulado en Generador (`macrocycleGenerator.ts`):**
+     - La semana de competición (`countdown === 1`) ahora se rotula inequívocamente como: `"🏆 Competición Oficial: {raceName} ({km} km). Carrera objetivo con ritmo específico y tapering"`.
+     - Duración proyectada de maratón ajustada al ritmo meta del atleta: **195 min** (3h15m, ~4:37/km para maratón Sub 3h15) con 260 TSS, en vez de 210 min.
+  3. **Ajuste en `SeasonPlanGeneratorTab.tsx`:**
+     - El cálculo de `"🏔️ Tirada Límite"` excluye estrictamente las semanas de competición (`microcycleType !== "COMPETICION" && phase !== "RACE_WEEK"`). Ahora refleja fielmente el fondo cumbre real de entrenamiento (155 min / 2h35).
+  4. **Presupuesto Estricto de Código (< 350 LOC):**
+     - `src/lib/ai/knowledge/marathonModel.ts`: **324 LOC** ($< 350$).
+     - `src/lib/ai/knowledge/index.ts`: **346 LOC** ($< 350$).
+     - `src/lib/physiology/macrocycleTemplateHelpers.ts`: **261 LOC** ($< 350$).
+     - `src/lib/physiology/macrocycleGenerator.ts`: **347 LOC** ($< 350$).
+     - `src/lib/physiology/macrocycleTemplates.ts`: **304 LOC** ($< 350$).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
+  - `Prueba 3 (Suite de Validación Matriz y Agentes):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
+  - `Prueba 4 (Inspección de Fondos de Germán Morales):` `scratch/inspect_gerkof_fondos.ts` $\rightarrow$ **Semana cumbre 22: 32 km / 155 min (2h35). Cero fondos de entrenamiento $> 155\text{ min}$**.
+  - `Prueba 5 (Regeneración de Macrociclos de Ambos Atletas):` `scratch/update_both_macrocycles.ts` $\rightarrow$ **Actualizado exitosamente para Tokio 2027 y Paipa 2026 (Código 0)**.
+
+

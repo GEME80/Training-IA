@@ -60,17 +60,17 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
     startKm: 16,
     peakKm: 34,
     startMinutes: 85,
-    peakMinutes: 180, // Cap fisiológico estándar para maratón (hasta 3h / 180 min)
+    peakMinutes: 165, // Cap metodológico Canova/Daniels/Pfitzinger (máx 2h45 / 165 min)
     targetIntensityPercentCpOrFtp: "68-74% CP en base y 78-83% CP en bloques específicos",
-    description: "Progresión de 16km a 32-34km (máximo 180 min) en semana cumbre -4, con descargas 2:1 o 3:1 y 3 semanas de tapering conservando ritmo maratón.",
+    description: "Progresión de 16km a 32-34km (máximo 165 min / 2h45) en semana cumbre -4, con descargas 2:1 o 3:1 y 3 semanas de tapering conservando ritmo maratón.",
     taperKmSequence: [24, 18, 10],
-    taperMinutesSequence: [120, 90, 50],
+    taperMinutesSequence: [115, 85, 45],
   },
-  maxLongRunMinutesCap: 180,
+  maxLongRunMinutesCap: 165,
   athleteLevelCaps: {
-    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 28, maxLongRunMinutes: 165, tssScaleFactor: 0.85 },
-    INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 32, maxLongRunMinutes: 175, tssScaleFactor: 0.95 },
-    ADVANCED_ELITE: { ctlThresholdMax: Infinity, maxLongRunKm: 36, maxLongRunMinutes: 185, tssScaleFactor: 1.10 },
+    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 28, maxLongRunMinutes: 145, tssScaleFactor: 0.85 },
+    INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 32, maxLongRunMinutes: 155, tssScaleFactor: 0.95 },
+    ADVANCED_ELITE: { ctlThresholdMax: Infinity, maxLongRunKm: 34, maxLongRunMinutes: 165, tssScaleFactor: 1.10 },
   },
   taperingRules: {
     taperingWeeks: 3,

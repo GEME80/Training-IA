@@ -276,8 +276,11 @@ export function generateCustomMacrocycleBlueprint(
 
     const isTri = curatedModel.sportCategory === "Triathlon";
     const isRaceWeekNow = countdown === 1;
-    const raceNote = isRaceWeekNow && isTri
-      ? `🏆 Competición Oficial Triatlón: Natación + T1 + Ciclismo + T2 + Carrera. Estrategia nutricional y transiciones ágiles.`
+    const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
+    const raceNote = isRaceWeekNow
+      ? (isTri
+          ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.`
+          : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
       : curatedModel.sportCategory === "Cycling"
       ? `${phaseLabel}: Fondo dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`
       : `${phaseLabel}: Tirada dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;

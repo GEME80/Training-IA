@@ -197,7 +197,7 @@ export function calculateProgressiveLongRun(
   // 1. Fase de Competición Oficial
   if (phase === "RACE_WEEK" || countdown === 1) {
     const raceDist = model.targetDistanceKm || 42.2;
-    const raceMins = raceDist >= 40 ? 210 : raceDist >= 20 ? 105 : raceDist >= 10 ? 50 : 25;
+    const raceMins = raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22;
     return {
       km: Math.round(raceDist * 10) / 10,
       minutes: raceMins,

@@ -144,8 +144,8 @@ export function resolveRaceWorkout(params: {
   const is5K = raceDist <= 6;
   const is10K = raceDist > 6 && raceDist <= 12;
   const is21K = raceDist > 12 && raceDist <= 25;
-  const durMins = is5K ? 25 : is10K ? 50 : is21K ? 105 : 210;
-  const raceTss = is5K ? 45 : is10K ? 85 : is21K ? 160 : 280;
+  const durMins = is5K ? 25 : is10K ? 50 : is21K ? 105 : 195;
+  const raceTss = is5K ? 45 : is10K ? 85 : is21K ? 160 : 260;
 
   return {
     day, date: dateStr, formattedDate, discipline: "Carrera",

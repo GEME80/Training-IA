@@ -40,7 +40,7 @@ export function generateWeekTemplate(
   const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber);
-  const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor);
+  const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl);
   const longRunDay = resolveLongRunDay(availability);
   const longRideDay = resolveLongRideDay(availability);
 

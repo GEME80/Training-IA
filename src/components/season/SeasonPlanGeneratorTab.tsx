@@ -404,8 +404,13 @@ export const SeasonPlanGeneratorTab: React.FC<SeasonPlanGeneratorTabProps> = ({
               const avgTss = Math.round(
                 planPreviewData.weeks.reduce((acc, w) => acc + w.targetTss, 0) / (totalWeeksCount || 1)
               );
+              const trainingWeeks = planPreviewData.weeks.filter(
+                (w) => w.microcycleType !== "COMPETICION" && w.phase !== "RACE_WEEK"
+              );
               const peakTss = Math.max(...planPreviewData.weeks.map((w) => w.targetTss));
-              const maxLongRun = Math.max(...planPreviewData.weeks.map((w) => w.maxLongRunMinutes));
+              const maxLongRun = trainingWeeks.length > 0
+                ? Math.max(...trainingWeeks.map((w) => w.maxLongRunMinutes))
+                : Math.max(...planPreviewData.weeks.map((w) => w.maxLongRunMinutes));
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">

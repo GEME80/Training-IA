@@ -1,5 +1,5 @@
-import { MacrocycleBlueprint, MacrocycleWeek } from "./macrocycle";
-import { getMondayOfWeekStr, formatLocalDateToYMD } from "@/lib/dateUtils";
+import { MacrocycleBlueprint, MacrocycleWeek, TargetRace } from "./macrocycle";
+import { getMondayOfWeekStr, formatLocalDateToYMD } from "../dateUtils";
 
 /**
  * Resuelve el índice de la semana actual dentro de un array de semanas de macrociclo
@@ -67,4 +67,94 @@ export function syncBlueprintToCurrentDate(
     currentWeek: updatedWeeks[currentIdx] || updatedWeeks[0],
     weeks: updatedWeeks,
   };
+}
+
+export interface BlueprintCalibrationOptions {
+  goalType?: string;
+  planName?: string;
+  athleteMetrics?: {
+    ctl?: number;
+    runFtp?: number;
+    bikeFtp?: number;
+    lthr?: number;
+    weightKg?: number;
+    heightCm?: number;
+    gender?: string;
+    restingHR?: number;
+    maxHR?: number;
+    weeklyAvailability?: any;
+    historicalMetrics?: any;
+  };
+  primaryRace?: TargetRace | null;
+}
+
+/**
+ * Evalúa si un blueprint guardado presenta desfasaje metodológico o fisiológico
+ * (ej. fondos de maratón > 165 min, semana de carrera de 210 min rotulada como tirada dominical,
+ * o TSS no adaptado a atletas de alto volumen) y lo recalibra con el motor vigente.
+ */
+export function syncAndCalibrateBlueprint(
+  blueprint: MacrocycleBlueprint,
+  options: BlueprintCalibrationOptions = {}
+): { blueprint: MacrocycleBlueprint; upgraded: boolean } {
+  if (!blueprint) return { blueprint, upgraded: false };
+
+  const syncedBp = syncBlueprintToCurrentDate(blueprint);
+  const weeks = syncedBp.weeks || [];
+  if (weeks.length === 0) return { blueprint: syncedBp, upgraded: false };
+
+  const isMarathonOrRunning =
+    syncedBp.mode === "MARATHON_SPECIFIC" ||
+    options.goalType === "MARATON_42K" ||
+    syncedBp.primaryRace?.distance === "42k" ||
+    options.primaryRace?.distance === "42k";
+
+  // Detección de fondos obsoletos o violaciones a límites fisiológicos:
+  // 1. Cualquier fondo de entrenamiento en running > 165 min (incompatible con Canova/Daniels/Pfitzinger)
+  // 2. Semana de carrera con 210 min o rotulada como "Tirada dominical"
+  // 3. Fondo cumbre en maratón > 155 min para atleta intermedio/máster
+  const hasOutdatedLongRuns = weeks.some((w) => {
+    const isRaceWeek = w.microcycleType === "COMPETICION" || w.phase === "RACE_WEEK" || w.countdownWeeks === 1;
+    if (isRaceWeek) {
+      const workoutText = (w as any).keyWorkout || w.focusDescription || "";
+      return w.maxLongRunMinutes === 210 || workoutText.includes("Tirada dominical");
+    }
+    return isMarathonOrRunning && w.maxLongRunMinutes > 165;
+  });
+
+  const hist = options.athleteMetrics?.historicalMetrics;
+  const needsCtlUpgrade = !!(
+    hist?.peakCtlLastYear &&
+    hist.peakCtlLastYear >= 60 &&
+    Math.max(...weeks.map((w) => w.targetTss || 0)) < 480
+  );
+
+  if (hasOutdatedLongRuns || needsCtlUpgrade) {
+    try {
+      const { generateCustomMacrocycleBlueprint } = require("./macrocycleGenerator");
+      const distanceType =
+        syncedBp.primaryRace?.distance ||
+        options.primaryRace?.distance ||
+        (options.goalType === "TRIATLON_703" ? "triathlon_703" : "42k");
+
+      const upgradedBp = generateCustomMacrocycleBlueprint({
+        distanceType: distanceType as any,
+        startDate: syncedBp.startDate,
+        endDate: weeks[weeks.length - 1]?.endDate,
+        weeksCount: weeks.length || syncedBp.totalWeeks || 16,
+        customGoal: syncedBp.cycleTitle || options.planName,
+        primaryRace: options.primaryRace || syncedBp.primaryRace || undefined,
+        athleteMetrics: options.athleteMetrics,
+      });
+
+      return {
+        blueprint: syncBlueprintToCurrentDate(upgradedBp),
+        upgraded: true,
+      };
+    } catch (e) {
+      console.warn("Aviso al recalibrar blueprint de macrociclo:", e);
+    }
+  }
+
+  return { blueprint: syncedBp, upgraded: false };
 }

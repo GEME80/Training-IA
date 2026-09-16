@@ -2,16 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  MacrocyclePhaseInfo,
-  TargetRace,
-  MacrocycleBlueprint,
-  SeasonPlanItem,
-  calculatePlanStatus,
-  calculateMacrocyclePhase,
-  getOffsetForWeek,
+  MacrocyclePhaseInfo, TargetRace, MacrocycleBlueprint, SeasonPlanItem,
+  calculatePlanStatus, calculateMacrocyclePhase, getOffsetForWeek,
 } from "@/lib/physiology/macrocycle";
-import { resolveCurrentWeekIndex, syncBlueprintToCurrentDate } from "@/lib/physiology/macrocycleSync";
-import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
+import { resolveCurrentWeekIndex, syncBlueprintToCurrentDate, syncAndCalibrateBlueprint } from "@/lib/physiology/macrocycleSync";
 import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
 import { UserStorage } from "@/lib/storage/userStorage";
@@ -289,22 +283,25 @@ export function useSeasonPlans({
         let hasUpgraded = false;
         const syncedPlans = resolvedPlans.map((p) => {
           if (!p.blueprint) return p;
-          let bp = syncBlueprintToCurrentDate(p.blueprint);
-          if (historicalMetrics?.peakCtlLastYear && historicalMetrics.peakCtlLastYear >= 60) {
-            const currentPeakTss = Math.max(...(bp.weeks || []).map((w) => w.targetTss || 0));
-            if (currentPeakTss < 480) {
-              bp = generateCustomMacrocycleBlueprint({
-                distanceType: (bp.primaryRace?.distance || (p.goalType === "TRIATLON_703" ? "triathlon_703" : "42k")) as any,
-                startDate: bp.startDate, weeksCount: bp.weeks?.length || bp.totalWeeks || 16,
-                customGoal: bp.cycleTitle || p.planName, primaryRace: bp.primaryRace || undefined,
-                athleteMetrics: {
-                  ctl: ctl || historicalMetrics.lastKnownCtl || 35, runFtp, bikeFtp,
-                  weeklyAvailability: userProfile?.weeklyAvailability, historicalMetrics,
-                },
-              });
-              hasUpgraded = true;
-            }
-          }
+          const { blueprint: bp, upgraded } = syncAndCalibrateBlueprint(p.blueprint, {
+            goalType: p.goalType,
+            planName: p.planName,
+            primaryRace: p.blueprint.primaryRace,
+            athleteMetrics: {
+              ctl: ctl || historicalMetrics?.lastKnownCtl || 35,
+              runFtp,
+              bikeFtp,
+              lthr: userProfile?.lthr,
+              weightKg: userProfile?.weightKg,
+              heightCm: userProfile?.heightCm,
+              gender: userProfile?.gender,
+              restingHR: userProfile?.restingHR,
+              maxHR: userProfile?.maxHR,
+              weeklyAvailability: userProfile?.weeklyAvailability,
+              historicalMetrics,
+            },
+          });
+          if (upgraded) hasUpgraded = true;
           return { ...p, blueprint: bp };
         });
         setSeasonPlans(syncedPlans);

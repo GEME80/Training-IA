@@ -3357,4 +3357,29 @@ flowchart TD
   - `Prueba 4 (Inspección de Fondos de Germán Morales):` `scratch/inspect_gerkof_fondos.ts` $\rightarrow$ **Semana cumbre 22: 32 km / 155 min (2h35). Cero fondos de entrenamiento $> 155\text{ min}$**.
   - `Prueba 5 (Regeneración de Macrociclos de Ambos Atletas):` `scratch/update_both_macrocycles.ts` $\rightarrow$ **Actualizado exitosamente para Tokio 2027 y Paipa 2026 (Código 0)**.
 
+---
+
+### Versión 3.46 - Autocalibración Dinámica de Macrociclos Almacenados y Blindaje de Sesión Activa (2026-09-16)
+- **Fecha y Hora:** 16 de Septiembre de 2026 - 15:30 COT.
+- **Directiva:** "ahora mactualiza el plan de gerkof@gmail.com que se ve el mismo de antes del error".
+- **Diagnóstico del Problema:**
+  - Aunque el motor fisiológico había sido calibrado en v3.45 (cap 165m, cumbre 155m, carrera 195m), el cliente web mantenía en `localStorage` (`season_plans`, `active_blueprint`) y en `userProfile.seasonPlans` la copia serializada previa del macrociclo de Tokio 2027.
+  - Al cargar la página, el hook `useSeasonPlans` reutilizaba dicho objeto sin detectar que sus semanas contenían duraciones obsoletas (> 165m o carrera de 210m con rotulado antiguo), haciendo que el usuario continuara visualizando los datos previos.
+- **Solución Implementada:**
+  1. **Motor de Autocalibración (`src/lib/physiology/macrocycleSync.ts`):**
+     - Se creó e integró `syncAndCalibrateBlueprint()`.
+     - Inspecciona dinámicamente cualquier macrociclo almacenado. Si detecta fondos que exceden los límites fisiológicos vigentes (> 165 min en running) o semanas de carrera con 210 min / "Tirada dominical", regenera y recalibra el blueprint con `generateCustomMacrocycleBlueprint` usando las métricas fisiológicas reales del atleta (`runFtp: 327W`, `ctl`, `bikeFtp: 240W`, `weeklyAvailability`).
+  2. **Actualización Automática y Persistencia Transparente (`src/hooks/useSeasonPlans.ts`):**
+     - Al inicializar o recibir planes (de `userProfile`, `localStorage` o `/api/macrocycles`), se ejecuta la autocalibración.
+     - Al detectar desfasaje, actualiza el estado de React en vivo, actualiza `season_plans` y `active_blueprint` en el almacenamiento local y persiste automáticamente en Firestore mediante `persistProfileField`.
+  3. **Presupuestos de Código Estrictamente Cumplidos (< 350 LOC):**
+     - `src/hooks/useSeasonPlans.ts`: **346 LOC** ($< 350$).
+     - `src/lib/physiology/macrocycleSync.ts`: **160 LOC** ($< 350$).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
+  - `Prueba 3 (Test de Autocalibración):` Macrociclo obsoleto de 25 semanas con semanas de 180m y 210m $\rightarrow$ Detectado y transformado automáticamente a Semana 22 (155m / 32 km) y Semana 25 (195m Sub 3h15).
+  - `Prueba 4 (Suite de Matriz & Agentes SGEA):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 superadas (100%)**.
+
+
 

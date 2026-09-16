@@ -3381,5 +3381,27 @@ flowchart TD
   - `Prueba 3 (Test de Autocalibración):` Macrociclo obsoleto de 25 semanas con semanas de 180m y 210m $\rightarrow$ Detectado y transformado automáticamente a Semana 22 (155m / 32 km) y Semana 25 (195m Sub 3h15).
   - `Prueba 4 (Suite de Matriz & Agentes SGEA):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 superadas (100%)**.
 
+---
+
+### Versión 3.47 - Sincronización Integral de Documentación de Gobernanza (PROJECT_RULES) y Prompts de Agentes IA (2026-09-16)
+- **Fecha y Hora:** 16 de Septiembre de 2026 - 15:40 COT.
+- **Directiva:** "actualiza la documentacion y los agentes con los cambios realizados".
+- **Alcance y Cambios Realizados:**
+  1. **Actualización de Documentación de Gobernanza (`PROJECT_RULES.md`):**
+     - Sincronizado el encabezado y el Prompt Maestro a la versión `v3.46`.
+     - Actualizada la Regla 6.4 de Fisiología y Carga: sustituido el techo anterior (180m) por el **Cap Fisiológico Dorado de 165 min (2h45)** bajo directrices de Canova, Daniels y Pfitzinger, y el tope de **155 min (2h35 / 32 km)** para atletas de categoría Máster ($\ge 40$ años / $\ge 80$ kg).
+     - Incorporada la ley de **Desacoplamiento Estricto de Semana de Competición** (`RACE_WEEK` como Competición Oficial a ritmo proyectado, no tirada dominical) y la **Autocalibración Dinámica de Macrociclos Almacenados**.
+  2. **Actualización de Prompts y Agentes de IA (`src/lib/ai/`):**
+     - **Agente 01 (`PULSE Live Coach` en `defaultPrompts.ts`):** Directriz explícita de Tirada Larga limitada a 165m máximo (155m para atletas Máster), prohibiendo terminantemente la prescripción de fondos de entrenamiento superiores a 165m.
+     - **Agente 02 (`PULSE Macrocycle Architect` en `defaultPrompts.ts` y `prompts.ts`):** Añadido el bloque metodológico rector de límites científicos de tirada larga y semana de competición oficial, inyectando el techo seguro en el grounding curado del sistema prompt.
+  3. **Presupuestos de Código Rigurosamente Cumplidos (< 350 LOC):**
+     - `src/lib/ai/prompts.ts`: **315 LOC** ($< 350$).
+     - `src/lib/ai/defaultPrompts.ts`: **118 LOC** ($< 350$).
+- **Set de Pruebas Superado:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
+  - `Prueba 3 (Suite de Matriz & Agentes SGEA):` `scratch/test_athlete_matrix_plans.ts` $\rightarrow$ **14/14 pruebas superadas (100%)**.
+
+
 
 

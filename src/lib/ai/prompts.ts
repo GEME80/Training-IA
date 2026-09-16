@@ -245,7 +245,7 @@ export function buildMacrocycleArchitectSystemPrompt(
 === MODELO CIENTÍFICO RECTOR APLICADO (GROUNDING CURADO) ===
 - Metodología: ${curatedModel.displayName}
 - Autores Científicos: ${curatedModel.scientificAuthors.join(" • ")}
-- Pauta de Tirada Larga: ${curatedModel.longRunRules.description} (${curatedModel.longRunRules.targetIntensityPercentCpOrFtp})
+- Pauta de Tirada Larga: ${curatedModel.longRunRules.description} (${curatedModel.longRunRules.targetIntensityPercentCpOrFtp}) [Pico programado: ${curatedModel.longRunRules.peakMinutes}m (tope 165m absoluto / 155m máster); semana de carrera es Competición Oficial]
 - Entrenamiento Cruzado: ${curatedModel.crossTrainingRules.notes}
 
 === TELEMETRÍA Y UMBRALES BIOLÓGICOS DEL ATLETA (INTERVALS.ICU) ===

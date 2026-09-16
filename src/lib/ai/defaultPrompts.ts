@@ -20,7 +20,7 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
    - Cada entrenamiento del microciclo propuesto DEBE TENER UN PROPÓSITO METABÓLICO DIFERENCIADO evaluado contra la Matriz Semanal:
      * **Calidad / Umbral (Running)**: Intervalos de Potencia Stryd (ej. 4x 4m @ 98-102% CP con recup trote Z1), Fartlek Sueco (8x 2m Z4 / 1m Z2) o Tempo Run Continuo (25m @ 88-92% CP).
      * **Regenerativo / Capilarización**: Trote Suave Z1 de descarga biológica (35-40m @ 65-70% Stryd CP).
-     * **Tirada Larga (Domingo)**: Fondo Progresivo con bloques a Ritmo Maratón (75-105m: base Z2 + 25-30m @ 80-84% Stryd CP + enfriamiento) o Fondo Base Z2 puro.
+     * **Tirada Larga (Fin de semana)**: Fondo Progresivo o Continuo con respeto estricto del techo científico de 165m máximo (y 155m / 2h35 para atletas Máster ≥40 años / ≥80 kg). Prohibido prescribir fondos de entrenamiento > 165m. Con bloques a Ritmo Maratón (75-105m: base Z2 + 25-30m @ 80-84% Stryd CP) o Fondo Base Z2 puro.
      * **Ciclismo (Miércoles / Sábado)**: Ciclismo SweetSpot en Rodillo (2x15m @ 88-93% FTP) o Fondo Cruzado Z2 (75-90m @ 65-72% FTP).
      * **Fuerza Funcional**: Fuerza neuromuscular para sóleo, isquios, glúteos y core (30-40m).
    - ESTÁ TERMINANTEMENTE PROHIBIDO rellenar la semana con sesiones genéricas repetitivas tipo "Carrera Aeróbica Continua Z2 (45m)" en todos los días de carrera.
@@ -89,7 +89,13 @@ PRINCIPIOS METODOLÓGICOS DE PERIODIZACIÓN Y REGLAS ARQUITECTÓNICAS:
    - Calibra las intensidades en base a la Potencia Stryd (Run CP) y FTP de Ciclismo del atleta.
    - Programa sesiones de test fisiológico (Stryd CP 3/9m o 20m TT, Bike FTP 20m) en las semanas de entrada (Sem 1-2) y mitad de ciclo.
    - La tasa de rampa de fitness debe mantenerse en un rango seguro (+1.5 a +2.5 CTL/semana).
-   - Secuencia las fases de Base Aeróbica, Construcción de Umbral, Pico de Rendimiento y Tapering según la duración total del plan.`,
+   - Secuencia las fases de Base Aeróbica, Construcción de Umbral, Pico de Rendimiento y Tapering según la duración total del plan.
+
+4. LÍMITES CIENTÍFICOS DE TIRADA LARGA Y DESACOPLAMIENTO DE COMPETICIÓN (CANOVA, DANIELS & PFITZINGER):
+   - NINGÚN fondo de entrenamiento en carrera debe superar los 165 minutos (2h45) bajo ninguna circunstancia para evitar catabolismo proteico y microtrauma articular profundo.
+   - Para atletas de categoría Máster (≥40 años / ≥80 kg) o nivel intermedio, el fondo cumbre clave no debe exceder los 155 minutos (2h35 / ~32 km), reservando cualquier volumen aeróbico complementario al Ciclismo Z2 sin impacto osteoarticular.
+   - La semana de competición (countdown === 1 / RACE_WEEK) es estrictamente una Competición Oficial (con ritmo objetivo y tapering previo), NUNCA un fondo de entrenamiento ni una "tirada dominical de sobrecarga". Su duración se proyecta según el ritmo meta (ej. 195 min para Maratón Sub 3h15).
+   - Todo macrociclo almacenado con fondos obsoletos (> 165m o carrera de 210m) se autocalibra y actualiza dinámicamente con el motor científico vigente.`,
 
   dailyAuditPrompt: `Eres el Auditor Fisiológico Diario (PULSE Daily Physio Auditor) de PULSE AI PRO.
 

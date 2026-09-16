@@ -2,6 +2,8 @@ import { PlanItem, DisciplineType } from "@/lib/gemini/types";
 import { MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { CalendarEvent } from "@/lib/intervals/types";
 
+import { formatLocalDateToYMD } from "@/lib/dateUtils";
+
 const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
@@ -35,7 +37,7 @@ export function hydrateWeekPlanFromEvents(
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = formatLocalDateToYMD(d);
     const formattedDate = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
     weekDates.push({ day: DAY_NAMES[i], dateStr, formattedDate });
   }
@@ -83,7 +85,9 @@ export function hydrateWeekPlanFromEvents(
       const cleanName = evt.name ? evt.name.replace(/^\[PULSE AI\]\s*/i, "").trim() : "Entrenamiento";
       const mins = Math.round((evt.moving_time || 0) / 60) || 45;
       const tss = evt.icu_training_load || undefined;
-      const doc = evt.workout_doc || evt.description || undefined;
+      const doc = typeof evt.description === "string" && evt.description.trim()
+        ? evt.description
+        : (typeof evt.workout_doc === "string" ? evt.workout_doc : undefined);
 
       hydratedItems.push({
         id: evt.id ? String(evt.id) : undefined,

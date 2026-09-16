@@ -154,7 +154,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
           >
             <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-emerald-100/90 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200 border-b border-emerald-200/90 dark:border-emerald-800/80">
               <div className="flex items-center space-x-1">
-                {renderPlannedIcon()}
+                {renderActivityIcon(matchedActivity.type, matchedActivity.name)}
                 <span>{matchedActivity.movingTimeMin}m</span>
                 {matchedActivity.distanceKm && <span className="text-[10px] opacity-80 font-normal">({matchedActivity.distanceKm}k)</span>}
               </div>

@@ -19,14 +19,9 @@ export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
 
 export function isLegacyAvailability(avail?: WeeklyAvailabilityMap): boolean {
   if (!avail) return true;
-  const t = normalizeDisciplines(avail["Martes"]);
-  const w = normalizeDisciplines(avail["Miércoles"]);
-  const th = normalizeDisciplines(avail["Jueves"]);
-  return (
-    t.length === 1 && t[0] === "Carrera" &&
-    w.length === 1 && w[0] === "Ciclismo" &&
-    th.length === 1 && th[0] === "Fuerza"
-  );
+  const wed = normalizeDisciplines(avail["Miércoles"]);
+  const tue = normalizeDisciplines(avail["Martes"]);
+  return !wed.includes("Carrera") || !tue.includes("Ciclismo");
 }
 
 export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): WeeklyAvailabilityMap {

@@ -137,7 +137,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
               >
                 <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-emerald-100/90 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200 border-b border-emerald-200/90 dark:border-emerald-800/80">
                   <div className="flex items-center space-x-1">
-                    {renderDisciplineIcon(item.discipline)}
+                    {renderActivityIcon(matchedAct.type, matchedAct.name)}
                     <span>{matchedAct.movingTimeMin}m</span>
                     {matchedAct.distanceKm && <span className="text-[10px] opacity-80 font-normal">({matchedAct.distanceKm}k)</span>}
                   </div>

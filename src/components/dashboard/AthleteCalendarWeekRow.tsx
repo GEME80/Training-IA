@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, RefreshCw, Footprints, Bike } from "lucide-react";
+import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { WeeklyAvailabilityMap, PlanItem } from "@/lib/gemini/engine";
@@ -38,6 +38,29 @@ function formatMinutesToHours(mins: number): string {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h > 0 ? `${h}h${m > 0 ? `${m < 10 ? "0" + m : m}m` : ""}` : `${m}m`;
+}
+
+function DisciplineBar({
+  icon, mins, tss, executedTss, textColor, badgeBg, badgeBorder, barColor, isPastWeek
+}: {
+  icon: React.ReactNode; mins: number; tss: number; executedTss: number;
+  textColor: string; badgeBg: string; badgeBorder: string; barColor: string; isPastWeek: boolean;
+}) {
+  if (mins <= 0 && executedTss <= 0) return null;
+  const pct = tss > 0 ? Math.min(100, Math.round(((executedTss || (isPastWeek ? tss : 0)) / tss) * 100)) : 0;
+  return (
+    <div className="space-y-0.5">
+      <div className={`flex items-center justify-between font-bold ${textColor}`}>
+        <span className="flex items-center gap-1.5">{icon}<span>{formatMinutesToHours(mins)}</span></span>
+        <span className={`px-1.5 py-0.2 rounded font-black text-[9px] border ${badgeBg} ${textColor} ${badgeBorder}`}>
+          {executedTss > 0 ? `${executedTss}/` : ""}{tss} TSS
+        </span>
+      </div>
+      <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
 }
 
 export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
@@ -79,9 +102,17 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   let runTss = 0;
   let bikeMins = 0;
   let bikeTss = 0;
+  let swimMins = 0;
+  let swimTss = 0;
+  let strengthMins = 0;
+  let strengthTss = 0;
   let executedBikeTss = 0;
   let executedRunTss = 0;
+  let executedSwimTss = 0;
+  let executedStrengthTss = 0;
   let executedDirectTotalTss = 0;
+
+  const processedDates = new Set<string>();
 
   weekPlan.forEach((item) => {
     const parsed = parseWorkoutDoc(item.workoutDoc);
@@ -90,22 +121,40 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     if (!item.isRestDay && item.discipline !== "Descanso") {
       totalMins += m;
       plannedTss += t;
-      if (item.discipline === "Carrera") {
+      const d = item.discipline.toLowerCase();
+      if (d === "carrera" || d === "run") {
         runMins += m;
         runTss += t;
-      } else if (item.discipline === "Ciclismo") {
+      } else if (d === "ciclismo" || d === "ride") {
         bikeMins += m;
         bikeTss += t;
+      } else if (d === "natacion" || d === "natación" || d === "swim") {
+        swimMins += m;
+        swimTss += t;
+      } else if (d === "fuerza" || d === "fortalecimiento" || d === "weighttraining" || d === "gym") {
+        strengthMins += m;
+        strengthTss += t;
       }
     }
 
-    const actDay = dailyExecutedActivities?.[item.date];
-    if (actDay && actDay.totalTss > 0) {
-      executedDirectTotalTss += actDay.totalTss;
-      actDay.activities?.forEach((a) => {
-        if (a.type === "Run") executedRunTss += a.tss;
-        else if (a.type === "Ride" || a.type === "VirtualRide") executedBikeTss += a.tss;
-      });
+    if (item.date && !processedDates.has(item.date)) {
+      processedDates.add(item.date);
+      const actDay = dailyExecutedActivities?.[item.date];
+      if (actDay && actDay.totalTss > 0) {
+        executedDirectTotalTss += actDay.totalTss;
+        actDay.activities?.forEach((a) => {
+          const type = (a.type || "").toLowerCase();
+          if (type === "run" || /run|carrera/i.test(type)) {
+            executedRunTss += a.tss;
+          } else if (type === "ride" || /ride|ciclismo|bike|virtualride/i.test(type)) {
+            executedBikeTss += a.tss;
+          } else if (type === "swim" || /swim|nataci/i.test(type)) {
+            executedSwimTss += a.tss;
+          } else if (type === "weighttraining" || /weight|gym|fuerza|strength/i.test(type)) {
+            executedStrengthTss += a.tss;
+          }
+        });
+      }
     }
   });
 
@@ -181,49 +230,50 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             </div>
 
             <div className="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px]">
-              {bikeMins > 0 && (
-                <div className="space-y-0.5">
-                  <div className="flex items-center justify-between text-sky-800 dark:text-sky-300 font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <Bike className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                      <span>{formatMinutesToHours(bikeMins)}</span>
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded bg-sky-500/15 text-sky-800 dark:text-sky-300 font-black text-[9px] border border-sky-400/25">
-                      {executedBikeTss > 0 ? `${executedBikeTss}/` : ""}{bikeTss} TSS
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-sky-500 rounded-full"
-                      style={{
-                        width: `${bikeTss > 0 ? Math.min(100, Math.round(((executedBikeTss || (isPastWeek ? bikeTss : 0)) / bikeTss) * 100)) : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {runMins > 0 && (
-                <div className="space-y-0.5">
-                  <div className="flex items-center justify-between text-amber-900 dark:text-amber-300 font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <Footprints className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                      <span>{formatMinutesToHours(runMins)}</span>
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-900 dark:text-amber-300 font-black text-[9px] border border-amber-400/25">
-                      {executedRunTss > 0 ? `${executedRunTss}/` : ""}{runTss} TSS
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-500 rounded-full"
-                      style={{
-                        width: `${runTss > 0 ? Math.min(100, Math.round(((executedRunTss || (isPastWeek ? runTss : 0)) / runTss) * 100)) : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+              <DisciplineBar
+                icon={<Bike className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />}
+                mins={bikeMins}
+                tss={bikeTss}
+                executedTss={executedBikeTss}
+                textColor="text-sky-800 dark:text-sky-300"
+                badgeBg="bg-sky-500/15"
+                badgeBorder="border-sky-400/25"
+                barColor="bg-sky-500"
+                isPastWeek={isPastWeek}
+              />
+              <DisciplineBar
+                icon={<Footprints className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
+                mins={runMins}
+                tss={runTss}
+                executedTss={executedRunTss}
+                textColor="text-amber-900 dark:text-amber-300"
+                badgeBg="bg-amber-500/15"
+                badgeBorder="border-amber-400/25"
+                barColor="bg-amber-500"
+                isPastWeek={isPastWeek}
+              />
+              <DisciplineBar
+                icon={<Waves className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />}
+                mins={swimMins}
+                tss={swimTss}
+                executedTss={executedSwimTss}
+                textColor="text-cyan-800 dark:text-cyan-300"
+                badgeBg="bg-cyan-500/15"
+                badgeBorder="border-cyan-400/25"
+                barColor="bg-cyan-500"
+                isPastWeek={isPastWeek}
+              />
+              <DisciplineBar
+                icon={<Dumbbell className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />}
+                mins={strengthMins}
+                tss={strengthTss}
+                executedTss={executedStrengthTss}
+                textColor="text-purple-800 dark:text-purple-300"
+                badgeBg="bg-purple-500/15"
+                badgeBorder="border-purple-400/25"
+                barColor="bg-purple-500"
+                isPastWeek={isPastWeek}
+              />
             </div>
           </div>
 

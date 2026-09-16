@@ -136,7 +136,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             onLiveConnectedChange={onLiveConnectedChange}
             userStorage={userStorage}
           />
-          <WorkoutDetailModal workout={selectedWorkoutModal} dailyExecutedActivities={telemetry.dailyExecutedActivities} onClose={() => setSelectedWorkoutModal(null)} />
+          <WorkoutDetailModal
+            workout={selectedWorkoutModal}
+            dailyExecutedActivities={telemetry.dailyExecutedActivities}
+            athleteId={telemetry.profile.id}
+            apiKey={telemetry.apiKeyCache}
+            email={user?.email || undefined}
+            uid={user?.uid || undefined}
+            onClose={() => setSelectedWorkoutModal(null)}
+          />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />
           <SyncNotificationModal notification={sync.syncNotification} onClose={() => sync.setSyncNotification(null)} />
         </main>

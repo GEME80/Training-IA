@@ -3434,6 +3434,39 @@ flowchart TD
   - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente incluyendo `/api/activities/[id]/streams` (Código 0)**.
 
+---
+
+### Versión 3.49 - Calibración Deportiva de Métricas de Telemetría (Ciclismo vs Carrera) y Etiquetas Pedagógicas Ocultables para Atletas (2026-09-16)
+- **Fecha y Hora:** 16 de Septiembre de 2026 - 16:10 COT.
+- **Directiva:** "revisa los datos que esta colocando que hay errores. adciona colcoquemos un label que se oculte en cada caja pafra saber a que hace referencia cada uno. con palabras claras para que los ateltas sepan de que se trata"
+- **Diagnóstico de Inconsistencias Fisiológicas y de UI:**
+  1. **Duplicación de Unidad de Ritmo:** Se generaba `3:43/km/km` porque el formateador concatenaba `/km` sobre un string que ya contenía la unidad.
+  2. **Inconsistencia de Disciplina (Ciclismo vs Carrera):** En sesiones de Ciclismo (ej. *Ciclismo Z2 con Variaciones de Cadencia 95-105 rpm*), se mostraba ritmo en min/km en vez de velocidad estándar en **km/h** (`16.1 km/h`) y cadencia en `spm` en lugar de **`rpm`** (revoluciones por minuto).
+  3. **Exceso de Precisión Flotante:** El Factor de Eficiencia (`EF`) se mostraba sin redondear (`EF 1.3482143`).
+  4. **Mapeo de RPE y Feel de Intervals:** Los campos `icu_rpe` y `feel` numérico no estaban siendo extraídos correctamente en la ingesta, mostrando valores por defecto.
+  5. **Falla de Streams por Falta de Credenciales en Frontend:** Al no enviarse las credenciales en la petición a `/api/activities/[id]/streams`, el endpoint retornaba 401.
+  6. **Falta de Explicación Intuitiva para Atletas:** Las cajas de telemetría no contaban con explicaciones contextuales que aclararan qué significa cada métrica deportiva.
+- **Solución y Mejoras Implementadas:**
+  1. **Submódulo Atómico Pedagógico (`src/components/macrocycle/workoutTelemetryHelpers.ts` - 156 LOC):**
+     - Formateador `buildTelemetryMetricItems(act, discipline)` que adapta automáticamente:
+       - Ciclismo: Caja rotulada `"VELOCIDAD"` en **km/h** y cadencia en **`rpm`**.
+       - Carrera: Caja rotulada `"RITMO / GAP"` en **`min/km`** (sin duplicar unidad), cadencia en **`spm`** y zancada en **`m`**.
+       - Eficiencia redondeada a 2 decimales (`EF 1.35`) y desacople cardíaco a 1 decimal (`D 6.2%` / `D 11.0%`).
+       - Desnivel adaptado para sesiones indoor (`0m (Indoor)`).
+     - Incorporación de explicaciones claras, humanas y rigurosas redactadas específicamente para atletas en cada una de las 8 métricas.
+  2. **Etiquetas Explicativas Ocultables y Botón de Guía (`WorkoutDetailModal.tsx` - 321 LOC):**
+     - Icono interactivo `(i)` (`HelpCircle`) individual por caja para desplegar/ocultar su explicación.
+     - Botón global en encabezado: `💡 ¿Qué significa cada métrica?` / `Ocultar Guía` para ver todas las explicaciones a la vez.
+  3. **Blindaje de Credenciales y Carga de Streams (`route.ts` & `WorkoutDetailModal.tsx`):**
+     - Envío transparente de `athleteId`, `apiKey`, `email` y `uid` desde el cliente authenticated hacia el componente de gráfica.
+     - Fallback seguro en servidor para entornos de administración local en `/api/activities/[id]/streams`.
+  4. **Corrección de Mapeo en Ingesta (`telemetryService.ts` - 264 LOC):**
+     - Detección de `act.decoupling`, `act.icu_rpe` y escala cualitativa de `feel` (`1: Excelente`, `2: Bueno`, `3: Normal`, `4: Exigente`, `5: Agotado`).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 334\text{ LOC}$ ($< 350$ LOC estricto).
+
 
 
 

@@ -12,30 +12,43 @@ import {
   Dumbbell,
   Waves,
   Moon,
-  Activity,
-  Zap,
-  Heart,
-  Smile,
-  Flame,
-  Mountain,
+  HelpCircle,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
+import { useAuth } from "@/context/AuthContext";
 import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
+import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
 
 interface WorkoutDetailModalProps {
   workout: PlanItem | null;
   dailyExecutedActivities: DailyExecutedMap;
   onClose: () => void;
+  athleteId?: string;
+  apiKey?: string;
+  uid?: string;
+  email?: string;
 }
 
 export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   workout,
   dailyExecutedActivities,
   onClose,
+  athleteId,
+  apiKey,
+  uid,
+  email,
 }) => {
+  const { user, userProfile } = useAuth();
+  const effAthleteId = athleteId || userProfile?.intervalsAthleteId;
+  const effApiKey = apiKey || (userProfile as any)?.intervalsApiKey;
+  const effEmail = email || user?.email || undefined;
+  const effUid = uid || user?.uid || undefined;
+
   const [hasCopiedSyntax, setHasCopiedSyntax] = useState<boolean>(false);
+  const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
+  const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
 
   if (!workout) return null;
 
@@ -151,113 +164,97 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         {/* Resumen de Ejecución Real Sincronizada con Intervals */}
         {isExecuted && (
           <div className="rounded-2xl p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-900 dark:text-emerald-300">
                 <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 Telemetría Sincronizada en Vivo (Intervals.icu)
               </span>
-              <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-lg border border-emerald-300/80">
-                {isExtraActivity ? (
-                  `⚡ Carga: ${executedTss} TSS`
-                ) : (
-                  `⚡ Carga: ${executedTss} / ${plannedTss} TSS`
-                )}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAllHelp(!showAllHelp)}
+                  className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200/60 dark:hover:bg-emerald-900/80 flex items-center gap-1 cursor-pointer bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-lg border border-emerald-300/80 transition"
+                  title="Mostrar u ocultar la explicación de todas las métricas"
+                >
+                  <HelpCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  {showAllHelp ? "Ocultar Guía" : "¿Qué significa cada métrica?"}
+                </button>
+                <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-lg border border-emerald-300/80">
+                  {isExtraActivity ? `⚡ Carga: ${executedTss} TSS` : `⚡ Carga: ${executedTss} / ${plannedTss} TSS`}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3">
-              {displayActivities.map((act, aIdx) => (
-                <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-slate-900 dark:text-white truncate max-w-[260px]">{act.name}</span>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      {act.deviceName || "Intervals Sync"}
-                    </span>
+              {displayActivities.map((act, aIdx) => {
+                const metricItems = buildTelemetryMetricItems(act, workout.discipline);
+                return (
+                  <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-black text-slate-900 dark:text-white truncate max-w-[260px]">{act.name}</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        {act.deviceName || "Intervals Sync"}
+                      </span>
+                    </div>
+
+                    {/* Rejilla de Métricas con Etiquetas Explicativas Claras */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800">
+                      {metricItems.map((item) => {
+                        const isExpanded = showAllHelp || activeHelpId === item.id;
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-slate-50/90 dark:bg-slate-800/50 p-2 rounded-lg relative flex flex-col justify-between border border-slate-100 dark:border-slate-800 transition shadow-2xs"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-[9px] text-slate-400 uppercase block font-sans font-bold truncate">
+                                  {item.label}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveHelpId(activeHelpId === item.id ? null : item.id)}
+                                  className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 p-0.5 transition cursor-pointer shrink-0"
+                                  title={`¿Qué significa ${item.label}?`}
+                                >
+                                  <HelpCircle className="h-2.5 w-2.5" />
+                                </button>
+                              </div>
+
+                              <strong className={`${item.colorClass} block font-bold text-xs mt-0.5`}>
+                                {item.value}
+                              </strong>
+                              {item.subtext && (
+                                <span className="text-[9px] text-slate-500 block truncate font-mono mt-0.5">
+                                  {item.subtext}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Label pedagógico ocultable para los atletas */}
+                            {isExpanded && (
+                              <div className="text-[9px] text-slate-700 dark:text-slate-300 bg-emerald-50/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/70 leading-snug font-sans mt-1.5 animate-fadeIn">
+                                {item.athleteExplanation}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Gráfico Interactivo de Telemetría (Streams) con Credenciales Resueltas */}
+                    {act.id && (
+                      <ActivityTelemetryChart
+                        activityId={act.id}
+                        athleteId={effAthleteId}
+                        apiKey={effApiKey}
+                        email={effEmail}
+                        uid={effUid}
+                      />
+                    )}
                   </div>
-
-                  {/* Métricas Avanzadas Intervals */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Ritmo / GAP</span>
-                      <strong className="text-slate-800 dark:text-slate-200 flex items-center gap-1 font-bold">
-                        <Footprints className="h-3 w-3 text-amber-500" />
-                        {act.paceStr ? `${act.paceStr}/km` : `${act.distanceKm || 0}km`}
-                      </strong>
-                      {act.gapPaceStr && <span className="text-[9px] text-slate-500 block">GAP {act.gapPaceStr}/km</span>}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Potencia (W)</span>
-                      <strong className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-bold">
-                        <Zap className="h-3 w-3 text-amber-500" />
-                        {act.watts ? `${act.watts}W` : "—"}
-                      </strong>
-                      {act.weightedWatts && <span className="text-[9px] text-amber-500 block">NP {act.weightedWatts}W</span>}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Cardio (FC)</span>
-                      <strong className="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-bold">
-                        <Heart className="h-3 w-3 text-rose-500" />
-                        {act.heartrate ? `${act.heartrate} bpm` : "—"}
-                      </strong>
-                      {act.maxHeartrate && <span className="text-[9px] text-rose-500 block">Máx {act.maxHeartrate} bpm</span>}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Eficiencia / D%</span>
-                      <strong className="text-cyan-600 dark:text-cyan-400 flex items-center gap-1 font-bold">
-                        <Activity className="h-3 w-3 text-cyan-500" />
-                        {act.efficiencyFactor ? `EF ${act.efficiencyFactor}` : `${act.movingTimeMin}m`}
-                      </strong>
-                      {act.cardiacDecoupling !== undefined && (
-                        <span className="text-[9px] text-cyan-500 block">D {act.cardiacDecoupling}%</span>
-                      )}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Cadencia / Paso</span>
-                      <strong className="text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-bold">
-                        {act.cadence ? `${act.cadence} spm` : "—"}
-                      </strong>
-                      {act.strideLengthM && <span className="text-[9px] text-slate-500 block">Zancada {act.strideLengthM}m</span>}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Desnivel / Calorías</span>
-                      <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
-                        <Mountain className="h-3 w-3 text-emerald-500" />
-                        {act.elevationGainM !== undefined ? `+${act.elevationGainM}m` : "—"}
-                      </strong>
-                      {act.calories && (
-                        <span className="text-[9px] text-slate-500 block flex items-center gap-0.5">
-                          <Flame className="h-2.5 w-2.5 text-orange-500" /> {act.calories} kcal
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Duración Real</span>
-                      <strong className="text-slate-800 dark:text-slate-200 block font-bold">
-                        {act.movingTimeMin} min ({act.distanceKm || 0} km)
-                      </strong>
-                      {act.intensityPercent && <span className="text-[9px] text-slate-500 block">Intensidad {act.intensityPercent}%</span>}
-                    </div>
-
-                    <div className="space-y-0.5 bg-slate-50/80 dark:bg-slate-800/40 p-2 rounded-lg">
-                      <span className="text-[9px] text-slate-400 uppercase block font-sans">Sensación / RPE</span>
-                      <strong className="text-amber-600 dark:text-amber-400 flex items-center gap-1 font-bold">
-                        <Smile className="h-3 w-3 text-amber-500" />
-                        {act.rpe ? `RPE ${act.rpe}/10` : "RPE 4"}
-                      </strong>
-                      <span className="text-[9px] text-slate-500 block">{act.feel ? `Feel: ${act.feel}` : "Óptimo"}</span>
-                    </div>
-                  </div>
-
-                  {/* Gráfico Interactivo de Telemetría (Streams) */}
-                  {act.id && <ActivityTelemetryChart activityId={act.id} />}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

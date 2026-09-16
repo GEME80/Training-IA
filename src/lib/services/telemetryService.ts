@@ -96,12 +96,30 @@ export class TelemetryService {
             const heartrate = act.average_heartrate;
             const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
 
+            const isRide = /ride|ciclismo|bike|virtualride|indoor/i.test(act.type || "");
             const weightedWatts = act.icu_weighted_avg_watts ?? act.weighted_average_watts;
-            const paceStr = act.average_speed && act.average_speed > 0.5 ? `${Math.floor(1000 / act.average_speed / 60)}:${String(Math.round((1000 / act.average_speed) % 60)).padStart(2, "0")}/km` : undefined;
+            const paceStr = act.average_speed && act.average_speed > 0.5
+              ? (isRide
+                  ? `${(act.average_speed * 3.6).toFixed(1)} km/h`
+                  : `${Math.floor(1000 / act.average_speed / 60)}:${String(Math.round((1000 / act.average_speed) % 60)).padStart(2, "0")}/km`)
+              : undefined;
             const gapSpeed = act.gap ?? act.icu_gap;
-            const gapPaceStr = gapSpeed && gapSpeed > 0.5 ? `${Math.floor(1000 / gapSpeed / 60)}:${String(Math.round((1000 / gapSpeed) % 60)).padStart(2, "0")}/km` : undefined;
-            const efficiencyFactor = act.icu_efficiency_factor ?? (watts && heartrate ? Number((watts / heartrate).toFixed(2)) : undefined);
-            const cardiacDecoupling = typeof act.icu_cardiac_decoupling === "number" ? Number(act.icu_cardiac_decoupling.toFixed(1)) : undefined;
+            const gapPaceStr = !isRide && gapSpeed && gapSpeed > 0.5
+              ? `${Math.floor(1000 / gapSpeed / 60)}:${String(Math.round((1000 / gapSpeed) % 60)).padStart(2, "0")}/km`
+              : undefined;
+
+            const rawEf = act.icu_efficiency_factor ?? (watts && heartrate ? watts / heartrate : undefined);
+            const efficiencyFactor = typeof rawEf === "number" && !isNaN(rawEf) ? Number(rawEf.toFixed(2)) : undefined;
+
+            const rawDecoupling = act.decoupling ?? act.icu_cardiac_decoupling ?? act.icu_decoupling;
+            const cardiacDecoupling = typeof rawDecoupling === "number" && !isNaN(rawDecoupling)
+              ? Number(rawDecoupling.toFixed(1))
+              : undefined;
+
+            const feelLabels: Record<number, string> = { 1: "Excelente", 2: "Bueno", 3: "Normal", 4: "Exigente", 5: "Agotado" };
+            const resolvedFeel = typeof act.feel === "string"
+              ? act.feel
+              : (typeof act.feel === "number" ? feelLabels[act.feel] || "Normal" : undefined);
 
             if (!dailyExecutedActivities[dateKey]) {
               dailyExecutedActivities[dateKey] = { date: dateKey, totalTss: 0, activities: [] };
@@ -129,8 +147,8 @@ export class TelemetryService {
               elevationGainM: typeof act.total_elevation_gain === "number" ? Math.round(act.total_elevation_gain) : undefined,
               calories: typeof act.calories === "number" ? Math.round(act.calories) : undefined,
               workKj: typeof act.joules === "number" ? Math.round(act.joules / 1000) : undefined,
-              rpe: act.perceived_exertion,
-              feel: typeof act.feel === "string" ? act.feel : act.feel ? (act.feel >= 4 ? "Bueno" : act.feel === 3 ? "Normal" : "Exigente") : undefined,
+              rpe: act.icu_rpe ?? act.perceived_exertion ?? undefined,
+              feel: resolvedFeel,
               deviceName: act.device_name,
             });
 

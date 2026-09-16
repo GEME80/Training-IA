@@ -21,14 +21,23 @@ export async function GET(
     const email = searchParams.get("email") || undefined;
 
     const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
-    if (!credentials.apiKey || !credentials.athleteId) {
+    let effAthleteId = credentials.athleteId;
+    let effApiKey = credentials.apiKey;
+
+    // Resiliencia local/admin: Si no se enviaron credenciales y existe llave en el entorno, usar fallback
+    if (!effApiKey && process.env.INTERVALS_API_KEY) {
+      effApiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
+      effAthleteId = effAthleteId || (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
+    }
+
+    if (!effApiKey || !effAthleteId) {
       return NextResponse.json(
         { success: false, error: "Credenciales de Intervals.icu no disponibles" },
         { status: 401 }
       );
     }
 
-    const client = new IntervalsClient(credentials.apiKey, credentials.athleteId);
+    const client = new IntervalsClient(effApiKey, effAthleteId);
     const rawStreams = await client.getActivityStreams(activityId, [
       "time",
       "heartrate",

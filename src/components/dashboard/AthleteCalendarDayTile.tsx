@@ -32,33 +32,24 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
     if (isRest || allActs.length === 0) return null;
 
     if (item.discipline === "Carrera") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "Run" ||
-          /run|carrera|trote|trail/i.test(a.type) ||
-          /run|carrera|trote|marat|fondo/i.test(a.name)
-      );
+      const match = allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail|fondo/i.test(`${a.type} ${a.name}`));
       if (match) return match;
     }
-
     if (item.discipline === "Ciclismo") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "Ride" ||
-          /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) ||
-          /ride|ciclismo|bike|rodaje|fondo/i.test(a.name)
-      );
+      const match = allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(`${a.type} ${a.name}`));
+      if (match) return match;
+    }
+    if (item.discipline === "Fuerza") {
+      const match = allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength|pesas/i.test(`${a.type} ${a.name}`));
       if (match) return match;
     }
 
-    if (item.discipline === "Fuerza") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "WeightTraining" ||
-          /weight|gym|fuerza|strength/i.test(a.type) ||
-          /fuerza|gym|pesas|fortalec/i.test(a.name)
-      );
-      if (match) return match;
+    // Adaptación cruzada para resistencia: Correr en vez de pedalear o viceversa
+    if (item.discipline === "Carrera" || item.discipline === "Ciclismo") {
+      const aerobic = allActs
+        .filter((a) => a.type === "Run" || a.type === "Ride" || /run|carrera|ride|ciclismo/i.test(a.type || ""))
+        .sort((a, b) => b.tss - a.tss)[0];
+      if (aerobic) return aerobic;
     }
 
     if (allActs.length === 1) return allActs[0];
@@ -71,25 +62,17 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
   const isExecuted = !isRest && !!matchedActivity;
   const isMissed = !isRest && !matchedActivity && isPastDay;
 
-  const renderPlannedIcon = () => {
-    if (item.discipline === "Carrera") return <Footprints className="h-3.5 w-3.5" />;
-    if (item.discipline === "Ciclismo") return <Bike className="h-3.5 w-3.5" />;
-    if (item.discipline === "Natacion") return <Waves className="h-3.5 w-3.5" />;
-    return <Dumbbell className="h-3.5 w-3.5" />;
-  };
+  const renderPlannedIcon = () =>
+    item.discipline === "Carrera" ? <Footprints className="h-3.5 w-3.5" /> :
+    item.discipline === "Ciclismo" ? <Bike className="h-3.5 w-3.5" /> :
+    item.discipline === "Natacion" ? <Waves className="h-3.5 w-3.5" /> :
+    <Dumbbell className="h-3.5 w-3.5" />;
 
   const renderActivityIcon = (type: string, name?: string) => {
-    const t = (type || "").toLowerCase();
-    const n = (name || "").toLowerCase();
-    if (t.includes("run") || n.includes("carrera") || n.includes("run")) {
-      return <Footprints className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />;
-    }
-    if (t.includes("ride") || t.includes("bike") || n.includes("ciclismo") || n.includes("bike")) {
-      return <Bike className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />;
-    }
-    if (t.includes("swim") || n.includes("nataci") || n.includes("swim")) {
-      return <Waves className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />;
-    }
+    const s = `${type} ${name || ""}`.toLowerCase();
+    if (s.includes("run") || s.includes("carrera")) return <Footprints className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />;
+    if (s.includes("ride") || s.includes("bike") || s.includes("ciclismo")) return <Bike className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />;
+    if (s.includes("swim") || s.includes("nataci")) return <Waves className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />;
     return <Dumbbell className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />;
   };
 
@@ -129,7 +112,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
                     date: item.date,
                     formattedDate: item.formattedDate,
                     day: item.day,
-                    discipline: act.type === "WeightTraining" ? "Fuerza" : act.type === "Ride" ? "Ciclismo" : act.type === "Run" ? "Carrera" : "Fuerza",
+                    discipline: act.type === "WeightTraining" ? "Fuerza" : act.type === "Ride" ? "Ciclismo" : "Carrera",
                     workoutName: act.name,
                     durationMinutes: act.movingTimeMin,
                     tss: act.tss,
@@ -146,9 +129,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
                     <span>{act.movingTimeMin}m</span>
                     {act.distanceKm && <span className="text-[10px] opacity-80 font-normal">({act.distanceKm}k)</span>}
                   </div>
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black shadow-2xs">
-                    ✓
-                  </span>
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black shadow-2xs">✓</span>
                 </div>
                 <div className="p-2 space-y-1">
                   <div className="flex items-center justify-between text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300">
@@ -266,11 +247,10 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
             >
               <div className="flex items-center space-x-1">
                 {renderPlannedIcon()}
-                <span>{item.durationMinutes || parsedDoc.totalMins ? (
-                  (item.durationMinutes || parsedDoc.totalMins) >= 60
-                    ? `${Math.floor((item.durationMinutes || parsedDoc.totalMins) / 60)}h${(item.durationMinutes || parsedDoc.totalMins) % 60 > 0 ? `${(item.durationMinutes || parsedDoc.totalMins) % 60}m` : ""}`
-                    : `${item.durationMinutes || parsedDoc.totalMins}m`
-                ) : "45m"}</span>
+                <span>{(() => {
+                  const m = item.durationMinutes || parsedDoc.totalMins || 45;
+                  return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 > 0 ? `${m % 60}m` : ""}` : `${m}m`;
+                })()}</span>
                 {(() => {
                   const kmMatch = item.workoutName.match(/(\d+(?:\.\d+)?)\s*(?:km|k\b)/i);
                   return kmMatch ? <span className="text-[10px] opacity-80 font-normal">({kmMatch[1]}k)</span> : null;
@@ -308,12 +288,12 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
                 date: item.date,
                 formattedDate: item.formattedDate,
                 day: item.day,
-                discipline: extraAct.type === "WeightTraining" ? "Fuerza" : extraAct.type === "Ride" ? "Ciclismo" : extraAct.type === "Run" ? "Carrera" : "Fuerza",
+                discipline: extraAct.type === "WeightTraining" ? "Fuerza" : extraAct.type === "Ride" ? "Ciclismo" : "Carrera",
                 workoutName: extraAct.name,
                 durationMinutes: extraAct.movingTimeMin,
                 tss: extraAct.tss,
                 action: "MANTENER",
-                justification: `Actividad adicional registrada en Intervals.icu (${extraAct.name}).`,
+                justification: `Actividad adicional (${extraAct.name}).`,
                 workoutDoc: "",
               });
             }}

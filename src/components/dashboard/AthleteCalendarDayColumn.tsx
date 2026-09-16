@@ -53,7 +53,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
   const usedActIds = new Set<string>();
 
   // Emparejamiento coordinado a nivel de día (1 sesión = 1 actividad ejecutada)
-  const matchedEntries = dayItems.map((item) => {
+  const matchedEntries: Array<{ item: PlanItem; matchedAct: DailyExecutedActivity | null; isRest: boolean }> = dayItems.map((item) => {
     const isRest = item.isRestDay || item.discipline === "Descanso";
     if (isRest || allActs.length === 0) return { item, matchedAct: null, isRest };
 
@@ -77,6 +77,23 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
       return { item, matchedAct: match, isRest: false };
     }
     return { item, matchedAct: null, isRest: false };
+  });
+
+  // Segundo pase: Sustitución cruzada inteligente de disciplinas aeróbicas
+  // Si el atleta tenía ciclismo programado y corrió (o viceversa), emparejar la sesión aeróbica
+  matchedEntries.forEach((entry) => {
+    if (!entry.matchedAct && !entry.isRest) {
+      const isAerobic = entry.item.discipline === "Carrera" || entry.item.discipline === "Ciclismo";
+      if (isAerobic) {
+        const unusedAerobic = allActs
+          .filter((a) => !usedActIds.has(a.id) && (a.type === "Run" || a.type === "Ride" || /run|carrera|ride|ciclismo/i.test(a.type || "")))
+          .sort((a, b) => b.tss - a.tss)[0];
+        if (unusedAerobic) {
+          usedActIds.add(unusedAerobic.id);
+          entry.matchedAct = unusedAerobic;
+        }
+      }
+    }
   });
 
   const extraActivities = allActs.filter((a) => !usedActIds.has(a.id));

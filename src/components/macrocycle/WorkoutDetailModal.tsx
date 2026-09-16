@@ -116,6 +116,14 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
       if (match) return match;
     }
 
+    // Adaptación cruzada para resistencia (Correr en vez de pedalear o viceversa)
+    if (workout.discipline === "Carrera" || workout.discipline === "Ciclismo") {
+      const aerobic = allActs
+        .filter((a) => a.type === "Run" || a.type === "Ride" || /run|carrera|ride|ciclismo/i.test(a.type || ""))
+        .sort((a, b) => b.tss - a.tss)[0];
+      if (aerobic) return aerobic;
+    }
+
     if (allActs.length === 1) return allActs[0];
     return null;
   };

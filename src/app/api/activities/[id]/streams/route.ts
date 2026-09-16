@@ -37,7 +37,7 @@ export async function GET(
       );
     }
 
-    const client = new IntervalsClient(effApiKey, effAthleteId);
+    const client = new IntervalsClient(effAthleteId, effApiKey);
     const rawStreams = await client.getActivityStreams(activityId, [
       "time",
       "heartrate",

@@ -189,6 +189,7 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
           targetWeekNumber: data.targetWeekNumber || activeWeekNumber,
           modelUsed: data.modelUsed,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          reasoning: data.reasoning || null,
         };
         setMessages((prev) => [...prev, assistantMsg]);
 

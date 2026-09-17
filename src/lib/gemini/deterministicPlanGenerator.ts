@@ -8,6 +8,7 @@ import {
   WeeklyAvailabilityMap,
   DEFAULT_WEEKLY_AVAILABILITY,
   normalizeDisciplines,
+  getDayDisciplines,
   DisciplineType,
 } from "./types";
 
@@ -33,7 +34,7 @@ export function generateDeterministicAnalysis(
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
   const suggestedPlan: PlanItem[] = days.map((day, idx) => {
-    const rawDiscList = normalizeDisciplines(availability[day]);
+    const rawDiscList = getDayDisciplines(availability, day);
     const dateInfo = weekDates[idx] || { date: "", formattedDate: "" };
 
     // 0. Manejo de Doble Sesión (Múltiples deportes configurados para el mismo día)

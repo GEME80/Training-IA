@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Activity, Flame, ShieldCheck, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { User, Activity, Flame, ShieldCheck, CheckCircle2, AlertTriangle, Sparkles, ChevronDown, Dna } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { HeadCoachMicrocycleCard } from "./HeadCoachMicrocycleCard";
 
@@ -13,6 +13,7 @@ export interface HeadCoachMessageData {
   targetWeekNumber?: number;
   modelUsed?: string;
   timestamp?: string;
+  reasoning?: string | null;
 }
 
 interface HeadCoachMessageItemProps {
@@ -144,6 +145,22 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
         {/* Texto Formateado */}
         <FormattedMessageBody text={message.text} />
+
+        {/* Profundidad Fisiológica Bajo Demanda ("Depth on Demand") */}
+        {isAssistant && message.reasoning && (
+          <details className="mt-3 text-xs bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60 group">
+            <summary className="cursor-pointer font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between gap-2 select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+              <span className="flex items-center gap-1.5">
+                <Dna className="h-3.5 w-3.5 text-emerald-500" />
+                🧬 Profundidad Fisiológica & Telemetría
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+            <div className="mt-2.5 pt-2.5 border-t border-slate-200/40 dark:border-slate-700/40 text-slate-600 dark:text-slate-300 leading-relaxed font-mono text-[11px] whitespace-pre-wrap">
+              {message.reasoning}
+            </div>
+          </details>
+        )}
 
         {/* Tarjeta del Microciclo Adaptado (Si el Coach propuso un plan) */}
         {isAssistant && Array.isArray(message.suggestedPlan) && message.suggestedPlan.length > 0 && (

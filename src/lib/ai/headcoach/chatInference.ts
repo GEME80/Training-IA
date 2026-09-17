@@ -1,6 +1,6 @@
 import { buildHeadCoachSystemPrompt } from "@/lib/ai/prompts";
 import { trackGeminiUsage } from "@/lib/ai/telemetry";
-import { normalizeDisciplines } from "@/lib/gemini/engine";
+import { normalizeDisciplines, getDayDisciplines } from "@/lib/gemini/engine";
 import { ResolvedChatContext } from "./chatContext";
 import { ChatMessage, HeadCoachChatRequest, HeadCoachChatResponse } from "./types";
 
@@ -22,7 +22,7 @@ export async function executeGeminiInference(
   );
 
   const userPrompt = isInitialAudit
-    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Declara primero si se continúa el plan previsto para la semana o la siguiente, o si se propone un nuevo plan/adaptación evaluado con la matriz semanal. Asegura que los trabajos propuestos sean diferentes y variados, audita el TSS por actividad y toma en cuenta los datos demográficos (edad máster, peso, W/kg).`
+    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Aplica Smart Brevity (120-180 palabras en "reply"): inicia con [📍 ESTADO DEL PROCESO], sigue con [⚖️ DIAGNÓSTICO / VEREDICTO] (CONTINUIDAD vs. AJUSTE con causa fisiológica) y finaliza con [🎯 ACCIÓN PRESCRIPTIVA] (instrucción para hoy y remisión a la tarjeta). NO listes los 7 días en el texto; todo el detalle profundo va en "reasoning" y la semana en "suggestedPlan".`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
@@ -57,13 +57,15 @@ export async function executeGeminiInference(
     }
   });
 
+  const smartBrevityInstruction = `\n\n[REGLA ESTRICTA DE SALIDA SMART BREVITY]: Tu respuesta en "reply" DEBE tener entre 120 y 180 palabras (700-1000 caracteres) y organizarse exactamente en 3 bloques:\n1. [📍 ESTADO DEL PROCESO]: 1 sola línea (semana, fase, adherencia % y rampa).\n2. [⚖️ DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con 🟢 CONTINUIDAD o ⚠️ AJUSTE TÁCTICO y la causa fisiológica (TSB, HRV, TSS).\n3. [🎯 ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).\nPROHIBIDO listar los 7 días en el texto. Pon las justificaciones fisiológicas extensas en "reasoning" y la semana en "suggestedPlan".`;
+
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {
-    finalTurn.parts[0].text += `\n\n${userPrompt}`;
+    finalTurn.parts[0].text += `\n\n${userPrompt}${smartBrevityInstruction}`;
   } else {
     normalizedContents.push({
       role: "user",
-      parts: [{ text: userPrompt }],
+      parts: [{ text: `${userPrompt}${smartBrevityInstruction}` }],
     });
   }
 
@@ -76,8 +78,8 @@ export async function executeGeminiInference(
       mappedModel,
       ...userFallbacks,
       "gemini-3.5-flash",
-      "gemini-2.5-flash",
-    ].filter(Boolean))
+      "gemini-3.6-flash",
+    ].filter((m: string) => Boolean(m) && !m.includes("2.5-flash") && !m.includes("2.5-pro")))
   ).slice(0, 3);
 
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
@@ -108,9 +110,10 @@ export async function executeGeminiInference(
             generationConfig: {
               responseMimeType: "application/json",
               temperature: safeTemp,
+              maxOutputTokens: 4096,
             },
           }),
-          signal: AbortSignal.timeout(35000),
+          signal: AbortSignal.timeout(50000),
         }
       );
 
@@ -129,11 +132,11 @@ export async function executeGeminiInference(
             if (parsed && typeof parsed === "object" && parsed.reply) {
               if (Array.isArray(parsed.suggestedPlan)) {
                 const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-                const allUserText = (messages.map((m) => m.content).join(" ") + " " + userPrompt).toLowerCase();
+                const allUserText = (messages.map((m) => m.content || "").join(" ") + " " + (userPrompt || "")).toLowerCase();
 
                 parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {
-                  const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx], date: "", formattedDate: "" };
-                  const dName = dateInfo.day || dayNamesList[idx];
+                  const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
+                  const dName = dateInfo.day || dayNamesList[idx % 7] || "Lunes";
                   const itemDate = p.date || dateInfo.date;
                   const isPast = ctx.isCurrentWeek && Boolean(itemDate && itemDate < ctx.todayDateStr);
 
@@ -144,7 +147,8 @@ export async function executeGeminiInference(
                       const act = execData.activities[0];
                       const isRide = /ride|cycling|bike|virtualride/i.test(act.type);
                       const isWeight = /weight|strength|fuerza/i.test(act.type);
-                      const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : "Carrera";
+                      const isSwimAct = /swim|nataci/i.test(act.type);
+                      const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : isSwimAct ? "Natacion" : "Carrera";
                       const pWatts = act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada");
                       return {
                         day: dName,
@@ -196,31 +200,37 @@ export async function executeGeminiInference(
                   }
 
                   // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL DE DISPONIBILIDAD
-                  const dLower = dName.toLowerCase();
+                  const dLower = (dName || "").toLowerCase();
                   const userRequestedChange = allUserText.includes(dLower) && (
                     allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
                     allUserText.includes("ciclismo") || allUserText.includes("descanso") || allUserText.includes("rodillo") ||
-                    allUserText.includes("fuerza") || allUserText.includes("modifica")
+                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("nado") ||
+                    allUserText.includes("natacion")
                   );
 
-                  const configuredList = normalizeDisciplines(ctx.safeAvailability[dName]);
+                  const configuredList = getDayDisciplines(ctx.safeAvailability, dName);
                   let safeDiscipline = p.discipline || p.type || "Carrera";
 
                   if (!userRequestedChange && configuredList.length > 0) {
                     if (configuredList.length === 1 && configuredList[0] === "Descanso") {
                       safeDiscipline = "Descanso";
+                    } else if (configuredList.includes("Natacion") && !configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) {
+                      safeDiscipline = "Natacion";
                     } else if (configuredList.includes("Ciclismo") && !configuredList.includes("Carrera")) {
                       safeDiscipline = "Ciclismo";
                     } else if (configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) {
                       safeDiscipline = "Carrera";
                     } else if (configuredList.includes("Fuerza") && !configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) {
                       safeDiscipline = "Fuerza";
+                    } else if (configuredList.includes("Natacion") && (p.discipline === "Natacion" || p.discipline === "Swim")) {
+                      safeDiscipline = "Natacion";
                     }
                   }
 
                   const isRest = safeDiscipline === "Descanso";
-                  const safeTss = isRest ? 0 : (typeof p.tss === "number" && p.tss > 0 ? p.tss : (safeDiscipline === "Ciclismo" ? 50 : 45));
-                  const safeDuration = isRest ? 0 : (typeof p.durationMinutes === "number" && p.durationMinutes > 0 ? p.durationMinutes : (safeDiscipline === "Ciclismo" ? 60 : 45));
+                  const isSwim = safeDiscipline === "Natacion";
+                  const safeTss = isRest ? 0 : (typeof p.tss === "number" && p.tss > 0 ? p.tss : (safeDiscipline === "Ciclismo" ? 50 : isSwim ? 38 : 45));
+                  const safeDuration = isRest ? 0 : (typeof p.durationMinutes === "number" && p.durationMinutes > 0 ? p.durationMinutes : (safeDiscipline === "Ciclismo" ? 60 : isSwim ? 45 : 45));
 
                   let safePower = p.powerTarget || p.intensity || "";
                   if (safeDiscipline === "Ciclismo" && (!safePower || safePower.includes("CP") || safePower.includes("Stryd"))) {
@@ -229,11 +239,17 @@ export async function executeGeminiInference(
                   } else if (safeDiscipline === "Carrera" && (!safePower || safePower.includes("Bike"))) {
                     const runFtp = ctx.profile.run_ftp || 320;
                     safePower = `70-75% Stryd CP (${Math.round(runFtp * 0.72)}W)`;
+                  } else if (isSwim && !safePower) {
+                    safePower = "Ritmo Aeróbico CSS";
                   }
 
                   let safeName = p.workoutName || p.title || p.name;
                   if (isRest) {
                     safeName = "Descanso Pasivo Total";
+                  } else if (isSwim) {
+                    if (!safeName || safeName === "Entrenamiento" || /^(rodaje|sesi[oó]n|entrenamiento)$/i.test(safeName.trim())) {
+                      safeName = "Natación Técnica & Resistencia Aeróbica";
+                    }
                   } else if (!safeName || safeName === "Entrenamiento" || /^(rodaje|sesi[oó]n|entrenamiento)$/i.test(safeName.trim())) {
                     if (safeDiscipline === "Ciclismo") {
                       safeName = dName === "Sábado"
@@ -245,8 +261,8 @@ export async function executeGeminiInference(
                       if (dName === "Martes") safeName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
                       else if (dName === "Jueves") safeName = "Carrera - Fartlek Progresivo Z2-Z4";
                       else if (dName === "Viernes") safeName = "Carrera - Fartlek Dinámico & Capilarización";
-                      else if (dName === "Domingo") safeName = "Carrera - Tirada Larga Progresiva con Bloque Maratón";
-                      else safeName = "Carrera - Rodaje Base Aeróbico Z2";
+                      else if (dName === "Domingo") safeName = `Carrera - Tirada Larga Progresiva (${safeDuration}m)`;
+                      else safeName = `Carrera - Rodaje de Capilarización (${safeDuration}m)`;
                     }
                   }
 
@@ -296,8 +312,12 @@ export async function executeGeminiInference(
             }
           } catch (pErr) {
             console.warn(`Error al parsear JSON devuelto por Gemini (${model}):`, pErr);
+            console.warn(`Texto crudo recibido (${model}):`, text.slice(0, 600));
           }
         }
+      } else {
+        const errText = await response.text().catch(() => "");
+        console.warn(`Gemini API respondió con status ${response.status} para modelo ${model}:`, errText.slice(0, 300));
       }
     } catch (e) {
       console.warn(`Intento fallido con modelo ${model}:`, e);

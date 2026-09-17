@@ -1,7 +1,7 @@
 import { IntervalsClient } from "@/lib/intervals/client";
 import { PhysiologicalEngine, PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness, ActivitySummary } from "@/lib/intervals/types";
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, normalizeDisciplines } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, normalizeDisciplines, CANONICAL_DAYS, getDayDisciplines, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
@@ -176,10 +176,10 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const actualTss = Math.round(recentActivitiesTss > 0 ? recentActivitiesTss : (plannedWeekTss || 350) * 0.92);
   const compliancePct = Math.min(120, Math.round((actualTss / (plannedWeekTss || 1)) * 100));
 
-  const safeAvailability = weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY;
-  const availabilityFormatted = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+  const safeAvailability = resolveEffectiveAvailability(weeklyAvailability);
+  const availabilityFormatted = CANONICAL_DAYS
     .map((day) => {
-      const list = normalizeDisciplines(safeAvailability[day]);
+      const list = getDayDisciplines(safeAvailability, day);
       return `  - ${day}: ${list.join(", ")}`;
     })
     .join("\n");

@@ -1,10 +1,27 @@
 export type DisciplineType = "Descanso" | "Carrera" | "Ciclismo" | "Fuerza" | "Natacion";
 export type WeeklyAvailabilityMap = Record<string, DisciplineType[] | DisciplineType>;
 
+export const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
+
 export function normalizeDisciplines(val?: DisciplineType[] | DisciplineType): DisciplineType[] {
   if (!val) return ["Descanso"];
   if (Array.isArray(val)) return val.length > 0 ? val : ["Descanso"];
   return [val];
+}
+
+export function getDayDisciplines(avail?: WeeklyAvailabilityMap, dayName?: string): DisciplineType[] {
+  if (!avail || !dayName) return ["Descanso"];
+  if (avail[dayName]) return normalizeDisciplines(avail[dayName]);
+
+  // Soporte de alias con y sin tildes (Miércoles/Miercoles, Sábado/Sabado)
+  const normKey = dayName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  for (const [k, v] of Object.entries(avail)) {
+    const kNorm = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (kNorm === normKey) {
+      return normalizeDisciplines(v);
+    }
+  }
+  return ["Descanso"];
 }
 
 export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
@@ -18,17 +35,24 @@ export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
 };
 
 export function isLegacyAvailability(avail?: WeeklyAvailabilityMap): boolean {
-  if (!avail) return true;
-  const wed = normalizeDisciplines(avail["Miércoles"]);
-  const tue = normalizeDisciplines(avail["Martes"]);
-  return !wed.includes("Carrera") || !tue.includes("Ciclismo");
+  if (!avail || typeof avail !== "object") return true;
+  const keys = Object.keys(avail);
+  if (keys.length === 0) return true;
+  // Solo se considera legacy si está vacío o no contiene ningún día válido
+  const hasAnyDay = CANONICAL_DAYS.some((d) => getDayDisciplines(avail, d)[0] !== "Descanso" || avail[d] !== undefined);
+  return !hasAnyDay && keys.length < 3;
 }
 
 export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): WeeklyAvailabilityMap {
   if (!avail || isLegacyAvailability(avail)) {
     return DEFAULT_WEEKLY_AVAILABILITY;
   }
-  return avail;
+  // Normalizar hacia los 7 días canónicos preservando exactamente la matriz del atleta
+  const resolved: WeeklyAvailabilityMap = {};
+  for (const day of CANONICAL_DAYS) {
+    resolved[day] = getDayDisciplines(avail, day);
+  }
+  return resolved;
 }
 
 export interface PlanItem {

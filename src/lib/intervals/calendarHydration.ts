@@ -1,8 +1,7 @@
-import { PlanItem, DisciplineType } from "@/lib/gemini/types";
-import { MacrocycleWeek } from "@/lib/physiology/macrocycle";
-import { CalendarEvent } from "@/lib/intervals/types";
-
-import { formatLocalDateToYMD } from "@/lib/dateUtils";
+import { PlanItem, DisciplineType } from "../gemini/types";
+import { MacrocycleWeek } from "../physiology/macrocycle";
+import { CalendarEvent } from "./types";
+import { formatLocalDateToYMD } from "../dateUtils";
 
 const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -65,18 +64,23 @@ export function hydrateWeekPlanFromEvents(
   for (const { day, dateStr, formattedDate } of weekDates) {
     const dayEvts = eventsByDate[dateStr];
     if (!dayEvts || dayEvts.length === 0) {
-      hydratedItems.push({
-        day,
-        date: dateStr,
-        formattedDate,
-        discipline: "Descanso",
-        workoutName: "Descanso Activo / Recuperación",
-        action: "MANTENER",
-        durationMinutes: 0,
-        tss: 0,
-        justification: "Día de asimilación biológica programado en Intervals.icu",
-        isRestDay: true,
-      });
+      const fallbackForDay = fallbackPlan.filter((p) => p.date === dateStr || p.day === day);
+      if (fallbackForDay.length > 0) {
+        hydratedItems.push(...fallbackForDay);
+      } else {
+        hydratedItems.push({
+          day,
+          date: dateStr,
+          formattedDate,
+          discipline: "Descanso",
+          workoutName: "Descanso Pasivo",
+          action: "MANTENER",
+          durationMinutes: 0,
+          tss: 0,
+          justification: "Día de asimilación biológica.",
+          isRestDay: true,
+        });
+      }
       continue;
     }
 

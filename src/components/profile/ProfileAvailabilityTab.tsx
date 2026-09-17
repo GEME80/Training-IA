@@ -6,6 +6,7 @@ import {
   WeeklyAvailabilityMap,
   DisciplineType,
   normalizeDisciplines,
+  getDayDisciplines,
 } from "@/lib/gemini/engine";
 
 interface ProfileAvailabilityTabProps {
@@ -64,10 +65,10 @@ export const ProfileAvailabilityTab: React.FC<ProfileAvailabilityTabProps> = ({
   const days = [
     { key: "Lunes", label: "Lunes", short: "Lun" },
     { key: "Martes", label: "Martes", short: "Mar" },
-    { key: "Miercoles", label: "Miércoles", short: "Mié" },
+    { key: "Miércoles", label: "Miércoles", short: "Mié" },
     { key: "Jueves", label: "Jueves", short: "Jue" },
     { key: "Viernes", label: "Viernes", short: "Vie" },
-    { key: "Sabado", label: "Sábado", short: "Sáb" },
+    { key: "Sábado", label: "Sábado", short: "Sáb" },
     { key: "Domingo", label: "Domingo", short: "Dom" },
   ];
 
@@ -90,7 +91,7 @@ export const ProfileAvailabilityTab: React.FC<ProfileAvailabilityTabProps> = ({
       {/* Grid de los 7 Días */}
       <div className="grid grid-cols-1 sm:grid-cols-7 gap-2.5 pt-1">
         {days.map((day) => {
-          const dayDisciplines = normalizeDisciplines(weeklyAvailability[day.key]);
+          const dayDisciplines = getDayDisciplines(weeklyAvailability, day.key);
           const isRest = dayDisciplines.includes("Descanso");
 
           return (

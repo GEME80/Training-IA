@@ -9,6 +9,8 @@ import {
   DEFAULT_WEEKLY_AVAILABILITY,
   getWeekDates,
   normalizeDisciplines,
+  CANONICAL_DAYS,
+  getDayDisciplines,
 } from "./types";
 import { generateDeterministicAnalysis } from "./deterministicPlanGenerator";
 
@@ -82,12 +84,17 @@ export class GeminiPhysiologicalAgent {
 - Límite Máximo de Tirada Larga Dominical: 55-65 minutos.
 - Carga Semanal Sugerida: 280 - 360 TSS.\n`;
 
-    const availabilityText = Object.entries(availability)
-      .map(
-        ([day, disc]) =>
-          `- ${day}: ${disc === "Descanso" ? "Descanso total obligatorio" : `${disc} (${disc === "Carrera" ? "Stryd Running Power % FTP" : disc === "Ciclismo" ? "Ciclismo % FTP" : "Fuerza / Prevención"})`}`
-      )
-      .join("\n");
+    const availabilityText = CANONICAL_DAYS.map((day) => {
+      const discs = getDayDisciplines(availability, day);
+      const desc = discs.map((disc) => {
+        if (disc === "Descanso") return "Descanso total";
+        if (disc === "Carrera") return "Carrera (Stryd CP)";
+        if (disc === "Ciclismo") return "Ciclismo (% FTP)";
+        if (disc === "Natacion") return "Natación";
+        return "Fuerza";
+      }).join(" + ");
+      return `- ${day}: ${desc}`;
+    }).join("\n");
 
     const prompt = `Actúa como un Head Coach Fisiológico Digital experto en entrenamiento de resistencia, potenciómetros Stryd, periodización de macrociclos y modelos Banister (CTL, ATL, TSB, Rolling HRV).
 Analiza el siguiente atleta y genera un microciclo semanal equilibrado con variedad de estímulos cualitativos (Lunes a Domingo):
@@ -162,7 +169,8 @@ Responde ÚNICAMENTE en formato JSON con la estructura:
         parsed.suggestedPlan = (parsed.suggestedPlan || []).map((item, idx) => {
           const dateInfo = weekDates[idx] || { date: "", formattedDate: "" };
           const isRest = item.discipline === "Descanso" || item.action === "DESCANSO_ACTIVO";
-          const rawDisc = item.discipline || availability[item.day] || "Carrera";
+          const dayDiscs = getDayDisciplines(availability, item.day);
+          const rawDisc = item.discipline || dayDiscs[0] || "Carrera";
           const disc: DisciplineType = Array.isArray(rawDisc) ? (rawDisc[0] as DisciplineType) : (rawDisc as DisciplineType);
 
           return {
@@ -175,6 +183,8 @@ Responde ÚNICAMENTE en formato JSON con la estructura:
               item.workoutDoc ||
               (isRest
                 ? undefined
+                : disc === "Natacion"
+                ? "Warmup\n- 200m Nado Suave Z1\n\nMain\n- 1200m Aeróbico Mixto\n\nCooldown\n- 200m Nado Fácil"
                 : PhysiologicalEngine.generateWorkoutSyntax(
                     disc === "Ciclismo" ? "Ride" : disc === "Fuerza" ? "WeightTraining" : "Run",
                     item.workoutName || item.title || "Entrenamiento",

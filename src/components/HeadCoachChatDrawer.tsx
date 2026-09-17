@@ -21,7 +21,7 @@ import {
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 
 export interface WorkoutDiff {
@@ -543,7 +543,7 @@ export const HeadCoachChatDrawer: React.FC<HeadCoachChatDrawerProps> = ({
         currentWeekBp as any,
         profile.run_ftp,
         profile.bike_ftp,
-        weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY,
+        resolveEffectiveAvailability(weeklyAvailability),
         (macrocyclePhase?.blueprint?.distanceType || macrocyclePhase?.primaryRace?.distance) as any,
         profile.ctl
       );
@@ -876,12 +876,20 @@ export const HeadCoachChatDrawer: React.FC<HeadCoachChatDrawerProps> = ({
                       : "bg-amber-500 text-black border-amber-400 font-semibold"
                   }`}
                 >
-                  {/* Razonamiento Fisiológico Sutil */}
+                  {/* Razonamiento Fisiológico Bajo Demanda ("Depth on Demand") */}
                   {isCoach && msg.reasoning && (
-                    <div className="mb-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 p-2 text-[10px] text-amber-900 flex items-start space-x-1.5">
-                      <Sparkles className="h-3 w-3 text-amber-600 shrink-0 mt-0.5" />
-                      <span><strong>Razonamiento del Coach:</strong> {msg.reasoning}</span>
-                    </div>
+                    <details className="mb-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 p-2 text-[10px] text-amber-900 group">
+                      <summary className="cursor-pointer font-bold flex items-center justify-between gap-1 select-none hover:text-amber-950">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-amber-600 shrink-0" />
+                          <strong>🧬 Profundidad Fisiológica & Telemetría</strong>
+                        </span>
+                        <span className="text-[9px] text-amber-700">▼</span>
+                      </summary>
+                      <div className="mt-2 pt-1.5 border-t border-amber-200/60 leading-relaxed font-mono whitespace-pre-wrap">
+                        {msg.reasoning}
+                      </div>
+                    </details>
                   )}
 
                   {/* Texto Estructurado */}

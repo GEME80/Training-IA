@@ -6,6 +6,7 @@ import {
   WeeklyAvailabilityMap,
   DisciplineType,
   normalizeDisciplines,
+  getDayDisciplines,
 } from "@/lib/gemini/engine";
 
 interface CompactAvailabilityMatrixProps {
@@ -75,8 +76,7 @@ export const CompactAvailabilityMatrix: React.FC<CompactAvailabilityMatrixProps>
     <div className={`w-full overflow-x-auto ${className}`}>
       <div className="grid grid-cols-7 gap-1.5 min-w-[520px] sm:min-w-0">
         {DAYS.map((day) => {
-          const rawVal = weeklyAvailability[day.key] || weeklyAvailability[day.altKey];
-          const dayDisciplines = normalizeDisciplines(rawVal);
+          const dayDisciplines = getDayDisciplines(weeklyAvailability, day.altKey || day.key);
           const isRest = dayDisciplines.includes("Descanso");
 
           return (

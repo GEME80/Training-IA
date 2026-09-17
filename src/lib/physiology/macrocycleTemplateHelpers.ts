@@ -1,4 +1,4 @@
-import { PlanItem, WeeklyAvailabilityMap } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 
@@ -231,11 +231,7 @@ export function resolveWeekendRide(params: {
  */
 export function resolveLongRunDay(availability: WeeklyAvailabilityMap = {}): string {
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const runDays = days.filter((d) => {
-    const raw = availability[d];
-    const list = Array.isArray(raw) ? raw : [raw];
-    return list.includes("Carrera");
-  });
+  const runDays = days.filter((d) => getDayDisciplines(availability, d).includes("Carrera"));
   if (runDays.includes("Domingo")) return "Domingo";
   if (runDays.includes("Sábado")) return "Sábado";
   return runDays[runDays.length - 1] || "Domingo";
@@ -247,13 +243,8 @@ export function resolveLongRunDay(availability: WeeklyAvailabilityMap = {}): str
  */
 export function resolveLongRideDay(availability: WeeklyAvailabilityMap = {}): string {
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const bikeDays = days.filter((d) => {
-    const raw = availability[d];
-    const list = Array.isArray(raw) ? raw : [raw];
-    return list.includes("Ciclismo");
-  });
-  const rawDom = availability["Domingo"];
-  const runsSunday = (Array.isArray(rawDom) ? rawDom : [rawDom]).includes("Carrera");
+  const bikeDays = days.filter((d) => getDayDisciplines(availability, d).includes("Ciclismo"));
+  const runsSunday = getDayDisciplines(availability, "Domingo").includes("Carrera");
   if (bikeDays.includes("Sábado") && runsSunday) return "Sábado";
   if (bikeDays.includes("Domingo")) return "Domingo";
   if (bikeDays.includes("Sábado")) return "Sábado";

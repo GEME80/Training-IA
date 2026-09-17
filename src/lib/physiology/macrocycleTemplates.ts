@@ -1,4 +1,4 @@
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines } from "../gemini/engine";
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun } from "../ai/knowledge";
@@ -57,8 +57,7 @@ export function generateWeekTemplate(
     const dateStr = d.toISOString().split("T")[0];
     const formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
 
-    const rawDisc = availability[day];
-    const discList: string[] = Array.isArray(rawDisc) ? (rawDisc.length > 0 ? [...rawDisc] : ["Descanso"]) : [rawDisc || "Descanso"];
+    const discList = getDayDisciplines(availability, day);
 
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
@@ -84,7 +83,7 @@ export function generateWeekTemplate(
       for (const disc of discList) {
         if (disc === "Descanso") continue;
 
-        if (disc === "Natacion" || disc === "Natación") {
+        if (disc === "Natacion") {
           result.push({
             day, date: dateStr, formattedDate, discipline: "Natacion",
             workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18,
@@ -138,7 +137,7 @@ export function generateWeekTemplate(
     for (const disc of discList) {
       if (disc === "Descanso") continue;
 
-      if (disc === "Natacion" || disc === "Natación") {
+      if (disc === "Natacion") {
         swimCount++;
         const swimTest = scheduledTests.find((t) => t.sport === "Swim" && !swimTestInjected);
         if (swimTest) {

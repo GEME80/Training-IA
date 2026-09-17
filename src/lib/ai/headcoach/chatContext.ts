@@ -169,13 +169,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   profile.tsb = physioStatus.tsb;
   profile.rampRate = physioStatus.rampRate;
 
-  const recentActivitiesTss = pastActivities.reduce((acc, a) => acc + (a.icu_training_load || 0), 0);
-  const plannedWeekTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
-    ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0)
-    : (macrocyclePhase?.blueprint?.currentWeek?.targetTss || 350);
-  const actualTss = Math.round(recentActivitiesTss > 0 ? recentActivitiesTss : (plannedWeekTss || 350) * 0.92);
-  const compliancePct = Math.min(120, Math.round((actualTss / (plannedWeekTss || 1)) * 100));
-
   const safeAvailability = resolveEffectiveAvailability(weeklyAvailability);
   const availabilityFormatted = CANONICAL_DAYS
     .map((day) => {
@@ -199,10 +192,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         .join("\n")
     : "  (No hay un plan activo previo para esta semana; se debe proponer uno nuevo)";
 
-  const isDeload = safeWeekNum % 4 === 0;
-  const targetMinTss = isDeload ? Math.round(actualTss * 0.7) : Math.round(actualTss * 1.08);
-  const targetMaxTss = isDeload ? Math.round(actualTss * 0.8) : Math.round(actualTss * 1.16);
-
   const weekDates = getWeekDates(safeOffset);
   const now = new Date();
   const jsDay = now.getDay();
@@ -219,6 +208,25 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
 
   // Mapeo unificado y optimizado de actividades ejecutadas por fecha (FinOps & High Density)
   const effectiveExecutedMap = buildCondensedExecutedMap(pastActivities, dailyExecutedActivities);
+
+  // TSS ejecutado real estrictamente dentro de los 7 días de la semana de planificación
+  const weekExecutedTss = planningWeekDates.reduce(
+    (acc, d) => acc + (effectiveExecutedMap[d.date]?.totalTss || 0),
+    0
+  );
+
+  const plannedWeekTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
+    ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0)
+    : (macrocyclePhase?.blueprint?.currentWeek?.targetTss || 350);
+
+  const actualTss = Math.round(weekExecutedTss);
+  const compliancePct = plannedWeekTss > 0
+    ? Math.round((actualTss / plannedWeekTss) * 100)
+    : 0;
+
+  const isDeload = safeWeekNum % 4 === 0;
+  const targetMinTss = isDeload ? Math.round((plannedWeekTss || 350) * 0.65) : Math.round((plannedWeekTss || 350) * 0.95);
+  const targetMaxTss = isDeload ? Math.round((plannedWeekTss || 350) * 0.8) : Math.round((plannedWeekTss || 350) * 1.15);
 
   // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
   const auditLines = planningWeekDates.map((wDate, idx) => {
@@ -239,22 +247,22 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         .map((a) => formatCompactActivitySummary(a))
         .join("; ");
       const complianceStatus = isRestPlanned
-        ? "⚠️ ACTIVIDAD EN DÍA DE DESCANSO"
+        ? "[ACTIVIDAD EN DIA DE DESCANSO]"
         : execTss >= Math.round(planTss * 0.85)
-        ? "✅ COMPLETADO"
-        : "⚠️ PARCIAL / RECORTADO";
-      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ${actSummaries} -> Total Real: ${execTss} TSS [${complianceStatus}]`;
+        ? "[COMPLETADO]"
+        : "[PARCIAL / RECORTADO]";
+      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ${actSummaries} -> Total Real: ${execTss} TSS ${complianceStatus}`;
     }
 
     if (isRestPlanned) {
-      return `- ${dName} (${wDate.formattedDate}): Plan: Descanso | Real: Descanso Pasivo (0 TSS) [✅ DESCANSO RESPETADO]`;
+      return `- ${dName} (${wDate.formattedDate}): Plan: Descanso | Real: Descanso Pasivo (0 TSS) [DESCANSO RESPETADO]`;
     }
 
     if (isPast) {
-      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ❌ 0 TSS [SESIÓN SALTADA / NO REGISTRADA]`;
+      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: 0 TSS [SESION NO REGISTRADA]`;
     }
 
-    return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | [⏳ ${isToday ? "HOY EN CURSO" : "PENDIENTE"}]`;
+    return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | [${isToday ? "HOY EN CURSO" : "PENDIENTE"}]`;
   });
 
   const dailyActivitiesReport = auditLines.join("\n");

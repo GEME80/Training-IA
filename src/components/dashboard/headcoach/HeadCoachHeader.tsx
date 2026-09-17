@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Activity } from "lucide-react";
+import { Activity, TrendingUp, Zap, BatteryMedium } from "lucide-react";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 
@@ -38,14 +38,16 @@ export const HeadCoachHeader: React.FC<HeadCoachHeaderProps> = ({
 
       {/* Mini-Cinta de Telemetría PMC */}
       <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto no-scrollbar">
-        <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 font-bold shrink-0">
-          📈 CTL: {physioStatus?.ctl?.toFixed(1) ?? profile.ctl ?? 0}
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 font-bold shrink-0">
+          <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          CTL: {physioStatus?.ctl?.toFixed(1) ?? profile.ctl ?? 0}
         </span>
-        <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold shrink-0">
-          ⚡ ATL: {physioStatus?.atl?.toFixed(1) ?? profile.atl ?? 0}
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 font-bold shrink-0">
+          <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          ATL: {physioStatus?.atl?.toFixed(1) ?? profile.atl ?? 0}
         </span>
         <span
-          className={`px-2.5 py-1 rounded-xl font-bold border shrink-0 ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border shrink-0 ${
             (physioStatus?.tsb ?? 0) >= 5
               ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
               : (physioStatus?.tsb ?? 0) < -20
@@ -53,7 +55,8 @@ export const HeadCoachHeader: React.FC<HeadCoachHeaderProps> = ({
               : "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300"
           }`}
         >
-          🔋 TSB:{" "}
+          <BatteryMedium className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          TSB:{" "}
           {physioStatus?.tsb !== undefined
             ? physioStatus.tsb >= 0
               ? `+${physioStatus.tsb.toFixed(1)}`

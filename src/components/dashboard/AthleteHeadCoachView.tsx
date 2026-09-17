@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Send, RefreshCw, Activity, CheckCircle2 } from "lucide-react";
+import { Sparkles, RefreshCw, Activity, CheckCircle2 } from "lucide-react";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { MacrocycleBlueprint, MacrocyclePhaseInfo, getOffsetForWeek } from "@/lib/physiology/macrocycle";
@@ -68,14 +68,37 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   const selectedWeekData = effectiveBlueprint?.weeks?.[selectedWeekIdx];
   const activePhaseLabel = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Construcción";
 
-  const getWelcomeText = (wNum: number, phase: string) =>
-    `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
+  const plannedWeekTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
+    ? currentPlan.reduce((acc, p) => acc + (p?.tss || 0), 0)
+    : (selectedWeekData?.targetTss || 350);
+  const executedWeekTss = Object.values(dailyExecutedActivities || {}).reduce(
+    (acc: number, item: any) => acc + (item?.icu_training_load || item?.tss || item?.totalTss || 0),
+    0
+  );
+  const compliancePct = plannedWeekTss > 0
+    ? Math.round((executedWeekTss / plannedWeekTss) * 100)
+    : 0;
 
-Tengo en pantalla tu telemetría en vivo: Fitness CTL ${physioStatus?.ctl?.toFixed(1) ?? "—"}, Fatiga ATL ${physioStatus?.atl?.toFixed(1) ?? "—"} y TSB ${physioStatus?.tsb !== undefined ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)) : "—"}${physioStatus?.currentHrv ? ` (HRV ${physioStatus.currentHrv} ms)` : ""}.
+  const getWelcomeText = (wNum: number, phase: string) => {
+    const tsbStr = physioStatus?.tsb !== undefined
+      ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1))
+      : "—";
+    const hrvStr = physioStatus?.currentHrv ? ` • HRV ${physioStatus.currentHrv} ms` : "";
+    const progressStatus = compliancePct >= 100
+      ? `Progreso Semanal: ${compliancePct}% (${executedWeekTss} / ${plannedWeekTss} TSS) — ¡Objetivo semanal completado al 100%! Carga asimilada con éxito.`
+      : compliancePct > 0
+      ? `Progreso Semanal: ${compliancePct}% (${executedWeekTss} / ${plannedWeekTss} TSS acumulados).`
+      : `Progreso Semanal: 0% (${plannedWeekTss} TSS objetivo en calendario).`;
 
-Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
+    return `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
 
-¿Cómo sientes las piernas tras las actividades de estos días o requieres adaptar el microciclo por viaje, molestia o tiempo?`;
+Telemetría en Vivo: CTL ${physioStatus?.ctl?.toFixed(1) ?? "—"} • ATL ${physioStatus?.atl?.toFixed(1) ?? "—"} • TSB ${tsbStr}${hrvStr}.
+
+Fase Activa: **Microciclo de la Semana ${wNum}** (${phase}).
+${progressStatus}
+
+Usa la consola de control táctico a continuación para auditar la semana, confirmar continuidad o consultar las pautas de tu sesión.`;
+  };
 
   const [messages, setMessages] = useState<HeadCoachMessageData[]>([
     {
@@ -85,7 +108,6 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
       timestamp: "En vivo",
     },
   ]);
-  const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,7 +128,7 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
       }
       return prev;
     });
-  }, [activeWeekNumber, activePhaseLabel, profile.name, physioStatus?.ctl, physioStatus?.atl, physioStatus?.tsb, physioStatus?.currentHrv]);
+  }, [activeWeekNumber, activePhaseLabel, profile.name, physioStatus?.ctl, physioStatus?.atl, physioStatus?.tsb, physioStatus?.currentHrv, executedWeekTss, plannedWeekTss, compliancePct]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,7 +139,7 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
   }, [messages, isLoading]);
 
   const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend || inputMessage).trim();
+    const text = (textToSend || "").trim();
     if (!text || isLoading) return;
 
     const userMsg: HeadCoachMessageData = {
@@ -129,7 +151,6 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
 
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
-    if (!textToSend) setInputMessage("");
     setIsLoading(true);
 
     try {
@@ -308,36 +329,12 @@ Estamos enfocados en el **Microciclo de la Semana ${wNum}** (${phase}).
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ACCIONES RÁPIDAS & INPUT */}
-      <div className="space-y-2 shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
+      {/* CONSOLA DE CONTROL TÁCTICO GUIADA (FINOPS & CONSULTAS ESTRUCTURADAS) */}
+      <div className="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
         <HeadCoachQuickActions
           onSelectAction={(prompt) => handleSendMessage(prompt)}
           isLoading={isLoading}
         />
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Escribe a tu Head Coach (ej: 'Reorganiza el microciclo porque viajo miércoles y jueves')..."
-            className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-medium text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none shadow-xs"
-          />
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isLoading}
-            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold transition cursor-pointer disabled:opacity-40 shadow-xs"
-            title="Enviar mensaje"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </form>
       </div>
     </div>
   );

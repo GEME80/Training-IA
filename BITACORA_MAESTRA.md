@@ -3519,3 +3519,38 @@ flowchart TD
   - `Prueba 1 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas en 2.7s sin errores (Código 0)**.
   - `Prueba 2 (Inferencia Real Gemini API):` `test_all_four_points.mjs` $\rightarrow$ **Auditoría con RPE y Feel ejecutada, respuesta concisa de 135 palabras en 3 bloques (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 342\text{ LOC}$ ($< 350$ LOC estricto).
+
+---
+
+### Versión 3.52 - Saludo Ejecutivo con Progreso Semanal, Consola Táctica Guiada en 2 Niveles (FinOps), Criterio de Continuidad y Supresión de Emojis (2026-09-17)
+- **Fecha y Hora:** 17 de Septiembre de 2026 - 10:15 COT.
+- **Directiva del Atleta:**
+  1. Actualizar el saludo inicial: suprimir la pregunta abierta redundante ("¿Cómo sientes las piernas...?") y mostrar el panel ejecutivo con porcentaje exacto de cumplimiento/progreso semanal (`Semana completada al 100%` o `X%`).
+  2. Blindaje FinOps & Cero Preguntas Abiertas: suprimir el `<input>` de texto libre para proteger el consumo de tokens y evitar alucinaciones.
+  3. Consola Táctica Guiada en 2 Niveles: selector estructurado en pestaña Semanal (Microciclo) y pestaña Diaria (Sesión de hoy).
+  4. Criterio de Oro de Continuidad: prohibir que el Head Coach fuerce siempre "AJUSTE TÁCTICO" cuando el plan se cumplió; declarar `CONTINUIDAD DEL PLAN` (`actionType: "REVIEW_PHYSIOLOGY"`) y preservar intactas las sesiones programadas (`action: "MANTENER"`).
+  5. Supresión de Emojis Infantiles: erradicar iconos `📍`, `⚖️`, `🎯`, `🧬`, `👈`, `👉`, `⚡`, `🔋`, `📈`, `✈️`, `⏱️`, `🚲` y reemplazarlos por componentes SVG vectoriales de `lucide-react`.
+- **Solución y Mejoras Implementadas:**
+  1. **Cálculo Fisiológico Preciso de Adherencia (`src/lib/ai/headcoach/chatContext.ts` - 342 LOC):**
+     - Corregido el cálculo de `actualTss`: ahora suma estrictamente las actividades comprendidas en los 7 días de `planningWeekDates` (erradicando la suma distorsionada de 14 días contra 7 días planificados).
+     - Porcentaje de adherencia semanal exacto y sin límites artificiales.
+     - Sanitización de marcadores en el reporte de auditoría.
+  2. **Saludo Inicial Ejecutivo & Protección FinOps (`src/components/dashboard/AthleteHeadCoachView.tsx` - 341 LOC):**
+     - Saludo rediseñado: muestra CTL, ATL, TSB, HRV y el badge dinámico de progreso (`Progreso Semanal: 112% — ¡Objetivo semanal completado al 100%! Carga asimilada con éxito` o `X%`).
+     - Eliminación definitiva del formulario abierto `<input>` y botón `Send`, cerrando la fuga de tokens.
+  3. **Consola de Control Táctico en 2 Niveles (`src/components/dashboard/headcoach/HeadCoachQuickActions.tsx` - 222 LOC):**
+     - Selector con dos pestañas atléticas: `[Nivel Semanal (Microciclo)]` y `[Nivel Diario (Sesión)]`.
+     - Pestaña Semanal: Auditar Carga & Asimilación, Confirmar Continuidad Fin de Semana, Reorganizar por Viaje (con selector rápido de días/recursos), Filosofía de Microciclos.
+     - Pestaña Diaria: Pautas & Vatios de Hoy (Stryd CP / FTP), Tiempo Limitado (pills 30m / 45m), Cambiar a Rodillo Z2 sin impacto, Sobrecarga / Piernas Pesadas (Z1 regenerativo).
+  4. **Criterio de Oro de Continuidad & Preservación (`src/lib/ai/defaultPrompts.ts` - 119 LOC, `src/lib/ai/prompts.ts` - 316 LOC, `src/lib/ai/headcoach/chatInference.ts` - 348 LOC):**
+     - Si la adherencia semanal es $\ge 80\%$, TSB $\ge -15$ y RPE $\le 6/10$, el veredicto mandatorio es `CONTINUIDAD DEL PLAN` con `actionType: "REVIEW_PHYSIOLOGY"`.
+     - Prohibición absoluta de inventar que el atleta adelantó o cambió sesiones si el día coincide.
+     - En `chatInference.ts`, si se dictamina continuidad, se preservan exactamente las sesiones planificadas en `currentPlan` con `action: "MANTENER"`, evitando renombrados arbitrarios.
+  5. **Iconografía Vectorial Deportiva (`HeadCoachHeader.tsx` - 69 LOC, `HeadCoachMessageItem.tsx` - 243 LOC, `HeadCoachMicrocycleCard.tsx` - 234 LOC, `HeadCoachChatDrawer.tsx`):**
+     - Emojis eliminados en encabezados, badges de telemetría y tarjetas de días.
+     - Sustituidos por `Compass`, `CheckCircle2`, `Target`, `TrendingUp`, `Zap`, `BatteryMedium`, `Clock`, `ArrowRight`, `Info`.
+     - Badge inteligente `Plan Confirmado` vs `Adaptación Activa` en la tarjeta de microciclo.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas exitosamente en 3.0s (Código 0)**.
+  - `Prueba 2 (Inferencia Real Gemini API):` `test_continuity_and_tags.mjs` $\rightarrow$ **0 emojis en reply (PASS), 3 tags limpios [ESTADO DEL PROCESO], [DIAGNÓSTICO / VEREDICTO], [ACCIÓN PRESCRIPTIVA] (PASS), preservación exacta de sesiones con (MANTENER) (PASS)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 348\text{ LOC}$ ($< 350$ LOC estricto - Regla 3).

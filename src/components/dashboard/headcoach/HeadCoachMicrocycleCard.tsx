@@ -12,6 +12,11 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Zap,
+  Clock,
+  ArrowRight,
+  Info,
+  CheckCircle2,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
@@ -37,6 +42,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
   const hours = Math.floor(totalMinutes / 60);
   const remainingMins = totalMinutes % 60;
   const timeFormatted = hours > 0 ? `${hours}h ${remainingMins}m` : `${remainingMins}m`;
+  const isContinuityPlan = plan.every((p) => p.action === "MANTENER" || p.discipline === "Descanso");
 
   const getDisciplineIcon = (disc: string) => {
     switch (disc) {
@@ -88,7 +94,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
         className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0 truncate max-w-[65px]"
         title="En Plan"
       >
-        En Plan
+        Confirmado
       </span>
     );
   };
@@ -104,8 +110,12 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
           <div>
             <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
               <span>Propuesta de Microciclo: Semana {weekNumber}</span>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.2 rounded-full border border-emerald-500/20">
-                Adaptación Activa
+              <span className={`text-[10px] font-mono px-2 py-0.2 rounded-full border ${
+                isContinuityPlan
+                  ? "text-teal-700 dark:text-teal-300 bg-teal-500/10 border-teal-500/20"
+                  : "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+              }`}>
+                {isContinuityPlan ? "Plan Confirmado" : "Adaptación Activa"}
               </span>
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -116,18 +126,23 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
 
         {/* Resumen Métrico de la Semana */}
         <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
-            ⚡ {totalTss} TSS
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
+            <Zap className="h-3.5 w-3.5 text-amber-500" />
+            {totalTss} TSS
           </span>
-          <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
-            ⏱️ {timeFormatted}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
+            <Clock className="h-3.5 w-3.5 text-slate-500" />
+            {timeFormatted}
           </span>
         </div>
       </div>
 
       {/* Indicador de Desplazamiento */}
       <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-0.5">
-        <span>👉 Desliza horizontalmente para ver los 7 días</span>
+        <span className="inline-flex items-center gap-1">
+          <ArrowRight className="h-3 w-3 text-slate-400" />
+          Desliza horizontalmente para ver los 7 días
+        </span>
         <span>Toca cualquier día para expandir</span>
       </div>
 
@@ -182,7 +197,10 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
 
               {isExpanded && item.justification && (
                 <div className="pt-1.5 border-t border-slate-100 dark:border-slate-700/80 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
-                  <p className="italic">💡 {item.justification}</p>
+                  <p className="italic flex items-start gap-1">
+                    <Info className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{item.justification}</span>
+                  </p>
                 </div>
               )}
             </div>
@@ -207,7 +225,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
             ) : (
               <Check className="h-4 w-4" />
             )}
-            <span>{isApplying ? "Sincronizando a Intervals..." : "✅ Aplicar Microciclo y Sincronizar a Intervals"}</span>
+            <span>{isApplying ? "Sincronizando a Intervals..." : "Aplicar Microciclo y Sincronizar a Intervals"}</span>
           </button>
         </div>
       )}

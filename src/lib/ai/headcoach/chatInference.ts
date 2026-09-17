@@ -22,7 +22,7 @@ export async function executeGeminiInference(
   );
 
   const userPrompt = isInitialAudit
-    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Aplica Smart Brevity (120-180 palabras en "reply"): inicia con [📍 ESTADO DEL PROCESO], sigue con [⚖️ DIAGNÓSTICO / VEREDICTO] (CONTINUIDAD vs. AJUSTE con causa fisiológica) y finaliza con [🎯 ACCIÓN PRESCRIPTIVA] (instrucción para hoy y remisión a la tarjeta). NO listes los 7 días en el texto; todo el detalle profundo va en "reasoning" y la semana en "suggestedPlan".`
+    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Aplica Smart Brevity (120-180 palabras en "reply"): inicia con [ESTADO DEL PROCESO], sigue con [DIAGNÓSTICO / VEREDICTO] (CONTINUIDAD vs. AJUSTE con causa fisiológica) y finaliza con [ACCIÓN PRESCRIPTIVA] (instrucción para hoy y remisión a la tarjeta). NO listes los 7 días en el texto; todo el detalle va en "reasoning" y la semana en "suggestedPlan".`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
@@ -30,64 +30,42 @@ export async function executeGeminiInference(
 
   normalizedContents.push({
     role: "user",
-    parts: [
-      {
-        text: isInitialAudit
-          ? "Inicia la evaluación fisiológica y auditoría del microciclo de la semana."
-          : "Inicia la conversación como Head Coach de resistencia.",
-      },
-    ],
+    parts: [{ text: isInitialAudit ? "Inicia la evaluación fisiológica y auditoría del microciclo de la semana." : "Inicia la conversación como Head Coach de resistencia." }],
   });
 
   messages.forEach((m: ChatMessage, mIdx: number) => {
     const gRole: "user" | "model" = m.role === "user" ? "user" : "model";
     const lastTurn = normalizedContents[normalizedContents.length - 1];
-
-    if (mIdx === messages.length - 1 && m.role === "user") {
-      return;
-    }
+    if (mIdx === messages.length - 1 && m.role === "user") return;
 
     if (lastTurn && lastTurn.role === gRole) {
       lastTurn.parts[0].text += `\n\n${m.content}`;
     } else {
-      normalizedContents.push({
-        role: gRole,
-        parts: [{ text: m.content }],
-      });
+      normalizedContents.push({ role: gRole, parts: [{ text: m.content }] });
     }
   });
 
   const smartBrevityInstruction = `\n\n[REGLA ESTRICTA DE SALIDA SMART BREVITY]:
-1. "reply": DEBE tener entre 120 y 180 palabras (700-1000 caracteres) y estructurarse estrictamente en 3 bloques:
-   - [📍 ESTADO DEL PROCESO]: 1 línea (semana, fase, adherencia % y rampa).
-   - [⚖️ DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con 🟢 CONTINUIDAD o ⚠️ AJUSTE TÁCTICO y causa fisiológica (TSB, HRV, TSS).
-   - [🎯 ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).
+1. "reply": 120-180 palabras (700-1000 caracteres) en 3 bloques (SIN emojis en los títulos):
+   - [ESTADO DEL PROCESO]: 1 línea (semana, fase, adherencia % y rampa).
+   - [DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con CONTINUIDAD DEL PLAN o AJUSTE TÁCTICO y causa fisiológica (TSB, HRV, TSS).
+   - [ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).
    PROHIBIDO listar los 7 días en "reply".
-2. "reasoning": Síntesis fisiológica técnica concisa (máximo 120-150 palabras). Evita textos kilométricos que agoten tokens.
+2. "reasoning": Síntesis fisiológica técnica concisa (máximo 120-150 palabras).
 3. "suggestedPlan": Los 7 días en JSON con workoutStructure paso a paso sintético.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {
     finalTurn.parts[0].text += `\n\n${userPrompt}${smartBrevityInstruction}`;
   } else {
-    normalizedContents.push({
-      role: "user",
-      parts: [{ text: `${userPrompt}${smartBrevityInstruction}` }],
-    });
+    normalizedContents.push({ role: "user", parts: [{ text: `${userPrompt}${smartBrevityInstruction}` }] });
   }
 
-  const mappedModel = (selectedModel === "gemini-flash-latest" || !selectedModel || selectedModel.includes("2.5-flash") || selectedModel.includes("2.0-flash"))
+  const mappedModel = (selectedModel === "gemini-flash-latest" || !selectedModel || selectedModel.includes("2.5-") || selectedModel.includes("2.0-"))
     ? "gemini-3.5-flash"
     : selectedModel;
-  const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels.filter((m: string) => !m.includes("2.5-flash") && !m.includes("2.5-pro")) : [];
-  const candidateModels = Array.from(
-    new Set([
-      mappedModel,
-      ...userFallbacks,
-      "gemini-3.5-flash",
-      "gemini-3.6-flash",
-    ].filter((m: string) => Boolean(m) && !m.includes("2.5-flash") && !m.includes("2.5-pro")))
-  ).slice(0, 3);
+  const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels.filter((m: string) => !m.includes("2.5-")) : [];
+  const candidateModels = Array.from(new Set([mappedModel, ...userFallbacks, "gemini-3.5-flash", "gemini-3.6-flash"].filter(Boolean))).slice(0, 3);
 
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
 
@@ -146,6 +124,13 @@ export async function executeGeminiInference(
               if (Array.isArray(parsed.suggestedPlan)) {
                 const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
                 const allUserText = (messages.map((m) => m.content || "").join(" ") + " " + (userPrompt || "")).toLowerCase();
+                const isContinuityVerdict =
+                  parsed.actionType === "REVIEW_PHYSIOLOGY" ||
+                  (typeof parsed.reply === "string" && /continuidad/i.test(parsed.reply) && !/ajuste t[aá]ctico/i.test(parsed.reply));
+
+                if (isContinuityVerdict) {
+                  parsed.actionType = "REVIEW_PHYSIOLOGY";
+                }
 
                 parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {
                   const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
@@ -212,7 +197,7 @@ export async function executeGeminiInference(
                     }
                   }
 
-                  // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL DE DISPONIBILIDAD
+                  // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL O CONTINUIDAD DEL PLAN
                   const dLower = (dName || "").toLowerCase();
                   const userRequestedChange = allUserText.includes(dLower) && (
                     allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
@@ -220,6 +205,23 @@ export async function executeGeminiInference(
                     allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("nado") ||
                     allUserText.includes("natacion")
                   );
+
+                  const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
+                  if (isContinuityVerdict && !userRequestedChange && plannedSession && (plannedSession.workoutName || plannedSession.title)) {
+                    return {
+                      day: dName,
+                      date: itemDate,
+                      formattedDate: p.formattedDate || dateInfo.formattedDate,
+                      discipline: plannedSession.discipline || p.discipline || "Carrera",
+                      workoutName: plannedSession.workoutName || plannedSession.title,
+                      action: "MANTENER",
+                      powerTarget: plannedSession.powerTarget || p.powerTarget || "",
+                      tss: plannedSession.tss || p.tss || 0,
+                      durationMinutes: plannedSession.durationMinutes || p.durationMinutes || 0,
+                      justification: "Plan confirmado: continuidad aprobada sin modificaciones.",
+                      workoutStructure: plannedSession.workoutStructure || p.workoutStructure || "",
+                    };
+                  }
 
                   const configuredList = getDayDisciplines(ctx.safeAvailability, dName);
                   let safeDiscipline = p.discipline || p.type || "Carrera";

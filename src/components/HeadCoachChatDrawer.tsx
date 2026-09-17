@@ -392,7 +392,7 @@ const FullMicrocyclePlanCard: React.FC<{
           ) : (
             <Check className="h-3.5 w-3.5" />
           )}
-          <span>{isApplying ? "Sincronizando..." : "🚀 Aplicar y Sincronizar Semana Completa a Intervals"}</span>
+          <span>{isApplying ? "Sincronizando..." : "Aplicar y Sincronizar Semana Completa a Intervals"}</span>
         </button>
       )}
     </div>
@@ -455,11 +455,11 @@ export const HeadCoachChatDrawer: React.FC<HeadCoachChatDrawerProps> = ({
   }, [isOpen, weekNumber, initialTriggerPrompt]);
 
   const defaultQuickReplies = [
-    "✅ Aprobar y Sincronizar",
-    "✈️ Adaptar semana por viaje / tiempo",
-    "🚴 Cambiar martes a Rodillo Z2",
-    "🌙 Marcar día de descanso",
-    "🔍 Ver zonas de potencia",
+    "Aprobar y Sincronizar",
+    "Adaptar semana por viaje / tiempo",
+    "Cambiar a Rodillo Z2 sin impacto",
+    "Marcar día de descanso activo",
+    "Ver zonas de potencia Stryd CP / FTP",
   ];
 
   const fetchInitialAudit = async () => {

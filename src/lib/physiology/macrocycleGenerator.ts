@@ -246,9 +246,9 @@ export function generateCustomMacrocycleBlueprint(
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
     } else if (gppWeeksCount > 0 && weekNumber <= gppEndWeek) {
       phase = "BASE_1";
-      phaseLabel = "GPP: Base Mitocondrial";
+      phaseLabel = "Fase 1: Base Aeróbica y Resistencia";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
-      microLabel = isRecoveryWeek ? `Descarga GPP (${isConservative ? "2:1" : "3:1"})` : "Base Aeróbica GPP";
+      microLabel = isRecoveryWeek ? `Descarga Base (${isConservative ? "2:1" : "3:1"})` : "Base Aeróbica General";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
     } else {
       phase = "BASE_2";

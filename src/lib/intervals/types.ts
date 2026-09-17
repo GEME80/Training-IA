@@ -41,18 +41,18 @@ export interface MetricIndicatorConfig {
 }
 
 export const AVAILABLE_METRIC_INDICATORS: MetricIndicatorConfig[] = [
-  { id: "ctl", name: "Fitness (CTL)", category: "PERFORMANCE", icon: "📈", unit: "pts", description: "Carga crónica aeróbica acumulada de las últimas 6 semanas", defaultVisible: true },
-  { id: "atl", name: "Fatigue (ATL)", category: "PERFORMANCE", icon: "⚡", unit: "pts", description: "Fatiga aguda acumulada de los últimos 7 días", defaultVisible: true },
-  { id: "tsb", name: "Form (TSB)", category: "PERFORMANCE", icon: "🔋", unit: "balance", description: "Balance de frescura / disponibilidad para sesiones de calidad", defaultVisible: true },
-  { id: "rampRate", name: "Ramp Rate", category: "PERFORMANCE", icon: "📐", unit: "/sem", description: "Tasa semanal de progresión de carga", defaultVisible: true },
-  { id: "strydCp", name: "Stryd CP (Run FTP)", category: "THRESHOLDS", icon: "👟", unit: "Watts", description: "Potencia crítica umbral sostenible en carrera a pie", defaultVisible: true },
-  { id: "bikeFtp", name: "Ride FTP (Ciclismo)", category: "THRESHOLDS", icon: "🚴", unit: "Watts", description: "Umbral funcional de potencia en bicicleta", defaultVisible: true },
-  { id: "hrv", name: "HRV (rMSSD / Z-Score)", category: "RECOVERY", icon: "💓", unit: "ms", description: "Variabilidad de la frecuencia cardíaca y desviación estándar", defaultVisible: false },
-  { id: "restingHr", name: "FC Reposo (RHR)", category: "RECOVERY", icon: "🫀", unit: "bpm", description: "Frecuencia cardíaca en reposo matutina", defaultVisible: false },
-  { id: "sleep", name: "Sueño & Recuperación", category: "RECOVERY", icon: "😴", unit: "hrs / %", description: "Calidad y duración del sueño sincronizado", defaultVisible: false },
-  { id: "wKg", name: "Relación W/kg", category: "BIOMETRICS", icon: "⚖️", unit: "W/kg", description: "Potencia relativa por kilo de peso corporal", defaultVisible: false },
-  { id: "ageBiometrics", name: "Edad & FC Tanaka", category: "BIOMETRICS", icon: "🎂", unit: "años", description: "Edad cronológica y FC Máxima estimada (208 - 0.7*Edad)", defaultVisible: false },
-  { id: "efficiencyFactor", name: "Eficiencia Aeróbica (EF)", category: "PERFORMANCE", icon: "🎯", unit: "W/bpm", description: "Relación de vatios producidos por cada latido cardíaco", defaultVisible: false },
+  { id: "ctl", name: "Condición Física (CTL)", category: "PERFORMANCE", icon: "📈", unit: "pts", description: "Tu nivel de forma aeróbica acumulado en las últimas 6 semanas", defaultVisible: true },
+  { id: "atl", name: "Fatiga Acumulada (ATL)", category: "PERFORMANCE", icon: "⚡", unit: "pts", description: "Cansancio muscular y cardiovascular de los últimos 7 días", defaultVisible: true },
+  { id: "tsb", name: "Frescura & Energía (TSB)", category: "PERFORMANCE", icon: "🔋", unit: "balance", description: "Disponibilidad física para rendir y asimilar entrenamientos de calidad hoy", defaultVisible: true },
+  { id: "rampRate", name: "Ritmo de Progresión", category: "PERFORMANCE", icon: "📐", unit: "/sem", description: "Incremento semanal de carga de forma segura y sin riesgo de lesión", defaultVisible: true },
+  { id: "strydCp", name: "Potencia de Carrera (Run)", category: "THRESHOLDS", icon: "👟", unit: "Watts", description: "Vatios umbral para correr a ritmo exigente y sostenible", defaultVisible: true },
+  { id: "bikeFtp", name: "Potencia en Bici (FTP)", category: "THRESHOLDS", icon: "🚴", unit: "Watts", description: "Tus vatios umbral pedaleando a ritmo exigente durante 1 hora", defaultVisible: true },
+  { id: "hrv", name: "Recuperación (HRV)", category: "RECOVERY", icon: "💓", unit: "ms", description: "Variabilidad cardíaca: qué tan recuperado está tu sistema nervioso", defaultVisible: false },
+  { id: "restingHr", name: "Pulso en Reposo", category: "RECOVERY", icon: "🫀", unit: "bpm", description: "Pulsaciones al despertar; si sube, puede indicar fatiga o inicio de enfermedad", defaultVisible: false },
+  { id: "sleep", name: "Sueño & Descanso", category: "RECOVERY", icon: "😴", unit: "hrs / %", description: "Horas y calidad del sueño registradas por tu reloj", defaultVisible: false },
+  { id: "wKg", name: "Relación Fuerza/Peso", category: "BIOMETRICS", icon: "⚖️", unit: "W/kg", description: "Vatios producidos por cada kilo de peso corporal", defaultVisible: false },
+  { id: "ageBiometrics", name: "Edad & Pulso Máximo", category: "BIOMETRICS", icon: "🎂", unit: "años", description: "Edad y frecuencia cardíaca máxima estimada", defaultVisible: false },
+  { id: "efficiencyFactor", name: "Eficiencia Aeróbica", category: "PERFORMANCE", icon: "🎯", unit: "W/bpm", description: "Velocidad o vatios que produces por cada latido del corazón", defaultVisible: false },
 ];
 
 export const DEFAULT_VISIBLE_METRICS: string[] = ["ctl", "atl", "tsb", "rampRate", "strydCp", "bikeFtp"];

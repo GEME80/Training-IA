@@ -17,9 +17,9 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   phaseDistributions: [
     {
       phaseKey: "BASE",
-      phaseName: "Base Aeróbica y Capilarización",
+      phaseName: "Base Aeróbica y Resistencia",
       percentageDuration: 0.35,
-      focusDescription: "Desarrollo mitocondrial, economía de carrera, reactividad del sóleo y acondicionamiento musculoesquelético.",
+      focusDescription: "Desarrollo de resistencia aeróbica, economía de carrera, reactividad del sóleo y acondicionamiento muscular.",
       weeklyTssRange: { min: 280, max: 370 },
       longRunGuideline: "Progresión gradual de 14 km (75m) a 20 km (100m) en Z2 cómoda (68-74% CP).",
       recommendedIntensityZones: ["Z1 Regenerativo (55-65% CP)", "Z2 Base Aeróbica (68-75% CP)", "Fartlek Cuestas (96% CP)"],
@@ -311,7 +311,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   crossTrainingRules: {
     recommendedBikeZ2WeeklyMin: 60,
     recommendedStrengthSessionsPerWeek: 1,
-    notes: "Sesión de rodillo Z2 para sumar volumen mitocondrial con cero impacto en sóleo/Aquiles. Sesión de fuerza para cadena posterior.",
+    notes: "Sesión de rodillo Z2 para sumar volumen aeróbico con cero impacto articular. Sesión de fuerza para tren inferior.",
   },
   banisterRampRateLimits: {
     minCtlPerWeek: 1.5,

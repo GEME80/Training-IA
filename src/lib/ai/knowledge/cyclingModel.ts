@@ -21,7 +21,7 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
       phaseKey: "BASE",
       phaseName: "Base Aeróbica y Eficiencia Mecánica",
       percentageDuration: 0.35,
-      focusDescription: "Desarrollo mitocondrial en Zona 2 y optimización del pedaleo fluido (85-95 rpm).",
+      focusDescription: "Desarrollo de resistencia aeróbica en Zona 2 y optimización del pedaleo fluido (85-95 rpm).",
       weeklyTssRange: { min: 350, max: 480 },
       longRunGuideline: "Fondo de fin de semana: 2h30m a 3h30m en Zona 2 continua con cadencia ágil.",
       recommendedIntensityZones: ["Zona 2 Aeróbica (60-70% FTP)", "SweetSpot Base (85-90% FTP)"],
@@ -94,7 +94,7 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
         {
           name: "Ciclismo Sweetspot Controlado (3x8m @ 85% FTP)",
           powerTarget: "85% FTP",
-          justification: "Densidad mitocondrial sin fatiga excesiva.",
+          justification: "Fondo aeróbico eficiente sin fatiga excesiva.",
           workoutDoc: "Warmup\n- 15m 55% FTP\n\n3x\n- 8m 85% FTP\n- 3m 55% FTP\n\nCooldown\n- 10m 50% FTP",
         },
         {

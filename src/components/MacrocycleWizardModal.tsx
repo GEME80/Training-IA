@@ -465,7 +465,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                           {bridgeStrategy === "BASE_GPP" && <CheckCircle2 className="h-4 w-4 text-teal-400" />}
                         </div>
                         <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
-                          Progresión ascendente de volumen aeróbico polarizado, desarrollo mitocondrial y fuerza específica en cuestas para elevar el CTL de partida antes del bloque específico.
+                          Progresión ascendente de volumen aeróbico continuo, desarrollo de resistencia aeróbica y fuerza específica en cuestas para elevar la forma física de partida antes del bloque específico.
                         </p>
                         <div className="mt-2 text-[10px] font-mono text-teal-300/80 bg-teal-500/10 px-2 py-0.5 rounded w-fit border border-teal-500/20">
                           Estructura: Progresión de Volumen + Descargas 3:1

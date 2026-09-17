@@ -172,7 +172,7 @@ export const SeasonPlanGeneratorTab: React.FC<SeasonPlanGeneratorTabProps> = ({
                 name: "PULSE Aerobic Engine Build",
                 weeks: 10,
                 icon: "🌱",
-                desc: "Construcción de base mitocondrial Z2, fuerza estructural e incremento de volumen seguro.",
+                desc: "Construcción de base aeróbica en Zona 2, fuerza muscular e incremento de volumen seguro.",
                 badge: "Base & Fuerza",
               },
               {

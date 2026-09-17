@@ -143,17 +143,17 @@ Finalización
 
 export const CROSS_BIKE_Z2_MITO: CrossTrainingModelDefinition = {
   modelId: "cross_bike_z2_mito",
-  name: "Ciclismo Z2 Mitocondrial & Protegido (Bici / Rodillo)",
+  name: "Ciclismo Z2 Regenerativo & Base Aeróbica (Bici / Rodillo)",
   category: "BIKE_Z2_MITO",
   sport: "Ride",
   targetMetric: "Bike FTP 65-72%",
   durationMin: 60,
   justification:
-    "Desarrolla el volumen aeróbico y la densidad mitocondrial acumulando horas de trabajo cardio-vascular con cero carga osteoarticular de impacto.",
+    "Desarrolla el volumen y la base aeróbica sumando horas de trabajo cardiovascular con cero impacto articular.",
   workoutDoc: `Calentamiento
 - 10m 55% FTP
 
-Main Z2 Mitocondrial (Cadencia 90 rpm)
+Bloque Principal Z2 Aeróbico (Cadencia fluida 90 rpm)
 - 40m 68% FTP
 
 Enfriamiento

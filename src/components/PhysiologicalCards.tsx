@@ -91,7 +91,7 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
       {/* Barra de Título & Personalización de Métricas (In-Place) */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
-          Métricas Fisiológicas en Vivo
+          Tu Estado de Rendimiento y Recuperación
         </span>
 
         {onToggleMetric && (
@@ -165,17 +165,17 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
 
       {/* Grid Modular Dinámico Adaptado a los Indicadores Seleccionados */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
-        {/* 1. FITNESS / CTL */}
+        {/* 1. FORMA FÍSICA / CTL */}
         {activeMetrics.includes("ctl") && (
           <div
-            title="Base aeróbica acumulada de las últimas 6 semanas (Fitness / CTL)"
+            title="Nivel de forma aeróbica acumulado en las últimas 6 semanas (CTL)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-blue-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">📈</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Fitness
+                  Forma Física
                 </span>
               </div>
               <span className="text-[10px] font-bold text-blue-600 font-mono">
@@ -186,22 +186,22 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <span className="text-lg font-black font-mono text-slate-900">
                 {Number(status.ctl).toFixed(1)}
               </span>
-              <span className="text-[10px] text-slate-400 font-sans">crónico</span>
+              <span className="text-[10px] text-slate-400 font-sans">nivel</span>
             </div>
           </div>
         )}
 
-        {/* 2. FATIGUE / ATL */}
+        {/* 2. FATIGA / ATL */}
         {activeMetrics.includes("atl") && (
           <div
-            title="Cansancio acumulado en los últimos 7 días (Fatigue / ATL)"
+            title="Cansancio muscular y cardiovascular acumulado en los últimos 7 días (ATL)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-amber-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm text-amber-500">⚡</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Fatigue
+                  Fatiga
                 </span>
               </div>
               <span className="text-[10px] font-bold text-amber-600 font-mono">
@@ -212,22 +212,22 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <span className="text-lg font-black font-mono text-amber-600">
                 {Number(status.atl).toFixed(1)}
               </span>
-              <span className="text-[10px] text-slate-400 font-sans">agudo</span>
+              <span className="text-[10px] text-slate-400 font-sans">reciente</span>
             </div>
           </div>
         )}
 
-        {/* 3. FORM / TSB */}
+        {/* 3. FRESCURA / TSB */}
         {activeMetrics.includes("tsb") && (
           <div
-            title="Balance de recuperación y disponibilidad para calidad (Form / TSB)"
+            title="Disponibilidad física y energía para rendir hoy (TSB)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-emerald-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">🔋</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Form
+                  Frescura
                 </span>
               </div>
               <span className="text-[10px] font-bold text-emerald-600 font-mono">
@@ -243,17 +243,17 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
           </div>
         )}
 
-        {/* 4. RAMP RATE */}
+        {/* 4. PROGRESIÓN */}
         {activeMetrics.includes("rampRate") && (
           <div
-            title="Tasa semanal de progresión de carga o descarga (Ramp Rate)"
+            title="Incremento semanal de carga de forma segura y sin riesgo de lesión"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-teal-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">📐</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Ramp Rate
+                  Progresión
                 </span>
               </div>
               <span className="text-[10px] font-bold text-teal-600 font-mono">
@@ -264,22 +264,22 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <span className="text-lg font-black font-mono text-slate-800">
                 {rampDisplay}
               </span>
-              <span className="text-[10px] text-slate-400 font-sans">tasa</span>
+              <span className="text-[10px] text-slate-400 font-sans">ritmo</span>
             </div>
           </div>
         )}
 
-        {/* 5. STRYD CP */}
+        {/* 5. POTENCIA RUN */}
         {activeMetrics.includes("strydCp") && (
           <div
-            title="Potencia crítica umbral sostenible en carrera (Stryd CP)"
+            title="Tus vatios umbral para correr a ritmo exigente y sostenible (Stryd CP)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-amber-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">👟</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Stryd CP
+                  Potencia Run
                 </span>
               </div>
               <span className="text-[10px] font-bold text-amber-600 font-mono">
@@ -290,22 +290,22 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <span className="text-lg font-black font-mono text-amber-600">
                 {runFtp ? `${runFtp} W` : "—"}
               </span>
-              <span className="text-[10px] text-slate-400 font-sans">potencia</span>
+              <span className="text-[10px] text-slate-400 font-sans">umbral</span>
             </div>
           </div>
         )}
 
-        {/* 6. RIDE FTP */}
+        {/* 6. POTENCIA BICI */}
         {activeMetrics.includes("bikeFtp") && (
           <div
-            title="Umbral funcional de potencia en bicicleta (Ride FTP)"
+            title="Tus vatios umbral pedaleando durante 1 hora (FTP Ciclismo)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-cyan-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">🚴</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  Ride FTP
+                  Potencia Bici
                 </span>
               </div>
               <span className="text-[10px] font-bold text-cyan-600 font-mono">
@@ -316,26 +316,26 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <span className="text-lg font-black font-mono text-cyan-600">
                 {bikeFtp ? `${bikeFtp} W` : "—"}
               </span>
-              <span className="text-[10px] text-slate-400 font-sans">potencia</span>
+              <span className="text-[10px] text-slate-400 font-sans">FTP</span>
             </div>
           </div>
         )}
 
-        {/* 7. HRV */}
+        {/* 7. RECUPERACIÓN (HRV) */}
         {activeMetrics.includes("hrv") && (
           <div
-            title="Variabilidad de la frecuencia cardíaca (rMSSD / Z-Score)"
+            title="Variabilidad cardíaca: qué tan recuperado está tu sistema nervioso (HRV)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-rose-400 transition flex flex-col justify-between"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <span className="text-sm">💓</span>
                 <span className="text-xs font-black tracking-tight text-slate-800">
-                  HRV
+                  Recuperación
                 </span>
               </div>
               <span className="text-[10px] font-bold text-rose-600 font-mono">
-                rMSSD
+                HRV
               </span>
             </div>
             <div className="mt-1 flex items-baseline justify-between">

@@ -176,7 +176,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-900 dark:text-emerald-300">
                 <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                Telemetría Sincronizada en Vivo (Intervals.icu)
+                Datos Reales del Entrenamiento (Intervals.icu)
               </span>
               <div className="flex items-center gap-2">
                 <button

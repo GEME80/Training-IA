@@ -137,7 +137,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     return (
       <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2">
         <Loader2 className="h-6 w-6 animate-spin text-cyan-500" />
-        <span className="text-xs font-mono text-slate-500">Cargando series de telemetría de Intervals.icu...</span>
+        <span className="text-xs font-mono text-slate-500">Cargando datos del entrenamiento desde Intervals.icu...</span>
       </div>
     );
   }
@@ -147,9 +147,9 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
       <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-center space-y-2">
         <div className="inline-flex items-center gap-1 text-xs font-black text-slate-600 dark:text-slate-400">
           <Activity className="h-4 w-4 text-cyan-500" />
-          <span>Resumen de Telemetría Ejecutada</span>
+          <span>Resumen de la Sesión</span>
         </div>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">{error || "Series detalladas no disponibles para esta sesión."}</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">{error || "Gráfica detallada no disponible para esta sesión."}</p>
       </div>
     );
   }
@@ -160,7 +160,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
           <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-            Cronología de Telemetría ({formatSec(timeArray[timeArray.length - 1] || 0)})
+            Gráfica de la Sesión ({formatSec(timeArray[timeArray.length - 1] || 0)})
           </span>
         </div>
 

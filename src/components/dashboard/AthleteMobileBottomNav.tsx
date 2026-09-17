@@ -19,7 +19,7 @@ export const AthleteMobileBottomNav: React.FC<AthleteMobileBottomNavProps> = ({
     {
       id: "dashboard" as AthleteSidebarNavSection,
       label: "Mi Dashboard",
-      sublabel: "Telemetría",
+      sublabel: "Mi Estado",
       icon: LayoutDashboard,
       badge: isIntervalsConnected ? "live" : undefined,
     },

@@ -65,7 +65,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
             Mi Dashboard
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Métricas fisiológicas en vivo, telemetría PMC y calendario continuo de entrenamientos.
+            Métricas de tu condición física en vivo, estado de forma y calendario de entrenamientos.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
             }`}
           >
             <TrendingUp className="h-3.5 w-3.5" />
-            <span>Telemetría & Curvas PMC</span>
+            <span>Estado de Forma & Evolución</span>
           </button>
         </div>
       </div>

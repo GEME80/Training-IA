@@ -62,13 +62,13 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
               type="button"
               className="pb-2 border-b-2 border-sky-500 text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-wider"
             >
-              APTITUD
+              FORMA Y EVOLUCIÓN
             </button>
             <button
               type="button"
               className="pb-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 uppercase tracking-wider transition"
             >
-              TAB 2
+              VISTA 2
             </button>
             <button
               type="button"
@@ -85,7 +85,7 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
               {formatPmcHeaderDate(activePoint?.date)}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Aptitud:</span>
+              <span className="text-slate-400">Forma:</span>
               <span className="text-sky-500 font-black">{activePoint?.ctl ?? "—"}</span>
               {activePoint?.plannedCtl !== undefined && (
                 <span className="text-amber-500 text-[11px] font-bold">
@@ -98,13 +98,13 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
               <span className="text-purple-500 font-black">{activePoint?.atl ?? "—"}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Forma:</span>
+              <span className="text-slate-400">Frescura:</span>
               <span className={`font-black ${(activePoint?.tsb ?? 0) >= 0 ? "text-emerald-500" : "text-amber-500"}`}>
                 {activePoint?.tsb !== undefined ? (activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb) : "—"}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Rampa:</span>
+              <span className="text-slate-400">Progresión:</span>
               <span className={`font-black ${(activePoint?.rampRate ?? 0) >= 0 ? "text-emerald-500" : "text-sky-500"}`}>
                 {activePoint?.rampRate !== undefined ? (activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate) : "0"}
               </span>

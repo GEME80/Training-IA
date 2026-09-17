@@ -50,10 +50,10 @@ export const PROGRAM_TEMPLATES: ProgramTemplate[] = [
     name: "PULSE Aerobic Engine Build",
     discipline: "Resistencia",
     weeks: 10,
-    description: "Construcción de base mitocondrial Z2, fuerza estructural y aumento de volumen seguro.",
+    description: "Construcción de base aeróbica en Zona 2, fuerza muscular y aumento de volumen seguro.",
     badgeColor: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700",
     icon: Sprout,
-    targetFocus: "Densidad Mitocondrial & Base Z2",
+    targetFocus: "Fondo Aeróbico & Base Zona 2",
   },
   {
     key: "MANTENIMIENTO",

@@ -10,18 +10,18 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
     "Dr. Peter Attia (Zone 2 Cardio & Musculoskeletal Longevity)",
   ],
   description:
-    "Modelo centrado en la salud cardiovascular a largo plazo, biogénesis mitocondrial, estabilidad de sóleo y tendón de Aquiles, y prevención de sobrecargas.",
+    "Modelo centrado en la salud cardiovascular a largo plazo, resistencia aeróbica en Zona 2, estabilidad muscular y prevención de sobrecargas.",
   targetDistanceKm: 12,
   periodizationStyle: "Periodización Continua Polarizada 2:1 Preventiva",
   phaseDistributions: [
     {
       phaseKey: "BASE",
-      phaseName: "Base Mitocondrial Zona 2",
+      phaseName: "Base Aeróbica en Zona 2",
       percentageDuration: 0.50,
-      focusDescription: "80% del tiempo en Zona 2 mitocondrial cómoda (<2 mmol lactato, conversación fluida) + fuerza funcional.",
+      focusDescription: "80% del tiempo en Zona 2 cómoda y conversacional (<2 mmol lactato, conversación fluida) + fuerza funcional.",
       weeklyTssRange: { min: 220, max: 320 },
       longRunGuideline: "Tirada dominical suave de 50 a 65 min en Zona 2 pura (65-72% Stryd CP).",
-      recommendedIntensityZones: ["Z1-Z2 Aeróbico Mitocondrial", "Fuerza Pliométrica Sóleo"],
+      recommendedIntensityZones: ["Z1-Z2 Fondo Aeróbico", "Fuerza y Estabilidad"],
     },
     {
       phaseKey: "BUILD",
@@ -86,7 +86,7 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
         {
           name: "Carrera Continua Aeróbica Z2 Estable con Cadencia Óptima (50m)",
           powerTarget: "72% CP",
-          justification: "Durabilidad mitocondrial pura.",
+          justification: "Resistencia aeróbica continua y durabilidad muscular.",
           workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 35m 72% FTP\n\nCooldown\n- 5m 60% FTP",
         },
       ],

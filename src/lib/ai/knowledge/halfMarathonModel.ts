@@ -22,7 +22,7 @@ export const HALF_MARATHON_21K_MODEL: CuratedTrainingModel = {
       phaseKey: "BASE",
       phaseName: "Base Aeróbica y Eficiencia Mecánica",
       percentageDuration: 0.35,
-      focusDescription: "Desarrollo mitocondrial, cadencia reactiva y acondicionamiento musculoesquelético.",
+      focusDescription: "Desarrollo de resistencia aeróbica, cadencia reactiva y acondicionamiento muscular.",
       weeklyTssRange: { min: 260, max: 360 },
       longRunGuideline: "Progresión gradual de 10 km (55m) a 16 km (85m) en Z2 cómoda (68-74% CP).",
       recommendedIntensityZones: ["Z1 Regenerativo (55-65% CP)", "Z2 Base Aeróbica (68-75% CP)", "Fartlek Cuestas (96% CP)"],
@@ -319,7 +319,7 @@ export const HALF_MARATHON_21K_MODEL: CuratedTrainingModel = {
   crossTrainingRules: {
     recommendedBikeZ2WeeklyMin: 60,
     recommendedStrengthSessionsPerWeek: 1,
-    notes: "Sesión de rodillo Z2 para sumar volumen mitocondrial con cero impacto.",
+    notes: "Sesión de rodillo Z2 para sumar volumen aeróbico con cero impacto articular.",
   },
   banisterRampRateLimits: {
     minCtlPerWeek: 1.5,

@@ -94,7 +94,7 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
         {
           name: "Carrera Continua Progresiva en Zona 2-3 (45m)",
           powerTarget: "72-84% CP",
-          justification: "Construcción de base mitocondrial con acabado ágil.",
+          justification: "Construcción de base aeróbica con final ágil.",
           workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n- 20m 78% FTP\n- 5m 84% FTP\n\nCooldown\n- 5m 60% FTP",
         },
         {

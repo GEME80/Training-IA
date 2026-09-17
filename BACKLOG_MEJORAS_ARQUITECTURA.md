@@ -142,6 +142,18 @@ radar
 
 ---
 
+### 🟢 MEJORA 10: Head Coach Fisiológico Élite, Interacción Guiada (FinOps), Criterio de Continuidad y Erradicación de Emojis [✅ COMPLETADA AL 100% EN v3.52]
+* **Estado:** ✅ **COMPLETADA EN v3.52 (2026-09-17)**.
+* **Impacto:** 
+  - **Saludo Ejecutivo & Métricas de Adherencia en Tiempo Real:** Suprimida la pregunta abierta redundante. Muestra CTL, ATL, TSB, HRV y el badge dinámico de progreso semanal (`Progreso Semanal: X% — ¡Objetivo semanal completado al 100%! Carga asimilada con éxito`).
+  - **Consola Táctica Guiada en 2 Niveles (FinOps):** Eliminado el input de texto libre abierto (`<input>`) en `AthleteHeadCoachView.tsx`, blindando el consumo de tokens y previniendo alucinaciones. Implementado el selector de consultas estructuradas en `HeadCoachQuickActions.tsx` (Nivel Semanal / Microciclo vs. Nivel Diario / Sesión).
+  - **Criterio de Oro de Continuidad:** Inyectada regla mandatoria en `defaultPrompts.ts`, `prompts.ts` y `chatInference.ts`: ante cumplimiento $\ge 80\%$, TSB funcional y RPE normal, el veredicto es obligatoriamente `CONTINUIDAD DEL PLAN` (`actionType: "REVIEW_PHYSIOLOGY"`), preservando intactas las sesiones programadas (`action: "MANTENER"`).
+  - **Auditoría Dual de Carga Externa vs. Interna:** Cruce de vatios/TSS con RPE (1-10), escala de sensaciones (Feel 1-5) y dolor muscular/sueño del Wellness diario.
+  - **Iconografía Deportiva Vectorial:** Erradicados emojis infantiles (`📍`, `⚖️`, `🎯`, `🧬`, `👈`, `👉`, `⚡`, `🔋`, `📈`, `✈️`, `⏱️`, `🚲`), reemplazados por componentes SVG de `lucide-react` y micro-tarjetas atléticas en `HeadCoachMessageItem.tsx` y `HeadCoachMicrocycleCard.tsx`.
+  - **Presupuestos de Líneas:** Todos los archivos modificados $\le 348\text{ LOC}$ (< 350 LOC estricto - Regla 3). Compilación `npm run build` con 20/20 rutas y 0 errores.
+
+---
+
 ## 📋 3. Matriz de Ejecución y Restricciones Inviolables (LOC Budgets & Zero-Rework)
 
 

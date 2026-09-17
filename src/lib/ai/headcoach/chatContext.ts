@@ -5,7 +5,7 @@ import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDa
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
-import { buildCondensedExecutedMap } from "@/lib/ai/contextCondenser";
+import { buildCondensedExecutedMap, formatCompactActivitySummary, formatActivitiesTssBreakdown, formatRecentWellnessSummary } from "@/lib/ai/contextCondenser";
 import { HeadCoachChatRequest } from "./types";
 
 export interface ResolvedChatContext {
@@ -236,7 +236,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
 
     if (execData && execData.activities.length > 0) {
       const actSummaries = execData.activities
-        .map((a) => `"${a.name || a.type}" (${a.movingTimeMin || 0}m, ${a.tss || 0} TSS${a.watts ? `, ${a.watts}W` : ""}${a.heartrate ? `, ${a.heartrate} bpm` : ""}${a.distanceKm ? `, ${a.distanceKm} km` : ""})`)
+        .map((a) => formatCompactActivitySummary(a))
         .join("; ");
       const complianceStatus = isRestPlanned
         ? "⚠️ ACTIVIDAD EN DÍA DE DESCANSO"
@@ -258,9 +258,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   });
 
   const dailyActivitiesReport = auditLines.join("\n");
-  const activitiesTssBreakdown = Object.entries(effectiveExecutedMap)
-    .flatMap(([dKey, val]) => val.activities.map((a: any) => `  - [${dKey}] "${a.name || a.type}" (${a.type}): ${a.tss || 0} TSS en ${a.movingTimeMin || 0}m${a.watts ? ` @ ${a.watts}W` : ""}${a.heartrate ? ` (FC ${a.heartrate} bpm)` : ""}`))
-    .join("\n") || "  (No hay actividades registradas en el periodo)";
+  const activitiesTssBreakdown = formatActivitiesTssBreakdown(effectiveExecutedMap);
+  const recentWellnessSummary = formatRecentWellnessSummary(wellness);
 
   const normalizedProfile = (coachProfile || "balanced").toLowerCase();
   const coachStyleDescription =
@@ -303,6 +302,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     formDiagnostic,
     coachProfile,
     customPromptDirective: customPrompt,
+    recentWellnessSummary,
   };
 
   return {

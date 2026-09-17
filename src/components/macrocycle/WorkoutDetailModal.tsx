@@ -49,6 +49,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const [hasCopiedSyntax, setHasCopiedSyntax] = useState<boolean>(false);
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
+  const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
 
   if (!workout) return null;
 
@@ -194,7 +195,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             </div>
 
             <div className="space-y-3">
-              {displayActivities.map((act, aIdx) => {
+              {displayActivities.map((rawAct, aIdx) => {
+                const act = discoveredWatts[rawAct.id] && !rawAct.watts
+                  ? { ...rawAct, watts: discoveredWatts[rawAct.id] }
+                  : rawAct;
                 const metricItems = buildTelemetryMetricItems(act, workout.discipline);
                 return (
                   <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
@@ -258,6 +262,15 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                         apiKey={effApiKey}
                         email={effEmail}
                         uid={effUid}
+                        summaryStats={{
+                          heartrate: act.heartrate, maxHeartrate: act.maxHeartrate,
+                          watts: act.watts, weightedWatts: act.weightedWatts,
+                          distanceKm: act.distanceKm, movingTimeMin: act.movingTimeMin,
+                          paceStr: act.paceStr, elevationGainM: act.elevationGainM,
+                        }}
+                        onMetricsDiscovered={(m) => {
+                          if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
+                        }}
                       />
                     )}
                   </div>

@@ -3494,3 +3494,28 @@ flowchart TD
   - `Prueba 1 (Inferencia Real Gemini API):` `test_all_four_points.mjs` $\rightarrow$ **Veredicto en 123 palabras (en rango 120-180), 3 bloques exactos, microciclo completo parseado sin truncamiento (Código 0)**.
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas estáticas/dinámicas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 346\text{ LOC}$ ($< 350$ LOC estricto).
+
+---
+
+### Versión 3.51 - Integración de RPE (1-10), Sensación Subjetiva (Feel) y Wellness en el Análisis del Head Coach (2026-09-17)
+- **Fecha y Hora:** 17 de Septiembre de 2026 - 08:50 COT.
+- **Directiva:** "¿también toma los datos de cada trabajo de la semana y la percepción del atleta el RPE? -> Sí".
+- **Problema Detectado:**
+  - El condensador de telemetría extraía datos cuantitativos (TSS, tiempo, vatios, FC, km), pero el RPE (1-10) y la escala de sensaciones (Feel 1-5 / Excelente a Agotado) no se inyectaban en el prompt del sistema de Gemini.
+  - El Head Coach evaluaba la carga externa (vatios y TSS), pero no podía contrastarla con la carga interna percibida por el atleta (fatiga neuromuscular, sensación de pesadez o frescura).
+- **Solución y Mejoras Implementadas:**
+  1. **Captura y Normalización de Carga Interna (`src/lib/ai/contextCondenser.ts` - 174 LOC):**
+     - Ampliación de `CompactActivity` con campos opcionales `rpe?: number` y `feel?: string`.
+     - Mapeo inteligente de sensaciones (`FEEL_LABELS`): 1: Excelente, 2: Bueno, 3: Normal, 4: Exigente, 5: Agotado.
+     - Extracción tanto desde `pastActivities` (Intervals API `icu_rpe ?? perceived_exertion ?? rpe`) como desde `dailyExecutedActivities`.
+     - Formateador `formatActivitiesTssBreakdown` y `formatCompactActivitySummary` enriquecidos con `RPE X/10` y `Sensación`.
+     - Función `formatRecentWellnessSummary` para sintetizar dolor muscular (`soreness`), fatiga percibida, estrés, calidad de sueño y notas del atleta.
+  2. **Inyección en el Contexto del Chat (`src/lib/ai/headcoach/chatContext.ts` - 334 LOC):**
+     - Inyección de las sesiones con RPE y sensación en el reporte de auditoría diaria (`auditLines`) y en el desglose analítico.
+     - Incorporación de `recentWellnessSummary` en `promptContext`.
+  3. **Regla de Auditoría Fisiológica en Prompt del Head Coach (`src/lib/ai/prompts.ts` - 313 LOC):**
+     - Añadida regla 9 de ejecución: *«AUDITORÍA DE CARGA INTERNA (RPE Y SENSACIÓN): Cruza la carga externa (vatios/TSS) con la carga interna percibida (RPE 1-10 y Feel). Si una sesión aeróbica Z1/Z2 tuvo un RPE elevado (≥ 7/10) o sensación "Exigente/Agotado", prioriza recuperación biológica. Si los vatios se cumplieron con RPE bajo (≤ 5/10) y sensación "Bueno/Excelente", confirma asimilación positiva»*.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas en 2.7s sin errores (Código 0)**.
+  - `Prueba 2 (Inferencia Real Gemini API):` `test_all_four_points.mjs` $\rightarrow$ **Auditoría con RPE y Feel ejecutada, respuesta concisa de 135 palabras en 3 bloques (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 342\text{ LOC}$ ($< 350$ LOC estricto).

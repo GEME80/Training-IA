@@ -94,12 +94,25 @@ export class TelemetryService {
             const dateKey = act.start_date_local.split("T")[0];
             const tss = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
             const movingTimeMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
-            const watts = act.icu_weighted_avg_watts ?? act.icu_average_watts ?? act.weighted_average_watts ?? act.average_watts ?? act.device_watts;
-            const heartrate = act.average_heartrate;
+            const rawWatts = [
+              act.icu_weighted_avg_watts,
+              act.icu_average_watts,
+              act.weighted_average_watts,
+              act.average_watts,
+              act.icu_power,
+              act.power,
+            ].find((w) => typeof w === "number" && !isNaN(w) && w > 0);
+            const watts = typeof rawWatts === "number" ? Math.round(rawWatts) : undefined;
+            const heartrate = typeof act.average_heartrate === "number" && act.average_heartrate > 35
+              ? Math.round(act.average_heartrate)
+              : undefined;
             const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
 
             const isRide = /ride|ciclismo|bike|virtualride|indoor/i.test(act.type || "");
-            const weightedWatts = act.icu_weighted_avg_watts ?? act.weighted_average_watts;
+            const rawWeighted = [act.icu_weighted_avg_watts, act.weighted_average_watts].find(
+              (w) => typeof w === "number" && !isNaN(w) && w > 0
+            );
+            const weightedWatts = typeof rawWeighted === "number" ? Math.round(rawWeighted) : undefined;
             const paceStr = act.average_speed && act.average_speed > 0.5
               ? (isRide
                   ? `${(act.average_speed * 3.6).toFixed(1)} km/h`
@@ -110,13 +123,32 @@ export class TelemetryService {
               ? `${Math.floor(1000 / gapSpeed / 60)}:${String(Math.round((1000 / gapSpeed) % 60)).padStart(2, "0")}/km`
               : undefined;
 
-            const rawEf = act.icu_efficiency_factor ?? (watts && heartrate ? watts / heartrate : undefined);
+            // Factor de Eficiencia (EF):
+            // En ciclismo: W/bpm (~1.2 - 2.5). En carrera a pie:
+            // 1. Si hay vatios de carrera (Garmin/Stryd) y FC: watts / HR (ej: 253 / 133 = 1.90 W/bpm)
+            // 2. Si Intervals entrega icu_efficiency_factor < 0.2 (está en m/s / bpm): multiplicar por 60 para obtener m/latido
+            // 3. Si no, calcular metros avanzados por minuto divididos por FC cardíaca (m/latido, ej: 1.29)
+            let rawEf: number | undefined = undefined;
+            if (watts && heartrate && heartrate > 0) {
+              rawEf = watts / heartrate;
+            } else if (typeof act.icu_efficiency_factor === "number" && !isNaN(act.icu_efficiency_factor) && act.icu_efficiency_factor > 0) {
+              rawEf = act.icu_efficiency_factor < 0.2 ? act.icu_efficiency_factor * 60 : act.icu_efficiency_factor;
+            } else if (act.distance && movingTimeMin > 0 && heartrate && heartrate > 0) {
+              const metersPerMin = act.distance / movingTimeMin;
+              rawEf = metersPerMin / heartrate;
+            }
             const efficiencyFactor = typeof rawEf === "number" && !isNaN(rawEf) ? Number(rawEf.toFixed(2)) : undefined;
 
             const rawDecoupling = act.decoupling ?? act.icu_cardiac_decoupling ?? act.icu_decoupling;
             const cardiacDecoupling = typeof rawDecoupling === "number" && !isNaN(rawDecoupling)
               ? Number(rawDecoupling.toFixed(1))
               : undefined;
+
+            let cadence = typeof act.average_cadence === "number" ? Math.round(act.average_cadence) : undefined;
+            // En carrera a pie, si el reloj reportó ciclos de una sola pierna (<120), duplicar para reflejar pasos/min (spm)
+            if (!isRide && cadence && cadence > 0 && cadence < 120) {
+              cadence = cadence * 2;
+            }
 
             const feelLabels: Record<number, string> = { 1: "Excelente", 2: "Bueno", 3: "Normal", 4: "Exigente", 5: "Agotado" };
             const resolvedFeel = typeof act.feel === "string"
@@ -134,17 +166,17 @@ export class TelemetryService {
               tss,
               movingTimeMin,
               elapsedTimeMin: act.elapsed_time ? Math.round(act.elapsed_time / 60) : undefined,
-              watts: typeof watts === "number" ? Math.round(watts) : undefined,
-              weightedWatts: typeof weightedWatts === "number" ? Math.round(weightedWatts) : undefined,
-              heartrate: typeof heartrate === "number" ? Math.round(heartrate) : undefined,
-              maxHeartrate: typeof act.max_heartrate === "number" ? Math.round(act.max_heartrate) : undefined,
+              watts,
+              weightedWatts,
+              heartrate,
+              maxHeartrate: typeof act.max_heartrate === "number" && act.max_heartrate > 35 ? Math.round(act.max_heartrate) : undefined,
               distanceKm,
               paceStr,
               gapPaceStr,
               intensityPercent: act.icu_intensity ? Math.round(act.icu_intensity * (act.icu_intensity <= 1 ? 100 : 1)) : undefined,
               efficiencyFactor,
               cardiacDecoupling,
-              cadence: typeof act.average_cadence === "number" ? Math.round(act.average_cadence) : undefined,
+              cadence,
               strideLengthM: typeof act.average_stride_length === "number" ? Number(act.average_stride_length.toFixed(2)) : undefined,
               elevationGainM: typeof act.total_elevation_gain === "number" ? Math.round(act.total_elevation_gain) : undefined,
               calories: typeof act.calories === "number" ? Math.round(act.calories) : undefined,

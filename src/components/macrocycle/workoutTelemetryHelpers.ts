@@ -46,19 +46,23 @@ export function buildTelemetryMetricItems(
     }
   }
 
-  // 2. Eficiencia y Desacople redondeados
-  const efFormatted =
-    typeof act.efficiencyFactor === "number" && !isNaN(act.efficiencyFactor)
-      ? `EF ${act.efficiencyFactor.toFixed(2)}`
-      : undefined;
+  // 2. Eficiencia y Desacople redondeados con unidades reales
+  let efFormatted: string | undefined = undefined;
+  if (typeof act.efficiencyFactor === "number" && !isNaN(act.efficiencyFactor) && act.efficiencyFactor > 0) {
+    const efVal = act.efficiencyFactor < 0.2 ? act.efficiencyFactor * 60 : act.efficiencyFactor;
+    const efUnit = isRide || (act.watts && act.watts > 0) ? "W/bpm" : "m/lat";
+    efFormatted = `EF ${efVal.toFixed(2)} ${efUnit}`;
+  }
   const decFormatted =
     typeof act.cardiacDecoupling === "number" && !isNaN(act.cardiacDecoupling)
       ? `D ${act.cardiacDecoupling.toFixed(1)}%`
       : undefined;
 
-  // 3. Cadencia
+  // 3. Cadencia (si es carrera y viene < 120, son ciclos de 1 pierna -> multiplicar por 2 a pasos/min)
+  const rawCad = act.cadence;
+  const displayCad = !isRide && rawCad && rawCad > 0 && rawCad < 120 ? rawCad * 2 : rawCad;
   const cadUnit = isRide ? "rpm" : "spm";
-  const cadValue = act.cadence ? `${act.cadence} ${cadUnit}` : "—";
+  const cadValue = displayCad ? `${displayCad} ${cadUnit}` : "—";
   const cadSub = !isRide && act.strideLengthM ? `Zancada ${act.strideLengthM.toFixed(2)}m` : undefined;
 
   // 4. Desnivel
@@ -108,8 +112,9 @@ export function buildTelemetryMetricItems(
       subtext: decFormatted,
       colorClass: "text-cyan-600 dark:text-cyan-400",
       badgeType: "ef",
-      athleteExplanation:
-        "EF = Vatios producidos por cada latido (a mayor número, mayor economía aeróbica). D% (Desacople Cardíaco) mide la fatiga o deriva de pulso en la segunda mitad (ideal < 5%).",
+      athleteExplanation: isRide || (act.watts && act.watts > 0)
+        ? "EF = Vatios producidos por cada latido cardíaco (W/bpm). D% (Desacople) mide la deriva o fatiga cardiovascular en la segunda mitad (ideal < 5%)."
+        : "EF = Metros avanzados por cada latido del corazón (m/latido). D% (Desacople) mide la deriva cardíaca en la segunda mitad de la sesión (ideal < 5%).",
     },
     {
       id: "cadence",

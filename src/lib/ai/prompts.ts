@@ -77,6 +77,7 @@ export interface HeadCoachPromptContext {
   formDiagnostic: string;
   coachProfile: string;
   customPromptDirective?: string;
+  recentWellnessSummary?: string;
 }
 
 /**
@@ -111,6 +112,7 @@ export function buildHeadCoachSystemPrompt(
     formDiagnostic,
     coachProfile,
     customPromptDirective,
+    recentWellnessSummary,
   } = ctx;
 
   const directiveBlock = customPromptDirective?.trim()
@@ -124,6 +126,7 @@ export function buildHeadCoachSystemPrompt(
   const wkgRunStr = profile.run_ftp && profile.weight ? `${(profile.run_ftp / profile.weight).toFixed(2)} W/kg` : "—";
   const wkgBikeStr = profile.bike_ftp && profile.weight ? `${(profile.bike_ftp / profile.weight).toFixed(2)} W/kg` : "—";
   const masterStr = profile.age && profile.age >= 40 ? "Categoría Máster • Mayor demanda de recuperación neuromuscular y articular" : "Categoría Senior";
+  const wellnessBlock = recentWellnessSummary ? `- Estado Subjetivo del Atleta (Wellness): ${recentWellnessSummary}\n` : "";
 
   return `${basePrompt}
 
@@ -148,7 +151,7 @@ export function buildHeadCoachSystemPrompt(
 - Fatiga Aguda (ATL): ${physioStatus.atl.toFixed(1)}
 - Variabilidad Cardíaca (HRV): ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"} (Rango para asimilación biológica)
 - Ramp Rate Semanal: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/semana
-- Perfil del Entrenador: ${coachProfile.toUpperCase()}
+${wellnessBlock}- Perfil del Entrenador: ${coachProfile.toUpperCase()}
 ${activitiesBlock}
 === DISPONIBILIDAD SEMANAL PROGRAMADA (INNEGOCIABLE) ===
 ${availabilityFormatted}
@@ -168,7 +171,8 @@ ${directiveBlock}
 6. RESPETO DE MATRIZ SEMANAL: Días restantes deben preservar la disciplina fijada en la Matriz (Ciclismo a % Bike FTP, Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
 7. PROTOCOLO DE VIAJES: Si el atleta menciona viaje sin fechas/medios, tranquilízalo, PREGUNTA días exactos y disponibilidad de cinta/zapatillas, y da quickReplies interactivas sin inventar días. Si ya dio fechas, adapta sólo esos días.
 8. SESIONES ESTRUCTURADAS: Todas las sesiones de running deben incluir duración en minutos, vatios a Stryd CP y TSS. En "suggestedPlan", el campo "workoutStructure" es OBLIGATORIO con pasos para el reloj.
-9. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies.`;
+9. AUDITORÍA DE CARGA INTERNA (RPE Y SENSACIÓN): Cruza la carga externa (vatios/TSS) con la carga interna percibida (RPE 1-10 y Feel). Si una sesión aeróbica Z1/Z2 tuvo un RPE elevado (≥ 7/10) o sensación "Exigente/Agotado", prioriza recuperación biológica (reducir volumen o vatios al día siguiente). Si los vatios se cumplieron con RPE bajo (≤ 5/10) y sensación "Bueno/Excelente", confirma asimilación positiva.
+10. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

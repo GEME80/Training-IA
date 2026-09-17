@@ -78,7 +78,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   }, [activityId, athleteId, apiKey, uid, email]);
 
   const timeArray = streams?.time || [];
-  const hrArray = streams?.heartrate || [];
+  const hrArray = streams?.raw_heartrate || streams?.heartrate || [];
   const wattsArray = streams?.watts || [];
   const altArray = streams?.altitude || [];
 

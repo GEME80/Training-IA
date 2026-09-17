@@ -41,6 +41,8 @@ export async function GET(
     const rawStreams = await client.getActivityStreams(activityId, [
       "time",
       "heartrate",
+      "raw_heartrate",
+      "fixed_heartrate",
       "watts",
       "velocity_smooth",
       "cadence",
@@ -54,6 +56,20 @@ export async function GET(
           streamsMap[stream.type] = stream.data;
         }
       });
+    }
+
+    // Fusión de FC en Bruto (RAW FC):
+    // Si Intervals.icu aplicó un filtro automático por Max HR (ej: recortando lecturas > 166 bpm a null/0),
+    // restaurar los valores reales desde el stream raw_heartrate o fixed_heartrate.
+    const rawHr = streamsMap.raw_heartrate || streamsMap.fixed_heartrate;
+    if (Array.isArray(rawHr) && rawHr.length > 0) {
+      const processedHr = streamsMap.heartrate || [];
+      const mergedHr = (processedHr.length > 0 ? processedHr : rawHr).map((val, idx) => {
+        if (typeof val === "number" && !isNaN(val) && val >= 40) return val;
+        const r = rawHr[idx];
+        return typeof r === "number" && !isNaN(r) && r >= 40 ? r : val;
+      });
+      streamsMap.heartrate = mergedHr;
     }
 
     return NextResponse.json({

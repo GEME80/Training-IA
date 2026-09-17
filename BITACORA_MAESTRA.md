@@ -3467,6 +3467,30 @@ flowchart TD
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas limpiamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 334\text{ LOC}$ ($< 350$ LOC estricto).
 
+---
 
-
-
+### Versión 3.50 - Head Coach Smart Brevity (120-180 palabras), Veredicto Estructurado en 3 Bloques y Acordeón "Depth on Demand" (2026-09-17)
+- **Fecha y Hora:** 17 de Septiembre de 2026 - 07:45 COT.
+- **Directiva:** "vamos a mejorar nuestro Head Coach ya que sus respuestas son largas y deben ser cortas pero con un explicacion clara de como va el proceso. Crea un plan de mejora y usa nuestros agentes para mejorar el head coach. revisa aplicaciones que usen una herramienta de ia y tomemos las mejores practicas."
+- **Benchmarking de Aplicaciones Deportivas Élite:**
+  - Se analizaron Whoop Coach, Runna AI, Strava Athlete Intelligence y Humango.
+  - Conclusión: los muros de texto causan fatiga cognitiva en atletas. La regla de oro es *Smart Brevity & Depth on Demand*: respuestas breves, ejecutables de inmediato en la pantalla de inicio del reloj, con acceso colapsable/desplegable a los razonamientos fisiológicos profundos.
+- **Solución y Mejoras Implementadas:**
+  1. **Regla de Oro de Concisión y Formato 3-Bloques en Prompts (`src/lib/ai/defaultPrompts.ts` - 116 LOC, `src/lib/ai/prompts.ts` - 310 LOC):**
+     - Target estricto en campo `reply`: 120 a 180 palabras (700-1000 caracteres).
+     - Estructura obligatoria en 3 bloques:
+       1. `[📍 ESTADO DEL PROCESO]`: 1 línea clara con semana/fase, adherencia y rampa de carga.
+       2. `[⚖️ DIAGNÓSTICO / VEREDICTO]`: 1-2 frases concisas con `🟢 CONTINUIDAD` o `⚠️ AJUSTE TÁCTICO` y causa fisiológica real (TSB, ATL, HRV).
+       3. `[🎯 ACCIÓN PRESCRIPTIVA]`: Instrucción directa para hoy con vatios exactos y llamada a la tarjeta interactiva.
+     - Prohibición estricta de listar mecánicamente los 7 días de la semana en el texto conversacional (anti-duplicación con la tarjeta gráfica de microciclo).
+  2. **Acordeón Desplegable "Depth on Demand" (`src/components/dashboard/headcoach/HeadCoachMessageItem.tsx` - 184 LOC, `HeadCoachChatDrawer.tsx`):**
+     - Desacoplamiento de la justificación técnica profunda: el campo `reasoning` ya no abruma el chat principal, sino que se renderiza dentro de un `<details>` colapsable (`🧬 Profundidad Fisiológica & Telemetría`).
+     - Al hacer clic, el atleta puede consultar los pormenores biomecánicos, fatiga residual y adaptaciones mitocondriales sin perder la agilidad de la conversación.
+  3. **Resiliencia en Inferencia y Parseo JSON (`src/lib/ai/headcoach/chatInference.ts` - 346 LOC):**
+     - Extensión de `maxOutputTokens` a 6144 para evitar truncamientos inesperados durante la generación de entrenamientos estructurados (`workoutStructure`).
+     - Extracción robusta de JSON con delimitadores `{` y `}` para resistir texto introductorio o Markdown periférico devuelto por el modelo.
+     - Fallback dinámico resiliente con modelos optimizados (`gemini-3.5-flash`, `gemini-3.6-flash`).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Inferencia Real Gemini API):` `test_all_four_points.mjs` $\rightarrow$ **Veredicto en 123 palabras (en rango 120-180), 3 bloques exactos, microciclo completo parseado sin truncamiento (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas estáticas/dinámicas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 346\text{ LOC}$ ($< 350$ LOC estricto).

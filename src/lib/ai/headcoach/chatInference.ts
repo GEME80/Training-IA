@@ -57,7 +57,14 @@ export async function executeGeminiInference(
     }
   });
 
-  const smartBrevityInstruction = `\n\n[REGLA ESTRICTA DE SALIDA SMART BREVITY]: Tu respuesta en "reply" DEBE tener entre 120 y 180 palabras (700-1000 caracteres) y organizarse exactamente en 3 bloques:\n1. [📍 ESTADO DEL PROCESO]: 1 sola línea (semana, fase, adherencia % y rampa).\n2. [⚖️ DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con 🟢 CONTINUIDAD o ⚠️ AJUSTE TÁCTICO y la causa fisiológica (TSB, HRV, TSS).\n3. [🎯 ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).\nPROHIBIDO listar los 7 días en el texto. Pon las justificaciones fisiológicas extensas en "reasoning" y la semana en "suggestedPlan".`;
+  const smartBrevityInstruction = `\n\n[REGLA ESTRICTA DE SALIDA SMART BREVITY]:
+1. "reply": DEBE tener entre 120 y 180 palabras (700-1000 caracteres) y estructurarse estrictamente en 3 bloques:
+   - [📍 ESTADO DEL PROCESO]: 1 línea (semana, fase, adherencia % y rampa).
+   - [⚖️ DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con 🟢 CONTINUIDAD o ⚠️ AJUSTE TÁCTICO y causa fisiológica (TSB, HRV, TSS).
+   - [🎯 ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).
+   PROHIBIDO listar los 7 días en "reply".
+2. "reasoning": Síntesis fisiológica técnica concisa (máximo 120-150 palabras). Evita textos kilométricos que agoten tokens.
+3. "suggestedPlan": Los 7 días en JSON con workoutStructure paso a paso sintético.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {
@@ -91,7 +98,13 @@ export async function executeGeminiInference(
     } else if (cleaned.startsWith("```")) {
       cleaned = cleaned.replace(/^```\s*/, "").replace(/```\s*$/, "");
     }
-    return cleaned.trim();
+    cleaned = cleaned.trim();
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      return cleaned.substring(firstBrace, lastBrace + 1);
+    }
+    return cleaned;
   };
 
   for (const model of candidateModels) {
@@ -110,7 +123,7 @@ export async function executeGeminiInference(
             generationConfig: {
               responseMimeType: "application/json",
               temperature: safeTemp,
-              maxOutputTokens: 4096,
+              maxOutputTokens: 6144,
             },
           }),
           signal: AbortSignal.timeout(50000),
@@ -311,8 +324,13 @@ export async function executeGeminiInference(
               };
             }
           } catch (pErr) {
+            const candidate = raw.candidates?.[0];
             console.warn(`Error al parsear JSON devuelto por Gemini (${model}):`, pErr);
-            console.warn(`Texto crudo recibido (${model}):`, text.slice(0, 600));
+            console.warn(`FinishReason: ${candidate?.finishReason} | Longitud texto: ${text.length}`);
+            console.warn(`Texto crudo recibido (${model}):`, text.slice(0, 1000));
+            if (text.length > 1000) {
+              console.warn(`Cola de texto recibido (${model}):`, text.slice(-500));
+            }
           }
         }
       } else {

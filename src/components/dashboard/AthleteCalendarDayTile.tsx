@@ -43,6 +43,10 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
       const match = allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength|pesas/i.test(`${a.type} ${a.name}`));
       if (match) return match;
     }
+    if (item.discipline === "Natacion") {
+      const match = allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina/i.test(`${a.type} ${a.name}`));
+      if (match) return match;
+    }
 
     // Adaptación cruzada para resistencia: Correr en vez de pedalear o viceversa
     if (item.discipline === "Carrera" || item.discipline === "Ciclismo") {
@@ -52,7 +56,6 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
       if (aerobic) return aerobic;
     }
 
-    if (allActs.length === 1) return allActs[0];
     return null;
   };
 
@@ -63,10 +66,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
   const isMissed = !isRest && !matchedActivity && isPastDay;
 
   const renderPlannedIcon = () =>
-    item.discipline === "Carrera" ? <Footprints className="h-3.5 w-3.5" /> :
-    item.discipline === "Ciclismo" ? <Bike className="h-3.5 w-3.5" /> :
-    item.discipline === "Natacion" ? <Waves className="h-3.5 w-3.5" /> :
-    <Dumbbell className="h-3.5 w-3.5" />;
+    item.discipline === "Carrera" ? <Footprints className="h-3.5 w-3.5" /> : item.discipline === "Ciclismo" ? <Bike className="h-3.5 w-3.5" /> : item.discipline === "Natacion" ? <Waves className="h-3.5 w-3.5" /> : <Dumbbell className="h-3.5 w-3.5" />;
 
   const renderActivityIcon = (type: string, name?: string) => {
     const s = `${type} ${name || ""}`.toLowerCase();

@@ -3649,3 +3649,44 @@ flowchart TD
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente en 2.9s (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados cumplen estrictamente la Regla 3 ($< 350$ LOC).
+
+---
+
+### Versión 3.57 - Sincronización Tri-Semanal con Re-calibración, Sync de Peso a Intervals, Persistencia Robusta de Matriz y Restauración de Max CTL (2026-09-18)
+- **Fecha y Hora:** 18 de Septiembre de 2026 - 17:15 COT.
+- **Directivas del Atleta:**
+  1. "Estrategia de Sincronización a Intervals.icu que funcione con sincronizacion cada 3 semanas. Cada 3 semanas se debe re-calibrar según los indicadores del atleta."
+  2. "Registro de Peso en Intervals.icu se debe actualizar desde Pulse a Intervals."
+  3. "Está mal la matriz del deportista y creo que el error es que se actualiza la matriz y no hay un botón de guardar o actualizar para que quede en la base de datos."
+  4. "En mi dashboard el objetivo es que se vea un calendario con todos los trabajos visualizando la semana actual de primero y las pasadas hacia abajo y no colocar historial o semana foco solo. Que esté acorde a las demás plataformas de entrenamiento con los calendarios."
+  5. "Adiciona en el diseño del plan si el atleta tiene su max CTL el plan debería llevarlo a esa forma del pasado y no quedar por debajo. Confirmame que va a quedar en el diseño del plan no un valor por defecto que está mal si no el valor máximo del atleta y con ese se configura el plan."
+- **Problemas Detectados:**
+  1. **Truncamiento de CTL Cumbre:** En `src/lib/physiology/macrocycleGenerator.ts`, `calculateTargetPeakCtl` imponía un tope arbitrario `eventOptimalCtl + 10 = 70 CTL` para distancias cortas/medias ($\le 55\text{ km}$), ignorando la capacidad máxima histórica demostrada del atleta (ej. Germán Morales con 86.9 CTL).
+  2. **Persistencia y Actualización de Peso:** Al modificar el peso en la interfaz de Pulse, Intervals.icu sólo recibía el cambio en `/athlete/{id}`, pero su gráfica PMC/Fitness y registros diarios requerían actualizar además `/wellness/{date}` para que el peso tuviera efecto inmediato.
+  3. **Desconexión de Matriz de Disponibilidad:** La pestaña `ProfileAvailabilityTab` y la vista `AthletePhysiologyView` modificaban el estado reactivo en memoria pero carecían de un botón explícito de persistencia con feedback visual claro y de un restablecedor a la matriz canónica, causando que el atleta no supiera si los cambios se habían grabado o se perdían al recargar.
+  4. **Sincronización Dispersa de Entrenamientos:** No existía una acción directa para enviar a Intervals.icu el bloque adaptativo completo de 3 semanas (2 de carga + 1 de asimilación) alineado con la re-calibración fisiológica de biomarcadores.
+  5. **UX del Calendario Fragmentada:** El calendario continuo forzaba modos como "semana foco" o requería toggles aislados de "Historial", en lugar de seguir la convención estándar de plataformas de entrenamiento de desplegar la semana actual en la cabecera y todas las semanas ejecutadas hacia abajo en orden cronológico descendente.
+- **Solución y Mejoras Implementadas:**
+  1. **Restauración del Techo Fisiológico Real (`src/lib/physiology/macrocycleGenerator.ts` - 345 LOC):**
+     - Se eliminó el techo de 70 CTL cuando `histPeak > currentCtl`. El sistema toma `histPeak` real (86.9 CTL) como target cumbre, programando una progresión segura (+2.1 a +3.2 CTL/sem) con semanas cumbre de 600-675 TSS.
+  2. **Sincronización Bidireccional de Peso en Intervals (`src/lib/intervals/client.ts` - 348 LOC, `src/app/api/sync-settings/route.ts` - 65 LOC):**
+     - Se implementó `updateWellness(date, data)` en el cliente de Intervals.icu.
+     - Al guardar el perfil del atleta, la API actualiza tanto `/athlete/{id}` con `weight: number` como el endpoint diario `/wellness/{today}` con `{ weight: number }`.
+     - Validado en vivo contra Intervals.icu con respuesta Status 200 (82.0 kg registrados).
+  3. **Persistencia Explícita de la Matriz de Disponibilidad (`src/components/profile/ProfileAvailabilityTab.tsx` - 242 LOC, `src/components/dashboard/AthletePhysiologyView.tsx` - 343 LOC, `src/components/dashboard/AthleteDashboardViewRouter.tsx` - 220 LOC):**
+     - Barra de acciones con botón *"Guardar Matriz de Disponibilidad"* (estado `isSavingAvailability`, checkmark de éxito `savedAvailabilitySuccess`).
+     - Botón *"Restablecer Matriz Canónica"* para volver al estándar sin colisiones (Lun: Descanso, Mar: Carrera, Mié: Ciclismo, Jue: Fuerza, Vie: Carrera+Fuerza, Sáb: Ciclismo, Dom: Carrera).
+     - Guardado persistente tanto en `localStorage` / perfil de usuario como en `useSeasonPlans` (`season.setWeeklyAvailability`).
+  4. **Estrategia Tri-Semanal con Re-calibración (`src/hooks/useIntervalsSync.ts` - 252 LOC, `src/components/dashboard/AthleteCalendarWeekRow.tsx` - 348 LOC):**
+     - Nueva función `handleSyncTriweeklyBlockToIntervals`: empaqueta 3 semanas consecutivas (bloque 2:1 intacto) y activa la notificación de re-calibración de biomarcadores (HRV, RHR, TSB, Sleep, Ramp Rate).
+     - Botón en cada cabecera de semana: *"Sincronizar 3 Semanas (2:1)"*.
+  5. **Rediseño del Calendario: Semana Actual de Primero y Pasadas Hacia Abajo (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 336 LOC):**
+     - Erradicación del modo aislado `desktopMode = "focus"` y del botón aislado de historial.
+     - Implementación de `calendarViewMode` (`"past"` por defecto, `"future"`, `"timeline"`).
+     - En el modo principal `"past"`, la **Semana Actual se sitúa de primera**, y hacia abajo se visualizan todas las semanas pasadas ejecutadas en orden cronológico descendente.
+     - Selector limpio de 3 pestañas estilo TrainingPeaks / Intervals.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente en 3.0s (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados estrictamente $\le 348$ LOC (cumplimiento total de Regla 3).
+

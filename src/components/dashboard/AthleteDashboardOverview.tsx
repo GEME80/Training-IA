@@ -27,6 +27,7 @@ interface AthleteDashboardOverviewProps {
   calendarEvents?: CalendarEvent[];
   onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals: (plan: PlanItem[]) => Promise<void>;
+  onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
   onOpenSeasonStudio: () => void;
   onRefreshTelemetry?: () => Promise<void>;
@@ -49,6 +50,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   calendarEvents,
   onOpenAICoach,
   onSyncWeekToIntervals,
+  onSyncTriweeklyBlock,
   onSelectWorkoutModal,
   onOpenSeasonStudio,
   onRefreshTelemetry,
@@ -161,6 +163,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 calendarEvents={calendarEvents}
                 onOpenAICoach={onOpenAICoach}
                 onSyncWeekToIntervals={onSyncWeekToIntervals}
+                onSyncTriweeklyBlock={onSyncTriweeklyBlock}
                 onSelectWorkoutModal={onSelectWorkoutModal}
               />
             </div>

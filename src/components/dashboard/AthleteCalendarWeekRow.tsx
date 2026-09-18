@@ -11,26 +11,15 @@ import { AthleteCalendarDayColumn } from "./AthleteCalendarDayColumn";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 
 interface AthleteCalendarWeekRowProps {
-  week: MacrocycleWeek;
-  wIdx: number;
-  weeksCount: number;
-  isCurrentWeek: boolean;
-  isSelectedWeek?: boolean;
-  isPastWeek: boolean;
-  calendarWeekNumber: number;
-  blueprint: MacrocycleBlueprint;
-  runFtp: number;
-  bikeFtp: number;
-  effectiveAvailability: WeeklyAvailabilityMap;
-  weeklyExecutedTss: number;
-  dailyExecutedActivities: DailyExecutedMap;
-  calendarEvents?: CalendarEvent[];
-  todayStr: string;
-  gridTemplate: string;
-  currentWeekRef: React.RefObject<HTMLDivElement | null>;
-  onSelectWeek: (idx: number) => void;
-  onOpenAICoach: (weekIdx?: number) => void;
+  week: MacrocycleWeek; wIdx: number; weeksCount: number; isCurrentWeek: boolean;
+  isSelectedWeek?: boolean; isPastWeek: boolean; calendarWeekNumber: number;
+  blueprint: MacrocycleBlueprint; runFtp: number; bikeFtp: number;
+  effectiveAvailability: WeeklyAvailabilityMap; weeklyExecutedTss: number;
+  dailyExecutedActivities: DailyExecutedMap; calendarEvents?: CalendarEvent[];
+  todayStr: string; gridTemplate: string; currentWeekRef: React.RefObject<HTMLDivElement | null>;
+  onSelectWeek: (idx: number) => void; onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
+  onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
 }
 
@@ -80,6 +69,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   onSelectWeek,
   onOpenAICoach,
   onSyncWeekToIntervals,
+  onSyncTriweeklyBlock,
   onSelectWorkoutModal,
 }) => {
   const rawWeekPlan = generateWeekTemplate(
@@ -327,14 +317,27 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               <span>Head Coach & Adaptación IA</span>
             </button>
 
+            {onSyncTriweeklyBlock && !isHistoricalWeek && (
+              <button
+                type="button"
+                onClick={() => onSyncTriweeklyBlock(wIdx)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer"
+                title="Sincroniza un bloque de 3 semanas (2:1) con re-calibración de biomarcadores"
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-emerald-500" />
+                <span>Sincronizar 3 Semanas (2:1)</span>
+              </button>
+            )}
+
             {onSyncWeekToIntervals && (
               <button
                 type="button"
                 onClick={() => onSyncWeekToIntervals(weekPlan)}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer"
+                title="Sincronizar solo esta semana"
               >
-                <RefreshCw className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Sincronizar a Intervals</span>
+                <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
+                <span>Esta Semana</span>
               </button>
             )}
           </div>

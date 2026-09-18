@@ -25,6 +25,7 @@ interface AthleteContinuousCalendarProps {
   calendarEvents?: CalendarEvent[];
   onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
+  onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
 }
 
@@ -54,6 +55,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   calendarEvents = [],
   onOpenAICoach,
   onSyncWeekToIntervals,
+  onSyncTriweeklyBlock,
   onSelectWorkoutModal,
 }) => {
   const currentWeekRef = useRef<HTMLDivElement>(null);
@@ -61,32 +63,39 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const todayStr = getLocalTodayStr();
   const weeks = blueprint.weeks || [];
 
-  // Semanas históricas previas ejecutadas por el atleta
-  const [showHistory, setShowHistory] = useState<boolean>(true);
+  // Modo del calendario: "past" (semana actual de primero + pasadas hacia abajo), "future" (plan futuro), "timeline" (completo)
+  const [calendarViewMode, setCalendarViewMode] = useState<"past" | "future" | "timeline">("past");
 
   const historicalWeeks = useMemo(() => {
-    if (!showHistory) return [];
     return buildHistoricalCalendarWeeks({
       blueprintStartDate: blueprint.startDate || currentMonStr,
       dailyExecutedActivities,
-      maxWeeksBack: 16,
+      maxWeeksBack: 24,
     });
-  }, [showHistory, blueprint.startDate, currentMonStr, dailyExecutedActivities]);
+  }, [blueprint.startDate, currentMonStr, dailyExecutedActivities]);
 
-  const allWeeks = useMemo(() => {
+  const currentWeekObj = useMemo(() => {
+    return weeks.find((w) => w.startDate === currentMonStr || (w.startDate <= todayStr && todayStr <= w.endDate)) || weeks[0];
+  }, [weeks, currentMonStr, todayStr]);
+
+  const displayWeeks = useMemo(() => {
+    if (calendarViewMode === "past") {
+      const sortedPast = [...historicalWeeks].reverse();
+      return currentWeekObj ? [currentWeekObj, ...sortedPast] : sortedPast;
+    }
+    if (calendarViewMode === "future") {
+      return weeks;
+    }
     return [...historicalWeeks, ...weeks];
-  }, [historicalWeeks, weeks]);
+  }, [calendarViewMode, historicalWeeks, weeks, currentWeekObj]);
 
-  // Modo de visualización en móvil (por defecto "agenda" táctil diaria)
   const [mobileMode, setMobileMode] = useState<"agenda" | "grid">("agenda");
-  // Modo de visualización en escritorio (por defecto "focus" para encajar al 100% de la pantalla)
-  const [desktopMode, setDesktopMode] = useState<"focus" | "all">("focus");
 
   useEffect(() => {
     if (currentWeekRef.current) {
-      currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [showHistory]);
+  }, [calendarViewMode]);
 
   const dayHeaders = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
   const gridTemplate = "grid-cols-[160px_repeat(7,minmax(0,1fr))]";
@@ -222,46 +231,45 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
             </button>
           )}
 
-          {historicalWeeks.length > 0 && (
+          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl space-x-1">
             <button
               type="button"
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center space-x-1.5 px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-                showHistory
-                  ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800"
+              onClick={() => setCalendarViewMode("past")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                calendarViewMode === "past"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
-              title="Mostrar u ocultar semanas pasadas del atleta"
+              title="Semana actual de primero y semanas pasadas hacia abajo"
             >
               <History className="h-3.5 w-3.5 text-cyan-500" />
-              <span>{showHistory ? `Historial (${historicalWeeks.length} sem)` : "Ver Historial"}</span>
-            </button>
-          )}
-
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            <button
-              type="button"
-              onClick={() => setDesktopMode("focus")}
-              className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                desktopMode === "focus"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              <CalendarDays className="h-3.5 w-3.5 text-cyan-500" />
-              <span>Semana Foco</span>
+              <span>Semana Actual & Pasadas</span>
             </button>
             <button
               type="button"
-              onClick={() => setDesktopMode("all")}
-              className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                desktopMode === "all"
+              onClick={() => setCalendarViewMode("future")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                calendarViewMode === "future"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
+              title="Semana actual de primero y semanas futuras planificadas"
             >
-              <Table className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Ver {weeks.length} Semanas</span>
+              <CalendarDays className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Plan Futuro ({weeks.length} sem)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarViewMode("timeline")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                calendarViewMode === "timeline"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+              title="Línea de tiempo continua completa"
+            >
+              <Table className="h-3.5 w-3.5 text-sky-500" />
+              <span>Línea Completa</span>
             </button>
           </div>
         </div>
@@ -283,15 +291,11 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           ))}
         </div>
 
-        {/* Filas Semanales de la Cuadrícula */}
+        {/* Filas Semanales de la Cuadrícula Continua */}
         <div className="min-w-[960px] 2xl:min-w-0 w-full space-y-4">
-          {(desktopMode === "focus" && mobileMode !== "grid"
-            ? [activeWeekForAgenda]
-            : allWeeks
-          ).map((week, idx) => {
+          {displayWeeks.map((week) => {
             const isHistoricalWeek = Boolean((week as any).isHistorical || week.weekNumber <= 0);
-            const plannedIdx = isHistoricalWeek ? 0 : idx - historicalWeeks.length;
-            const wIdx = desktopMode === "focus" && mobileMode !== "grid" ? selectedMacroWeekIdx : plannedIdx;
+            const wIdx = isHistoricalWeek ? week.weekNumber : Math.max(0, week.weekNumber - 1);
             const isCurrentWeek =
               week.startDate === currentMonStr || (week.startDate <= todayStr && todayStr <= week.endDate);
             const isPastWeek = week.endDate < todayStr;
@@ -299,7 +303,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
 
             return (
               <AthleteCalendarWeekRow
-                key={wIdx}
+                key={week.startDate}
                 week={week}
                 wIdx={wIdx}
                 weeksCount={weeks.length}
@@ -320,6 +324,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                 onSelectWeek={onSelectWeek}
                 onOpenAICoach={onOpenAICoach}
                 onSyncWeekToIntervals={onSyncWeekToIntervals}
+                onSyncTriweeklyBlock={onSyncTriweeklyBlock}
                 onSelectWorkoutModal={onSelectWorkoutModal}
               />
             );

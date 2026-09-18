@@ -46,6 +46,13 @@ export async function POST(req: NextRequest) {
         await client.updateAthlete(athletePayload);
         syncResults.athleteProfile = "Perfil actualizado en Intervals.icu";
       }
+
+      // Sincronizar peso en el registro diario de Wellness para reflejarlo en gráficas PMC
+      if (weightKg) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        await client.updateWellness(todayStr, { id: todayStr, weight: Number(weightKg) });
+        syncResults.wellnessWeight = `${weightKg} kg sincronizado en Wellness`;
+      }
     } catch (aErr: any) {
       syncResults.athleteWarning = aErr?.message;
     }

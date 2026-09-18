@@ -300,27 +300,35 @@ export class IntervalsClient {
     return await res.json();
   }
 
-  /**
-   * Actualiza los datos generales del perfil del atleta (peso, restingHR, etc.) en Intervals.icu.
-   */
+  /** Actualiza los datos generales del perfil del atleta en Intervals.icu. */
   async updateAthlete(athleteData: Record<string, any>): Promise<AthleteProfile> {
     const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}`, {
       method: "PUT",
       headers: getAuthHeader(this.apiKey),
       body: JSON.stringify(athleteData),
     });
-
     if (!res.ok) {
       const errText = await res.text();
       throw new Error(`Error al actualizar perfil del atleta (${res.status}): ${errText || res.statusText}`);
     }
-
     return (await res.json()) as AthleteProfile;
   }
 
-  /**
-   * Obtiene los streams de telemetría continua (FC, potencia, ritmo, altitud, cadencia) de una actividad.
-   */
+  /** Actualiza el registro de Wellness diario (peso, rhr, etc.) en Intervals.icu. */
+  async updateWellness(date: string, data: Record<string, any>): Promise<any> {
+    const res = await this.safeFetch(`${BASE_URL}/athlete/${this.athleteId}/wellness/${date}`, {
+      method: "PUT",
+      headers: getAuthHeader(this.apiKey),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error al actualizar wellness ${date} (${res.status}): ${errText || res.statusText}`);
+    }
+    return await res.json();
+  }
+
+  /** Obtiene los streams de telemetría continua de una actividad. */
   async getActivityStreams(
     activityId: string,
     types: string[] = ["time", "heartrate", "watts", "velocity_smooth", "cadence", "altitude"]

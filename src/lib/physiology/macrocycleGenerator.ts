@@ -87,25 +87,23 @@ export function calculateTargetPeakCtl(input: PeakCtlCalculationInput): {
 } {
   const currentCtl = Math.max(12, input.currentCtl || 30);
   const histPeak = input.peakCtlLastYear || input.historicalMetrics?.peakCtlLastYear;
-  const peakLastYear = histPeak && histPeak > currentCtl ? histPeak : currentCtl * 1.30;
+  const buildWeeks = Math.max(2, (input.totalWeeks || input.weeksCount || 12) - 2);
+  const hasStrongEngine = (histPeak || currentCtl) >= 65 && currentCtl < (histPeak || 70) * 0.85;
+  const safeRampRate = hasStrongEngine ? (buildWeeks <= 8 ? 3.8 : 3.2) : 2.2;
+  const attainableCtl = currentCtl + buildWeeks * safeRampRate;
 
-  let eventMinCtl = 48, eventOptimalCtl = 68;
-  if (input.targetDistanceKm && input.targetDistanceKm > 100) {
-    eventMinCtl = input.targetDistanceKm > 150 ? 82 : 68;
-    eventOptimalCtl = input.targetDistanceKm > 150 ? 100 : 80;
-  } else if (input.targetDistanceKm && input.targetDistanceKm <= 55) {
-    eventMinCtl = 45; eventOptimalCtl = 60;
+  // Si el atleta demostró un max CTL histórico superior, el plan se configura hacia ese valor real exacto
+  let targetPeakCtl: number;
+  if (histPeak && histPeak > currentCtl) {
+    targetPeakCtl = Math.round(Math.min(histPeak, attainableCtl) * 10) / 10;
+  } else {
+    let optimal = 65;
+    if (input.targetDistanceKm && input.targetDistanceKm > 100) optimal = 80;
+    targetPeakCtl = Math.round(Math.min(optimal + 10, Math.max(45, attainableCtl)) * 10) / 10;
   }
 
-  const buildWeeks = Math.max(2, (input.totalWeeks || input.weeksCount || 12) - 2);
-  const hasStrongEngine = peakLastYear >= 65 && currentCtl < peakLastYear * 0.80;
-  const safeRampRate = hasStrongEngine ? (buildWeeks <= 6 ? 4.8 : 3.4) : 2.2;
-  const attainableCtl = currentCtl + buildWeeks * safeRampRate;
-  const safeCeiling = Math.min(peakLastYear * 1.02, eventOptimalCtl + 10);
-
-  const targetPeakCtl = Math.round(Math.min(safeCeiling, Math.max(eventMinCtl, attainableCtl)) * 10) / 10;
   const targetPeakWeeklyTss = Math.round(7 * targetPeakCtl + 45 * 1.5);
-  const startWeeklyTss = Math.round(7 * currentCtl + 45 * (hasStrongEngine ? 2.4 : 1.8));
+  const startWeeklyTss = Math.round(7 * currentCtl + 45 * (hasStrongEngine ? 2.2 : 1.8));
   const weeklyRampRate = Math.round(((targetPeakCtl - currentCtl) / buildWeeks) * 10) / 10;
 
   return { targetPeakCtl, targetPeakWeeklyTss, startWeeklyTss, weeklyRampRate };

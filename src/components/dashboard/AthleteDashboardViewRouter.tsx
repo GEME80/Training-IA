@@ -62,6 +62,14 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           onNavigateTo("head_coach");
         }}
         onSyncWeekToIntervals={sync.handleSyncToIntervals}
+        onSyncTriweeklyBlock={(startIdx) =>
+          sync.handleSyncTriweeklyBlockToIntervals(
+            season.blueprint,
+            season.weeklyAvailability,
+            season.primaryRace,
+            startIdx
+          )
+        }
         onSelectWorkoutModal={onSelectWorkoutModal}
         onOpenSeasonStudio={() => onNavigateTo("season_studio")}
         onRefreshTelemetry={() =>
@@ -199,6 +207,11 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           return data;
         }}
         onSave={telemetry.handleSaveSettings}
+        onUpdateAvailability={async (newMap) => {
+          season.setWeeklyAvailability(newMap);
+          userStorage.setJSON("weekly_availability", newMap);
+          await telemetry.handleSaveSettings({ weeklyAvailability: newMap });
+        }}
       />
     );
   }

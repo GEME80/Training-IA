@@ -47,6 +47,7 @@ interface AthletePhysiologyViewProps {
     intervalsAthleteId?: string;
     apiKey?: string;
   }) => Promise<void>;
+  onUpdateAvailability?: (newMap: WeeklyAvailabilityMap) => Promise<void>;
 }
 
 export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
@@ -70,6 +71,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   isLiveConnected = false,
   onTestConnection,
   onSave,
+  onUpdateAvailability,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
@@ -121,7 +123,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     setTimeout(() => setSuccessMessage(null), 3000);
   };
 
-  const handleToggleDayDiscipline = async (dayKey: string, disc: DisciplineType) => {
+  const handleToggleDayDiscipline = (dayKey: string, disc: DisciplineType) => {
     const current = normalizeDisciplines(weeklyAvailability[dayKey]);
     let updated: DisciplineType[] = [];
 
@@ -141,10 +143,36 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       ...weeklyAvailability,
       [dayKey]: updated,
     };
-
     setWeeklyAvailability(newMap);
-    await onSave({ weeklyAvailability: newMap });
-    showNotification("Matriz semanal guardada con éxito");
+  };
+
+  const handleSaveAvailability = async (mapToSave: WeeklyAvailabilityMap) => {
+    setWeeklyAvailability(mapToSave);
+    if (onUpdateAvailability) {
+      await onUpdateAvailability(mapToSave);
+    } else {
+      await onSave({ weeklyAvailability: mapToSave });
+    }
+    showNotification("Matriz semanal guardada con éxito en la base de datos.");
+  };
+
+  const handleResetCanonical = async () => {
+    const canonical = {
+      Lunes: ["Descanso"] as DisciplineType[],
+      Martes: ["Carrera"] as DisciplineType[],
+      Miércoles: ["Ciclismo"] as DisciplineType[],
+      Jueves: ["Fuerza"] as DisciplineType[],
+      Viernes: ["Carrera", "Fuerza"] as DisciplineType[],
+      Sábado: ["Ciclismo"] as DisciplineType[],
+      Domingo: ["Carrera"] as DisciplineType[],
+    };
+    setWeeklyAvailability(canonical);
+    if (onUpdateAvailability) {
+      await onUpdateAvailability(canonical);
+    } else {
+      await onSave({ weeklyAvailability: canonical });
+    }
+    showNotification("Matriz restablecida a la configuración canónica recomendada.");
   };
 
   const handleSaveModalData = async (data: {
@@ -257,6 +285,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         <ProfileAvailabilityTab
           weeklyAvailability={weeklyAvailability}
           onToggleDayDiscipline={handleToggleDayDiscipline}
+          onSaveAvailability={handleSaveAvailability}
+          onResetToCanonical={handleResetCanonical}
         />
       </AthleteCollapsibleSection>
 

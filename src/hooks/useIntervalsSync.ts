@@ -159,11 +159,94 @@ export function useIntervalsSync({
     }
   };
 
+  const handleSyncTriweeklyBlockToIntervals = async (
+    blueprint?: MacrocycleBlueprint | null,
+    weeklyAvailability?: WeeklyAvailabilityMap,
+    primaryRace?: TargetRace | null,
+    startWeekIndex: number = 0
+  ) => {
+    if (!blueprint || !blueprint.weeks || blueprint.weeks.length === 0) {
+      setSyncNotification({
+        title: "Sin Macrociclo Activo",
+        message: "No hay un macrociclo activo cargado para sincronizar.",
+        type: "error",
+      });
+      return;
+    }
+
+    const effectiveStartIndex = Math.max(0, Math.min(startWeekIndex, blueprint.weeks.length - 1));
+    const targetWeeks = blueprint.weeks.slice(effectiveStartIndex, effectiveStartIndex + 3);
+
+    if (targetWeeks.length === 0) {
+      setSyncNotification({
+        title: "Fin del Plan",
+        message: "No hay más semanas futuras en este macrociclo para sincronizar.",
+        type: "error",
+      });
+      return;
+    }
+
+    const triweeklyPlan: PlanItem[] = [];
+    targetWeeks.forEach((week) => {
+      const weekPlan = generateWeekTemplate(
+        week,
+        runFtp,
+        bikeFtp,
+        resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
+        (blueprint.distanceType || primaryRace?.distance) as any,
+        ctl
+      );
+      triweeklyPlan.push(...weekPlan);
+    });
+
+    setIsSyncing(true);
+    try {
+      const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
+      const res = await fetch("/api/sync-intervals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId,
+          apiKey: activeApiKey,
+          uid: user?.uid,
+          email: user?.email || userProfile?.email || "",
+          plan: triweeklyPlan,
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        if (data.isAuthError && onOpenSettings) onOpenSettings("intervals");
+        throw new Error(data.error || "Fallo en la sincronización con Intervals.icu");
+      }
+
+      const weekNumbers = targetWeeks.map((w) => w.weekNumber).join(", ");
+      const structuredCount = triweeklyPlan.filter((p) => !p.isRestDay && p.discipline !== "Descanso").length;
+
+      setSyncNotification({
+        title: `¡Bloque de 3 Semanas Sincronizado! (Sem. ${weekNumbers})`,
+        message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos en Intervals.icu y Garmin Connect (${targetWeeks[0].formattedRange} al ${targetWeeks[targetWeeks.length - 1].formattedRange}).`,
+        details: "Estrategia 2:1 activa: Al término de este bloque de 3 semanas, el sistema recalibrará automáticamente tus zonas Stryd CP, Bike FTP y TSS según tu adherencia viva y evolución de CTL/TSB.",
+        type: "success",
+      });
+    } catch (err: any) {
+      console.error("Error al sincronizar bloque de 3 semanas:", err);
+      setSyncNotification({
+        title: "Error de Sincronización",
+        message: err.message || "No se pudo sincronizar el bloque de 3 semanas.",
+        type: "error",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return {
     isSyncing,
     syncNotification,
     setSyncNotification,
     handleSyncToIntervals,
     handleSyncFullMacrocycleToIntervals,
+    handleSyncTriweeklyBlockToIntervals,
   };
 }

@@ -323,11 +323,11 @@ export function useSeasonPlans({
       }
 
       const storedAvail = userStorage.getJSON<WeeklyAvailabilityMap>("weekly_availability");
-      if (userProfile?.weeklyAvailability) {
-        setWeeklyAvailability(userProfile.weeklyAvailability);
-        userStorage.setJSON("weekly_availability", userProfile.weeklyAvailability);
-      } else if (storedAvail && typeof storedAvail === "object" && Object.keys(storedAvail).length > 0) {
-        setWeeklyAvailability(storedAvail);
+      const rawAvail = userProfile?.weeklyAvailability || (storedAvail && typeof storedAvail === "object" && Object.keys(storedAvail).length > 0 ? storedAvail : undefined);
+      if (rawAvail) {
+        const sanitized = resolveEffectiveAvailability(rawAvail);
+        setWeeklyAvailability(sanitized);
+        userStorage.setJSON("weekly_availability", sanitized);
       }
     };
 

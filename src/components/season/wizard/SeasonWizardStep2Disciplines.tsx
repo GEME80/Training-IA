@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Zap, Footprints, Bike, Dumbbell, Waves, Mountain, HeartPulse, Layers, Check, ExternalLink } from "lucide-react";
-import { WeeklyAvailabilityMap, DisciplineType } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, DisciplineType, DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
 import { CompactAvailabilityMatrix } from "@/components/profile/CompactAvailabilityMatrix";
 
 interface SeasonWizardStep2DisciplinesProps {
@@ -71,15 +71,7 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
     if (!onChangeWeeklyAvailability) return;
     const currentMap: WeeklyAvailabilityMap = weeklyAvailability
       ? { ...weeklyAvailability }
-      : {
-          Lunes: ["Descanso"],
-          Martes: ["Carrera"],
-          Miércoles: ["Carrera", "Fuerza"],
-          Jueves: ["Carrera", "Fuerza"],
-          Viernes: ["Carrera", "Fuerza"],
-          Sábado: ["Ciclismo"],
-          Domingo: ["Carrera"],
-        };
+      : { ...DEFAULT_WEEKLY_AVAILABILITY };
 
     const currentDayVal = currentMap[day as keyof WeeklyAvailabilityMap];
     let currentList: DisciplineType[] = Array.isArray(currentDayVal)

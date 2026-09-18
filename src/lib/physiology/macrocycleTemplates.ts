@@ -1,4 +1,4 @@
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines, resolveEffectiveAvailability } from "../gemini/engine";
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun } from "../ai/knowledge";
@@ -29,6 +29,7 @@ export function generateWeekTemplate(
   athleteCtl?: number,
   primaryRaceDate?: string
 ): PlanItem[] {
+  const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const weekStart = new Date(week.startDate + "T00:00:00");
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -41,8 +42,8 @@ export function generateWeekTemplate(
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber);
   const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl);
-  const longRunDay = resolveLongRunDay(availability);
-  const longRideDay = resolveLongRideDay(availability);
+  const longRunDay = resolveLongRunDay(safeAvailability);
+  const longRideDay = resolveLongRideDay(safeAvailability);
 
   const result: PlanItem[] = [];
   let bikeTestInjected = false;
@@ -57,7 +58,7 @@ export function generateWeekTemplate(
     const dateStr = d.toISOString().split("T")[0];
     const formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
 
-    const discList = getDayDisciplines(availability, day);
+    const discList = getDayDisciplines(safeAvailability, day);
 
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";

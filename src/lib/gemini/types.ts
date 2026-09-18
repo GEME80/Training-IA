@@ -26,9 +26,9 @@ export function getDayDisciplines(avail?: WeeklyAvailabilityMap, dayName?: strin
 
 export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
   Lunes: ["Descanso"],
-  Martes: ["Ciclismo", "Fuerza"],
-  Miércoles: ["Carrera", "Fuerza"],
-  Jueves: ["Ciclismo", "Fuerza"],
+  Martes: ["Carrera"],
+  Miércoles: ["Ciclismo"],
+  Jueves: ["Fuerza"],
   Viernes: ["Carrera", "Fuerza"],
   Sábado: ["Ciclismo"],
   Domingo: ["Carrera"],
@@ -47,11 +47,32 @@ export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): Wee
   if (!avail || isLegacyAvailability(avail)) {
     return DEFAULT_WEEKLY_AVAILABILITY;
   }
-  // Normalizar hacia los 7 días canónicos preservando exactamente la matriz del atleta
+  // Normalizar hacia los 7 días canónicos preservando la matriz del atleta
   const resolved: WeeklyAvailabilityMap = {};
   for (const day of CANONICAL_DAYS) {
     resolved[day] = getDayDisciplines(avail, day);
   }
+
+  // Prevención de colisión de ciclismo consecutivo entre semana (ej. Martes + Miércoles o Miércoles + Jueves)
+  const tueList = normalizeDisciplines(resolved["Martes"]);
+  const wedList = normalizeDisciplines(resolved["Miércoles"]);
+  const thuList = normalizeDisciplines(resolved["Jueves"]);
+
+  const tueHasBike = tueList.includes("Ciclismo");
+  const wedHasBike = wedList.includes("Ciclismo");
+  const thuHasBike = thuList.includes("Ciclismo");
+
+  if (tueHasBike && wedHasBike) {
+    let nextTue = tueList.map((d: DisciplineType) => (d === "Ciclismo" ? "Carrera" : d));
+    if (!nextTue.includes("Carrera")) nextTue.push("Carrera");
+    resolved["Martes"] = nextTue;
+  }
+  if (wedHasBike && thuHasBike) {
+    let nextThu = thuList.filter((d: DisciplineType) => d !== "Ciclismo");
+    if (nextThu.length === 0) nextThu = ["Fuerza"];
+    resolved["Jueves"] = nextThu;
+  }
+
   return resolved;
 }
 

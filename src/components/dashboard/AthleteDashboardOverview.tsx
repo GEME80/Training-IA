@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { LayoutDashboard, Sparkles, TrendingUp, CalendarDays } from "lucide-react";
 import { PhysiologicalCards } from "@/components/PhysiologicalCards";
 import { AthleteContinuousCalendar } from "./AthleteContinuousCalendar";
@@ -9,6 +9,7 @@ import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness, DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
+import { buildHistoricalBlueprint } from "@/lib/physiology/historicalCalendarWeeks";
 
 interface AthleteDashboardOverviewProps {
   physioStatus: PhysiologicalStatus | null;
@@ -54,6 +55,17 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   isRefreshingTelemetry,
 }) => {
   const [activeTab, setActiveTab] = useState<"overview" | "pmc">("overview");
+
+  const effectiveBlueprint = useMemo(() => {
+    if (blueprint) return blueprint;
+    const hasActs = Object.keys(dailyExecutedActivities || {}).some(
+      (k) => dailyExecutedActivities[k]?.activities?.length > 0
+    );
+    if (hasActs) {
+      return buildHistoricalBlueprint(dailyExecutedActivities, profile);
+    }
+    return null;
+  }, [blueprint, dailyExecutedActivities, profile]);
 
   return (
     <div className="space-y-5 animate-fadeIn">
@@ -118,21 +130,40 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
           />
 
           {/* CALENDARIO CONTINUO SEMANAL O ESTADO VACÍO */}
-          {blueprint ? (
-            <AthleteContinuousCalendar
-              blueprint={blueprint}
-              selectedMacroWeekIdx={selectedMacroWeekIdx}
-              onSelectWeek={onSelectWeek}
-              runFtp={profile.run_ftp || 0}
-              bikeFtp={profile.bike_ftp || 0}
-              weeklyAvailability={weeklyAvailability}
-              weeklyExecutedTss={weeklyExecutedTss}
-              dailyExecutedActivities={dailyExecutedActivities}
-              calendarEvents={calendarEvents}
-              onOpenAICoach={onOpenAICoach}
-              onSyncWeekToIntervals={onSyncWeekToIntervals}
-              onSelectWorkoutModal={onSelectWorkoutModal}
-            />
+          {effectiveBlueprint ? (
+            <div className="space-y-3">
+              {!blueprint && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/80 p-3.5 rounded-2xl">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <p className="text-xs font-mono text-emerald-900 dark:text-emerald-200">
+                      <strong>Modo Historial Activo:</strong> Estás visualizando tus entrenamientos registrados en Intervals.icu. Diseña tu macrociclo para proyectar las próximas semanas.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenSeasonStudio}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs font-mono shadow-xs transition cursor-pointer shrink-0 self-start sm:self-auto"
+                  >
+                    Diseñar Macrociclo con IA
+                  </button>
+                </div>
+              )}
+              <AthleteContinuousCalendar
+                blueprint={effectiveBlueprint}
+                selectedMacroWeekIdx={selectedMacroWeekIdx}
+                onSelectWeek={onSelectWeek}
+                runFtp={profile.run_ftp || 0}
+                bikeFtp={profile.bike_ftp || 0}
+                weeklyAvailability={weeklyAvailability}
+                weeklyExecutedTss={weeklyExecutedTss}
+                dailyExecutedActivities={dailyExecutedActivities}
+                calendarEvents={calendarEvents}
+                onOpenAICoach={onOpenAICoach}
+                onSyncWeekToIntervals={onSyncWeekToIntervals}
+                onSelectWorkoutModal={onSelectWorkoutModal}
+              />
+            </div>
           ) : (
             <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 sm:p-12 text-center space-y-4 shadow-xs animate-fadeIn">
               <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">

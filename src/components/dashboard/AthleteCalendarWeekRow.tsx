@@ -34,11 +34,7 @@ interface AthleteCalendarWeekRowProps {
   onSelectWorkoutModal: (item: PlanItem) => void;
 }
 
-function formatMinutesToHours(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h${m > 0 ? `${m < 10 ? "0" + m : m}m` : ""}` : `${m}m`;
-}
+const formatMinutesToHours = (m: number) => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}` : `${m}m`;
 
 function DisciplineBar({
   icon, mins, tss, executedTss, textColor, badgeBg, badgeBorder, barColor, isPastWeek
@@ -158,16 +154,18 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     }
   });
 
+  const isHistoricalWeek = Boolean((week as any).isHistorical || week.weekNumber <= 0);
   const effectiveExecuted =
     executedDirectTotalTss > 0
       ? executedDirectTotalTss
       : isCurrentWeek
       ? weeklyExecutedTss
       : isPastWeek
-      ? plannedTss
+      ? (isHistoricalWeek ? 0 : plannedTss)
       : 0;
 
-  const completionPct = plannedTss > 0 ? Math.min(100, Math.round((effectiveExecuted / plannedTss) * 100)) : 0;
+  const displayPlannedTss = isHistoricalWeek ? (effectiveExecuted || week.targetTss || 0) : plannedTss;
+  const completionPct = displayPlannedTss > 0 ? Math.min(100, Math.round((effectiveExecuted / displayPlannedTss) * 100)) : (effectiveExecuted > 0 ? 100 : 0);
 
   return (
     <div
@@ -176,6 +174,8 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
       className={`rounded-2xl border transition-all duration-150 p-2.5 ${
         isCurrentWeek
           ? "bg-white dark:bg-slate-900 border-sky-400 dark:border-sky-500 shadow-md ring-1 ring-sky-400/30"
+          : isHistoricalWeek
+          ? "bg-slate-100/70 dark:bg-slate-950/60 border-slate-300 dark:border-slate-800/90"
           : isPastWeek
           ? "bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800/80 opacity-95 hover:opacity-100"
           : "bg-white/95 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300"
@@ -188,7 +188,8 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             <div className="flex items-center justify-start border-b border-slate-200 dark:border-slate-800 pb-1.5">
               <div className="flex items-center space-x-1.5">
                 <span className="font-black text-slate-900 dark:text-white text-sm">
-                  Sem. {week.weekNumber} <span className="text-slate-400 font-normal text-[11px]">/ {weeksCount}</span>
+                  {isHistoricalWeek ? "Historial" : `Sem. ${week.weekNumber}`}
+                  {!isHistoricalWeek && <span className="text-slate-400 font-normal text-[11px]"> / {weeksCount}</span>}
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
                   W{calendarWeekNumber}
@@ -199,8 +200,8 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               </div>
             </div>
 
-            <div className="inline-block px-2 py-0.5 rounded-md bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold text-[10px] uppercase border border-cyan-500/20">
-              {week.phaseLabel || week.phase}
+            <div className={`inline-block px-2 py-0.5 rounded-md font-bold text-[10px] uppercase border ${isHistoricalWeek ? "bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" : "bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/20"}`}>
+              {isHistoricalWeek ? "Historial Ejecutado" : (week.phaseLabel || week.phase)}
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 pt-0.5 text-[11px]">
@@ -209,8 +210,8 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                 <strong className="text-slate-900 dark:text-white text-xs">{formatMinutesToHours(totalMins)}</strong>
               </div>
               <div className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5">
-                <span className="text-slate-400 text-[9px] block uppercase font-bold">Plan TSS</span>
-                <strong className="text-cyan-600 dark:text-cyan-400 text-xs">{plannedTss}</strong>
+                <span className="text-slate-400 text-[9px] block uppercase font-bold">{isHistoricalWeek ? "Carga Total" : "Plan TSS"}</span>
+                <strong className="text-cyan-600 dark:text-cyan-400 text-xs">{displayPlannedTss}</strong>
               </div>
             </div>
 
@@ -218,7 +219,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               <div className="flex items-center justify-between text-[10px] font-mono">
                 <span className="text-slate-500 font-bold">Carga Real</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-black">
-                  {effectiveExecuted} / {plannedTss} TSS
+                  {effectiveExecuted} / {displayPlannedTss} TSS
                 </span>
               </div>
               <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">

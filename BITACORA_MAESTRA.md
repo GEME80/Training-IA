@@ -3618,3 +3618,34 @@ flowchart TD
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados cumplen estrictamente la Regla 3 ($< 350$ LOC).
+
+---
+
+### Versión 3.56 - Visualización Integral de Entrenamientos Históricos y Continuidad Temporal del Calendario (2026-09-18)
+- **Fecha y Hora:** 18 de Septiembre de 2026 - 10:40 COT.
+- **Directiva del Atleta:** "revisa nuevamnete la documentacion. y vamos a trabajar que se puedan ver todos los entrenamientos que ha realizado el atleta en el pasado y que al diseñar el macrociclo el calendario solo muestra desde el dia que empieza el plan y debe mostrar todos los entrenos del pasado. revisa un plan con nuestros agentes para hacer esta mejora".
+- **Problema Detectado:**
+  1. En `src/lib/services/telemetryService.ts`, la consulta de actividades a la API de Intervals.icu estaba restringida artificialmente a los últimos 30 días (`past30Days`), omitiendo el historial deportivo previo del atleta.
+  2. El calendario continuo del atleta (`AthleteContinuousCalendar.tsx`) únicamente renderizaba las semanas contenidas en el `blueprint.weeks` activo (a partir de su `startDate`), dejando ocultas las semanas y entrenamientos pasados anteriores al inicio del plan.
+  3. Al diseñar o antes de activar un macrociclo, o si no había plan activo, el calendario no mostraba la línea de tiempo de entrenamientos realizados en el pasado, quedando la vista vacía.
+- **Solución y Mejoras Implementadas:**
+  1. **Expansión de Ingesta Histórica en Telemetría (`src/lib/services/telemetryService.ts` - 297 LOC):**
+     - Se extendió la ventana de búsqueda de actividades ejecutadas a 370 días en el pasado (`past370Days`), capturando más de 1 año completo de historial atlético y alineándose con la ventana de Wellness.
+     - Se expandió la ventana de eventos históricos a 180 días.
+  2. **Módulo Autónomo de Semanas Históricas (`src/lib/physiology/historicalCalendarWeeks.ts` - 163 LOC):**
+     - `buildHistoricalCalendarWeeks`: Escanea `dailyExecutedActivities`, computa el TSS y volumen en horas real ejecutado por cada semana anterior al inicio del macrociclo, y genera objetos `MacrocycleWeek` históricos (`weekNumber <= 0`, `isHistorical: true`, `phaseLabel: "Historial de Carga"`).
+     - `buildHistoricalBlueprint`: Construye un macrociclo dinámico de respaldo que abarca las semanas históricas ejecutadas y la semana activa para desplegar el calendario incluso cuando no existe un plan de temporada cargado.
+  3. **Aislamiento en Plantillas de Macrociclo (`src/lib/physiology/macrocycleTemplates.ts` - 322 LOC):**
+     - En `generateWeekTemplate`, las semanas históricas (`isHistorical` o `weekNumber <= 0`) retornan días neutrales sin prescripciones artificiales para que `AthleteCalendarDayColumn` renderice limpiamente cada actividad real ejecutada en Intervals.icu.
+  4. **Identificación y Métricas en Tarjeta Semanal (`src/components/dashboard/AthleteCalendarWeekRow.tsx` - 345 LOC):**
+     - Encabezado con etiqueta `Historial`, badge `Historial Ejecutado` y calibración de TSS planificado igualado al real ejecutado para mantener la coherencia en la barra de adherencia.
+  5. **Línea de Tiempo Continua y Toggle de Historial (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 331 LOC):**
+     - Antepone las semanas históricas (`historicalWeeks`) al array de semanas del macrociclo activo (`allWeeks = [...historicalWeeks, ...weeks]`).
+     - Botón toggle `Historial (N sem)` con icono y contador de semanas disponibles.
+     - Auto-scroll automático hacia la semana actual activa (`currentWeekRef`) para mantener foco inmediato en el presente con navegación hacia el pasado y futuro.
+  6. **Respaldo Histórico en Dashboard (`src/components/dashboard/AthleteDashboardOverview.tsx` - 209 LOC):**
+     - Si `blueprint` es nulo, genera `effectiveBlueprint` histórico permitiendo al atleta explorar todos sus entrenamientos pasados sin pantallas en blanco.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente en 2.9s (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados cumplen estrictamente la Regla 3 ($< 350$ LOC).

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { CalendarDays, Table, Smartphone, ChevronLeft, ChevronRight, Compass } from "lucide-react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { CalendarDays, Table, Smartphone, ChevronLeft, ChevronRight, Compass, History } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem, resolveEffectiveAvailability, isLegacyAvailability } from "@/lib/gemini/engine";
@@ -11,6 +11,7 @@ import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { AthleteCalendarWeekRow } from "./AthleteCalendarWeekRow";
 import { AthleteMobileAgendaView } from "./AthleteMobileAgendaView";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
+import { buildHistoricalCalendarWeeks } from "@/lib/physiology/historicalCalendarWeeks";
 
 interface AthleteContinuousCalendarProps {
   blueprint: MacrocycleBlueprint;
@@ -60,6 +61,22 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const todayStr = getLocalTodayStr();
   const weeks = blueprint.weeks || [];
 
+  // Semanas históricas previas ejecutadas por el atleta
+  const [showHistory, setShowHistory] = useState<boolean>(true);
+
+  const historicalWeeks = useMemo(() => {
+    if (!showHistory) return [];
+    return buildHistoricalCalendarWeeks({
+      blueprintStartDate: blueprint.startDate || currentMonStr,
+      dailyExecutedActivities,
+      maxWeeksBack: 16,
+    });
+  }, [showHistory, blueprint.startDate, currentMonStr, dailyExecutedActivities]);
+
+  const allWeeks = useMemo(() => {
+    return [...historicalWeeks, ...weeks];
+  }, [historicalWeeks, weeks]);
+
   // Modo de visualización en móvil (por defecto "agenda" táctil diaria)
   const [mobileMode, setMobileMode] = useState<"agenda" | "grid">("agenda");
   // Modo de visualización en escritorio (por defecto "focus" para encajar al 100% de la pantalla)
@@ -69,7 +86,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
     if (currentWeekRef.current) {
       currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, []);
+  }, [showHistory]);
 
   const dayHeaders = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
   const gridTemplate = "grid-cols-[160px_repeat(7,minmax(0,1fr))]";
@@ -205,6 +222,22 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
             </button>
           )}
 
+          {historicalWeeks.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowHistory(!showHistory)}
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                showHistory
+                  ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800"
+              }`}
+              title="Mostrar u ocultar semanas pasadas del atleta"
+            >
+              <History className="h-3.5 w-3.5 text-cyan-500" />
+              <span>{showHistory ? `Historial (${historicalWeeks.length} sem)` : "Ver Historial"}</span>
+            </button>
+          )}
+
           <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
             <button
               type="button"
@@ -254,9 +287,11 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
         <div className="min-w-[960px] 2xl:min-w-0 w-full space-y-4">
           {(desktopMode === "focus" && mobileMode !== "grid"
             ? [activeWeekForAgenda]
-            : weeks
+            : allWeeks
           ).map((week, idx) => {
-            const wIdx = desktopMode === "focus" && mobileMode !== "grid" ? selectedMacroWeekIdx : idx;
+            const isHistoricalWeek = Boolean((week as any).isHistorical || week.weekNumber <= 0);
+            const plannedIdx = isHistoricalWeek ? 0 : idx - historicalWeeks.length;
+            const wIdx = desktopMode === "focus" && mobileMode !== "grid" ? selectedMacroWeekIdx : plannedIdx;
             const isCurrentWeek =
               week.startDate === currentMonStr || (week.startDate <= todayStr && todayStr <= week.endDate);
             const isPastWeek = week.endDate < todayStr;

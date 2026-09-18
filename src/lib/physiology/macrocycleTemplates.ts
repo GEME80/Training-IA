@@ -34,6 +34,24 @@ export function generateWeekTemplate(
   const weekStart = new Date(week.startDate + "T00:00:00");
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
+  if ((week as any).isHistorical || week.weekNumber <= 0) {
+    return days.map((day, idx) => {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + idx);
+      return {
+        day,
+        date: d.toISOString().split("T")[0],
+        formattedDate: `${d.getDate()} ${months[d.getMonth()]}`,
+        discipline: "Descanso",
+        workoutName: "Descanso",
+        action: "MANTENER",
+        justification: "Historial de entrenamiento ejecutado",
+        isRestDay: true,
+        workoutDoc: "",
+      };
+    });
+  }
+
   const { weekNumber, countdownWeeks: countdown, phase, microcycleType } = week;
   const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
   const isRaceWeek = phase === "RACE_WEEK" || countdown === 1;

@@ -69,13 +69,12 @@ export class TelemetryService {
           const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
           const today = new Date();
           const past370Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 370);
-          const past30Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
-          const past14Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 14);
+          const past180Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 180);
           const next60Days = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 60);
 
           const oldestWellnessStr = formatLocalDateToYMD(past370Days);
-          const oldestActivitiesStr = formatLocalDateToYMD(past30Days);
-          const oldestEventsStr = formatLocalDateToYMD(past14Days);
+          const oldestActivitiesStr = formatLocalDateToYMD(past370Days);
+          const oldestEventsStr = formatLocalDateToYMD(past180Days);
           const newestStr = getLocalTodayStr();
           const futureEventsStr = formatLocalDateToYMD(next60Days);
           const thisMondayStr = getMondayOfWeekStr(today);

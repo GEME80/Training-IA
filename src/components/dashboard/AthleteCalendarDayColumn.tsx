@@ -118,6 +118,15 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
         {matchedEntries.map(({ item, matchedAct, isRest }, idx) => {
           const parsedDoc = parseWorkoutDoc(item.workoutDoc);
           const itemPlannedTss = item.tss || parsedDoc.estimatedTss || (item.durationMinutes ? Math.round(item.durationMinutes * 0.75) : 0);
+          const titleMinsMatch = item.workoutName.match(/\((\d+)\s*m(?:in)?\)/i);
+          const effectiveDuration = titleMinsMatch
+            ? parseInt(titleMinsMatch[1], 10)
+            : item.discipline === "Fuerza"
+            ? (item.durationMinutes && item.durationMinutes >= 15 ? item.durationMinutes : parsedDoc.totalMins || 35)
+            : item.durationMinutes || parsedDoc.totalMins || 45;
+          const durationLabel = effectiveDuration >= 60
+            ? `${Math.floor(effectiveDuration / 60)}h${effectiveDuration % 60 > 0 ? `${effectiveDuration % 60}m` : ""}`
+            : `${effectiveDuration}m`;
 
           if (isRest) {
             return (
@@ -181,7 +190,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                 <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-rose-100/70 dark:bg-rose-900/40 text-rose-900 dark:text-rose-300 border-b border-rose-200 dark:border-rose-800">
                   <div className="flex items-center space-x-1">
                     {renderDisciplineIcon(item.discipline)}
-                    <span>{item.durationMinutes || 45}m</span>
+                    <span>{durationLabel}</span>
                   </div>
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-2xs">✕</span>
                 </div>
@@ -210,7 +219,11 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
             <div
               key={`item-${idx}`}
               onClick={(e) => { e.stopPropagation(); if (item.workoutDoc) onSelectWorkoutModal(item); }}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden flex flex-col hover:border-sky-400 dark:hover:border-sky-500 transition cursor-pointer group"
+              className={`rounded-xl border shadow-xs overflow-hidden flex flex-col transition cursor-pointer group ${
+                item.discipline === "Fuerza"
+                  ? "border-purple-200/90 dark:border-purple-800/80 bg-purple-50/25 dark:bg-purple-950/20 hover:border-purple-400 dark:hover:border-purple-500"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500"
+              }`}
             >
               <div
                 className={`px-2 py-1 flex items-center justify-between text-xs font-bold font-mono border-b ${
@@ -218,24 +231,16 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                     ? "bg-[#fcf2eb] dark:bg-amber-950/40 text-[#8C564B] dark:text-amber-300 border-[#f6ddcd] dark:border-amber-900/50"
                     : item.discipline === "Ciclismo"
                     ? "bg-[#e8f4fd] dark:bg-sky-950/50 text-[#0863b2] dark:text-sky-300 border-[#cde6fb] dark:border-sky-900/50"
-                    : "bg-[#f3effb] dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border-[#e1d8f5] dark:border-purple-900/50"
+                    : "bg-purple-100/80 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border-purple-200/90 dark:border-purple-800/70"
                 }`}
               >
                 <div className="flex items-center space-x-1">
                   {renderDisciplineIcon(item.discipline)}
-                  <span>
-                    {item.durationMinutes || parsedDoc.totalMins
-                      ? (item.durationMinutes || parsedDoc.totalMins) >= 60
-                        ? `${Math.floor((item.durationMinutes || parsedDoc.totalMins) / 60)}h${
-                            (item.durationMinutes || parsedDoc.totalMins) % 60 > 0
-                              ? `${(item.durationMinutes || parsedDoc.totalMins) % 60}m`
-                              : ""
-                          }`
-                        : `${item.durationMinutes || parsedDoc.totalMins}m`
-                      : "45m"}
-                  </span>
+                  <span>{durationLabel}</span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">Plan</span>
+                <span className={`text-[10px] font-mono ${item.discipline === "Fuerza" ? "text-purple-700 dark:text-purple-300 font-bold" : "text-slate-400"}`}>
+                  {item.discipline === "Fuerza" ? "Gimnasio" : "Plan"}
+                </span>
               </div>
 
               <div className="p-2 space-y-1.5 flex flex-col justify-between flex-1">

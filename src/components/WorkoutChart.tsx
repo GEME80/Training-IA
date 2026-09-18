@@ -1,11 +1,77 @@
 "use client";
 
 import React from "react";
+import { Dumbbell } from "lucide-react";
 
 export interface IntervalSegment {
   durationMins: number;
   intensityPercent: number;
   label?: string;
+}
+
+export interface StrengthExercise {
+  reps: string;
+  name: string;
+  raw: string;
+}
+
+export interface StrengthCircuitInfo {
+  rounds: number;
+  circuitTitle: string;
+  warmupMins: number;
+  cooldownMins: number;
+  exercises: StrengthExercise[];
+  totalMins: number;
+}
+
+export function isStrengthDoc(doc?: string, discipline?: string): boolean {
+  if (discipline === "Fuerza") return true;
+  if (!doc) return false;
+  return /rondas?|circuito|manguito|sentadilla|plancha|hip thrust|s[oó]leo|face-pull|gemelos|isquios|tobillo|escapular/i.test(doc);
+}
+
+export function parseStrengthDoc(doc?: string, workoutName?: string): StrengthCircuitInfo {
+  if (!doc || doc.trim().length === 0) {
+    return { rounds: 3, circuitTitle: "Circuito Funcional", warmupMins: 5, cooldownMins: 5, exercises: [], totalMins: 35 };
+  }
+
+  const titleMinsMatch = (workoutName || doc).match(/\((\d+)\s*m(?:in)?\)/i);
+  const totalMins = titleMinsMatch ? parseInt(titleMinsMatch[1], 10) : 35;
+
+  const roundsMatch = doc.match(/\((\d+)\s*rondas?\)/i) || doc.match(/(\d+)\s*rondas?/i);
+  const rounds = roundsMatch ? parseInt(roundsMatch[1], 10) : 3;
+
+  const circuitTitleMatch = doc.match(/(?:Circuito|Bloque)\s+([^\n(]+)/i);
+  const circuitTitle = circuitTitleMatch ? circuitTitleMatch[0].trim() : "Circuito Estructural";
+
+  const lines = doc.split("\n").map((l) => l.trim()).filter(Boolean);
+  const exercises: StrengthExercise[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith("-") || line.startsWith("•") || line.startsWith("*")) {
+      const clean = line.replace(/^[-•*]+\s*/, "").trim();
+      const repMatch = clean.match(/^(\d+\s*[xs]|\d+\s*reps?|\d+\s*seg)\s+(.*)$/i);
+      if (repMatch) {
+        const reps = repMatch[1].trim();
+        const fullName = repMatch[2].trim();
+        const shortName = fullName.replace(/\s*\([^)]*\)/g, "").split(/\s+/).slice(0, 2).join(" ");
+        exercises.push({
+          reps,
+          name: shortName || fullName,
+          raw: clean,
+        });
+      }
+    }
+  }
+
+  return {
+    rounds,
+    circuitTitle,
+    warmupMins: 5,
+    cooldownMins: 5,
+    exercises,
+    totalMins,
+  };
 }
 
 export function parseWorkoutDoc(doc?: string): {
@@ -15,6 +81,15 @@ export function parseWorkoutDoc(doc?: string): {
 } {
   if (!doc || doc.trim().length === 0) {
     return { segments: [], totalMins: 0, estimatedTss: 0 };
+  }
+
+  if (isStrengthDoc(doc)) {
+    const stInfo = parseStrengthDoc(doc);
+    return {
+      segments: [],
+      totalMins: stInfo.totalMins,
+      estimatedTss: Math.round(stInfo.totalMins * 0.72),
+    };
   }
 
   const lines = doc.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -100,6 +175,52 @@ export function parseWorkoutDoc(doc?: string): {
   return { segments, totalMins: Math.round(totalMins), estimatedTss };
 }
 
+export const StrengthCircuitView: React.FC<{ info: StrengthCircuitInfo; className?: string }> = ({
+  info,
+  className = "",
+}) => {
+  const displayExercises = info.exercises.length > 0 ? info.exercises.slice(0, 4) : [];
+
+  return (
+    <div
+      className={`relative w-full overflow-hidden rounded-lg bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-purple-50/90 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-purple-950/40 border border-purple-200/90 dark:border-purple-800/60 p-1.5 flex flex-col justify-between select-none ${className}`}
+    >
+      <div className="flex items-center justify-between gap-1 mb-1 leading-none">
+        <div className="flex items-center gap-1 text-[10px] font-mono font-black text-purple-900 dark:text-purple-200">
+          <Dumbbell className="h-3 w-3 text-purple-600 dark:text-purple-400 shrink-0" />
+          <span>{info.rounds} Rondas</span>
+        </div>
+        <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-purple-200/80 dark:bg-purple-900/60 text-purple-950 dark:text-purple-200 leading-none">
+          {info.exercises.length > 0 ? `${info.exercises.length} Estaciones` : "Circuito"}
+        </span>
+      </div>
+
+      {displayExercises.length > 0 ? (
+        <div className="flex items-stretch gap-1 w-full">
+          {displayExercises.map((ex, idx) => (
+            <div
+              key={idx}
+              className="flex-1 min-w-0 rounded bg-white/95 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-800/80 px-1 py-0.5 text-center shadow-2xs group/station transition hover:border-purple-400"
+              title={ex.raw}
+            >
+              <span className="text-[9px] font-mono font-black text-purple-700 dark:text-purple-300 block truncate leading-tight">
+                {ex.reps}
+              </span>
+              <span className="text-[8px] font-medium text-slate-600 dark:text-slate-300 block truncate leading-tight">
+                {ex.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-[10px] font-mono text-purple-700 dark:text-purple-300 text-center py-0.5">
+          Movilidad • {info.rounds} Rondas • Enfriamiento
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface WorkoutChartProps {
   workoutDoc?: string;
   discipline: string;
@@ -111,9 +232,18 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   discipline,
   className = "",
 }) => {
+  if (discipline === "Descanso") {
+    return null;
+  }
+
+  if (isStrengthDoc(workoutDoc, discipline)) {
+    const info = parseStrengthDoc(workoutDoc);
+    return <StrengthCircuitView info={info} className={className} />;
+  }
+
   const { segments, totalMins } = parseWorkoutDoc(workoutDoc);
 
-  if (segments.length === 0 || discipline === "Descanso") {
+  if (segments.length === 0) {
     return null;
   }
 

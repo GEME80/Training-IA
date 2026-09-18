@@ -107,35 +107,44 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
       </div>
 
       {/* Métricas Clave de la Sesión */}
-      {!isRest && (
-        <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl text-center font-mono">
-          <div>
-            <span className="text-[9px] uppercase text-slate-400 block font-sans">Tiempo</span>
-            <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-              <Activity className="h-3 w-3 text-cyan-500" />
-              {workout.durationMinutes}m
-            </strong>
-          </div>
+      {!isRest && (() => {
+        const titleMinsMatch = workout.workoutName.match(/\((\d+)\s*m(?:in)?\)/i);
+        const mobileDuration = titleMinsMatch
+          ? parseInt(titleMinsMatch[1], 10)
+          : workout.discipline === "Fuerza"
+          ? (workout.durationMinutes && workout.durationMinutes >= 15 ? workout.durationMinutes : parsedDoc.totalMins || 35)
+          : (workout.durationMinutes || parsedDoc.totalMins || 45);
 
-          <div>
-            <span className="text-[9px] uppercase text-slate-400 block font-sans">Carga TSS</span>
-            <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-              <Zap className="h-3 w-3 text-amber-500" />
-              {isCompleted && matchedAct?.tss ? `${matchedAct.tss} / ` : ""}
-              {workout.tss || parsedDoc.estimatedTss || 0}
-            </strong>
-          </div>
+        return (
+          <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl text-center font-mono">
+            <div>
+              <span className="text-[9px] uppercase text-slate-400 block font-sans">Tiempo</span>
+              <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
+                <Activity className="h-3 w-3 text-cyan-500" />
+                {mobileDuration}m
+              </strong>
+            </div>
 
-          <div>
-            <span className="text-[9px] uppercase text-slate-400 block font-sans">Enfoque</span>
-            <strong className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate block">
-              {workout.discipline}
-            </strong>
-          </div>
-        </div>
-      )}
+            <div>
+              <span className="text-[9px] uppercase text-slate-400 block font-sans">Carga TSS</span>
+              <strong className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
+                <Zap className="h-3 w-3 text-amber-500" />
+                {isCompleted && matchedAct?.tss ? `${matchedAct.tss} / ` : ""}
+                {workout.tss || parsedDoc.estimatedTss || 0}
+              </strong>
+            </div>
 
-      {/* Gráfica Visual de Intervalos (Igual que en PC) */}
+            <div>
+              <span className="text-[9px] uppercase text-slate-400 block font-sans">Enfoque</span>
+              <strong className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate block">
+                {workout.discipline}
+              </strong>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Gráfica Visual de Intervalos o Circuito de Fuerza */}
       {workout.workoutDoc && (
         <div className="py-1">
           <WorkoutChart workoutDoc={workout.workoutDoc} discipline={workout.discipline} />
@@ -144,7 +153,9 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
 
       {/* Botón Táctil de 1 Toque */}
       <div className="pt-0.5 flex items-center justify-between text-xs">
-        <span className="text-[10px] text-slate-400 font-medium">Toca para ver intervalos y potencia</span>
+        <span className="text-[10px] text-slate-400 font-medium">
+          {workout.discipline === "Fuerza" ? "Toca para ver circuito y ejercicios" : "Toca para ver intervalos y potencia"}
+        </span>
         <span className="text-xs font-bold text-cyan-600 flex items-center gap-0.5">
           Ver Detalle →
         </span>

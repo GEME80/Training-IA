@@ -284,7 +284,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         {workout.workoutDoc && (
           <div className="space-y-2">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Perfil de Intervalos y Zonas:
+              {workout.discipline === "Fuerza" ? "Estructura del Circuito de Fuerza:" : "Perfil de Intervalos y Zonas:"}
             </span>
             <WorkoutChart
               workoutDoc={workout.workoutDoc}
@@ -299,7 +299,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                Prescripción Estructurada (Sintaxis Stryd / % FTP):
+                {workout.discipline === "Fuerza" ? "Prescripción de la Sesión de Fuerza:" : "Prescripción Estructurada (Sintaxis Stryd / % FTP):"}
               </span>
               <button
                 type="button"
@@ -307,15 +307,9 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                 className="flex items-center space-x-1 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
               >
                 {hasCopiedSyntax ? (
-                  <>
-                    <CheckCheck className="h-3.5 w-3.5 text-emerald-500" />
-                    <span className="text-emerald-600 dark:text-emerald-400">¡Copiado!</span>
-                  </>
+                  <><CheckCheck className="h-3.5 w-3.5 text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400">¡Copiado!</span></>
                 ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                    <span>Copiar Sintaxis</span>
-                  </>
+                  <><Copy className="h-3.5 w-3.5" /><span>Copiar Sintaxis</span></>
                 )}
               </button>
             </div>
@@ -328,11 +322,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
         {/* Footer del Modal */}
         <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl bg-slate-900 text-white dark:bg-slate-800 dark:text-white px-5 py-2 text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-700 transition cursor-pointer"
-          >
+          <button type="button" onClick={onClose} className="rounded-xl bg-slate-900 text-white dark:bg-slate-800 px-5 py-2 text-xs font-bold hover:bg-slate-800 transition cursor-pointer">
             Cerrar
           </button>
         </div>

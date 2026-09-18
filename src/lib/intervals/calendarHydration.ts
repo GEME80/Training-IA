@@ -87,7 +87,15 @@ export function hydrateWeekPlanFromEvents(
     dayEvts.forEach((evt) => {
       const disc = resolveDiscipline(evt.type);
       const cleanName = evt.name ? evt.name.replace(/^\[PULSE AI\]\s*/i, "").trim() : "Entrenamiento";
-      const mins = Math.round((evt.moving_time || 0) / 60) || 45;
+      const titleMinsMatch = cleanName.match(/\((\d+)\s*m(?:in)?\)/i);
+      let mins = Math.round((evt.moving_time || 0) / 60);
+      if (titleMinsMatch) {
+        const parsedTitleMins = parseInt(titleMinsMatch[1], 10);
+        if (parsedTitleMins > 0 && (mins < 15 || disc === "Fuerza")) {
+          mins = parsedTitleMins;
+        }
+      }
+      if (!mins || mins === 0) mins = disc === "Fuerza" ? 35 : 45;
       const tss = evt.icu_training_load || undefined;
       const doc = typeof evt.description === "string" && evt.description.trim()
         ? evt.description

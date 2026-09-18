@@ -20,7 +20,7 @@ export function getFuelingStrategy(durationMinutes: number, sport: string): Fuel
       targetChoPerHour: cho,
       sodiumMgPerHour: "500-700mg Na+/h",
       fluidMlPerHour: "600-800ml/h",
-      protocolNote: `Estrategia Nutricional Ciclismo (${durationMinutes}m): Ingerir ${cho} (isotónico + geles/barritas) y 500-700mg sodio/h cada 20-30 min.`,
+      protocolNote: `Ingerir ${cho} (isotónico + geles/barritas) y 500-700mg sodio/h cada 20-30 min.`,
     };
   }
 
@@ -30,35 +30,53 @@ export function getFuelingStrategy(durationMinutes: number, sport: string): Fuel
     targetChoPerHour: cho,
     sodiumMgPerHour: "400-600mg Na+/h",
     fluidMlPerHour: "450-650ml/h",
-    protocolNote: `Estrategia Nutricional Carrera (${durationMinutes}m): Consumo regular de ${cho} con agua y sales minerales cada 30-40 min.`,
+    protocolNote: `Consumo regular de ${cho} con agua y sales minerales cada 30-40 min.`,
   };
 }
 
+export function getMobilityWarmup(sport: string, isQualityOrLong: boolean): string | null {
+  if (!isQualityOrLong) return null;
+  if (sport === "Run" || sport === "Carrera") {
+    return "3m Movilidad dinámica de tobillo contra pared & 90/90 de cadera • 2x15s Pogo hops elásticos reactivos • 2x10x Sóleo excéntrico en escalón.";
+  }
+  if (sport === "Ride" || sport === "Ciclismo") {
+    return "3m Movilidad torácica & cadera (cat-cow dinámico) • 2x20s Activación neuromuscular de glúteo medio con minibanda.";
+  }
+  return null;
+}
+
+export function resolveWorkoutAddons(params: {
+  durationMinutes: number;
+  sport: string;
+  isQualityOrLong: boolean;
+}): { mobilityWarmup?: string; fuelingStrategy?: string } {
+  const { durationMinutes, sport, isQualityOrLong } = params;
+  const fueling = getFuelingStrategy(durationMinutes, sport);
+  const mobility = getMobilityWarmup(sport, isQualityOrLong);
+
+  return {
+    mobilityWarmup: mobility || undefined,
+    fuelingStrategy: fueling?.protocolNote || undefined,
+  };
+}
+
+export function cleanWorkoutDocOfAddons(doc?: string): string {
+  if (!doc) return "";
+  return doc
+    .replace(/^Activación Neuromuscular Previa[\s\S]*?(?=Warmup|Main|Calentamiento|Circuito|$)/im, "")
+    .replace(/Estrategia Nutricional & Hidratación[\s\S]*$/im, "")
+    .trim();
+}
+
+/**
+ * Mantenido por retrocompatibilidad, pero ya NO muta el workoutDoc
+ * para evitar mezclar datos informativos con la prescripción estructurada del entrenamiento.
+ */
 export function enhanceWorkoutDocWithFuelingAndWarmup(params: {
   workoutDoc: string;
   durationMinutes: number;
   sport: string;
   isQualityOrLong: boolean;
 }): string {
-  const { workoutDoc, durationMinutes, sport, isQualityOrLong } = params;
-  let enhanced = workoutDoc;
-
-  // Agente 07: Fueling & Hydration
-  const fueling = getFuelingStrategy(durationMinutes, sport);
-  if (fueling && !enhanced.includes("Estrategia Nutricional")) {
-    enhanced = `${enhanced}\n\nEstrategia Nutricional & Hidratación (PULSE Fueling)\n- ${fueling.protocolNote}`;
-  }
-
-  // Agente 08: Dynamic Mobility & Neuromuscular Warmup
-  if (isQualityOrLong && !enhanced.includes("Activación Neuromuscular")) {
-    if (sport === "Run" || sport === "Carrera") {
-      const warmupProtocol = "Activación Neuromuscular Previa (Reloj)\n- 3m Movilidad de tobillo contra pared & 90/90 cadera\n- 2x 15s Pogo hops elásticos reactivos\n- 2x 10x Sóleo excéntrico en escalón\n\n";
-      enhanced = `${warmupProtocol}${enhanced}`;
-    } else if (sport === "Ride" || sport === "Ciclismo") {
-      const warmupProtocol = "Activación Neuromuscular Previa (Reloj)\n- 3m Movilidad torácica & cadera (cat-cow dinámico)\n- 2x 20s Activación de glúteo medio con minibanda\n\n";
-      enhanced = `${warmupProtocol}${enhanced}`;
-    }
-  }
-
-  return enhanced;
+  return cleanWorkoutDocOfAddons(params.workoutDoc);
 }

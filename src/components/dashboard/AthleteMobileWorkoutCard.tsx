@@ -151,6 +151,22 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
         </div>
       )}
 
+      {/* Pautas complementarias informativas */}
+      {(workout.mobilityWarmup || workout.fuelingStrategy) && (
+        <div className="flex items-center gap-1.5 pt-0.5">
+          {workout.mobilityWarmup && (
+            <span className="px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 text-[10px] font-bold border border-sky-200 dark:border-sky-800">
+              🧘 Movilidad
+            </span>
+          )}
+          {workout.fuelingStrategy && (
+            <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold border border-amber-200 dark:border-amber-800">
+              ⚡ Nutrición
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Botón Táctil de 1 Toque */}
       <div className="pt-0.5 flex items-center justify-between text-xs">
         <span className="text-[10px] text-slate-400 font-medium">

@@ -6,7 +6,7 @@ import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool";
 import { selectStrengthWorkout } from "./strengthWorkoutPool";
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches";
-import { enhanceWorkoutDocWithFuelingAndWarmup } from "./workoutEnhancers";
+import { resolveWorkoutAddons } from "./workoutEnhancers";
 import {
   getCoprimeStride,
   buildRestDay,
@@ -195,8 +195,7 @@ export function generateWeekTemplate(
             distanceType, phase, weekNumber, isRecovery, bikeFtp,
           });
           const baseRideDoc = `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
-          const enrichedRideDoc = enhanceWorkoutDocWithFuelingAndWarmup({
-            workoutDoc: baseRideDoc,
+          const addons = resolveWorkoutAddons({
             durationMinutes: rideMins,
             sport: "Ciclismo",
             isQualityOrLong: true,
@@ -206,7 +205,8 @@ export function generateWeekTemplate(
             day, date: dateStr, formattedDate, discipline: "Ciclismo",
             workoutName: rideTitle, action: "MANTENER", durationMinutes: rideMins,
             tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
-            workoutDoc: enrichedRideDoc, isRestDay: false,
+            workoutDoc: baseRideDoc, isRestDay: false,
+            mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }
@@ -239,8 +239,7 @@ export function generateWeekTemplate(
         }
 
         if (day === longRunDay) {
-          const enrichedLongRunDoc = enhanceWorkoutDocWithFuelingAndWarmup({
-            workoutDoc: longRun.workoutDoc,
+          const addons = resolveWorkoutAddons({
             durationMinutes: longRun.minutes,
             sport: "Carrera",
             isQualityOrLong: true,
@@ -251,7 +250,8 @@ export function generateWeekTemplate(
             tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)),
             powerTarget: longRun.powerTarget,
             justification: `Tirada progresiva de ${longRun.km} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
-            workoutDoc: enrichedLongRunDoc, isRestDay: false,
+            workoutDoc: longRun.workoutDoc, isRestDay: false,
+            mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }
@@ -268,8 +268,7 @@ export function generateWeekTemplate(
             else if (q.name.includes("50m")) { dur = 65; tss = 70; }
             else { dur = 75; tss = 75; }
           }
-          const enrichedQualityDoc = enhanceWorkoutDocWithFuelingAndWarmup({
-            workoutDoc: q.workoutDoc,
+          const addons = resolveWorkoutAddons({
             durationMinutes: dur,
             sport: "Carrera",
             isQualityOrLong: true,
@@ -277,7 +276,8 @@ export function generateWeekTemplate(
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", activityType: isBrick ? "Brick" : "Carrera",
             workoutName: q.name, action: "MANTENER", durationMinutes: dur, tss,
-            powerTarget: q.powerTarget, justification: q.justification, workoutDoc: enrichedQualityDoc, isRestDay: false,
+            powerTarget: q.powerTarget, justification: q.justification, workoutDoc: q.workoutDoc, isRestDay: false,
+            mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }

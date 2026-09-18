@@ -94,6 +94,8 @@ export interface PlanItem {
   justification: string;
   workoutDoc?: string;
   workoutStructure?: string;
+  mobilityWarmup?: string;
+  fuelingStrategy?: string;
   isRestDay?: boolean;
   isCustomized?: boolean;
 }

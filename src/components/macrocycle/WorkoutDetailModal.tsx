@@ -60,18 +60,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   };
 
   const getDisciplineIcon = (discipline: string) => {
-    if (discipline === "Descanso" || discipline === "Off") {
-      return <Moon className="h-4 w-4 text-slate-400 shrink-0" />;
-    }
-    if (discipline === "Fuerza") {
-      return <Dumbbell className="h-4 w-4 text-purple-500 shrink-0" />;
-    }
-    if (discipline === "Ciclismo") {
-      return <Bike className="h-4 w-4 text-cyan-500 shrink-0" />;
-    }
-    if (discipline === "Natacion" || discipline === "Natación") {
-      return <Waves className="h-4 w-4 text-sky-500 shrink-0" />;
-    }
+    if (discipline === "Descanso" || discipline === "Off") return <Moon className="h-4 w-4 text-slate-400 shrink-0" />;
+    if (discipline === "Fuerza") return <Dumbbell className="h-4 w-4 text-purple-500 shrink-0" />;
+    if (discipline === "Ciclismo") return <Bike className="h-4 w-4 text-cyan-500 shrink-0" />;
+    if (discipline === "Natacion" || discipline === "Natación") return <Waves className="h-4 w-4 text-sky-500 shrink-0" />;
     return <Footprints className="h-4 w-4 text-amber-500 shrink-0" />;
   };
 
@@ -98,33 +90,16 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     }
 
     if (workout.discipline === "Ciclismo") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "Ride" ||
-          /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) ||
-          /ride|ciclismo|bike|rodaje|fondo/i.test(a.name)
-      );
-      if (match) return match;
+      const m = allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) || /ride|ciclismo|bike|rodaje|fondo/i.test(a.name));
+      if (m) return m;
     }
-
     if (workout.discipline === "Fuerza") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "WeightTraining" ||
-          /weight|gym|fuerza|strength/i.test(a.type) ||
-          /fuerza|gym|pesas|fortalec/i.test(a.name)
-      );
-      if (match) return match;
+      const m = allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type) || /fuerza|gym|pesas|fortalec/i.test(a.name));
+      if (m) return m;
     }
-
     if (workout.discipline === "Natacion") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "Swim" ||
-          /swim|nataci|piscina|aguas/i.test(a.type) ||
-          /swim|nataci|piscina|aguas/i.test(a.name)
-      );
-      if (match) return match;
+      const m = allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina|aguas/i.test(a.type || "") || /swim|nataci|piscina|aguas/i.test(a.name || ""));
+      if (m) return m;
     }
 
     // Adaptación cruzada para resistencia (Correr en vez de pedalear o viceversa)
@@ -326,6 +301,28 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             <pre className="max-h-48 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] font-mono text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
               {workout.workoutDoc}
             </pre>
+          </div>
+        )}
+
+        {/* Pautas Complementarias: Movilidad y Nutrición (Espacio Informativo Separado) */}
+        {(workout.mobilityWarmup || workout.fuelingStrategy) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            {workout.mobilityWarmup && (
+              <div className="rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 p-2.5 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">
+                  🧘 Movilidad & Activación (Informativo)
+                </span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">{workout.mobilityWarmup}</p>
+              </div>
+            )}
+            {workout.fuelingStrategy && (
+              <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 p-2.5 space-y-1">
+                <span className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">
+                  ⚡ Estrategia Nutricional (Informativo)
+                </span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">{workout.fuelingStrategy}</p>
+              </div>
+            )}
           </div>
         )}
 

@@ -9,8 +9,7 @@ export async function executeGeminiInference(
   body: HeadCoachChatRequest
 ): Promise<{ success: boolean; data?: any; successfulModel?: string }> {
   const { customGeminiKey, selectedModel, fallbackModels, temperature = 0.0, messages = [], isInitialAudit } = body;
-  const rawKey = (customGeminiKey || process.env.GEMINI_API_KEY || "").toString();
-  const geminiKey = rawKey.replace(/^["']|["']$/g, "").trim();
+  const geminiKey = (customGeminiKey || process.env.GEMINI_API_KEY || "").toString().replace(/^["']|["']$/g, "").trim();
 
   if (!geminiKey) {
     return { success: false };
@@ -66,23 +65,13 @@ export async function executeGeminiInference(
     : selectedModel;
   const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels.filter((m: string) => !m.includes("2.5-")) : [];
   const candidateModels = Array.from(new Set([mappedModel, ...userFallbacks, "gemini-3.5-flash", "gemini-3.6-flash"].filter(Boolean))).slice(0, 3);
-
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
 
   const cleanJson = (str: string) => {
-    let cleaned = str.trim();
-    if (cleaned.startsWith("```json")) {
-      cleaned = cleaned.replace(/^```json\s*/, "").replace(/```\s*$/, "");
-    } else if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/^```\s*/, "").replace(/```\s*$/, "");
-    }
-    cleaned = cleaned.trim();
+    const cleaned = str.trim().replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "").trim();
     const firstBrace = cleaned.indexOf("{");
     const lastBrace = cleaned.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      return cleaned.substring(firstBrace, lastBrace + 1);
-    }
-    return cleaned;
+    return (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) ? cleaned.substring(firstBrace, lastBrace + 1) : cleaned;
   };
 
   for (const model of candidateModels) {
@@ -220,6 +209,8 @@ export async function executeGeminiInference(
                       durationMinutes: plannedSession.durationMinutes || p.durationMinutes || 0,
                       justification: "Plan confirmado: continuidad aprobada sin modificaciones.",
                       workoutStructure: plannedSession.workoutStructure || p.workoutStructure || "",
+                      mobilityWarmup: p.mobilityWarmup || plannedSession.mobilityWarmup,
+                      fuelingStrategy: p.fuelingStrategy || plannedSession.fuelingStrategy,
                     };
                   }
 
@@ -316,6 +307,8 @@ export async function executeGeminiInference(
                     durationMinutes: safeDuration,
                     justification: p.justification || p.description || "",
                     workoutStructure: safeStructure,
+                    mobilityWarmup: p.mobilityWarmup || plannedSession?.mobilityWarmup,
+                    fuelingStrategy: p.fuelingStrategy || plannedSession?.fuelingStrategy,
                   };
                 });
               }

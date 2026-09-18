@@ -3554,3 +3554,67 @@ flowchart TD
   - `Prueba 1 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 rutas compiladas exitosamente en 3.0s (Código 0)**.
   - `Prueba 2 (Inferencia Real Gemini API):` `test_continuity_and_tags.mjs` $\rightarrow$ **0 emojis en reply (PASS), 3 tags limpios [ESTADO DEL PROCESO], [DIAGNÓSTICO / VEREDICTO], [ACCIÓN PRESCRIPTIVA] (PASS), preservación exacta de sesiones con (MANTENER) (PASS)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados $\le 348\text{ LOC}$ ($< 350$ LOC estricto - Regla 3).
+
+---
+
+### Versión 3.53 - Lenguaje Claro y Comprensible para Atletas (Erradicación de Jerga Técnica Oscura) (2026-09-17)
+- **Fecha y Hora:** 17 de Septiembre de 2026 - 17:30 COT.
+- **Directiva del Atleta:** "revisa todos los textos de la palicacion y cmabiemos las palabras tecnicas por conceptos que el atleta pueda entender. ejemplo menmcionamos mucho base mitocondrial, telemetria PMC, etc".
+- **Problema Detectado:**
+  - El Head Coach y la interfaz mostraban terminología compleja de laboratorio ("base mitocondrial", "densidad mitocondrial", "telemetría PMC", "estrés excéntrico", "catabolismo proteico", "sobrecarga simpática") que confundía al atleta.
+- **Solución y Mejoras Implementadas:**
+  1. **Regla de Lenguaje Humano en Prompts (`src/lib/ai/defaultPrompts.ts`, `src/lib/ai/prompts.ts`):**
+     - Se incorporó la regla 10 mandatoria de comunicación: traducir tecnicismos a lenguaje práctico y claro para el atleta.
+     - "Base mitocondrial" $\rightarrow$ "Base aeróbica / Rodaje suave en Z2".
+     - "Telemetría PMC" $\rightarrow$ "Estado de forma y evolución (frescura y fatiga)".
+     - "Estrés excéntrico" $\rightarrow$ "Impacto muscular y articular acumulado".
+     - "Sobrecarga simpática" $\rightarrow$ "Fatiga acumulada en el sistema nervioso".
+     - Los términos hiper-técnicos se reservan exclusivamente para el acordeón colapsable bajo demanda (`reasoning`).
+  2. **Revisión de Textos en Vistas:**
+     - Títulos, descripciones y badges simplificados en el dashboard y vistas de temporada.
+
+---
+
+### Versión 3.54 - Armonización de la Matriz Semanal Canónica y Erradicación de Ciclismo Consecutivo (2026-09-18)
+- **Fecha y Hora:** 18 de Septiembre de 2026 - 01:00 COT.
+- **Directiva del Atleta:** "revisa la imagen que tenemos ciclismo seguido lo cual esta mal, no respeta la matriz".
+- **Problema Detectado:**
+  - En la vista del calendario continuo, semanas 7 y 8 mostraban días de ciclismo consecutivos (Martes, Miércoles, Jueves Ciclismo + Fuerza, Sábado Ciclismo).
+  - La matriz histórica por defecto en `DEFAULT_WEEKLY_AVAILABILITY` y colisiones al mezclar presets de entrenamiento cruzado generaban días seguidos de bici.
+- **Solución y Mejoras Implementadas:**
+  1. **Matriz Canónica SSOT (`src/lib/gemini/types.ts`, `src/lib/db/types.ts`):**
+     - Lunes: Descanso | Martes: Carrera | Miércoles: Ciclismo | Jueves: Fuerza | Viernes: Carrera + Fuerza | Sábado: Ciclismo | Domingo: Carrera.
+  2. **Algoritmo de Saneamiento y Desduplicación (`resolveEffectiveAvailability`):**
+     - Detección proactiva de colisiones: si Martes y Miércoles coinciden en Ciclismo, Martes se conmuta a Carrera. Si Miércoles y Jueves coinciden en Ciclismo, Jueves retira Ciclismo para priorizar Fuerza o descanso neuromuscular.
+  3. **Protección en Generador de Macrociclos (`src/lib/physiology/macrocycleTemplates.ts`):**
+     - Todo acceso a la disponibilidad semanal pasa forzosamente por `resolveEffectiveAvailability`.
+  4. **Higienización de Estado en Atleta (`useSeasonPlans.ts`):**
+     - Al cargar el perfil, se depuran matrices residuales corruptas almacenadas en caché local.
+
+---
+
+### Versión 3.55 - Desacoplamiento Arquitectónico de Movilidad y Nutrición Fuera de workoutDoc (2026-09-18)
+- **Fecha y Hora:** 18 de Septiembre de 2026 - 10:20 COT.
+- **Directiva del Atleta:** "para mejorar el sistema todo lo que sea movilidad o nutricion pongamoslo como en otro espacio de datos adicionales que no se tomen para crear los workouts. con eso evitamos el riesgo de mezclar cosas y que sea solo informativo".
+- **Problema Detectado:**
+  - El enriquecedor fisiológico concatenaba texto de activación neuromuscular previa y nutrición/hidratación intra-sesión directamente al inicio y final del campo `workoutDoc`.
+  - Esto provocaba que el parser de intervalos (`parseWorkoutDoc`, `WorkoutChart.tsx`) y la sincronización con Intervals.icu intentaran interpretar los ejercicios de movilidad o notas nutricionales como series de fuerza o pasos de carrera/ciclismo para los relojes Garmin.
+- **Solución y Mejoras Implementadas:**
+  1. **Extensión del Modelo de Datos `PlanItem` (`src/lib/gemini/types.ts` - 133 LOC):**
+     - Incorporación de los campos complementarios informativos: `mobilityWarmup?: string` y `fuelingStrategy?: string`.
+  2. **Motor Fisiológico Desacoplado (`src/lib/physiology/workoutEnhancers.ts` - 82 LOC):**
+     - `resolveWorkoutAddons`: genera de forma aislada los textos informativos de movilidad y nutrición.
+     - `cleanWorkoutDocOfAddons`: sanea y purga cadenas heredadas de `workoutDoc` para dejarlas 100% libres de texto ajeno a los intervalos.
+     - `workoutDoc` permanece estrictamente puro con prescripción estructurada (Warmup, Main, Cooldown / repeticiones de fuerza).
+  3. **Integración en Macrociclos (`src/lib/physiology/macrocycleTemplates.ts` - 304 LOC):**
+     - Fondos, tiradas largas y series de calidad asignan `mobilityWarmup` y `fuelingStrategy` como propiedades independientes del `PlanItem`.
+  4. **Espacio Informativo Dedicado en la UI (`src/components/macrocycle/WorkoutDetailModal.tsx` - 338 LOC):**
+     - Nueva sección estructurada: *"Pautas Complementarias: Movilidad y Nutrición (Espacio Informativo Separado)"*, mostrando tarjetas independientes para `🧘 Movilidad & Activación` y `⚡ Estrategia Nutricional`.
+  5. **Indicadores en Tarjetas Móviles (`src/components/dashboard/AthleteMobileWorkoutCard.tsx` - 181 LOC):**
+     - Badges discretos (`🧘 Movilidad` y `⚡ Nutrición`) para alertar al atleta de pautas complementarias sin alterar la gráfica de intervalos.
+  6. **Actualización de Prompts y Gobernanza (`defaultPrompts.ts`, `prompts.ts`, `PROJECT_RULES.md`, `README.md`):**
+     - Regla mandatoria para todos los agentes de no contaminar `workoutDoc` ni `workoutStructure` con movilidad o nutrición.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados cumplen estrictamente la Regla 3 ($< 350$ LOC).

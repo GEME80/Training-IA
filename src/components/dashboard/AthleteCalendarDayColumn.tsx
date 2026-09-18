@@ -116,7 +116,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
       {/* 2. Sesiones Programadas del Día */}
       <div className="space-y-2 flex-1 flex flex-col">
         {matchedEntries.map(({ item, matchedAct, isRest }, idx) => {
-          const parsedDoc = parseWorkoutDoc(item.workoutDoc);
+          const parsedDoc = parseWorkoutDoc(item.workoutDoc, item.discipline);
           const itemPlannedTss = item.tss || parsedDoc.estimatedTss || (item.durationMinutes ? Math.round(item.durationMinutes * 0.75) : 0);
           const titleMinsMatch = item.workoutName.match(/\((\d+)\s*m(?:in)?\)/i);
           const effectiveDuration = titleMinsMatch

@@ -25,9 +25,15 @@ export interface StrengthCircuitInfo {
 }
 
 export function isStrengthDoc(doc?: string, discipline?: string): boolean {
-  if (discipline === "Fuerza") return true;
+  if (discipline) {
+    const d = discipline.toLowerCase();
+    return d === "fuerza" || d === "weighttraining" || d === "gym" || d === "fortalecimiento";
+  }
   if (!doc) return false;
-  return /rondas?|circuito|manguito|sentadilla|plancha|hip thrust|s[oó]leo|face-pull|gemelos|isquios|tobillo|escapular/i.test(doc);
+  // Si contiene prescripción de potencia (% FTP, % CP, vatios) o ritmo de carrera/bici, NUNCA es fuerza
+  if (/% ftp|% cp|pace|ritmo|w\/kg|\bftp\b|\bcp\b/i.test(doc)) return false;
+  // Solo es fuerza si contiene bloques explícitos de circuito/fuerza sin potencia
+  return /(?:circuito|bloque)[^\n]*\(\d+\s*rondas?\)|(?:rondas?|estaciones).*sentadilla|plancha.*face-pull/i.test(doc);
 }
 
 export function parseStrengthDoc(doc?: string, workoutName?: string): StrengthCircuitInfo {
@@ -74,7 +80,7 @@ export function parseStrengthDoc(doc?: string, workoutName?: string): StrengthCi
   };
 }
 
-export function parseWorkoutDoc(doc?: string): {
+export function parseWorkoutDoc(doc?: string, discipline?: string): {
   segments: IntervalSegment[];
   totalMins: number;
   estimatedTss: number;
@@ -83,7 +89,7 @@ export function parseWorkoutDoc(doc?: string): {
     return { segments: [], totalMins: 0, estimatedTss: 0 };
   }
 
-  if (isStrengthDoc(doc)) {
+  if (isStrengthDoc(doc, discipline)) {
     const stInfo = parseStrengthDoc(doc);
     return {
       segments: [],
@@ -98,6 +104,7 @@ export function parseWorkoutDoc(doc?: string): {
   let repeatCount = 1;
   let inRepeatBlock = false;
   let repeatBuffer: IntervalSegment[] = [];
+  let inIgnoredSection = false;
 
   const parseDuration = (raw: string): number => {
     const minsMatch = raw.match(/(\d+)\s*m/i);
@@ -125,6 +132,16 @@ export function parseWorkoutDoc(doc?: string): {
   };
 
   for (const line of lines) {
+    if (/activaci[oó]n neuromuscular|estrategia nutricional|pulse fueling/i.test(line)) {
+      inIgnoredSection = true;
+      continue;
+    }
+    if (/^(?:warmup|main|cooldown|calentamiento|principal|series|bloque|enfriamiento|recuperaci[oó]n|interval)/i.test(line)) {
+      inIgnoredSection = false;
+    }
+    if (inIgnoredSection) {
+      continue;
+    }
     const repeatMatch = line.match(/^(\d+)x\s*$/i);
     if (repeatMatch) {
       if (inRepeatBlock && repeatBuffer.length > 0) {
@@ -241,7 +258,7 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
     return <StrengthCircuitView info={info} className={className} />;
   }
 
-  const { segments, totalMins } = parseWorkoutDoc(workoutDoc);
+  const { segments, totalMins } = parseWorkoutDoc(workoutDoc, discipline);
 
   if (segments.length === 0) {
     return null;

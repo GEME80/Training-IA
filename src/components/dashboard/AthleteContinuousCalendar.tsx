@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { CalendarDays, Table, Smartphone, ChevronLeft, ChevronRight, Compass } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
-import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem, resolveEffectiveAvailability, isLegacyAvailability } from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { getLocalTodayStr, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
@@ -77,7 +77,9 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   // Semana activa para la vista de agenda móvil
   const activeWeekForAgenda = weeks[selectedMacroWeekIdx] || weeks[0];
   const effectiveAvailability = resolveEffectiveAvailability(
-    (blueprint.availabilitySnapshot as any) || weeklyAvailability
+    weeklyAvailability && !isLegacyAvailability(weeklyAvailability)
+      ? weeklyAvailability
+      : (blueprint.availabilitySnapshot as any) || weeklyAvailability
   );
   const rawActiveWeekPlan = activeWeekForAgenda
     ? generateWeekTemplate(

@@ -115,7 +115,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   const processedDates = new Set<string>();
 
   weekPlan.forEach((item) => {
-    const parsed = parseWorkoutDoc(item.workoutDoc);
+    const parsed = parseWorkoutDoc(item.workoutDoc, item.discipline);
     const m = item.durationMinutes || parsed.totalMins || 45;
     const t = item.tss || parsed.estimatedTss || 0;
     if (!item.isRestDay && item.discipline !== "Descanso") {
@@ -320,7 +320,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             <button
               type="button"
               onClick={() => onOpenAICoach(wIdx)}
-              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-slate-950 text-xs font-black shadow-xs transition hover:scale-[1.02] active:scale-95 cursor-pointer"
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 text-slate-950 text-xs font-black shadow-xs transition hover:scale-[1.02] cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>Head Coach & Adaptación IA</span>

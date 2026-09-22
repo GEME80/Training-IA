@@ -5,8 +5,6 @@ import {
   Code2,
   Check,
   X,
-  Copy,
-  CheckCheck,
   Footprints,
   Bike,
   Dumbbell,
@@ -46,18 +44,11 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const effEmail = email || user?.email || undefined;
   const effUid = uid || user?.uid || undefined;
 
-  const [hasCopiedSyntax, setHasCopiedSyntax] = useState<boolean>(false);
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
   const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
 
   if (!workout) return null;
-
-  const handleCopySyntax = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setHasCopiedSyntax(true);
-    setTimeout(() => setHasCopiedSyntax(false), 2000);
-  };
 
   const getDisciplineIcon = (discipline: string) => {
     if (discipline === "Descanso" || discipline === "Off") return <Moon className="h-4 w-4 text-slate-400 shrink-0" />;
@@ -280,23 +271,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         {/* Sintaxis Estructurada Stryd / Intervals */}
         {workout.workoutDoc && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                {workout.discipline === "Fuerza" ? "Prescripción de la Sesión de Fuerza:" : "Prescripción Estructurada (Sintaxis Stryd / % FTP):"}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleCopySyntax(workout.workoutDoc || "")}
-                className="flex items-center space-x-1 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
-              >
-                {hasCopiedSyntax ? (
-                  <><CheckCheck className="h-3.5 w-3.5 text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400">¡Copiado!</span></>
-                ) : (
-                  <><Copy className="h-3.5 w-3.5" /><span>Copiar Sintaxis</span></>
-                )}
-              </button>
-            </div>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+              <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+              {workout.discipline === "Fuerza" ? "Prescripción de la Sesión de Fuerza:" : "Prescripción Estructurada (Sintaxis Stryd / % FTP):"}
+            </span>
 
             <pre className="max-h-48 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] font-mono text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
               {workout.workoutDoc}

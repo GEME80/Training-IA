@@ -3690,3 +3690,44 @@ flowchart TD
   - `Prueba 2 (Compilación de Producción Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente en 3.0s (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados estrictamente $\le 348$ LOC (cumplimiento total de Regla 3).
 
+---
+
+### Versión 3.58 - Calendario Unificado de Año Completo al Estilo Intervals.icu (2026-09-22)
+- **Fecha y Hora:** 22 de Septiembre de 2026 - 11:30 COT.
+- **Directivas del Atleta:**
+  1. "El calendario debe ser de todo el año y mostrar todas las semanas con todos los trabajos realizados, no separados por plan futuro, actual o pasadas."
+  2. "El objetivo es que el atleta entre a su calendario y pueda ver sus workouts de un año atrás. Siempre que ingrese ve la semana actual y las siguientes semanas se vean por encima de la semana actual y las pasadas por debajo."
+  3. "El calendario debe tener el panel de resumen semanal con la información de la fase del macrociclo activo. Tarjetas de cada día compactas, delegando los totales al resumen semanal."
+- **Benchmark de Plataformas:**
+  - **Intervals.icu:** Vista semanal continua sin tabs. Semana actual visible en pantalla al abrir. Panel lateral con TSS, horas, IF y fase. Semanas pasadas arriba del scroll, futuras abajo.
+  - **TrainingPeaks:** Cuadrícula anual. Semana actual anclada. Color-coded por cumplimiento. Columna lateral con métricas del período.
+  - **Garmin Connect / Strava:** Calendarios mensual/cronológico, sin separación de plan vs. historial.
+- **Problemas Detectados:**
+  1. El calendario de Pulse tenía **3 tabs separadores** ("Semana Actual & Pasadas", "Plan Futuro", "Línea Completa") que fragmentaban la experiencia y obligaban al atleta a cambiar entre vistas para ver el historial ejecutado y el plan futuro.
+  2. Las semanas históricas tenían un tope de **24 semanas** (6 meses), cuando el estándar del mercado es 52 semanas (1 año completo).
+  3. El panel lateral de resumen semanal no mostraba la fase específica del macrociclo activo de forma destacada, ni diferenciaba visualmente entre semanas históricas, actuales y futuras.
+- **Solución y Mejoras Implementadas:**
+  1. **Calendario Unificado Anual (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 314 LOC):**
+     - Eliminación total de los 3 tabs (`calendarViewMode`).
+     - Construcción del arreglo unificado `allYearWeeks`:
+       - Semanas futuras del plan → arriba del scroll (lejanas primero, proximas abajo).
+       - Semana actual → anclada al viewport con `scrollIntoView({ behavior: "instant" })` en el primer mount.
+       - Semanas históricas ejecutadas (52 semanas) → debajo de la semana actual, orden reciente→antiguo.
+     - Separadores visuales orientativos: "↑ Plan Futuro (N sem)" y "↓ Historial Ejecutado (N sem)".
+     - Botón "Hoy" en la barra superior para re-anclar al viewport en cualquier momento.
+     - Cabecera de días sticky con `backdrop-blur-sm` para mejor lectura al hacer scroll.
+  2. **Panel Lateral Enriquecido (`src/components/dashboard/AthleteCalendarWeekRow.tsx` - 311 LOC):**
+     - Badge dedicado de **Fase del Macrociclo** con icono `Target` y nombre completo en tooltip (ej. "Fase 2: Construcción de Velocidad").
+     - Colores diferenciados por estado: azul cielo (actual), índigo (futura), gris (historial), neutro (plan pasado).
+     - Barra de adherencia con color semafórico: verde ($\ge 85\%$), ámbar ($\ge 60\%$), gris ($< 60\%$).
+     - Barras de disciplina más compactas (altura reducida a 1px, texto en 10px).
+     - Rango de fechas en el pie del panel.
+  3. **Historial Anual Completo (`src/lib/physiology/historicalCalendarWeeks.ts` - 185 LOC):**
+     - `maxWeeksBack` aumentado de 24 a **52 semanas** (1 año completo de historial ejecutado).
+     - Orden garantizado de **más reciente a más antiguo** en el arreglo devuelto (correcto para el scroll descendente).
+     - El `buildHistoricalBlueprint` (sin plan activo) también opera con 52 semanas.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` `AthleteContinuousCalendar.tsx` 314 LOC · `AthleteCalendarWeekRow.tsx` 311 LOC · `historicalCalendarWeeks.ts` 185 LOC. Todos $\le 350$ LOC (Regla 3 cumplida).
+

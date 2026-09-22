@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import { CalendarDays, Table, Smartphone, ChevronLeft, ChevronRight, Compass, History } from "lucide-react";
+import React, { useEffect, useRef, useMemo } from "react";
+import { CalendarDays, Compass } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
-import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem, resolveEffectiveAvailability, isLegacyAvailability } from "@/lib/gemini/engine";
+import {
+  WeeklyAvailabilityMap,
+  DEFAULT_WEEKLY_AVAILABILITY,
+  PlanItem,
+  resolveEffectiveAvailability,
+  isLegacyAvailability,
+} from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { getLocalTodayStr, getMondayOfWeekStr } from "@/lib/dateUtils";
-import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { AthleteCalendarWeekRow } from "./AthleteCalendarWeekRow";
 import { AthleteMobileAgendaView } from "./AthleteMobileAgendaView";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
@@ -43,6 +48,16 @@ function getWeekOfYear(dateStr: string): number {
   return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
 }
 
+/**
+ * Calendario Unificado de Año Completo — Estilo Intervals.icu / TrainingPeaks
+ *
+ * Disposición en scroll vertical continuo:
+ *   ↑ arriba: semanas FUTURAS del plan (más lejanas arriba)
+ *   ── SEMANA ACTUAL (anclada al viewport en el primer render) ──
+ *   ↓ abajo:  semanas HISTÓRICAS ejecutadas (de más reciente a más antigua)
+ *
+ * Sin tabs separadores. Un único scroll = todo el año de entrenamiento.
+ */
 export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps> = ({
   blueprint,
   selectedMacroWeekIdx,
@@ -59,54 +74,77 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   onSelectWorkoutModal,
 }) => {
   const currentWeekRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentMonStr = getMondayOfWeekStr();
   const todayStr = getLocalTodayStr();
-  const weeks = blueprint.weeks || [];
+  const blueprintWeeks = blueprint.weeks || [];
 
-  // Modo del calendario: "past" (semana actual de primero + pasadas hacia abajo), "future" (plan futuro), "timeline" (completo)
-  const [calendarViewMode, setCalendarViewMode] = useState<"past" | "future" | "timeline">("past");
+  // Semanas históricas: orden reciente→antiguo (para scroll hacia abajo = pasado)
+  const historicalWeeks = useMemo(
+    () =>
+      buildHistoricalCalendarWeeks({
+        blueprintStartDate: blueprint.startDate || currentMonStr,
+        dailyExecutedActivities,
+        maxWeeksBack: 52,
+      }),
+    [blueprint.startDate, currentMonStr, dailyExecutedActivities]
+  );
 
-  const historicalWeeks = useMemo(() => {
-    return buildHistoricalCalendarWeeks({
-      blueprintStartDate: blueprint.startDate || currentMonStr,
-      dailyExecutedActivities,
-      maxWeeksBack: 24,
-    });
-  }, [blueprint.startDate, currentMonStr, dailyExecutedActivities]);
+  // Semana actual del blueprint (puede coincidir fecha)
+  const currentBlueprintWeek = useMemo(
+    () =>
+      blueprintWeeks.find(
+        (w) =>
+          w.startDate === currentMonStr ||
+          (w.startDate <= todayStr && todayStr <= w.endDate)
+      ),
+    [blueprintWeeks, currentMonStr, todayStr]
+  );
 
-  const currentWeekObj = useMemo(() => {
-    return weeks.find((w) => w.startDate === currentMonStr || (w.startDate <= todayStr && todayStr <= w.endDate)) || weeks[0];
-  }, [weeks, currentMonStr, todayStr]);
+  // Semanas futuras: posteriores a la semana actual, en orden ascendente (próxima primero)
+  const futureWeeks = useMemo(() => {
+    const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
+    return blueprintWeeks
+      .filter((w) => w.startDate > cutoff)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  }, [blueprintWeeks, currentBlueprintWeek, currentMonStr]);
 
-  const displayWeeks = useMemo(() => {
-    if (calendarViewMode === "past") {
-      const sortedPast = [...historicalWeeks].reverse();
-      return currentWeekObj ? [currentWeekObj, ...sortedPast] : sortedPast;
-    }
-    if (calendarViewMode === "future") {
-      return weeks;
-    }
-    return [...historicalWeeks, ...weeks];
-  }, [calendarViewMode, historicalWeeks, weeks, currentWeekObj]);
+  /**
+   * Array unificado para renderizar de arriba a abajo:
+   * [futuras_lejanas..., futuras_próximas, semana_actual, pasada_1, pasada_2, ...]
+   *
+   * Las futuras se muestran en orden de más lejana (arriba) a más próxima (arriba-centro),
+   * luego semana actual, luego histórico de más reciente (centro-abajo) a más antiguo.
+   */
+  const allYearWeeks = useMemo(() => {
+    const futureSorted = [...futureWeeks].reverse(); // lejanas primero (top)
+    const currentSlot = currentBlueprintWeek ? [currentBlueprintWeek] : [];
+    // Histórico ya viene reciente→antiguo desde buildHistoricalCalendarWeeks
+    return [...futureSorted, ...currentSlot, ...historicalWeeks];
+  }, [futureWeeks, currentBlueprintWeek, historicalWeeks]);
 
-  const [mobileMode, setMobileMode] = useState<"agenda" | "grid">("agenda");
+  const totalWeeksLabel = allYearWeeks.length;
 
+  // Auto-scroll instantáneo a la semana actual en el primer mount
   useEffect(() => {
     if (currentWeekRef.current) {
-      currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      currentWeekRef.current.scrollIntoView({ behavior: "instant", block: "start" });
     }
-  }, [calendarViewMode]);
+    // Solo en el primer render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const effectiveAvailability = resolveEffectiveAvailability(
+    weeklyAvailability && !isLegacyAvailability(weeklyAvailability)
+      ? weeklyAvailability
+      : ((blueprint.availabilitySnapshot as any) || weeklyAvailability)
+  );
 
   const dayHeaders = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
   const gridTemplate = "grid-cols-[160px_repeat(7,minmax(0,1fr))]";
 
-  // Semana activa para la vista de agenda móvil
-  const activeWeekForAgenda = weeks[selectedMacroWeekIdx] || weeks[0];
-  const effectiveAvailability = resolveEffectiveAvailability(
-    weeklyAvailability && !isLegacyAvailability(weeklyAvailability)
-      ? weeklyAvailability
-      : (blueprint.availabilitySnapshot as any) || weeklyAvailability
-  );
+  // Vista móvil: agenda de la semana activa
+  const activeWeekForAgenda = blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
   const rawActiveWeekPlan = activeWeekForAgenda
     ? generateWeekTemplate(
         activeWeekForAgenda,
@@ -123,41 +161,35 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
 
   return (
     <div className="space-y-3 animate-fadeIn select-none">
-      {/* Selector de modo exclusivo para Celulares */}
-      <div className="flex md:hidden items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <span className="text-[11px] font-bold text-slate-500 font-mono uppercase">
-          Vista Calendario
-        </span>
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-          <button
-            type="button"
-            onClick={() => setMobileMode("agenda")}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-              mobileMode === "agenda"
-                ? "bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <Smartphone className="h-3 w-3 text-emerald-500" />
-            <span>Agenda Diaria</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileMode("grid")}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-              mobileMode === "grid"
-                ? "bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <Table className="h-3 w-3 text-cyan-500" />
-            <span>Matriz Completa</span>
-          </button>
+      {/* ── BARRA SUPERIOR: Título y navegación rápida ── */}
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-sky-500" />
+          <span className="text-sm font-black text-slate-900 dark:text-white">
+            Calendario de Entrenamiento
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+            {totalWeeksLabel} semanas · Año completo
+          </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (currentWeekRef.current) {
+              currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }}
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
+          title="Ir a la semana actual"
+        >
+          <Compass className="h-3.5 w-3.5" />
+          <span>Hoy</span>
+        </button>
       </div>
 
-      {/* 1. Vista Móvil de Agenda Diaria (Recomendada en Smartphones) */}
-      {mobileMode === "agenda" && (
+      {/* ── VISTA MÓVIL: Agenda Diaria ── */}
+      <div className="md:hidden">
         <AthleteMobileAgendaView
           blueprint={blueprint}
           selectedMacroWeekIdx={selectedMacroWeekIdx}
@@ -168,121 +200,16 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           onSelectWorkoutModal={onSelectWorkoutModal}
           onOpenAICoach={onOpenAICoach}
         />
-      )}
-
-      {/* 2. Selector de Modo y Navegador de Semanas en Escritorio (md+) */}
-      <div className="hidden md:flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        {/* Lado Izquierdo: Foco y Navegación de Semanas */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-1">
-            <button
-              type="button"
-              disabled={selectedMacroWeekIdx === 0}
-              onClick={() => onSelectWeek(Math.max(0, selectedMacroWeekIdx - 1))}
-              className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              title="Semana Anterior"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              disabled={selectedMacroWeekIdx >= weeks.length - 1}
-              onClick={() => onSelectWeek(Math.min(weeks.length - 1, selectedMacroWeekIdx + 1))}
-              className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              title="Semana Siguiente"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                Semana {selectedMacroWeekIdx + 1} de {weeks.length}
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20">
-                {activeWeekForAgenda?.phase || "Base"}
-              </span>
-              {activeWeekForAgenda?.startDate === currentMonStr && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-slate-950 uppercase">
-                  Semana Actual
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {activeWeekForAgenda?.focusDescription || activeWeekForAgenda?.phaseLabel || "Construcción Aeróbica"}
-            </p>
-          </div>
-        </div>
-
-        {/* Lado Derecho: Acciones de Vista */}
-        <div className="flex items-center space-x-2">
-          {activeWeekForAgenda?.startDate !== currentMonStr && (
-            <button
-              type="button"
-              onClick={() => {
-                const currentIdx = resolveCurrentWeekIndex(weeks);
-                if (currentIdx !== -1) onSelectWeek(currentIdx);
-              }}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition cursor-pointer"
-            >
-              <Compass className="h-3.5 w-3.5 text-cyan-500" />
-              <span>Ir a Semana Actual</span>
-            </button>
-          )}
-
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl space-x-1">
-            <button
-              type="button"
-              onClick={() => setCalendarViewMode("past")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                calendarViewMode === "past"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Semana actual de primero y semanas pasadas hacia abajo"
-            >
-              <History className="h-3.5 w-3.5 text-cyan-500" />
-              <span>Semana Actual & Pasadas</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setCalendarViewMode("future")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                calendarViewMode === "future"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Semana actual de primero y semanas futuras planificadas"
-            >
-              <CalendarDays className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Plan Futuro ({weeks.length} sem)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setCalendarViewMode("timeline")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                calendarViewMode === "timeline"
-                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Línea de tiempo continua completa"
-            >
-              <Table className="h-3.5 w-3.5 text-sky-500" />
-              <span>Línea Completa</span>
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* 3. Vista de Cuadrícula Semanal (Desktop md:block; opcional en móvil si seleccionan "grid") */}
-      <div className={`${mobileMode === "grid" ? "block" : "hidden md:block"} overflow-x-auto space-y-4`}>
-        {/* Cabecera Global de Días */}
+      {/* ── VISTA ESCRITORIO: Cuadrícula Continua Anual ── */}
+      <div ref={scrollContainerRef} className="hidden md:block overflow-x-auto">
+        {/* Cabecera de días — sticky */}
         <div
-          className={`min-w-[960px] 2xl:min-w-0 w-full grid ${gridTemplate} gap-2 px-2 text-center font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-200 dark:border-slate-800`}
+          className={`min-w-[960px] 2xl:min-w-0 w-full grid ${gridTemplate} gap-2 px-2 text-center font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 sticky top-0 z-10 backdrop-blur-sm`}
         >
           <div className="text-left pl-2 font-black text-slate-700 dark:text-slate-300">
-            SEMANA / RESUMEN
+            SEMANA · FASE
           </div>
           {dayHeaders.map((dh, i) => (
             <div key={i} className="text-center font-black">
@@ -291,42 +218,93 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           ))}
         </div>
 
-        {/* Filas Semanales de la Cuadrícula Continua */}
-        <div className="min-w-[960px] 2xl:min-w-0 w-full space-y-4">
-          {displayWeeks.map((week) => {
-            const isHistoricalWeek = Boolean((week as any).isHistorical || week.weekNumber <= 0);
-            const wIdx = isHistoricalWeek ? week.weekNumber : Math.max(0, week.weekNumber - 1);
+        {/* Etiqueta de orientación: FUTURO */}
+        {futureWeeks.length > 0 && (
+          <div className="min-w-[960px] 2xl:min-w-0 flex items-center gap-3 px-3 py-2 mt-2">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-indigo-300 dark:to-indigo-700" />
+            <span className="text-[10px] font-black font-mono text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
+              ↑ Plan Futuro ({futureWeeks.length} sem)
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-indigo-300 dark:to-indigo-700" />
+          </div>
+        )}
+
+        {/* Filas Semanales Unificadas */}
+        <div className="min-w-[960px] 2xl:min-w-0 w-full space-y-3 pb-6">
+          {allYearWeeks.map((week, renderIdx) => {
+            const isHistoricalWeek = Boolean(
+              (week as any).isHistorical || week.weekNumber <= 0
+            );
+            const isFutureWeek =
+              !isHistoricalWeek && week.startDate > (currentBlueprintWeek?.startDate || currentMonStr);
             const isCurrentWeek =
-              week.startDate === currentMonStr || (week.startDate <= todayStr && todayStr <= week.endDate);
-            const isPastWeek = week.endDate < todayStr;
+              week.startDate === currentMonStr ||
+              (!isHistoricalWeek && week.startDate <= todayStr && todayStr <= week.endDate);
+            const isPastWeek = !isCurrentWeek && week.endDate < todayStr;
             const calendarWeekNumber = getWeekOfYear(week.startDate);
+            const wIdx = isHistoricalWeek
+              ? week.weekNumber
+              : Math.max(0, week.weekNumber - 1);
+
+            // Separador visual: etiqueta "SEMANA ACTUAL" antes de la primera semana actual
+            const prevWeek = allYearWeeks[renderIdx - 1];
+            const showCurrentDivider =
+              isCurrentWeek &&
+              prevWeek &&
+              (prevWeek.startDate > currentMonStr || (prevWeek as any).isHistorical === false);
 
             return (
-              <AthleteCalendarWeekRow
-                key={week.startDate}
-                week={week}
-                wIdx={wIdx}
-                weeksCount={weeks.length}
-                isCurrentWeek={isCurrentWeek}
-                isSelectedWeek={wIdx === selectedMacroWeekIdx}
-                isPastWeek={isPastWeek}
-                calendarWeekNumber={calendarWeekNumber}
-                blueprint={blueprint}
-                runFtp={runFtp}
-                bikeFtp={bikeFtp}
-                effectiveAvailability={effectiveAvailability}
-                weeklyExecutedTss={weeklyExecutedTss}
-                dailyExecutedActivities={dailyExecutedActivities}
-                calendarEvents={calendarEvents}
-                todayStr={todayStr}
-                gridTemplate={gridTemplate}
-                currentWeekRef={currentWeekRef}
-                onSelectWeek={onSelectWeek}
-                onOpenAICoach={onOpenAICoach}
-                onSyncWeekToIntervals={onSyncWeekToIntervals}
-                onSyncTriweeklyBlock={onSyncTriweeklyBlock}
-                onSelectWorkoutModal={onSelectWorkoutModal}
-              />
+              <React.Fragment key={week.startDate}>
+                {/* Divisor "Hoy" entre futuro y presente */}
+                {showCurrentDivider && (
+                  <div className="flex items-center gap-3 px-3 py-1">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-sky-400 dark:to-sky-600" />
+                    <span className="text-[10px] font-black font-mono text-sky-600 dark:text-sky-400 uppercase tracking-widest">
+                      ── Semana Actual ──
+                    </span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-sky-400 dark:to-sky-600" />
+                  </div>
+                )}
+
+                <div ref={isCurrentWeek ? currentWeekRef : undefined}>
+                  <AthleteCalendarWeekRow
+                    week={week}
+                    wIdx={wIdx}
+                    weeksCount={blueprintWeeks.length}
+                    isCurrentWeek={isCurrentWeek}
+                    isFutureWeek={isFutureWeek}
+                    isSelectedWeek={wIdx === selectedMacroWeekIdx}
+                    isPastWeek={isPastWeek}
+                    calendarWeekNumber={calendarWeekNumber}
+                    blueprint={blueprint}
+                    runFtp={runFtp}
+                    bikeFtp={bikeFtp}
+                    effectiveAvailability={effectiveAvailability}
+                    weeklyExecutedTss={weeklyExecutedTss}
+                    dailyExecutedActivities={dailyExecutedActivities}
+                    calendarEvents={calendarEvents}
+                    todayStr={todayStr}
+                    gridTemplate={gridTemplate}
+                    currentWeekRef={currentWeekRef}
+                    onSelectWeek={onSelectWeek}
+                    onOpenAICoach={onOpenAICoach}
+                    onSyncWeekToIntervals={onSyncWeekToIntervals}
+                    onSyncTriweeklyBlock={onSyncTriweeklyBlock}
+                    onSelectWorkoutModal={onSelectWorkoutModal}
+                  />
+                </div>
+
+                {/* Separador "Historial" entre semana actual y primer semana pasada */}
+                {isCurrentWeek && renderIdx < allYearWeeks.length - 1 && (
+                  <div className="flex items-center gap-3 px-3 py-1">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-300 dark:to-slate-700" />
+                    <span className="text-[10px] font-black font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      ↓ Historial Ejecutado ({historicalWeeks.length} sem)
+                    </span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-slate-700" />
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>

@@ -5,6 +5,7 @@ import { getMondayOfWeekStr, getLocalTodayStr, formatLocalDateToYMD } from "@/li
 export interface HistoricalWeeksOptions {
   blueprintStartDate?: string;
   dailyExecutedActivities?: DailyExecutedMap;
+  /** Cuántas semanas hacia atrás construir. Por defecto 52 (1 año completo). */
   maxWeeksBack?: number;
 }
 
@@ -17,42 +18,58 @@ function getMonday(dateStr: string): Date {
   return d;
 }
 
+/**
+ * Construye las semanas históricas ejecutadas ANTERIORES al inicio del blueprint
+ * (o de la semana actual si no hay blueprint).
+ *
+ * El arreglo devuelto está ordenado de **MÁS RECIENTE a MÁS ANTIGUA**, de modo
+ * que al renderizarlo debajo de la semana actual en el scroll continuo, el
+ * atleta ve primero las semanas más cercanas al presente.
+ */
 export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): MacrocycleWeek[] {
   const {
     blueprintStartDate,
     dailyExecutedActivities = {},
-    maxWeeksBack = 16,
+    maxWeeksBack = 52,
   } = options;
 
   const todayStr = getLocalTodayStr();
   const currentMondayStr = getMondayOfWeekStr();
-  const referenceMondayStr = blueprintStartDate || currentMondayStr;
+  // La referencia es el lunes actual o el inicio del plan (lo que sea más temprano)
+  const referenceMondayStr = blueprintStartDate
+    ? (blueprintStartDate <= currentMondayStr ? blueprintStartDate : currentMondayStr)
+    : currentMondayStr;
   const refMondayDate = getMonday(referenceMondayStr);
 
-  const activityDates = Object.keys(dailyExecutedActivities).filter((d) => {
-    const actData = dailyExecutedActivities[d];
-    return actData && actData.activities && actData.activities.length > 0;
-  }).sort();
+  // Encontrar la semana más antigua con actividades
+  const activityDates = Object.keys(dailyExecutedActivities)
+    .filter((d) => {
+      const actData = dailyExecutedActivities[d];
+      return actData && actData.activities && actData.activities.length > 0;
+    })
+    .sort();
 
-  if (activityDates.length === 0) {
-    return [];
+  // Calcular cuántas semanas reales hay disponibles hacia atrás
+  let effectiveWeeksBack = maxWeeksBack;
+  if (activityDates.length > 0) {
+    const earliestActDate = activityDates[0];
+    const earliestMonday = getMonday(earliestActDate);
+    const diffMs = refMondayDate.getTime() - earliestMonday.getTime();
+    if (diffMs > 0) {
+      const diffWeeks = Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000));
+      effectiveWeeksBack = Math.min(diffWeeks, maxWeeksBack);
+    } else {
+      // No hay semanas anteriores a la referencia
+      effectiveWeeksBack = 0;
+    }
   }
 
-  const earliestActDate = activityDates[0];
-  const earliestMonday = getMonday(earliestActDate);
-
-  // Calcular cuántas semanas completas hay entre el lunes más antiguo y el lunes del plan
-  const diffMs = refMondayDate.getTime() - earliestMonday.getTime();
-  if (diffMs <= 0) {
-    return [];
-  }
-
-  const diffWeeks = Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000));
-  const effectiveWeeksBack = Math.min(diffWeeks, maxWeeksBack);
+  if (effectiveWeeksBack <= 0) return [];
 
   const historicalWeeks: MacrocycleWeek[] = [];
 
-  for (let i = effectiveWeeksBack; i >= 1; i--) {
+  // Generar en orden RECIENTE→ANTIGUO (i=1 es la semana inmediatamente anterior)
+  for (let i = 1; i <= effectiveWeeksBack; i++) {
     const weekMon = new Date(refMondayDate);
     weekMon.setDate(refMondayDate.getDate() - i * 7);
     const weekSun = new Date(weekMon);
@@ -61,7 +78,6 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
     const monStr = formatLocalDateToYMD(weekMon);
     const sunStr = formatLocalDateToYMD(weekSun);
 
-    // Calcular TSS y minutos reales ejecutados en los 7 días de esta semana
     let weekExecutedTss = 0;
     let weekTotalMins = 0;
     const sportsFound = new Set<string>();
@@ -81,8 +97,8 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
     }
 
     const volumeHours = Number((weekTotalMins / 60).toFixed(1));
-    const sportSummary = sportsFound.size > 0 ? Array.from(sportsFound).join(", ") : "Completada";
-
+    const sportSummary =
+      sportsFound.size > 0 ? Array.from(sportsFound).join(", ") : "Completada";
     const isPast = sunStr < todayStr;
 
     historicalWeeks.push({
@@ -96,11 +112,12 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
       microcycleType: "CARGA",
       microcycleLabel: `Semana Ejecutada (${weekExecutedTss} TSS)`,
       microcycleBadgeColor: "bg-slate-500/20 text-slate-400 border-slate-500/30",
-      targetTss: weekExecutedTss > 0 ? weekExecutedTss : 150,
+      targetTss: weekExecutedTss > 0 ? weekExecutedTss : 0,
       maxLongRunMinutes: 0,
-      focusDescription: weekExecutedTss > 0
-        ? `${weekExecutedTss} TSS registrados • ${volumeHours}h ejecutadas (${sportSummary})`
-        : "Semana histórica registrada en Intervals.icu",
+      focusDescription:
+        weekExecutedTss > 0
+          ? `${weekExecutedTss} TSS · ${volumeHours}h ejecutadas (${sportSummary})`
+          : "Semana registrada en Intervals.icu",
       isCurrentWeek: false,
       isRecoveryWeek: false,
       isPastWeek: isPast,
@@ -109,19 +126,23 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
     } as any);
   }
 
+  // El arreglo ya está ordenado de más reciente (i=1) a más antigua (i=N)
   return historicalWeeks;
 }
 
+/** Construye un blueprint de respaldo usando sólo el historial ejecutado (sin plan activo). */
 export function buildHistoricalBlueprint(
   dailyExecutedActivities: DailyExecutedMap = {},
   athleteProfile?: any
 ): MacrocycleBlueprint {
   const currentMondayStr = getMondayOfWeekStr();
   const todayStr = getLocalTodayStr();
+
+  // Pasadas en orden reciente→antiguo para el array de weeks
   const pastWeeks = buildHistoricalCalendarWeeks({
     blueprintStartDate: currentMondayStr,
     dailyExecutedActivities,
-    maxWeeksBack: 12,
+    maxWeeksBack: 52,
   });
 
   const nowMonday = getMonday(currentMondayStr);
@@ -147,7 +168,8 @@ export function buildHistoricalBlueprint(
     isPastWeek: false,
   };
 
-  const allWeeks = [...pastWeeks, currentWeek];
+  // Para el blueprint: histórico (antiguo→reciente) + semana actual
+  const allWeeks = [...[...pastWeeks].reverse(), currentWeek];
 
   return {
     id: "historical-timeline-blueprint",

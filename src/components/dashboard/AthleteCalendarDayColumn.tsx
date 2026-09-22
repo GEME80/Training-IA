@@ -4,6 +4,7 @@ import React from "react";
 import { Footprints, Bike, Dumbbell, Waves, Moon, ChevronRight } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
+import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
 
 interface AthleteCalendarDayColumnProps {
   dayName: string;
@@ -48,6 +49,17 @@ function resolveDisplayDuration(item: PlanItem): number {
 
 /** Nombre limpio de la sesión sin tags de acciones */
 const cleanName = (name: string) => name.replace(/\[.*?\]\s*/g, "").trim();
+
+/**
+ * Extrae una descripción muy corta (≤ 60 chars) de un workoutDoc de Fuerza.
+ * Toma la primera línea no vacía que no sea un encabezado de sección (no empieza con #).
+ */
+function gymShortDesc(workoutDoc: string): string {
+  if (!workoutDoc) return "";
+  const lines = workoutDoc.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith("---"));
+  const first = lines[0] || "";
+  return first.length > 60 ? first.slice(0, 57) + "…" : first;
+}
 
 export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> = ({
   dayName,
@@ -198,6 +210,8 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
           }
 
           // ── SESIÓN PLANIFICADA (futura o presente) ──
+          const isAerobicDisc = item.discipline === "Carrera" || item.discipline === "Ciclismo";
+          const isGym = item.discipline === "Fuerza";
           const headerColors =
             item.discipline === "Carrera"
               ? "bg-[#fcf2eb] dark:bg-amber-950/40 text-[#8C564B] dark:text-amber-300 border-[#f6ddcd] dark:border-amber-900/50"
@@ -205,10 +219,11 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
               ? "bg-[#e8f4fd] dark:bg-sky-950/50 text-[#0863b2] dark:text-sky-300 border-[#cde6fb] dark:border-sky-900/50"
               : "bg-purple-100/80 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border-purple-200/90 dark:border-purple-800/70";
           const cardColors =
-            item.discipline === "Fuerza"
+            isGym
               ? "border-purple-200/90 dark:border-purple-800/80 bg-purple-50/25 dark:bg-purple-950/20 hover:border-purple-400"
               : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500";
-          const badgeLabel = item.discipline === "Fuerza" ? "Gym" : "Plan";
+          const badgeLabel = isGym ? "Gym" : "Plan";
+          const gymDesc = isGym ? gymShortDesc(item.workoutDoc || "") : "";
 
           return (
             <div
@@ -230,6 +245,20 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                   {cleanName(item.workoutName)}
                 </p>
               </div>
+              {/* Gráfica de intervalos — solo Carrera y Ciclismo */}
+              {isAerobicDisc && item.workoutDoc && (
+                <div className="px-1.5 pb-1">
+                  <WorkoutChart workoutDoc={item.workoutDoc} discipline={item.discipline} />
+                </div>
+              )}
+              {/* Descripción corta — solo Gimnasio */}
+              {isGym && gymDesc && (
+                <div className="px-2 pb-1">
+                  <p className="text-[10px] text-purple-700 dark:text-purple-300 font-mono leading-snug line-clamp-2 opacity-80">
+                    {gymDesc}
+                  </p>
+                </div>
+              )}
               {/* Footer */}
               <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-100 dark:border-slate-800 pt-1 mt-auto">
                 <span className="text-slate-600 dark:text-slate-400">{plannedTss} TSS</span>

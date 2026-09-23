@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.55)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.60)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,16 +8,18 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.52).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.60).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.50 - 3.52: Modernización Integral del Head Coach Fisiológico:
-  * Saludo ejecutivo con badge dinámico de progreso semanal (% de carga ejecutada) y telemetría Banister viva (CTL, ATL, TSB, HRV), suprimiendo preguntas abiertas redundantes.
-  * Blindaje FinOps & Consola Táctica en 2 Niveles: eliminación del input abierto de texto libre (<input>), canalizando la interacción en selector estructurado Semanal (Microciclo) y Diario (Sesión de hoy).
-  * Criterio de Oro de Continuidad: obligatoriedad de dictaminar CONTINUIDAD DEL PLAN (actionType: "REVIEW_PHYSIOLOGY") con preservación exacta de sesiones (action: "MANTENER") cuando la adherencia es >= 80%, TSB >= -15 y RPE <= 6/10.
-  * Auditoría Dual de Carga Externa (vatios/TSS) vs Carga Interna (RPE 1-10, Feel 1-5, soreness muscular y sueño).
-  * Iconografía Deportiva Vectorial: erradicación total de emojis infantiles, sustituidos por componentes SVG de lucide-react y micro-tarjetas atléticas.
+- Versiones 3.56 - 3.60: Modernización del Calendario Deportivo, Sincronización Tri-Semanal & Main Sticky Header Maestro:
+  * Main Sticky Header Maestro Unificado (`top: 0; z-index: 50; backdrop-blur`): agrupa en un único contenedor persistente las tarjetas fisiológicas (CTL, ATL, TSB, Potencia), la barra de título con navegación rápida "Hoy" y la cabecera de días (Lunes a Domingo), permitiendo que el scroll del calendario fluya por debajo sin perder nunca la visión de la condición física ni los controles rápidos.
+  * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
+  * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
+  * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
+  * Sincronización Bidireccional de Peso: despacho automático del peso corporal del atleta a Intervals.icu (`/athlete/{id}` y `/wellness/{date}`).
+  * Persistencia Explícita de Matriz de Disponibilidad: guardado manual seguro y botón de restablecimiento a Matriz Canónica anti-colisiones.
+  * Respeto de Max CTL Histórico: macrociclos dimensionados tomando el pico real de fitness histórico del atleta sin topes artificiales.
 - La arquitectura frontend está modularizada (< 350 líneas por archivo) en: `src/components/admin/`, `profile/`, `season/`, `dashboard/` y `macrocycle/`, operada por Custom Hooks en `src/hooks/` (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`).
 - El backend desacopla su lógica en `src/lib/services/` (`telemetryService.ts`, `intervalsSyncService.ts`, `macrocycleApiService.ts`), con controladores API delgados (<= 30-71 LOC) y validación declarativa con Zod en `src/lib/validation/schemas.ts`.
 - Capa de Ciencia Deportiva: 18 modelos fisiológicos modulares (< 350 LOC cada uno) en `src/lib/ai/knowledge/` (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Sprint/Olímpico/70.3/140.6) con rotación anti-repetición de paso coprimo gcd(L, s) = 1, desambiguación jerárquica de running vs ciclismo, y soporte para Maratón Cruzado (Run + Bike).
@@ -406,3 +408,24 @@ Todo agente o desarrollador que genere o modifique sesiones, macrociclos o texto
      * En vez de "telemetría PMC" $\rightarrow$ usar "tu estado de forma y evolución", "frescura y fatiga".
      * En vez de "estrés excéntrico" o "catabolismo proteico" $\rightarrow$ usar "impacto muscular y articular" o "desgaste muscular acumulado".
      * En vez de "sobrecarga simpática" $\rightarrow$ usar "fatiga acumulada en el sistema nervioso" o "demanda alta de recuperación".
+
+---
+
+## 📌 13. LEYES DEL CALENDARIO UNIFICADO, MAIN STICKY HEADER & TARJETAS ESPECIALIZADAS (v3.60)
+
+1. **Ley del Main Sticky Header Maestro:**
+   - La vista principal de entrenamiento debe mantener persistentemente visible (`position: sticky; top: 0; z-index: 50`) el bloque maestro con:
+     * El panel de métricas fisiológicas dinámicas (CTL, ATL, TSB, Potencia).
+     * La barra de control con botón "Hoy" y contador de semanas anuales.
+     * La cabecera fija de días (Lunes a Domingo + Semana/Fase).
+   - El scroll vertical de semanas (futuras hacia arriba, pasadas hacia abajo) debe fluir por debajo de este bloque maestro.
+
+2. **Ley del Calendario Unificado sin Tabs:**
+   - Queda prohibido dividir el calendario en tabs disjuntos de pasado vs futuro. Todo el año de entrenamiento (hasta 52 semanas de historial + semanas de macrociclo activo) debe habitar un único scroll vertical.
+   - La semana actual se ancla automáticamente al viewport al cargar la vista.
+
+3. **Ley de Especialización de Tarjetas de Sesión:**
+   - **Carrera y Ciclismo:** Conservan su gráfica compacta de intervalos de potencia/zonas (`WorkoutChart`).
+   - **Fuerza / Gimnasio:** Prohibido renderizar gráficas; en su lugar, muestran una síntesis de texto concisa ($\le 60$ caracteres) de los ejercicios clave.
+   - **Modal de Detalle:** El detalle completo (prescripción estructurada, series, repeticiones, descansos, telemetría e intervalos) reside exclusivamente en el modal que se abre con el evento de clic en la tarjeta.
+

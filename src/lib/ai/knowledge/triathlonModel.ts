@@ -158,6 +158,12 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           workoutDoc: "Warmup\n- 12m 65% FTP\n\n4x\n- 9m 84% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
         },
         {
+          name: "Escalera Incremental Triatlón en Pista (200m -> 400m -> 600m -> 800m)",
+          powerTarget: "100-110% CP",
+          justification: "Reactividad neuromuscular de zancada y potencia aeróbica para triatletas.",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain (Escalera Progresiva)\n- 40s 110% FTP (200m)\n- 1m 55% FTP\n- 1m25s 106% FTP (400m)\n- 1m30s 55% FTP\n- 2m15s 102% FTP (600m)\n- 2m 55% FTP\n- 3m 100% FTP (800m)\n- 2m30s 55% FTP\n- 1m25s 106% FTP (400m)\n- 1m 55% FTP\n- 40s 110% FTP (200m)\n\nCooldown\n- 8m 60% FTP",
+        },
+        {
           name: "Brick Dinámico de Umbral (1h20m Bici con 2x15m @ 85% FTP + 20m Run)",
           powerTarget: "85% FTP + 84% CP",
           justification: "Tolerancia al lactato en acoples aerodinámicos y salida a pie inmediata.",

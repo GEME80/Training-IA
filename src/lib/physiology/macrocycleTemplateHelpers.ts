@@ -164,12 +164,13 @@ export function resolveWeekendRide(params: {
   weekNumber: number;
   isRecovery: boolean;
   bikeFtp?: number;
-}): { rideMins: number; rideTitle: string; rideJust: string; rideTarget: string } {
+}): { rideMins: number; rideTitle: string; rideJust: string; rideTarget: string; workoutDoc?: string } {
   const { distanceType, phase, weekNumber, isRecovery, bikeFtp } = params;
   let rideMins = 90;
   let rideTitle = "Fondo Resistencia Ciclismo";
   let rideJust = "Volumen mitocondrial continuo.";
   let rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.65)}W (65% FTP)` : "65% FTP";
+  let workoutDoc: string | undefined = undefined;
 
   if (distanceType === "triathlon_1406") {
     if (phase === "PEAK") rideMins = [270, 300, 240][(weekNumber - 1) % 3];
@@ -218,11 +219,29 @@ export function resolveWeekendRide(params: {
     rideMins = [110, 120, 105][(weekNumber - 1) % 3];
     rideTitle = `Fondo Específico Ciclismo (${rideMins}m Z2/Z3)`;
   } else {
-    rideMins = [85, 95, 90, 100][(weekNumber - 1) % 4];
-    rideTitle = `Fondo Resistencia Continua Z2 (${rideMins}m)`;
+    // Alternancia dinámica de estímulo de fin de semana para Ciclismo
+    const style = (weekNumber - 1) % 3;
+    if (style === 0) {
+      rideMins = [90, 100, 95][(weekNumber - 1) % 3];
+      rideTitle = `Fondo Ciclismo con Variaciones de Cadencia (${rideMins}m)`;
+      rideJust = "Fuerza y eficiencia neuromuscular alternando 60 y 100 rpm.";
+      rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.68)}W (68% FTP)` : "68% FTP";
+      workoutDoc = `Warmup\n- 15m 55% FTP\n\n4x (Cadencia Dinámica)\n- 6m 72% FTP (60 rpm)\n- 4m 65% FTP (100 rpm)\n\nMain\n- ${Math.max(15, rideMins - 65)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
+    } else if (style === 1) {
+      rideMins = [85, 95, 90][(weekNumber - 1) % 3];
+      rideTitle = `Fondo Ciclismo con Bloques Sweetspot (${rideMins}m)`;
+      rideJust = "Estímulo aeróbico profundo sin impacto sobre tendón de Aquiles.";
+      rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.72)}W` : "Z2 con 2x10m Sweetspot";
+      workoutDoc = `Warmup\n- 15m 55% FTP\n\n2x (Sweetspot)\n- 10m 85% FTP\n- 5m 55% FTP\n\nMain (Z2)\n- ${Math.max(15, rideMins - 55)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
+    } else {
+      rideMins = [85, 95, 90, 100][(weekNumber - 1) % 4];
+      rideTitle = `Fondo Resistencia Continua Z2 (${rideMins}m)`;
+      rideJust = "Densidad mitocondrial y volumen continuo.";
+      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
+    }
   }
 
-  return { rideMins, rideTitle, rideJust, rideTarget };
+  return { rideMins, rideTitle, rideJust, rideTarget, workoutDoc };
 }
 
 /**

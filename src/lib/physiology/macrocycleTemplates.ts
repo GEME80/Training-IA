@@ -209,10 +209,10 @@ export function generateWeekTemplate(
         }
 
         if (day === longRideDay || day === "Sábado" || day === "Domingo") {
-          const { rideMins, rideTitle, rideJust, rideTarget } = resolveWeekendRide({
+          const { rideMins, rideTitle, rideJust, rideTarget, workoutDoc: rideWorkoutDoc } = resolveWeekendRide({
             distanceType, phase, weekNumber, isRecovery, bikeFtp,
           });
-          const baseRideDoc = `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
+          const baseRideDoc = rideWorkoutDoc || `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
           const addons = resolveWorkoutAddons({
             durationMinutes: rideMins,
             sport: "Ciclismo",

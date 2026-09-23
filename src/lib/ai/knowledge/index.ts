@@ -14,6 +14,7 @@ import {
   POST_RACE_DELOAD_MODEL,
   INJURY_REHAB_MODEL,
 } from "./athleteMomentsModels";
+import { buildDynamicLongRunStructure } from "./longRunPeriodization";
 
 export * from "./types";
 export * from "./testingProtocols";
@@ -23,6 +24,7 @@ export * from "./cyclingModel";
 export * from "./cyclingSpecialtyModels";
 export * from "./triathlonModel";
 export * from "./triathlonFullAndShortModels";
+export * from "./longRunPeriodization";
 export * from "./triathlonShortModel";
 export * from "./triathlon1406Model";
 export * from "./trailModel";
@@ -254,24 +256,21 @@ export function calculateProgressiveLongRun(
     baseMins = Math.round(baseMins * 0.90);
   }
 
-  const workoutName = isPeak
-    ? (countdown <= 3 && countdown > 1)
-      ? `📉 DESCENSO PICO — Transición a Tapering (${baseKm} km / ${baseMins}m @ Ritmo Carrera)`
-      : `🔥 FONDO CUMBRE ESPECÍFICO (${baseKm} km / ${baseMins}m con Ritmo de Carrera)`
-    : phase === "BUILD"
-    ? `Tirada Larga Progresiva (${baseKm} km / ${baseMins}m Z2-Z3)`
-    : `Tirada Larga de Construcción Aeróbica (${baseKm} km / ${baseMins}m Z2)`;
-
-  const doc = isPeak
-    ? `Warmup\n- 20m 68% FTP\n\n2x (Ritmo Específico)\n- 25m 82% FTP\n- 5m 68% FTP\n\nMain (Z2)\n- ${Math.max(10, baseMins - 60)}m 74% FTP\n\nCooldown\n- 10m 60% FTP`
-    : `Warmup\n- 15m 68% FTP\n\nMain\n- ${Math.max(10, baseMins - 25)}m 74% FTP\n\nCooldown\n- 10m 60% FTP`;
+  const dynamicStructure = buildDynamicLongRunStructure({
+    baseKm,
+    baseMins,
+    phase,
+    weekNumber,
+    countdown,
+    isPeak,
+  });
 
   return {
     km: baseKm,
     minutes: baseMins,
-    workoutName,
-    powerTarget: isPeak ? "78-83% CP (Ritmo de Carrera)" : "72-76% CP (Z2 Base)",
-    workoutDoc: doc,
+    workoutName: dynamicStructure.workoutName,
+    powerTarget: dynamicStructure.powerTarget,
+    workoutDoc: dynamicStructure.workoutDoc,
     isPeakBlock: isPeak,
   };
 }

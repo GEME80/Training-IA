@@ -3787,4 +3787,39 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteContinuousCalendar.tsx`: 344 LOC, `AthleteDashboardOverview.tsx`: 221 LOC, `AthletePMCSVG.tsx`: 344 LOC, `AthletePMCChart.tsx`: 176 LOC).
   - `Prueba 4 (Servidor):` Activo y respondiendo HTTP 200 en `http://localhost:3000`.
 
+---
+
+### Versión 3.62 - Periodización Dinámica de Tiradas Largas Dominicales, Escaleras de Intervalos y Fondos de Ciclismo con Propósito (2026-09-23)
+- **Fecha y Hora:** 23 de Septiembre de 2026 - 15:55 COT.
+- **Directiva del Atleta:**
+  - "Mejora los planes que generamos de running y triatlón. Los domingos el plan no debe ser siempre el mismo con solo aumento de TSS, y lo mismo para los sábados. Incluir planes de bloques largos e intervalos incrementales de 200m hasta 800m. Actualizar los macrociclos de ambos atletas."
+- **Solución y Mejoras Implementadas:**
+  1. **Periodización Dinámica de Tiradas Largas (`src/lib/ai/knowledge/longRunPeriodization.ts` - 83 LOC & `index.ts` - 345 LOC):**
+     - Desacoplamiento de la monotonía de rodaje plano Z2 dominical.
+     - Implementación de 4 tipologías rotativas según la fase y la semana del microciclo:
+       * *Tipo A (Base Progresiva):* Rodaje aeróbico cómodo Z2 con final ágil (últimos 15 min al 76% CP).
+       * *Tipo B (Fast-Finish Pfitzinger en BUILD):* 75% del tiempo en Z2 + aceleración final sostenida a ritmo maratón/medio maratón (82% CP).
+       * *Tipo C (Bloques Específicos Intercalados en BUILD):* $2\times 15\text{ a }20\text{ min @ } 82\% \text{ CP}$ separados por flotación activa Z2.
+       * *Tipo D (Bloques Cumbre Canova en PEAK):* $2\times 25\text{ min @ } 82\text{--}83\% \text{ CP}$ + zancada específica de competición.
+  2. **Escaleras de Intervalos Incrementales de 200m a 800m (`marathonModel.ts`, `triathlonModel.ts`, `tenKModel.ts`):**
+     - Inyección de sesiones fraccionadas progresivas en pista/asfalto:
+       * *Running Maratón:* $200\text{m (112% CP)} \rightarrow 400\text{m (108% CP)} \rightarrow 600\text{m (104% CP)} \rightarrow 800\text{m (100% CP)} \rightarrow \text{pirámide descendente}$.
+       * *Bloques largos de Umbral:* $3\times 2.000\text{m @ } 98\% \text{ CP}$ con $2\text{m}30\text{s}$ de recuperación.
+       * *Triatlón 70.3:* Escalera en pista adaptada a triatletas post-bici ($200\text{m a } 800\text{m}$).
+       * *10K Road:* Escalera de velocidad reactiva en pista.
+  3. **Sábados de Ciclismo con Propósito Biomecánico (`macrocycleTemplateHelpers.ts` & `macrocycleTemplates.ts`):**
+     - Enriquecimiento de `resolveWeekendRide`:
+       * *Sábado Cadencia & Torque:* 4 bloques alternando cadencia baja de fuerza (60 rpm @ 72% FTP) y cadencia alta de reactividad (100 rpm @ 65% FTP).
+       * *Sábado SweetSpot Aeróbico:* 2 bloques de 10 min al 85% FTP para elevar densidad mitocondrial sin impacto articular.
+       * *Sábado Fondo Continuo Z2:* Volumen sostenido clásico para asimilación.
+  4. **Recalibración y Persistencia de Macrociclos de Atletas (`recalibrateService.ts`):**
+     - Recalibrado y guardado en Firestore el macrociclo de **Germán Morales** (`i442091` / Tokio 2027, 25 semanas, periodización 3:1).
+     - Recalibrado y guardado en Firestore el macrociclo de **Juan Pablo Vásquez** (`juan.vasquez.1983@gmail.com` / Triseries Paipa 2026, 7 semanas).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`marathonModel.ts`: 336 LOC, `triathlonModel.ts`: 343 LOC, `tenKModel.ts`: 315 LOC, `index.ts`: 345 LOC, `longRunPeriodization.ts`: 83 LOC, `macrocycleTemplateHelpers.ts`: 271 LOC, `macrocycleTemplates.ts`: 322 LOC).
+  - `Prueba 4 (Ejecución API):` `POST /api/macrocycles` con `recalibrate_both` retornó éxito para ambos atletas.
+
+
 

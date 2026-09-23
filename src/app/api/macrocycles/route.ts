@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveMacrocycleToFirestore, getActiveMacrocycleFromFirestore } from "@/lib/db/macrocycles";
 import { isMasterAdminEmail } from "@/lib/env";
+import { executeRecalibrateBoth } from "@/lib/services/recalibrateService";
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,6 +48,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    if (body.action === "recalibrate_both") {
+      const updated = await executeRecalibrateBoth();
+      return NextResponse.json({ success: true, updated });
+    }
+
     const { athleteId, blueprint, primaryRace, source = "WIZARD_CUSTOM" } = body;
 
     if (!athleteId) {

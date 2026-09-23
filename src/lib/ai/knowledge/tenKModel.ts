@@ -118,6 +118,12 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
       ],
       build: [
         {
+          name: "Escalera de Velocidad en Pista (200m -> 400m -> 600m -> 800m -> 400m -> 200m)",
+          powerTarget: "102-114% CP",
+          justification: "Reclutamiento de fibras rápidas, reactividad del tobillo y VO2max.",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\nMain (Escalera Progresiva)\n- 40s 114% FTP (200m)\n- 1m 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 2m10s 104% FTP (600m)\n- 2m 55% FTP\n- 2m55s 102% FTP (800m)\n- 2m30s 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 40s 114% FTP (200m)\n\nCooldown\n- 10m 55% FTP",
+        },
+        {
           name: "Series de Potencia Específica (5x 3m30s @ 102% CP)",
           powerTarget: "102% CP",
           justification: "Mejora la capacidad de sostener un ritmo fuerte sin acumular fatiga excesiva.",

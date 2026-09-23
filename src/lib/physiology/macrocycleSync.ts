@@ -144,6 +144,7 @@ export function syncAndCalibrateBlueprint(
         weeksCount: weeks.length || syncedBp.totalWeeks || 16,
         customGoal: syncedBp.cycleTitle || options.planName,
         primaryRace: options.primaryRace || syncedBp.primaryRace || undefined,
+        periodization: (syncedBp.periodization as any) || "3:1",
         athleteMetrics: options.athleteMetrics,
       });
 

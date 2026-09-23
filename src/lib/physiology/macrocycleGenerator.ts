@@ -102,7 +102,7 @@ export function calculateTargetPeakCtl(input: PeakCtlCalculationInput): {
     targetPeakCtl = Math.round(Math.min(optimal + 10, Math.max(45, attainableCtl)) * 10) / 10;
   }
 
-  const targetPeakWeeklyTss = Math.round(7 * targetPeakCtl + 45 * 1.5);
+  const targetPeakWeeklyTss = Math.round(Math.max(7 * targetPeakCtl + 45 * 1.5, (targetPeakCtl * 7) / 0.84));
   const startWeeklyTss = Math.round(7 * currentCtl + 45 * (hasStrongEngine ? 2.2 : 1.8));
   const weeklyRampRate = Math.round(((targetPeakCtl - currentCtl) / buildWeeks) * 10) / 10;
 
@@ -276,12 +276,8 @@ export function generateCustomMacrocycleBlueprint(
     const isRaceWeekNow = countdown === 1;
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
     const raceNote = isRaceWeekNow
-      ? (isTri
-          ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.`
-          : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
-      : curatedModel.sportCategory === "Cycling"
-      ? `${phaseLabel}: Fondo dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`
-      : `${phaseLabel}: Tirada dominical de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
+      ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
+      : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? "Fondo dominical" : "Tirada dominical"} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;
 
     const isPast = weekMon.getTime() < currentMonday.getTime();
@@ -341,5 +337,7 @@ export function generateCustomMacrocycleBlueprint(
     availabilitySnapshot: config.athleteMetrics?.weeklyAvailability as any,
     distanceType: config.distanceType,
     athleteCtlAtCreation: athleteCtl,
+    periodization: config.periodization || (isConservative ? "2:1" : "3:1"),
+    targetPeakCtl: peakPlanCalc.targetPeakCtl,
   };
 }

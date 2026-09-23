@@ -69,6 +69,10 @@ export interface MacrocycleBlueprint {
   distanceType?: string;
   /** CTL del atleta en el momento de generación (para auditoría y escalado) */
   athleteCtlAtCreation?: number;
+  /** Ratio de periodización: "3:1" estándar o "2:1" conservador */
+  periodization?: "3:1" | "2:1" | "ESTANDAR" | "CONSERVADOR";
+  /** CTL pico proyectado en el bloque cumbre */
+  targetPeakCtl?: number;
 }
 
 

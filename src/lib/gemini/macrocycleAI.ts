@@ -55,14 +55,14 @@ export class MacrocycleAIEngine {
       raceName: config.raceName,
     });
 
-    const isPreventive = config.periodization === "2:1" || !config.periodization;
+    const isPreventive = config.periodization === "2:1";
 
     const baseBlueprint = generateCustomMacrocycleBlueprint({
       distanceType: distType,
       startDate,
       weeksCount: requestedWeeks,
       customGoal: `${config.raceName || "Macrociclo de Temporada"}. Metodología: ${curatedModel.displayName}`,
-      periodization: (config.periodization as any) || "2:1",
+      periodization: (config.periodization as any) || "3:1",
       primaryRace: config.hasRace || config.raceName ? {
         id: `race-${Date.now()}`,
         name: config.raceName || "Competición Objetivo",

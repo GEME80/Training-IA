@@ -79,7 +79,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   const [customStartDate, setCustomStartDate] = useState<string>("");
 
   const [trainingApproach, setTrainingApproach] = useState<string>("Entrenamiento Cruzado");
-  const [periodization, setPeriodization] = useState<"2:1" | "3:1" | "CONTINUO">("2:1");
+  const [periodization, setPeriodization] = useState<"2:1" | "3:1" | "CONTINUO">("3:1");
   const [customPromptText, setCustomPromptText] = useState("");
   const [localWeeklyAvailability, setLocalWeeklyAvailability] = useState<WeeklyAvailabilityMap>(weeklyAvailability || {});
   const [generatedBlueprint, setGeneratedBlueprint] = useState<MacrocycleBlueprint | null>(null);

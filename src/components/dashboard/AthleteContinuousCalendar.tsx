@@ -32,6 +32,8 @@ interface AthleteContinuousCalendarProps {
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
+  /** Encabezado del dashboard ("Mi Dashboard" + Tabs) anclado dentro del bloque sticky maestro */
+  dashboardHeaderSlot?: React.ReactNode;
   /** Contenido opcional que se renderiza dentro del bloque sticky maestro, encima del título del calendario. */
   stickyTopSlot?: React.ReactNode;
 }
@@ -52,13 +54,7 @@ function getWeekOfYear(dateStr: string): number {
 
 /**
  * Calendario Unificado de Año Completo — Estilo Intervals.icu / TrainingPeaks
- *
- * Disposición en scroll vertical continuo:
- *   ↑ arriba: semanas FUTURAS del plan (más lejanas arriba)
- *   ── SEMANA ACTUAL (anclada al viewport en el primer render) ──
- *   ↓ abajo:  semanas HISTÓRICAS ejecutadas (de más reciente a más antigua)
- *
- * Sin tabs separadores. Un único scroll = todo el año de entrenamiento.
+ * Scroll continuo: ↑ Plan Futuro | ── Semana Actual ── | ↓ Histórico
  */
 export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps> = ({
   blueprint,
@@ -74,6 +70,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   onSyncWeekToIntervals,
   onSyncTriweeklyBlock,
   onSelectWorkoutModal,
+  dashboardHeaderSlot,
   stickyTopSlot,
 }) => {
   const currentWeekRef = useRef<HTMLDivElement>(null);
@@ -165,19 +162,29 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   return (
     <div className="animate-fadeIn select-none">
       {/* ══════════════════════════════════════════════════════════
-          BLOQUE STICKY MAESTRO
-          Contiene: métricas fisiológicas (slot) + barra de título + cabecera de días
-          Se ancla al top de la página y el scroll de semanas pasa por debajo.
+          BLOQUE STICKY MAESTRO ('Main Sticky Header')
+          Agrupa los 4 bloques:
+          1. Encabezado principal y tabs (dashboardHeaderSlot)
+          2. Métricas fisiológicas (stickyTopSlot)
+          3. Barra de controles de calendario (Título + Hoy)
+          4. Cabecera de la cuadrícula (SEMANA · FASE + Lun a Dom)
       ══════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm -mx-1 px-1">
-        {/* Slot de métricas fisiológicas (CTL, ATL, TSB, Potencia) */}
+      <div className="sticky top-0 z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm -mx-1 px-1">
+        {/* Bloque 1: Encabezado principal y selector de vistas */}
+        {dashboardHeaderSlot && (
+          <div className="pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+            {dashboardHeaderSlot}
+          </div>
+        )}
+
+        {/* Bloque 2: Métricas fisiológicas (CTL, ATL, TSB, Potencia) */}
         {stickyTopSlot && (
-          <div className="pt-3 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
             {stickyTopSlot}
           </div>
         )}
 
-        {/* Barra de controles: Título del calendario + botón Hoy */}
+        {/* Bloque 3: Barra de controles del calendario */}
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-sky-500" />
@@ -204,7 +211,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           </button>
         </div>
 
-        {/* Cabecera de la cuadrícula: Semana · Fase | Lun → Dom */}
+        {/* Bloque 4: Cabecera de la cuadrícula: Semana · Fase | Lun → Dom */}
         <div className="hidden md:block overflow-x-auto">
           <div
             className={`min-w-[960px] 2xl:min-w-0 w-full grid ${gridTemplate} gap-2 px-2 text-center font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider py-2`}
@@ -286,7 +293,10 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                   </div>
                 )}
 
-                <div ref={isCurrentWeek ? currentWeekRef : undefined}>
+                <div
+                  ref={isCurrentWeek ? currentWeekRef : undefined}
+                  className={isCurrentWeek ? "scroll-mt-[280px]" : undefined}
+                >
                   <AthleteCalendarWeekRow
                     week={week}
                     wIdx={wIdx}

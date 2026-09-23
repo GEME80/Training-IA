@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles, Plus, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw } from "lucide-react";
 import { AthleteWellness } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generatePMCSeries, PMCTimeframe, PMCDataPoint } from "@/lib/physiology/pmcEngine";
@@ -63,19 +63,6 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
               className="pb-2 border-b-2 border-sky-500 text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-wider"
             >
               FORMA Y EVOLUCIÓN
-            </button>
-            <button
-              type="button"
-              className="pb-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 uppercase tracking-wider transition"
-            >
-              VISTA 2
-            </button>
-            <button
-              type="button"
-              className="p-1 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              title="Añadir pestaña"
-            >
-              <Plus className="h-3.5 w-3.5" />
             </button>
           </div>
 

@@ -411,14 +411,16 @@ Todo agente o desarrollador que genere o modifique sesiones, macrociclos o texto
 
 ---
 
-## 📌 13. LEYES DEL CALENDARIO UNIFICADO, MAIN STICKY HEADER & TARJETAS ESPECIALIZADAS (v3.60)
+## 📌 13. LEYES DEL CALENDARIO UNIFICADO, MAIN STICKY HEADER & TARJETAS ESPECIALIZADAS (v3.61)
 
-1. **Ley del Main Sticky Header Maestro:**
-   - La vista principal de entrenamiento debe mantener persistentemente visible (`position: sticky; top: 0; z-index: 50`) el bloque maestro con:
-     * El panel de métricas fisiológicas dinámicas (CTL, ATL, TSB, Potencia).
-     * La barra de control con botón "Hoy" y contador de semanas anuales.
-     * La cabecera fija de días (Lunes a Domingo + Semana/Fase).
-   - El scroll vertical de semanas (futuras hacia arriba, pasadas hacia abajo) debe fluir por debajo de este bloque maestro.
+1. **Ley del Main Sticky Header Maestro (4 Bloques Unificados):**
+   - La vista principal de entrenamiento debe mantener persistentemente visible (`position: sticky; top: 0; z-index: 50; background-color: solid`) el bloque maestro con **fondo sólido 100% opaco** (sin transparencias ni efectos blur) conteniendo exactamente los 4 bloques:
+     * **Bloque 1:** Encabezado principal ("Mi Dashboard") y tabs selectores de vistas ("Resumen & Calendario" / "Estado de Forma & Evolución").
+     * **Bloque 2:** Métricas fisiológicas (CTL, ATL, TSB, Potencia) y botón "Personalizar" con su popover interactivo.
+     * **Bloque 3:** Barra de controles del calendario ("Calendario de Entrenamiento", contador de semanas anuales y botón "Hoy").
+     * **Bloque 4:** Fila de cabecera de la cuadrícula ("SEMANA · FASE" y columnas de Lunes a Domingo).
+   - El scroll vertical de semanas (futuras hacia arriba, pasadas hacia abajo) fluye limpiamente por debajo del bloque maestro.
+   - La fila de la semana actual debe implementar `scroll-mt-[280px]` para que al hacer clic en "Hoy" o en el anclaje inicial quede completamente visible debajo del sticky header sin quedar tapada.
 
 2. **Ley del Calendario Unificado sin Tabs:**
    - Queda prohibido dividir el calendario en tabs disjuntos de pasado vs futuro. Todo el año de entrenamiento (hasta 52 semanas de historial + semanas de macrociclo activo) debe habitar un único scroll vertical.
@@ -428,4 +430,29 @@ Todo agente o desarrollador que genere o modifique sesiones, macrociclos o texto
    - **Carrera y Ciclismo:** Conservan su gráfica compacta de intervalos de potencia/zonas (`WorkoutChart`).
    - **Fuerza / Gimnasio:** Prohibido renderizar gráficas; en su lugar, muestran una síntesis de texto concisa ($\le 60$ caracteres) de los ejercicios clave.
    - **Modal de Detalle:** El detalle completo (prescripción estructurada, series, repeticiones, descansos, telemetría e intervalos) reside exclusivamente en el modal que se abre con el evento de clic en la tarjeta.
+
+---
+
+## ⚡ 14. POLÍTICA DE EFICIENCIA DE TOKENS Y MEJORES PRÁCTICAS DE DESARROLLO (FINOPS DE CONTEXTO)
+
+Para garantizar un desarrollo ágil, sostenible y con un consumo óptimo y eficiente de tokens en el modelo, todo agente de desarrollo debe cumplir estrictamente las siguientes 5 reglas operativas:
+
+1. **Búsquedas Quirúrgicas Focalizadas (`grep_search` vs `view_file` masivo):**
+   - Queda prohibido leer archivos extensos completos o bloques arbitrarios de 80+ líneas para localizar funciones o variables.
+   - Debe usarse `grep_search` con `MatchPerLine: true` para identificar la línea exacta del símbolo antes de cualquier lectura.
+
+2. **Ventanas Mínimas de Inspección (Micro-Lecturas $\le 20-30$ líneas):**
+   - Al usar `view_file`, debe acotarse el rango `StartLine` y `EndLine` estrictamente a la sección que se va a editar o revisar (ej. 15 a 30 líneas).
+   - Queda prohibido inspeccionar archivos o módulos que no forman parte del cambio activo o que ya fueron analizados previamente en la sesión.
+
+3. **Contabilización de Líneas vía CLI (`wc -l`):**
+   - Para verificar el cumplimiento del presupuesto de código (< 350 LOC por archivo), se debe consultar el conteo rápido mediante comandos de terminal (`wc -l <archivo>`), evitando volcar el contenido completo del archivo al contexto del modelo.
+
+4. **Edición Quirúrgica Directa (`replace_file_content`):**
+   - Las modificaciones deben apuntar únicamente a los bloques de código afectados, evitando reescrituras innecesarias de archivos enteros.
+
+5. **Verificación y Pipeline Secuencial Ágil:**
+   - Ejecutar `tsc --noEmit` y `npm run build` como validación final de ciclo.
+   - Documentar los cambios en `BITACORA_MAESTRA.md` y actualizar la bitácora al cierre de cada tarea sin duplicación de contexto.
+
 

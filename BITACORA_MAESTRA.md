@@ -3756,3 +3756,35 @@ flowchart TD
   - `Prueba 2 (Compilación Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` `AthleteContinuousCalendar.tsx` (334 LOC) y `AthleteDashboardOverview.tsx` (212 LOC) estrictamente $\le 350$ LOC (Regla 3 cumplida).
 
+---
+
+### Versión 3.61 - Consolidación de Main Sticky Header (4 Bloques), Limpieza PMC y Política de Eficiencia de Tokens (2026-09-23)
+- **Fecha y Hora:** 23 de Septiembre de 2026 - 15:25 COT.
+- **Directiva del Atleta:**
+  1. Refactorizar el layout de la cabecera fija para unificar absolutamente toda la zona superior en un único contenedor maestro sticky con fondo sólido opaco (sin transparencias):
+     - Bloque 1: Encabezado principal ("Mi Dashboard") y tabs selectores de vistas ("Resumen & Calendario" / "Estado de Forma & Evolución").
+     - Bloque 2: Métricas fisiológicas (CTL, ATL, TSB, Potencia) y botón "Personalizar" con su popover.
+     - Bloque 3: Barra de controles de calendario (Título + contador de semanas + botón "Hoy").
+     - Bloque 4: Cabecera de la cuadrícula ("SEMANA · FASE" + Lunes a Domingo).
+  2. Limpieza de vista secundaria en gráfico PMC: eliminar pestaña "VISTA 2" y botón "+" al lado de "FORMA Y EVOLUCIÓN".
+  3. Asegurar sincronización en tiempo real (60 fps) del Crosshair magnético en la gráfica PMC.
+  4. Establecer en la gobernanza una política estricta de eficiencia en consumo de tokens en tareas de desarrollo (FinOps de contexto).
+- **Solución y Mejoras Implementadas:**
+  1. **Contenedor Maestro Sticky 4 Bloques (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 344 LOC):**
+     - Integración de prop `dashboardHeaderSlot` en `AthleteContinuousCalendar`.
+     - Fondo 100% sólido opaco con `bg-white dark:bg-slate-950` y borde inferior sutil (`border-slate-200 dark:border-slate-800 shadow-sm`).
+     - Desplazamiento de anclaje corregido con `scroll-mt-[280px]` en la fila de la semana actual para evitar solapamiento bajo el sticky header.
+  2. **Inyección en Dashboard (`src/components/dashboard/AthleteDashboardOverview.tsx` - 221 LOC):**
+     - Extracción del encabezado "Mi Dashboard" + tabs selectores para inyectarlo como `dashboardHeaderSlot` dentro del contenedor sticky en vista `overview`.
+  3. **Limpieza PMC & Crosshair (`src/components/dashboard/pmc/AthletePMCChart.tsx` - 176 LOC & `AthletePMCSVG.tsx` - 344 LOC):**
+     - Pestaña 'VISTA 2' y botón '+' eliminados del DOM.
+     - Seguimiento del cursor verificado a 60 fps con cálculo matemático directo de coordenadas sin transiciones CSS lentas.
+  4. **Política de Eficiencia de Tokens en Gobernanza (`PROJECT_RULES.md` Sección 14):**
+     - Protocolo de 5 reglas: Búsquedas quirúrgicas vía `grep_search`, micro-lecturas acotadas ($\le 20-30$ líneas), conteo de LOC vía CLI (`wc -l`), edición quirúrgica (`replace_file_content`) y pipeline de verificación ágil.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteContinuousCalendar.tsx`: 344 LOC, `AthleteDashboardOverview.tsx`: 221 LOC, `AthletePMCSVG.tsx`: 344 LOC, `AthletePMCChart.tsx`: 176 LOC).
+  - `Prueba 4 (Servidor):` Activo y respondiendo HTTP 200 en `http://localhost:3000`.
+
+

@@ -123,10 +123,18 @@ export function syncAndCalibrateBlueprint(
   });
 
   const hist = options.athleteMetrics?.historicalMetrics;
+  const currentMaxTss = Math.max(...weeks.map((w) => w.targetTss || 0));
+  const expectedMinPeakTss = hist?.peakCtlLastYear ? Math.round((hist.peakCtlLastYear * 7) / 0.95) : 600;
+
+  // Actualizar si:
+  // 1. El atleta tiene historial de alto rendimiento (peakCtl >= 60) pero su plan actual no alcanza el TSS cumbre esperado
+  // 2. El blueprint carece de targetPeakCtl (generado con versión previa del motor)
+  // 3. El blueprint quedó guardado con periodización 2:1 o sin especificar cuando corresponde 3:1 estándar
   const needsCtlUpgrade = !!(
-    hist?.peakCtlLastYear &&
-    hist.peakCtlLastYear >= 60 &&
-    Math.max(...weeks.map((w) => w.targetTss || 0)) < 480
+    (hist?.peakCtlLastYear && hist.peakCtlLastYear >= 60 && currentMaxTss < expectedMinPeakTss) ||
+    !syncedBp.targetPeakCtl ||
+    syncedBp.periodization === "2:1" ||
+    !syncedBp.periodization
   );
 
   if (hasOutdatedLongRuns || needsCtlUpgrade) {
@@ -137,6 +145,11 @@ export function syncAndCalibrateBlueprint(
         options.primaryRace?.distance ||
         (options.goalType === "TRIATLON_703" ? "triathlon_703" : "42k");
 
+      const resolvedPeriodization =
+        syncedBp.periodization === "2:1" || !syncedBp.periodization
+          ? "3:1"
+          : syncedBp.periodization;
+
       const upgradedBp = generateCustomMacrocycleBlueprint({
         distanceType: distanceType as any,
         startDate: syncedBp.startDate,
@@ -144,7 +157,7 @@ export function syncAndCalibrateBlueprint(
         weeksCount: weeks.length || syncedBp.totalWeeks || 16,
         customGoal: syncedBp.cycleTitle || options.planName,
         primaryRace: options.primaryRace || syncedBp.primaryRace || undefined,
-        periodization: (syncedBp.periodization as any) || "3:1",
+        periodization: resolvedPeriodization as any,
         athleteMetrics: options.athleteMetrics,
       });
 
@@ -159,3 +172,4 @@ export function syncAndCalibrateBlueprint(
 
   return { blueprint: syncedBp, upgraded: false };
 }
+

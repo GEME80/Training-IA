@@ -32,6 +32,8 @@ interface AthleteContinuousCalendarProps {
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
+  /** Contenido opcional que se renderiza dentro del bloque sticky maestro, encima del título del calendario. */
+  stickyTopSlot?: React.ReactNode;
 }
 
 function getWeekOfYear(dateStr: string): number {
@@ -72,6 +74,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   onSyncWeekToIntervals,
   onSyncTriweeklyBlock,
   onSelectWorkoutModal,
+  stickyTopSlot,
 }) => {
   const currentWeekRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -160,36 +163,67 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
     : [];
 
   return (
-    <div className="space-y-3 animate-fadeIn select-none">
-      {/* ── BARRA SUPERIOR: Título y navegación rápida ── */}
-      <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-sky-500" />
-          <span className="text-sm font-black text-slate-900 dark:text-white">
-            Calendario de Entrenamiento
-          </span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-            {totalWeeksLabel} semanas · Año completo
-          </span>
+    <div className="animate-fadeIn select-none">
+      {/* ══════════════════════════════════════════════════════════
+          BLOQUE STICKY MAESTRO
+          Contiene: métricas fisiológicas (slot) + barra de título + cabecera de días
+          Se ancla al top de la página y el scroll de semanas pasa por debajo.
+      ══════════════════════════════════════════════════════════ */}
+      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm -mx-1 px-1">
+        {/* Slot de métricas fisiológicas (CTL, ATL, TSB, Potencia) */}
+        {stickyTopSlot && (
+          <div className="pt-3 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+            {stickyTopSlot}
+          </div>
+        )}
+
+        {/* Barra de controles: Título del calendario + botón Hoy */}
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-sky-500" />
+            <span className="text-sm font-black text-slate-900 dark:text-white">
+              Calendario de Entrenamiento
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+              {totalWeeksLabel} semanas · Año completo
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (currentWeekRef.current) {
+                currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
+            title="Ir a la semana actual"
+          >
+            <Compass className="h-3.5 w-3.5" />
+            <span>Hoy</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (currentWeekRef.current) {
-              currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-          }}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
-          title="Ir a la semana actual"
-        >
-          <Compass className="h-3.5 w-3.5" />
-          <span>Hoy</span>
-        </button>
+        {/* Cabecera de la cuadrícula: Semana · Fase | Lun → Dom */}
+        <div className="hidden md:block overflow-x-auto">
+          <div
+            className={`min-w-[960px] 2xl:min-w-0 w-full grid ${gridTemplate} gap-2 px-2 text-center font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider py-2`}
+          >
+            <div className="text-left pl-2 font-black text-slate-700 dark:text-slate-300">
+              SEMANA · FASE
+            </div>
+            {dayHeaders.map((dh, i) => (
+              <div key={i} className="text-center font-black">
+                {dh}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+      {/* ═══════════════════════════════════════════════════════ */}
 
       {/* ── VISTA MÓVIL: Agenda Diaria ── */}
-      <div className="md:hidden">
+      <div className="md:hidden mt-3">
         <AthleteMobileAgendaView
           blueprint={blueprint}
           selectedMacroWeekIdx={selectedMacroWeekIdx}
@@ -203,21 +237,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       </div>
 
       {/* ── VISTA ESCRITORIO: Cuadrícula Continua Anual ── */}
-      <div ref={scrollContainerRef} className="hidden md:block overflow-x-auto">
-        {/* Cabecera de días — sticky */}
-        <div
-          className={`min-w-[960px] 2xl:min-w-0 w-full grid ${gridTemplate} gap-2 px-2 text-center font-mono text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 sticky top-0 z-10 backdrop-blur-sm`}
-        >
-          <div className="text-left pl-2 font-black text-slate-700 dark:text-slate-300">
-            SEMANA · FASE
-          </div>
-          {dayHeaders.map((dh, i) => (
-            <div key={i} className="text-center font-black">
-              {dh}
-            </div>
-          ))}
-        </div>
-
+      <div ref={scrollContainerRef} className="hidden md:block overflow-x-auto mt-3">
         {/* Etiqueta de orientación: FUTURO */}
         {futureWeeks.length > 0 && (
           <div className="min-w-[960px] 2xl:min-w-0 flex items-center gap-3 px-3 py-2 mt-2">

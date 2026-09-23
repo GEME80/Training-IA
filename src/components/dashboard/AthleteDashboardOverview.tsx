@@ -114,24 +114,8 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
 
       {/* CONTENIDO DE PESTAÑA 1: RESUMEN ACTUAL Y CALENDARIO */}
       {activeTab === "overview" && (
-        <div className="space-y-5 animate-fadeIn">
-          {/* TARJETAS DE TELEMETRÍA DINÁMICAS PMC */}
-          <PhysiologicalCards
-            status={physioStatus}
-            runFtp={profile.run_ftp}
-            bikeFtp={profile.bike_ftp}
-            weightKg={profile.weight}
-            age={profile.age}
-            restingHR={profile.restingHR}
-            hrv={physioStatus?.currentHrv}
-            sleepQuality={latestWellness?.sleepQuality}
-            sleepSecs={latestWellness?.sleepSecs}
-            efficiencyFactor={profile.icu_efficiency_factor}
-            visibleMetrics={visibleMetrics}
-            onToggleMetric={onToggleMetric}
-          />
-
-          {/* CALENDARIO CONTINUO SEMANAL O ESTADO VACÍO */}
+        <div className="space-y-3 animate-fadeIn">
+          {/* CALENDARIO CONTINUO — Las métricas fisiológicas viajan como stickyTopSlot */}
           {effectiveBlueprint ? (
             <div className="space-y-3">
               {!blueprint && (
@@ -165,6 +149,22 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 onSyncWeekToIntervals={onSyncWeekToIntervals}
                 onSyncTriweeklyBlock={onSyncTriweeklyBlock}
                 onSelectWorkoutModal={onSelectWorkoutModal}
+                stickyTopSlot={
+                  <PhysiologicalCards
+                    status={physioStatus}
+                    runFtp={profile.run_ftp}
+                    bikeFtp={profile.bike_ftp}
+                    weightKg={profile.weight}
+                    age={profile.age}
+                    restingHR={profile.restingHR}
+                    hrv={physioStatus?.currentHrv}
+                    sleepQuality={latestWellness?.sleepQuality}
+                    sleepSecs={latestWellness?.sleepSecs}
+                    efficiencyFactor={profile.icu_efficiency_factor}
+                    visibleMetrics={visibleMetrics}
+                    onToggleMetric={onToggleMetric}
+                  />
+                }
               />
             </div>
           ) : (

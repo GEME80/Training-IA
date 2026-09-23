@@ -3731,3 +3731,28 @@ flowchart TD
   - `Prueba 2 (Compilación de Producción Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` `AthleteContinuousCalendar.tsx` 314 LOC · `AthleteCalendarWeekRow.tsx` 311 LOC · `historicalCalendarWeeks.ts` 185 LOC. Todos $\le 350$ LOC (Regla 3 cumplida).
 
+---
+
+### Versión 3.60 - Main Sticky Header Maestro Unificado (2026-09-23)
+- **Fecha y Hora:** 23 de Septiembre de 2026 - 11:00 COT.
+- **Directiva del Atleta:**
+  - "Refactoriza el layout de la vista principal para que toda la cabecera superior quede fija (position: sticky) al hacer scroll vertical, no solo la fila de los días. Agrupa: el dashboard de métricas fisiológicas (CTL, ATL, TSB, Potencia), la barra de controles y título (botón 'Hoy' y 'Calendario de Entrenamiento') y la cabecera de la cuadrícula ('Semana · Fase' y Lunes a Domingo) en un único contenedor superior ('Main Sticky Header') anclado al top (top: 0; z-index: 50)."
+- **Problema Resuelto:**
+  - Al hacer scroll para ver semanas pasadas o futuras, las tarjetas de métricas fisiológicas (CTL, ATL, TSB, Potencia) y el control de navegación rápida ("Hoy") quedaban ocultos arriba, obligando al usuario a volver a subir completamente para consultar su estado fisiológico o re-anclar la vista.
+- **Solución Implementada:**
+  1. **Main Sticky Header Maestro (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 334 LOC):**
+     - Nuevo bloque envolvente unificado con clase `sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm`.
+     - Nueva prop `stickyTopSlot?: React.ReactNode` para alojar limpiamente componentes superiores.
+     - Contiene de arriba a abajo:
+       1. Slot de tarjetas fisiológicas (`stickyTopSlot`).
+       2. Barra de título del calendario, contador de semanas de año completo y botón de re-anclado "Hoy".
+       3. Cabecera fija de columnas de la cuadrícula (Lunes a Domingo + Semana/Fase).
+     - El scroll vertical de semanas (futuro hacia arriba, pasado hacia abajo) fluye suavemente por debajo del header unificado.
+  2. **Inyección en Vista Principal (`src/components/dashboard/AthleteDashboardOverview.tsx` - 212 LOC):**
+     - Remoción de `PhysiologicalCards` del flujo estático del dashboard.
+     - Inyección directa como `stickyTopSlot` en `<AthleteContinuousCalendar />`, logrando acoplamiento limpio sin duplicidad de estado.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `./node_modules/.bin/next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` `AthleteContinuousCalendar.tsx` (334 LOC) y `AthleteDashboardOverview.tsx` (212 LOC) estrictamente $\le 350$ LOC (Regla 3 cumplida).
+

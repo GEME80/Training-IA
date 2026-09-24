@@ -26,6 +26,14 @@ interface AthleteEditProfileModalProps {
   onSave: (data: AthleteProfileFormData) => Promise<void>;
 }
 
+const SyncBadge = () => (
+  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">📤 Sincroniza</span>
+);
+
+const IntervalsBadge = () => (
+  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">📥 Intervals</span>
+);
+
 export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = ({
   isOpen,
   onClose,
@@ -81,7 +89,8 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
   const numInputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 pr-8 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+      {/* Fondo oscuro opaco cliqueable para cerrar */}
       <div className="fixed inset-0" onClick={onClose} />
 
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden ring-1 ring-black/10">
@@ -107,6 +116,18 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          {/* Leyenda Compacta de Flujo de Datos */}
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-[10px] font-mono">
+            <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 font-bold text-[9px]">📤 Sincroniza</span>
+              <span className="text-[10px]">Se envía a Intervals</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sky-700 dark:text-sky-300">
+              <span className="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 font-bold text-[9px]">📥 Intervals</span>
+              <span className="text-[10px]">Leído de sensores</span>
+            </div>
+          </div>
+
           {/* Bloque 1: Identidad */}
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -122,11 +143,17 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Fecha de Nacimiento</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Fecha de Nacimiento</label>
+                  <SyncBadge />
+                </div>
                 <input type="date" value={form.birthDate || ""} onChange={(e) => update("birthDate", e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Género Biológico</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Género Biológico</label>
+                  <SyncBadge />
+                </div>
                 <div className="grid grid-cols-3 gap-1 mt-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                   {[{ id: "M", label: "Hombre" }, { id: "F", label: "Mujer" }, { id: "OTHER", label: "Otro" }].map((g) => (
                     <button
@@ -150,14 +177,20 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biometría & Potencia</span>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Peso Corporal</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Peso Corporal</label>
+                  <SyncBadge />
+                </div>
                 <div className="relative mt-1">
                   <input type="number" step="0.1" value={form.weightKg || ""} onChange={(e) => update("weightKg", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kg</span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Altura</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Altura</label>
+                  <SyncBadge />
+                </div>
                 <div className="relative mt-1">
                   <input type="number" value={form.heightCm || ""} onChange={(e) => update("heightCm", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cm</span>
@@ -167,18 +200,24 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Footprints className="h-3.5 w-3.5 text-amber-500" /> Stryd CP (Carrera)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <Footprints className="h-3.5 w-3.5 text-amber-500" /> Stryd CP (Carrera)
+                  </label>
+                  <SyncBadge />
+                </div>
                 <div className="relative mt-1">
                   <input type="number" value={form.runFtp || ""} onChange={(e) => update("runFtp", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Bike className="h-3.5 w-3.5 text-sky-500" /> Ciclismo FTP
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <Bike className="h-3.5 w-3.5 text-sky-500" /> Ciclismo FTP
+                  </label>
+                  <SyncBadge />
+                </div>
                 <div className="relative mt-1">
                   <input type="number" value={form.bikeFtp || ""} onChange={(e) => update("bikeFtp", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
@@ -189,21 +228,30 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
             {/* Frecuencia Cardíaca */}
             <div className="grid grid-cols-3 gap-2.5 pt-1">
               <div>
-                <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                  <HeartPulse className="h-3 w-3 text-rose-500 shrink-0" /> FC Umbral
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
+                    <HeartPulse className="h-3 w-3 text-rose-500 shrink-0" /> FC Umbral
+                  </label>
+                  <IntervalsBadge />
+                </div>
                 <input type="number" placeholder="bpm" value={form.lthr || ""} onChange={(e) => update("lthr", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                  <Moon className="h-3 w-3 text-indigo-500 shrink-0" /> FC Reposo
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
+                    <Moon className="h-3 w-3 text-indigo-500 shrink-0" /> FC Reposo
+                  </label>
+                  <IntervalsBadge />
+                </div>
                 <input type="number" placeholder="bpm" value={form.restingHR || ""} onChange={(e) => update("restingHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                  <Activity className="h-3 w-3 text-emerald-500 shrink-0" /> FC Máxima
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
+                    <Activity className="h-3 w-3 text-emerald-500 shrink-0" /> FC Máxima
+                  </label>
+                  <IntervalsBadge />
+                </div>
                 <input type="number" placeholder="bpm" value={form.maxHR || ""} onChange={(e) => update("maxHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
             </div>

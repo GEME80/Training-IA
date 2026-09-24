@@ -3852,5 +3852,36 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteMobileAgendaView.tsx`: 327 LOC, `AthleteMobileWeekFeed.tsx`: 113 LOC, `matchDailyActivities.ts`: 52 LOC, `AthleteContinuousCalendar.tsx`: 344 LOC).
   - `Prueba 4 (Git SSOT):` Cambios commiteados y pusheados a `origin/main` (`5d45434`).
 
+---
+
+### Versión 3.64 - Rediseño Minimalista del Modal "Perfil del Atleta" y Sincronización Bidireccional Robusta con Intervals.icu (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 11:05 COT.
+- **Directiva del Atleta:**
+  - "Mejorar el editar perfil Antropométrico & Umbrales. Primero dejarlo como perfil del atleta en el título. Después revisa por qué no está sincronizando con intervals al cambiar los datos. El diseño se ve lleno de mucha información, hacerlo más minimalista UX/UI."
+- **Diagnóstico Forense de la Sincronización:**
+  1. *Bloqueo por API Key en Cliente (`targetApiKey`):* En `useAthleteTelemetry.ts`, la llamada a `/api/sync-settings` estaba condicionada a `if (targetApiKey && ...)`. Como la clave API de los atletas se almacena cifrada en Firestore y el formulario no la re-solicita en cada edición, la condición evaluaba a `false` impidiendo despachar la sincronización externa.
+  2. *Condición de Carrera Asíncrona (Race Condition):* `fetch("/api/sync-settings")` se disparaba sin `await`, mientras que en la siguiente línea se ejecutaba `await refreshTelemetry(..., forceRefresh: true)`. La lectura de `/api/evaluate` llegaba a Intervals.icu antes de que la escritura remota finalizara (1.5-2.5s), sobrescribiendo el estado local con los valores viejos y revirtiendo la interfaz.
+  3. *Métricas Cardíacas Omitidas:* El endpoint omitía la persistencia de `lthr`, `maxHR` y `restingHR` hacia `sport-settings` y perfil de Intervals.icu.
+- **Solución y Mejoras Implementadas:**
+  1. **Rediseño Minimalista UX/UI (`src/components/profile/AthleteEditProfileModal.tsx` - 271 LOC):**
+     - Título unificado y limpio: **"Perfil del Atleta"** con icono `User` en tono esmeralda.
+     - Erradicación del banner superior explicativo de 2 columnas y de los 9 badges flotantes repetitivos (`📤 Sincroniza` / `📥 Intervals`).
+     - Organización en 3 bloques limpios: Identidad (con segmented control integrado para género), Biometría & Potencia (unidades tabulares `kg`, `cm`, `W`, `bpm`) y Conexión Intervals.icu.
+     - Feedback interactivo de guardado: `Guardar Cambios` $\rightarrow$ `Sincronizando...` (con `Loader2`) $\rightarrow$ `¡Guardado y Sincronizado!` (con `Check`).
+     - Reducción drástica de deuda técnica: de 359 LOC a **271 LOC** (< 350 LOC).
+  2. **Resolución Unificada y Secuencia Síncrona Segura (`src/hooks/useAthleteTelemetry.ts` - 347 LOC):**
+     - Eliminado el bloqueo de `targetApiKey`; el backend resuelve automáticamente la API Key descifrada en memoria mediante `uid` y `email`.
+     - Implementado `await` estricto en `/api/sync-settings` previo a la recarga de telemetría, erradicando al 100% la condición de carrera.
+  3. **Persistencia Ampliada de Umbrales Fisiológicos (`src/app/api/sync-settings/route.ts` - 74 LOC):**
+     - Sincronización automática de `lthr` y `maxHR` en los perfiles de `sport-settings` (Carrera y Ciclismo) y de `restingHR` (`icu_resting_hr`) en el perfil general de Intervals.icu.
+  4. **Coherencia Semántica en UI (`src/components/profile/AthleteProfileHeroCard.tsx` - 186 LOC):**
+     - Actualizado el botón de acción a **"Editar Perfil"**.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteEditProfileModal.tsx`: 271 LOC, `useAthleteTelemetry.ts`: 347 LOC, `/api/sync-settings/route.ts`: 74 LOC, `AthleteProfileHeroCard.tsx`: 186 LOC).
+  - `Prueba 4 (Ejecución API):` `curl -X POST /api/sync-settings` retornó HTTP 200 con `{ success: true, syncResults: { runFtp: '336W (Stryd)', bikeFtp: '226W', ... } }`.
+
+
 
 

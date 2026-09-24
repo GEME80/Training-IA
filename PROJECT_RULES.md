@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.63)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.64)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,11 +8,13 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.63).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.64).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.63: Responsive Móvil, Main Sticky Header 4 Bloques y Periodización Dinámica de Entrenamientos:
+- Versiones 3.56 - 3.64: Perfil del Atleta Minimalista, Responsive Móvil, Main Sticky Header 4 Bloques y Periodización Dinámica:
+  * Modal Perfil del Atleta Minimalista (v3.64): Erradicación de sobrecarga visual, banners de dos columnas y badges repetitivos en inputs; segmented control sutil para género, unidades tabulares limpias y feedback interactivo de guardado.
+  * Sincronización Bidireccional Robusta con Intervals.icu (v3.64): Erradicación de condiciones de carrera mediante await estricto antes de refrescar telemetría; resolución automática de API Keys cifradas en Firestore vía UID/email; persistencia completa de peso, Stryd CP, FTP, LTHR, Max HR y Resting HR en Intervals.icu.
   * Ergonomía Responsive Móvil & Plegado de Métricas: En móvil, las tarjetas fisiológicas se pliegan a un carrusel compacto de pills de 36px con toggle 'Ver (6)' / 'Plegar', liberando más del 75% del viewport vertical; controles de calendario compactos.
   * Visualización Dual Móvil Día vs. Agenda Semanal (Estilo TrainingPeaks): Toggle en móvil entre vista de detalle diario (con swipe táctil horizontal) y feed continuo semanal unificado donde los descansos ocupan una sola línea.
   * Main Sticky Header Maestro de 4 Bloques ('Mi Dashboard' + Tabs, Métricas Fisiológicas + Popover, Controles de Calendario + 'Hoy', y Cuadrícula Lunes-Domingo) con fondo 100% sólido opaco y scroll-margin de 280px en desktop.
@@ -23,7 +25,6 @@ Contexto Actual del Proyecto:
   * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
   * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
   * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
-  * Sincronización Bidireccional de Peso y Umbrales Cardíacos: despacho automático del peso y umbrales (LTHR, Max HR, Resting HR) a Intervals.icu (`/athlete/{id}` y `/sport-settings`).
   * Persistencia Explícita de Matriz de Disponibilidad: guardado manual seguro y botón de restablecimiento a Matriz Canónica anti-colisiones.
   * Respeto de Max CTL Histórico: macrociclos dimensionados tomando el pico real de fitness histórico del atleta sin topes artificiales.
 - La arquitectura frontend está modularizada (< 350 líneas por archivo) en: `src/components/admin/`, `profile/`, `season/`, `dashboard/` y `macrocycle/`, operada por Custom Hooks en `src/hooks/` (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`).

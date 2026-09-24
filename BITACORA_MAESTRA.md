@@ -3821,5 +3821,36 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`marathonModel.ts`: 336 LOC, `triathlonModel.ts`: 343 LOC, `tenKModel.ts`: 315 LOC, `index.ts`: 345 LOC, `longRunPeriodization.ts`: 83 LOC, `macrocycleTemplateHelpers.ts`: 271 LOC, `macrocycleTemplates.ts`: 322 LOC).
   - `Prueba 4 (Ejecución API):` `POST /api/macrocycles` con `recalibrate_both` retornó éxito para ambos atletas.
 
+---
+
+### Versión 3.63 - Optimización Responsive Móvil, Plegado Ergonómico de Métricas y Agenda Semanal Feed (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 11:00 COT.
+- **Directiva del Atleta:**
+  - "Plan para mejorar la vista responsive desde el móvil. Analiza cómo se debería ver el calendario comparando con TrainingPeaks u otras plataformas. Browser para mejorar el UX/UI. Actualiza la documentación."
+- **Diagnóstico y Benchmark de Plataformas Líderes (TrainingPeaks, Intervals.icu, TrainerRoad, Strava):**
+  - *Problema Identificado:* En pantallas móviles, el *Main Sticky Header* (Header + Tabs + 6 tarjetas de métricas fisiológicas en 2x3 + Controles de Calendario) consumía ~500px, asfixiando más del 60% del viewport vertical útil.
+  - *Benchmark UX:* TrainingPeaks e Intervals.icu en móvil muestran métricas en pastillas condensadas horizontales o drawers plegables, y ofrecen selector dual entre detalle del día y agenda semanal continua (feed vertical) donde los descansos ocupan una sola línea.
+- **Solución y Mejoras Implementadas:**
+  1. **Métricas Fisiológicas Plegables (`src/components/PhysiologicalCards.tsx`):**
+     - En pantallas móviles (`< md:`), las métricas se pliegan por defecto en un **carrusel horizontal ultra-compacto de pastillas (pills)** de ~36px (`CTL`, `ATL`, `TSB`, `Run FTP`, `Bike FTP`, `Ramp Rate`), reduciendo la altura ocupada en más de un 80%.
+     - Incorporado botón toggle `Ver (6)` / `Plegar` para desplegar el panel completo con selectores de personalización si el atleta lo requiere.
+     - En escritorio (`md:` en adelante), la visualización íntegra del grid de métricas con el *Main Sticky Header* de 4 bloques permanece intacta.
+  2. **Controles de Calendario Compactos (`src/components/dashboard/AthleteContinuousCalendar.tsx` - 344 LOC):**
+     - Paddings verticales reducidos en móvil (`pt-1.5 pb-1.5` vs `md:pt-2 md:pb-2`).
+     - Ocultado texto redundante *"76 semanas · Año completo"* en dispositivos móviles (`hidden sm:inline-block`), priorizando el botón táctil "Hoy".
+  3. **Visualización Dual Día vs. Semana Estilo TrainingPeaks (`src/components/dashboard/AthleteMobileAgendaView.tsx` - 327 LOC):**
+     - Selector toggle ergonómico: `[ Día | Semana ]`.
+     - *Vista Día:* Selector horizontal de los 7 días con badges de estado (ejecutado en verde, planificado en cian, descanso en gris), tarjeta Hero completa con gráfico de intervalos o circuito de fuerza y **soporte gestual táctil de swipe horizontal** (`onTouchStart`/`onTouchEnd`) para deslizar entre días cómodamente con el pulgar.
+     - *Vista Semana:* Despliegue de los 7 días de la semana activa en un feed continuo unificado mediante el componente [`AthleteMobileWeekFeed.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteMobileWeekFeed.tsx) (113 LOC), donde los descansos se condensan en filas sutiles de una línea y las sesiones muestran badge de completado/omitido, TSS y disciplina con navegación a 1 toque.
+  4. **Modularización y SSOT de Emparejamiento (`src/components/dashboard/matchDailyActivities.ts` - 52 LOC):**
+     - Se desacopló la lógica de reconciliación y emparejamiento estricto por disciplina (Running, Ciclismo, Fuerza, Natación) entre entrenamientos planificados y actividades ejecutadas de Intervals.icu, garantizando que `AthleteMobileAgendaView.tsx` respete el límite estricto de $\le 350$ LOC (quedando en 327 LOC).
+  5. **Sincronización Bidireccional de Umbrales Cardíacos (`src/app/api/sync-settings/route.ts` & `src/hooks/useAthleteTelemetry.ts`):**
+     - Soporte para sincronizar `lthr` (umbral lactato), `maxHR` y `restingHR` directamente hacia Intervals.icu en `/athlete/{id}` y `/sport-settings`.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteMobileAgendaView.tsx`: 327 LOC, `AthleteMobileWeekFeed.tsx`: 113 LOC, `matchDailyActivities.ts`: 52 LOC, `AthleteContinuousCalendar.tsx`: 344 LOC).
+  - `Prueba 4 (Git SSOT):` Cambios commiteados y pusheados a `origin/main` (`5d45434`).
+
 
 

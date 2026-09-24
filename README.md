@@ -1,11 +1,12 @@
-# ⚡ SGEA Pro (v3.60) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.63) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica y Prescripción Adaptativa con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
-- 📌 **Main Sticky Header Maestro Unificado:** Bloque superior persistente (`position: sticky; top: 0; z-index: 50`) que ancla las tarjetas de métricas fisiológicas (Fitness CTL, Fatiga ATL, Forma TSB, Potencia), la barra de control con botón "Hoy" y la cabecera semanal de días (Lunes a Domingo), permitiendo que el scroll del calendario fluya por debajo sin perder nunca la visión de la condición física ni los controles rápidos.
+- 📱 **Ergonomía Responsive Móvil & Plegado de Métricas:** En smartphones, las métricas fisiológicas se pliegan a un carrusel horizontal compacto de pastillas (pills) de ~36px con toggle `Ver (6)` / `Plegar`, liberando más del 75% del viewport vertical. Conmutador dual entre **Detalle Diario** (con soporte gestual de swipe táctil horizontal) y **Agenda Semanal** (feed continuo estilo TrainingPeaks con descansos condensados en una sola fila).
+- 📌 **Main Sticky Header Maestro Unificado (Desktop):** Bloque superior persistente (`position: sticky; top: 0; z-index: 50`) que ancla las tarjetas de métricas fisiológicas (Fitness CTL, Fatiga ATL, Forma TSB, Potencia), la barra de control con botón "Hoy" y la cabecera semanal de días (Lunes a Domingo), permitiendo que el scroll del calendario fluya por debajo sin perder nunca la visión de la condición física ni los controles rápidos.
 - 📅 **Calendario Unificado de Año Completo (Scroll Continuo Estilo Intervals.icu):** Eliminación de tabs separadores. Un único flujo vertical donde las semanas futuras planificadas se proyectan hacia arriba (scroll up), la semana actual queda anclada al entrar al dashboard, y el historial de entrenamientos ejecutados (hasta 52 semanas / 1 año) se extiende hacia abajo (scroll down).
 - 🗂️ **Tarjetas de Sesión Minimalistas y Especializadas:** Tarjetas limpias en 3 zonas (Header, Título, Footer) con pista de expansión (`ChevronRight` en hover). Carrera y Ciclismo mantienen su gráfica de intervalos y zonas de potencia (`WorkoutChart`) compacta; Fuerza/Gimnasio presenta descripción concisa de ejercicios ($\le 60$ caracteres), delegando la sintaxis y prescripción detallada al modal interactivo.
 - 🔁 **Sincronización Tri-Semanal & Recalibración Adaptativa (2:1):** Botón para despachar bloques fisiológicos de 3 semanas (2 de carga + 1 de asimilación/descarga) a Intervals.icu con recalibración continua según la evolución real del atleta.

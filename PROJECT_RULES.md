@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.62)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.63)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,12 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.62).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.63).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.62: Modernización del Calendario, Main Sticky Header 4 Bloques y Periodización Dinámica de Entrenamientos:
-  * Main Sticky Header Maestro de 4 Bloques ('Mi Dashboard' + Tabs, Métricas Fisiológicas + Popover, Controles de Calendario + 'Hoy', y Cuadrícula Lunes-Domingo) con fondo 100% sólido opaco y scroll-margin de 280px.
+- Versiones 3.56 - 3.63: Responsive Móvil, Main Sticky Header 4 Bloques y Periodización Dinámica de Entrenamientos:
+  * Ergonomía Responsive Móvil & Plegado de Métricas: En móvil, las tarjetas fisiológicas se pliegan a un carrusel compacto de pills de 36px con toggle 'Ver (6)' / 'Plegar', liberando más del 75% del viewport vertical; controles de calendario compactos.
+  * Visualización Dual Móvil Día vs. Agenda Semanal (Estilo TrainingPeaks): Toggle en móvil entre vista de detalle diario (con swipe táctil horizontal) y feed continuo semanal unificado donde los descansos ocupan una sola línea.
+  * Main Sticky Header Maestro de 4 Bloques ('Mi Dashboard' + Tabs, Métricas Fisiológicas + Popover, Controles de Calendario + 'Hoy', y Cuadrícula Lunes-Domingo) con fondo 100% sólido opaco y scroll-margin de 280px en desktop.
   * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia sistemática de 4 tipologías (Base con final ágil, Fast-Finish Pfitzinger, Bloques de Ritmo Específico y Bloques Cumbre Canova).
   * Escaleras de Intervalos Incrementales (200m a 800m) y Bloques Largos (3x 2000m): integración en modelos de Running (Maratón, 10K) y Triatlón.
   * Sábados de Ciclismo con Propósito: alternancia de Cadencia/Torque (60/100 rpm), Sweetspot y rodaje continuo.
@@ -21,7 +23,7 @@ Contexto Actual del Proyecto:
   * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
   * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
   * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
-  * Sincronización Bidireccional de Peso: despacho automático del peso corporal del atleta a Intervals.icu (`/athlete/{id}` y `/wellness/{date}`).
+  * Sincronización Bidireccional de Peso y Umbrales Cardíacos: despacho automático del peso y umbrales (LTHR, Max HR, Resting HR) a Intervals.icu (`/athlete/{id}` y `/sport-settings`).
   * Persistencia Explícita de Matriz de Disponibilidad: guardado manual seguro y botón de restablecimiento a Matriz Canónica anti-colisiones.
   * Respeto de Max CTL Histórico: macrociclos dimensionados tomando el pico real de fitness histórico del atleta sin topes artificiales.
 - La arquitectura frontend está modularizada (< 350 líneas por archivo) en: `src/components/admin/`, `profile/`, `season/`, `dashboard/` y `macrocycle/`, operada por Custom Hooks en `src/hooks/` (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`).
@@ -476,6 +478,23 @@ Para garantizar un desarrollo ágil, sostenible y con un consumo óptimo y efici
 
 3. **Ley del Fin de Semana de Ciclismo con Propósito Biomecánico:**
    - Los fondos de sábado deben alternar Cadencia & Torque (bloques a 60 rpm para fuerza articularmente segura y 100 rpm para coordinación neuromuscular), Sweetspot aeróbico ($2\times 10\text{m @ } 85\% \text{ FTP}$) y fondos continuos de asimilación Z2.
+
+---
+
+## 📱 16. LEYES DE ERGONOMÍA RESPONSIVE Y MOBILE UX (v3.63)
+
+1. **Ley de Preservación del Viewport Móvil ($\ge 75\%$ Libre):**
+   - En pantallas móviles (`< md:`), las métricas fisiológicas nunca deben ocupar la cuadrícula 2x3 completa por defecto. Deben plegarse obligatoriamente a un carrusel horizontal compacto de pastillas (pills) de $\approx 36\text{px}$ con toggle explícito para expandir o plegar.
+   - La cabecera fija (*Sticky Header*) en móvil no debe superar los 130px para garantizar que la tarjeta del entrenamiento activo ocupe el foco principal sin sensación de asfixia visual.
+
+2. **Ley de Visualización Dual de Calendario Móvil (Día vs. Feed Semanal):**
+   - La experiencia móvil debe proporcionar un conmutador ergonómico `[ Día | Semana ]`:
+     * *Vista Día:* Tarjeta Hero completa con gráfica de intervalos y soporte gestual táctil de swipe horizontal (`onTouchStart` y `onTouchEnd`) para transición ágil entre los 7 días.
+     * *Vista Semana:* Feed vertical continuo donde los días de descanso ocupan una única fila compacta (`h-8` a `h-10`) y las sesiones muestran badges de estado, TSS y disciplina con navegación a 1 toque.
+
+3. **Ley de Preservación de la Experiencia Desktop:**
+   - Ninguna optimización móvil debe alterar o degradar la visualización en escritorio (`md:` en adelante), donde el *Main Sticky Header* de 4 bloques anclados y el scroll vertical continuo de año completo permanecen fijos.
+
 
 
 

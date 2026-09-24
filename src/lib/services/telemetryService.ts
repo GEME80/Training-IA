@@ -228,8 +228,8 @@ export class TelemetryService {
 
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
             const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
-            const resolvedRunFtp = customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0);
-            const resolvedBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
+            const resolvedRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0);
+            const resolvedBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
 
             // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
             const intervalsRestingHR = (latestWellness as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;

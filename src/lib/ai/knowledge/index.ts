@@ -221,8 +221,8 @@ export function calculateProgressiveLongRun(
       km: taperKm,
       minutes: taperMins,
       workoutName: `Carrera Continua de Puesta a Punto Tapering (${taperKm} km / ${taperMins}m Z1-Z2)`,
-      powerTarget: "70-74% CP (Z2 Suave conservando ritmo de carrera)",
-      workoutDoc: `Warmup\n- 15m 65% FTP\n\nMain\n- ${Math.max(10, taperMins - 25)}m 72% FTP\n\nCooldown\n- 10m 60% FTP`,
+      powerTarget: "80-84% CP (Z2 Suave conservando ritmo de carrera)",
+      workoutDoc: `Warmup\n- 15m 74% FTP\n\nMain\n- ${Math.max(10, taperMins - 25)}m 81% FTP\n\nCooldown\n- 10m 65% FTP`,
       isPeakBlock: false,
     };
   }
@@ -242,8 +242,8 @@ export function calculateProgressiveLongRun(
       km: baseKm,
       minutes: baseMins,
       workoutName: `Tirada Larga de Asimilación (${baseKm} km / ${baseMins}m Z2)`,
-      powerTarget: "70% CP (Asimilación Biológica)",
-      workoutDoc: `Warmup\n- 15m 65% FTP\n\nMain\n- ${Math.max(10, baseMins - 25)}m 70% FTP\n\nCooldown\n- 10m 60% FTP`,
+      powerTarget: "78-80% CP (Asimilación Biológica)",
+      workoutDoc: `Warmup\n- 15m 72% FTP\n\nMain\n- ${Math.max(10, baseMins - 25)}m 79% FTP\n\nCooldown\n- 10m 65% FTP`,
       isPeakBlock: false,
     };
   }

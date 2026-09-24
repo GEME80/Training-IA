@@ -282,10 +282,10 @@ export function generateDeterministicAnalysis(
           : "Tirada Larga Progresiva Stryd (1h15m)",
         action: "MANTENER",
         durationMinutes: longMins,
-        tss: Math.round(longMins * 0.80),
-        powerTarget: `${Math.round(runFtp * 0.78)}W (78% CP)`,
-        justification: "Desarrollo de durabilidad y potencia específica de competición.",
-        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 80, phase),
+        tss: Math.round(longMins * 0.85),
+        powerTarget: `${Math.round(runFtp * 0.84)}W (84% CP)`,
+        justification: "Desarrollo de durabilidad y potencia específica de competición en Z2-Z3 Stryd.",
+        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 84, phase),
         isRestDay: false,
       };
     }
@@ -300,8 +300,8 @@ export function generateDeterministicAnalysis(
         : "Carrera Continua Progresiva Z1-Z2 Stryd (45m)",
       action: isFatigued ? "MODIFICAR" : "MANTENER",
       durationMinutes: isFatigued ? 35 : 45,
-      tss: isFatigued ? 26 : 38,
-      powerTarget: `${Math.round(runFtp * 0.70)}W (70% CP)`,
+      tss: isFatigued ? 26 : 42,
+      powerTarget: `${Math.round(runFtp * (isFatigued ? 0.72 : 0.81))}W (${isFatigued ? "72% CP Z1" : "81% CP Z2"})`,
       justification: isFatigued
         ? "Atenuación a Z1 para proteger tono parasimpático y acelerar recuperación."
         : "Carrera aeróbica base para consistencia de fitness.",

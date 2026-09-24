@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.60)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.62)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,12 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.60).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.62).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.60: Modernización del Calendario Deportivo, Sincronización Tri-Semanal & Main Sticky Header Maestro:
-  * Main Sticky Header Maestro Unificado (`top: 0; z-index: 50; backdrop-blur`): agrupa en un único contenedor persistente las tarjetas fisiológicas (CTL, ATL, TSB, Potencia), la barra de título con navegación rápida "Hoy" y la cabecera de días (Lunes a Domingo), permitiendo que el scroll del calendario fluya por debajo sin perder nunca la visión de la condición física ni los controles rápidos.
+- Versiones 3.56 - 3.62: Modernización del Calendario, Main Sticky Header 4 Bloques y Periodización Dinámica de Entrenamientos:
+  * Main Sticky Header Maestro de 4 Bloques ('Mi Dashboard' + Tabs, Métricas Fisiológicas + Popover, Controles de Calendario + 'Hoy', y Cuadrícula Lunes-Domingo) con fondo 100% sólido opaco y scroll-margin de 280px.
+  * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia sistemática de 4 tipologías (Base con final ágil, Fast-Finish Pfitzinger, Bloques de Ritmo Específico y Bloques Cumbre Canova).
+  * Escaleras de Intervalos Incrementales (200m a 800m) y Bloques Largos (3x 2000m): integración en modelos de Running (Maratón, 10K) y Triatlón.
+  * Sábados de Ciclismo con Propósito: alternancia de Cadencia/Torque (60/100 rpm), Sweetspot y rodaje continuo.
+  * Política de Eficiencia de Tokens (FinOps): micro-lecturas <= 20-30 líneas, conteo LOC vía CLI (wc -l) y búsquedas quirúrgicas con grep_search.
   * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
   * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
   * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
@@ -454,5 +458,24 @@ Para garantizar un desarrollo ágil, sostenible y con un consumo óptimo y efici
 5. **Verificación y Pipeline Secuencial Ágil:**
    - Ejecutar `tsc --noEmit` y `npm run build` como validación final de ciclo.
    - Documentar los cambios en `BITACORA_MAESTRA.md` y actualizar la bitácora al cierre de cada tarea sin duplicación de contexto.
+
+---
+
+## 🏃 15. LEYES DE PERIODIZACIÓN DINÁMICA DE FONDOS, ESCALERAS Y CICLISMO CON PROPÓSITO (v3.62)
+
+1. **Ley de Rotación Dinámica de Tiradas Largas Dominicales:**
+   - Queda terminantemente prohibido generar planes donde el domingo sea invariablemente un rodaje continuo plano Z2 donde solo cambia el TSS.
+   - Todo modelo de running y triatlón debe rotar dinámicamente entre las 4 tipologías según la fase del microciclo:
+     * *Fase Base:* Tirada de Construcción Aeróbica Z2 alternada con Tirada Aeróbica con Progresión Final (últimos 15 min al 76% CP).
+     * *Fase Build:* Alternancia entre Tirada Fast-Finish Pfitzinger (75% Z2 + final 82% CP), Tirada con Bloques Extensivos a Ritmo Maratón/Medio Maratón ($2\times 15\text{--}20\text{ min @ } 82\% \text{ CP}$) y Tiradas Onduladas con Flotación Activa.
+     * *Fase Peak:* Fondos Cumbre Específicos Canova con bloques al 82-83% CP.
+     * *Descargas:* Reducción estricta del 22% de volumen manteniendo zancada ágil.
+
+2. **Ley de Escaleras de Intervalos y Bloques Extensivos:**
+   - La suite de calidad de Running y Triatlón debe incorporar fraccionados progresivos (escaleras $200\text{m} \rightarrow 400\text{m} \rightarrow 600\text{m} \rightarrow 800\text{m}$) prescritos en tiempo y % FTP/CP Stryd, y bloques largos de umbral en pista/asfalto ($3\times 2.000\text{m @ } 98\% \text{ CP}$).
+
+3. **Ley del Fin de Semana de Ciclismo con Propósito Biomecánico:**
+   - Los fondos de sábado deben alternar Cadencia & Torque (bloques a 60 rpm para fuerza articularmente segura y 100 rpm para coordinación neuromuscular), Sweetspot aeróbico ($2\times 10\text{m @ } 85\% \text{ FTP}$) y fondos continuos de asimilación Z2.
+
 
 

@@ -172,26 +172,26 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       <div className="sticky top-0 z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm -mx-1 px-1">
         {/* Bloque 1: Encabezado principal y selector de vistas */}
         {dashboardHeaderSlot && (
-          <div className="pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="pt-1.5 pb-1.5 md:pt-2 md:pb-2 border-b border-slate-100 dark:border-slate-800/80">
             {dashboardHeaderSlot}
           </div>
         )}
 
         {/* Bloque 2: Métricas fisiológicas (CTL, ATL, TSB, Potencia) */}
         {stickyTopSlot && (
-          <div className="pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="pt-1 pb-1.5 md:pt-2 md:pb-2 border-b border-slate-100 dark:border-slate-800/80">
             {stickyTopSlot}
           </div>
         )}
 
         {/* Bloque 3: Barra de controles del calendario */}
-        <div className="flex items-center justify-between px-3 py-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-2 md:px-3 py-1.5 md:py-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <CalendarDays className="h-4 w-4 text-sky-500" />
-            <span className="text-sm font-black text-slate-900 dark:text-white">
+            <span className="text-xs md:text-sm font-black text-slate-900 dark:text-white">
               Calendario de Entrenamiento
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
               {totalWeeksLabel} semanas · Año completo
             </span>
           </div>
@@ -203,7 +203,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                 currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
               }
             }}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
+            className="flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
             title="Ir a la semana actual"
           >
             <Compass className="h-3.5 w-3.5" />

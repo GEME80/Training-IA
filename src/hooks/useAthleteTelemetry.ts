@@ -196,34 +196,35 @@ export function useAthleteTelemetry({
       lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
       restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
       maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
-      weightKg: effectiveWeight, heightCm: effectiveHeight,
-      birthDate: effectiveBirth, gender: effectiveGender,
+      weightKg: effectiveWeight, heightCm: effectiveHeight, birthDate: effectiveBirth, gender: effectiveGender,
       weeklyAvailability: data.weeklyAvailability, visibleMetrics: data.visibleMetrics || visibleMetrics,
     });
 
-    // Sincronizar los 5 campos maestros hacia Intervals.icu en segundo plano
-    if (targetApiKey && (athleteIdToUse || profile.id)) {
-      fetch("/api/sync-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          athleteId: athleteIdToUse || profile.id,
-          apiKey: targetApiKey,
-          uid: user?.uid,
-          email: user?.email || userProfile?.email || "",
-          runFtp: effectiveRunFtp,
-          bikeFtp: effectiveBikeFtp,
-          weightKg: effectiveWeight,
-          birthDate: effectiveBirth,
-          gender: effectiveGender,
-        }),
-      }).catch((syncErr) => console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr));
+    // Sincronizar hacia Intervals.icu esperando confirmación antes de refrescar
+    if (athleteIdToUse || profile.id || user?.uid) {
+      try {
+        await fetch("/api/sync-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            athleteId: athleteIdToUse || profile.id, apiKey: targetApiKey || undefined,
+            uid: user?.uid, email: user?.email || userProfile?.email || "",
+            runFtp: effectiveRunFtp, bikeFtp: effectiveBikeFtp,
+            weightKg: effectiveWeight, birthDate: effectiveBirth, gender: effectiveGender,
+            lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
+            restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
+            maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
+          }),
+        });
+      } catch (syncErr) {
+        console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr);
+      }
     }
 
     if (refreshProfile) {
       try { await refreshProfile(); } catch (authErr) { console.warn("Aviso al refrescar perfil en AuthContext:", authErr); }
     }
-    await refreshTelemetry(athleteIdToUse || profile.id, data.apiKey, data.runFtp, data.bikeFtp, true);
+    await refreshTelemetry(athleteIdToUse || profile.id, targetApiKey || data.apiKey, effectiveRunFtp, effectiveBikeFtp, true);
   };
 
   const handleToggleMetric = async (id: string) => {

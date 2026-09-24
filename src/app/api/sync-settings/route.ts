@@ -5,7 +5,7 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, uid, email, runFtp, bikeFtp, weightKg, birthDate, gender } = body;
+    const { athleteId, apiKey, uid, email, runFtp, bikeFtp, weightKg, birthDate, gender, lthr, maxHR, restingHR } = body;
 
     const { athleteId: effId, apiKey: effKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
     if (!effKey || !effId) {
@@ -21,24 +21,33 @@ export async function POST(req: NextRequest) {
       const runSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /run/i.test(t)) || /run/i.test(String(s.id)));
       const rideSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /ride|cycling|bike/i.test(t)) || /ride|cycling|bike/i.test(String(s.id)));
 
-      if (runFtp && runSetting?.id) {
-        await client.updateSportSettings(runSetting.id, { ...runSetting, ftp: Number(runFtp) });
-        syncResults.runFtp = `${runFtp}W (Stryd)`;
+      if (runSetting?.id && (runFtp || lthr || maxHR)) {
+        const patch: Record<string, any> = { ...runSetting };
+        if (runFtp) patch.ftp = Number(runFtp);
+        if (lthr) patch.lthr = Number(lthr);
+        if (maxHR) patch.max_hr = Number(maxHR);
+        await client.updateSportSettings(runSetting.id, patch);
+        if (runFtp) syncResults.runFtp = `${runFtp}W (Stryd)`;
       }
-      if (bikeFtp && rideSetting?.id) {
-        await client.updateSportSettings(rideSetting.id, { ...rideSetting, ftp: Number(bikeFtp) });
-        syncResults.bikeFtp = `${bikeFtp}W`;
+      if (rideSetting?.id && (bikeFtp || lthr || maxHR)) {
+        const patch: Record<string, any> = { ...rideSetting };
+        if (bikeFtp) patch.ftp = Number(bikeFtp);
+        if (lthr) patch.lthr = Number(lthr);
+        if (maxHR) patch.max_hr = Number(maxHR);
+        await client.updateSportSettings(rideSetting.id, patch);
+        if (bikeFtp) syncResults.bikeFtp = `${bikeFtp}W`;
       }
     } catch (sErr: any) {
       syncResults.sportWarning = sErr?.message;
     }
 
-    // 2. Sincronizar métricas maestras en perfil de atleta: Stryd CP, Bike FTP, peso, edad/fecha y sexo
+    // 2. Sincronizar métricas maestras en perfil de atleta: Stryd CP, Bike FTP, peso, edad/fecha, sexo y FC reposo
     try {
       const athletePayload: Record<string, any> = {};
       if (bikeFtp) athletePayload.icu_ftp = Number(bikeFtp);
       if (runFtp) athletePayload.icu_running_ftp = Number(runFtp);
       if (weightKg) athletePayload.weight = Number(weightKg);
+      if (restingHR) athletePayload.icu_resting_hr = Number(restingHR);
       if (birthDate) { athletePayload.icu_date_of_birth = birthDate; athletePayload.dob = birthDate; }
       if (gender) athletePayload.sex = gender === "M" ? "M" : gender === "F" ? "F" : undefined;
 

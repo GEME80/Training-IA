@@ -83,7 +83,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
         >
           <Edit3 className="h-3.5 w-3.5" />
-          <span>Editar Perfil & Umbrales</span>
+          <span>Editar Perfil</span>
         </button>
       </div>
 

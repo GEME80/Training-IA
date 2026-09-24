@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { AlertTriangle, SlidersHorizontal, Check, X } from "lucide-react";
+import React, { useState } from "react";
+import { AlertTriangle, SlidersHorizontal, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { DEFAULT_VISIBLE_METRICS, AVAILABLE_METRIC_INDICATORS } from "@/lib/intervals/types";
 
@@ -34,7 +34,8 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
   visibleMetrics = DEFAULT_VISIBLE_METRICS,
   onToggleMetric,
 }) => {
-  const [isConfigOpen, setIsConfigOpen] = React.useState(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const activeMetrics = visibleMetrics && visibleMetrics.length > 0 ? visibleMetrics : DEFAULT_VISIBLE_METRICS;
 
   if (!status) {
@@ -94,77 +95,138 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
           Tu Estado de Rendimiento y Recuperación
         </span>
 
-        {onToggleMetric && (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsConfigOpen(!isConfigOpen)}
-              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-bold transition shadow-xs cursor-pointer"
-            >
-              <SlidersHorizontal className="h-3 w-3 text-sky-500" />
-              <span>Personalizar ({activeMetrics.length})</span>
-            </button>
+        <div className="flex items-center gap-2">
+          {/* Botón Acordeón exclusivo para Móvil (< md) */}
+          <button
+            type="button"
+            onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+            className="flex md:hidden items-center space-x-1 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition shadow-xs cursor-pointer"
+          >
+            <span>{isMobileExpanded ? "Plegar" : `Ver (${activeMetrics.length})`}</span>
+            {isMobileExpanded ? <ChevronUp className="h-3 w-3 text-sky-500" /> : <ChevronDown className="h-3 w-3 text-sky-500" />}
+          </button>
 
-            {/* Popover flotante con checkboxes */}
-            {isConfigOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsConfigOpen(false)}
-                />
-                <div className="absolute right-0 mt-1.5 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl z-50 animate-fadeIn space-y-2">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                      Métricas Visibles
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsConfigOpen(false)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+          {onToggleMetric && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsConfigOpen(!isConfigOpen)}
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-bold transition shadow-xs cursor-pointer"
+              >
+                <SlidersHorizontal className="h-3 w-3 text-sky-500" />
+                <span className="hidden sm:inline">Personalizar ({activeMetrics.length})</span>
+                <span className="sm:hidden">Ajustes</span>
+              </button>
 
-                  <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                    {AVAILABLE_METRIC_INDICATORS.map((metric) => {
-                      const isChecked = activeMetrics.includes(metric.id);
-                      return (
-                        <div
-                          key={metric.id}
-                          onClick={() => onToggleMetric(metric.id)}
-                          className={`flex items-center justify-between px-2 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition ${
-                            isChecked
-                              ? "bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-200 font-bold"
-                              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-1.5">
-                            <span>{metric.icon}</span>
-                            <span>{metric.name}</span>
-                          </div>
+              {/* Popover flotante con checkboxes */}
+              {isConfigOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsConfigOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-1.5 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl z-50 animate-fadeIn space-y-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        Métricas Visibles
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsConfigOpen(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                      {AVAILABLE_METRIC_INDICATORS.map((metric) => {
+                        const isChecked = activeMetrics.includes(metric.id);
+                        return (
                           <div
-                            className={`h-4 w-4 rounded-md flex items-center justify-center border ${
+                            key={metric.id}
+                            onClick={() => onToggleMetric(metric.id)}
+                            className={`flex items-center justify-between px-2 py-1.5 rounded-xl cursor-pointer text-xs font-medium transition ${
                               isChecked
-                                ? "bg-sky-600 border-sky-600 text-white"
-                                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                                ? "bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-200 font-bold"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                           >
-                            {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
+                            <div className="flex items-center space-x-1.5">
+                              <span>{metric.icon}</span>
+                              <span>{metric.name}</span>
+                            </div>
+                            <div
+                              className={`h-4 w-4 rounded-md flex items-center justify-center border ${
+                                isChecked
+                                  ? "bg-sky-600 border-sky-600 text-white"
+                                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+                              }`}
+                            >
+                              {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Grid Modular Dinámico Adaptado a los Indicadores Seleccionados */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
+      {/* Vista Compacta Horizontal Exclusiva para Móvil (cuando no está expandido) */}
+      {!isMobileExpanded && (
+        <div className="flex md:hidden items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
+          {activeMetrics.includes("ctl") && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">📈</span>
+              <span className="font-bold text-blue-700 dark:text-blue-300">CTL</span>
+              <strong className="text-slate-900 dark:text-white font-black">{Number(status.ctl).toFixed(1)}</strong>
+            </div>
+          )}
+          {activeMetrics.includes("atl") && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">⚡</span>
+              <span className="font-bold text-amber-700 dark:text-amber-300">ATL</span>
+              <strong className="text-slate-900 dark:text-white font-black">{Number(status.atl).toFixed(1)}</strong>
+            </div>
+          )}
+          {activeMetrics.includes("tsb") && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">🌱</span>
+              <span className="font-bold text-slate-500">TSB</span>
+              <strong className={`font-black ${getTsbColor(status.tsb)}`}>{Number(status.tsb).toFixed(0)}</strong>
+            </div>
+          )}
+          {activeMetrics.includes("run_ftp") && runFtp && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-orange-50/80 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/60 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">🏃</span>
+              <span className="font-bold text-orange-700 dark:text-orange-300">Run</span>
+              <strong className="text-slate-900 dark:text-white font-black">{runFtp}W</strong>
+            </div>
+          )}
+          {activeMetrics.includes("bike_ftp") && bikeFtp && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-cyan-50/80 dark:bg-cyan-950/40 border border-cyan-200/80 dark:border-cyan-800/60 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">🚴</span>
+              <span className="font-bold text-cyan-700 dark:text-cyan-300">Bici</span>
+              <strong className="text-slate-900 dark:text-white font-black">{bikeFtp}W</strong>
+            </div>
+          )}
+          {activeMetrics.includes("ramp_rate") && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 shrink-0 font-mono text-[11px]">
+              <span className="text-[10px]">📐</span>
+              <span className="font-bold text-purple-700 dark:text-purple-300">Ramp</span>
+              <strong className="text-slate-900 dark:text-white font-black">{rampDisplay}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Grid Modular Dinámico: Visible siempre en desktop (md:grid), y en móvil solo si está expandido */}
+      <div className={`${isMobileExpanded ? "grid" : "hidden md:grid"} grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5`}>
         {/* 1. FORMA FÍSICA / CTL */}
         {activeMetrics.includes("ctl") && (
           <div

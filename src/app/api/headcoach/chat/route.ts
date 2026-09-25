@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
         actionType: parsed.actionType || "CONVERSATION",
         reasoning: parsed.reasoning || null,
         workoutDiff: parsed.workoutDiff || null,
+        previousWeekSummary: ctx.previousWeekSummary || null,
         audit: parsed.audit || {
           compliancePct: ctx.compliancePct, actualTss: ctx.actualTss, plannedTss: ctx.plannedWeekTss,
           ctl: ctx.physioStatus.ctl.toFixed(1), atl: ctx.physioStatus.atl.toFixed(1), tsb: ctx.physioStatus.tsb.toFixed(1),
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
           ),
         },
         suggestedPlan: parsed.suggestedPlan || null,
-        quickReplies: parsed.quickReplies || ["✅ Aprobar y Sincronizar", "⏱️ Adaptar martes por falta de tiempo", "🚴 Cambiar a Rodillo Z2", "🔍 Ver zonas de potencia"],
+        quickReplies: parsed.quickReplies || ["✅ Mantener Plan Previsto", "📉 Reducir Carga TSS (-15%)", "📈 Subir Carga TSS (+10%)", "📅 Ajustar Deportes Esta Semana"],
         modelUsed: inferenceResult.successfulModel || "Google Gemini AI",
         targetWeekNumber: ctx.targetPlanningWeekNum,
       };

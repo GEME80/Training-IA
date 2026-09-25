@@ -9,7 +9,8 @@ import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engine";
 import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
-import { HeadCoachQuickActions } from "./headcoach/HeadCoachQuickActions";
+import { HeadCoachQuickActions, QuickActionOptions } from "./headcoach/HeadCoachQuickActions";
+import { HeadCoachTemporaryMatrixModal } from "./headcoach/HeadCoachTemporaryMatrixModal";
 import { HeadCoachMessageItem, HeadCoachMessageData } from "./headcoach/HeadCoachMessageItem";
 import { HeadCoachHeader } from "./headcoach/HeadCoachHeader";
 
@@ -63,6 +64,8 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   });
   const [isApplying, setIsApplying] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+  const [temporaryAvailability, setTemporaryAvailability] = useState<WeeklyAvailabilityMap | null>(null);
+  const [isMatrixModalOpen, setIsMatrixModalOpen] = useState(false);
 
   const selectedWeekIdx = Math.max(0, activeWeekNumber - 1);
   const selectedWeekData = effectiveBlueprint?.weeks?.[selectedWeekIdx];
@@ -138,7 +141,7 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string, options?: QuickActionOptions) => {
     const text = (textToSend || "").trim();
     if (!text || isLoading) return;
 
@@ -165,7 +168,7 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
             selectedWeekData,
             profile.run_ftp,
             profile.bike_ftp,
-            (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
+            (temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
             (effectiveBlueprint?.distanceType as any) || "MARATON_42K",
             profile.ctl
           )
@@ -176,27 +179,16 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: updatedHistory.map((m) => ({ role: m.role, content: m.text })),
-          athleteId: profile.id,
-          apiKey,
-          uid,
-          email,
-          customGeminiKey: geminiApiKey,
-          selectedModel,
-          temperature,
-          weekOffset: calculatedOffset,
-          weekNumber: activeWeekNumber,
-          currentPlan: effectivePlanForWeek,
-          dailyExecutedActivities,
-          runFtp: profile.run_ftp,
-          bikeFtp: profile.bike_ftp,
-          weight: profile.weight,
-          height: profile.heightCm,
-          birthDate: profile.birthDate,
-          gender: profile.gender,
-          restingHR: profile.restingHR,
-          maxHR: profile.maxHR,
-          lthr: profile.lthr,
+          athleteId: profile.id, apiKey, uid, email, customGeminiKey: geminiApiKey,
+          selectedModel, temperature, weekOffset: calculatedOffset, weekNumber: activeWeekNumber,
+          currentPlan: effectivePlanForWeek, dailyExecutedActivities,
+          runFtp: profile.run_ftp, bikeFtp: profile.bike_ftp, weight: profile.weight,
+          height: profile.heightCm, birthDate: profile.birthDate, gender: profile.gender,
+          restingHR: profile.restingHR, maxHR: profile.maxHR, lthr: profile.lthr,
           isInitialAudit: false,
+          temporaryAvailability: temporaryAvailability || undefined,
+          targetTssAdjustmentPct: options?.targetTssAdjustmentPct,
+          isWeekKickoffAudit: options?.isWeekKickoffAudit,
         }),
       });
 
@@ -258,6 +250,11 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
     } finally {
       setIsApplying(false);
     }
+  };
+
+  const handleApplyTemporaryMatrix = (tempAvail: WeeklyAvailabilityMap) => {
+    setTemporaryAvailability(tempAvail);
+    handleSendMessage("He configurado una matriz de deportes temporal para esta semana. Adapta el microciclo distribuyendo los estímulos según esta nueva disponibilidad.");
   };
 
   let startStr: string | undefined;
@@ -332,10 +329,21 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
       {/* CONSOLA DE CONTROL TÁCTICO GUIADA (FINOPS & CONSULTAS ESTRUCTURADAS) */}
       <div className="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
         <HeadCoachQuickActions
-          onSelectAction={(prompt) => handleSendMessage(prompt)}
+          onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
+          onOpenTemporaryMatrix={() => setIsMatrixModalOpen(true)}
           isLoading={isLoading}
         />
       </div>
+
+      {/* MODAL MATRIZ TEMPORAL (SOLO ESTA SEMANA) */}
+      <HeadCoachTemporaryMatrixModal
+        isOpen={isMatrixModalOpen}
+        onClose={() => setIsMatrixModalOpen(false)}
+        weekNumber={activeWeekNumber}
+        initialAvailability={(temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability || {}}
+        onApplyTemporaryMatrix={handleApplyTemporaryMatrix}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

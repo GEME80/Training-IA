@@ -7,7 +7,8 @@ import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { buildCondensedExecutedMap, formatCompactActivitySummary, formatActivitiesTssBreakdown, formatRecentWellnessSummary } from "@/lib/ai/contextCondenser";
 import { FtpDetectionService } from "@/lib/services/ftpDetectionService";
-import { HeadCoachChatRequest } from "./types";
+import { computePreviousWeekRetrospective } from "./weekRetrospective";
+import { HeadCoachChatRequest, PreviousWeekSummary } from "./types";
 
 export interface ResolvedChatContext {
   profile: AthleteProfile;
@@ -34,6 +35,9 @@ export interface ResolvedChatContext {
   coachStyleDescription: string;
   promptContext: HeadCoachPromptContext;
   effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }>;
+  previousWeekSummary: PreviousWeekSummary;
+  targetTssAdjustmentPct: number;
+  isWeekKickoffAudit: boolean;
 }
 
 export async function resolveChatContext(body: HeadCoachChatRequest): Promise<ResolvedChatContext> {
@@ -46,6 +50,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     weekNumber = 1,
     macrocyclePhase = null,
     weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY,
+    temporaryAvailability,
+    targetTssAdjustmentPct = 0,
+    isWeekKickoffAudit = false,
     currentPlan = [],
     dailyExecutedActivities = {},
     runFtp,
@@ -94,14 +101,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       ]);
 
       if (ath) {
-        const runSport = (sports || []).find((s: any) =>
-          s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) ||
-          /run/i.test(String(s.id))
-        );
-        const rideSport = (sports || []).find((s: any) =>
-          s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
-          /ride|cycling|bike/i.test(String(s.id))
-        );
+        const runSport = (sports || []).find((s: any) => s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) || /run/i.test(String(s.id)));
+        const rideSport = (sports || []).find((s: any) => s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id)));
 
         const anyAth = (ath || {}) as any;
         const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || birthDate;
@@ -137,15 +138,13 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           id: ath?.id || effectiveAthleteId || "",
           name: ath?.name || profile.name || "Atleta",
           birthDate: birthDate || icuDob,
-          age: computedAge,
-          gender: resolvedSex,
+          age: computedAge, gender: resolvedSex,
           weight: resolvedWeight ? Number(resolvedWeight) : undefined,
           heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
           restingHR: restingHR || (wellness[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
           maxHR: maxHR || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr,
           lthr: lthr || anyAth.lthr || ath?.lthr || defaultLthr,
-          run_ftp: resolvedRunFtp,
-          bike_ftp: resolvedBikeFtp,
+          run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
         };
       }
       wellness = Array.isArray(wel) ? wel : [];
@@ -173,27 +172,17 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   profile.tsb = physioStatus.tsb;
   profile.rampRate = physioStatus.rampRate;
 
-  const safeAvailability = resolveEffectiveAvailability(weeklyAvailability);
+  const effectiveAvailability = (temporaryAvailability && Object.keys(temporaryAvailability).length > 0)
+    ? temporaryAvailability
+    : weeklyAvailability;
+  const safeAvailability = resolveEffectiveAvailability(effectiveAvailability);
   const availabilityFormatted = CANONICAL_DAYS
-    .map((day) => {
-      const list = getDayDisciplines(safeAvailability, day);
-      return `  - ${day}: ${list.join(", ")}`;
-    })
+    .map((day) => `  - ${day}: ${getDayDisciplines(safeAvailability, day).join(", ")}`)
     .join("\n");
 
-  const hasExistingPlan =
-    Array.isArray(currentPlan) &&
-    currentPlan.length > 0 &&
-    currentPlan.some((p) => p && ((p.tss || 0) > 0 || (p.durationMinutes || 0) > 0));
-
+  const hasExistingPlan = Array.isArray(currentPlan) && currentPlan.length > 0 && currentPlan.some((p) => p && ((p.tss || 0) > 0 || (p.durationMinutes || 0) > 0));
   const currentPlanSummary = hasExistingPlan
-    ? currentPlan
-        .filter(Boolean)
-        .map(
-          (p) =>
-            `  - ${p.day || p.dayOfWeek || "Día"}: [${p.discipline || "Carrera"}] ${p.workoutName || p.title || "Entrenamiento"} (${p.durationMinutes || 0} min, ~${p.tss || 0} TSS)`
-        )
-        .join("\n")
+    ? currentPlan.filter(Boolean).map((p) => `  - ${p.day || p.dayOfWeek || "Día"}: [${p.discipline || "Carrera"}] ${p.workoutName || p.title || "Entrenamiento"} (${p.durationMinutes || 0} min, ~${p.tss || 0} TSS)`).join("\n")
     : "  (No hay un plan activo previo para esta semana; se debe proponer uno nuevo)";
 
   const weekDates = getWeekDates(safeOffset);
@@ -213,24 +202,31 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   // Mapeo unificado y optimizado de actividades ejecutadas por fecha (FinOps & High Density)
   const effectiveExecutedMap = buildCondensedExecutedMap(pastActivities, dailyExecutedActivities);
 
+  // Retrospectiva y balance de la semana anterior a la semana de planificación
+  const previousWeekSummary = computePreviousWeekRetrospective({
+    planningWeekDates,
+    effectiveExecutedMap,
+    macrocyclePhase,
+    targetPlanningWeekNum: safeWeekNum,
+  });
+
   // TSS ejecutado real estrictamente dentro de los 7 días de la semana de planificación
   const weekExecutedTss = planningWeekDates.reduce(
     (acc, d) => acc + (effectiveExecutedMap[d.date]?.totalTss || 0),
     0
   );
 
-  const plannedWeekTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
+  const rawPlannedTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
     ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0)
     : (macrocyclePhase?.blueprint?.currentWeek?.targetTss || 350);
-
+  const tssFactor = targetTssAdjustmentPct !== 0 ? (1 + targetTssAdjustmentPct / 100) : 1;
+  const plannedWeekTss = Math.round(rawPlannedTss * tssFactor);
   const actualTss = Math.round(weekExecutedTss);
-  const compliancePct = plannedWeekTss > 0
-    ? Math.round((actualTss / plannedWeekTss) * 100)
-    : 0;
+  const compliancePct = plannedWeekTss > 0 ? Math.round((actualTss / plannedWeekTss) * 100) : 0;
 
   const isDeload = safeWeekNum % 4 === 0;
-  const targetMinTss = isDeload ? Math.round((plannedWeekTss || 350) * 0.65) : Math.round((plannedWeekTss || 350) * 0.95);
-  const targetMaxTss = isDeload ? Math.round((plannedWeekTss || 350) * 0.8) : Math.round((plannedWeekTss || 350) * 1.15);
+  const targetMinTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.65 : 0.95));
+  const targetMaxTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.8 : 1.15));
 
   // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
   const auditLines = planningWeekDates.map((wDate, idx) => {
@@ -258,14 +254,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ${actSummaries} -> Total Real: ${execTss} TSS ${complianceStatus}`;
     }
 
-    if (isRestPlanned) {
-      return `- ${dName} (${wDate.formattedDate}): Plan: Descanso | Real: Descanso Pasivo (0 TSS) [DESCANSO RESPETADO]`;
-    }
-
-    if (isPast) {
-      return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: 0 TSS [SESION NO REGISTRADA]`;
-    }
-
+    if (isRestPlanned) return `- ${dName} (${wDate.formattedDate}): Plan: Descanso | Real: Descanso Pasivo (0 TSS) [DESCANSO RESPETADO]`;
+    if (isPast) return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: 0 TSS [SESION NO REGISTRADA]`;
     return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | [${isToday ? "HOY EN CURSO" : "PENDIENTE"}]`;
   });
 
@@ -315,6 +305,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     coachProfile,
     customPromptDirective: customPrompt,
     recentWellnessSummary,
+    previousWeekReport: previousWeekSummary.summaryText,
+    isWeekKickoffAudit: Boolean(isWeekKickoffAudit),
+    targetTssAdjustmentPct,
   };
 
   return {
@@ -342,5 +335,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     coachStyleDescription,
     promptContext,
     effectiveExecutedMap,
+    previousWeekSummary,
+    targetTssAdjustmentPct,
+    isWeekKickoffAudit: Boolean(isWeekKickoffAudit),
   };
 }

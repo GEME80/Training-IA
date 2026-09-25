@@ -1,6 +1,7 @@
 import { buildHeadCoachSystemPrompt } from "@/lib/ai/prompts";
 import { trackGeminiUsage } from "@/lib/ai/telemetry";
 import { normalizeDisciplines, getDayDisciplines } from "@/lib/gemini/engine";
+import { applyTssAdjustmentToPlan } from "./weekRetrospective";
 import { ResolvedChatContext } from "./chatContext";
 import { ChatMessage, HeadCoachChatRequest, HeadCoachChatResponse } from "./types";
 
@@ -311,6 +312,9 @@ export async function executeGeminiInference(
                     fuelingStrategy: p.fuelingStrategy || plannedSession?.fuelingStrategy,
                   };
                 });
+                if (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && Array.isArray(parsed.suggestedPlan)) {
+                  parsed.suggestedPlan = applyTssAdjustmentToPlan(parsed.suggestedPlan, ctx.targetTssAdjustmentPct);
+                }
               }
               return {
                 success: true,

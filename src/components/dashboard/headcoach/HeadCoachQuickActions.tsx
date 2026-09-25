@@ -12,27 +12,54 @@ import {
   CheckCircle2,
   Calendar,
   Zap,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 
+export interface QuickActionOptions {
+  targetTssAdjustmentPct?: number;
+  isWeekKickoffAudit?: boolean;
+}
+
 interface HeadCoachQuickActionsProps {
-  onSelectAction: (prompt: string) => void;
+  onSelectAction: (prompt: string, options?: QuickActionOptions) => void;
+  onOpenTemporaryMatrix?: () => void;
   isLoading?: boolean;
 }
 
 export const HeadCoachQuickActions: React.FC<HeadCoachQuickActionsProps> = ({
   onSelectAction,
+  onOpenTemporaryMatrix,
   isLoading = false,
 }) => {
   const [activeTab, setActiveTab] = useState<"weekly" | "daily">("weekly");
   const [travelPickerOpen, setTravelPickerOpen] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [tssPickerOpen, setTssPickerOpen] = useState(false);
 
   const weeklyActions = [
     {
-      id: "eval",
-      label: "Auditar Carga & Asimilación",
-      icon: <Activity className="h-3.5 w-3.5 text-emerald-500" />,
-      prompt: "Evalúa las actividades realizadas en la semana frente al plan y emite tu dictamen fisiológico.",
+      id: "kickoff",
+      label: "Inicio de Semana & Balance",
+      icon: <Calendar className="h-3.5 w-3.5 text-indigo-500" />,
+      onClick: () =>
+        onSelectAction(
+          "Realiza la auditoría de inicio de semana: preséntame el balance de la semana anterior (TSS y sesiones clave), el diagnóstico de rendimiento actual (CTL/ATL/TSB) y evalúa si el plan de esta semana es idóneo o si debemos modular la carga de TSS.",
+          { isWeekKickoffAudit: true }
+        ),
+    },
+    {
+      id: "modulate_tss",
+      label: "Modular Carga TSS",
+      icon: <TrendingDown className="h-3.5 w-3.5 text-amber-500" />,
+      onClick: () => setTssPickerOpen((prev) => !prev),
+    },
+    {
+      id: "temp_matrix",
+      label: "Matriz Temporal (7 Días)",
+      icon: <Sparkles className="h-3.5 w-3.5 text-purple-500" />,
+      onClick: () => onOpenTemporaryMatrix?.(),
     },
     {
       id: "continuity",
@@ -46,11 +73,23 @@ export const HeadCoachQuickActions: React.FC<HeadCoachQuickActionsProps> = ({
       icon: <Plane className="h-3.5 w-3.5 text-sky-500" />,
       onClick: () => setTravelPickerOpen((prev) => !prev),
     },
+  ];
+
+  const tssSubOptions = [
     {
-      id: "philosophy",
-      label: "Filosofía de Microciclos",
-      icon: <Compass className="h-3.5 w-3.5 text-purple-500" />,
-      prompt: "¿Por qué el Head Coach adapta microciclo a microciclo en vez de modificar todo el mes a la vez?",
+      label: "-15% TSS (Fatiga / Poco Tiempo)",
+      prompt: "Ajusta el microciclo reduciendo la carga semanal un 15% por fatiga acumulada, escalando proporcionalmente las duraciones.",
+      options: { targetTssAdjustmentPct: -15 },
+    },
+    {
+      label: "-25% TSS (Descarga / Sobrecarga Alta)",
+      prompt: "Ajusta el microciclo reduciendo la carga semanal un 25% para forzar asimilación biológica y descanso activo.",
+      options: { targetTssAdjustmentPct: -25 },
+    },
+    {
+      label: "+10% TSS (Frescura / Mayor Asimilación)",
+      prompt: "Incrementa la carga semanal un 10% de TSS aprovechando la frescura, aumentando volumen aeróbico Z2.",
+      options: { targetTssAdjustmentPct: 10 },
     },
   ];
 
@@ -171,6 +210,29 @@ export const HeadCoachQuickActions: React.FC<HeadCoachQuickActionsProps> = ({
           </button>
         ))}
       </div>
+
+      {/* Sub-selector de Modulación de Carga TSS */}
+      {tssPickerOpen && activeTab === "weekly" && (
+        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-wrap items-center gap-1.5 animate-in fade-in duration-150">
+          <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 mr-1">
+            Modulación semanal:
+          </span>
+          {tssSubOptions.map((sub, sIdx) => (
+            <button
+              key={sIdx}
+              type="button"
+              disabled={isLoading}
+              onClick={() => {
+                setTssPickerOpen(false);
+                onSelectAction(sub.prompt, sub.options);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-200 border border-amber-500/30 text-[11px] font-semibold hover:bg-amber-50 dark:hover:bg-slate-700 transition cursor-pointer"
+            >
+              {sub.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Sub-selector de Viaje */}
       {travelPickerOpen && activeTab === "weekly" && (

@@ -1,5 +1,6 @@
 import { PlanItem } from "@/lib/gemini/engine";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
+import { applyTssAdjustmentToPlan } from "./weekRetrospective";
 import { ResolvedChatContext } from "./chatContext";
 import { HeadCoachChatResponse, WorkoutDiff, ChatMessage } from "./types";
 
@@ -325,19 +326,19 @@ Para la visión estratégica a largo plazo disponemos del **Plan del Macrociclo*
     replyMsg = `He registrado tus indicaciones ("${lastUserMsg}"). Los parámetros fisiológicos (CTL ${physioStatus.ctl.toFixed(1)}, TSB ${physioStatus.tsb.toFixed(1)}) están equilibrados. ¿Procedemos con la sincronización a Intervals.icu?`;
   }
 
+  const finalPlan = (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && modifiedPlan)
+    ? applyTssAdjustmentToPlan(modifiedPlan, ctx.targetTssAdjustmentPct)
+    : modifiedPlan;
+
   return {
     success: true,
     reply: replyMsg,
     actionType,
     workoutDiff,
-    suggestedPlan: modifiedPlan,
+    previousWeekSummary: ctx.previousWeekSummary || null,
+    suggestedPlan: finalPlan,
     reasoning: "Ajuste algorítmico fisiológico determinístico completado.",
-    quickReplies: [
-      "✅ Aprobar y Sincronizar",
-      "✈️ Adaptar por viaje / tiempo",
-      "⏱️ Reducir otro día",
-      "📋 Ver detalle de entrenamientos",
-    ],
+    quickReplies: ["✅ Aprobar y Sincronizar", "✈️ Adaptar por viaje / tiempo", "⏱️ Reducir otro día", "📋 Ver detalle de entrenamientos"],
     modelUsed: "Motor Fisiológico PULSE (Algorítmico)",
     targetWeekNumber: targetPlanningWeekNum,
   };

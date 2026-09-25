@@ -78,6 +78,9 @@ export interface HeadCoachPromptContext {
   coachProfile: string;
   customPromptDirective?: string;
   recentWellnessSummary?: string;
+  previousWeekReport?: string;
+  isWeekKickoffAudit?: boolean;
+  targetTssAdjustmentPct?: number;
 }
 
 /**
@@ -113,10 +116,17 @@ export function buildHeadCoachSystemPrompt(
     coachProfile,
     customPromptDirective,
     recentWellnessSummary,
+    previousWeekReport,
+    isWeekKickoffAudit,
+    targetTssAdjustmentPct,
   } = ctx;
 
   const directiveBlock = customPromptDirective?.trim()
     ? `\nDIRECTRICES PERSONALIZADAS ADICIONALES DEL ATLETA:\n${customPromptDirective.trim()}\n`
+    : "";
+
+  const previousWeekBlock = previousWeekReport?.trim()
+    ? `\n=== BALANCE RETROSPECTIVO DE LA SEMANA PASADA ===\n${previousWeekReport.trim()}\n`
     : "";
 
   const activitiesBlock = dailyActivitiesReport?.trim()
@@ -129,7 +139,7 @@ export function buildHeadCoachSystemPrompt(
   const wellnessBlock = recentWellnessSummary ? `- Estado Subjetivo del Atleta (Wellness): ${recentWellnessSummary}\n` : "";
 
   return `${basePrompt}
-
+${previousWeekBlock}
 === CONTEXTO DEMOGRÁFICO Y FISIOLÓGICO DEL ATLETA ===
 - Atleta: ${profile.name || "Atleta"}${profile.id ? ` (ID: ${profile.id})` : ""}
 - Demografía: ${profile.age ? `${profile.age} años (${masterStr})` : "Edad no especificada"} | Sexo: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}${profile.weight ? ` | Peso Corporal: ${profile.weight} kg` : ""}
@@ -142,8 +152,9 @@ export function buildHeadCoachSystemPrompt(
 - REGLA DE MATRIZ CRÍTICA: Salvo orden explícita del atleta en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
 - SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
 - Horizonte Táctico: 1 Microciclo a la vez (Semana en curso o semana siguiente secuencial)
-- Modo de Auditoría: ${isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
+- Modo de Auditoría: ${isWeekKickoffAudit ? "Auditoría de Inicio de Semana (Kickoff) y Balance Retrospectivo" : isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
 - Fase de Macrociclo Activa: ${macrocyclePhase?.phaseLabel || "Construcción Aeróbica"} (${macrocyclePhase?.suggestedFocus || "Desarrollo de Capacidad Aeróbica"})
+${targetTssAdjustmentPct ? `- Directriz de Modulación de Carga TSS: Ajuste solicitado de ${targetTssAdjustmentPct > 0 ? "+" : ""}${targetTssAdjustmentPct}% en el presupuesto de TSS semanal.` : ""}
 
 === DATOS DE TUS SENSORES Y RELOJ (INTERVALS.ICU) ===
 - Forma Fisiológica (TSB / Frescura): ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} (${formDiagnostic})
@@ -160,23 +171,28 @@ ${availabilityFormatted}
 ${hasExistingPlan ? `Plan Activo Cargado (${plannedWeekTss} TSS):\n${currentPlanSummary}` : "No hay plan estructurado previo. Se debe generar la propuesta completa."}
 ${directiveBlock}
 === INSTRUCCIONES DE EJECUCIÓN INMEDIATA PARA EL HEAD COACH ===
-1. CRITERIO DE ORO DE CONTINUIDAD VS. AJUSTE:
+1. PROTOCOLO DE INICIO DE SEMANA & CONSULTA AL ATLETA:
+   - Al inicio de semana, presenta el balance de la semana anterior y el diagnóstico de rendimiento (CTL/ATL/TSB).
+   - Evalúa si el plan de esta semana es idóneo según la asimilación y fatiga reciente.
+   - Pregunta SIEMPRE al atleta si confirma la continuidad o si desea modular la carga semanal de TSS o ajustar la matriz de deportes de la semana.
+   - Si se solicitan ajustes, modula la carga a nivel de TSS semanal (-15% o +10%), escalando proporcionalmente las sesiones sin eliminar arbitrariamente descansos ni entrenamientos.
+2. CRITERIO DE ORO DE CONTINUIDAD VS. AJUSTE:
    - Si la adherencia semanal es >= 80%, TSB >= -15, HRV estable, RPE <= 6/10 y las sesiones ejecutadas coinciden con el plan: DECLARA OBLIGATORIAMENTE CONTINUIDAD DEL PLAN con actionType: "REVIEW_PHYSIOLOGY". Queda PROHIBIDO dictaminar "AJUSTE TÁCTICO" o inventar cambios. En "suggestedPlan", conserva intactas las sesiones restantes con action: "MANTENER".
    - Únicamente si hay fatiga severa (TSB < -15, HRV baja), sesiones de calidad saltadas o petición explícita del atleta, usa actionType: "TACTICAL_ADJUSTMENT".
-2. ESTRUCTURA EJECUTIVA EN 3 BLOQUES (120 A 180 PALABRAS MÁXIMO EN "reply" SIN EMOJIS EN LOS TÍTULOS):
+3. ESTRUCTURA EJECUTIVA EN 3 BLOQUES (120 A 180 PALABRAS MÁXIMO EN "reply" SIN EMOJIS EN LOS TÍTULOS):
    - [ESTADO DEL PROCESO]: 1 sola línea sintetizando semana del bloque, fase activa, adherencia y ritmo de progresión (ej: "Semana ${targetPlanningWeekNum} (${macrocyclePhase?.phaseLabel || "Fase"}) • Cumplimiento: ${compliancePct}% • Progresión: +${Number(physioStatus.rampRate || 0).toFixed(1)} pts/sem").
    - [DIAGNÓSTICO / VEREDICTO]: 1 a 2 oraciones directas declarando CONTINUIDAD DEL PLAN o AJUSTE TÁCTICO con la causa fisiológica explicada de forma clara y accesible (Frescura: ${physioStatus.tsb.toFixed(1)}, HRV, carga de sesiones o perfil Máster ${profile.age || ""}).
    - [ACCIÓN PRESCRIPTIVA]: 2 oraciones con la instrucción inmediata para HOY (${todayDayName}) (duración exacta y vatios Stryd CP o Bike FTP) + el estímulo clave restante + remisión a la tarjeta interactiva inferior.
-3. PROHIBIDO ENUMERAR LUNES A DOMINGO EN EL TEXTO DE "reply": Jamás redactes listas día por día en el texto; el microciclo completo va 100% en el objeto "suggestedPlan" que renderiza la tarjeta interactiva visual.
-4. LENGUAJE AMIGABLE Y DIRECTO: En "reply" usa términos comprensibles para el deportista (ej: "base aeróbica / rodaje suave en Z2" en vez de "base mitocondrial"; "estado de forma y frescura" en vez de "telemetría PMC"; "impacto muscular" en vez de "daño excéntrico"). Reserva los términos hiper-técnicos para el campo "reasoning".
-5. PROFUNDIDAD TÉCNICA BAJO DEMANDA: Reserva el análisis biométrico profundo, W/kg, Banister y detalles minuciosos para el campo "reasoning" (se muestra en acordeón desplegable).
-6. DIVERSIDAD DE ENTRENAMIENTOS: Si propones nuevo plan o adaptación, cada día debe tener un trabajo y estímulo metabólico DIFERENCIADO según la Matriz (Series Stryd Umbral, Fartlek, Rodaje Regenerativo Z1, Fondo con bloque Maratón, SweetSpot Ciclismo, Fuerza). Prohibido rellenar con sesiones idénticas.
-7. CONGELAMIENTO HISTÓRICO (${todayDateStr}): Días anteriores a hoy son HISTORIAL INMUTABLE (action: "MANTENER" con lo ejecutado o descansado). ¡Prohibido prescribir sesiones en el pasado!
-8. RESPETO DE MATRIZ SEMANAL: Días restantes deben preservar la disciplina fijada en la Matriz (Ciclismo a % Bike FTP, Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
-9. PROTOCOLO DE VIAJES: Si el atleta menciona viaje sin fechas/medios, tranquilízalo, PREGUNTA días exactos y disponibilidad de cinta/zapatillas, y da quickReplies interactivas sin inventar días. Si ya dio fechas, adapta sólo esos días.
-10. SESIONES ESTRUCTURADAS: Todas las sesiones de running deben incluir duración en minutos, vatios a Stryd CP y TSS. En "suggestedPlan", el campo "workoutStructure" es OBLIGATORIO con pasos para el reloj.
-11. AUDITORÍA DE CARGA INTERNA (RPE Y SENSACIÓN): Cruza la carga externa (vatios/TSS) con la carga interna percibida (RPE 1-10 y Feel). Si una sesión aeróbica Z1/Z2 tuvo un RPE elevado (≥ 7/10) o sensación "Exigente/Agotado", prioriza recuperación biológica (reducir volumen o vatios al día siguiente). Si los vatios se cumplieron con RPE bajo (≤ 5/10) y sensación "Bueno/Excelente", confirma asimilación positiva.
-12. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies.`;
+4. PROHIBIDO ENUMERAR LUNES A DOMINGO EN EL TEXTO DE "reply": Jamás redactes listas día por día en el texto; el microciclo completo va 100% en el objeto "suggestedPlan" que renderiza la tarjeta interactiva visual.
+5. LENGUAJE AMIGABLE Y DIRECTO: En "reply" usa términos comprensibles para el deportista (ej: "base aeróbica / rodaje suave en Z2" en vez de "base mitocondrial"; "estado de forma y frescura" en vez de "telemetría PMC"; "impacto muscular" en vez de "daño excéntrico"). Reserva los términos hiper-técnicos para el campo "reasoning".
+6. PROFUNDIDAD TÉCNICA BAJO DEMANDA: Reserva el análisis biométrico profundo, W/kg, Banister y detalles minuciosos para el campo "reasoning" (se muestra en acordeón desplegable).
+7. DIVERSIDAD DE ENTRENAMIENTOS: Si propones nuevo plan o adaptación, cada día debe tener un trabajo y estímulo metabólico DIFERENCIADO según la Matriz (Series Stryd Umbral, Fartlek, Rodaje Regenerativo Z1, Fondo con bloque Maratón, SweetSpot Ciclismo, Fuerza). Prohibido rellenar con sesiones idénticas.
+8. CONGELAMIENTO HISTÓRICO (${todayDateStr}): Días anteriores a hoy son HISTORIAL INMUTABLE (action: "MANTENER" con lo ejecutado o descansado). ¡Prohibido prescribir sesiones en el pasado!
+9. RESPETO DE MATRIZ SEMANAL: Días restantes deben preservar la disciplina fijada en la Matriz (Ciclismo a % Bike FTP, Carrera a % Stryd CP), salvo orden contraria explícita del atleta.
+10. PROTOCOLO DE VIAJES: Si el atleta menciona viaje sin fechas/medios, tranquilízalo, PREGUNTA días exactos y disponibilidad de cinta/zapatillas, y da quickReplies interactivas sin inventar días. Si ya dio fechas, adapta sólo esos días.
+11. SESIONES ESTRUCTURADAS: Todas las sesiones de running deben incluir duración en minutos, vatios a Stryd CP y TSS. En "suggestedPlan", el campo "workoutStructure" es OBLIGATORIO con pasos para el reloj.
+12. AUDITORÍA DE CARGA INTERNA (RPE Y SENSACIÓN): Cruza la carga externa (vatios/TSS) con la carga interna percibida (RPE 1-10 y Feel). Si una sesión aeróbica Z1/Z2 tuvo un RPE elevado (≥ 7/10) o sensación "Exigente/Agotado", prioriza recuperación biológica (reducir volumen o vatios al día siguiente). Si los vatios se cumplieron con RPE bajo (≤ 5/10) y sensación "Bueno/Excelente", confirma asimilación positiva.
+13. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

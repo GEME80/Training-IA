@@ -59,6 +59,19 @@ export interface HeadCoachChatRequest {
   temperature?: number;
   fallbackModels?: string[];
   enableGrounding?: boolean;
+  temporaryAvailability?: WeeklyAvailabilityMap;
+  targetTssAdjustmentPct?: number;
+  isWeekKickoffAudit?: boolean;
+}
+
+export interface PreviousWeekSummary {
+  startDate: string;
+  endDate: string;
+  actualTss: number;
+  plannedTss: number;
+  compliancePct: number;
+  keySessionsCount: number;
+  summaryText: string;
 }
 
 export interface HeadCoachChatResponse {
@@ -67,6 +80,7 @@ export interface HeadCoachChatResponse {
   actionType?: "REVIEW_PHYSIOLOGY" | "CREATE_PLAN" | "ADAPT_WORKOUT" | "CONVERSATION" | "MODIFY_WORKOUT" | "REPLACE_WORKOUT";
   reasoning?: string | null;
   workoutDiff?: WorkoutDiff | null;
+  previousWeekSummary?: PreviousWeekSummary | null;
   audit?: {
     compliancePct: number;
     actualTss: number;

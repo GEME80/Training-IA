@@ -5,6 +5,7 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { EvaluateRequest } from "@/lib/validation/schemas";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { FtpDetectionService, FtpCalibrationEvent } from "@/lib/services/ftpDetectionService";
 
 export interface TelemetryEvaluationResult {
   success: boolean;
@@ -17,6 +18,7 @@ export interface TelemetryEvaluationResult {
   agentDecision: any;
   executedWeeklyTss: number;
   dailyExecutedActivities: DailyExecutedMap;
+  recentFtpCalibration?: FtpCalibrationEvent;
   warning?: string;
 }
 
@@ -63,6 +65,7 @@ export class TelemetryService {
       let isLive = false;
       let executedWeeklyTss = 0;
       let dailyExecutedActivities: DailyExecutedMap = {};
+      let recentFtpCalibration: FtpCalibrationEvent | undefined = undefined;
 
       if (effectiveAthleteId && effectiveApiKey) {
         try {
@@ -183,6 +186,8 @@ export class TelemetryService {
               rpe: act.icu_rpe ?? act.perceived_exertion ?? undefined,
               feel: resolvedFeel,
               deviceName: act.device_name,
+              icu_ftp: typeof act.icu_ftp === "number" ? act.icu_ftp : undefined,
+              icu_pm_ftp: typeof act.icu_pm_ftp === "number" ? act.icu_pm_ftp : undefined,
             });
 
             if (dateKey >= thisMondayStr && dateKey <= newestStr) {
@@ -229,7 +234,25 @@ export class TelemetryService {
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
             const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
             const resolvedRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0);
-            const resolvedBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
+            const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
+
+            // Detección y Calibración Automática de Tests de FTP
+            let resolvedBikeFtp = initialBikeFtp;
+            try {
+              const ftpCal = await FtpDetectionService.evaluateActivitiesForFtpUpdate({
+                activities: activitiesData || [],
+                athleteId: effectiveAthleteId,
+                apiKey: effectiveApiKey,
+                uid,
+                currentBikeFtp: initialBikeFtp,
+              });
+              if (ftpCal?.detected && ftpCal.newFtp > 0) {
+                resolvedBikeFtp = ftpCal.newFtp;
+                recentFtpCalibration = ftpCal;
+              }
+            } catch (calErr) {
+              console.warn("Aviso al evaluar test de FTP en telemetría:", calErr);
+            }
 
             // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
             const intervalsRestingHR = (latestWellness as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
@@ -273,6 +296,7 @@ export class TelemetryService {
         agentDecision: null,
         executedWeeklyTss,
         dailyExecutedActivities,
+        recentFtpCalibration,
       };
     } catch (err: unknown) {
       console.error("Error en TelemetryService.evaluate:", err);

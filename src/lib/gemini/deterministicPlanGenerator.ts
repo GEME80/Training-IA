@@ -2,6 +2,7 @@ import { AthleteProfile } from "../intervals/types";
 import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
 import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
 import { resolveSpecializedStrengthWorkout } from "../physiology/specializedStrengthCoaches";
+import { BIKE_TEST_20M_FTP } from "../ai/knowledge/testingProtocols";
 import {
   AgentDecisionOutput,
   PlanItem,
@@ -26,11 +27,8 @@ export function generateDeterministicAnalysis(
   const runFtp = profile.run_ftp || 280;
   const bikeFtp = profile.bike_ftp || 200;
   const phase = macrocyclePhase?.phase || "MAINTENANCE";
-
-  const macroTitle = macrocyclePhase?.primaryRace
-    ? `Macrociclo: ${macrocyclePhase.phaseLabel} (${macrocyclePhase.weeksRemaining} sem para ${macrocyclePhase.primaryRace.name}).`
-    : `Macrociclo: Mantenimiento General Adaptativo.`;
-
+  const isFtpTestWeek = !isFatigued && (macrocyclePhase?.blueprint?.currentWeek?.microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(`${macrocyclePhase?.guideline || ""} ${macrocyclePhase?.suggestedFocus || ""}`));
+  const macroTitle = macrocyclePhase?.primaryRace ? `Macrociclo: ${macrocyclePhase.phaseLabel} (${macrocyclePhase.weeksRemaining} sem para ${macrocyclePhase.primaryRace.name}).` : `Macrociclo: Mantenimiento General Adaptativo.`;
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
   const suggestedPlan: PlanItem[] = days.map((day, idx) => {
@@ -164,6 +162,23 @@ export function generateDeterministicAnalysis(
 
     // 3. Ciclismo
     if (disc === "Ciclismo") {
+      if (isFtpTestWeek) {
+        return {
+          day,
+          date: dateInfo.date,
+          formattedDate: dateInfo.formattedDate,
+          discipline: "Ciclismo",
+          workoutName: "🧪 Test Oficial FTP 20 Minutos (Coggan / Allen)",
+          action: "MANTENER",
+          durationMinutes: 65,
+          tss: 68,
+          powerTarget: `Calibración • Test 20m @ All-Out (FTP actual: ${bikeFtp}W)`,
+          justification: "Test de campo para calibrar tu FTP de ciclismo. Al completarlo, tu FTP y zonas se calibrarán automáticamente.",
+          workoutDoc: BIKE_TEST_20M_FTP.workoutDoc,
+          isRestDay: false,
+        };
+      }
+
       const isLong = day === "Sábado" || day === "Domingo";
       const isPeakBuild = phase === "BUILD" || phase === "PEAK";
       const isBaseCadence = (phase === "BASE_1" || phase === "BASE_2") && !isLong;

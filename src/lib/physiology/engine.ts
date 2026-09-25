@@ -188,6 +188,9 @@ export class PhysiologicalEngine {
 
     if (discipline === "Ride") {
       const typeLower = workoutType.toLowerCase();
+      if (typeLower.includes("test") || typeLower.includes("ftp") || typeLower.includes("umbral")) {
+        return `Calentamiento Progresivo\n- 20m 55-70% FTP\n\nLimpieza Anaeróbica\n- 5m 105-110% FTP\n\nRecuperación Fácil\n- 10m 50-60% FTP\n\nTest Principal 20m FTP Máximo Esfuerzo Constante\n- 20m 95-105% FTP\n\nEnfriamiento\n- 10m 50% FTP`;
+      }
       if (typeLower.includes("recovery") || typeLower.includes("regenerativ")) {
         return `Warmup\n- 10m 50% FTP\n\nMain\n- 35m 55% FTP\n\nCooldown\n- 10m 45% FTP`;
       }

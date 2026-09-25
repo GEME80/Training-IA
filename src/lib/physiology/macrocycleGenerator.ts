@@ -17,6 +17,7 @@ import {
   resolveTrainingModel,
   calculateProgressiveLongRun,
   calculateProgressiveWeeklyTss,
+  BIKE_TEST_20M_FTP,
 } from "../ai/knowledge";
 import { PMCHistoricalSummary } from "./pmcEngine";
 
@@ -257,24 +258,23 @@ export function generateCustomMacrocycleBlueprint(
     }
 
     // Cálculo dinámico progresivo desde el modelo curado (SSOT) con volumeScaleFactor, athleteCtl y runFtp del atleta
-    const longRun = calculateProgressiveLongRun(
-      curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown,
-      volumeScaleFactor, athleteCtl, config.athleteMetrics?.runFtp
-    );
+    const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown, volumeScaleFactor, athleteCtl, config.athleteMetrics?.runFtp);
+    const targetTss = calculateProgressiveWeeklyTss(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, dynamicTssBaseline, { startTss: peakPlanCalc.startWeeklyTss, peakTss: peakPlanCalc.targetPeakWeeklyTss });
 
-    const targetTss = calculateProgressiveWeeklyTss(
-      curatedModel,
-      weekNumber,
-      totalWeeks,
-      isRecoveryWeek,
-      phase,
-      dynamicTssBaseline,
-      { startTss: peakPlanCalc.startWeeklyTss, peakTss: peakPlanCalc.targetPeakWeeklyTss }
-    );
+    const hasCycling = curatedModel.sportCategory === "Cycling" || curatedModel.sportCategory === "Triathlon" ||
+      Object.values(config.athleteMetrics?.weeklyAvailability || {}).some((d: any) => Array.isArray(d) && d.some((s: string) => /ciclismo|bike|ride/i.test(s)));
+    const isFtpTestWk = hasCycling && (weekNumber === 2 || (weekNumber === 7 && totalWeeks >= 9));
+    const scheduledTests = [...curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber)];
+    if (isFtpTestWk && !scheduledTests.some(t => t.sport === "Ride")) {
+      scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
+    }
+    if (scheduledTests.length > 0 && !isRecoveryWeek && countdown > 1) {
+      microType = "TEST_CONTROL";
+      microLabel = `🧪 ${scheduledTests.some(t => t.sport === "Ride") ? "Control FTP" : "Evaluación"}`;
+      badgeColor = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+    }
 
-    const scheduledTests = curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber);
     const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests.map(t => t.testName).join(" & ")} • ` : "";
-
     const isTri = curatedModel.sportCategory === "Triathlon";
     const isRaceWeekNow = countdown === 1;
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();

@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.70)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.71)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,11 +8,12 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.70).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.71).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.70: Perfil Minimalista, Calibración Universal de Potencia, Integridad Matemática TSS, Desacople de Cabecera y Gobernanza FinOps:
+- Versiones 3.56 - 3.71: Tests Periódicos FTP Ciclismo, Perfil Minimalista, Calibración Universal, Integridad Matemática TSS, Desacople de Cabecera y FinOps:
+  * Tests Periódicos de FTP en Ciclismo & Calibración Automática (v3.71): Programación sistemática de microciclos 'TEST_CONTROL' (Semana 2 y 7) en cualquier plan con ciclismo; prescripción estructurada de BIKE_TEST_20M_FTP; detección automática de ejecuciones de test en Intervals.icu y calibración síncrona bidireccional de bikeFtp en Firestore e Intervals.icu recalculando zonas y TSS.
   * Calibración Universal de Potencia (v3.68-v3.70): Erradicación de métricas quemadas. Vatios calculados dinámicamente según CP/FTP del atleta autenticado (probado con Stryd 275W y 336W), preservados durante hidratación de calendario y con tooltips interactivos de vatios en gráficas.
   * Integridad Matemática de Resumen Semanal (v3.70): Erradicación del 100% histórico forzado. Cálculo real de TSS Planificado vs. Ejecutado (`AthleteCalendarWeekRow`) y porcentaje fidedigno de cumplimiento por disciplina.
   * Desacople Sticky en Cabecera & Ventana Estricta de 52 Semanas (v3.69): Cabecera de usuario en `top-0 z-40` y calendario en `top-[49px] z-30` eliminando solapamiento de avatar. Calendario rodante acotado a exactamente 52 semanas (1 año).

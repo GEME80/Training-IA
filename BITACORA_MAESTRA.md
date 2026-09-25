@@ -4054,6 +4054,30 @@ flowchart TD
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteCalendarWeekRow.tsx`: 349 LOC).
 
+---
+
+### Versión 3.71 - Tests Periódicos de FTP en Ciclismo & Calibración Automática Bidireccional (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 21:24 COT.
+- **Directivas Atendidas:**
+  - *"vamos a revisar en los macroplanes que colocamos cuando hay ciclismo realizar pruebas de FTP para ir revisando si el FTP aumenta o disminuye con el fin de asegurar que los TSS y el FTP estan bien en el ciclismo, deben existir estas pruebas y cuando se realice debe tomar los datos y actualizar el FTP de ciclismo del atleta automaticamente. revisa un /plan y usa nuestos agentes. no ejecutar solo crear el plan"*
+- **Arquitectura e Implementación Realizada:**
+  1. *Programación Sistemática en Macrociclos (`macrocycleGenerator.ts` - 348 LOC):*
+     - Detección universal de ciclismo en cualquier plan (modelos de Ciclismo, Triatlón o corredores con disponibilidad semanal de Ciclismo).
+     - Asignación de semanas de evaluación `microcycleType: "TEST_CONTROL"` con badge púrpura `🧪 Control FTP` en la Semana 2 (línea base) y Semana 7 (construcción media).
+  2. *Prescripción Estructurada en Microciclos (`deterministicPlanGenerator.ts` - 343 LOC & `engine.ts` - 261 LOC):*
+     - En semanas de control con ciclismo, prescripción del test oficial `BIKE_TEST_20M_FTP` (Test 20 min Coggan/Allen) en sintaxis compatible con Intervals.icu / Stryd (`% FTP`).
+  3. *Motor de Detección de Tests y Calibración Automática (`ftpDetectionService.ts` - 168 LOC & `telemetryService.ts` - 321 LOC):*
+     - Servicio autónomo que analiza actividades recientes de ciclismo en busca de tests de 20m, rampas o estimaciones `icu_pm_ftp` de Intervals.icu.
+     - Aplicación de fórmula oficial ($0.95 \times \text{MMP}_{20}$ o eFTP).
+     - Si $\Delta \text{FTP} \ge \pm 2\text{W}$, persiste automáticamente en Firestore (`users/{uid}.bikeFtp`) y en Intervals.icu vía `client.updateSportSettings(rideSport.id, { ftp: nuevoFtp })` y `client.updateAthlete`.
+     - Preservación de `icu_ftp` e `icu_pm_ftp` en `DailyExecutedActivity` (`types.ts`).
+  4. *Gobernanza del Agente Head Coach (`chatContext.ts` - 346 LOC):*
+     - Reconocimiento del evento de calibración de FTP reciente e inyección de la novedad fisiológica en el prompt del Head Coach para informar al atleta sobre sus nuevas zonas y cálculos de TSS.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`ftpDetectionService.ts`: 168 LOC, `telemetryService.ts`: 321 LOC, `macrocycleGenerator.ts`: 348 LOC, `deterministicPlanGenerator.ts`: 343 LOC, `chatContext.ts`: 346 LOC, `engine.ts`: 261 LOC, `types.ts`: 201 LOC).
+
 
 
 

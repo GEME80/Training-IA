@@ -6,6 +6,7 @@ import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { buildCondensedExecutedMap, formatCompactActivitySummary, formatActivitiesTssBreakdown, formatRecentWellnessSummary } from "@/lib/ai/contextCondenser";
+import { FtpDetectionService } from "@/lib/services/ftpDetectionService";
 import { HeadCoachChatRequest } from "./types";
 
 export interface ResolvedChatContext {
@@ -58,9 +59,10 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     lthr,
     isInitialAudit = false,
     coachProfile = "balanced",
-    customPrompt = "",
+    customPrompt: initialCustomPrompt = "",
   } = body;
 
+  let customPrompt = initialCustomPrompt;
   const safeWeekNum = Number(weekNumber) || 1;
   const safeOffset = Number(weekOffset) || 0;
 
@@ -68,21 +70,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
   let profile: AthleteProfile = {
-    id: effectiveAthleteId,
-    name: "Atleta",
-    ctl: 0,
-    atl: 0,
-    tsb: 0,
-    rampRate: 0,
-    run_ftp: runFtp ? Number(runFtp) : undefined,
-    bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
-    weight: weight ? Number(weight) : undefined,
-    heightCm: height ? Number(height) : undefined,
-    birthDate,
-    gender: (gender === "M" || gender === "F" || gender === "OTHER") ? gender : undefined,
-    restingHR: restingHR ? Number(restingHR) : undefined,
-    maxHR: maxHR ? Number(maxHR) : undefined,
-    lthr: lthr ? Number(lthr) : undefined,
+    id: effectiveAthleteId, name: "Atleta", ctl: 0, atl: 0, tsb: 0, rampRate: 0,
+    run_ftp: runFtp ? Number(runFtp) : undefined, bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
+    weight: weight ? Number(weight) : undefined, heightCm: height ? Number(height) : undefined,
+    birthDate, gender: (gender === "M" || gender === "F" || gender === "OTHER") ? gender : undefined,
+    restingHR: restingHR ? Number(restingHR) : undefined, maxHR: maxHR ? Number(maxHR) : undefined, lthr: lthr ? Number(lthr) : undefined,
   };
   let wellness: AthleteWellness[] = [];
   let pastActivities: ActivitySummary[] = [];
@@ -158,6 +150,18 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       }
       wellness = Array.isArray(wel) ? wel : [];
       pastActivities = Array.isArray(acts) ? acts : [];
+
+      if (pastActivities.length > 0 && profile.bike_ftp) {
+        try {
+          const ftpCal = await FtpDetectionService.evaluateActivitiesForFtpUpdate({
+            activities: pastActivities, athleteId: effectiveAthleteId, apiKey: effectiveApiKey, uid, currentBikeFtp: profile.bike_ftp,
+          });
+          if (ftpCal?.detected && ftpCal.newFtp > 0) {
+            profile.bike_ftp = ftpCal.newFtp;
+            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD FISIOLÓGICA RECIENTE: ${ftpCal.message}`;
+          }
+        } catch {}
+      }
     } catch (err) {
       console.warn("Aviso al obtener datos para Head Coach Chat:", err);
     }

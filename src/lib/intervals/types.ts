@@ -172,6 +172,8 @@ export interface DailyExecutedActivity {
   rpe?: number; // Perceived exertion 1-10
   feel?: string; // Sensaciones (ej. "Bueno", "Excelente")
   deviceName?: string; // e.g. "Garmin Forerunner 970"
+  icu_ftp?: number; // FTP vigente en la actividad
+  icu_pm_ftp?: number; // eFTP estimado por curva de potencia
 }
 
 export interface ActivityStreamPoint {

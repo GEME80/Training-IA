@@ -4018,7 +4018,42 @@ flowchart TD
 - **Set de Pruebas y Validación:**
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
-  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteDashboardHeader.tsx`: 98 LOC, `AthleteContinuousCalendar.tsx`: 345 LOC, `AthleteCalendarWeekRow.tsx`: 348 LOC).
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteDashboardHeader.tsx`: 98 LOC, `AthleteContinuousCalendar.tsx`: 345 LOC, `AthleteCalendarWeekRow.tsx`: 349 LOC).
+
+---
+
+### Versión 3.70 - Corrección de Integridad Matemática en TSS Planificado vs Ejecutado y Erradicación del 100% Forzado (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 20:41 COT.
+- **Directivas Atendidas:**
+  - *"revisa los datos del resumen semanal ya que la suma de los TSS reales Vs los mplaneados estan mal. no puede ser que simpre sea el 100%"*
+- **Diagnóstico y Corrección:**
+  1. *Identificación de la Causa Raíz del 100% Constante (`AthleteCalendarWeekRow.tsx`):*
+     - Línea 144 anterior: `const displayPlannedTss = isHistoricalWeek ? (effectiveExecuted || week.targetTss || 0) : plannedTss;`
+     - Error: En cualquier semana histórica (o semana pasada con actividades), el código sobrescribía deliberadamente `displayPlannedTss` para igualarlo a `effectiveExecuted` (ej: 432 TSS).
+     - Al calcular `completionPct = Math.round((effectiveExecuted / displayPlannedTss) * 100)`, el resultado era `(432 / 432) * 100 = 100%` SIEMPRE.
+     - Además, en semanas pasadas vacías forzaba `effectiveExecuted = plannedTss`, inventando un 100% ficticio.
+  2. *Restauración de la Suma Real y Matemática de TSS:*
+     - `displayPlannedTss` ahora respeta estrictamente la sumatoria de las sesiones planificadas en la semana: `plannedTss > 0 ? plannedTss : (week.targetTss || 0)`.
+     - Para la semana W38:
+       - Ciclismo planificado: 138 TSS
+       - Carrera planificada: 122 TSS
+       - Fuerza planificada: 71 TSS
+       - **Suma TSS Planificado:** $138 + 122 + 71 = \mathbf{331\text{ TSS obj}}$.
+     - Carga real ejecutada en W38:
+       - Ciclismo real: 220 TSS
+       - Carrera real: 181 TSS
+       - Fuerza real: 31 TSS
+       - **Suma TSS Ejecutado:** $220 + 181 + 31 = \mathbf{432\text{ TSS real}}$.
+     - **Porcentaje de Cumplimiento Real:** $432 / 331 = \mathbf{131\%}$ (Superado).
+  3. *Actualización de Métricas en UI:*
+     - Cajón superior: Muestra `TSS Obj` con el valor real planificado (`331 TSS` en W38, `352 TSS` en W39).
+     - Tarjeta de Cumplimiento: Muestra `432 TSS real` · `331 TSS obj`, y la barra se expande proporcionalmente hasta el 100% de la pista.
+     - Desaparición total del falso 100% universal.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteCalendarWeekRow.tsx`: 349 LOC).
+
 
 
 

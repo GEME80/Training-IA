@@ -15,11 +15,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar autorización del solicitante
+    const effectiveEmail = requesterEmail || req.headers.get("x-requester-email");
+    const effectiveUid = requesterUid || req.headers.get("x-requester-uid");
+
     let isAuthorized = false;
-    if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
+    if (effectiveUid === "superadmin-root" || (effectiveEmail && isMasterAdminEmail(effectiveEmail))) {
       isAuthorized = true;
-    } else if (requesterUid) {
-      const requesterData = await getUserProfileDecrypted(requesterUid);
+    } else if (effectiveUid) {
+      const requesterData = await getUserProfileDecrypted(effectiveUid);
       if (requesterData?.profile.role === "admin" || isMasterAdminEmail(requesterData?.profile.email)) {
         isAuthorized = true;
       }

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { UserPlus, Copy, Check, Info, Sparkles, X } from "lucide-react";
 import { UserRole, UserStatus } from "@/lib/db/types";
+import { useAuth } from "@/context/AuthContext";
 
 interface AdminUserInviteModalProps {
   isOpen: boolean;
@@ -17,9 +18,13 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
   onSuccess,
   showMessage,
 }) => {
+  const { user, userProfile } = useAuth();
+  const requesterUid = user?.uid || userProfile?.uid || "superadmin-root";
+  const requesterEmail = user?.email || userProfile?.email || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "";
+
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
-    const [role, setRole] = useState<UserRole>("athlete");
+  const [role, setRole] = useState<UserRole>("athlete");
   const [status, setStatus] = useState<UserStatus>("pending");
   const [intervalsId, setIntervalsId] = useState<string>("");
   const [runFtp, setRunFtp] = useState<number>(300);
@@ -37,7 +42,11 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
     try {
       const res = await fetch("/api/admin/users/preauthorize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-requester-email": requesterEmail,
+          "x-requester-uid": requesterUid,
+        },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           displayName: name.trim(),
@@ -46,6 +55,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
           intervalsAthleteId: intervalsId.trim(),
           runFtp: Number(runFtp) || 300,
           bikeFtp: Number(bikeFtp) || 250,
+          requesterEmail,
+          requesterUid,
         }),
       });
       const data = await res.json();

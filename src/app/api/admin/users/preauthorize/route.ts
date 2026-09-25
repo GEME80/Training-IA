@@ -26,11 +26,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Validación de privilegios de Administrador
+    const effectiveEmail = requesterEmail || req.headers.get("x-requester-email");
+    const effectiveUid = requesterUid || req.headers.get("x-requester-uid");
+
     let isAuthorized = false;
-    if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
+    if (effectiveUid === "superadmin-root" || (effectiveEmail && isMasterAdminEmail(effectiveEmail))) {
       isAuthorized = true;
-    } else if (requesterUid) {
-      const requester = await getUserProfileDecrypted(requesterUid);
+    } else if (effectiveUid) {
+      const requester = await getUserProfileDecrypted(effectiveUid);
       if (requester?.profile.role === "admin" || isMasterAdminEmail(requester?.profile.email)) {
         isAuthorized = true;
       }

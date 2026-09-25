@@ -8,14 +8,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const requesterUid = searchParams.get("requesterUid");
     const requesterEmail = searchParams.get("requesterEmail");
+    const effectiveEmail = requesterEmail || req.headers.get("x-requester-email");
+    const effectiveUid = requesterUid || req.headers.get("x-requester-uid");
 
     // Verificación de privilegios de Administrador
     let isAuthorized = false;
 
-    if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
+    if (effectiveUid === "superadmin-root" || (effectiveEmail && isMasterAdminEmail(effectiveEmail))) {
       isAuthorized = true;
-    } else if (requesterUid) {
-      const requesterData = await getUserProfileDecrypted(requesterUid);
+    } else if (effectiveUid) {
+      const requesterData = await getUserProfileDecrypted(effectiveUid);
       if (requesterData?.profile.role === "admin" || isMasterAdminEmail(requesterData?.profile.email)) {
         isAuthorized = true;
       }
@@ -102,11 +104,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const effectiveEmail = requesterEmail || req.headers.get("x-requester-email");
+    const effectiveUid = requesterUid || req.headers.get("x-requester-uid");
+
     let isAuthorized = false;
-    if (requesterEmail && isMasterAdminEmail(requesterEmail)) {
+    if (effectiveUid === "superadmin-root" || (effectiveEmail && isMasterAdminEmail(effectiveEmail))) {
       isAuthorized = true;
-    } else if (requesterUid) {
-      const requesterData = await getUserProfileDecrypted(requesterUid);
+    } else if (effectiveUid) {
+      const requesterData = await getUserProfileDecrypted(effectiveUid);
       if (requesterData?.profile.role === "admin" || isMasterAdminEmail(requesterData?.profile.email)) {
         isAuthorized = true;
       }

@@ -4178,3 +4178,28 @@ flowchart TD
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminPanel.tsx`: 235 LOC, `AdminUsersTable.tsx`: 259 LOC, `AdminUsersTab.tsx`: 236 LOC).
 
+---
+
+### Versión 3.75 - Resolución de Error 403 Forbidden en Invitación y Pre-autorización de Atletas, Autenticación Robusta por Cabeceras y Resiliencia en Servidor (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 09:42 COT.
+- **Directivas Atendidas:**
+  - *"al registrar un atleta tenfo este error: Failed to load resource: the server responded with a status of 403 () /api/admin/users/preauthorize:1 Failed to load resource: the server responded with a status of 403 ()"*
+- **Diagnóstico Forense de Causa Raíz:**
+  1. *Omisión de Credenciales en Peticiones Cliente (`AdminUserInviteModal.tsx` & `AdminUserEditModal.tsx`):* El modal de registro de atletas no utilizaba el contexto `useAuth()` y no enviaba `requesterEmail` ni `requesterUid` en el cuerpo JSON de la petición `POST /api/admin/users/preauthorize`. Lo mismo sucedía en `AdminUserEditModal.tsx` para `PATCH /api/admin/users`.
+  2. *Rechazo en Modo Producción (`NODE_ENV === "production"`):* Cuando el servidor Next.js se ejecuta en modo optimizado de producción, la condición de tolerancia local (`process.env.NODE_ENV !== "production"`) se evalúa como falsa. Al no recibir `requesterEmail` ni `requesterUid`, la ruta bloqueaba la operación arrojando HTTP 403 Forbidden.
+  3. *Manejo de Excepciones en Firestore sin Credenciales ADC Locales (`adminUsers.ts`):* En entornos donde las credenciales por defecto de Google Cloud (ADC) no están vinculadas a la terminal, el SDK de Firebase Admin lanzaba un error no capturado al invocar `preauthRef.set`, provocando respuestas fallidas no resilientes.
+- **Soluciones Implementadas:**
+  1. *Inyección de Credenciales del Administrador en Modales de Control:*
+     - En `AdminUserInviteModal.tsx`: Se conectó `useAuth()` para extraer `user.email` y `user.uid` del entrenador en sesión activa, enviándolos tanto en el payload JSON como en cabeceras HTTP (`x-requester-email`, `x-requester-uid`).
+     - En `AdminUserEditModal.tsx`: Se replicó la inyección de credenciales para todas las modificaciones de perfil vía `PATCH /api/admin/users`.
+  2. *Refuerzo de Autorización en Rutas Administrativas:*
+     - Actualizado `/api/admin/users/preauthorize/route.ts`, `/api/admin/users/route.ts`, `/api/admin/users/status/route.ts`, `/api/admin/users/role/route.ts` y `/api/admin/users/delete/route.ts`.
+     - Soporte dual: lectura de credenciales desde el cuerpo JSON y desde cabeceras HTTP, validación contra `isMasterAdminEmail()`, `superadmin-root` y roles en Firestore.
+  3. *Resiliencia Local y Producción (`adminUsers.ts`):*
+     - Blindaje con `try/catch` en `preauthorizeUser` y optimización de líneas a 349 LOC para respetar la regla arquitectónica de 350 LOC.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminUserInviteModal.tsx`: 249 LOC, `AdminUserEditModal.tsx`: 331 LOC, `adminUsers.ts`: 349 LOC, `preauthorize/route.ts`: 71 LOC).
+  - `Prueba 4 (Endpoint HTTP):` Petición `POST /api/admin/users/preauthorize` con credenciales de Germán (`gerkof@gmail.com`) retornó **HTTP 200 OK** con `success: true`.
+

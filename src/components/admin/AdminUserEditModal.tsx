@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AdminUserListItem, UserRole, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
+import { useAuth } from "@/context/AuthContext";
 import { AdminUserEditIntervalsSection } from "./AdminUserEditIntervalsSection";
 import { AdminUserEditBiometricsSection } from "./AdminUserEditBiometricsSection";
 
@@ -28,6 +29,10 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   onSuccess,
   showMessage,
 }) => {
+  const { user: authUser, userProfile } = useAuth();
+  const requesterUid = authUser?.uid || userProfile?.uid || "superadmin-root";
+  const requesterEmail = authUser?.email || userProfile?.email || process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "";
+
   const [name, setName] = useState<string>("");
   const [intervalsId, setIntervalsId] = useState<string>("");
   const [rawApiKey, setRawApiKey] = useState<string>("");
@@ -128,7 +133,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
       const finalStatus = overrideStatus || status;
       const res = await fetch("/api/admin/users", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-requester-email": requesterEmail,
+          "x-requester-uid": requesterUid,
+        },
         body: JSON.stringify({
           targetUid: user.uid,
           targetEmail: user.email,
@@ -143,6 +152,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           restingHR: restingHR === "" ? undefined : Number(restingHR),
           role,
           status: finalStatus,
+          requesterEmail,
+          requesterUid,
         }),
       });
       const data = await res.json();

@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.65)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.70)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,22 +8,24 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.65).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.70).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.65: Perfil del Atleta Minimalista, Responsive Móvil, Main Sticky Header 4 Bloques, Periodización Dinámica y Gobernanza FinOps Extrema:
-  * Protocolo Maestro de Eficiencia de Tokens (FinOps v3.65): micro-lecturas quirúrgicas <= 20-30 líneas, conteo LOC vía CLI (wc -l), grep_search focalizado, respuestas ejecutivas ultra-densas sin verborrea, compresión extrema de telemetría (contextCondenser.ts -70%), límites estrictos de max_output_tokens (600-1200) y cero consultas/lecturas redundantes.
-  * Modal Perfil del Atleta Minimalista (v3.64): Erradicación de sobrecarga visual, banners de dos columnas y badges repetitivos en inputs; segmented control sutil para género, unidades tabulares limpias y feedback interactivo de guardado.
-  * Sincronización Bidireccional Robusta con Intervals.icu (v3.64): Erradicación de condiciones de carrera mediante await estricto antes de refrescar telemetría; resolución automática de API Keys cifradas en Firestore vía UID/email; persistencia completa de peso, Stryd CP, FTP, LTHR, Max HR y Resting HR en Intervals.icu.
+- Versiones 3.56 - 3.70: Perfil Minimalista, Calibración Universal de Potencia, Integridad Matemática TSS, Desacople de Cabecera y Gobernanza FinOps:
+  * Calibración Universal de Potencia (v3.68-v3.70): Erradicación de métricas quemadas. Vatios calculados dinámicamente según CP/FTP del atleta autenticado (probado con Stryd 275W y 336W), preservados durante hidratación de calendario y con tooltips interactivos de vatios en gráficas.
+  * Integridad Matemática de Resumen Semanal (v3.70): Erradicación del 100% histórico forzado. Cálculo real de TSS Planificado vs. Ejecutado (`AthleteCalendarWeekRow`) y porcentaje fidedigno de cumplimiento por disciplina.
+  * Desacople Sticky en Cabecera & Ventana Estricta de 52 Semanas (v3.69): Cabecera de usuario en `top-0 z-40` y calendario en `top-[49px] z-30` eliminando solapamiento de avatar. Calendario rodante acotado a exactamente 52 semanas (1 año).
+  * Feedback Interactivo de Sincronización (v3.69): Botones 'Sync 3 sem' y 'Esta sem' con spinner animado (`animate-spin`) y estado 'Sincronizando...'.
+  * Deduplicación Inteligente en Calendario (v3.67): `calendarHydration.ts` previene tarjetas repetidas y preserva calentamiento dinámico y nutrición.
+  * Protocolo Maestro de Eficiencia de Tokens (FinOps): micro-lecturas quirúrgicas <= 20-30 líneas, conteo LOC vía CLI (wc -l), grep_search focalizado, respuestas ejecutivas ultra-densas sin verborrea, compresión extrema de telemetría (contextCondenser.ts -70%), límites estrictos de max_output_tokens (600-1200) y cero consultas/lecturas redundantes.
+  * Modal Perfil del Atleta Minimalista: Persistencia bidireccional síncrona con Intervals.icu para Peso, Stryd CP, FTP, LTHR, Max HR y Resting HR resolviendo API Keys cifradas en Firestore sin condiciones de carrera.
   * Ergonomía Responsive Móvil & Plegado de Métricas: En móvil, las tarjetas fisiológicas se pliegan a un carrusel compacto de pills de 36px con toggle 'Ver (6)' / 'Plegar', liberando más del 75% del viewport vertical; controles de calendario compactos.
-  * Visualización Dual Móvil Día vs. Agenda Semanal (Estilo TrainingPeaks): Toggle en móvil entre vista de detalle diario (con swipe táctil horizontal) y feed continuo semanal unificado donde los descansos ocupan una sola línea.
-  * Main Sticky Header Maestro de 4 Bloques ('Mi Dashboard' + Tabs, Métricas Fisiológicas + Popover, Controles de Calendario + 'Hoy', y Cuadrícula Lunes-Domingo) con fondo 100% sólido opaco y scroll-margin de 280px en desktop.
-  * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia sistemática de 4 tipologías (Base con final ágil, Fast-Finish Pfitzinger, Bloques de Ritmo Específico y Bloques Cumbre Canova).
-  * Escaleras de Intervalos Incrementales (200m a 800m) y Bloques Largos (3x 2000m): integración en modelos de Running (Maratón, 10K) y Triatlón.
-  * Sábados de Ciclismo con Propósito: alternancia de Cadencia/Torque (60/100 rpm), Sweetspot y rodaje continuo.
-  * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
-  * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
+  * Visualización Dual Móvil Día vs. Agenda Semanal: Toggle en móvil entre vista de detalle diario (con swipe táctil) y feed continuo semanal estilo TrainingPeaks.
+  * Main Sticky Header Maestro de 4 Bloques con fondo 100% sólido opaco y scroll-margin de 280px en desktop.
+  * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia de 4 tipologías.
+  * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): un único flujo vertical (semanas futuras arriba, semana actual anclada, historial ejecutado de 52 semanas hacia abajo).
+  * Tarjetas de Sesión Minimalistas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera/Ciclismo con gráfica WorkoutChart; Fuerza con descripción concisa (<= 60 chars).
   * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
   * Persistencia Explícita de Matriz de Disponibilidad: guardado manual seguro y botón de restablecimiento a Matriz Canónica anti-colisiones.
   * Respeto de Max CTL Histórico: macrociclos dimensionados tomando el pico real de fitness histórico del atleta sin topes artificiales.
@@ -674,6 +676,28 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 
 3. **Ley de Preservación de la Experiencia Desktop:**
    - Ninguna optimización móvil debe alterar o degradar la visualización en escritorio (`md:` en adelante), donde el *Main Sticky Header* de 4 bloques anclados y el scroll vertical continuo de año completo permanecen fijos.
+
+---
+
+## ⚡ 17. LEYES DE CALIBRACIÓN UNIVERSAL, INTEGRIDAD MATEMÁTICA Y DESACOPLES UI (v3.70)
+
+1. **Ley de Calibración Universal de Potencia (Stryd CP / FTP Dinámico):**
+   - Prohibido cualquier valor quemado (hardcoded) de FTP, CP o nombres de atleta en generadores, templates o componentes UI.
+   - Todo vatio mostrado (`⚡ 272W (81% CP)`) o prescrito debe calcularse en tiempo real a partir del `runFtp` o `bikeFtp` del atleta autenticado.
+   - En la hidratación de calendario (`calendarHydration.ts`), los metadatos de potencia calculada, warmups de movilidad y nutrición deben preservarse y fusionarse bidireccionalmente ante sincronizaciones con Intervals.icu.
+   - Las gráficas interactivas (`WorkoutChart`) deben recibir `athleteFtp` para proyectar vatios reales en el tooltip de cada intervalo.
+
+2. **Ley de Integridad Matemática en Cumplimiento y Adherencia Semanal:**
+   - Prohibido sobreescribir `displayPlannedTss` para igualarlo artificialmente a `effectiveExecuted` en semanas pasadas o históricas.
+   - La adherencia y el TSS planificado deben reflejar fielmente la suma real de las sesiones del plan (`displayPlannedTss = plannedTss > 0 ? plannedTss : week.targetTss`). Si el atleta ejecutó 432 TSS frente a 331 TSS planificados, la UI debe exhibir con transparencia el 131% de cumplimiento sin falsear un 100%.
+
+3. **Ley de Desacople de Capas Sticky y Ventana Anual Estricta:**
+   - La barra de navegación superior del dashboard debe anclarse en `sticky top-0 z-40` (`AthleteDashboardHeader`), mientras que la cabecera del calendario debe ubicarse en `sticky top-[49px] sm:top-[53px] z-30` (`AthleteContinuousCalendar`), garantizando que el perfil y avatar del usuario jamás queden cubiertos por el calendario.
+   - La ventana rodante del calendario unificado debe sumar exactamente 52 semanas (1 año calendario) sumando el plan proyectado hacia arriba y el historial hacia abajo (`maxHistoricalWeeks = Math.max(0, 52 - blueprintWeeks.length)`).
+
+4. **Ley de Feedback Visual Reactivo en Procesos Asíncronos:**
+   - Toda acción asíncrona de sincronización ("Sync 3 sem (2:1)", "Esta sem.", etc.) debe proporcionar retroalimentación interactiva inmediata: botón deshabilitado preventivamente, icono en rotación (`animate-spin`) y texto explícito de estado ("Sincronizando...").
+
 
 
 

@@ -4203,3 +4203,32 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminUserInviteModal.tsx`: 249 LOC, `AdminUserEditModal.tsx`: 331 LOC, `adminUsers.ts`: 349 LOC, `preauthorize/route.ts`: 71 LOC).
   - `Prueba 4 (Endpoint HTTP):` Petición `POST /api/admin/users/preauthorize` con credenciales de Germán (`gerkof@gmail.com`) retornó **HTTP 200 OK** con `success: true`.
 
+---
+
+### Versión 3.76 - Visor Metodológico Completo e Inspector de Macrociclos con Editor Funcional de Programas Deportivos (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 10:15 COT.
+- **Directivas Atendidas:**
+  - *"ahora revisemos la seccion de ciencia & programas. al dar click en la tarjeta deberia poder ver toda la metodologia por msi falta algo o si requiero editarla. el boton actual de editar no funciona."*
+- **Diagnóstico Forense de Causa Raíz:**
+  1. *Modal Inexistente en Render (`AdminProgramLibrariesTab.tsx`):* El componente definía estados `isProgramModalOpen` y `isAiProgramModalOpen`, y el botón "Editar" ejecutaba `setIsProgramModalOpen(true)`. Sin embargo, ningún componente de modal estaba importado ni renderizado en el JSX de retorno, provocando que los clics fueran inertes sin ninguna respuesta visual en pantalla.
+  2. *Violación Previa de Límite Arquitectónico:* `AdminProgramLibrariesTab.tsx` contenía 462 líneas de código (superando el umbral estricto de 350 LOC dictado en la Regla 3 de `PROJECT_RULES.md`).
+  3. *Ausencia de Inspección Metodológica en Tarjeta:* Las tarjetas de programas (`programCard`) solo mostraban metadatos superficiales (semanas, nivel, sesiones) sin permitir al entrenador inspeccionar la arquitectura fisiológica subyacente (fases del macrociclo: Base, Build, Peak, Taper; adaptaciones celulares, entrenamientos clave y métricas de intensidad compatibles).
+- **Soluciones Implementadas:**
+  1. *Refactorización Modular Atómica (< 350 LOC):*
+     - `AdminProgramDetailViewSection.tsx` (176 LOC): Sección interactiva de inspección que desglosa la periodización porcentual de macrociclos (barra visual de fases Base/Build/Peak/Taper), adaptaciones fisiológicas, entrenamientos representativos, perfil de atleta sugerido y compatibilidad de métricas (Stryd CP, Bike FTP, HR, Pace, RPE).
+     - `AdminProgramDetailEditSection.tsx` (152 LOC): Formulario de edición integral que permite calibrar semanas totales, tirada larga máxima (km), categoría, deporte, adaptaciones biológicas, sesiones clave y directrices metodológicas.
+     - `AdminProgramDetailModal.tsx` (147 LOC): Orquestador del modal con selector de modo ("Modo Vista Metodológica" vs "Editar Metodología"), persistencia asíncrona hacia `/api/admin/programs` y retroalimentación de estado.
+     - `AdminProgramAiModal.tsx` (128 LOC): Modal asistente para generación inteligente de macrociclos mediante IA Gemini.
+     - `AdminProgramCard.tsx` (134 LOC): Tarjeta interactiva con `onClick` en toda el área para abrir inmediatamente el visor metodológico, indicador sutil de llamada a la acción ("Ver metodología completa & fases...") y botón "Editar" con aislamiento de eventos (`e.stopPropagation()`) que abre directamente el formulario de modificación.
+     - `AdminProgramHeader.tsx` (61 LOC): Banner superior estilizado con degradado atlético y botones de acción rápida.
+     - `AdminProgramMetricsHud.tsx` (47 LOC): HUD superior con conteo de programas, deportes y distribución de niveles.
+     - `AdminProgramLibrariesTab.tsx` (341 LOC): Tab orquestador limpio y desacoplado, reduciendo su tamaño de 462 a 341 LOC.
+  2. *Refuerzo de API Administrativa de Programas (`/api/admin/programs`):*
+     - Soporte completo en GET, POST, PUT y DELETE para credenciales maestras vía cuerpo JSON y cabeceras (`x-requester-email`, `x-requester-uid`), garantizando compatibilidad con `superadmin-root` y `isMasterAdminEmail()`.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 rutas estáticas y dinámicas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos creados y modificados cumplen estrictamente con $\le 350$ LOC (`AdminProgramLibrariesTab.tsx`: 341 LOC, `AdminProgramCard.tsx`: 134 LOC, `AdminProgramDetailModal.tsx`: 147 LOC, `AdminProgramDetailViewSection.tsx`: 176 LOC, `AdminProgramDetailEditSection.tsx`: 152 LOC, `AdminProgramAiModal.tsx`: 128 LOC, `AdminProgramHeader.tsx`: 61 LOC, `AdminProgramMetricsHud.tsx`: 47 LOC, `/api/admin/programs/route.ts`: 335 LOC).
+  - `Prueba 4 (Servidor en Producción):` Servidor Next.js activo en puerto 3000 con respuesta **HTTP 200 OK**.
+
+

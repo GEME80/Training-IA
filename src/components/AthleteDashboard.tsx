@@ -143,6 +143,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             apiKey={telemetry.apiKeyCache}
             email={user?.email || undefined}
             uid={user?.uid || undefined}
+            runFtp={telemetry.profile.run_ftp}
+            bikeFtp={telemetry.profile.bike_ftp}
             onClose={() => setSelectedWorkoutModal(null)}
           />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />

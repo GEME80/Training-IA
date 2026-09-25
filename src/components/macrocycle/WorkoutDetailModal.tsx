@@ -28,6 +28,8 @@ interface WorkoutDetailModalProps {
   apiKey?: string;
   uid?: string;
   email?: string;
+  runFtp?: number;
+  bikeFtp?: number;
 }
 
 export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
@@ -38,11 +40,15 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   apiKey,
   uid,
   email,
+  runFtp,
+  bikeFtp,
 }) => {
   const { user, userProfile } = useAuth();
   const effAthleteId = athleteId || userProfile?.intervalsAthleteId;
   const effApiKey = apiKey || (userProfile as any)?.intervalsApiKey;
   const effEmail = email || user?.email || undefined;
+  const effRunFtp = runFtp || userProfile?.runFtp || 0;
+  const effBikeFtp = bikeFtp || userProfile?.bikeFtp || 0;
   const effUid = uid || user?.uid || undefined;
 
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
@@ -277,19 +283,45 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           </div>
         )}
 
-        {/* Sintaxis Estructurada Stryd / Intervals */}
-        {workout.workoutDoc && (
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-              {workout.discipline === "Fuerza" ? "Prescripción de la Sesión de Fuerza:" : "Prescripción Estructurada (Sintaxis Stryd / % FTP):"}
-            </span>
+        {/* Sintaxis Estructurada Stryd / Intervals con Vatios Calculados Dinámicamente */}
+        {workout.workoutDoc && (() => {
+          const effectiveFtp = workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : 0;
+          const ftpLabel = workout.discipline === "Carrera" ? "Stryd CP" : "FTP";
 
-            <pre className="max-h-48 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] font-mono text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
-              {workout.workoutDoc}
-            </pre>
-          </div>
-        )}
+          // Interpolar % FTP / CP con vatios calculados reales si tenemos el umbral del atleta
+          const enrichedWorkoutDoc = workout.workoutDoc.split("\n").map((line) => {
+            if (effectiveFtp > 0 && /%\s*(?:ftp|cp)/i.test(line)) {
+              return line.replace(/(\d+)\s*%\s*(?:ftp|cp)/gi, (match, pctStr) => {
+                const pct = parseInt(pctStr, 10);
+                const watts = Math.round((effectiveFtp * pct) / 100);
+                return `${pct}% ${ftpLabel} (${watts}W)`;
+              });
+            }
+            return line;
+          }).join("\n");
+
+          return (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                  {workout.discipline === "Fuerza"
+                    ? "Prescripción de la Sesión de Fuerza:"
+                    : `Prescripción Estructurada (${workout.discipline === "Carrera" ? "Stryd CP" : "Bici FTP"}):`}
+                </span>
+                {effectiveFtp > 0 && workout.discipline !== "Fuerza" && (
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
+                    ⚡ {ftpLabel} Atleta: <strong>{effectiveFtp}W</strong>
+                  </span>
+                )}
+              </div>
+
+              <pre className="max-h-48 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] font-mono text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
+                {enrichedWorkoutDoc}
+              </pre>
+            </div>
+          );
+        })()}
 
         {/* Pautas Complementarias: Movilidad y Nutrición (Espacio Informativo Separado) */}
         {(workout.mobilityWarmup || workout.fuelingStrategy) && (

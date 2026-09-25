@@ -265,11 +265,18 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   }
 
   const getSegmentColor = (intensity: number) => {
-    if (intensity <= 65) return "#34d399"; // Verde suave Z1 (Recovery)
-    if (intensity <= 80) return "#10b981"; // Verde intenso Z2 (Aeróbico)
-    if (intensity <= 92) return "#facc15"; // Amarillo Sweetspot/Tempo Z3
-    if (intensity <= 104) return "#fb923c"; // Naranja Umbral Z4
-    return "#f87171"; // Rojo VO2max Z5 / Anaeróbico
+    // Escala Oficial Stryd (CP):
+    // Z1 Fácil / Recuperación (65-80% CP): Verde Esmeralda
+    // Z2 Moderado / Aeróbico (80-90% CP): Amarillo / Dorado
+    // Z3 Umbral (90-100% CP): Naranja
+    // Z4 Intervalo / VO2max (100-115% CP): Rojo
+    // Z5 Repetición / Anaeróbico (>115% CP): Púrpura
+    if (intensity <= 65) return "#34d399"; // Verde suave recuperación activa (<65%)
+    if (intensity <= 80) return "#10b981"; // Stryd Zona 1: Fácil (65 - 80% CP)
+    if (intensity <= 90) return "#facc15"; // Stryd Zona 2: Moderado (80 - 90% CP)
+    if (intensity <= 100) return "#fb923c"; // Stryd Zona 3: Umbral (90 - 100% CP)
+    if (intensity <= 115) return "#ef4444"; // Stryd Zona 4: Intervalo (100 - 115% CP)
+    return "#a855f7"; // Stryd Zona 5: Repetición (>115% CP)
   };
 
   const maxIntensity = Math.max(...segments.map((s) => s.intensityPercent), 115);

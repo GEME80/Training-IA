@@ -4154,3 +4154,27 @@ flowchart TD
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminUserEditModal.tsx`: 319 LOC, `AdminUserEditIntervalsSection.tsx`: 109 LOC, `AdminUserEditBiometricsSection.tsx`: 110 LOC, `AdminUserInviteModal.tsx`: 243 LOC, `AdminUsersTab.tsx`: 236 LOC, `AdminUsersTable.tsx`: 263 LOC, `AdminUserCardMobile.tsx`: 206 LOC, `adminUsers.ts`: 341 LOC, `userProfile.ts`: 308 LOC).
+
+---
+
+### Versión 3.74 - Optimización Ergonómica de UX/UI en Gestión de Atletas: Consolidación de Columnas, Prevención de Desbordamiento Flexbox y Densidad de Información Profesional (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 09:25 COT.
+- **Directivas Atendidas:**
+  - *"revisa el UX ya que el formato esta mal no se ajusta al espacio. se eun experto en diseño digital"*
+- **Diagnóstico Forense de UX & Layout:**
+  1. *Trampa de Ancho Mínimo en Flexbox (`AdminPanel.tsx`):* El contenedor `<main>` de la consola de administración carecía de la propiedad `min-w-0`. En flexbox, los flex items tienen `min-width: auto` por defecto; ante una tabla con múltiples columnas y padding amplio (`px-5`), el ancho mínimo superaba el espacio visible restante junto a la barra lateral de 256px (`AdminSidebar`). Debido a `overflow-hidden` en el contenedor padre, los últimos ~120px a la derecha quedaban recortados (la columna de "Acciones" y el botón "Configurar").
+  2. *Redundancia Cognitiva de Columnas:* Existía una columna separada para "Rol" (Superadmin, Administrador, Atleta), generando duplicidad con los identificadores del usuario (ej: Germán tenía "Superadmin" junto a su nombre y "Administrador" en la columna adyacente), consumiendo ~140px innecesariamente.
+  3. *Densidad Espacial Subóptima:* El padding de celdas (`py-3.5 px-5`) consumía más de 240px de espacio horizontal muerto a lo largo de las 6 columnas.
+- **Soluciones Implementadas:**
+  1. *Blindaje de Contenedor Responsivo (`AdminPanel.tsx`):*
+     - Inyección de `min-w-0` en `<main className="flex-1 min-w-0 ...">`, permitiendo que el contenedor respete fielmente los límites del viewport y que el sub-contenedor con `overflow-x-auto` gestione limpiamente el desplazamiento horizontal si la resolución de pantalla lo requiere.
+  2. *Consolidación de 6 a 5 Columnas de Alto Impacto (`AdminUsersTable.tsx`):*
+     - Se integró la insignia de Rol (`Superadmin` púrpura, `Admin` púrpura o `Atleta` pizarra) directamente en la columna de identidad `Usuario / Atleta`.
+     - Se eliminó la columna redundante "Rol", ahorrando ~140px y unificando la identidad del atleta en un único bloque semántico coherente.
+     - Densidad optimizada: padding refinado a `py-3 px-3.5 sm:px-4`, garantizando un balance visual nítido y moderno.
+     - Blindaje de la columna "Acciones": botones con `shrink-0` y `whitespace-nowrap`, asegurando que `Aprobar`, `Configurar` y los controles de estado se muestren íntegros sin recortes ni saltos de línea indeseados.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminPanel.tsx`: 235 LOC, `AdminUsersTable.tsx`: 259 LOC, `AdminUsersTab.tsx`: 236 LOC).
+

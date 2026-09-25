@@ -154,6 +154,17 @@ radar
 
 ---
 
+### 🟢 MEJORA 6: Centro de Control Administrativo, Metodología de Macrociclos, Modelos Científicos y Tests de Campo [✅ COMPLETADA AL 100% (v3.72 - v3.77)]
+* **Estado:** ✅ **COMPLETADA EN VERSIONES 3.72 A 3.77**.
+* **Impacto:** Refactorización atómica integral (< 350 LOC) de la consola de administración y la suite de ciencia deportiva SSOT:
+  - **Gestión de Atletas & Pre-autorización (v3.72-v3.75):** Inyección de credenciales administrativas en cliente/servidor, tabla responsiva de 5 columnas sin recortes flexbox, columna en vivo de conectividad con Intervals.icu y modal de calibración biométrica (`AdminUsersTab`, `AdminUsersTable`, `AdminUserInviteModal`, `AdminUserEditModal`).
+  - **Visor Metodológico de Macrociclos & Editor Funcional (v3.76):** Apertura de metodología completa al hacer clic en tarjeta de programa y edición bidireccional con persistencia hacia `/api/admin/programs` (`AdminProgramCard`, `AdminProgramDetailModal`, `AdminProgramDetailViewSection`, `AdminProgramDetailEditSection`).
+  - **Inspector de Modelos Científicos (v3.77):** Desglose detallado de fases del macrociclo (Base/Build/Peak/Taper) con rangos de TSS, dinámicas Banister (límites min/max de Ramp Rate CTL y deload %), progresión de tirada larga con caps de tiempo y reglas de mitigación por biotipo (`AdminScientificModelCard`, `AdminScientificModelDetailModal`, `AdminScientificModelPhasesSection`, `AdminScientificModelDynamicsSection`).
+  - **Inspector de Tests Fisiológicos de Campo (v3.77):** Catálogo de 6 protocolos oficiales (Stryd CP 3/9m, 20m TT, VAM 5K, Bike FTP 20m, Ramp Test y CSS Natación) con fórmulas matemáticas, factores de ajuste según CTL, criterios de validez y sintaxis estructurada para Intervals.icu (`AdminFieldTestCard`, `AdminFieldTestDetailModal`).
+  - **Presupuestos de Líneas:** 100% de los archivos creados y refactorizados cumplen estrictamente $\le 170$ LOC (muy por debajo del límite de 350 LOC). Compilación con 20/20 rutas y 0 errores.
+
+---
+
 ## 📋 3. Matriz de Ejecución y Restricciones Inviolables (LOC Budgets & Zero-Rework)
 
 

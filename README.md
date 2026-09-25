@@ -1,10 +1,14 @@
-# ⚡ SGEA Pro (v3.70) — Sistema Adaptativo de Entrenamiento Inteligente
-> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica y Prescripción Adaptativa con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
+# ⚡ SGEA Pro (v3.77) — Sistema Adaptativo de Entrenamiento Inteligente
+> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🔬 **Suite de Ciencia & Modelos Metodológicos Interactivos (v3.77):** Inspección fisiológica profunda al hacer clic en cualquier modelo científico (`AdminScientificModelCard` & `AdminScientificModelDetailModal`), desglosando la periodización por fases (Base, Build, Peak, Taper) con rangos de TSS, dinámicas de carga Banister (límites de Ramp Rate $+CTL/\text{sem}$ y $\%$ de descarga), progresión de tirada larga con caps de tiempo y reglas de mitigación de impacto articular por biotipo.
+- 🧪 **Catálogo Completo e Inspector de Tests de Campo (v3.77):** Protocolos fisiológicos de calibración para Stryd Potencia (3/9 min y 20m TT), Ciclismo FTP (20m y Ramp Test), Natación CSS (400m/200m) y VAM 5K (`AdminFieldTestCard` & `AdminFieldTestDetailModal`). Incluye fórmulas matemáticas, factores dinámicos según CTL, criterios de validez y sintaxis estructurada para Intervals.icu con botón de copiado directo.
+- 📋 **Visor y Editor Funcional de Programas Deportivos (v3.76):** Clic directo en tarjetas de macrociclos para inspección metodológica completa y edición en vivo (`AdminProgramCard`, `AdminProgramDetailModal`, `AdminProgramDetailViewSection`, `AdminProgramDetailEditSection`) con persistencia asíncrona hacia `/api/admin/programs`.
+- 👥 **Centro de Control Administrativo & Gestión de Atletas (v3.72-v3.75):** Invitación de atletas, pre-autorización con credenciales seguras, columna viva de conexión con Intervals.icu (🟢 OK, 🟡 Falta API Key, ⚪ No vinculado), calibración de biometría y soporte al atleta con diseño responsivo optimizado sin desbordamientos flexbox.
 - ⚡ **Calibración Dinámica y Universal de Potencia (Stryd CP & Bike FTP):** Erradicación total de métricas quemadas (hardcoding). La potencia en vatios (`⚡ 272W (81% CP)`) se calcula y muestra en tiempo real según el perfil fisiológico de cada atleta (`runFtp`/`bikeFtp`), con persistencia en blueprints y tooltips interactivos de vatios en gráficas de intervalos (`WorkoutChart`).
 - 📊 **Integridad Matemática de TSS y Adherencia Semanal:** Cálculo fidedigno de TSS Ejecutado vs. Planificado en el resumen semanal de macrociclo (`AthleteCalendarWeekRow`). Eliminación del falso 100% histórico forzado, mostrando el porcentaje real de cumplimiento y sumatorias exactas por disciplina.
 - 📌 **Desacople de Capas Sticky en Cabecera & Ventana Estricta de 52 Semanas:** Altura y z-index independientes entre la barra superior del dashboard (`AthleteDashboardHeader`, `sticky top-0 z-40`) y la cabecera del calendario (`AthleteContinuousCalendar`, `sticky top-[49px] z-30`), garantizando visibilidad 100% libre de solapamientos del perfil de usuario en desktop y móvil. Ventana rodante acotada a exactamente 52 semanas (1 año calendario).

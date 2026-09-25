@@ -8,11 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.71).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.77).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.71: Tests Periódicos FTP Ciclismo, Perfil Minimalista, Calibración Universal, Integridad Matemática TSS, Desacople de Cabecera y FinOps:
+- Versiones 3.72 - 3.77: Consola de Administración, Visor Metodológico de Macrociclos, Inspector Científico y Tests Fisiológicos:
+  * Suite de Ciencia & Modelos Metodológicos Interactivos (v3.77): Tarjetas interactivas (`AdminScientificModelCard`) y modal de inspección fisiológica (`AdminScientificModelDetailModal`, `AdminScientificModelPhasesSection`, `AdminScientificModelDynamicsSection`) con desglose de 4 fases (Base/Build/Peak/Taper) con TSS y zonas, dinámica Banister (rampas de CTL y deload %), progresión de tirada larga con caps de tiempo y mitigación articular por biotipo.
+  * Inspector de Protocolos y Tests de Campo (v3.77): Tarjetas (`AdminFieldTestCard`) y modal (`AdminFieldTestDetailModal`) para Stryd CP (3/9 min y 20m TT), Ciclismo FTP (20m y Ramp Test), Natación CSS (400m/200m) y VAM 5K con sintaxis estructurada para Intervals.icu, criterios de validez y algoritmo de calibración automática.
+  * Visor y Editor Funcional de Programas Deportivos (v3.76): Clic directo en tarjetas para inspección metodológica completa y edición interactiva (`AdminProgramCard`, `AdminProgramDetailModal`, `AdminProgramDetailViewSection`, `AdminProgramDetailEditSection`) con persistencia hacia `/api/admin/programs`.
+  * Centro de Control Administrativo & Gestión de Atletas (v3.72-v3.75): Invitación de atletas, pre-autorización con credenciales seguras, columna viva de conexión con Intervals.icu (🟢 OK, 🟡 Falta API Key, ⚪ No vinculado), calibración de biometría y soporte al atleta con diseño responsivo optimizado sin desbordamientos flexbox.
   * Tests Periódicos de FTP en Ciclismo & Calibración Automática (v3.71): Programación sistemática de microciclos 'TEST_CONTROL' (Semana 2 y 7) en cualquier plan con ciclismo; prescripción estructurada de BIKE_TEST_20M_FTP; detección automática de ejecuciones de test en Intervals.icu y calibración síncrona bidireccional de bikeFtp en Firestore e Intervals.icu recalculando zonas y TSS.
   * Calibración Universal de Potencia (v3.68-v3.70): Erradicación de métricas quemadas. Vatios calculados dinámicamente según CP/FTP del atleta autenticado (probado con Stryd 275W y 336W), preservados durante hidratación de calendario y con tooltips interactivos de vatios en gráficas.
   * Integridad Matemática de Resumen Semanal (v3.70): Erradicación del 100% histórico forzado. Cálculo real de TSS Planificado vs. Ejecutado (`AthleteCalendarWeekRow`) y porcentaje fidedigno de cumplimiento por disciplina.

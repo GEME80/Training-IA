@@ -84,9 +84,20 @@ export function hydrateWeekPlanFromEvents(
       continue;
     }
 
+    // Deduplicación inteligente: evitar workouts duplicados por múltiples sincronizaciones o idéntico contenido
+    const seenWorkouts = new Set<string>();
+
     dayEvts.forEach((evt) => {
       const disc = resolveDiscipline(evt.type);
-      const cleanName = evt.name ? evt.name.replace(/^\[PULSE AI\]\s*/i, "").trim() : "Entrenamiento";
+      const cleanName = evt.name ? evt.name.replace(/^\[(?:PULSE AI|SGEA)\]\s*/i, "").trim() : "Entrenamiento";
+      
+      // Clave de unicidad por día, disciplina y nombre normalizado (ignorando mayúsculas y espacios extra)
+      const normalizedKey = `${dateStr}_${disc}_${cleanName.toLowerCase().replace(/\s+/g, " ")}`;
+      if (seenWorkouts.has(normalizedKey)) {
+        return; // Omitir duplicado exacto
+      }
+      seenWorkouts.add(normalizedKey);
+
       const titleMinsMatch = cleanName.match(/\((\d+)\s*m(?:in)?\)/i);
       let mins = Math.round((evt.moving_time || 0) / 60);
       if (titleMinsMatch) {

@@ -11,6 +11,7 @@ import {
   Waves,
   Moon,
   HelpCircle,
+  Zap,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
@@ -133,6 +134,14 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               <h4 className="text-sm font-black text-slate-900 dark:text-white">
                 {workout.workoutName.replace(/\[.*?\]\s*/g, "")}
               </h4>
+              {workout.powerTarget && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/60">
+                    <Zap className="h-3 w-3 text-amber-500" />
+                    Objetivo: {workout.powerTarget}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

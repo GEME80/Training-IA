@@ -3882,6 +3882,60 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteEditProfileModal.tsx`: 271 LOC, `useAthleteTelemetry.ts`: 347 LOC, `/api/sync-settings/route.ts`: 74 LOC, `AthleteProfileHeroCard.tsx`: 186 LOC).
   - `Prueba 4 (Ejecución API):` `curl -X POST /api/sync-settings` retornó HTTP 200 con `{ success: true, syncResults: { runFtp: '336W (Stryd)', bikeFtp: '226W', ... } }`.
 
+---
+
+### Versión 3.65 - Protocolo Maestro de Eficiencia de Tokens en Desarrollo (Pair Programming) y Runtime FinOps (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 11:45 COT.
+- **Directiva:** "actualiza la documentacion y las reglas para que seamos eficinetes en el consumo de tokens de Ia ya que estamos siendo ineficientes".
+- **Diagnóstico de Ineficiencia de Tokens:**
+  1. *Ineficiencia Operativa en Sesiones de Agentes:* Uso de lecturas masivas de archivos (`view_file` de 100-300 líneas) para ubicar funciones puntuales, repetición de explicaciones y resúmenes de código no modificado, y encadenamiento de llamadas a herramientas sin acotar.
+  2. *Ineficiencia en Runtime del Sistema:* Riesgo de inflado de tokens en prompts a Gemini por envío de JSONs crudos de telemetría, respuestas no acotadas en longitud de salida, y falta de aprovechamiento del Prompt Caching.
+- **Solución y Mejoras de Gobernanza Implementadas:**
+  1. **Directrices Operativas Zero-Waste para Agentes (`PROJECT_RULES.md` Sección 14.1):**
+     - **Micro-Lecturas Quirúrgicas Obligatorias:** `view_file` con `StartLine` y `EndLine` estrictamente acotados a $\le 20-30$ líneas.
+     - **Búsqueda Focalizada:** `grep_search` con `MatchPerLine: true` como paso previo a cualquier inspección de archivo.
+     - **Verificación Ligera de Líneas:** Uso exclusivo de `wc -l` en terminal para validar presupuestos de código (< 350 LOC).
+     - **Respuestas Ejecutivas Ultra-Densas:** Cero verborrea; reporte directo con diff, justificación técnica y resultado de tests.
+     - **Cero Bucles de Herramientas:** Planificación previa de llamadas sin redundancia.
+  2. **Directrices FinOps de Runtime en Producción (`PROJECT_RULES.md` Sección 14.2):**
+     - **Condensación de Telemetría (`contextCondenser.ts`):** Reducción de ~70% de tokens de entrada transformando JSONs de actividades a cadenas tabulares compactas.
+     - **Presupuestos Estrictos de Salida (`max_output_tokens`):** `/api/headcoach/chat` ($\le 800\text{--}1200$), `/api/macrocycles/generate-ai` ($\le 2048$), `/api/evaluate` ($\le 600$).
+     - **Arquitectura Amigable con Gemini Prompt Caching:** Prefijo de System Prompt inmutable para maximizar la tasa de acierto del caché de contexto.
+     - **Determinismo Heurístico Previo:** Los cálculos fisiológicos matemáticos (Banister, zonas Tanaka, rotación coprima) se resuelven en TypeScript antes de invocar a Gemini.
+     - **Zero Schema Bloat:** Esquemas Zod y JSON Schemas delgados sin descripciones innecesarias.
+     - **Caché en Memoria SWR en Cliente (TTL 3 min):** Deduplicación de peticiones de telemetría y dirty checking en escrituras.
+  3. **Actualización de Leyes de Gobernanza:**
+     - Incorporada la **Ley Inviolable #10: Eficiencia Extrema de Tokens (FinOps)** en el Prompt Maestro Integral de `PROJECT_RULES.md`.
+     - Sincronización en `README.md` y `BACKLOG_MEJORAS_ARQUITECTURA.md`.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (TypeScript Estricto):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación de Producción Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350\text{ LOC}$ (Límite estricto cumplido).
+
+---
+
+### Versión 3.66 - Cálculo Dinámico de Potencia desde Perfil del Atleta: Stryd CP y Bike FTP (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 19:05 COT.
+- **Directiva:** "pero estos planes no deben tener la potencia fija con el numero si no debe tomar los datos del perfil del atleta. FTP de ciclismo y CP del stryd".
+- **Diagnóstico y Corrección:**
+  1. *Desacople de Potencia Fija:* Anteriormente las funciones generadoras de entrenamientos (`buildDynamicLongRunStructure`, `calculateProgressiveLongRun`, `selectQualityWorkout`) emitían strings con porcentajes o números estáticos sin considerar los vatios del atleta.
+  2. *Propagación Dinámica de Vatios del Atleta:*
+     - `longRunPeriodization.ts`: Ahora recibe `runFtp?: number` (Stryd Critical Power) y computa vatios exactos con función de formato dinámico `${Math.round(runFtp * pct)}W (${pct}% CP • Objetivo)`.
+     - `index.ts` (`calculateProgressiveLongRun`): Acepta `runFtp?: number`, calcula los rangos de vatios de carrera en fases de Competición Oficial, Tapering y Descarga Asimilación, y propaga `runFtp` a `buildDynamicLongRunStructure`.
+     - `macrocycleTemplateHelpers.ts`:
+       - Creada función helper `interpolatePowerTarget(rawTarget, runFtp, bikeFtp)` que reemplaza dinámicamente cualquier expresión tipo `88-92% CP`, `90% CP`, `85% FTP` o `85-95% FTP` calculando los vatios precisos del atleta según su disciplina.
+       - `selectQualityWorkout`: Ahora recibe `runFtp` y `bikeFtp`, interpolando la potencia objetivo en entrenamientos de calidad de carrera y brick.
+     - `macrocycleTemplates.ts`: Pasa `runFtp` a `calculateProgressiveLongRun`, propaga `runFtp` y `bikeFtp` a `selectQualityWorkout`, e interpola la potencia en rodajes de ciclismo entre semana y rodajes regenerativos de carrera.
+  3. *Visualización en UI:*
+     - `WorkoutDetailModal.tsx`: Presenta badge destacado con `Objetivo: [Vatios calculados + % CP/FTP]` debajo del título de la sesión.
+     - `AthleteCalendarDayColumn.tsx`: Pie de tarjeta planificada ahora muestra el objetivo de potencia dinámico en vatios junto a los TSS.
+     - `AthleteMobileWorkoutCard.tsx`: Rejilla móvil de métricas ahora prioriza y exhibe el objetivo de vatios calculado dinámicamente desde el perfil del atleta.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`longRunPeriodization.ts`: 101 LOC, `macrocycleTemplates.ts`: 336 LOC, `macrocycleTemplateHelpers.ts`: 296 LOC, `WorkoutDetailModal.tsx`: 326 LOC).
+
+
 
 
 

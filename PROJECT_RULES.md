@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.64)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.65)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,11 +8,12 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.64).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.65).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versiones 3.56 - 3.64: Perfil del Atleta Minimalista, Responsive Móvil, Main Sticky Header 4 Bloques y Periodización Dinámica:
+- Versiones 3.56 - 3.65: Perfil del Atleta Minimalista, Responsive Móvil, Main Sticky Header 4 Bloques, Periodización Dinámica y Gobernanza FinOps Extrema:
+  * Protocolo Maestro de Eficiencia de Tokens (FinOps v3.65): micro-lecturas quirúrgicas <= 20-30 líneas, conteo LOC vía CLI (wc -l), grep_search focalizado, respuestas ejecutivas ultra-densas sin verborrea, compresión extrema de telemetría (contextCondenser.ts -70%), límites estrictos de max_output_tokens (600-1200) y cero consultas/lecturas redundantes.
   * Modal Perfil del Atleta Minimalista (v3.64): Erradicación de sobrecarga visual, banners de dos columnas y badges repetitivos en inputs; segmented control sutil para género, unidades tabulares limpias y feedback interactivo de guardado.
   * Sincronización Bidireccional Robusta con Intervals.icu (v3.64): Erradicación de condiciones de carrera mediante await estricto antes de refrescar telemetría; resolución automática de API Keys cifradas en Firestore vía UID/email; persistencia completa de peso, Stryd CP, FTP, LTHR, Max HR y Resting HR en Intervals.icu.
   * Ergonomía Responsive Móvil & Plegado de Métricas: En móvil, las tarjetas fisiológicas se pliegan a un carrusel compacto de pills de 36px con toggle 'Ver (6)' / 'Plegar', liberando más del 75% del viewport vertical; controles de calendario compactos.
@@ -21,7 +22,6 @@ Contexto Actual del Proyecto:
   * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia sistemática de 4 tipologías (Base con final ágil, Fast-Finish Pfitzinger, Bloques de Ritmo Específico y Bloques Cumbre Canova).
   * Escaleras de Intervalos Incrementales (200m a 800m) y Bloques Largos (3x 2000m): integración en modelos de Running (Maratón, 10K) y Triatlón.
   * Sábados de Ciclismo con Propósito: alternancia de Cadencia/Torque (60/100 rpm), Sweetspot y rodaje continuo.
-  * Política de Eficiencia de Tokens (FinOps): micro-lecturas <= 20-30 líneas, conteo LOC vía CLI (wc -l) y búsquedas quirúrgicas con grep_search.
   * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): eliminación de tabs separadores. Un único flujo vertical donde semanas futuras van arriba (scroll up), semana actual anclada al inicio, e historial ejecutado de hasta 52 semanas hacia abajo (scroll down).
   * Tarjetas de Sesión Minimalistas y Especializadas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera y Ciclismo conservan gráfica de zonas/intervalos (`WorkoutChart`); Fuerza muestra descripción concisa de ejercicios (<= 60 caracteres), delegando detalles y sintaxis al modal.
   * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
@@ -49,6 +49,7 @@ Leyes Inviolables de Gobernanza:
 7. Set de Pruebas Obligatorio: Cuando reciba la orden "Actualiza la bitácora maestra" o "Cierre de tarea", ejecutaré automáticamente `./node_modules/.bin/tsc --noEmit` y `npm run build` antes de documentar el avance en BITACORA_MAESTRA.md.
 8. Cero Datos Quemados y Protocolo SSOT para Agentes: Prohibido terminantemente el uso de mocks o datos quemados de biotipo (peso, altura, CP, FTP, fechas). Toda consulta de atleta se resuelve dinámicamente desde la fuente viva (`TelemetryService.evaluate` o `getAthleteSSOT`).
 9. Aislamiento Multi-Atleta y Borrado Quirúrgico: La purga de eventos en Intervals.icu se restringe estrictamente a prefijos de la plataforma (`[PULSE AI]` y `[SGEA]`) dentro de la ventana de fechas del plan y se ejecuta exclusivamente sobre el `athleteId` autenticado.
+10. Eficiencia Extrema de Tokens (FinOps): Cero lecturas de archivos completos; búsquedas directas con grep_search; micro-lecturas acotadas (<= 20-30 LOC); respuestas concisas y ejecutivas; compresión de telemetría y prompt caching.
 
 Por favor, confirma que leíste PROJECT_RULES.md y BITACORA_MAESTRA.md (Sección 15), resume el estado actual y presenta tu propuesta de arquitectura para los Agentes de IA.
 ```
@@ -440,29 +441,207 @@ Todo agente o desarrollador que genere o modifique sesiones, macrociclos o texto
 
 ---
 
-## ⚡ 14. POLÍTICA DE EFICIENCIA DE TOKENS Y MEJORES PRÁCTICAS DE DESARROLLO (FINOPS DE CONTEXTO)
+## ⚡ 14. PROTOCOLO MAESTRO DE EFICIENCIA DE TOKENS (FINOPS & TOKEN DENSITY MANDATE v3.65)
 
-Para garantizar un desarrollo ágil, sostenible y con un consumo óptimo y eficiente de tokens en el modelo, todo agente de desarrollo debe cumplir estrictamente las siguientes 5 reglas operativas:
+Para garantizar un desarrollo ágil, de costo controlado y con una densidad de tokens óptima, todo agente y el motor en producción deben cumplir sin excepción las directrices en sus dos dimensiones:
+
+### 🛠️ 14.1. Dimensión Operativa del Agente (Pair Programming Zero-Waste)
 
 1. **Búsquedas Quirúrgicas Focalizadas (`grep_search` vs `view_file` masivo):**
-   - Queda prohibido leer archivos extensos completos o bloques arbitrarios de 80+ líneas para localizar funciones o variables.
-   - Debe usarse `grep_search` con `MatchPerLine: true` para identificar la línea exacta del símbolo antes de cualquier lectura.
+   - Queda **estrictamente prohibido** leer archivos extensos completos o bloques arbitrarios de 80+ líneas para localizar funciones o variables.
+   - Debe usarse `grep_search` con `MatchPerLine: true` para identificar el número de línea exacto del símbolo antes de cualquier lectura.
 
 2. **Ventanas Mínimas de Inspección (Micro-Lecturas $\le 20-30$ líneas):**
    - Al usar `view_file`, debe acotarse el rango `StartLine` y `EndLine` estrictamente a la sección que se va a editar o revisar (ej. 15 a 30 líneas).
    - Queda prohibido inspeccionar archivos o módulos que no forman parte del cambio activo o que ya fueron analizados previamente en la sesión.
 
-3. **Contabilización de Líneas vía CLI (`wc -l`):**
+3. **Verificación Ligera de Líneas vía CLI (`wc -l`):**
    - Para verificar el cumplimiento del presupuesto de código (< 350 LOC por archivo), se debe consultar el conteo rápido mediante comandos de terminal (`wc -l <archivo>`), evitando volcar el contenido completo del archivo al contexto del modelo.
 
 4. **Edición Quirúrgica Directa (`replace_file_content`):**
    - Las modificaciones deben apuntar únicamente a los bloques de código afectados, evitando reescrituras innecesarias de archivos enteros.
 
-5. **Verificación y Pipeline Secuencial Ágil:**
-   - Ejecutar `tsc --noEmit` y `npm run build` como validación final de ciclo.
-   - Documentar los cambios en `BITACORA_MAESTRA.md` y actualizar la bitácora al cierre de cada tarea sin duplicación de contexto.
+5. **Respuestas Ejecutivas Ultra-Densas (Cero Verborrea):**
+   - Prohibido re-resumir artefactos completos o repetir explicaciones de código que no se modificó.
+   - Las respuestas deben ser concisas, estructuradas y directas al grano, presentando el diff, la justificación técnica clave y los resultados de los tests.
+
+6. **Cero Bucles de Herramientas Redundantes:**
+   - Planificar mentalmente las acciones requeridas antes de ejecutarlas; prohibido encadenar llamadas repetitivas o redundantes a herramientas de lectura.
 
 ---
+
+### 🌐 14.2. Dimensión de Runtime del Sistema SGEA (Modelos Gemini API en Producción)
+
+1. **Condensación Agresiva de Telemetría (`src/lib/ai/contextCondenser.ts`):**
+   - Prohibido enviar payloads JSON crudos y verbosos con cientos de actividades a la API de Gemini.
+   - Toda lista de actividades ejecutadas debe condensarse a cadenas tabulares ultra-densas (`compactActivity`), ahorrando **~70% de tokens de entrada**.
+
+2. **Presupuestos Estrictos de Tokens de Salida (`max_output_tokens`):**
+   - Cada endpoint de IA debe fijar un presupuesto máximo estricto según su objetivo:
+     * `/api/headcoach/chat`: $\le 1.800\text{ tokens}$ (reply 120-180 palabras + plan semanal JSON).
+     * `/api/macrocycles/generate-ai`: $\le 3.072\text{ tokens}$ estructurados en JSON compacto.
+     * `/api/evaluate`: $\le 600\text{ tokens}$ para veredicto fisiológico conciso.
+     * `/api/admin/programs`: $\le 2.048\text{ tokens}$ para programas del catálogo.
+
+3. **Arquitectura de Prompt en 2 Capas para Gemini Prompt Caching:**
+   - **Capa Estática (cacheable):** `src/lib/ai/prompts.ts` — Leyes fisiológicas, sintaxis Stryd y formato JSON canónico. **NUNCA** debe contener datos dinámicos del atleta. Versión semántica fija por release.
+   - **Capa Dinámica (no cacheable):** `chatContext.ts` — CTL, ATL, TSB, plan de la semana, actividades 7 días. Siempre comprimida con `contextCondenser.ts` antes de enviar.
+   - **Prohibido:** Mezclar datos del atleta en la capa estática; destruye la tasa de caché.
+
+4. **Determinismo Heurístico Previo a la Invocación del LLM:**
+   - Todos los cálculos matemáticos puros (Banister CTL/ATL/TSB, zonas Tanaka, rotación de paso coprimo $\gcd(L, s) = 1$, desglose de volumen semanal, % adherencia, ACWR) se ejecutan de forma determinista en TypeScript antes de invocar a la IA.
+   - El LLM solo recibe variables ya calculadas y digeridas, evitando que gaste tokens en operaciones aritméticas.
+
+5. **Temperatura Correcta por Tipo de Agente:**
+   - Agentes deterministas (evaluación, macrociclos): `temperature: 0.0`.
+   - HeadCoach conversacional: `temperature: 0.1 – 0.3` (variedad lingüística, no de contenido).
+   - Prohibido usar `temperature > 0.3` en cualquier agente fisiológico.
+
+6. **`candidateCount: 1` Obligatorio:**
+   - Queda prohibido solicitar múltiples candidatos de respuesta. Cada candidato extra multiplica el costo de salida directamente.
+
+7. **Serialización Tabular del Plan (`currentPlan`):**
+   - Prohibido enviar el array `currentPlan` como array JSON de objetos `PlanItem` al prompt.
+   - Formato obligatorio: `LUN:RUN-Z2-60m-52tss | MAR:BIKE-SS-75m-70tss | MIÉ:REST | ...`
+
+8. **Caché en Memoria SWR en Cliente (TTL 3 min) & Persistencia con Dirty Checking:**
+   - Las consultas de telemetría y estado de temporada en `useAthleteTelemetry` y `useSeasonPlans` se sirven desde caché en memoria para evitar re-invocaciones al backend ante re-renders.
+   - Solo se emiten mutaciones a Firestore/APIs cuando el estado cambia realmente (`useRef` dirty check).
+
+---
+
+### 🔑 14.3. Regla de Oro: Output > Input en ROI de Optimización
+
+> **Los modelos cobran el output 2-4x más caro por token que el input.**  
+> Optimizar `maxOutputTokens` tiene el mayor retorno de inversión.  
+> Orden de prioridad: **(1) Reducir output tokens → (2) Comprimir input → (3) Prompt Caching.**
+
+---
+
+### ✅ 14.4. Gate 0 FinOps (Antes de Cualquier PR o Cambio en Archivos de IA)
+
+Todo agente debe verificar secuencialmente en archivos de IA:
+- **Gate 0.1:** `maxOutputTokens` dentro del presupuesto por endpoint (Sección 14.2.2).
+- **Gate 0.2:** `contextCondenser.ts` invocado para **todo** payload de actividades.
+- **Gate 0.3:** System Prompt no contiene datos dinámicos del atleta (Sección 14.2.3).
+- **Gate 0.4:** `temperature: 0.0` en agentes deterministas.
+- **Gate 0.5:** `candidateCount: 1` explícito en todos los endpoints.
+
+Solo después se ejecuta el **Gate 1 (LOC)**, **Gate 2 (tsc)** y **Gate 3 (next build)**.
+
+---
+
+### 📋 14.5. Protocolo de Cero Fricción para el Usuario y Enrutamiento Autónomo del Agente (Zero-Waste)
+
+> **MANDATO SUPREMO:** El usuario NUNCA debe verse obligado a conocer rutas de archivos, nombres de funciones ni detalles técnicos del código.  
+> La responsabilidad del ahorro de tokens recae **100% en la inteligencia y el enrutamiento autónomo del agente**, no en el usuario.
+
+#### 1. Experiencia del Usuario (100% Lenguaje Natural Deportivo):
+El usuario solo debe describir lo que desea en sus propias palabras. Ejemplos válidos:
+- *"Quiero que en el plan de maratón las tiradas dominicales de carga tengan un bloque a ritmo objetivo."*
+- *"En el chat del coach, haz que la respuesta sea más directa y mencione los vatios de hoy."*
+- *"El modal de perfil no me está guardando la frecuencia cardíaca máxima."*
+- *"En el calendario continuo quiero que los días de descanso se vean más compactos."*
+- *"Ajusta la sincronización con Intervals para que no duplique sesiones."*
+
+#### 2. Matriz Canónica Integral de Enrutamiento Inmediato (100% Cobertura Full-Stack):
+Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas ciegas (`find`, `ls -R`, volcados de directorio) ni leerá archivos enteros. Consulta internamente esta tabla canónica organizada por capas:
+
+##### A. Capa Frontend UI (Vistas, Calendario, Tarjetas y Modales)
+| Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
+| :--- | :--- |
+| **Calendario Continuo / Cuadrícula de 8 Columnas** | `src/components/dashboard/AthleteContinuousCalendar.tsx` |
+| **Tarjeta Diaria de Sesión (Ejecutado vs Planificado, Badges)** | `src/components/dashboard/AthleteCalendarDayTile.tsx` |
+| **Fila Semanal del Calendario (Balance TSS, Rampa)** | `src/components/dashboard/AthleteCalendarWeekRow.tsx` |
+| **Main Sticky Header (4 Bloques, Tabs, Hoy, Fecha Actual)** | `src/components/dashboard/AthleteDashboardHeader.tsx` |
+| **Sidebar Lateral (Navegación entre vistas)** | `src/components/dashboard/AthleteSidebar.tsx` |
+| **Vista Móvil (Agenda Diaria con Swipe, Feed Semanal)** | `src/components/dashboard/AthleteMobileAgendaView.tsx` / `AthleteMobileWeekFeed.tsx` |
+| **Gráfica de Rendimiento PMC (Fitness CTL, ATL, TSB)** | `src/components/dashboard/pmc/AthletePMCChart.tsx` |
+| **Modal Detalle de Sesión (Series, Vatios, Streams, Gráfica)** | `src/components/macrocycle/WorkoutDetailModal.tsx` |
+| **Gráfica de Zonas e Intervalos (Skyline de Potencia)** | `src/components/WorkoutChart.tsx` |
+| **Modal de Perfil del Atleta (Antropometría, Peso, Altura)** | `src/components/profile/AthleteEditProfileModal.tsx` |
+| **Visualizador de Zonas (Stryd CP, Bike FTP, FC LTHR)** | `src/components/profile/AthleteZonesViewer.tsx` |
+| **Matriz Semanal de Disponibilidad (Días de entreno)** | `src/components/profile/CompactAvailabilityMatrix.tsx` |
+| **Conexiones y Credenciales Intervals.icu en UI** | `src/components/dashboard/AthleteConnectionsView.tsx` |
+| **Estudio de Temporada / Gestor de Carreras A/B/C** | `src/components/season/SeasonStudioModal.tsx` / `SeasonRacesTab.tsx` |
+| **Tarjeta de Plan Activo de Temporada** | `src/components/season/SeasonActivePlanCard.tsx` |
+| **Generador Guiado de Temporada con Curva SVG** | `src/components/season/SeasonAIGenerator.tsx` |
+| **Biblioteca de Programas en UI** | `src/components/season/SeasonProgramLibrary.tsx` |
+| **Autenticación Google OAuth en UI** | `src/components/auth/AuthModal.tsx` |
+
+##### B. Capa Head Coach & Inferencia IA (Chat, Prompts y Tokens)
+| Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
+| :--- | :--- |
+| **Drawer / Ventana Flotante del Chat con Head Coach** | `src/components/HeadCoachChatDrawer.tsx` |
+| **Botonera Táctica Guiada en 2 Niveles (Quick Actions)** | `src/components/dashboard/headcoach/HeadCoachQuickActions.tsx` |
+| **Mensajes del Coach, Micro-Tarjetas Atléticas y Acordeón** | `src/components/dashboard/headcoach/HeadCoachMessageItem.tsx` |
+| **Tarjeta de Semana Sugerida / Diffing del Microciclo** | `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx` |
+| **Llamadas a Gemini API, Tokens (`maxOutputTokens`) y Modelos** | `src/lib/ai/headcoach/chatInference.ts` |
+| **Ensamblado del Contexto Fisiológico del Atleta para IA** | `src/lib/ai/headcoach/chatContext.ts` |
+| **Fallback Determinista del Coach (Cero Costo de Tokens)** | `src/lib/ai/headcoach/deterministicFallback.ts` |
+| **Compresión Tabular FinOps de Actividades (-70% Tokens)** | `src/lib/ai/contextCondenser.ts` |
+| **Prompts del Sistema Maestros (Inmutables / Cacheables)** | `src/lib/ai/prompts.ts` / `defaultPrompts.ts` |
+
+##### C. Capa de Modelos Científicos Fisiológicos SSOT (`src/lib/ai/knowledge/`)
+| Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
+| :--- | :--- |
+| **Maratón 42K (Canova, Pfitzinger, Daniels, Ritmo Maratón)** | `src/lib/ai/knowledge/marathonModel.ts` |
+| **Media Maratón 21K (Daniels, Magness, Umbral de Lactato)** | `src/lib/ai/knowledge/halfMarathonModel.ts` |
+| **10K Road Racing (VT2, series de 1.000m)** | `src/lib/ai/knowledge/tenKModel.ts` |
+| **5K Speed & Potencia Aeróbica (Billat vVO2max, 30/30)** | `src/lib/ai/knowledge/fiveKModel.ts` |
+| **Trail & Ultra Montaña (D+, Desnivel, Bastones, Koop)** | `src/lib/ai/knowledge/trailModel.ts` |
+| **Ciclismo Gran Fondo / Resistencia (Coggan 7 Zonas, Sweetspot)**| `src/lib/ai/knowledge/cyclingModel.ts` |
+| **Ciclismo Puertos / Escalada / Criterium (Torque, Cadencia)** | `src/lib/ai/knowledge/cyclingSpecialtyModels.ts` |
+| **Triatlón Sprint y Olímpico (Transiciones T1/T2, vVO2max)** | `src/lib/ai/knowledge/triathlonShortModel.ts` |
+| **Triatlón Media Distancia 70.3 (Friel, Olbrecht, Bricks)** | `src/lib/ai/knowledge/triathlonModel.ts` |
+| **Triatlón Full / IRONMAN 140.6 (Gestión Glucogénica Profunda)**| `src/lib/ai/knowledge/triathlon1406Model.ts` |
+| **Salud, Longevidad, Base Mitocondrial (Peter Attia, Seiler)** | `src/lib/ai/knowledge/athleteMomentsModels.ts` |
+| **Retorno de Lesión / Método CaCo / Control ACWR (Tim Gabbett)** | `src/lib/ai/knowledge/athleteMomentsModels.ts` |
+| **Rotación Dinámica de Tiradas Largas Dominicales (4 Tipos)** | `src/lib/ai/knowledge/longRunPeriodization.ts` |
+| **Tests Diagnósticos (Stryd 3/9m, FTP 20m, Ramp Test, CSS)** | `src/lib/ai/knowledge/testingProtocols.ts` |
+| **Coaches de Fortalecimiento S1 a S5 (Running, Bike, Prehab)**| `src/lib/physiology/specializedStrengthCoaches.ts` |
+| **Piscina de Entrenamientos de Fuerza Estructurados** | `src/lib/physiology/strengthWorkoutPool.ts` |
+
+##### D. Capa Backend, Servicios y Controladores API (`src/app/api/` & `src/lib/services/`)
+| Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
+| :--- | :--- |
+| **Endpoint del Chat del Head Coach** | `src/app/api/headcoach/chat/route.ts` |
+| **Endpoint de Generación de Macrociclos con IA** | `src/app/api/macrocycles/generate-ai/route.ts` |
+| **Endpoint de Auditoría de Carga y Evaluación Diaria** | `src/app/api/evaluate/route.ts` |
+| **Endpoint de Sincronización de Entrenamientos a Intervals** | `src/app/api/sync-intervals/route.ts` |
+| **Endpoint de Sincronización de Peso/Potencia/FC a Intervals** | `src/app/api/sync-settings/route.ts` |
+| **Endpoint de Perfil de Atleta y Almacenamiento Cifrado** | `src/app/api/profile/route.ts` |
+| **Endpoint de Test de Conexión en Vivo con Intervals** | `src/app/api/test-connection/route.ts` |
+| **Endpoint de Streams de Potencia/FC Segundo a Segundo** | `src/app/api/activities/[id]/streams/route.ts` |
+| **Servicio de Telemetría (Agregación TSS, Banister, Fallback)** | `src/lib/services/telemetryService.ts` |
+| **Servicio de Sincronización Intervals (Borrado y Despacho)** | `src/lib/services/intervalsSyncService.ts` |
+| **Motor Rector de Generación de Macrociclos (Banister Rampa)** | `src/lib/physiology/macrocycleGenerator.ts` |
+| **Plantillas Canónicas de Periodización y Rotación Coprima** | `src/lib/physiology/macrocycleTemplates.ts` |
+| **Motor de Cálculo PMC (CTL tau 42, ATL tau 7, TSB)** | `src/lib/physiology/pmcEngine.ts` |
+| **Cliente HTTP de bajo nivel para Intervals.icu API** | `src/lib/intervals/client.ts` |
+| **Validación Declarativa de Payloads con Zod** | `src/lib/validation/schemas.ts` |
+
+##### E. Capa de Persistencia, Seguridad & SuperAdmin
+| Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
+| :--- | :--- |
+| **Cifrado y Descifrado Criptográfico AES-256-GCM** | `src/lib/crypto.ts` |
+| **Operaciones con Cloud Firestore (`users/{uid}`)** | `src/lib/db/userProfile.ts` |
+| **Operaciones de Macrociclos en Base de Datos** | `src/lib/db/macrocycles.ts` |
+| **Gestión de Usuarios SuperAdmin y Preautorizaciones** | `src/lib/db/adminUsers.ts` |
+| **Endpoints de Administración (`/api/admin/*`)** | `src/app/api/admin/users/route.ts` / `programs/route.ts` |
+| **Panel de Administración en UI (Sidebar, Tabs, Métricas)** | `src/components/admin/AdminSidebar.tsx` / `AdminDashboardTab.tsx` |
+
+#### 3. Algoritmo Operativo Autónomo del Agente (Mínimo Consumo de Tokens):
+1. **Identificación Inmediata:** Identifica el archivo destino en la tabla canónica (0 tokens de exploración).
+2. **Grep Focalizado:** Ejecuta un único `grep -n` sobre el archivo conocido para ubicar la función o variable exacta (< 30 tokens).
+3. **Micro-Lectura Quirúrgica:** Abre con `view_file` **estrictamente entre 15 y 30 líneas** alrededor del bloque a intervenir. Prohibido leer el resto del archivo.
+4. **Reemplazo Directo:** Aplica `replace_file_content` sobre el bloque mínimo afectado.
+5. **Validación:** Ejecuta `./node_modules/.bin/tsc --noEmit`.
+6. **Respuesta Sintética:** Informa al usuario qué se modificó y el resultado en máx. 10-15 líneas, sin repetir código innecesario.
+
+
+---
+
 
 ## 🏃 15. LEYES DE PERIODIZACIÓN DINÁMICA DE FONDOS, ESCALERAS Y CICLISMO CON PROPÓSITO (v3.62)
 

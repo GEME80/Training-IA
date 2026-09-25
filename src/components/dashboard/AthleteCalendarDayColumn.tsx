@@ -260,9 +260,11 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                 </div>
               )}
               {/* Footer */}
-              <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-100 dark:border-slate-800 pt-1 mt-auto">
-                <span className="text-slate-600 dark:text-slate-400">{plannedTss} TSS</span>
-                <ChevronRight className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-100 dark:border-slate-800 pt-1 mt-auto gap-1">
+                <span className="text-slate-600 dark:text-slate-400 truncate">
+                  {plannedTss} TSS{item.powerTarget ? ` · ⚡${item.powerTarget.split("•")[0].trim()}` : ""}
+                </span>
+                <ChevronRight className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </div>
             </div>
           );

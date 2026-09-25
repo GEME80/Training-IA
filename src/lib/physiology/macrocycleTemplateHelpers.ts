@@ -32,10 +32,55 @@ export function buildRestDay(day: string, dateStr: string, formattedDate: string
   };
 }
 
+export function interpolatePowerTarget(rawTarget: string, runFtp?: number, bikeFtp?: number): string {
+  if (!rawTarget) return rawTarget;
+  let res = rawTarget;
+
+  // Interpolar % CP con runFtp (Stryd)
+  if (runFtp && runFtp > 0) {
+    // Caso rango: "88-92% CP" o "100-112% CP"
+    res = res.replace(/(\d+)\s*-\s*(\d+)\s*%\s*CP/gi, (_, p1, p2) => {
+      const w1 = Math.round(runFtp * (parseInt(p1, 10) / 100));
+      const w2 = Math.round(runFtp * (parseInt(p2, 10) / 100));
+      return `${w1}-${w2}W (${p1}-${p2}% CP)`;
+    });
+    // Caso rango con "a": "72% a 84% CP"
+    res = res.replace(/(\d+)\s*%\s*a\s*(\d+)\s*%\s*CP/gi, (_, p1, p2) => {
+      const w1 = Math.round(runFtp * (parseInt(p1, 10) / 100));
+      const w2 = Math.round(runFtp * (parseInt(p2, 10) / 100));
+      return `${w1}-${w2}W (${p1}% a ${p2}% CP)`;
+    });
+    // Caso individual: "90% CP" o "100% CP"
+    res = res.replace(/(\d+)\s*%\s*CP/gi, (_, p) => {
+      const w = Math.round(runFtp * (parseInt(p, 10) / 100));
+      return `${w}W (${p}% CP)`;
+    });
+  }
+
+  // Interpolar % FTP con bikeFtp (Ciclismo)
+  if (bikeFtp && bikeFtp > 0) {
+    // Caso rango: "85-95% FTP"
+    res = res.replace(/(\d+)\s*-\s*(\d+)\s*%\s*FTP/gi, (_, p1, p2) => {
+      const w1 = Math.round(bikeFtp * (parseInt(p1, 10) / 100));
+      const w2 = Math.round(bikeFtp * (parseInt(p2, 10) / 100));
+      return `${w1}-${w2}W (${p1}-${p2}% FTP)`;
+    });
+    // Caso individual: "85% FTP"
+    res = res.replace(/(\d+)\s*%\s*FTP/gi, (_, p) => {
+      const w = Math.round(bikeFtp * (parseInt(p, 10) / 100));
+      return `${w}W (${p}% FTP)`;
+    });
+  }
+
+  return res;
+}
+
 export function selectQualityWorkout(
   phase: string,
   weekNumber: number,
-  curatedModel: ReturnType<typeof resolveTrainingModel>
+  curatedModel: ReturnType<typeof resolveTrainingModel>,
+  runFtp?: number,
+  bikeFtp?: number
 ): { name: string; powerTarget: string; justification: string; workoutDoc: string; durationMin?: number; tss?: number } {
   const vars = curatedModel.workoutVariations.qualityWorkouts;
   let rawList = vars.base;
@@ -57,7 +102,7 @@ export function selectQualityWorkout(
   const list = runOnly.length > 0 ? runOnly : [
     {
       name: "Series de Potencia Crítica en Carrera (5x3m @ 90% CP)",
-      powerTarget: "90% CP",
+      powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.90)}W (90% CP)` : "90% CP",
       justification: "Estímulo de calidad aeróbica en carrera a pie con aclaramiento eficiente de lactato.",
       workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
     }
@@ -67,15 +112,20 @@ export function selectQualityWorkout(
   const idx = ((weekNumber - 1) * stride) % list.length;
   const baseWorkout = list[idx >= 0 ? idx : 0] || list[0];
   const cycleRound = Math.floor((weekNumber - 1) / list.length);
+  const dynPowerTarget = interpolatePowerTarget(baseWorkout.powerTarget, runFtp, bikeFtp);
 
   if (cycleRound > 0) {
     return {
       ...baseWorkout,
       name: `${baseWorkout.name} (Progresión Bloque II)`,
+      powerTarget: dynPowerTarget,
       justification: `${baseWorkout.justification} Estímulo consolidado en fase avanzada.`,
     };
   }
-  return baseWorkout;
+  return {
+    ...baseWorkout,
+    powerTarget: dynPowerTarget,
+  };
 }
 
 export function resolveRaceWorkout(params: {

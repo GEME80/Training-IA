@@ -11,6 +11,7 @@ import {
   getCoprimeStride,
   buildRestDay,
   selectQualityWorkout,
+  interpolatePowerTarget,
   resolveRaceWorkout,
   resolveRaceSundayWorkout,
   resolveWeekendRide,
@@ -18,7 +19,7 @@ import {
   resolveLongRideDay,
 } from "./macrocycleTemplateHelpers";
 
-export { selectQualityWorkout, selectStrengthWorkout };
+export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
 
 export function generateWeekTemplate(
   week: MacrocycleWeek,
@@ -59,7 +60,17 @@ export function generateWeekTemplate(
   const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber);
-  const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl);
+  const longRun = calculateProgressiveLongRun(
+    curatedModel,
+    weekNumber,
+    weekNumber + countdown - 1,
+    isRecovery,
+    phase,
+    countdown,
+    volumeScaleFactor,
+    athleteCtl,
+    runFtp
+  );
   const longRunDay = resolveLongRunDay(safeAvailability);
   const longRideDay = resolveLongRideDay(safeAvailability);
 
@@ -238,7 +249,8 @@ export function generateWeekTemplate(
         result.push({
           day, date: dateStr, formattedDate, discipline: "Ciclismo",
           workoutName: selBike.name, action: "MANTENER", durationMinutes: bDur, tss: Math.round(bDur * 0.78),
-          powerTarget: selBike.powerTarget, justification: selBike.justification, workoutDoc: selBike.workoutDoc, isRestDay: false,
+          powerTarget: interpolatePowerTarget(selBike.powerTarget, undefined, bikeFtp),
+          justification: selBike.justification, workoutDoc: selBike.workoutDoc, isRestDay: false,
         });
         continue;
       }
@@ -275,7 +287,7 @@ export function generateWeekTemplate(
         }
 
         if (runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay) {
-          const q = selectQualityWorkout(phase, weekNumber, curatedModel);
+          const q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp);
           const isBrick = q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición");
           let dur = 50;
           let tss = 55;
@@ -309,7 +321,8 @@ export function generateWeekTemplate(
         result.push({
           day, date: dateStr, formattedDate, discipline: "Carrera",
           workoutName: recW.name, action: "MANTENER", durationMinutes: dur, tss: Math.round(dur * 0.75),
-          powerTarget: recW.powerTarget, justification: recW.justification, workoutDoc: recW.workoutDoc, isRestDay: false,
+          powerTarget: interpolatePowerTarget(recW.powerTarget, runFtp, undefined),
+          justification: recW.justification, workoutDoc: recW.workoutDoc, isRestDay: false,
         });
         continue;
       }

@@ -157,7 +157,8 @@ export function calculateProgressiveLongRun(
   phase: string,
   countdown: number,
   volumeScaleFactor: number = 1.0,
-  athleteCtl?: number
+  athleteCtl?: number,
+  runFtp?: number
 ): {
   km: number;
   minutes: number;
@@ -200,11 +201,14 @@ export function calculateProgressiveLongRun(
   if (phase === "RACE_WEEK" || countdown === 1) {
     const raceDist = model.targetDistanceKm || 42.2;
     const raceMins = raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22;
+    const racePower = runFtp && runFtp > 0
+      ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
+      : rules.targetIntensityPercentCpOrFtp;
     return {
       km: Math.round(raceDist * 10) / 10,
       minutes: raceMins,
       workoutName: `🏆 COMPETICIÓN OBJETIVO: ${model.displayName.split("(")[0].trim()} (${raceDist} km)`,
-      powerTarget: rules.targetIntensityPercentCpOrFtp,
+      powerTarget: racePower,
       workoutDoc: `Warmup\n- 15m 65% FTP Activación & Movilidad\n\nMain (Competición Oficial)\n- ${raceDist} km @ Ritmo Objetivo de Carrera\n- Control nutricional: 60-80g CHO/h e hidratación\n\nCooldown\n- 10m Caminata de Recuperación`,
       isPeakBlock: true,
     };
@@ -216,12 +220,15 @@ export function calculateProgressiveLongRun(
     const taperIdx = Math.max(0, Math.min(rules.taperKmSequence.length - 1, taperTotal - countdown));
     const taperKm = Math.round((rules.taperKmSequence[taperIdx] || rules.startKm) * safeVolumeFactor);
     const taperMins = Math.min(maxCapMins, Math.round((rules.taperMinutesSequence[taperIdx] || rules.startMinutes) * safeVolumeFactor));
+    const taperPower = runFtp && runFtp > 0
+      ? `${Math.round(runFtp * 0.80)}-${Math.round(runFtp * 0.84)}W (80-84% CP • Puesta a Punto)`
+      : "80-84% CP (Z2 Suave conservando ritmo de carrera)";
 
     return {
       km: taperKm,
       minutes: taperMins,
       workoutName: `Carrera Continua de Puesta a Punto Tapering (${taperKm} km / ${taperMins}m Z1-Z2)`,
-      powerTarget: "80-84% CP (Z2 Suave conservando ritmo de carrera)",
+      powerTarget: taperPower,
       workoutDoc: `Warmup\n- 15m 74% FTP\n\nMain\n- ${Math.max(10, taperMins - 25)}m 81% FTP\n\nCooldown\n- 10m 65% FTP`,
       isPeakBlock: false,
     };
@@ -238,11 +245,14 @@ export function calculateProgressiveLongRun(
   if (isRecoveryWeek) {
     baseKm = Math.max(scaledStartKm, Math.round(baseKm * 0.78));
     baseMins = Math.max(scaledStartMins, Math.round(baseMins * 0.78));
+    const recPower = runFtp && runFtp > 0
+      ? `${Math.round(runFtp * 0.78)}-${Math.round(runFtp * 0.80)}W (78-80% CP • Asimilación)`
+      : "78-80% CP (Asimilación Biológica)";
     return {
       km: baseKm,
       minutes: baseMins,
       workoutName: `Tirada Larga de Asimilación (${baseKm} km / ${baseMins}m Z2)`,
-      powerTarget: "78-80% CP (Asimilación Biológica)",
+      powerTarget: recPower,
       workoutDoc: `Warmup\n- 15m 72% FTP\n\nMain\n- ${Math.max(10, baseMins - 25)}m 79% FTP\n\nCooldown\n- 10m 65% FTP`,
       isPeakBlock: false,
     };
@@ -263,6 +273,7 @@ export function calculateProgressiveLongRun(
     weekNumber,
     countdown,
     isPeak,
+    runFtp,
   });
 
   return {

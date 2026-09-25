@@ -32,7 +32,7 @@ export function generateWeekTemplate(
 ): PlanItem[] {
   const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const weekStart = new Date(week.startDate + "T00:00:00");
+  const weekStart = (!week?.startDate || Number.isNaN(new Date(week.startDate).getTime())) ? new Date() : new Date(week.startDate.includes("T") ? week.startDate : `${week.startDate}T00:00:00`);
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
   if ((week as any).isHistorical || week.weekNumber <= 0) {

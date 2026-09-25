@@ -26,6 +26,7 @@ export function handleDeterministicFallback(
 
     const defaultWeekBlueprint = {
       weekNumber: targetPlanningWeekNum,
+      startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
       phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
       focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
       targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
@@ -207,17 +208,26 @@ ${actionPlanText}`;
       const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
       const defaultWeekBlueprint = {
         weekNumber: targetPlanningWeekNum,
+        startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
         phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
         focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
         targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
         microcycleType: isDeload ? ("RECOVERY" as const) : ("LOAD" as const),
         maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
       };
-      modifiedPlan = generateWeekTemplate(
+      const rawTemplate = generateWeekTemplate(
         defaultWeekBlueprint as any, profile.run_ftp, profile.bike_ftp,
         safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date
       );
-      replyMsg = "He reorganizado tu microciclo según tu matriz deportiva temporal para esta semana. Las disciplinas y descansos han sido redistribuidos protegiendo tu carga global y respetando tus días libres.\n\n¿Deseas confirmar este nuevo calendario?";
+      modifiedPlan = rawTemplate.map((p, pIdx) => {
+        const dateInfo = planningWeekDates[pIdx] || { date: "", formattedDate: "" };
+        return {
+          ...p,
+          date: dateInfo.date || p.date,
+          formattedDate: dateInfo.formattedDate || p.formattedDate,
+        };
+      });
+      replyMsg = "He generado una propuesta de microciclo adaptada a tu matriz temporal para esta semana. Las disciplinas y descansos han sido redistribuidos protegiendo tu carga global y respetando tus días libres.\n\n⚠️ Esta es una propuesta previa: ningún cambio se aplicará a tu calendario de Intervals.icu hasta que hagas clic en 'Confirmar Nuevo Calendario'.\n\n¿Deseas confirmar este nuevo calendario?";
       smartActions = [
         { label: "Confirmar Nuevo Calendario", variant: "primary", icon: "check" },
         { label: "Descartar", variant: "secondary", icon: "x" },

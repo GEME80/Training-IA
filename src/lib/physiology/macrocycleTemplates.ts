@@ -1,7 +1,7 @@
 import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines, resolveEffectiveAvailability } from "../gemini/engine";
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
-import { resolveTrainingModel, calculateProgressiveLongRun } from "../ai/knowledge";
+import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_20M_FTP } from "../ai/knowledge";
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool";
 import { selectStrengthWorkout } from "./strengthWorkoutPool";
@@ -59,7 +59,15 @@ export function generateWeekTemplate(
 
   const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
-  const scheduledTests = curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber);
+  const scheduledTests = [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
+  const hasCyclingInAvailability = Object.values(safeAvailability).some((discs: any) =>
+    Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d))
+  );
+  const isFtpTestWk = (microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(week.focusDescription || "")) ||
+    (hasCyclingInAvailability && (weekNumber === 2 || (weekNumber === 7 && (weekNumber + countdown - 1) >= 9)));
+  if (isFtpTestWk && hasCyclingInAvailability && !scheduledTests.some((t) => t.sport === "Ride")) {
+    scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
+  }
   const longRun = calculateProgressiveLongRun(
     curatedModel,
     weekNumber,
@@ -213,8 +221,9 @@ export function generateWeekTemplate(
           bikeTestInjected = true;
           result.push({
             day, date: dateStr, formattedDate, discipline: "Ciclismo",
-            workoutName: `🎯 TEST DE CALIBRACIÓN BIKE: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 55, tss: 65,
-            powerTarget: bikeTest.targetMetric, justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
+            workoutName: `🧪 TEST OFICIAL FTP: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 65, tss: 68,
+            powerTarget: bikeFtp ? `Test 20m @ All-Out (FTP actual: ${bikeFtp}W)` : "Test 20m FTP All-Out",
+            justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
           });
           continue;
         }

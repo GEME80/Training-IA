@@ -31,8 +31,8 @@ interface MacrocyclePreviewTimelineProps {
 
 export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps> = ({
   blueprint,
-  runFtp = 285,
-  bikeFtp = 260,
+  runFtp,
+  bikeFtp,
   weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType,
   selectedWeekIndex: externalSelectedIndex,
@@ -43,6 +43,8 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
   onOpenCoachChat,
   onSyncFullMacrocycle,
 }) => {
+  const effRunFtp = runFtp ?? blueprint.runFtpAtCreation ?? 285;
+  const effBikeFtp = bikeFtp ?? blueprint.bikeFtpAtCreation ?? 260;
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<number>(blueprint.currentWeekIndex || 0);
   const [selectedWorkoutModal, setSelectedWorkoutModal] = useState<PlanItem | null>(null);
 
@@ -55,7 +57,7 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
   const weeks = blueprint.weeks || [];
   const selectedWeek: MacrocycleWeek = weeks[selectedIndex] || weeks[0];
   const selectedWeekPlan = selectedWeek
-    ? generateWeekTemplate(selectedWeek, runFtp, bikeFtp, weeklyAvailability, distanceType)
+    ? generateWeekTemplate(selectedWeek, effRunFtp, effBikeFtp, weeklyAvailability, distanceType)
     : [];
 
   const getOffsetForWeek = (w: MacrocycleWeek): number => {
@@ -90,13 +92,13 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
           selectedIndex={selectedIndex}
           weeksCount={weeks.length}
           selectedWeekPlan={selectedWeekPlan}
-          runFtp={runFtp}
-          bikeFtp={bikeFtp}
+          runFtp={effRunFtp}
+          bikeFtp={effBikeFtp}
           executedTss={executedTss}
           dailyExecutedActivities={dailyExecutedActivities}
           onOpenCoachWithPlan={() => {
             const offset = getOffsetForWeek(selectedWeek);
-            const plan = generateWeekTemplate(selectedWeek, runFtp, bikeFtp, weeklyAvailability, distanceType);
+            const plan = generateWeekTemplate(selectedWeek, effRunFtp, effBikeFtp, weeklyAvailability, distanceType);
             if (onRecalibrateWeekWithAI) {
               onRecalibrateWeekWithAI(offset, plan);
             } else if (onOpenCoachChat) {
@@ -111,6 +113,8 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
       <WorkoutDetailModal
         workout={selectedWorkoutModal}
         dailyExecutedActivities={dailyExecutedActivities}
+        runFtp={effRunFtp}
+        bikeFtp={effBikeFtp}
         onClose={() => setSelectedWorkoutModal(null)}
       />
     </div>

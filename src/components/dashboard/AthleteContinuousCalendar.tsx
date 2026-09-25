@@ -79,15 +79,16 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const todayStr = getLocalTodayStr();
   const blueprintWeeks = blueprint.weeks || [];
 
-  // Semanas históricas: orden reciente→antiguo (para scroll hacia abajo = pasado)
+  // Ventana anual continua estricta de 52 semanas (1 año calendario)
+  const maxHistoricalWeeks = Math.max(0, 52 - blueprintWeeks.length);
   const historicalWeeks = useMemo(
     () =>
       buildHistoricalCalendarWeeks({
         blueprintStartDate: blueprint.startDate || currentMonStr,
         dailyExecutedActivities,
-        maxWeeksBack: 52,
+        maxWeeksBack: maxHistoricalWeeks,
       }),
-    [blueprint.startDate, currentMonStr, dailyExecutedActivities]
+    [blueprint.startDate, currentMonStr, dailyExecutedActivities, maxHistoricalWeeks]
   );
 
   // Semana actual del blueprint (puede coincidir fecha)
@@ -169,7 +170,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           3. Barra de controles de calendario (Título + Hoy)
           4. Cabecera de la cuadrícula (SEMANA · FASE + Lun a Dom)
       ══════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-50 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm -mx-1 px-1">
+      <div className="sticky top-[49px] sm:top-[53px] z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs -mx-1 px-1">
         {/* Bloque 1: Encabezado principal y selector de vistas */}
         {dashboardHeaderSlot && (
           <div className="pt-1.5 pb-1.5 md:pt-2 md:pb-2 border-b border-slate-100 dark:border-slate-800/80">

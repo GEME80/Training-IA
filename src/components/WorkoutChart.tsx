@@ -242,12 +242,14 @@ interface WorkoutChartProps {
   workoutDoc?: string;
   discipline: string;
   className?: string;
+  athleteFtp?: number;
 }
 
 export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   workoutDoc,
   discipline,
   className = "",
+  athleteFtp,
 }) => {
   if (discipline === "Descanso") {
     return null;
@@ -310,7 +312,7 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
                 backgroundColor: color,
                 minWidth: "2px",
               }}
-              title={`${seg.durationMins >= 1 ? `${Math.round(seg.durationMins)}m` : `${Math.round(seg.durationMins * 60)}s`} @ ${seg.intensityPercent}%`}
+              title={`${seg.durationMins >= 1 ? `${Math.round(seg.durationMins)}m` : `${Math.round(seg.durationMins * 60)}s`} @ ${seg.intensityPercent}%${athleteFtp && athleteFtp > 0 ? ` (${Math.round((athleteFtp * seg.intensityPercent) / 100)}W)` : ""}`}
             />
           );
         })}

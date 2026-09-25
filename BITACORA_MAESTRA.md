@@ -3963,7 +3963,64 @@ flowchart TD
 - **Set de Pruebas y Validación:**
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
-  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`WorkoutDetailModal.tsx`: 332 LOC, `WorkoutChart.tsx`: 321 LOC, `calendarHydration.ts`: 134 LOC, `AthleteDashboard.tsx`: 158 LOC).
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`WorkoutDetailModal.tsx`: 347 LOC, `WorkoutChart.tsx`: 322 LOC, `calendarHydration.ts`: 141 LOC, `AthleteDashboard.tsx`: 158 LOC).
+
+---
+
+### Versión 3.68 - Universalización de Calibración de Potencia Stryd/FTP para Todos los Atletas (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 20:07 COT.
+- **Directivas Atendidas:**
+  - *"estos cambios realizados deben ser funcionales para todos los atletas. revisa que los copambiso se realicen"*
+- **Diagnóstico y Corrección:**
+  1. *Auditoría de Inexistencia de Datos Quemados (Cero Hardcoding):*
+     - Confirmado mediante escaneo global que no existen valores estáticos de atletas específicos (`gerkof`, `336W`, `226W`) en los componentes de UI ni en los servicios de hidratación.
+  2. *Preservación de Potencia Dinámica tras Sincronización Intervals (`calendarHydration.ts`):*
+     - Al hidratar eventos provenientes de Intervals.icu, se vinculó la conciliación con `matchingFallback` para preservar el `powerTarget` calculado (ej. `⚡ 272W (81% CP)`) así como `mobilityWarmup` y `fuelingStrategy`, evitando que las tarjetas pierdan sus vatios tras un `GET /api/activities` o sync.
+  3. *Trazabilidad de Potencia en Blueprints de Temporada (`macrocycleGenerator.ts` & `macrocycle.ts`):*
+     - `generateCustomMacrocycleBlueprint` ahora pasa `config.athleteMetrics?.runFtp` al cálculo de tirada larga progresiva (`calculateProgressiveLongRun`), y estampa `runFtpAtCreation` y `bikeFtpAtCreation` en el blueprint del atleta para trazabilidad inmutable.
+  4. *Propagación Completa en Previsualización (`MacrocyclePreviewTimeline.tsx`):*
+     - Resuelve `effRunFtp` y `effBikeFtp` desde props o desde `blueprint.runFtpAtCreation`/`bikeFtpAtCreation` y los transfiere a `generateWeekTemplate` y `<WorkoutDetailModal />`.
+  5. *Hover con Vatios Dinámicos en Gráfica de Zonas (`WorkoutChart.tsx` & `WorkoutDetailModal.tsx`):*
+     - `WorkoutChart` ahora acepta `athleteFtp?: number` opcional. Al pasar el cursor sobre cualquier segmento de zona Stryd, el tooltip muestra la potencia exacta en vatios del atleta: `@ 85% (286W)`.
+  6. *Modularización y FinOps:*
+     - `WorkoutDetailModal.tsx` optimizado a 347 LOC (estricto $\le 350$ LOC).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`WorkoutDetailModal.tsx`: 347 LOC, `WorkoutChart.tsx`: 322 LOC, `calendarHydration.ts`: 141 LOC, `macrocycleGenerator.ts`: 348 LOC, `MacrocyclePreviewTimeline.tsx`: 122 LOC).
+
+---
+
+### Versión 3.69 - Corrección de Superposición de Cabecera, Ventana Anual de 52 Semanas, Rediseño Minimalista de Cumplimiento y Spinners de Sync (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 20:25 COT.
+- **Directivas Atendidas:**
+  - *"revisa dos cmabios menores en la cabecera en la esquina superior derecha se tapa el boton del usuario (comparacion de las dos imagenes)."*
+  - *"adicional dice 76 semans- año completo. uun año tiene 52 semanas."*
+  - *"en el resumen de la semana dice adherencia que jo se que significa y si realnete esta sumando bien los diferentes TSS y deberia colocar el % de cumplimiento de forma muy minimalista y qeu mantenga el formato responsive."*
+  - *"al darle a los botones de sync 3 sem (2:1) o Esta sem debe aparecer alfgo de espera ya que no sabemos si esta haciendo alguna accion. revisa este plan"*
+- **Diagnóstico y Corrección:**
+  1. *Desacople de Capas Sticky en Cabecera (`AthleteDashboardHeader.tsx` & `AthleteContinuousCalendar.tsx`):*
+     - Causa: Ambos contenedores competían por `top-0` (`AthleteDashboardHeader` en `z-30` y el bloque maestro del calendario en `z-50`). Al hacer scroll, el bloque del calendario solapaba la barra superior, cortando el avatar y dejando visible únicamente "Morales" en el margen derecho de 24px de `main`.
+     - Solución: Se asignó `sticky top-0 z-40 h-[49px] sm:h-[53px]` a `AthleteDashboardHeader`, y se fijó el bloque maestro del calendario a `sticky top-[49px] sm:top-[53px] z-30`. Ahora la barra de usuario permanece 100% visible, fija y despejada al hacer scroll, anclando el calendario exactamente debajo.
+  2. *Ventana Anual Estricta de 52 Semanas (`AthleteContinuousCalendar.tsx`):*
+     - Causa: Se sumaban 52 semanas históricas completas más las semanas del plan futuro (ej: 24 semanas = 76 semanas), mientras el badge indicaba "Año completo".
+     - Solución: Se acotó la ventana rodante con `maxHistoricalWeeks = Math.max(0, 52 - blueprintWeeks.length)`. Así, la suma total de semanas futuras + semana actual + historial totaliza **exactamente 52 semanas (1 año calendario)**.
+  3. *Rediseño Minimalista y Responsivo de Cumplimiento (`AthleteCalendarWeekRow.tsx`):*
+     - Se reemplazó el término confuso y texto desbordado `Adherencia 118 / 352 TSS` por una tarjeta minimalista:
+       - Título claro en mayúsculas `CUMPLIMIENTO` a la izquierda.
+       - Porcentaje destacado en negrita y color según nivel (ej: `34%` o `100%`) a la derecha.
+       - Barra de progreso suave (h-1.5).
+       - Desglose inferior limpio en fuente micro (8px): `${effectiveExecuted} TSS real` y `${displayPlannedTss} TSS obj`.
+     - Auditoría matemática de sumatoria de TSS: Verificado que `execDirectTotalTss` suma con exactitud las disciplinas ejecutadas (Bici 70 + Run 45 + Fuerza 3 = 118 TSS real vs 146 + 156 + 50 = 352 TSS planificado).
+  4. *Feedback Visual Interactivo en Botones de Sincronización (`AthleteCalendarWeekRow.tsx`):*
+     - Se incorporó estado de carga asíncrono (`isSyncingTriweekly` e `isSyncingCurrentWeek`).
+     - Al presionar **"Sync 3 sem (2:1)"** o **"Esta sem."**, el botón se deshabilita temporalmente, el icono `RefreshCw` entra en animación giratoria (`animate-spin`) y el texto cambia dinámicamente a **"Sincronizando..."**, confirmando que el proceso está en curso.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AthleteDashboardHeader.tsx`: 98 LOC, `AthleteContinuousCalendar.tsx`: 345 LOC, `AthleteCalendarWeekRow.tsx`: 348 LOC).
+
+
 
 
 

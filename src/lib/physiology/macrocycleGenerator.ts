@@ -256,8 +256,11 @@ export function generateCustomMacrocycleBlueprint(
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
     }
 
-    // Cálculo dinámico progresivo desde el modelo curado (SSOT) con volumeScaleFactor y athleteCtl
-    const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown, volumeScaleFactor, athleteCtl);
+    // Cálculo dinámico progresivo desde el modelo curado (SSOT) con volumeScaleFactor, athleteCtl y runFtp del atleta
+    const longRun = calculateProgressiveLongRun(
+      curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown,
+      volumeScaleFactor, athleteCtl, config.athleteMetrics?.runFtp
+    );
 
     const targetTss = calculateProgressiveWeeklyTss(
       curatedModel,
@@ -337,6 +340,8 @@ export function generateCustomMacrocycleBlueprint(
     availabilitySnapshot: config.athleteMetrics?.weeklyAvailability as any,
     distanceType: config.distanceType,
     athleteCtlAtCreation: athleteCtl,
+    runFtpAtCreation: config.athleteMetrics?.runFtp,
+    bikeFtpAtCreation: config.athleteMetrics?.bikeFtp,
     periodization: config.periodization || (isConservative ? "2:1" : "3:1"),
     targetPeakCtl: peakPlanCalc.targetPeakCtl,
   };

@@ -38,20 +38,16 @@ export function interpolatePowerTarget(rawTarget: string, runFtp?: number, bikeF
 
   // Interpolar % CP con runFtp (Stryd)
   if (runFtp && runFtp > 0) {
-    // Caso rango: "88-92% CP" o "100-112% CP"
-    res = res.replace(/(\d+)\s*-\s*(\d+)\s*%\s*CP/gi, (_, p1, p2) => {
-      const w1 = Math.round(runFtp * (parseInt(p1, 10) / 100));
-      const w2 = Math.round(runFtp * (parseInt(p2, 10) / 100));
+    // Rangos: "88-92% CP" o "72% a 84% CP"
+    res = res.replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*CP|(\d+)\s*-\s*(\d+)\s*%\s*CP)/gi, (_, a1, a2, r1, r2) => {
+      const p1 = parseInt(a1 || r1, 10);
+      const p2 = parseInt(a2 || r2, 10);
+      const w1 = Math.round(runFtp * (p1 / 100));
+      const w2 = Math.round(runFtp * (p2 / 100));
       return `${w1}-${w2}W (${p1}-${p2}% CP)`;
     });
-    // Caso rango con "a": "72% a 84% CP"
-    res = res.replace(/(\d+)\s*%\s*a\s*(\d+)\s*%\s*CP/gi, (_, p1, p2) => {
-      const w1 = Math.round(runFtp * (parseInt(p1, 10) / 100));
-      const w2 = Math.round(runFtp * (parseInt(p2, 10) / 100));
-      return `${w1}-${w2}W (${p1}% a ${p2}% CP)`;
-    });
-    // Caso individual: "90% CP" o "100% CP"
-    res = res.replace(/(\d+)\s*%\s*CP/gi, (_, p) => {
+    // Caso individual: solo si no está ya entre paréntesis
+    res = res.replace(/(?<![(-])\b(\d+)\s*%\s*CP/gi, (_, p) => {
       const w = Math.round(runFtp * (parseInt(p, 10) / 100));
       return `${w}W (${p}% CP)`;
     });
@@ -59,14 +55,16 @@ export function interpolatePowerTarget(rawTarget: string, runFtp?: number, bikeF
 
   // Interpolar % FTP con bikeFtp (Ciclismo)
   if (bikeFtp && bikeFtp > 0) {
-    // Caso rango: "85-95% FTP"
-    res = res.replace(/(\d+)\s*-\s*(\d+)\s*%\s*FTP/gi, (_, p1, p2) => {
-      const w1 = Math.round(bikeFtp * (parseInt(p1, 10) / 100));
-      const w2 = Math.round(bikeFtp * (parseInt(p2, 10) / 100));
+    // Rangos: "85-95% FTP" o "80% a 90% FTP"
+    res = res.replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*FTP|(\d+)\s*-\s*(\d+)\s*%\s*FTP)/gi, (_, a1, a2, r1, r2) => {
+      const p1 = parseInt(a1 || r1, 10);
+      const p2 = parseInt(a2 || r2, 10);
+      const w1 = Math.round(bikeFtp * (p1 / 100));
+      const w2 = Math.round(bikeFtp * (p2 / 100));
       return `${w1}-${w2}W (${p1}-${p2}% FTP)`;
     });
-    // Caso individual: "85% FTP"
-    res = res.replace(/(\d+)\s*%\s*FTP/gi, (_, p) => {
+    // Caso individual: solo si no está ya entre paréntesis
+    res = res.replace(/(?<![(-])\b(\d+)\s*%\s*FTP/gi, (_, p) => {
       const w = Math.round(bikeFtp * (parseInt(p, 10) / 100));
       return `${w}W (${p}% FTP)`;
     });

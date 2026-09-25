@@ -112,6 +112,11 @@ export function hydrateWeekPlanFromEvents(
         ? evt.description
         : (typeof evt.workout_doc === "string" ? evt.workout_doc : undefined);
 
+      const matchingFallback = fallbackPlan.find(
+        (p) => (p.date === dateStr || p.day === day) && p.discipline === disc
+      );
+      const powerTarget = matchingFallback?.powerTarget;
+
       hydratedItems.push({
         id: evt.id ? String(evt.id) : undefined,
         day,
@@ -122,9 +127,12 @@ export function hydrateWeekPlanFromEvents(
         action: "MANTENER",
         durationMinutes: mins,
         tss,
-        workoutDoc: doc,
+        powerTarget,
+        workoutDoc: doc || matchingFallback?.workoutDoc,
         justification: `Sincronizado desde Intervals.icu (${evt.type})`,
         isRestDay: false,
+        mobilityWarmup: matchingFallback?.mobilityWarmup,
+        fuelingStrategy: matchingFallback?.fuelingStrategy,
       });
     });
   }

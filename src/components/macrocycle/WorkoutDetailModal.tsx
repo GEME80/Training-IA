@@ -78,15 +78,9 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     }
 
     if (workout.discipline === "Carrera") {
-      const match = allActs.find(
-        (a) =>
-          a.type === "Run" ||
-          /run|carrera|trote|trail/i.test(a.type) ||
-          /run|carrera|trote|marat|fondo/i.test(a.name)
-      );
+      const match = allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail/i.test(a.type) || /run|carrera|trote|marat|fondo/i.test(a.name));
       if (match) return match;
     }
-
     if (workout.discipline === "Ciclismo") {
       const m = allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) || /ride|ciclismo|bike|rodaje|fondo/i.test(a.name));
       if (m) return m;
@@ -99,15 +93,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
       const m = allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina|aguas/i.test(a.type || "") || /swim|nataci|piscina|aguas/i.test(a.name || ""));
       if (m) return m;
     }
-
-    // Adaptación cruzada para resistencia (Correr en vez de pedalear o viceversa)
     if (workout.discipline === "Carrera" || workout.discipline === "Ciclismo") {
-      const aerobic = allActs
-        .filter((a) => a.type === "Run" || a.type === "Ride" || /run|carrera|ride|ciclismo/i.test(a.type || ""))
-        .sort((a, b) => b.tss - a.tss)[0];
+      const aerobic = allActs.filter((a) => a.type === "Run" || a.type === "Ride" || /run|carrera|ride|ciclismo/i.test(a.type || "")).sort((a, b) => b.tss - a.tss)[0];
       if (aerobic) return aerobic;
     }
-
     return null;
   };
 
@@ -279,6 +268,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             <WorkoutChart
               workoutDoc={workout.workoutDoc}
               discipline={workout.discipline}
+              athleteFtp={workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined}
             />
           </div>
         )}

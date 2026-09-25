@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
@@ -71,6 +71,31 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     blueprint.athleteCtlAtCreation
   );
   const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents);
+
+  const [isSyncingTriweekly, setIsSyncingTriweekly] = useState(false);
+  const [isSyncingCurrentWeek, setIsSyncingCurrentWeek] = useState(false);
+
+  const handleSyncTriweekly = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSyncingTriweekly || isSyncingCurrentWeek || !onSyncTriweeklyBlock) return;
+    setIsSyncingTriweekly(true);
+    try {
+      await onSyncTriweeklyBlock(wIdx);
+    } finally {
+      setIsSyncingTriweekly(false);
+    }
+  };
+
+  const handleSyncWeek = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSyncingTriweekly || isSyncingCurrentWeek || !onSyncWeekToIntervals) return;
+    setIsSyncingCurrentWeek(true);
+    try {
+      await onSyncWeekToIntervals(weekPlan);
+    } finally {
+      setIsSyncingCurrentWeek(false);
+    }
+  };
 
   let totalMins = 0, plannedTss = 0;
   let runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0;
@@ -211,24 +236,32 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               </div>
             </div>
 
-            {/* Barra de adherencia */}
+            {/* Cumplimiento Semanal Minimalista y Responsivo */}
             {!isFutureWeek && (
               <div className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 p-1.5 space-y-1">
-                <div className="flex items-center justify-between text-[9px] font-mono">
-                  <span className="text-slate-500 font-bold">Adherencia</span>
-                  <span className={`font-black ${completionPct >= 85 ? "text-emerald-600 dark:text-emerald-400" : completionPct >= 60 ? "text-amber-600 dark:text-amber-400" : "text-slate-500"}`}>
-                    {effectiveExecuted > 0 ? `${effectiveExecuted} / ${displayPlannedTss} TSS` : isPastWeek ? "Sin datos" : "—"}
+                <div className="flex items-center justify-between text-[10px] font-mono leading-none">
+                  <span className="text-slate-500 font-bold text-[9px] uppercase tracking-wider">Cumplimiento</span>
+                  <span className={`font-black text-xs ${
+                    completionPct >= 85 ? "text-emerald-600 dark:text-emerald-400"
+                    : completionPct >= 50 ? "text-amber-600 dark:text-amber-400"
+                    : "text-slate-500"
+                  }`}>
+                    {effectiveExecuted > 0 ? `${completionPct}%` : isPastWeek ? "0%" : "—"}
                   </span>
                 </div>
-                <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
                       completionPct >= 85 ? "bg-gradient-to-r from-cyan-500 to-emerald-500"
-                      : completionPct >= 60 ? "bg-amber-400"
+                      : completionPct >= 50 ? "bg-amber-400"
                       : "bg-slate-300 dark:bg-slate-700"
                     }`}
                     style={{ width: `${completionPct}%` }}
                   />
+                </div>
+                <div className="flex items-center justify-between text-[8px] text-slate-400 font-mono pt-0.5">
+                  <span>{effectiveExecuted} TSS real</span>
+                  <span>{displayPlannedTss} TSS obj</span>
                 </div>
               </div>
             )}
@@ -286,21 +319,25 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             {onSyncTriweeklyBlock && !isHistoricalWeek && (
               <button
                 type="button"
-                onClick={() => onSyncTriweeklyBlock(wIdx)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer"
+                onClick={handleSyncTriweekly}
+                disabled={isSyncingTriweekly || isSyncingCurrentWeek}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                title="Sincronizar bloque tri-semanal a Intervals.icu"
               >
-                <RefreshCw className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Sync 3 sem (2:1)</span>
+                <RefreshCw className={`h-3.5 w-3.5 text-emerald-500 ${isSyncingTriweekly ? "animate-spin" : ""}`} />
+                <span>{isSyncingTriweekly ? "Sincronizando..." : "Sync 3 sem (2:1)"}</span>
               </button>
             )}
             {onSyncWeekToIntervals && (
               <button
                 type="button"
-                onClick={() => onSyncWeekToIntervals(weekPlan)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer"
+                onClick={handleSyncWeek}
+                disabled={isSyncingTriweekly || isSyncingCurrentWeek}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                title="Sincronizar esta semana a Intervals.icu"
               >
-                <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
-                <span>Esta sem.</span>
+                <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isSyncingCurrentWeek ? "animate-spin" : ""}`} />
+                <span>{isSyncingCurrentWeek ? "Sincronizando..." : "Esta sem."}</span>
               </button>
             )}
           </div>

@@ -7,13 +7,7 @@ import { TRIATHLON_70_3_MODEL } from "./triathlonModel";
 import { TRIATHLON_SHORT_MODEL, TRIATHLON_140_6_MODEL } from "./triathlonFullAndShortModels";
 import { TRAIL_ULTRA_MODEL } from "./trailModel";
 import { BASE_LONGEVITY_MODEL } from "./longevityModel";
-import {
-  BASE_GPP_MODEL,
-  GENERAL_BUILD_MODEL,
-  SPEED_BLOCK_MODEL,
-  POST_RACE_DELOAD_MODEL,
-  INJURY_REHAB_MODEL,
-} from "./athleteMomentsModels";
+import { BASE_GPP_MODEL, GENERAL_BUILD_MODEL, SPEED_BLOCK_MODEL, POST_RACE_DELOAD_MODEL, INJURY_REHAB_MODEL } from "./athleteMomentsModels";
 import { buildDynamicLongRunStructure } from "./longRunPeriodization";
 
 export * from "./types";
@@ -31,7 +25,6 @@ export * from "./trailModel";
 export * from "./longevityModel";
 export * from "./athleteMomentsModels";
 export * from "./strengthAndCrossModels";
-
 
 export const ALL_CURATED_TRAINING_MODELS: Record<SportDisciplineGoal, CuratedTrainingModel> = {
   MARATHON_42K: MARATHON_42K_MODEL,
@@ -94,18 +87,10 @@ export function resolveTrainingModel(params: {
   const has1406 = (/140\.6|1406|full_iron|full-iron|ironman full|triathlon_1406/i.test(combined) || (/ironman/i.test(combined) && !has703));
   const hasShort = /sprint|olimp|triathlon_short|triathlon_sprint|triathlon_olympic|triseries|paipa|corto|short/i.test(combined);
 
-  if (has1406) {
-    return TRIATHLON_140_6_MODEL;
-  }
-  if (has703) {
-    return TRIATHLON_70_3_MODEL;
-  }
-  if (hasShort) {
-    return TRIATHLON_SHORT_MODEL;
-  }
-  if (isTriathlon) {
-    return TRIATHLON_70_3_MODEL;
-  }
+  if (has1406) return TRIATHLON_140_6_MODEL;
+  if (has703) return TRIATHLON_70_3_MODEL;
+  if (hasShort) return TRIATHLON_SHORT_MODEL;
+  if (isTriathlon) return TRIATHLON_70_3_MODEL;
 
   // 3. Trail & Montaña
   if (/trail|ultra|montaña|utmb|skyrun|chicamocha|merrell|\b(50|60|70|80|100)\s*k(m)?\b/i.test(combined)) {
@@ -235,11 +220,15 @@ export function calculateProgressiveLongRun(
   }
 
   // 3. Progresión Aritmética Continua (Base → Build → Peak) con Cap Absoluto
-  const peakTargetWeek = Math.max(3, totalWeeks - (model.taperingRules?.taperingWeeks || 3));
-  const progressRatio = Math.min(1, Math.max(0, (weekNumber - 1) / (peakTargetWeek - 1)));
+  const safeTotalWeeks = totalWeeks && !Number.isNaN(totalWeeks) ? totalWeeks : 16;
+  const safeWeekNum = weekNumber && !Number.isNaN(weekNumber) ? weekNumber : 1;
+  const peakTargetWeek = Math.max(3, safeTotalWeeks - (model.taperingRules?.taperingWeeks || 3));
+  const progressRatio = Math.min(1, Math.max(0, (safeWeekNum - 1) / Math.max(1, peakTargetWeek - 1)));
 
-  let baseKm = Math.round(scaledStartKm + progressRatio * (scaledPeakKm - scaledStartKm));
-  let baseMins = Math.min(maxCapMins, Math.round(scaledStartMins + progressRatio * (scaledPeakMins - scaledStartMins)));
+  let baseKm = Math.round(scaledStartKm + (Number.isNaN(progressRatio) ? 0 : progressRatio) * (scaledPeakKm - scaledStartKm));
+  let baseMins = Math.min(maxCapMins, Math.round(scaledStartMins + (Number.isNaN(progressRatio) ? 0 : progressRatio) * (scaledPeakMins - scaledStartMins)));
+  if (Number.isNaN(baseKm) || baseKm <= 0) baseKm = scaledStartKm || 14;
+  if (Number.isNaN(baseMins) || baseMins <= 0) baseMins = scaledStartMins || 75;
 
   // Modulador en semanas de descarga biológica
   if (isRecoveryWeek) {

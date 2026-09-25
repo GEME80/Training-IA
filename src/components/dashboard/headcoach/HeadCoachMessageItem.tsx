@@ -1,8 +1,13 @@
 "use client";
 
 import React from "react";
-import { User, Activity, Flame, ShieldCheck, CheckCircle2, AlertTriangle, Sparkles, ChevronDown, Dna, Compass, Target } from "lucide-react";
+import {
+  User, Activity, Flame, ShieldCheck, CheckCircle2, AlertTriangle, Sparkles,
+  ChevronDown, Dna, Compass, Target, CalendarSync, TrendingDown, TrendingUp,
+  Sliders, Check, X, Undo2, RotateCcw
+} from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
+import { SmartActionItem } from "@/lib/ai/headcoach/types";
 import { HeadCoachMicrocycleCard } from "./HeadCoachMicrocycleCard";
 
 export interface HeadCoachMessageData {
@@ -15,6 +20,7 @@ export interface HeadCoachMessageData {
   timestamp?: string;
   reasoning?: string | null;
   quickReplies?: string[] | null;
+  smartActions?: (string | SmartActionItem)[] | null;
 }
 
 interface HeadCoachMessageItemProps {
@@ -23,6 +29,7 @@ interface HeadCoachMessageItemProps {
   onApplyAndSync?: (plan: PlanItem[]) => Promise<void>;
   isApplying?: boolean;
   onSelectQuickReply?: (replyText: string) => void;
+  onSelectSmartAction?: (action: SmartActionItem | string) => void;
 }
 
 /**
@@ -168,14 +175,45 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
+const renderActionIcon = (action: SmartActionItem | string) => {
+  const icon = typeof action === "string" ? undefined : action.icon;
+  const label = typeof action === "string" ? action : action.label;
+
+  if (icon === "activity" || /detalle|estado|fisiol[oó]g/i.test(label)) return <Activity className="h-3.5 w-3.5" />;
+  if (icon === "calendar-sync" || /reorganizar/i.test(label)) return <CalendarSync className="h-3.5 w-3.5" />;
+  if (icon === "trending-down" || /fatiga|cansad/i.test(label)) return <TrendingDown className="h-3.5 w-3.5" />;
+  if (icon === "trending-up" || /suave|aumentar|mayor carga/i.test(label)) return <TrendingUp className="h-3.5 w-3.5" />;
+  if (icon === "sliders" || /matriz temporal/i.test(label)) return <Sliders className="h-3.5 w-3.5" />;
+  if (icon === "check" || /aprobar|confirmar|aplicar/i.test(label)) return <Check className="h-3.5 w-3.5" />;
+  if (icon === "undo" || /deshacer/i.test(label)) return <Undo2 className="h-3.5 w-3.5" />;
+  if (icon === "x" || /descartar|descansar/i.test(label)) return <X className="h-3.5 w-3.5" />;
+  if (/mantener/i.test(label)) return <RotateCcw className="h-3.5 w-3.5" />;
+  return null;
+};
+
+const getActionVariantClasses = (variant?: string, label?: string) => {
+  if (variant === "primary" || (!variant && /confirmar|aprobar|aplicar/i.test(label || ""))) {
+    return "bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-xs border border-emerald-500";
+  }
+  if (variant === "secondary" || (!variant && /descartar|mantener|descansar/i.test(label || ""))) {
+    return "bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-medium";
+  }
+  if (variant === "tertiary" || (!variant && /deshacer/i.test(label || ""))) {
+    return "text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 text-[11px] underline decoration-dotted bg-transparent border-0 p-1 font-medium";
+  }
+  return "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200/60 dark:border-slate-700";
+};
+
 export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   message,
   weekNumber,
   onApplyAndSync,
   isApplying = false,
   onSelectQuickReply,
+  onSelectSmartAction,
 }) => {
   const isAssistant = message.role === "assistant";
+  const actionsList = message.smartActions || message.quickReplies || [];
 
   return (
     <div className={`flex items-start gap-3 ${isAssistant ? "justify-start" : "justify-end"}`}>
@@ -220,19 +258,31 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
         {/* Texto Formateado */}
         <FormattedMessageBody text={message.text} />
 
-        {/* Chips de Respuestas Rápidas (Quick Replies) */}
-        {isAssistant && Array.isArray(message.quickReplies) && message.quickReplies.length > 0 && onSelectQuickReply && (
-          <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-            {message.quickReplies.map((qr, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => onSelectQuickReply(qr)}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200/60 dark:border-slate-700"
-              >
-                {qr}
-              </button>
-            ))}
+        {/* Acciones Tácticas Dinámicas (Smart Replies con Iconos Lucide & Jerarquía) */}
+        {isAssistant && actionsList.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 items-center">
+            {actionsList.map((action, idx) => {
+              const rawLabel = typeof action === "string" ? action : action.label;
+              const label = rawLabel.replace(/^[📊✈️📉📈]\s*/, "");
+              const variant = typeof action === "string" ? undefined : action.variant;
+              const isTertiary = variant === "tertiary" || /deshacer/i.test(label);
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    if (onSelectSmartAction) onSelectSmartAction(action);
+                    else if (onSelectQuickReply) onSelectQuickReply(label);
+                  }}
+                  className={`inline-flex items-center gap-1.5 transition cursor-pointer ${
+                    isTertiary ? "px-1 py-0.5" : "px-3 py-1.5 rounded-xl text-xs"
+                  } ${getActionVariantClasses(variant, label)}`}
+                >
+                  {renderActionIcon(action)}
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 

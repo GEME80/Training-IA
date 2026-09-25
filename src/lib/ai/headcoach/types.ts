@@ -119,7 +119,16 @@ export interface HeadCoachChatResponse {
   planDecision?: "CONTINUE_PLAN" | "ADAPT_PLAN" | "NEW_PLAN";
   suggestedPlan?: PlanItem[] | null;
   quickReplies?: string[];
+  smartActions?: (string | SmartActionItem)[];
   modelUsed?: string;
   targetWeekNumber?: number;
   error?: string;
+}
+
+export interface SmartActionItem {
+  label: string;
+  variant?: "primary" | "secondary" | "tertiary" | "default";
+  icon?: "activity" | "calendar-sync" | "trending-down" | "trending-up" | "sliders" | "check" | "x" | "undo";
+  actionType?: "message" | "open_matrix_modal" | "undo_changes";
+  customPayload?: any;
 }

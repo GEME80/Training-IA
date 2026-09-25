@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, RefreshCw, Activity, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { RefreshCw, Activity, CheckCircle2 } from "lucide-react";
 import { AthleteProfile } from "@/lib/intervals/types";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
-import { MacrocycleBlueprint, MacrocyclePhaseInfo, getOffsetForWeek } from "@/lib/physiology/macrocycle";
+import { MacrocycleBlueprint, MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
-import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engine";
 import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
-import { HeadCoachQuickActions, QuickActionOptions } from "./headcoach/HeadCoachQuickActions";
 import { HeadCoachTemporaryMatrixModal } from "./headcoach/HeadCoachTemporaryMatrixModal";
-import { HeadCoachMessageItem, HeadCoachMessageData } from "./headcoach/HeadCoachMessageItem";
+import { HeadCoachMessageItem } from "./headcoach/HeadCoachMessageItem";
 import { HeadCoachHeader } from "./headcoach/HeadCoachHeader";
+import { useHeadCoachChat } from "./headcoach/useHeadCoachChat";
 
 interface AthleteHeadCoachViewProps {
   profile: AthleteProfile;
@@ -39,7 +38,6 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   physioStatus,
   macrocyclePhase,
   blueprint,
-  weekOffset = 0,
   weekNumber,
   apiKey,
   geminiApiKey,
@@ -62,43 +60,11 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   const [activeWeekNumber, setActiveWeekNumber] = useState<number>(() => {
     return weekNumber && weekNumber > 0 ? weekNumber : realCurrentWeekNumber;
   });
-  const [isApplying, setIsApplying] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
-  const [temporaryAvailability, setTemporaryAvailability] = useState<WeeklyAvailabilityMap | null>(null);
-  const [isMatrixModalOpen, setIsMatrixModalOpen] = useState(false);
 
   const selectedWeekIdx = Math.max(0, activeWeekNumber - 1);
   const selectedWeekData = effectiveBlueprint?.weeks?.[selectedWeekIdx];
   const activePhaseLabel = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Construcción";
 
-  const plannedWeekTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
-    ? currentPlan.reduce((acc, p) => acc + (p?.tss || 0), 0)
-    : (selectedWeekData?.targetTss || 350);
-  const executedWeekTss = Object.values(dailyExecutedActivities || {}).reduce(
-    (acc: number, item: any) => acc + (item?.icu_training_load || item?.tss || item?.totalTss || 0),
-    0
-  );
-  const compliancePct = plannedWeekTss > 0
-    ? Math.round((executedWeekTss / plannedWeekTss) * 100)
-    : 0;
-
-  const getWelcomeText = (name?: string) => {
-    const firstName = (name || "Atleta").trim().split(" ")[0];
-    return `Hola ${firstName}, ¿en qué te puedo ayudar hoy?`;
-  };
-
-  const [messages, setMessages] = useState<HeadCoachMessageData[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: getWelcomeText(profile.name),
-      timestamp: "Ahora",
-    },
-  ]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Sincronizar semana activa cuando cambia el macrociclo o weekNumber por navegación
   useEffect(() => {
     if (weekNumber && weekNumber > 0) {
       setActiveWeekNumber(weekNumber);
@@ -107,140 +73,38 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     }
   }, [weekNumber, realCurrentWeekNumber]);
 
-  // Actualizar el saludo inicial si cambia el nombre del perfil
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length === 1 && prev[0].id === "welcome") {
-        return [{ ...prev[0], text: getWelcomeText(profile.name) }];
-      }
-      return prev;
-    });
-  }, [profile.name]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
-
-  const handleSendMessage = async (textToSend?: string, options?: QuickActionOptions) => {
-    const text = (textToSend || "").trim();
-    if (!text || isLoading) return;
-
-    const userMsg: HeadCoachMessageData = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    const updatedHistory = [...messages, userMsg];
-    setMessages(updatedHistory);
-    setIsLoading(true);
-
-    try {
-      const calculatedOffset = selectedWeekData
-        ? getOffsetForWeek(selectedWeekData)
-        : (activeWeekNumber - realCurrentWeekNumber);
-
-      const effectivePlanForWeek = (activeWeekNumber === realCurrentWeekNumber && currentPlan && currentPlan.length > 0)
-        ? currentPlan
-        : selectedWeekData
-        ? generateWeekTemplate(
-            selectedWeekData,
-            profile.run_ftp,
-            profile.bike_ftp,
-            (temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
-            (effectiveBlueprint?.distanceType as any) || "MARATON_42K",
-            profile.ctl
-          )
-        : currentPlan;
-
-      const res = await fetch("/api/headcoach/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedHistory.map((m) => ({ role: m.role, content: m.text })),
-          athleteId: profile.id, apiKey, uid, email, customGeminiKey: geminiApiKey,
-          selectedModel, temperature, weekOffset: calculatedOffset, weekNumber: activeWeekNumber,
-          currentPlan: effectivePlanForWeek, dailyExecutedActivities,
-          runFtp: profile.run_ftp, bikeFtp: profile.bike_ftp, weight: profile.weight,
-          height: profile.heightCm, birthDate: profile.birthDate, gender: profile.gender,
-          restingHR: profile.restingHR, maxHR: profile.maxHR, lthr: profile.lthr,
-          isInitialAudit: false,
-          temporaryAvailability: temporaryAvailability || undefined,
-          targetTssAdjustmentPct: options?.targetTssAdjustmentPct,
-          isWeekKickoffAudit: options?.isWeekKickoffAudit,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success && (data.reply || data.suggestedPlan)) {
-        const assistantMsg: HeadCoachMessageData = {
-          id: `bot-${Date.now()}`,
-          role: "assistant",
-          text: data.reply || "Microciclo evaluado y calibrado a tus parámetros.",
-          suggestedPlan: data.suggestedPlan || null,
-          targetWeekNumber: data.targetWeekNumber || activeWeekNumber,
-          modelUsed: data.modelUsed,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          reasoning: data.reasoning || null,
-          quickReplies: data.quickReplies || null,
-        };
-        setMessages((prev) => [...prev, assistantMsg]);
-
-        if (data.suggestedPlan && onPlanUpdate) {
-          onPlanUpdate(data.suggestedPlan);
-        }
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `err-${Date.now()}`,
-            role: "assistant",
-            text: data.error || "Evaluación offline: Mantén tu progresión en zonas de potencia Stryd y Bike FTP establecidas para este microciclo.",
-            timestamp: "Offline",
-          },
-        ]);
-      }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          text: "No se pudo conectar con el motor de IA. Tu balance TSB se encuentra en rango fisiológico estable.",
-          timestamp: "Offline",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleApplyAndSync = async (planToSync?: PlanItem[]) => {
-    const finalPlan = planToSync || currentPlan;
-    if (!onApplyPlanAndSync || !finalPlan || finalPlan.length === 0) return;
-
-    setIsApplying(true);
-    setSyncFeedback(null);
-    try {
-      await onApplyPlanAndSync(finalPlan);
-      setSyncFeedback("¡Microciclo sincronizado exitosamente con Intervals.icu!");
-      setTimeout(() => setSyncFeedback(null), 4000);
-    } catch (e: any) {
-      setSyncFeedback(`Error al sincronizar: ${e.message || "Verifica credenciales"}`);
-    } finally {
-      setIsApplying(false);
-    }
-  };
-
-  const handleApplyTemporaryMatrix = (tempAvail: WeeklyAvailabilityMap) => {
-    setTemporaryAvailability(tempAvail);
-    handleSendMessage("He configurado una matriz de deportes temporal para esta semana. Adapta el microciclo distribuyendo los estímulos según esta nueva disponibilidad.");
-  };
+  const {
+    messages,
+    isLoading,
+    isApplying,
+    syncFeedback,
+    isMatrixModalOpen,
+    temporaryAvailability,
+    messagesEndRef,
+    setIsMatrixModalOpen,
+    handleApplyAndSync,
+    handleSelectSmartAction,
+    handleApplyTemporaryMatrix,
+  } = useHeadCoachChat({
+    profile,
+    physioStatus,
+    macrocyclePhase,
+    effectiveBlueprint,
+    activeWeekNumber,
+    realCurrentWeekNumber,
+    selectedWeekData,
+    weeklyAvailability,
+    currentPlan,
+    dailyExecutedActivities,
+    apiKey,
+    geminiApiKey,
+    selectedModel,
+    temperature,
+    uid,
+    email,
+    onApplyPlanAndSync,
+    onPlanUpdate,
+  });
 
   let startStr: string | undefined;
   let endStr: string | undefined;
@@ -285,7 +149,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
         </div>
       )}
 
-      {/* HISTORIAL DE MENSAJES CON CARDS DE MICROCICLO */}
+      {/* HISTORIAL DE MENSAJES CON CARDS DE MICROCICLO Y SMART REPLIES */}
       <div className="flex-1 overflow-y-auto space-y-4 pr-1 sm:pr-2">
         {messages.map((m) => (
           <HeadCoachMessageItem
@@ -294,7 +158,8 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
             weekNumber={activeWeekNumber}
             onApplyAndSync={handleApplyAndSync}
             isApplying={isApplying}
-            onSelectQuickReply={(qr) => handleSendMessage(qr)}
+            onSelectQuickReply={(qr) => handleSelectSmartAction(qr)}
+            onSelectSmartAction={handleSelectSmartAction}
           />
         ))}
 
@@ -310,15 +175,6 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
           </div>
         )}
         <div ref={messagesEndRef} />
-      </div>
-
-      {/* CONSOLA DE CONTROL TÁCTICO GUIADA (FINOPS & CONSULTAS ESTRUCTURADAS) */}
-      <div className="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <HeadCoachQuickActions
-          onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
-          onOpenTemporaryMatrix={() => setIsMatrixModalOpen(true)}
-          isLoading={isLoading}
-        />
       </div>
 
       {/* MODAL MATRIZ TEMPORAL (SOLO ESTA SEMANA) */}

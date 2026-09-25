@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
           ),
         },
         suggestedPlan: parsed.suggestedPlan || null,
-        quickReplies: parsed.quickReplies || ["✅ Mantener Plan Previsto", "📉 Reducir Carga TSS (-15%)", "📈 Subir Carga TSS (+10%)", "📅 Ajustar Deportes Esta Semana"],
+        smartActions: parsed.smartActions || (Array.isArray(parsed.quickReplies) ? parsed.quickReplies.map((qr: string) => ({ label: qr.replace(/^[📊✈️📉📈✅⏱️📋]\s*/, "") })) : undefined),
+        quickReplies: parsed.quickReplies || ["Mantener plan original", "Reorganizar", "Siento mucha fatiga hoy", "El plan está muy suave"],
         modelUsed: inferenceResult.successfulModel || "Google Gemini AI",
         targetWeekNumber: ctx.targetPlanningWeekNum,
       };

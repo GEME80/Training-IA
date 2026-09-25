@@ -115,6 +115,23 @@ export function hydrateWeekPlanFromEvents(
       const matchingFallback = fallbackPlan.find(
         (p) => (p.date === dateStr || p.day === day) && p.discipline === disc
       );
+
+      // Si el plan rector actual prescribe un TEST OFICIAL y el evento previo en Intervals es un rodaje genérico:
+      const isFallbackTest = /test.*(ftp|control|calibraci[oó]n|stryd|vam|css)/i.test(matchingFallback?.workoutName || "");
+      const isEvtTest = /test|ftp|umbral|prueba/i.test(cleanName);
+
+      if (isFallbackTest && !isEvtTest && matchingFallback) {
+        hydratedItems.push({
+          ...matchingFallback,
+          id: evt.id ? String(evt.id) : undefined,
+          date: dateStr,
+          formattedDate,
+          day,
+          justification: `Test de calibración oficial programado (${matchingFallback.powerTarget || "Umbral"})`,
+        });
+        return;
+      }
+
       const powerTarget = matchingFallback?.powerTarget;
 
       hydratedItems.push({

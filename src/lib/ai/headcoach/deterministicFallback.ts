@@ -24,8 +24,11 @@ export function handleDeterministicFallback(
     );
     const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
 
+    const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
     const defaultWeekBlueprint = {
       weekNumber: targetPlanningWeekNum,
+      countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
+      totalWeeks: totalWeeksCount,
       startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
       phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
       focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
@@ -206,8 +209,11 @@ ${actionPlanText}`;
         Array.isArray(v) ? v.includes("Natacion") : v === "Natacion"
       );
       const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
+      const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
       const defaultWeekBlueprint = {
         weekNumber: targetPlanningWeekNum,
+        countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
+        totalWeeks: totalWeeksCount,
         startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
         phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
         focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",

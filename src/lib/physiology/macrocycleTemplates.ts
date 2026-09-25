@@ -12,11 +12,8 @@ import {
   buildRestDay,
   selectQualityWorkout,
   interpolatePowerTarget,
-  resolveRaceWorkout,
-  resolveRaceSundayWorkout,
-  resolveWeekendRide,
-  resolveLongRunDay,
-  resolveLongRideDay,
+  resolveRaceWorkout, resolveRaceSundayWorkout, resolveWeekendRide,
+  resolveLongRunDay, resolveLongRideDay,
 } from "./macrocycleTemplateHelpers";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
@@ -53,7 +50,9 @@ export function generateWeekTemplate(
     });
   }
 
-  const { weekNumber, countdownWeeks: countdown, phase, microcycleType } = week;
+  const { weekNumber, phase, microcycleType } = week;
+  const countdown = week.countdownWeeks || Math.max(1, 16 - (weekNumber || 1) + 1);
+  const totalWeeks = (week as any).totalWeeks || (weekNumber + countdown - 1) || 16;
   const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
   const isRaceWeek = phase === "RACE_WEEK" || countdown === 1;
 
@@ -63,7 +62,6 @@ export function generateWeekTemplate(
   const hasCyclingInAvailability = Object.values(safeAvailability).some((discs: any) =>
     Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d))
   );
-  const totalWeeks = weekNumber + countdown - 1;
   const isFtpTestWk = !isRaceWeek && hasCyclingInAvailability && (
     (microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) ||
     (weekNumber === 7 && totalWeeks >= 9)

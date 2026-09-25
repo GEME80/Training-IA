@@ -3935,6 +3935,37 @@ flowchart TD
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`longRunPeriodization.ts`: 101 LOC, `macrocycleTemplates.ts`: 336 LOC, `macrocycleTemplateHelpers.ts`: 296 LOC, `WorkoutDetailModal.tsx`: 326 LOC).
 
+---
+
+### Versión 3.67 - Deduplicación de Calendario en Sincronización Intervals y Calibración Oficial de Zonas Stryd (2026-09-24)
+- **Fecha y Hora:** 24 de Septiembre de 2026 - 19:48 COT.
+- **Directivas Atendidas:**
+  1. *"actualice y mira como aparece la semana con varios ejercicios repetidos y el detalle del ejercicio de mañana para gerkof@gmail.com. revisa que esta ocurriendo"*
+  2. *"tengo una duda para los entrenamientos pulse le envia a intervals y no intervals a pulse. intervasl cuando se realiza el entrenamoiento devuelve la informacion del entrenamoiento para colcoarla en la tarjeta. revisate esto"*
+  3. *"ya esta bien el calendario pero no veo que este bien las potencias para correr en el detalle de pulse no se si deba aparecer las potencias como si parece en intervals y revisa si las zonas estan bien segun stryd"*
+- **Diagnóstico y Corrección:**
+  1. *Deduplicación Inteligente en Hidratación del Calendario (`calendarHydration.ts`):*
+     - Causa: Tras múltiples sincronizaciones bidireccionales, Intervals.icu acumulaba eventos duplicados para la misma fecha. Al realizar el GET de la semana, `calendarHydration.ts` renderizaba cada copia sin colapsar.
+     - Solución: Se introdujo una clave de unicidad compuesta por `${dateStr}_${disc}_${cleanName}` normalizada. Si existen duplicados en el payload de Intervals.icu, se preserva únicamente una tarjeta por sesión.
+  2. *Auditoría de Flujo Bidireccional (Pulse $\leftrightarrow$ Intervals.icu):*
+     - Confirmado el modelo arquitectónico: Pulse prescribe y envía a Intervals (`POST /api/events`); Intervals sincroniza al reloj del atleta; el atleta entrena y el reloj sube la actividad real; Pulse descarga las actividades (`GET /api/activities`), empareja Plan vs. Ejecutado por disciplina/fecha y transmuta la tarjeta a verde con check `✓`, mostrando tiempo real, TSS y potencia/FC real.
+  3. *Calibración de Zonas Oficiales Stryd de 5 Zonas (`WorkoutChart.tsx`):*
+     - Alineada la función cromática `getSegmentColor` con la escala oficial de Stryd:
+       - $\le 80\%$: Verde Esmeralda (Zona 1: Fácil / Recuperación, $219\text{--}269\text{W}$).
+       - $80\% - 90\%$: Amarillo / Dorado (Zona 2: Moderado / Aeróbico, $269\text{--}303\text{W}$).
+       - $90\% - 100\%$: Naranja (Zona 3: Umbral, $303\text{--}336\text{W}$).
+       - $100\% - 115\%$: Rojo (Zona 4: Intervalo, $336\text{--}387\text{W}$).
+       - $> 115\%$: Púrpura (Zona 5: Repetición, $> 387\text{W}$).
+  4. *Visualización de Vatios Numéricos en Modal de Pulse (`WorkoutDetailModal.tsx`):*
+     - El modal ahora recibe `runFtp` (Stryd CP) y `bikeFtp`.
+     - Se enriqueció la prescripción para parsear e interpolar los porcentajes en tiempo real: `- 30m 81% Stryd CP (272W)`.
+     - Se añadió un badge informativo en la cabecera: `⚡ Stryd CP Atleta: 336W` (o `⚡ FTP: 226W`).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`WorkoutDetailModal.tsx`: 332 LOC, `WorkoutChart.tsx`: 321 LOC, `calendarHydration.ts`: 134 LOC, `AthleteDashboard.tsx`: 158 LOC).
+
+
 
 
 

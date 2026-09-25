@@ -4231,4 +4231,36 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos creados y modificados cumplen estrictamente con $\le 350$ LOC (`AdminProgramLibrariesTab.tsx`: 341 LOC, `AdminProgramCard.tsx`: 134 LOC, `AdminProgramDetailModal.tsx`: 147 LOC, `AdminProgramDetailViewSection.tsx`: 176 LOC, `AdminProgramDetailEditSection.tsx`: 152 LOC, `AdminProgramAiModal.tsx`: 128 LOC, `AdminProgramHeader.tsx`: 61 LOC, `AdminProgramMetricsHud.tsx`: 47 LOC, `/api/admin/programs/route.ts`: 335 LOC).
   - `Prueba 4 (Servidor en Producción):` Servidor Next.js activo en puerto 3000 con respuesta **HTTP 200 OK**.
 
+---
+
+### Versión 3.77 - Visores Detallados e Interactivos de Modelos Científicos y Tests Fisiológicos de Campo (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 10:58 COT.
+- **Directivas Atendidas:**
+  - *"ahora realicemos los mismos cambios para los modelos cientificos y los test de campo para ver mas detalle"*
+- **Diagnóstico Forense:**
+  1. *Falta de Interactividad en Modelos Científicos:* En la pestaña "Modelos Fisiológicos", las tarjetas eran meramente visuales; al hacer clic sobre una tarjeta no existía ningún modal ni visor para explorar la arquitectura profunda del modelo (desglose de fases Base/Build/Peak/Taper con TSS, pautas de tirada larga y caps de duración, dinámica Banister con límites de ramp rate de CTL, sesiones clave por fase y reglas de biotipo/prevención articular).
+  2. *Tests de Campo Limitados:* En "Tests de Campo", las tarjetas mostraban información truncada y solo un botón para copiar el texto básico, sin desplegar las directrices de ejecución paso a paso, fórmulas de calibración dinámica por CTL, ni criterios de validez del esfuerzo máximo.
+- **Soluciones Implementadas:**
+  1. *Tarjetas Interactivas con Affordance Ergonómico:*
+     - `AdminScientificModelCard.tsx` (150 LOC): Tarjeta interactiva con hover effects (`border-cyan-500`), badge de deporte, autores científicos, barra de fases, indicador de rampa Banister y enlace sutil "Ver modelo completo".
+     - `AdminFieldTestCard.tsx` (131 LOC): Tarjeta interactiva para tests fisiológicos con badge de métrica (Stryd CP, Bike FTP, CSS Swim Pace), semana recomendada, preview de bloques y enlace "Ver protocolo completo".
+  2. *Modales de Inspección Fisiológica Profunda:*
+     - `AdminScientificModelDetailModal.tsx` (159 LOC): Orquestador del inspector de modelos científicos estructurado con 4 sub-pestañas temáticas:
+       * `AdminScientificModelPhasesSection.tsx` (104 LOC): Fases macrocíclicas con duración %, rangos de TSS, descripciones de foco celular, pautas de tirada larga, zonas de intensidad recomendadas y tests obligatorios programados.
+       * `AdminScientificModelDynamicsSection.tsx` (169 LOC): Dinámica de impulsos de Banister (Ramp Rate min/max CTL, step TSS, deload %), reglas de tirada larga pico con caps de minutos y secuencia de tapering, catálogo de sesiones clave por fase y reglas de protección por biotipo de peso corporal.
+     - `AdminFieldTestDetailModal.tsx` (164 LOC): Inspector exhaustivo de tests de campo que detalla:
+       * Objetivo fisiológico y capacidad biológica evaluada (CP, W', FTP, CSS).
+       * Fórmula matemática y algoritmo de determinación automática en Intervals.icu/Firestore.
+       * Sintaxis estructurada completa para Intervals.icu/Stryd con copiado al portapapeles.
+       * Criterios de validez, ritmo sostenido, no sprint prematuro y calibración previa.
+  3. *Refactorización Atómica de `AdminScientificModelsTab.tsx` (169 LOC):*
+     - Soporte ampliado para los 6 protocolos de campo curados (`RUN_TEST_STRYD_3_9`, `RUN_TEST_20M_TT`, `RUN_TEST_5K_VAM`, `BIKE_TEST_20M_FTP`, `BIKE_TEST_RAMP`, `SWIM_TEST_CSS_400_200`).
+     - Gestión fluida de selección de modelos y tests para abrir los modales correspondientes.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 170$ LOC, cumpliendo estrictamente la Regla 3 ($\le 350$ LOC).
+  - `Prueba 4 (Servidor Local):` Servidor Next.js activo en puerto 3000 con respuesta **HTTP 200 OK**.
+
+
 

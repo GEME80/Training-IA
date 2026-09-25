@@ -63,11 +63,15 @@ export function generateWeekTemplate(
   const hasCyclingInAvailability = Object.values(safeAvailability).some((discs: any) =>
     Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d))
   );
-  const isFtpTestWk = (microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(week.focusDescription || "")) ||
-    (hasCyclingInAvailability && (weekNumber === 2 || (weekNumber === 7 && (weekNumber + countdown - 1) >= 9)));
-  if (isFtpTestWk && hasCyclingInAvailability && !scheduledTests.some((t) => t.sport === "Ride")) {
+  const totalWeeks = weekNumber + countdown - 1;
+  const isFtpTestWk = !isRaceWeek && hasCyclingInAvailability && (
+    (microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) ||
+    (weekNumber === 7 && totalWeeks >= 9)
+  );
+  if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) {
     scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
   }
+  if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
   const longRun = calculateProgressiveLongRun(
     curatedModel,
     weekNumber,

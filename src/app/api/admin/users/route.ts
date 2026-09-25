@@ -86,6 +86,11 @@ export async function PATCH(req: NextRequest) {
       intervalsAthleteId,
       runFtp,
       bikeFtp,
+      rawApiKey,
+      weightKg,
+      restingHR,
+      maxHR,
+      lthr,
       requesterEmail,
       requesterUid,
     } = body;
@@ -125,6 +130,11 @@ export async function PATCH(req: NextRequest) {
       intervalsAthleteId,
       runFtp,
       bikeFtp,
+      rawApiKey,
+      weightKg,
+      restingHR,
+      maxHR,
+      lthr,
     });
 
     return NextResponse.json(result);

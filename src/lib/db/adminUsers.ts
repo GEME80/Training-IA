@@ -1,5 +1,6 @@
 import { adminDb } from "../firebase/admin";
 import { isMasterAdminEmail, getSuperadminEmail } from "../env";
+import { encryptSensitiveData } from "../crypto";
 import {
   UserProfileData,
   AdminUserListItem,
@@ -56,6 +57,10 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         isPreAuthorized: Boolean((data as unknown as { isPreAuthorized?: boolean }).isPreAuthorized || (data.uid || doc.id).startsWith("preauth_")),
         runFtp: (!isSuper && data.runFtp === 327) ? undefined : data.runFtp,
         bikeFtp: (!isSuper && data.bikeFtp === 240) ? undefined : data.bikeFtp,
+        weightKg: data.weightKg,
+        restingHR: data.restingHR,
+        maxHR: data.maxHR,
+        lthr: data.lthr,
         createdAt: data.createdAt || new Date().toISOString(),
         lastLoginAt: data.lastLoginAt || new Date().toISOString(),
       };
@@ -263,7 +268,7 @@ export async function preauthorizeUser(
     email: cleanEmail,
     displayName: params.displayName?.trim() || "Atleta Invitado",
     role: params.role || "athlete",
-    status: params.status || "active",
+    status: params.status || "pending",
     intervalsAthleteId: params.intervalsAthleteId?.trim() || undefined,
     runFtp: params.runFtp ? Number(params.runFtp) : undefined,
     bikeFtp: params.bikeFtp ? Number(params.bikeFtp) : undefined,
@@ -288,47 +293,49 @@ export async function preauthorizeUser(
   };
 }
 
+export interface UpdateUserDetailsParams {
+  displayName?: string;
+  role?: UserRole;
+  status?: UserStatus;
+  intervalsAthleteId?: string;
+  runFtp?: number;
+  bikeFtp?: number;
+  rawApiKey?: string;
+  weightKg?: number;
+  restingHR?: number;
+  maxHR?: number;
+  lthr?: number;
+}
+
 /**
  * Actualiza los campos principales de un usuario desde el panel de administración.
  */
 export async function updateUserDetails(
   targetUid: string,
-  updates: {
-    displayName?: string;
-    role?: UserRole;
-    status?: UserStatus;
-    intervalsAthleteId?: string;
-    runFtp?: number;
-    bikeFtp?: number;
-  }
+  updates: UpdateUserDetailsParams
 ): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
-    return { success: true, message: "Usuario actualizado en entorno local." };
-  }
+  if (!adminDb) return { success: true, message: "Usuario actualizado en entorno local." };
 
   const userRef = adminDb.collection("users").doc(targetUid);
   const doc = await userRef.get();
+  if (!doc.exists) throw new Error("Usuario no encontrado.");
 
-  if (!doc.exists) {
-    throw new Error("Usuario no encontrado.");
-  }
-
-  const cleanUpdates: Record<string, any> = {
-    updatedAt: new Date().toISOString(),
-  };
-
+  const cleanUpdates: Record<string, any> = { updatedAt: new Date().toISOString() };
   if (updates.displayName !== undefined) cleanUpdates.displayName = updates.displayName.trim();
   if (updates.role !== undefined) cleanUpdates.role = updates.role;
   if (updates.status !== undefined) cleanUpdates.status = updates.status;
   if (updates.intervalsAthleteId !== undefined) cleanUpdates.intervalsAthleteId = updates.intervalsAthleteId.trim();
   if (updates.runFtp !== undefined) cleanUpdates.runFtp = Number(updates.runFtp);
   if (updates.bikeFtp !== undefined) cleanUpdates.bikeFtp = Number(updates.bikeFtp);
+  if (updates.weightKg !== undefined) cleanUpdates.weightKg = Number(updates.weightKg) || undefined;
+  if (updates.restingHR !== undefined) cleanUpdates.restingHR = Number(updates.restingHR) || undefined;
+  if (updates.maxHR !== undefined) cleanUpdates.maxHR = Number(updates.maxHR) || undefined;
+  if (updates.lthr !== undefined) cleanUpdates.lthr = Number(updates.lthr) || undefined;
+  if (updates.rawApiKey && updates.rawApiKey.trim()) {
+    cleanUpdates.encryptedApiKey = encryptSensitiveData(updates.rawApiKey.trim());
+  }
 
   await userRef.update(cleanUpdates);
-
-  return {
-    success: true,
-    message: "Datos del atleta actualizados con éxito.",
-  };
+  return { success: true, message: "Datos del atleta actualizados con éxito." };
 }
 

@@ -61,6 +61,10 @@ export interface AdminUserListItem {
   isPreAuthorized?: boolean;
   runFtp?: number;
   bikeFtp?: number;
+  weightKg?: number;
+  restingHR?: number;
+  maxHR?: number;
+  lthr?: number;
   createdAt: string;
   lastLoginAt: string;
 }

@@ -56,9 +56,8 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
     },
   ],
   mandatoryTests: [
-    { ...SWIM_TEST_CSS_400_200, recommendedWeekIndex: 2 },
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 2 },
-    { ...RUN_TEST_5K_VAM, recommendedWeekIndex: 3 },
+    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 3 },
+    { ...SWIM_TEST_CSS_400_200, recommendedWeekIndex: 4 },
   ],
   longRunRules: {
     startKm: 8, peakKm: 14, startMinutes: 45, peakMinutes: 70,

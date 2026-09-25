@@ -107,13 +107,21 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
   let inIgnoredSection = false;
 
   const parseDuration = (raw: string): number => {
-    const minsMatch = raw.match(/(\d+)\s*m/i);
+    const isSwim = /nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw);
+    const minsMatch = raw.match(/(\d+)\s*m(?:in)?/i);
     const secsMatch = raw.match(/(\d+)\s*s/i);
     const hoursMatch = raw.match(/(\d+)\s*h/i);
 
     let total = 0;
     if (hoursMatch) total += parseInt(hoursMatch[1], 10) * 60;
-    if (minsMatch) total += parseInt(minsMatch[1], 10);
+    if (minsMatch) {
+      const val = parseInt(minsMatch[1], 10);
+      if (isSwim && val >= 25) {
+        total += Math.max(0.5, Math.round((val / 50) * 10) / 10);
+      } else {
+        total += Math.min(val, 120);
+      }
+    }
     if (secsMatch) total += Math.max(0.2, parseInt(secsMatch[1], 10) / 60);
     return total > 0 ? total : 5;
   };

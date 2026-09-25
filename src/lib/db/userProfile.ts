@@ -72,7 +72,7 @@ export async function syncUserFromGoogleAuth(userData: {
       const pData = preAuthDoc.data();
       if (pData) {
         preAuthRole = pData.role || preAuthRole;
-        preAuthStatus = pData.status || "active";
+        preAuthStatus = pData.status || preAuthStatus;
         preAuthAthleteId = pData.intervalsAthleteId || preAuthAthleteId;
         preAuthRunFtp = pData.runFtp || preAuthRunFtp;
         preAuthBikeFtp = pData.bikeFtp || preAuthBikeFtp;
@@ -98,12 +98,17 @@ export async function syncUserFromGoogleAuth(userData: {
 
     // BLINDAJE: Si el nuevo atleta no es superadmin, jamás hereda i442091 ni valores de Germán
     if (!isSuperadmin) {
-      if (existingData.intervalsAthleteId === "i442091") existingData.intervalsAthleteId = undefined;
+      const masterAthleteId = process.env.INTERVALS_ATHLETE_ID || "i442091";
+      if (existingData.intervalsAthleteId === "i442091" || existingData.intervalsAthleteId === masterAthleteId) {
+        existingData.intervalsAthleteId = undefined;
+      }
       if (existingData.runFtp === 327 && existingData.bikeFtp === 240) {
         existingData.runFtp = undefined;
         existingData.bikeFtp = undefined;
       }
-      preAuthAthleteId = undefined;
+      if (preAuthAthleteId === "i442091" || preAuthAthleteId === masterAthleteId) {
+        preAuthAthleteId = undefined;
+      }
     }
 
     // Registro de nuevo usuario consolidado

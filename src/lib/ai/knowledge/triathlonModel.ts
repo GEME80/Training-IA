@@ -52,8 +52,8 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     },
   ],
   mandatoryTests: [
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 2 },
     { ...RUN_TEST_STRYD_3_9, recommendedWeekIndex: 3 },
+    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 4 },
   ],
   longRunRules: {
     startKm: 10,

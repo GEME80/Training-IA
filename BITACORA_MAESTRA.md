@@ -4080,6 +4080,46 @@ flowchart TD
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`ftpDetectionService.ts`: 168 LOC, `telemetryService.ts`: 321 LOC, `macrocycleGenerator.ts`: 348 LOC, `deterministicPlanGenerator.ts`: 343 LOC, `chatContext.ts`: 346 LOC, `engine.ts`: 261 LOC, `types.ts`: 201 LOC).
 
+---
+
+### Versión 3.72 - Erradicación de Pruebas Fisiológicas Duplicadas, Eliminación de Test en Semana 2, Sanitización de 22h30m y Blindaje del Macrociclo de Juan Pablo Vásquez (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 09:00 COT.
+- **Directivas Atendidas:**
+  - *"la semana 7 si esta bien el test pero el de la semana 2 no es test. revisa si esta bien o n o"*
+  - *"revisa el macrociclo de juan.vasquez.1983@gmail.com ya que tenemos test repetidos en una semana. revisa todo el plan y ajustalo"*
+- **Análisis de Causa Raíz Forense:**
+  1. *Conflicto de Tests en Semana 2:* En `triathlonShortModel.ts`, tanto el test de natación (`SWIM_TEST_CSS_400_200`) como el test de ciclismo (`BIKE_TEST_20M_FTP`) estaban asignados a la Semana 2 (`recommendedWeekIndex: 2`). Además, `macrocycleGenerator.ts` forzaba arbitrariamente `weekNumber === 2` como semana de test para cualquier atleta con ciclismo. Esto generaba colisión de múltiples pruebas all-out en una misma semana (inviable e inseguro fisiológicamente).
+  2. *Bug de Duración 22h30m (1350 min) en Natación:* En `WorkoutChart.tsx`, la función `parseDuration` interpretaba números seguidos de `m` (ej: `- 300m Nado suave`, `- 400m All-Out`, `- 200m`) como **minutos** en lugar de **metros** ($300 + 50 + 400 + 200 + 200 + 200 = 1350$ minutos = 22 horas y 30 minutos).
+  3. *Inyección Desordenada en Hidratación de Calendario (`calendarHydration.ts`):* Eventos huérfanos o desactualizados de sincronizaciones anteriores en Intervals.icu introducían sesiones de disciplinas no contempladas en la matriz diaria del atleta (ej: Fuerza en Miércoles/Viernes y Natación en Sábado), además de clonar pruebas ya obsoletas.
+- **Soluciones Implementadas:**
+  1. *Semana 2 Declarada Zona Libre de Tests (Base Pura):*
+     - Eliminada la condición `weekNumber === 2` en `macrocycleGenerator.ts` y `macrocycleTemplates.ts`. La Semana 2 es de construcción aeróbica y adaptación neuromuscular, nunca de test.
+     - La Semana 7 se preserva como semana de test de control para macrociclos largos ($\ge 9$ semanas, cuando no es semana de carrera).
+  2. *Distribución Progresiva y Regla de Unicidad de Test por Microciclo:*
+     - En `triathlonShortModel.ts`: Se desacoplan los tests: Semana 3 para Ciclismo (`BIKE_TEST_20M_FTP`, en semana de asimilación) y Semana 4 para Natación (`SWIM_TEST_CSS_400_200`). Cero colisiones.
+     - En `triathlonModel.ts`: `RUN_TEST_STRYD_3_9` en Semana 3 y `BIKE_TEST_20M_FTP` en Semana 4.
+     - En `macrocycleGenerator.ts` y `macrocycleTemplates.ts`: Blindaje estricto que trunca `scheduledTests` a máximo 1 prueba por microciclo y prohíbe tests en la semana de competición (`countdown === 1` / `RACE_WEEK`).
+  3. *Resolución Definitiva de Metros vs Minutos en Natación (`WorkoutChart.tsx` - 330 LOC):*
+     - Detección contextual de natación: cuando el intervalo se especifica en metros ($\ge 25\text{m}$), se convierte a minutos biológicamente coherentes ($\approx \text{metros}/50$, ritmo 2:00/100m). Un test de 400m dura 8m, 200m dura 4m, reduciendo los 1350 minutos (22h30m) a 27 minutos reales de sesión.
+  4. *Gobernanza y Sanitización en Hidratación (`calendarHydration.ts` - 188 LOC):*
+     - Límite estricto de duración máxima por sesión (180 min para natación/carrera, 360 min para ciclismo). Cualquier valor desmedido procedente de Intervals.icu es saneado automáticamente.
+     - Filtrado de eventos de sincronizaciones obsoletas que violen la matriz de disponibilidad del día (ej: descartar fuerza en días donde solo hay ciclismo).
+     - Priorización del plan rector sobre tests obsoletos guardados previamente en Intervals.icu.
+  5. *Revisión Integral del Macrociclo de Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com`):*
+     - Macrociclo de 7 semanas (Triseries Paipa 2026, 1 Nov 2026):
+       * Semana 1: Base 2 - Carga (Soltura y rodaje aeróbico)
+       * Semana 2: Base 2 - Carga (Consistencia aeróbica y posición aero; CERO tests)
+       * Semana 3: Build - Asimilación (Test Oficial FTP 20 min en Ciclismo)
+       * Semana 4: Build - Test Control (Test CSS 400m+200m en Natación)
+       * Semana 5: Peak - Impacto/Choque (Simulación y brick)
+       * Semana 6: Peak - Tapering/Descarga (Soltura y frescura)
+       * Semana 7: Race Week - Competición Oficial Triseries Paipa 2026
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`triathlonShortModel.ts`: 326 LOC, `triathlonModel.ts`: 343 LOC, `macrocycleGenerator.ts`: 349 LOC, `macrocycleTemplates.ts`: 348 LOC, `WorkoutChart.tsx`: 330 LOC, `calendarHydration.ts`: 188 LOC, `recalibrateService.ts`: 136 LOC).
+  - `Prueba 4 (Fisiología):` Validación completa de Juan Pablo Vásquez con 7 semanas verificadas, cero colisiones de tests y 27m en el test de natación.
+
 
 
 

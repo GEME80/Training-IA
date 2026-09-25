@@ -263,18 +263,19 @@ export function generateCustomMacrocycleBlueprint(
 
     const hasCycling = curatedModel.sportCategory === "Cycling" || curatedModel.sportCategory === "Triathlon" ||
       Object.values(config.athleteMetrics?.weeklyAvailability || {}).some((d: any) => Array.isArray(d) && d.some((s: string) => /ciclismo|bike|ride/i.test(s)));
-    const isFtpTestWk = hasCycling && (weekNumber === 2 || (weekNumber === 7 && totalWeeks >= 9));
-    const scheduledTests = [...curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber)];
-    if (isFtpTestWk && !scheduledTests.some(t => t.sport === "Ride")) {
-      scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
+    const isFtpTestWk = hasCycling && weekNumber === 7 && totalWeeks >= 9 && countdown > 1;
+    const rawTests = [...curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber)];
+    if (isFtpTestWk && !rawTests.some(t => t.sport === "Ride")) {
+      rawTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
     }
-    if (scheduledTests.length > 0 && !isRecoveryWeek && countdown > 1) {
+    const scheduledTests = countdown > 1 ? rawTests.slice(0, 1) : [];
+    if (scheduledTests.length > 0 && !isRecoveryWeek) {
       microType = "TEST_CONTROL";
-      microLabel = `🧪 ${scheduledTests.some(t => t.sport === "Ride") ? "Control FTP" : "Evaluación"}`;
+      microLabel = `🧪 ${scheduledTests[0].sport === "Ride" ? "Control FTP" : "Evaluación"}`;
       badgeColor = "bg-purple-500/20 text-purple-300 border-purple-500/40";
     }
 
-    const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests.map(t => t.testName).join(" & ")} • ` : "";
+    const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests[0].testName} • ` : "";
     const isTri = curatedModel.sportCategory === "Triathlon";
     const isRaceWeekNow = countdown === 1;
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();

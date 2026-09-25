@@ -86,40 +86,51 @@ export function hydrateWeekPlanFromEvents(
 
     // Deduplicación inteligente: evitar workouts duplicados por múltiples sincronizaciones o idéntico contenido
     const seenWorkouts = new Set<string>();
+    const seenDisciplines = new Set<DisciplineType>();
+    const dayFallback = fallbackPlan.filter((p) => p.date === dateStr || p.day === day);
+    const dayFallbackDiscs = new Set(dayFallback.map((p) => p.discipline));
 
     dayEvts.forEach((evt) => {
       const disc = resolveDiscipline(evt.type);
-      const cleanName = evt.name ? evt.name.replace(/^\[(?:PULSE AI|SGEA)\]\s*/i, "").trim() : "Entrenamiento";
+      const isPulseGenerated = evt.name && (/\[(?:PULSE AI|SGEA)\]/i.test(evt.name) || /test.*(ftp|css|vam|stryd|calibraci[oó]n)/i.test(evt.name));
       
-      // Clave de unicidad por día, disciplina y nombre normalizado (ignorando mayúsculas y espacios extra)
+      // Si es un evento generado por Pulse/SGEA pero la disciplina no pertenece a la prescripción del día:
+      if (isPulseGenerated && dayFallbackDiscs.size > 0 && !dayFallbackDiscs.has(disc) && !dayFallbackDiscs.has("Descanso")) {
+        return; // Omitir evento huérfano de sincronizaciones previas obsoletas
+      }
+
+      // Evitar duplicar la misma disciplina en el mismo día a menos que el plan rector lo contemple
+      const maxAllowedForDisc = dayFallback.filter((p) => p.discipline === disc).length || 1;
+      const countForDisc = Array.from(seenDisciplines).filter((d) => d === disc).length;
+      if (countForDisc >= maxAllowedForDisc) {
+        return;
+      }
+
+      const cleanName = evt.name ? evt.name.replace(/^\[(?:PULSE AI|SGEA)\]\s*/i, "").trim() : "Entrenamiento";
       const normalizedKey = `${dateStr}_${disc}_${cleanName.toLowerCase().replace(/\s+/g, " ")}`;
       if (seenWorkouts.has(normalizedKey)) {
-        return; // Omitir duplicado exacto
+        return;
       }
       seenWorkouts.add(normalizedKey);
+      seenDisciplines.add(disc);
 
-      const titleMinsMatch = cleanName.match(/\((\d+)\s*m(?:in)?\)/i);
-      let mins = Math.round((evt.moving_time || 0) / 60);
-      if (titleMinsMatch) {
-        const parsedTitleMins = parseInt(titleMinsMatch[1], 10);
-        if (parsedTitleMins > 0 && (mins < 15 || disc === "Fuerza")) {
-          mins = parsedTitleMins;
-        }
+      const matchingFallback = dayFallback.find((p) => p.discipline === disc);
+      const isFallbackTest = /test.*(ftp|control|calibraci[oó]n|stryd|vam|css)/i.test(matchingFallback?.workoutName || "");
+      const isEvtTest = /test|ftp|umbral|prueba|css|vam/i.test(cleanName);
+
+      // Si Intervals tiene un test obsoleto de Pulse pero el plan rector NO prescribe test para esta semana:
+      if (isPulseGenerated && isEvtTest && !isFallbackTest && matchingFallback) {
+        hydratedItems.push({
+          ...matchingFallback,
+          id: evt.id ? String(evt.id) : undefined,
+          date: dateStr,
+          formattedDate,
+          day,
+        });
+        return;
       }
-      if (!mins || mins === 0) mins = disc === "Fuerza" ? 35 : 45;
-      const tss = evt.icu_training_load || undefined;
-      const doc = typeof evt.description === "string" && evt.description.trim()
-        ? evt.description
-        : (typeof evt.workout_doc === "string" ? evt.workout_doc : undefined);
-
-      const matchingFallback = fallbackPlan.find(
-        (p) => (p.date === dateStr || p.day === day) && p.discipline === disc
-      );
 
       // Si el plan rector actual prescribe un TEST OFICIAL y el evento previo en Intervals es un rodaje genérico:
-      const isFallbackTest = /test.*(ftp|control|calibraci[oó]n|stryd|vam|css)/i.test(matchingFallback?.workoutName || "");
-      const isEvtTest = /test|ftp|umbral|prueba/i.test(cleanName);
-
       if (isFallbackTest && !isEvtTest && matchingFallback) {
         hydratedItems.push({
           ...matchingFallback,
@@ -131,6 +142,25 @@ export function hydrateWeekPlanFromEvents(
         });
         return;
       }
+
+      // Sanitización matemática estricta de duración (elimina anomalías como 22h30m / 81000s)
+      const maxLimit = disc === "Ciclismo" ? 360 : 180;
+      let rawMins = Math.round((evt.moving_time || 0) / 60);
+      let mins = (rawMins > 0 && rawMins <= maxLimit) ? rawMins : 0;
+
+      const titleMinsMatch = cleanName.match(/\((\d+)\s*m(?:in)?\)/i);
+      if (titleMinsMatch) {
+        const parsedTitleMins = parseInt(titleMinsMatch[1], 10);
+        if (parsedTitleMins > 0 && (mins < 15 || mins > maxLimit || disc === "Fuerza")) {
+          mins = parsedTitleMins;
+        }
+      }
+      if (!mins || mins === 0) mins = matchingFallback?.durationMinutes || (disc === "Fuerza" ? 35 : 45);
+
+      const tss = evt.icu_training_load || undefined;
+      const doc = typeof evt.description === "string" && evt.description.trim()
+        ? evt.description
+        : (typeof evt.workout_doc === "string" ? evt.workout_doc : undefined);
 
       const powerTarget = matchingFallback?.powerTarget;
 

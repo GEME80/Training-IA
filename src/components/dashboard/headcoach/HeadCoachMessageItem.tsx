@@ -14,6 +14,7 @@ export interface HeadCoachMessageData {
   modelUsed?: string;
   timestamp?: string;
   reasoning?: string | null;
+  quickReplies?: string[] | null;
 }
 
 interface HeadCoachMessageItemProps {
@@ -21,16 +22,29 @@ interface HeadCoachMessageItemProps {
   weekNumber: number;
   onApplyAndSync?: (plan: PlanItem[]) => Promise<void>;
   isApplying?: boolean;
+  onSelectQuickReply?: (replyText: string) => void;
 }
 
 /**
  * Renderizador de Texto Formateado Deportivo Profesional (Cero Emojis Infantiles)
  */
 const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
-  const lines = text.split("\n");
+  // Pre-normalizar etiquetas si vienen en líneas aisladas
+  let normalizedText = text
+    .replace(/^\[?📍?\s*ESTADO DEL PROCESO\]?:?\s*$/gim, "[ESTADO DEL PROCESO]:")
+    .replace(/^\[?⚖️?\s*DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?\]?:?\s*$/gim, "[DIAGNÓSTICO]:")
+    .replace(/^\[?🎯?\s*ACCI[OÓ]N PRESCRIPTIVA\]?:?\s*$/gim, "[ACCIÓN PRESCRIPTIVA]:");
+
+  // Si las etiquetas están aisladas sin dos puntos, unirlas con la siguiente línea
+  normalizedText = normalizedText
+    .replace(/\[ESTADO DEL PROCESO\]:\n+/gi, "[ESTADO DEL PROCESO] ")
+    .replace(/\[DIAGNÓSTICO\]:\n+/gi, "[DIAGNÓSTICO] ")
+    .replace(/\[ACCIÓN PRESCRIPTIVA\]:\n+/gi, "[ACCIÓN PRESCRIPTIVA] ");
+
+  const lines = normalizedText.split("\n");
 
   const formatInline = (str: string) => {
-    // Limpieza de emojis infantiles que pudieran venir en el texto crudo
+    // Limpieza de emojis infantiles
     const sanitized = str.replace(/[📍⚖️🎯🧬👈👉⚡🔋📈✈️⏱️🚲]/g, "").trim();
     const boldParts = sanitized.split(/(\*\*.*?\*\*)/g);
     return boldParts.map((bPart, bIdx) => {
@@ -58,8 +72,8 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
             <div key={idx} className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-950 dark:text-cyan-100 flex items-start gap-2">
               <Compass className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <span className="font-black uppercase tracking-wider text-[10px] text-cyan-700 dark:text-cyan-300 block mb-0.5">Estado del Proceso</span>
-                <div>{formatInline(content)}</div>
+                <span className="font-black uppercase tracking-wider text-[10px] text-cyan-700 dark:text-cyan-300 block mb-0.5">Estado de la Semana</span>
+                <div>{formatInline(content || "Semana en curso.")}</div>
               </div>
             </div>
           );
@@ -68,7 +82,7 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
         // Bloque Canónico 2: Diagnóstico / Veredicto
         if (/^\[?⚖️?\s*DIAGN[OÓ]STICO/i.test(trimmed)) {
           const content = trimmed.replace(/^\[?⚖️?\s*DIAGN[OÓ]STICO\s*(\/\s*VEREDICTO)?\]?:?\s*/i, "");
-          const isAdjustment = /ajuste|recalibraci/i.test(content);
+          const isAdjustment = /ajuste|recalibraci|descarga|fatiga/i.test(content);
           return (
             <div key={idx} className={`p-2.5 rounded-xl border flex items-start gap-2 ${
               isAdjustment
@@ -84,23 +98,23 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
                 <span className={`font-black uppercase tracking-wider text-[10px] block mb-0.5 ${
                   isAdjustment ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"
                 }`}>
-                  {isAdjustment ? "Ajuste Táctico" : "Veredicto: Continuidad"}
+                  {isAdjustment ? "Diagnóstico: Ajuste Fisiológico Sugerido" : "Veredicto: Continuidad del Plan"}
                 </span>
-                <div>{formatInline(content)}</div>
+                <div>{formatInline(content || "Mantenemos el plan previsto.")}</div>
               </div>
             </div>
           );
         }
 
-        // Bloque Canónico 3: Acción Prescriptiva
+        // Bloque Canónico 3: Acción Prescriptiva / Pauta para hoy
         if (/^\[?🎯?\s*ACCI[OÓ]N PRESCRIPTIVA\]?/i.test(trimmed)) {
           const content = trimmed.replace(/^\[?🎯?\s*ACCI[OÓ]N PRESCRIPTIVA\]?:?\s*/i, "");
           return (
             <div key={idx} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 flex items-start gap-2">
               <Target className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <span className="font-black uppercase tracking-wider text-[10px] text-slate-600 dark:text-slate-400 block mb-0.5">Acción Prescriptiva</span>
-                <div>{formatInline(content)}</div>
+                <span className="font-black uppercase tracking-wider text-[10px] text-slate-600 dark:text-slate-400 block mb-0.5">Pauta para Hoy</span>
+                <div>{formatInline(content || "Sigue las zonas estipuladas.")}</div>
               </div>
             </div>
           );
@@ -159,6 +173,7 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   weekNumber,
   onApplyAndSync,
   isApplying = false,
+  onSelectQuickReply,
 }) => {
   const isAssistant = message.role === "assistant";
 
@@ -204,6 +219,22 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
         {/* Texto Formateado */}
         <FormattedMessageBody text={message.text} />
+
+        {/* Chips de Respuestas Rápidas (Quick Replies) */}
+        {isAssistant && Array.isArray(message.quickReplies) && message.quickReplies.length > 0 && onSelectQuickReply && (
+          <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+            {message.quickReplies.map((qr, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onSelectQuickReply(qr)}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200/60 dark:border-slate-700"
+              >
+                {qr}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Profundidad Fisiológica Bajo Demanda ("Depth on Demand") */}
         {isAssistant && message.reasoning && (

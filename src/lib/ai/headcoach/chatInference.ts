@@ -22,7 +22,7 @@ export async function executeGeminiInference(
   );
 
   const userPrompt = isInitialAudit
-    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Aplica Smart Brevity (120-180 palabras en "reply"): inicia con [ESTADO DEL PROCESO], sigue con [DIAGNÓSTICO / VEREDICTO] (CONTINUIDAD vs. AJUSTE con causa fisiológica) y finaliza con [ACCIÓN PRESCRIPTIVA] (instrucción para hoy y remisión a la tarjeta). NO listes los 7 días en el texto; todo el detalle va en "reasoning" y la semana en "suggestedPlan".`
+    ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Evalúa adherencia y carga. Si el plan es idóneo declara continuidad (sin suggestedPlan). Si requiere ajuste pregunta primero si desea adaptar la semana.`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
@@ -45,14 +45,17 @@ export async function executeGeminiInference(
     }
   });
 
-  const smartBrevityInstruction = `\n\n[REGLA ESTRICTA DE SALIDA SMART BREVITY]:
-1. "reply": 120-180 palabras (700-1000 caracteres) en 3 bloques (SIN emojis en los títulos):
-   - [ESTADO DEL PROCESO]: 1 línea (semana, fase, adherencia % y rampa).
-   - [DIAGNÓSTICO / VEREDICTO]: 1-2 oraciones con CONTINUIDAD DEL PLAN o AJUSTE TÁCTICO y causa fisiológica (TSB, HRV, TSS).
-   - [ACCIÓN PRESCRIPTIVA]: 2 oraciones (instrucción para HOY con vatios exactos + día clave + remite a la tarjeta).
-   PROHIBIDO listar los 7 días en "reply".
-2. "reasoning": Síntesis fisiológica técnica concisa (máximo 120-150 palabras).
-3. "suggestedPlan": Los 7 días en JSON con workoutStructure paso a paso sintético.`;
+  const smartBrevityInstruction = `\n\n[DIRECTRICES DE FORMATO Y CONVERSACIÓN]:
+1. "reply": Redacta en Markdown limpio y elegante (110-160 palabras):
+   - Inicia con **Estado de la semana:** (resumen claro de adherencia y rampa).
+   - Sigue con **Diagnóstico:**
+     * Si la fisiología es óptima (TSB >= -15, HRV estable): declara CONTINUIDAD DEL PLAN ("El plan previsto es idóneo"). "suggestedPlan" DEBE SER null (cero propuestas de cambio).
+     * Si detectas fatiga aguda o sobrecarga que amerite ajuste: explica la causa y pregunta al atleta "¿Deseas que adaptemos el plan de esta semana?". "suggestedPlan" DEBE SER null. En "quickReplies" pon: ["Sí, adaptar plan por fatiga", "No, mantener plan actual"].
+     * Si el atleta solicitó explícitamente modular TSS, viaje o reorganizar: describe el cambio y aquí SÍ incluye los 7 días en "suggestedPlan".
+   - Finaliza con **Pauta para hoy:** (instrucción exacta de sesión y vatios).
+   PROHIBIDO usar etiquetas mecánicas como [ESTADO DEL PROCESO]. Usa negritas limpias de Markdown.
+2. "reasoning": Síntesis fisiológica técnica concisa (80-120 palabras).
+3. "suggestedPlan": Solo incluir array de 7 días si el atleta solicitó explícitamente un cambio; de lo contrario debe ser null.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {
@@ -111,17 +114,32 @@ export async function executeGeminiInference(
           try {
             const parsed = JSON.parse(cleanJson(text));
             if (parsed && typeof parsed === "object" && parsed.reply) {
-              if (Array.isArray(parsed.suggestedPlan)) {
-                const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-                const allUserText = (messages.map((m) => m.content || "").join(" ") + " " + (userPrompt || "")).toLowerCase();
-                const isContinuityVerdict =
-                  parsed.actionType === "REVIEW_PHYSIOLOGY" ||
-                  (typeof parsed.reply === "string" && /continuidad/i.test(parsed.reply) && !/ajuste t[aá]ctico/i.test(parsed.reply));
+              if (typeof parsed.reply === "string") {
+                parsed.reply = parsed.reply
+                  .replace(/\[\s*ESTADO DEL PROCESO\s*\]:?\s*/gi, "**Estado de la semana:**\n")
+                  .replace(/\[\s*DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?\s*\]:?\s*/gi, "\n\n**Diagnóstico:**\n")
+                  .replace(/\[\s*ACCI[OÓ]N PRESCRIPTIVA\s*\]:?\s*/gi, "\n\n**Pauta para hoy:**\n")
+                  .trim();
+              }
 
-                if (isContinuityVerdict) {
-                  parsed.actionType = "REVIEW_PHYSIOLOGY";
+              const allUserText = (messages.map((m) => m.content || "").join(" ") + " " + (userPrompt || "")).toLowerCase();
+              const isContinuityVerdict =
+                parsed.actionType === "REVIEW_PHYSIOLOGY" ||
+                (typeof parsed.reply === "string" && /continuidad/i.test(parsed.reply) && !/ajuste t[aá]ctico/i.test(parsed.reply));
+
+              const userExplicitlyRequestedAdjustment =
+                allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
+                allUserText.includes("+10%") || allUserText.includes("viaje") || allUserText.includes("cambia") ||
+                allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta");
+
+              if (isContinuityVerdict || !userExplicitlyRequestedAdjustment) {
+                parsed.actionType = "REVIEW_PHYSIOLOGY";
+                parsed.suggestedPlan = null;
+                if (!parsed.quickReplies || parsed.quickReplies.length === 0) {
+                  parsed.quickReplies = ["🎯 Pautas & Vatios de Hoy", "🌙 Confirmar Fin de Semana", "🔍 Ver Zonas de Potencia"];
                 }
-
+              } else if (Array.isArray(parsed.suggestedPlan)) {
+                const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
                 parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {
                   const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
                   const dName = dateInfo.day || dayNamesList[idx % 7] || "Lunes";
@@ -156,35 +174,19 @@ export async function executeGeminiInference(
                     const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
                     const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
 
-                    if (isRestPlanned) {
-                      return {
-                        day: dName,
-                        date: itemDate,
-                        formattedDate: dateInfo.formattedDate,
-                        discipline: "Descanso",
-                        workoutName: "Descanso Pasivo Realizado",
-                        action: "MANTENER",
-                        powerTarget: "0W",
-                        tss: 0,
-                        durationMinutes: 0,
-                        justification: "Historial inmutable: descanso respetado.",
-                        workoutStructure: "",
-                      };
-                    } else {
-                      return {
-                        day: dName,
-                        date: itemDate,
-                        formattedDate: dateInfo.formattedDate,
-                        discipline: plannedSession.discipline || "Carrera",
-                        workoutName: `Sesión Saltada (${plannedSession.workoutName || plannedSession.title || "Entrenamiento"})`,
-                        action: "MANTENER",
-                        powerTarget: "0 TSS",
-                        tss: 0,
-                        durationMinutes: 0,
-                        justification: "Historial inmutable: sesión no registrada en Intervals.icu.",
-                        workoutStructure: "",
-                      };
-                    }
+                    return {
+                      day: dName,
+                      date: itemDate,
+                      formattedDate: dateInfo.formattedDate,
+                      discipline: isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera"),
+                      workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || plannedSession?.title || "Entrenamiento"})`,
+                      action: "MANTENER",
+                      powerTarget: isRestPlanned ? "0W" : "0 TSS",
+                      tss: 0,
+                      durationMinutes: 0,
+                      justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
+                      workoutStructure: "",
+                    };
                   }
 
                   // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL O CONTINUIDAD DEL PLAN

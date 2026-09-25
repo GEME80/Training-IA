@@ -11,21 +11,10 @@ export function handleDeterministicFallback(
   currentPlan: PlanItem[] = []
 ): HeadCoachChatResponse {
   const {
-    profile,
-    physioStatus,
-    compliancePct,
-    actualTss,
-    plannedWeekTss,
-    targetMinTss,
-    targetMaxTss,
-    formDiagnostic,
-    hasExistingPlan,
-    currentPlanSummary,
-    availabilityFormatted,
-    safeAvailability,
-    targetPlanningWeekNum,
-    planningWeekDates,
-    isDeload,
+    profile, physioStatus, compliancePct, actualTss, plannedWeekTss,
+    targetMinTss, targetMaxTss, formDiagnostic, hasExistingPlan,
+    currentPlanSummary, availabilityFormatted, safeAvailability,
+    targetPlanningWeekNum, planningWeekDates, isDeload,
   } = ctx;
 
   if (isInitialAudit) {
@@ -131,7 +120,13 @@ export function handleDeterministicFallback(
 
     const decisionHeader = isContinuityViable
       ? `### 📋 Decisión del Microciclo: 🟢 CONTINUIDAD DEL PLAN PROGRAMADO\nTu asimilación biológica es óptima (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Mantenemos el plan previsto para los días restantes.`
-      : `### 📋 Decisión del Microciclo: ⚠️ PROPUESTA DE RECALIBRACIÓN / NUEVO PLAN\n${hasExistingPlan ? "Debido a la fatiga acumulada o sesiones omitidas, no es óptimo continuar el plan original idéntico. Reestructuramos la carga con sesiones diferenciadas." : "No se encontró un plan previo activo; generamos una propuesta estructurada a medida respetando tu matriz semanal."}`;
+      : `### 📋 Decisión del Microciclo: ⚠️ PROPUESTA DE RECALIBRACIÓN / NUEVO PLAN\n${hasExistingPlan ? "Debido a la fatiga acumulada o sesiones omitidas, sugiero reestructurar la carga." : "No se encontró un plan previo activo; generamos una propuesta estructurada a medida respetando tu matriz semanal."}`;
+
+    const actionPlanText = isContinuityViable
+      ? `🎯 **Plan de Acción:**\nContinuamos con las sesiones ya programadas en tu calendario sin necesidad de cambios.`
+      : hasExistingPlan
+        ? `🎯 **Recomendación:**\n¿Deseas que adaptemos el plan de esta semana para balancear la fatiga?`
+        : `🎯 **Propuesta Adaptada del Microciclo (~${fallbackPlannedTss} TSS):**\nSemana estructurada con estímulos diferenciados evaluados según tu matriz semanal.`;
 
     const auditText = `${decisionHeader}
 
@@ -152,15 +147,20 @@ export function handleDeterministicFallback(
 - ${physioStatus.tsb < -15 ? "Tu TSB ha caído a zona de sobrecarga. Vigila el descanso nocturno e hidratación para evitar fatiga residual." : "Ramp Rate en rango controlado. Mantén la disciplina en los ritmos y no te aceleres en los días de trote suave Z1."}
 - En atletas ${masterLabel.toLowerCase()}, el tiempo de asimilación articular exige no encadenar dos días de calidad consecutivos.
 
-🎯 **Propuesta Adaptada del Microciclo (~${fallbackPlannedTss} TSS):**
-Semana estructurada con estímulos diferenciados (Umbral Stryd CP, Rodillo SweetSpot / Fondo Z2, Tirada Larga con ritmo sostenido y Descanso) evaluados estrictamente contra tu matriz semanal.`;
+${actionPlanText}`;
+
+    const fallbackQuickReplies = isContinuityViable
+      ? ["🎯 Pautas & Vatios de Hoy", "🌙 Confirmar Fin de Semana", "🔍 Ver Zonas de Potencia"]
+      : hasExistingPlan
+        ? ["✅ Sí, adaptar semana", "❌ No, mantener plan actual", "🔍 Ver detalle de fatiga"]
+        : ["✅ Aprobar y Sincronizar", "✈️ Adaptar semana por viaje / tiempo", "🔍 Ver zonas de potencia"];
 
     return {
       success: true,
       reply: auditText,
       actionType: hasExistingPlan ? "REVIEW_PHYSIOLOGY" : "CREATE_PLAN",
       reasoning: "Evaluación fisiológica de rendimiento y carga completada con base en modelo Banister.",
-      suggestedPlan: fallbackGeneratedPlan,
+      suggestedPlan: (!hasExistingPlan) ? fallbackGeneratedPlan : null,
       audit: {
         compliancePct,
         actualTss,
@@ -171,13 +171,7 @@ Semana estructurada con estímulos diferenciados (Umbral Stryd CP, Rodillo Sweet
         rampRate: Number(physioStatus.rampRate || 0).toFixed(1),
         feedback: formDiagnostic,
       },
-      quickReplies: [
-        "✅ Aprobar y Sincronizar",
-        "✈️ Adaptar semana por viaje / tiempo",
-        "🚴 Cambiar martes a Rodillo Z2",
-        "🌙 Marcar día de descanso",
-        "🔍 Ver zonas de potencia",
-      ],
+      quickReplies: fallbackQuickReplies,
       modelUsed: "Motor Fisiológico PULSE (Algorítmico)",
       targetWeekNumber: targetPlanningWeekNum,
     };

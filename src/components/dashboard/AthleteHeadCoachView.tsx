@@ -82,33 +82,17 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     ? Math.round((executedWeekTss / plannedWeekTss) * 100)
     : 0;
 
-  const getWelcomeText = (wNum: number, phase: string) => {
-    const tsbStr = physioStatus?.tsb !== undefined
-      ? (physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1))
-      : "—";
-    const hrvStr = physioStatus?.currentHrv ? ` • HRV ${physioStatus.currentHrv} ms` : "";
-    const progressStatus = compliancePct >= 100
-      ? `Progreso Semanal: ${compliancePct}% (${executedWeekTss} / ${plannedWeekTss} TSS) — ¡Objetivo semanal completado al 100%! Carga asimilada con éxito.`
-      : compliancePct > 0
-      ? `Progreso Semanal: ${compliancePct}% (${executedWeekTss} / ${plannedWeekTss} TSS acumulados).`
-      : `Progreso Semanal: 0% (${plannedWeekTss} TSS objetivo en calendario).`;
-
-    return `¡Saludos, ${profile.name || "Atleta"}! Soy tu Head Coach Fisiológico de PULSE.
-
-Telemetría en Vivo: CTL ${physioStatus?.ctl?.toFixed(1) ?? "—"} • ATL ${physioStatus?.atl?.toFixed(1) ?? "—"} • TSB ${tsbStr}${hrvStr}.
-
-Fase Activa: **Microciclo de la Semana ${wNum}** (${phase}).
-${progressStatus}
-
-Usa la consola de control táctico a continuación para auditar la semana, confirmar continuidad o consultar las pautas de tu sesión.`;
+  const getWelcomeText = (name?: string) => {
+    const firstName = (name || "Atleta").trim().split(" ")[0];
+    return `Hola ${firstName}, ¿en qué te puedo ayudar hoy?`;
   };
 
   const [messages, setMessages] = useState<HeadCoachMessageData[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: getWelcomeText(weekNumber && weekNumber > 0 ? weekNumber : realCurrentWeekNumber, activePhaseLabel),
-      timestamp: "En vivo",
+      text: getWelcomeText(profile.name),
+      timestamp: "Ahora",
     },
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -123,15 +107,15 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
     }
   }, [weekNumber, realCurrentWeekNumber]);
 
-  // Actualizar el saludo inicial si aún no se ha iniciado la conversación
+  // Actualizar el saludo inicial si cambia el nombre del perfil
   useEffect(() => {
     setMessages((prev) => {
       if (prev.length === 1 && prev[0].id === "welcome") {
-        return [{ ...prev[0], text: getWelcomeText(activeWeekNumber, activePhaseLabel) }];
+        return [{ ...prev[0], text: getWelcomeText(profile.name) }];
       }
       return prev;
     });
-  }, [activeWeekNumber, activePhaseLabel, profile.name, physioStatus?.ctl, physioStatus?.atl, physioStatus?.tsb, physioStatus?.currentHrv, executedWeekTss, plannedWeekTss, compliancePct]);
+  }, [profile.name]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -203,6 +187,7 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
           modelUsed: data.modelUsed,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           reasoning: data.reasoning || null,
+          quickReplies: data.quickReplies || null,
         };
         setMessages((prev) => [...prev, assistantMsg]);
 
@@ -309,6 +294,7 @@ Usa la consola de control táctico a continuación para auditar la semana, confi
             weekNumber={activeWeekNumber}
             onApplyAndSync={handleApplyAndSync}
             isApplying={isApplying}
+            onSelectQuickReply={(qr) => handleSendMessage(qr)}
           />
         ))}
 

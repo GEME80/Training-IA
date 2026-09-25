@@ -4073,6 +4073,8 @@ flowchart TD
      - Preservación de `icu_ftp` e `icu_pm_ftp` en `DailyExecutedActivity` (`types.ts`).
   4. *Gobernanza del Agente Head Coach (`chatContext.ts` - 346 LOC):*
      - Reconocimiento del evento de calibración de FTP reciente e inyección de la novedad fisiológica en el prompt del Head Coach para informar al atleta sobre sus nuevas zonas y cálculos de TSS.
+  5. *Priorización de Tests en Hidratación de Calendario (`calendarHydration.ts` - 158 LOC):*
+     - Corrección del solapamiento donde un evento previo en Intervals.icu (ej: rodaje genérico o 'Fuerza Resistencia' sincronizado con anterioridad) sobrescribía el workout doc pero recibía el powerTarget del test. Ahora, si el plan prescribe un TEST OFICIAL, se prioriza el protocolo de test oficial sobre el evento genérico desactualizado.
 - **Set de Pruebas y Validación:**
   - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
   - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.

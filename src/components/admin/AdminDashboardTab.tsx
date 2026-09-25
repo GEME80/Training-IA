@@ -50,7 +50,7 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
               tokenPeriod === "daily" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            📅 Hoy
+            Hoy
           </button>
           <button
             type="button"
@@ -59,7 +59,7 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
               tokenPeriod === "monthly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            📆 Mes
+            Mes
           </button>
           <button
             type="button"
@@ -68,7 +68,7 @@ export const AdminDashboardTab: React.FC<AdminDashboardTabProps> = ({
               tokenPeriod === "yearly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            🗓️ Año
+            Año
           </button>
         </div>
       </div>

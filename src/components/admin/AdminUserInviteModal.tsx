@@ -19,8 +19,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
 }) => {
   const [email, setEmail] = useState<string>("");
   const [name, setName] = useState<string>("");
-  const [role, setRole] = useState<UserRole>("athlete");
-  const [status, setStatus] = useState<UserStatus>("active");
+    const [role, setRole] = useState<UserRole>("athlete");
+  const [status, setStatus] = useState<UserStatus>("pending");
   const [intervalsId, setIntervalsId] = useState<string>("");
   const [runFtp, setRunFtp] = useState<number>(300);
   const [bikeFtp, setBikeFtp] = useState<number>(250);
@@ -51,7 +51,12 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al registrar la invitación");
 
-      showMessage(`Invitación registrada para ${email}. Acceso habilitado.`, "success");
+      showMessage(
+        status === "pending"
+          ? `Invitación registrada para ${email} en Solicitud Pendiente.`
+          : `Invitación registrada para ${email}. Acceso directo activo.`,
+        "success"
+      );
       onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -64,7 +69,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
   const handleCopyWelcomeMessage = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
     const athleteName = name.trim() || "Atleta";
-    const text = `¡Hola ${athleteName}! Tu cuenta en PULSE AI ya ha sido habilitada por tu entrenador. Puedes ingresar directamente con tu cuenta de Google aquí: ${origin}`;
+    const text = `¡Hola ${athleteName}! Tu cuenta en PULSE AI ha sido registrada por tu entrenador. Puedes ingresar con tu cuenta de Google aquí: ${origin}`;
     navigator.clipboard.writeText(text);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
@@ -81,7 +86,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-950 tracking-tight">Invitar / Registrar Atleta</h3>
-              <p className="text-xs text-slate-500">Habilitación de acceso directo sin cola de espera</p>
+              <p className="text-xs text-slate-500">Registro con estado de solicitud pendiente para verificación</p>
             </div>
           </div>
           <button
@@ -97,7 +102,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
         <div className="p-3.5 rounded-2xl bg-cyan-50/70 border border-cyan-200/70 flex items-start space-x-3 text-xs text-cyan-950 leading-relaxed">
           <Info className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">¿Cómo funciona?</span> Al registrar el correo de Google de tu atleta, este queda pre-aprobado. Cuando haga clic en <em>&quot;Iniciar Sesión con Google&quot;</em> entrará de inmediato con sus métricas precargadas.
+            <span className="font-bold">Protocolo de Alta:</span> El atleta queda registrado como <strong>Solicitud Pendiente</strong>. Al iniciar sesión con su correo de Google, sus parámetros quedarán vinculados a la espera de la verificación de Intervals.icu y aprobación del entrenador.
           </div>
         </div>
 
@@ -136,20 +141,20 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
                 onChange={(e) => setRole(e.target.value as UserRole)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none focus:border-cyan-500 cursor-pointer shadow-2xs"
               >
-                <option value="athlete">🏃 Atleta</option>
-                <option value="admin">👑 Administrador</option>
+                <option value="athlete">Atleta</option>
+                <option value="admin">Administrador</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Estado de Acceso</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Estado Inicial</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as UserStatus)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none focus:border-cyan-500 cursor-pointer shadow-2xs"
               >
-                <option value="active">🟢 Activo Inmediato</option>
-                <option value="pending">🟡 Pendiente de Aprobación</option>
+                <option value="pending">Solicitud Pendiente (Recomendado)</option>
+                <option value="active">Activo Inmediato</option>
               </select>
             </div>
           </div>
@@ -173,7 +178,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-amber-800 mb-1">⚡ Stryd CP (W)</label>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">Stryd Critical Power (W)</label>
                 <input
                   type="number"
                   value={runFtp}
@@ -183,7 +188,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-cyan-800 mb-1">🚴 Bike FTP (W)</label>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">Ciclismo FTP (W)</label>
                 <input
                   type="number"
                   value={bikeFtp}

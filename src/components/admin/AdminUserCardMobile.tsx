@@ -1,7 +1,19 @@
 "use client";
 
 import React from "react";
-import { Edit, UserCheck, UserX, Trash2, CheckCircle, Zap } from "lucide-react";
+import {
+  Edit3,
+  UserCheck,
+  UserX,
+  Trash2,
+  CheckCircle2,
+  Zap,
+  Shield,
+  User,
+  Clock,
+  AlertCircle,
+  Unlink,
+} from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
 
@@ -21,6 +33,7 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
   const isRootAdmin = isMasterAdminEmail(u.email);
   const isPending = u.status === "pending";
   const isPreAuth = Boolean(u.isPreAuthorized || u.uid.startsWith("preauth_"));
+  const isIntervalsOk = Boolean(u.intervalsAthleteId && (u.hasIntervalsKey || isRootAdmin));
 
   return (
     <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
@@ -46,44 +59,76 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
         </div>
 
         <span
-          className={`shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
+          className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
             u.role === "admin"
               ? "bg-purple-50 text-purple-900 border-purple-200"
               : "bg-slate-100 text-slate-700 border-slate-200"
           }`}
         >
-          {u.role === "admin" ? "👑 Admin" : "🏃 Atleta"}
+          {u.role === "admin" ? (
+            <>
+              <Shield className="h-3 w-3 text-purple-600" />
+              <span>Admin</span>
+            </>
+          ) : (
+            <>
+              <User className="h-3 w-3 text-slate-500" />
+              <span>Atleta</span>
+            </>
+          )}
         </span>
       </div>
 
-      {/* 2. Fila de Estado e Intervals */}
+      {/* 2. Fila de Estado de Acceso */}
       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
         <div>
-          {isPreAuth ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
-              <span>Invitado</span>
-            </span>
-          ) : isPending ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              <span>Pendiente</span>
+          {isPending ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300">
+              <Clock className="h-3 w-3 text-amber-600 animate-pulse" />
+              <span>Solicitud Pendiente</span>
+              {isPreAuth && (
+                <span className="ml-1 text-[9px] px-1 py-0.2 rounded bg-amber-200/70 text-amber-950 font-mono">
+                  Invitado
+                </span>
+              )}
             </span>
           ) : u.status === "active" ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
               <span>Activo</span>
+              {isPreAuth && (
+                <span className="ml-1 text-[9px] px-1 py-0.2 rounded bg-sky-100 text-sky-800 font-mono">
+                  Preautorizado
+                </span>
+              )}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+              <UserX className="h-3 w-3 text-rose-600" />
               <span>Deshabilitado</span>
             </span>
           )}
         </div>
 
-        <div className="text-[10px] font-mono text-slate-500">
-          Intervals: <strong className="text-slate-700 font-semibold">{u.intervalsAthleteId || "No vinculado"}</strong>
+        {/* Intervals Status Badge */}
+        <div>
+          {isIntervalsOk ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">
+              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              <span>{u.intervalsAthleteId}</span>
+              <span className="text-[8px] bg-emerald-200/80 px-1 rounded uppercase">OK</span>
+            </span>
+          ) : u.intervalsAthleteId ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 font-mono">
+              <AlertCircle className="h-3 w-3 text-amber-600" />
+              <span>{u.intervalsAthleteId}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+              <Unlink className="h-3 w-3 text-slate-400" />
+              <span>No vinculado</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -109,8 +154,8 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
             onClick={() => onStatusChange(u.uid, u.email, "active")}
             className="flex-1 flex items-center justify-center space-x-1.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition cursor-pointer"
           >
-            <CheckCircle className="h-3.5 w-3.5" />
-            <span>Aprobar Acceso</span>
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>Aprobar</span>
           </button>
         )}
 
@@ -119,8 +164,8 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
           onClick={() => onEdit(u)}
           className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
         >
-          <Edit className="h-3.5 w-3.5" />
-          <span>Editar</span>
+          <Edit3 className="h-3.5 w-3.5" />
+          <span>Configurar</span>
         </button>
 
         {u.status === "active" && !isRootAdmin && (

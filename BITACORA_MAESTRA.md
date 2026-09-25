@@ -4120,11 +4120,37 @@ flowchart TD
   - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`triathlonShortModel.ts`: 326 LOC, `triathlonModel.ts`: 343 LOC, `macrocycleGenerator.ts`: 349 LOC, `macrocycleTemplates.ts`: 348 LOC, `WorkoutChart.tsx`: 330 LOC, `calendarHydration.ts`: 188 LOC, `recalibrateService.ts`: 136 LOC).
   - `Prueba 4 (Fisiología):` Validación completa de Juan Pablo Vásquez con 7 semanas verificadas, cero colisiones de tests y 27m en el test de natación.
 
+---
 
-
-
-
-
-
-
-
+### Versión 3.73 - Reingeniería del Espacio de Administrador: Estado de Solicitud Pendiente en Invitaciones/Registro, Monitor de Conexión Intervals.icu, Erradicación de Emojis Infantiles y Centro Modular de Soporte al Atleta (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 09:12 COT.
+- **Directivas Atendidas:**
+  - *"revisa adicionalmente que le doy a invitar atleta con su correo y no queda como solicitud pendiente . desde la pagina o desde invoitar deben quedar los usuariios comomsolicitud hasta que pasen a activo y se verifique que el ID de intervals esta conectado. adicional revisa los iconos que no sean infantiles. debe mostrar si la conexion con intervals esta ok o no y tner una opcion de configurarlo por si solicitan soporte los atletas. revisa que otro tipo de soporte nos pueden solcitar el cual al admin pueda configurar en cada perfil de atleta"*
+- **Análisis de Causa Raíz Forense:**
+  1. *Estado Forzado a Activo en Invitación:* `AdminUserInviteModal.tsx` inicializaba su estado en `"active"` y `preauthorizeUser` asignaba por defecto `status: "active"`. Esto provocaba que atletas invitados se saltaran la cola de validación y nunca aparecieran como solicitudes pendientes.
+  2. *Bug de Sanitización de Atleta en Primer Login (`userProfile.ts`):* En `syncUserFromGoogleAuth`, la directiva de seguridad anti-fuga ejecutaba `preAuthAthleteId = undefined;` de manera incondicional para cualquier usuario que no fuera superadmin, borrando accidentalmente el `intervalsAthleteId` asignado por el entrenador.
+  3. *Simbología Informal / Emojis Infantiles:* Uso disperso de emojis (`👑`, `🏃`, `🟢`, `🟡`, `🔵`, `🔴`, `⚡`, `🚴`, `👟`, `📅`) en tablas, badges y modales del panel de control que restaban seriedad y madurez al producto.
+  4. *Falta de Monitor de Conexión de Intervals:* El admin no podía visualizar si la cuenta del atleta tenía conectividad real (`OK`) o si faltaba configurar la API Key privada.
+  5. *Ausencia de Centro de Soporte para Atletas:* El admin no tenía herramientas para ayudar a atletas no técnicos que requerían configurar su clave API de Intervals, verificar la conexión en tiempo real o ajustar manualmente su biometría (peso, LTHR, Max HR, Resting HR).
+- **Soluciones Implementadas:**
+  1. *Ciclo de Vida de Acceso Basado en Solicitud Pendiente:*
+     - Tanto en invitación manual (`AdminUserInviteModal.tsx`) como en pre-autorización (`adminUsers.ts`) y registro orgánico (`userProfile.ts`), los atletas se registran con `status: "pending"` por defecto.
+     - En `AdminUsersTab.tsx`, el filtro rápido y contador de *Solicitudes Pendientes* agrupa de manera fidedigna a todos los atletas pendientes de verificación.
+     - Corrección en `userProfile.ts` para preservar el `intervalsAthleteId` configurado por el coach, blindando únicamente contra herencia del ID del superadmin (`i442091`).
+  2. *Erradicación Total de Emojis Infantiles:*
+     - Sustitución completa por iconografía sobria de Lucide (`Shield` para administradores, `User` para atletas, `Clock` para pendientes, `CheckCircle2` para activos, `UserX` para deshabilitados, `Zap` para potencia y `Activity` para fisiología).
+     - Aplicado transversalmente en `AdminUsersTable.tsx`, `AdminUserCardMobile.tsx`, `AdminUserInviteModal.tsx`, `AdminUserEditModal.tsx`, `AdminAISettingsTab.tsx`, `AdminDashboardTab.tsx`, `AdminScientificModelsTab.tsx` y `AdminProgramLibrariesTab.tsx`.
+  3. *Columna & Badge de Conexión en Vivo con Intervals.icu:*
+     - Implementado en `AdminUsersTable.tsx` y `AdminUserCardMobile.tsx`:
+       * `🟢 OK`: ID y Clave API válidas y enlazadas en Firestore con badge esmeralda.
+       * `🟡 Falta API Key`: ID de Intervals asignado pero pendiente de clave personal del atleta.
+       * `⚪ No vinculado`: Sin ID de Intervals.
+  4. *Centro Integral de Configuración y Soporte al Atleta:*
+     - Modularizado en 3 componentes enfocados para cumplir la regla < 350 LOC:
+       * `AdminUserEditModal.tsx` (319 LOC): Orquestador del soporte con botón de aprobación directa y copia de credenciales.
+       * `AdminUserEditIntervalsSection.tsx` (109 LOC): Configuración de Athlete ID, Clave API privada cifrada con AES-256-GCM y botón de prueba en vivo (`POST /api/test-connection`).
+       * `AdminUserEditBiometricsSection.tsx` (110 LOC): Calibración manual de Stryd CP (W), Bike FTP (W), Peso (kg), LTHR (ppm), FC Máxima (ppm) y FC Reposo (ppm).
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`AdminUserEditModal.tsx`: 319 LOC, `AdminUserEditIntervalsSection.tsx`: 109 LOC, `AdminUserEditBiometricsSection.tsx`: 110 LOC, `AdminUserInviteModal.tsx`: 243 LOC, `AdminUsersTab.tsx`: 236 LOC, `AdminUsersTable.tsx`: 263 LOC, `AdminUserCardMobile.tsx`: 206 LOC, `adminUsers.ts`: 341 LOC, `userProfile.ts`: 308 LOC).

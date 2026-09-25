@@ -297,12 +297,12 @@ export const AdminProgramLibrariesTab: React.FC<AdminProgramLibrariesTabProps> =
             onChange={(e) => setSportFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-cyan-500 cursor-pointer"
           >
-            <option value="ALL">🏃 Todos los Deportes</option>
-            <option value="running">🏃 Carrera en Ruta</option>
-            <option value="trail_running">⛰️ Trail Running</option>
-            <option value="cycling">🚴 Ciclismo / Fondo</option>
-            <option value="triathlon">🏊🚴🏃 Triatlón</option>
-            <option value="maintenance">🛡️ Salud / Mantenimiento</option>
+            <option value="ALL">Todos los Deportes</option>
+            <option value="running">Carrera en Ruta</option>
+            <option value="trail_running">Trail Running</option>
+            <option value="cycling">Ciclismo / Fondo</option>
+            <option value="triathlon">Triatlón</option>
+            <option value="maintenance">Salud / Mantenimiento</option>
           </select>
 
           <select
@@ -310,11 +310,11 @@ export const AdminProgramLibrariesTab: React.FC<AdminProgramLibrariesTabProps> =
             onChange={(e) => setMetricFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:border-cyan-500 cursor-pointer"
           >
-            <option value="ALL">🎯 Todas las Métricas</option>
-            <option value="POWER">⚡ Potencia</option>
-            <option value="HEART_RATE">💓 Frecuencia Cardíaca</option>
-            <option value="PACE">⏱️ Ritmo</option>
-            <option value="RPE">🧠 Sensaciones (RPE)</option>
+            <option value="ALL">Todas las Métricas</option>
+            <option value="POWER">Potencia</option>
+            <option value="HEART_RATE">Frecuencia Cardíaca</option>
+            <option value="PACE">Ritmo</option>
+            <option value="RPE">Sensaciones (RPE)</option>
           </select>
         </div>
       </div>

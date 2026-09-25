@@ -101,7 +101,7 @@ export const AdminScientificModelsTab: React.FC<AdminScientificModelsTabProps> =
                 : "text-slate-300 hover:text-white"
             }`}
           >
-            📚 Modelos ({modelsList.length})
+            Modelos Fisiológicos ({modelsList.length})
           </button>
           <button
             type="button"
@@ -112,7 +112,7 @@ export const AdminScientificModelsTab: React.FC<AdminScientificModelsTabProps> =
                 : "text-slate-300 hover:text-white"
             }`}
           >
-            🧪 Tests de Campo ({testProtocols.length})
+            Tests de Campo ({testProtocols.length})
           </button>
         </div>
       </div>
@@ -133,7 +133,7 @@ export const AdminScientificModelsTab: React.FC<AdminScientificModelsTabProps> =
                     : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                 }`}
               >
-                {cat === "ALL" ? "🌐 Todos los Deportes" : cat}
+                {cat === "ALL" ? "Todos los Deportes" : cat}
               </button>
             ))}
           </div>
@@ -167,7 +167,7 @@ export const AdminScientificModelsTab: React.FC<AdminScientificModelsTabProps> =
                   <div className="flex flex-wrap gap-1.5">
                     {model.scientificAuthors.map((author, idx) => (
                       <span key={idx} className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white text-slate-700 border border-slate-200">
-                        👨‍🔬 {author}
+                        {author}
                       </span>
                     ))}
                   </div>
@@ -230,7 +230,7 @@ export const AdminScientificModelsTab: React.FC<AdminScientificModelsTabProps> =
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                      {test.sport === "Run" ? "👟 Stryd Running CP" : "🚴 Bike FTP"}
+                      {test.sport === "Run" ? "Stryd Running CP" : "Bike FTP"}
                     </span>
                     <span className="text-[10px] font-mono text-slate-500 font-bold">Semana Recomendada: {test.recommendedWeekIndex}</span>
                   </div>

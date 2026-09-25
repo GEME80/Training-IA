@@ -35,7 +35,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   // Conteo para los segmentos
   const counts = useMemo(() => {
     const total = users.length;
-    const active = users.filter((u) => u.status === "active" && !u.isPreAuthorized && !u.uid.startsWith("preauth_")).length;
+    const active = users.filter((u) => u.status === "active").length;
     const pending = users.filter((u) => u.status === "pending").length;
     const invited = users.filter((u) => Boolean(u.isPreAuthorized || u.uid.startsWith("preauth_"))).length;
     return { total, active, pending, invited };
@@ -52,7 +52,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
       let matchesQuick = true;
       if (quickFilter === "ACTIVE") {
-        matchesQuick = u.status === "active" && !isPreAuth;
+        matchesQuick = u.status === "active";
       } else if (quickFilter === "PENDING") {
         matchesQuick = u.status === "pending";
       } else if (quickFilter === "INVITED") {
@@ -191,8 +191,8 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
           className="w-full sm:w-auto px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-800 focus:outline-none focus:border-cyan-500 cursor-pointer shadow-2xs"
         >
           <option value="ALL">Todos los Roles</option>
-          <option value="admin">👑 Administradores</option>
-          <option value="athlete">🏃 Atletas</option>
+          <option value="admin">Administradores</option>
+          <option value="athlete">Atletas</option>
         </select>
       </div>
 

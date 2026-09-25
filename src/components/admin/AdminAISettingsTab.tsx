@@ -90,14 +90,14 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
             {availableModels.length > 0 ? (
               availableModels.map((m) => (
                 <option key={m.id} value={m.id}>
-                  🟢 {m.id} {m.isRecommended ? "★ (Recomendado)" : ""} — [{m.category}]
+                  {m.id} {m.isRecommended ? "(Recomendado)" : ""} — [{m.category}]
                 </option>
               ))
             ) : (
               <>
-                <option value="gemini-2.5-flash">🟢 gemini-2.5-flash (Recomendado) — [Flash / Rápido]</option>
-                <option value="gemini-2.0-flash">🟢 gemini-2.0-flash — [Flash / Rápido]</option>
-                <option value="gemini-1.5-pro">🟢 gemini-1.5-pro — [Pro / Analítico]</option>
+                <option value="gemini-2.5-flash">gemini-2.5-flash (Recomendado) — [Flash / Rápido]</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash — [Flash / Rápido]</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro — [Pro / Analítico]</option>
               </>
             )}
           </select>

@@ -281,6 +281,14 @@ ${actionPlanText}`;
       { label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" },
     ];
   }
+  // FLUJO: Mantener plan original
+  else if (lowerMsg.includes("mantener plan original") || lowerMsg.includes("mantener plan") || lowerMsg.includes("mantener")) {
+    replyMsg = "Excelente decisión. Mantener la constancia y respetar los ritmos programados es la base para asimilar este bloque sin sobrecargas. Tu plan previsto sigue activo con normalidad.";
+    smartActions = [
+      { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+      { label: "Reorganizar", icon: "calendar-sync", variant: "secondary" },
+    ];
+  }
   // Default de continuidad
   else {
     replyMsg = `He registrado tus indicaciones ("${lastUserMsg}"). Los parámetros fisiológicos están equilibrados. ¿Qué ajuste táctico deseas realizar en tu microciclo?`;
@@ -292,9 +300,17 @@ ${actionPlanText}`;
     ];
   }
 
-  const finalPlan = (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && modifiedPlan)
-    ? applyTssAdjustmentToPlan(modifiedPlan, ctx.targetTssAdjustmentPct)
-    : modifiedPlan;
+  // SUGGESTED_PLAN SOLO se incluye cuando hay una propuesta de cambio activa
+  const hasActiveProposal =
+    (lowerMsg.includes("matriz") || lowerMsg.includes("temporal") || lowerMsg.includes("disponibilidad")) ||
+    (lowerMsg.includes("fatiga") || lowerMsg.includes("cansad") || lowerMsg.includes("dolor") || lowerMsg.includes("molestia")) ||
+    (lowerMsg.includes("suave") || lowerMsg.includes("aumentar") || lowerMsg.includes("mayor carga"));
+
+  const finalPlan = (hasActiveProposal && modifiedPlan && modifiedPlan.length > 0)
+    ? (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0
+        ? applyTssAdjustmentToPlan(modifiedPlan, ctx.targetTssAdjustmentPct)
+        : modifiedPlan)
+    : null;
 
   return {
     success: true,

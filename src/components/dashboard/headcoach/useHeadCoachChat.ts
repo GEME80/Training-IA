@@ -161,10 +161,6 @@ export function useHeadCoachChat({
           smartActions: data.smartActions || (data.quickReplies?.map((qr: string) => ({ label: qr })) || null),
         };
         setMessages((prev) => [...prev, assistantMsg]);
-
-        if (data.suggestedPlan && onPlanUpdate) {
-          onPlanUpdate(data.suggestedPlan);
-        }
       } else {
         setMessages((prev) => [
           ...prev,
@@ -199,6 +195,7 @@ export function useHeadCoachChat({
     setIsApplying(true);
     setSyncFeedback(null);
     try {
+      if (onPlanUpdate) onPlanUpdate(finalPlan);
       await onApplyPlanAndSync(finalPlan);
       setSyncFeedback("¡Microciclo sincronizado exitosamente con Intervals.icu!");
       setTimeout(() => setSyncFeedback(null), 4000);
@@ -271,17 +268,8 @@ export function useHeadCoachChat({
         text: "Para reorganizar tu microciclo sin alterar tu planificación habitual, configuremos tu disponibilidad temporal. ¿Qué días deseas entrenar cada disciplina y cuáles necesitas de descanso?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         smartActions: [
-          {
-            label: "Configurar Matriz Temporal",
-            variant: "primary",
-            icon: "sliders",
-            actionType: "open_matrix_modal",
-          },
-          {
-            label: "Mantener plan original",
-            variant: "secondary",
-            icon: "x",
-          },
+          { label: "Configurar Matriz Temporal", variant: "primary", icon: "sliders", actionType: "open_matrix_modal" },
+          { label: "Mantener plan original", variant: "secondary", icon: "x" },
         ],
       };
       setMessages((prev) => [...prev, reorgPromptMsg]);
@@ -306,6 +294,21 @@ export function useHeadCoachChat({
         smartActions: INITIAL_SMART_ACTIONS,
       };
       setMessages((prev) => [...prev, discardMsg]);
+      return;
+    }
+
+    if (/mantener plan original|mantener plan/i.test(rawLabel.trim())) {
+      const keepMsg: HeadCoachMessageData = {
+        id: `keep-${Date.now()}`,
+        role: "assistant",
+        text: "Excelente decisión. Mantener la constancia y respetar los ritmos programados es la base para asimilar este bloque sin sobrecargas. Tu plan previsto sigue activo con normalidad.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        smartActions: [
+          { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+          { label: "Reorganizar", icon: "calendar-sync", variant: "secondary" },
+        ],
+      };
+      setMessages((prev) => [...prev, keepMsg]);
       return;
     }
 

@@ -11,7 +11,32 @@ export async function POST(req: NextRequest) {
     // 1. Extracción de telemetría y resolución de contexto unificado
     const ctx = await resolveChatContext(body);
 
-    // 2. Inferencia con Google Gemini API
+    // 2. Interceptación inmediata de Acciones Canónicas (Flujos A, B, C, D, Matriz Temporal, Confirmación)
+    const lastMsg = (body.messages && body.messages.length > 0)
+      ? (body.messages[body.messages.length - 1].content || "").toLowerCase().trim()
+      : "";
+
+    const isCanonicalAction =
+      Boolean(body.isInitialAudit) ||
+      lastMsg.includes("detalle de mi estado") || lastMsg.includes("ver detalle") ||
+      lastMsg.includes("reorganizar") || lastMsg.includes("matriz") || lastMsg.includes("temporal") ||
+      lastMsg.includes("mucha fatiga") || lastMsg.includes("fatiga hoy") ||
+      lastMsg.includes("plan está muy suave") || lastMsg.includes("muy suave") ||
+      lastMsg.includes("confirmar nuevo calendario") || lastMsg.includes("aprobar ajuste") ||
+      lastMsg.includes("aplicar mayor carga") || lastMsg.includes("descartar") ||
+      lastMsg.includes("prefiero descansar") || lastMsg.includes("mantener plan original");
+
+    if (isCanonicalAction) {
+      const fallbackResponse = handleDeterministicFallback(
+        ctx,
+        body.messages || [],
+        Boolean(body.isInitialAudit),
+        body.currentPlan || []
+      );
+      return NextResponse.json(fallbackResponse);
+    }
+
+    // 3. Inferencia con Google Gemini API para consultas abiertas
     const inferenceResult = await executeGeminiInference(ctx, body);
 
     if (inferenceResult.success && inferenceResult.data) {

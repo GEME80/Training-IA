@@ -45,17 +45,14 @@ export async function executeGeminiInference(
     }
   });
 
-  const smartBrevityInstruction = `\n\n[DIRECTRICES DE FORMATO Y CONVERSACIÓN]:
-1. "reply": Redacta en Markdown limpio y elegante (110-160 palabras):
-   - Inicia con **Estado de la semana:** (resumen claro de adherencia y rampa).
-   - Sigue con **Diagnóstico:**
-     * Si la fisiología es óptima (TSB >= -15, HRV estable): declara CONTINUIDAD DEL PLAN ("El plan previsto es idóneo"). "suggestedPlan" DEBE SER null (cero propuestas de cambio).
-     * Si detectas fatiga aguda o sobrecarga que amerite ajuste: explica la causa y pregunta al atleta "¿Deseas que adaptemos el plan de esta semana?". "suggestedPlan" DEBE SER null. En "quickReplies" pon: ["Sí, adaptar plan por fatiga", "No, mantener plan actual"].
-     * Si el atleta solicitó explícitamente modular TSS, viaje o reorganizar: describe el cambio y aquí SÍ incluye los 7 días en "suggestedPlan".
-   - Finaliza con **Pauta para hoy:** (instrucción exacta de sesión y vatios).
-   PROHIBIDO usar etiquetas mecánicas como [ESTADO DEL PROCESO]. Usa negritas limpias de Markdown.
-2. "reasoning": Síntesis fisiológica técnica concisa (80-120 palabras).
-3. "suggestedPlan": Solo incluir array de 7 días si el atleta solicitó explícitamente un cambio; de lo contrario debe ser null.`;
+  const smartBrevityInstruction = `\n\n[DIRECTRICES ESTRICTAS DEL HEAD COACH FISIOLÓGICO PULSE]:
+1. "reply": Habla en términos prácticos de "frecuencia", "intensidad", "descanso" y "días". Cero jerga de cálculos matemáticos de TSS al atleta.
+   - Formato conciso: Contexto directo (1-2 oraciones) + Propuesta concreta (1-2 oraciones) + Pregunta de decisión binaria.
+   - Máximo 70-110 palabras. Prohibido usar encabezados mecánicos como "Estado de la semana:" o "Diagnóstico:".
+2. "quickReplies": Proporciona exactamente 2 botones:
+   - Botón 1 (Primario): Acción recomendada.
+   - Botón 2 (Secundario): Alternativa segura.
+3. "suggestedPlan": Solo incluir array de 7 días si el atleta solicitó explícitamente adaptar la semana; de lo contrario debe ser null.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {

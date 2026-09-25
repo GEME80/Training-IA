@@ -65,7 +65,6 @@ export function useHeadCoachChat({
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [temporaryAvailability, setTemporaryAvailability] = useState<WeeklyAvailabilityMap | null>(null);
   const [previousPlanSnapshot, setPreviousPlanSnapshot] = useState<PlanItem[] | null>(null);
-  const [isMatrixModalOpen, setIsMatrixModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -205,14 +204,7 @@ export function useHeadCoachChat({
         role: "assistant",
         text: "¡Microciclo actualizado con éxito! Tus sesiones ya están sincronizadas. Que tengas un excelente entrenamiento.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        smartActions: [
-          {
-            label: "Deshacer cambios",
-            variant: "tertiary",
-            icon: "undo",
-            actionType: "undo_changes",
-          },
-        ],
+        smartActions: [{ label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" }],
       };
       setMessages((prev) => [...prev, successMsg]);
     } catch (e: any) {
@@ -256,24 +248,19 @@ export function useHeadCoachChat({
       return;
     }
 
-    if (actionType === "open_matrix_modal" || /matriz temporal/i.test(rawLabel)) {
-      setIsMatrixModalOpen(true);
-      return;
-    }
-
     if (/^reorganizar$/i.test(rawLabel.trim())) {
+      const initialMatrix = temporaryAvailability || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability || {};
       const reorgPromptMsg: HeadCoachMessageData = {
         id: `reorg-prompt-${Date.now()}`,
         role: "assistant",
-        text: "Para reorganizar tu microciclo sin alterar tu planificación habitual, configuremos tu disponibilidad temporal. ¿Qué días deseas entrenar cada disciplina y cuáles necesitas de descanso?",
+        text: "Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en esta matriz. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso:",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        smartActions: [
-          { label: "Configurar Matriz Temporal", variant: "primary", icon: "sliders", actionType: "open_matrix_modal" },
-          { label: "Mantener plan original", variant: "secondary", icon: "x" },
-        ],
+        showInlineMatrix: true,
+        inlineMatrixAvailability: initialMatrix,
+        targetWeekNumber: activeWeekNumber,
+        smartActions: [],
       };
       setMessages((prev) => [...prev, reorgPromptMsg]);
-      setIsMatrixModalOpen(true);
       return;
     }
 
@@ -297,7 +284,7 @@ export function useHeadCoachChat({
       return;
     }
 
-    if (/mantener plan original|mantener plan/i.test(rawLabel.trim())) {
+    if (/mantener plan original|mantener plan previsto|mantener plan/i.test(rawLabel.trim())) {
       const keepMsg: HeadCoachMessageData = {
         id: `keep-${Date.now()}`,
         role: "assistant",
@@ -317,10 +304,27 @@ export function useHeadCoachChat({
 
   const handleApplyTemporaryMatrix = (tempAvail: WeeklyAvailabilityMap) => {
     setTemporaryAvailability(tempAvail);
+    setMessages((prev) =>
+      prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m))
+    );
     handleSendMessage(
       "He configurado una matriz de deportes temporal para esta semana. Adapta el microciclo distribuyendo los estímulos según esta nueva disponibilidad.",
       { temporaryAvailability: tempAvail }
     );
+  };
+
+  const handleCancelInlineMatrix = () => {
+    setMessages((prev) =>
+      prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m))
+    );
+    const cancelMsg: HeadCoachMessageData = {
+      id: `cancel-matrix-${Date.now()}`,
+      role: "assistant",
+      text: "Ajuste de matriz cancelado. Mantenemos tu microciclo tal como estaba planificado.",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      smartActions: INITIAL_SMART_ACTIONS,
+    };
+    setMessages((prev) => [...prev, cancelMsg]);
   };
 
   return {
@@ -328,14 +332,13 @@ export function useHeadCoachChat({
     isLoading,
     isApplying,
     syncFeedback,
-    isMatrixModalOpen,
     temporaryAvailability,
     messagesEndRef,
-    setIsMatrixModalOpen,
     handleSendMessage,
     handleApplyAndSync,
     handleUndoChanges,
     handleSelectSmartAction,
     handleApplyTemporaryMatrix,
+    handleCancelInlineMatrix,
   };
 }

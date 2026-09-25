@@ -190,9 +190,9 @@ ${actionPlanText}`;
   // FLUJO A: Ver detalle de estado fisiológico
   if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
     actionType = "REVIEW_PHYSIOLOGY";
-    replyMsg = `Claro. A nivel fisiológico, tu condición (CTL) está subiendo a buen ritmo alcanzando los ${physioStatus.ctl.toFixed(1)} puntos. Tu fatiga aguda (ATL) está controlada en ${physioStatus.atl.toFixed(1)}, lo que nos da un TSB de ${physioStatus.tsb.toFixed(1)} (fase ideal de asimilación). Tu HRV confirma que tu sistema nervioso se recupera perfectamente.\n\n¿Quieres mantener el plan actual o hacemos algún ajuste logístico?`;
+    replyMsg = "Tu cuerpo está asimilando la carga acumulada de manera óptima. La fatiga de las sesiones previas se mantiene en rangos totalmente seguros y la recuperación de tu sistema nervioso confirma que estás absorbiendo el trabajo sin riesgo de sobrecarga.\n\nVamos en trayectoria ideal hacia tu objetivo. ¿Mantenemos la planificación prevista para cerrar la semana con fuerza o necesitas reorganizar algún día?";
     smartActions = [
-      { label: "Mantener plan original", variant: "primary", icon: "check" },
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
       { label: "Reorganizar", variant: "secondary", icon: "calendar-sync" },
     ];
   }
@@ -223,10 +223,9 @@ ${actionPlanText}`;
         { label: "Descartar", variant: "secondary", icon: "x" },
       ];
     } else {
-      replyMsg = "Para reorganizar tu microciclo sin alterar tu planificación habitual, configuremos tu disponibilidad temporal. ¿Qué días deseas entrenar cada disciplina y cuáles necesitas de descanso?";
+      replyMsg = "Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en la matriz del chat. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso.";
       smartActions = [
-        { label: "Configurar Matriz Temporal", variant: "primary", icon: "sliders", actionType: "open_matrix_modal" },
-        { label: "Mantener plan original", variant: "secondary", icon: "x" },
+        { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
       ];
     }
   }

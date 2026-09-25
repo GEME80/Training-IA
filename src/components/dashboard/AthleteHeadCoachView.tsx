@@ -8,7 +8,6 @@ import { MacrocycleBlueprint, MacrocyclePhaseInfo } from "@/lib/physiology/macro
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engine";
 import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
-import { HeadCoachTemporaryMatrixModal } from "./headcoach/HeadCoachTemporaryMatrixModal";
 import { HeadCoachMessageItem } from "./headcoach/HeadCoachMessageItem";
 import { HeadCoachHeader } from "./headcoach/HeadCoachHeader";
 import { useHeadCoachChat } from "./headcoach/useHeadCoachChat";
@@ -78,13 +77,11 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     isLoading,
     isApplying,
     syncFeedback,
-    isMatrixModalOpen,
-    temporaryAvailability,
     messagesEndRef,
-    setIsMatrixModalOpen,
     handleApplyAndSync,
     handleSelectSmartAction,
     handleApplyTemporaryMatrix,
+    handleCancelInlineMatrix,
   } = useHeadCoachChat({
     profile,
     physioStatus,
@@ -160,6 +157,9 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
             isApplying={isApplying}
             onSelectQuickReply={(qr) => handleSelectSmartAction(qr)}
             onSelectSmartAction={handleSelectSmartAction}
+            onApplyInlineMatrix={handleApplyTemporaryMatrix}
+            onCancelInlineMatrix={handleCancelInlineMatrix}
+            isGeneratingFromMatrix={isLoading}
           />
         ))}
 
@@ -176,16 +176,6 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* MODAL MATRIZ TEMPORAL (SOLO ESTA SEMANA) */}
-      <HeadCoachTemporaryMatrixModal
-        isOpen={isMatrixModalOpen}
-        onClose={() => setIsMatrixModalOpen(false)}
-        weekNumber={activeWeekNumber}
-        initialAvailability={(temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability || {}}
-        onApplyTemporaryMatrix={handleApplyTemporaryMatrix}
-        isLoading={isLoading}
-      />
     </div>
   );
 };

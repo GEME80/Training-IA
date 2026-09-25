@@ -3,12 +3,13 @@
 import React from "react";
 import {
   User, Activity, Flame, ShieldCheck, CheckCircle2, AlertTriangle, Sparkles,
-  ChevronDown, Dna, Compass, Target, CalendarSync, TrendingDown, TrendingUp,
+  Compass, Target, CalendarSync, TrendingDown, TrendingUp,
   Sliders, Check, X, Undo2, RotateCcw
 } from "lucide-react";
-import { PlanItem } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { SmartActionItem } from "@/lib/ai/headcoach/types";
 import { HeadCoachMicrocycleCard } from "./HeadCoachMicrocycleCard";
+import { HeadCoachInlineMatrixCard } from "./HeadCoachInlineMatrixCard";
 
 export interface HeadCoachMessageData {
   id: string;
@@ -21,6 +22,8 @@ export interface HeadCoachMessageData {
   reasoning?: string | null;
   quickReplies?: string[] | null;
   smartActions?: (string | SmartActionItem)[] | null;
+  showInlineMatrix?: boolean;
+  inlineMatrixAvailability?: WeeklyAvailabilityMap;
 }
 
 interface HeadCoachMessageItemProps {
@@ -30,6 +33,9 @@ interface HeadCoachMessageItemProps {
   isApplying?: boolean;
   onSelectQuickReply?: (replyText: string) => void;
   onSelectSmartAction?: (action: SmartActionItem | string) => void;
+  onApplyInlineMatrix?: (tempAvailability: WeeklyAvailabilityMap) => void;
+  onCancelInlineMatrix?: () => void;
+  isGeneratingFromMatrix?: boolean;
 }
 
 /**
@@ -192,11 +198,11 @@ const renderActionIcon = (action: SmartActionItem | string) => {
 };
 
 const getActionVariantClasses = (variant?: string, label?: string) => {
-  if (variant === "primary" || (!variant && /confirmar|aprobar|aplicar/i.test(label || ""))) {
-    return "bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-xs border border-emerald-500";
+  if (variant === "primary" || (!variant && /confirmar|aprobar|aplicar|mantener/i.test(label || ""))) {
+    return "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold active:scale-95 shadow-md shadow-emerald-500/20 border border-emerald-400";
   }
-  if (variant === "secondary" || (!variant && /descartar|mantener|descansar/i.test(label || ""))) {
-    return "bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-medium";
+  if (variant === "secondary" || (!variant && /descartar|descansar|reorganizar/i.test(label || ""))) {
+    return "bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-semibold";
   }
   if (variant === "tertiary" || (!variant && /deshacer/i.test(label || ""))) {
     return "text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 text-[11px] underline decoration-dotted bg-transparent border-0 p-1 font-medium";
@@ -211,6 +217,9 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   isApplying = false,
   onSelectQuickReply,
   onSelectSmartAction,
+  onApplyInlineMatrix,
+  onCancelInlineMatrix,
+  isGeneratingFromMatrix = false,
 }) => {
   const isAssistant = message.role === "assistant";
   const actionsList = message.smartActions || message.quickReplies || [];
@@ -286,20 +295,15 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
           </div>
         )}
 
-        {/* Profundidad Fisiológica Bajo Demanda ("Depth on Demand") */}
-        {isAssistant && message.reasoning && (
-          <details className="mt-3 text-xs bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60 group">
-            <summary className="cursor-pointer font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between gap-2 select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-              <span className="flex items-center gap-1.5">
-                <Dna className="h-3.5 w-3.5 text-emerald-500" />
-                Profundidad Fisiológica & Telemetría
-              </span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200 group-open:rotate-180" />
-            </summary>
-            <div className="mt-2.5 pt-2.5 border-t border-slate-200/40 dark:border-slate-700/40 text-slate-600 dark:text-slate-300 leading-relaxed font-mono text-[11px] whitespace-pre-wrap">
-              {message.reasoning}
-            </div>
-          </details>
+        {/* Matriz Temporal Deportiva Inline (100% en el Chat) */}
+        {isAssistant && message.showInlineMatrix && message.inlineMatrixAvailability && onApplyInlineMatrix && (
+          <HeadCoachInlineMatrixCard
+            weekNumber={message.targetWeekNumber || weekNumber}
+            initialAvailability={message.inlineMatrixAvailability}
+            onApplyMatrix={onApplyInlineMatrix}
+            onCancel={onCancelInlineMatrix}
+            isLoading={isGeneratingFromMatrix}
+          />
         )}
 
         {/* Tarjeta del Microciclo Adaptado (Si el Coach propuso un plan) */}

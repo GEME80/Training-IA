@@ -25,6 +25,22 @@ const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
       justification: "Evita la basculación de la pelvis y el valgo dinámico de rodilla en el maratón.",
       workoutDoc: "Activación (5m)\n- Puentes de glúteo unipodales\n\nBloque Principal (3 Rondas)\n- 10x Sentadilla búlgara por pierna con mancuernas\n- 12x Plancha lateral con abducción de pierna\n- 12x Clamshells con banda de alta tensión\n- 15x Elevaciones tibiales contra pared\n\nEnfriamiento (5m)\n- Estiramiento de psoas y piramidal",
     },
+    {
+      name: "S1: Cadena Posterior & Peso Muerto Rumano Unipodal (35m)",
+      focus: "Isquiotibiales, Glúteo Mayor y Control Lumbo-Pélvico",
+      durationMin: 35,
+      tss: 25,
+      justification: "Equilibra la fuerza de la zancada posterior y previene desgarros musculares en aceleraciones.",
+      workoutDoc: "Activación (5m)\n- Bisagra de cadera con pica\n\nBloque Principal (3 Rondas)\n- 10x Peso muerto rumano unipodal por pierna\n- 12x Puentes de glúteo con talón elevado\n- 12x Planchas dinámicas con apoyo alternado\n- 15x Tibiales anteriores con banda elástica\n\nEnfriamiento (5m)\n- Estiramiento miofascial de isquiotibiales",
+    },
+    {
+      name: "S1: Core Anti-Rotación & Estabilidad de Columna Pallof (30m)",
+      focus: "Transverso, Oblicuos y Transferencia de Fuerza",
+      durationMin: 30,
+      tss: 22,
+      justification: "Elimina oscilaciones y torsiones parásitas del torso para una economía de carrera perfecta.",
+      workoutDoc: "Activación (5m)\n- Bird-dog y respiración diafragmática 360°\n\nBloque Anti-Rotación (3 Rondas)\n- 12x Pallof press con banda isométrica 3s\n- 30s Paseo del granjero con mancuerna unilateral\n- 12x Deadbug con presión contra rodilla\n- 10x Elevación de caderas en plancha lateral\n\nEnfriamiento (5m)\n- Movilidad espinal y relajación",
+    },
   ],
   BUILD: [
     {
@@ -42,6 +58,22 @@ const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
       tss: 26,
       justification: "Enseña al sistema neuromuscular a absorber y transferir energía elástica instantánea sin fatiga metabólica.",
       workoutDoc: "Activación (5m)\n- Saltos suaves con comba\n\nBloque Pliométrico (3 Rondas)\n- 8x Drop jumps desde cajón bajo a salto vertical reactivo\n- 10x Zancadas explosivas alternadas\n- 15x Pogos reactivos unipodales\n- 30s Hollow body hold\n\nEnfriamiento (5m)\n- Soltura y respiración diafragmática",
+    },
+    {
+      name: "S1: Fuerza Unipodal & Sentadilla Búlgara con Pausa Isométrica (35m)",
+      focus: "Cuádriceps, Glúteo Medio y Absorción de Impacto",
+      durationMin: 35,
+      tss: 27,
+      justification: "Desarrolla fuerza excéntrica en cadena cerrada para tolerar impactos acumulados sin pérdida de técnica.",
+      workoutDoc: "Activación (5m)\n- Movilidad dinámica de cadera y tobillo\n\nBloque Principal (3 Rondas)\n- 8x Sentadilla búlgara con pausa abajo 2s\n- 10x Step-ups con elevación reactiva de rodilla contraria\n- 12x Clamshells resistidos con banda alta\n- 30s Plancha lateral con estrella\n\nEnfriamiento (5m)\n- Descarga miofascial de cuádriceps",
+    },
+    {
+      name: "S1: Potencia Reactiva Sóleo-Aquiles & Saltos Reactivos Pogo (30m)",
+      focus: "Tendón de Aquiles, Sóleo y Fuerza Elástica",
+      durationMin: 30,
+      tss: 25,
+      justification: "Optimiza la restitución elástica del complejo gemelo-sóleo-Aquiles durante el ritmo de competición.",
+      workoutDoc: "Activación (5m)\n- Saltos de tobillo suaves\n\nBloque Reactivo (3 Rondas)\n- 12x Saltos pogo elásticos a 180 bpm\n- 8x Elevación de talón con carga pesada a 1 pierna\n- 10x Saltos laterales reactivos sobre línea\n- 30s Hollow body en suelo\n\nEnfriamiento (5m)\n- Estiramiento pasivo de sóleo y gemelo",
     },
   ],
 };

@@ -37,15 +37,8 @@ export function generateWeekTemplate(
       const d = new Date(weekStart);
       d.setDate(weekStart.getDate() + idx);
       return {
-        day,
-        date: d.toISOString().split("T")[0],
-        formattedDate: `${d.getDate()} ${months[d.getMonth()]}`,
-        discipline: "Descanso",
-        workoutName: "Descanso",
-        action: "MANTENER",
-        justification: "Historial de entrenamiento ejecutado",
-        isRestDay: true,
-        workoutDoc: "",
+        day, date: d.toISOString().split("T")[0], formattedDate: `${d.getDate()} ${months[d.getMonth()]}`,
+        discipline: "Descanso", workoutName: "Descanso", action: "MANTENER", justification: "Historial de entrenamiento ejecutado", isRestDay: true, workoutDoc: "",
       };
     });
   }
@@ -89,6 +82,8 @@ export function generateWeekTemplate(
   let swimTestInjected = false;
   let runTestInjected = false;
   let runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
+  const usedRunWorkoutNames = new Set<string>();
+  const usedBikeWorkoutNames = new Set<string>();
 
   for (let idx = 0; idx < days.length; idx++) {
     const day = days[idx];
@@ -97,7 +92,11 @@ export function generateWeekTemplate(
     const dateStr = d.toISOString().split("T")[0];
     const formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
 
-    const discList = getDayDisciplines(safeAvailability, day);
+    let discList = getDayDisciplines(safeAvailability, day);
+    if (curatedModel.sportCategory === "Running") {
+      discList = discList.filter((d) => d !== "Natacion");
+      if (discList.length === 0) discList = ["Descanso"];
+    }
 
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
@@ -154,10 +153,11 @@ export function generateWeekTemplate(
         }
 
         if (disc === "Carrera") {
+          const isSat = day === "Sábado";
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera",
-            workoutName: day === "Sábado" ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
-            durationMinutes: day === "Sábado" ? 15 : 25, tss: day === "Sábado" ? 9 : 16,
+            workoutName: isSat ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
+            durationMinutes: isSat ? 15 : 25, tss: isSat ? 9 : 16,
             powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave", justification: "Soltura neuromuscular con mínimo impacto articular.",
             workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 10m 70% FTP\n3x\n- 20s 85% FTP\n- 40s 55% FTP\n\nCooldown\n- 5m 60% FTP", isRestDay: false,
           });
@@ -245,8 +245,7 @@ export function generateWeekTemplate(
             day, date: dateStr, formattedDate, discipline: "Ciclismo",
             workoutName: rideTitle, action: "MANTENER", durationMinutes: rideMins,
             tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
-            workoutDoc: baseRideDoc, isRestDay: false,
-            mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
+            workoutDoc: baseRideDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }
@@ -254,13 +253,17 @@ export function generateWeekTemplate(
         const bikeVars = curatedModel.workoutVariations.bikeMidWeekWorkouts || [];
         const bStride = getCoprimeStride(bikeVars.length, 3);
         const bIdx = ((weekNumber - 1) * bStride + (bikeCount - 1)) % (bikeVars.length || 1);
-        const selBike = bikeVars[bIdx >= 0 ? bIdx : 0] || bikeVars[0];
+        let selBike = bikeVars[bIdx >= 0 ? bIdx : 0] || bikeVars[0];
+        for (let a = 0; a < bikeVars.length; a++) {
+          const candidate = bikeVars[(bIdx + a) % bikeVars.length];
+          if (!usedBikeWorkoutNames.has(candidate.name)) { selBike = candidate; break; }
+        }
+        usedBikeWorkoutNames.add(selBike.name);
         const bDur = isRecovery ? Math.min(45, selBike.durationMin || 45) : (selBike.durationMin || 50);
 
         result.push({
-          day, date: dateStr, formattedDate, discipline: "Ciclismo",
-          workoutName: selBike.name, action: "MANTENER", durationMinutes: bDur, tss: Math.round(bDur * 0.78),
-          powerTarget: interpolatePowerTarget(selBike.powerTarget, undefined, bikeFtp),
+          day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: selBike.name, action: "MANTENER",
+          durationMinutes: bDur, tss: Math.round(bDur * 0.78), powerTarget: interpolatePowerTarget(selBike.powerTarget, undefined, bikeFtp),
           justification: selBike.justification, workoutDoc: selBike.workoutDoc, isRestDay: false,
         });
         continue;
@@ -280,40 +283,35 @@ export function generateWeekTemplate(
         }
 
         if (day === longRunDay) {
-          const addons = resolveWorkoutAddons({
-            durationMinutes: longRun.minutes,
-            sport: "Carrera",
-            isQualityOrLong: true,
-          });
+          usedRunWorkoutNames.add(longRun.workoutName);
+          const addons = resolveWorkoutAddons({ durationMinutes: longRun.minutes, sport: "Carrera", isQualityOrLong: true });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera",
             workoutName: longRun.workoutName, action: "MANTENER", durationMinutes: longRun.minutes,
-            tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)),
-            powerTarget: longRun.powerTarget,
+            tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
             justification: `Tirada progresiva de ${longRun.km} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
-            workoutDoc: longRun.workoutDoc, isRestDay: false,
-            mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
+            workoutDoc: longRun.workoutDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }
 
         if (runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay) {
-          const q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp);
-          const isBrick = q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición");
-          let dur = 50;
-          let tss = 55;
-          if (isBrick) {
-            if (q.name.includes("1h30m") || q.name.includes("2h")) { dur = 115; tss = 110; }
-            else if (q.name.includes("1h15m") || q.name.includes("1h20m")) { dur = 95; tss = 95; }
-            else if (q.name.includes("1h10m") || q.name.includes("1h00m")) { dur = 85; tss = 85; }
-            else if (q.name.includes("50m")) { dur = 65; tss = 70; }
-            else { dur = 75; tss = 75; }
+          let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp);
+          const isRunningProgram = curatedModel.sportCategory === "Running";
+          if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
+            const phaseList = curatedModel.workoutVariations.qualityWorkouts[phase.toLowerCase() as "base" | "build" | "peak" | "taper"] || [];
+            const nonBrick = phaseList.find((v) => !v.name.toLowerCase().includes("brick")) || phaseList[0];
+            if (nonBrick) {
+              q = {
+                name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp),
+                justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc,
+              };
+            }
           }
-          const addons = resolveWorkoutAddons({
-            durationMinutes: dur,
-            sport: "Carrera",
-            isQualityOrLong: true,
-          });
+          usedRunWorkoutNames.add(q.name);
+          const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
+          const dur = isBrick ? 85 : 50, tss = isBrick ? 85 : 55;
+          const addons = resolveWorkoutAddons({ durationMinutes: dur, sport: "Carrera", isQualityOrLong: true });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", activityType: isBrick ? "Brick" : "Carrera",
             workoutName: q.name, action: "MANTENER", durationMinutes: dur, tss,
@@ -326,13 +324,17 @@ export function generateWeekTemplate(
         const recVars = curatedModel.workoutVariations.recoveryAerobicWorkouts || [];
         const rStride = getCoprimeStride(recVars.length, 2);
         const recIdx = ((weekNumber - 1) * rStride + (runCount - 1)) % (recVars.length || 1);
-        const recW = recVars[recIdx >= 0 ? recIdx : 0] || recVars[0];
+        let recW = recVars[recIdx >= 0 ? recIdx : 0] || recVars[0];
+        for (let a = 0; a < recVars.length; a++) {
+          const candidate = recVars[(recIdx + a) % recVars.length];
+          if (!usedRunWorkoutNames.has(candidate.name)) { recW = candidate; break; }
+        }
+        usedRunWorkoutNames.add(recW.name);
         const dur = phase === "TAPER" || isRecovery ? 35 : (recW.durationMin || 40);
 
         result.push({
-          day, date: dateStr, formattedDate, discipline: "Carrera",
-          workoutName: recW.name, action: "MANTENER", durationMinutes: dur, tss: Math.round(dur * 0.75),
-          powerTarget: interpolatePowerTarget(recW.powerTarget, runFtp, undefined),
+          day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: recW.name, action: "MANTENER",
+          durationMinutes: dur, tss: Math.round(dur * 0.75), powerTarget: interpolatePowerTarget(recW.powerTarget, runFtp, undefined),
           justification: recW.justification, workoutDoc: recW.workoutDoc, isRestDay: false,
         });
         continue;

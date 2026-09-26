@@ -205,10 +205,7 @@ ${actionPlanText}`;
     actionType = "ADAPT_WORKOUT";
     if (lowerMsg.includes("matriz") || lowerMsg.includes("temporal") || lowerMsg.includes("disponibilidad")) {
       const macroPhase = ctx.promptContext.macrocyclePhase;
-      const hasSwim = Object.values(safeAvailability).some((v: any) =>
-        Array.isArray(v) ? v.includes("Natacion") : v === "Natacion"
-      );
-      const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
+      const resolvedDist = (macroPhase?.primaryRace?.distance as any) || "42k";
       const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
       const defaultWeekBlueprint = {
         weekNumber: targetPlanningWeekNum,
@@ -225,8 +222,10 @@ ${actionPlanText}`;
         defaultWeekBlueprint as any, profile.run_ftp, profile.bike_ftp,
         safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date
       );
-      modifiedPlan = rawTemplate.map((p, pIdx) => {
-        const dateInfo = planningWeekDates[pIdx] || { date: "", formattedDate: "" };
+      const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+      modifiedPlan = rawTemplate.map((p) => {
+        const dayIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === p.day?.toLowerCase());
+        const dateInfo = dayIdx >= 0 && planningWeekDates[dayIdx] ? planningWeekDates[dayIdx] : { date: "", formattedDate: "" };
         return {
           ...p,
           date: dateInfo.date || p.date,

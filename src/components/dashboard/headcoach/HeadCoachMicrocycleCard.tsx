@@ -2,21 +2,14 @@
 
 import React, { useState } from "react";
 import {
-  Calendar,
-  Check,
-  RefreshCw,
   Footprints,
   Bike,
   Dumbbell,
   Moon,
-  ChevronDown,
-  ChevronUp,
   Sparkles,
   Zap,
   Clock,
-  ArrowRight,
   Info,
-  CheckCircle2,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
@@ -28,14 +21,13 @@ interface HeadCoachMicrocycleCardProps {
   isApplying?: boolean;
 }
 
+const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
 export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = ({
   plan,
   weekNumber,
-  onApplyAndSync,
-  isApplying = false,
 }) => {
-  const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const [showStructures, setShowStructures] = useState(false);
+  const [expandedCardKey, setExpandedCardKey] = useState<string | null>(null);
 
   const totalTss = plan.reduce((acc, p) => acc + (p.tss || 0), 0);
   const totalMinutes = plan.reduce((acc, p) => acc + (p.durationMinutes || 0), 0);
@@ -99,6 +91,23 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
     );
   };
 
+  // Agrupamiento canónico por los 7 días de la semana
+  const daysGrouped = CANONICAL_DAYS.map((dayName) => {
+    const daySessions = plan.filter(
+      (p) => p.day?.toLowerCase() === dayName.toLowerCase() ||
+             p.day?.toLowerCase().startsWith(dayName.slice(0, 3).toLowerCase())
+    );
+    const primaryDate = daySessions.find((s) => s.formattedDate)?.formattedDate || "";
+    const dayTotalTss = daySessions.reduce((acc, s) => acc + (s.tss || 0), 0);
+    return {
+      dayName,
+      shortName: dayName.slice(0, 3),
+      formattedDate: primaryDate,
+      sessions: daySessions,
+      dayTotalTss,
+    };
+  });
+
   return (
     <div className="my-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-white via-emerald-50/15 to-white dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-900 shadow-md p-3.5 sm:p-5 space-y-4">
       {/* Cabecera de la Tarjeta del Microciclo */}
@@ -141,68 +150,110 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
       <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-0.5">
         <span className="inline-flex items-center gap-1">
           <Sparkles className="h-3 w-3 text-emerald-500" />
-          <span className="hidden lg:inline">Semana completa visible (7 días estructurados)</span>
+          <span className="hidden lg:inline">Semana completa visible (7 días fijos de Lunes a Domingo)</span>
           <span className="lg:hidden">Desliza o toca cada día</span>
         </span>
-        <span>Toca cualquier día para expandir</span>
+        <span>Toca cualquier sesión para expandir</span>
       </div>
 
-      {/* Rejilla Adaptativa de los 7 Días del Microciclo (Full Width en Desktop) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5 pb-2 pt-1 px-0.5">
-        {plan.map((item, idx) => {
-          const isExpanded = expandedDay === idx;
-          const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
+      {/* Rejilla Canónica de 7 Días (Sesiones dobles apiladas limpiamente dentro de su columna) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 pb-2 pt-1 px-0.5 items-start">
+        {daysGrouped.map((dayGroup, dayIdx) => {
+          const hasSessions = dayGroup.sessions.length > 0;
 
           return (
             <div
-              key={idx}
-              onClick={() => setExpandedDay(isExpanded ? null : idx)}
-              className={`w-full rounded-xl p-2.5 transition-all cursor-pointer border flex flex-col justify-between overflow-hidden ${
-                isRest
-                  ? "bg-slate-50/70 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800/80 opacity-85"
-                  : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 shadow-2xs hover:border-emerald-500/40"
-              } space-y-2`}
+              key={dayIdx}
+              className="flex flex-col gap-2 rounded-xl p-2 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/80 min-h-[140px]"
             >
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center space-x-1 min-w-0">
-                  {getDisciplineIcon(item.discipline)}
-                  <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate">
-                    {item.day?.slice(0, 3) || "Día"}
+              {/* Cabecera de Columna de Día */}
+              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-slate-200/70 dark:border-slate-800/80">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-black text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                    {dayGroup.shortName}
                   </span>
+                  {dayGroup.formattedDate && (
+                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                      • {dayGroup.formattedDate}
+                    </span>
+                  )}
                 </div>
-                {getActionBadge(item)}
-              </div>
-
-              <div>
-                <p
-                  className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-2 min-h-[30px] leading-tight"
-                  title={item.workoutName || item.title || "Entrenamiento"}
-                >
-                  {item.workoutName || item.title || "Entrenamiento"}
-                </p>
-                {item.formattedDate && (
-                  <p className="text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
-                    {item.formattedDate}
-                  </p>
+                {dayGroup.dayTotalTss > 0 ? (
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    {dayGroup.dayTotalTss} TSS
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                    0 TSS
+                  </span>
                 )}
               </div>
 
-              {/* Gráfica de Bloques de Potencia */}
-              <HeadCoachWorkoutBlockChart
-                discipline={item.discipline}
-                durationMinutes={item.durationMinutes || 0}
-                tss={item.tss || 0}
-                intensity={item.powerTarget || item.focus}
-                workoutStructure={item.workoutStructure}
-              />
-
-              {isExpanded && item.justification && (
-                <div className="pt-1.5 border-t border-slate-100 dark:border-slate-700/80 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
-                  <p className="italic flex items-start gap-1">
-                    <Info className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>{item.justification}</span>
-                  </p>
+              {/* Sesiones del Día */}
+              {!hasSessions ? (
+                <div className="flex-1 rounded-lg p-3 bg-white/50 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1 text-slate-400 py-6">
+                  <Moon className="h-4 w-4 text-slate-400/80" />
+                  <span className="text-[10px] font-medium">Descanso</span>
                 </div>
+              ) : (
+                dayGroup.sessions.map((item, sIdx) => {
+                  const cardKey = `${dayGroup.dayName}-${sIdx}`;
+                  const isExpanded = expandedCardKey === cardKey;
+                  const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
+
+                  return (
+                    <div
+                      key={sIdx}
+                      onClick={() => setExpandedCardKey(isExpanded ? null : cardKey)}
+                      className={`w-full rounded-xl p-2.5 transition-all cursor-pointer border flex flex-col justify-between overflow-hidden ${
+                        isRest
+                          ? "bg-white/70 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800/80 opacity-85"
+                          : "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 shadow-2xs hover:border-emerald-500/40"
+                      } space-y-2`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center space-x-1 min-w-0">
+                          {getDisciplineIcon(item.discipline)}
+                          <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate">
+                            {item.discipline}
+                          </span>
+                        </div>
+                        {getActionBadge(item)}
+                      </div>
+
+                      <div>
+                        <p
+                          className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-2 min-h-[26px] leading-tight"
+                          title={item.workoutName || item.title || "Entrenamiento"}
+                        >
+                          {item.workoutName || item.title || "Entrenamiento"}
+                        </p>
+                        <div className="flex items-center justify-between mt-1 text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                          <span>{item.durationMinutes ? `${item.durationMinutes}m` : "0m"}</span>
+                          <span>{item.tss ? `${item.tss} TSS` : ""}</span>
+                        </div>
+                      </div>
+
+                      {/* Gráfica de Bloques de Potencia */}
+                      <HeadCoachWorkoutBlockChart
+                        discipline={item.discipline}
+                        durationMinutes={item.durationMinutes || 0}
+                        tss={item.tss || 0}
+                        intensity={item.powerTarget || item.focus}
+                        workoutStructure={item.workoutStructure}
+                      />
+
+                      {isExpanded && item.justification && (
+                        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-700/80 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
+                          <p className="italic flex items-start gap-1">
+                            <Info className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{item.justification}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           );

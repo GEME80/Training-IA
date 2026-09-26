@@ -12,7 +12,9 @@ import {
   Info,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
+import { WorkoutChart } from "@/components/WorkoutChart";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
+import { gymShortDesc, HeadCoachExpandedGym, HeadCoachExpandedAerobic } from "./headcoachCardHelpers";
 
 interface HeadCoachMicrocycleCardProps {
   plan: PlanItem[];
@@ -22,14 +24,6 @@ interface HeadCoachMicrocycleCardProps {
 }
 
 const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-function gymShortDesc(workoutDoc?: string, focus?: string): string {
-  if (focus && focus.length > 3) return focus;
-  if (!workoutDoc) return "Fortalecimiento neuromuscular";
-  const lines = workoutDoc.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith("---"));
-  const first = lines[0] || "";
-  return first.length > 50 ? first.slice(0, 47) + "…" : first;
-}
 
 export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = ({
   plan,
@@ -249,14 +243,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
                           </span>
                         </div>
 
-                        {isExpanded && item.justification && (
-                          <div className="pt-1.5 border-t border-purple-200/50 dark:border-purple-900/50 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
-                            <p className="italic flex items-start gap-1">
-                              <Info className="h-3 w-3 text-purple-500 shrink-0 mt-0.5" />
-                              <span>{item.justification}</span>
-                            </p>
-                          </div>
-                        )}
+                        {isExpanded && <HeadCoachExpandedGym item={item} />}
                       </div>
                     );
                   }
@@ -296,22 +283,22 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
                       </div>
 
                       {/* Gráfica de Bloques de Potencia */}
-                      <HeadCoachWorkoutBlockChart
-                        discipline={item.discipline}
-                        durationMinutes={item.durationMinutes || 0}
-                        tss={item.tss || 0}
-                        intensity={item.powerTarget || item.focus}
-                        workoutStructure={item.workoutStructure}
-                      />
-
-                      {isExpanded && item.justification && (
-                        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-700/80 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
-                          <p className="italic flex items-start gap-1">
-                            <Info className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
-                            <span>{item.justification}</span>
-                          </p>
+                      {item.workoutDoc ? (
+                        <div className="w-full overflow-hidden rounded-lg">
+                          <WorkoutChart workoutDoc={item.workoutDoc} discipline={item.discipline} />
                         </div>
+                      ) : (
+                        <HeadCoachWorkoutBlockChart
+                          discipline={item.discipline}
+                          durationMinutes={item.durationMinutes || 0}
+                          tss={item.tss || 0}
+                          intensity={item.powerTarget || item.focus}
+                          workoutStructure={item.workoutStructure}
+                        />
                       )}
+
+                      {/* Detalle estructurado al expandir */}
+                      {isExpanded && <HeadCoachExpandedAerobic item={item} />}
                     </div>
                   );
                 })

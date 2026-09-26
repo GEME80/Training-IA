@@ -77,12 +77,12 @@ export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps>
           return (
             <div
               key={day}
-              className="py-2 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap"
+              className="py-2.5 px-2 sm:px-3 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-900/50 transition-colors flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap"
             >
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 w-20 shrink-0">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 w-24 shrink-0">
                 {day}
               </span>
-              <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto py-0.5">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap py-0.5 justify-end">
                 {DISCIPLINES.map((d) => {
                   const isSelected = currentSelected.includes(d.id);
                   return (
@@ -90,7 +90,7 @@ export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps>
                       key={d.id}
                       type="button"
                       onClick={() => handleToggleDiscipline(day, d.id)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                         isSelected
                           ? d.id === "Descanso"
                             ? "bg-slate-300 dark:bg-slate-700 text-slate-900 dark:text-white border border-slate-400 dark:border-slate-600 shadow-xs"

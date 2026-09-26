@@ -236,10 +236,10 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
       {/* Cuerpo del Mensaje */}
       <div
-        className={`max-w-3xl rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
+        className={`rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
           isAssistant
-            ? "bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200"
-            : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-medium ml-auto"
+            ? "w-full max-w-full lg:max-w-[96%] xl:max-w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200"
+            : "max-w-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-medium ml-auto"
         }`}
       >
         {isAssistant && (

@@ -137,17 +137,18 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
         </div>
       </div>
 
-      {/* Indicador de Desplazamiento */}
+      {/* Indicador de Visualización & Guía */}
       <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-0.5">
         <span className="inline-flex items-center gap-1">
-          <ArrowRight className="h-3 w-3 text-slate-400" />
-          Desliza horizontalmente para ver los 7 días
+          <Sparkles className="h-3 w-3 text-emerald-500" />
+          <span className="hidden lg:inline">Semana completa visible (7 días estructurados)</span>
+          <span className="lg:hidden">Desliza o toca cada día</span>
         </span>
         <span>Toca cualquier día para expandir</span>
       </div>
 
-      {/* Tira Horizontal Desplazable de los 7 Días del Microciclo */}
-      <div className="flex items-stretch overflow-x-auto no-scrollbar gap-2.5 pb-2 pt-1 px-0.5 snap-x">
+      {/* Rejilla Adaptativa de los 7 Días del Microciclo (Full Width en Desktop) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5 pb-2 pt-1 px-0.5">
         {plan.map((item, idx) => {
           const isExpanded = expandedDay === idx;
           const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
@@ -156,7 +157,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
             <div
               key={idx}
               onClick={() => setExpandedDay(isExpanded ? null : idx)}
-              className={`w-[136px] sm:w-[145px] shrink-0 snap-start rounded-xl p-2.5 transition-all cursor-pointer border flex flex-col justify-between overflow-hidden ${
+              className={`w-full rounded-xl p-2.5 transition-all cursor-pointer border flex flex-col justify-between overflow-hidden ${
                 isRest
                   ? "bg-slate-50/70 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-800/80 opacity-85"
                   : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 shadow-2xs hover:border-emerald-500/40"

@@ -317,3 +317,23 @@ export function resolveLongRideDay(availability: WeeklyAvailabilityMap = {}): st
   if (bikeDays.includes("Sábado")) return "Sábado";
   return bikeDays[bikeDays.length - 1] || "Sábado";
 }
+
+export function resolveEveRide(bikeFtp?: number) {
+  return {
+    workoutName: "Ciclismo de Soltura & Cadencia Pre-Tirada (45m Z2)",
+    durationMinutes: 45, tss: 28,
+    powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.62)}W (62% FTP)` : "62% FTP",
+    justification: "Pedaleo ágil de cadencia y oxigenación para llegar con piernas frescas a la tirada larga.",
+    workoutDoc: "Warmup\n- 10m 55% FTP\n\nMain\n- 25m 62% FTP (90-95 rpm)\n- 3x 30s aceleración 100 rpm (recup 1m)\n\nCooldown\n- 7m 50% FTP",
+  };
+}
+
+export function resolveFridayFartlek(runFtp?: number) {
+  return {
+    workoutName: "Carrera - Fartlek Dinámico & Activación Aeróbica (45m)",
+    durationMinutes: 45, tss: 42,
+    powerTarget: runFtp ? `${Math.round(runFtp * 0.72)}-${Math.round(runFtp * 0.88)}W (Z2-Z4)` : "72-88% Stryd CP",
+    justification: "Cambios de ritmo alegres y controlados para activar reactividad neuromuscular sin agotar las piernas antes de la tirada larga.",
+    workoutDoc: "Warmup\n- 15m @ 70% CP\n\n6x Fartlek Ágil\n- 1m @ 88-92% CP\n- 2m @ 68% CP\n\nCooldown\n- 12m @ 65% CP",
+  };
+}

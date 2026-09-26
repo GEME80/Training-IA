@@ -8,12 +8,9 @@ import { selectStrengthWorkout } from "./strengthWorkoutPool";
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches";
 import { resolveWorkoutAddons } from "./workoutEnhancers";
 import {
-  getCoprimeStride,
-  buildRestDay,
-  selectQualityWorkout,
-  interpolatePowerTarget,
+  getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
   resolveRaceWorkout, resolveRaceSundayWorkout, resolveWeekendRide,
-  resolveLongRunDay, resolveLongRideDay,
+  resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
 } from "./macrocycleTemplateHelpers";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
@@ -36,10 +33,7 @@ export function generateWeekTemplate(
     return days.map((day, idx) => {
       const d = new Date(weekStart);
       d.setDate(weekStart.getDate() + idx);
-      return {
-        day, date: d.toISOString().split("T")[0], formattedDate: `${d.getDate()} ${months[d.getMonth()]}`,
-        discipline: "Descanso", workoutName: "Descanso", action: "MANTENER", justification: "Historial de entrenamiento ejecutado", isRestDay: true, workoutDoc: "",
-      };
+      return { day, date: d.toISOString().split("T")[0], formattedDate: `${d.getDate()} ${months[d.getMonth()]}`, discipline: "Descanso", workoutName: "Descanso", action: "MANTENER", justification: "Historial de entrenamiento ejecutado", isRestDay: true, workoutDoc: "" };
     });
   }
 
@@ -52,16 +46,9 @@ export function generateWeekTemplate(
   const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
-  const hasCyclingInAvailability = Object.values(safeAvailability).some((discs: any) =>
-    Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d))
-  );
-  const isFtpTestWk = !isRaceWeek && hasCyclingInAvailability && (
-    (microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) ||
-    (weekNumber === 7 && totalWeeks >= 9)
-  );
-  if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) {
-    scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
-  }
+  const hasCycling = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
+  const isFtpTestWk = !isRaceWeek && hasCycling && ((microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) || (weekNumber === 7 && totalWeeks >= 9));
+  if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
   if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
   const longRun = calculateProgressiveLongRun(
     curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp
@@ -181,20 +168,14 @@ export function generateWeekTemplate(
         }
 
         const sw = selectSwimWorkout(phase, weekNumber, isRecovery, swimCount);
-        result.push({
-          day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: sw.name, action: "MANTENER",
-          durationMinutes: sw.durationMin, tss: sw.tss, powerTarget: sw.focus, justification: sw.justification, workoutDoc: sw.workoutDoc, isRestDay: false,
-        });
+        result.push({ day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: sw.name, action: "MANTENER", durationMinutes: sw.durationMin, tss: sw.tss, powerTarget: sw.focus, justification: sw.justification, workoutDoc: sw.workoutDoc, isRestDay: false });
         continue;
       }
 
       if (disc === "Fuerza") {
         strengthCount++;
         const st = resolveSpecializedStrengthWorkout({ sportCategory: curatedModel.sportCategory, phase, weekNumber, isRecovery, sessionIndex: strengthCount });
-        result.push({
-          day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: st.name, action: "MANTENER",
-          durationMinutes: st.durationMin, tss: st.tss, powerTarget: st.focus, justification: st.justification, workoutDoc: st.workoutDoc, isRestDay: false,
-        });
+        result.push({ day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: st.name, action: "MANTENER", durationMinutes: st.durationMin, tss: st.tss, powerTarget: st.focus, justification: st.justification, workoutDoc: st.workoutDoc, isRestDay: false });
         continue;
       }
 
@@ -226,6 +207,17 @@ export function generateWeekTemplate(
             day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: rideTitle, action: "MANTENER",
             durationMinutes: rideMins, tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
             workoutDoc: baseRideDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
+          });
+          continue;
+        }
+
+        if (isEve) {
+          const eve = resolveEveRide(bikeFtp);
+          usedBikeWorkoutNames.add(eve.workoutName);
+          result.push({
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: eve.workoutName, action: "MANTENER",
+            durationMinutes: eve.durationMinutes, tss: eve.tss, powerTarget: eve.powerTarget, justification: eve.justification,
+            workoutDoc: eve.workoutDoc, isRestDay: false,
           });
           continue;
         }
@@ -287,7 +279,19 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const isAdj = (day === "Viernes" && (longRunDay === "Domingo" || longRunDay === "Sábado")) || (day === "Sábado" && longRunDay === "Domingo");
+        const isEveFriday = day === "Viernes" && (longRunDay === "Domingo" || longRunDay === "Sábado");
+        if (isEveFriday) {
+          const fri = resolveFridayFartlek(runFtp);
+          usedRunWorkoutNames.add(fri.workoutName);
+          result.push({
+            day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: fri.workoutName, action: "MANTENER",
+            durationMinutes: fri.durationMinutes, tss: fri.tss, powerTarget: fri.powerTarget, justification: fri.justification,
+            workoutDoc: fri.workoutDoc, isRestDay: false,
+          });
+          continue;
+        }
+
+        const isAdj = day === "Sábado" && longRunDay === "Domingo";
         const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj && !discList.includes("Fuerza");
 
         if (isEligibleQuality) {

@@ -9,12 +9,11 @@ export async function executeGeminiInference(
   ctx: ResolvedChatContext,
   body: HeadCoachChatRequest
 ): Promise<{ success: boolean; data?: any; successfulModel?: string }> {
-  const { customGeminiKey, selectedModel, fallbackModels, temperature = 0.0, messages = [], isInitialAudit } = body;
-  const geminiKey = (customGeminiKey || process.env.GEMINI_API_KEY || "").toString().replace(/^["']|["']$/g, "").trim();
+  try {
+    const { customGeminiKey, selectedModel, fallbackModels, temperature = 0.0, messages = [], isInitialAudit } = body;
+    const geminiKey = (customGeminiKey || process.env.GEMINI_API_KEY || "").toString().replace(/^["']|["']$/g, "").trim();
 
-  if (!geminiKey) {
-    return { success: false };
-  }
+    if (!geminiKey) return { success: false };
 
   const systemInstructions = buildHeadCoachSystemPrompt(
     body.customPrompt || undefined,
@@ -61,11 +60,9 @@ export async function executeGeminiInference(
     normalizedContents.push({ role: "user", parts: [{ text: `${userPrompt}${smartBrevityInstruction}` }] });
   }
 
-  const mappedModel = (selectedModel === "gemini-flash-latest" || !selectedModel || selectedModel.includes("2.5-") || selectedModel.includes("2.0-"))
-    ? "gemini-3.5-flash"
-    : selectedModel;
-  const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels.filter((m: string) => !m.includes("2.5-")) : [];
-  const candidateModels = Array.from(new Set([mappedModel, ...userFallbacks, "gemini-3.5-flash", "gemini-3.6-flash"].filter(Boolean))).slice(0, 3);
+  const primaryModel = selectedModel || "gemini-2.5-flash";
+  const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels : [];
+  const candidateModels = Array.from(new Set([primaryModel, ...userFallbacks, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"].filter(Boolean) as string[])).slice(0, 3);
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
 
   const cleanJson = (str: string) => {
@@ -94,7 +91,7 @@ export async function executeGeminiInference(
               maxOutputTokens: 6144,
             },
           }),
-          signal: AbortSignal.timeout(50000),
+          signal: AbortSignal.timeout(12000),
         }
       );
 
@@ -342,4 +339,8 @@ export async function executeGeminiInference(
   }
 
   return { success: false };
+} catch (err) {
+  console.warn("Aviso: executeGeminiInference capturó excepción interna:", err);
+  return { success: false };
+}
 }

@@ -78,9 +78,7 @@ export function generateWeekTemplate(
   const longRideDay = resolveLongRideDay(safeAvailability);
 
   const result: PlanItem[] = [];
-  let bikeTestInjected = false;
-  let swimTestInjected = false;
-  let runTestInjected = false;
+  let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false;
   let runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
   const usedRunWorkoutNames = new Set<string>();
   const usedBikeWorkoutNames = new Set<string>();
@@ -192,26 +190,18 @@ export function generateWeekTemplate(
 
         const sw = selectSwimWorkout(phase, weekNumber, isRecovery, swimCount);
         result.push({
-          day, date: dateStr, formattedDate, discipline: "Natacion",
-          workoutName: sw.name, action: "MANTENER", durationMinutes: sw.durationMin, tss: sw.tss,
-          powerTarget: sw.focus, justification: sw.justification, workoutDoc: sw.workoutDoc, isRestDay: false,
+          day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: sw.name, action: "MANTENER",
+          durationMinutes: sw.durationMin, tss: sw.tss, powerTarget: sw.focus, justification: sw.justification, workoutDoc: sw.workoutDoc, isRestDay: false,
         });
         continue;
       }
 
       if (disc === "Fuerza") {
         strengthCount++;
-        const st = resolveSpecializedStrengthWorkout({
-          sportCategory: curatedModel.sportCategory,
-          phase,
-          weekNumber,
-          isRecovery,
-          sessionIndex: strengthCount,
-        });
+        const st = resolveSpecializedStrengthWorkout({ sportCategory: curatedModel.sportCategory, phase, weekNumber, isRecovery, sessionIndex: strengthCount });
         result.push({
-          day, date: dateStr, formattedDate, discipline: "Fuerza",
-          workoutName: st.name, action: "MANTENER", durationMinutes: st.durationMin, tss: st.tss,
-          powerTarget: st.focus, justification: st.justification, workoutDoc: st.workoutDoc, isRestDay: false,
+          day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: st.name, action: "MANTENER",
+          durationMinutes: st.durationMin, tss: st.tss, powerTarget: st.focus, justification: st.justification, workoutDoc: st.workoutDoc, isRestDay: false,
         });
         continue;
       }
@@ -230,22 +220,31 @@ export function generateWeekTemplate(
           continue;
         }
 
-        if (day === longRideDay || day === "Sábado" || day === "Domingo") {
+        const isLongRideMatch = !longRideInjected && (day === longRideDay || (!longRideDay && (day === "Sábado" || day === "Domingo")));
+        if (isLongRideMatch && day !== longRunDay) {
+          longRideInjected = true;
           const { rideMins, rideTitle, rideJust, rideTarget, workoutDoc: rideWorkoutDoc } = resolveWeekendRide({
             distanceType, phase, weekNumber, isRecovery, bikeFtp,
           });
+          usedBikeWorkoutNames.add(rideTitle);
           const baseRideDoc = rideWorkoutDoc || `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
-          const addons = resolveWorkoutAddons({
-            durationMinutes: rideMins,
-            sport: "Ciclismo",
-            isQualityOrLong: true,
-          });
-
+          const addons = resolveWorkoutAddons({ durationMinutes: rideMins, sport: "Ciclismo", isQualityOrLong: true });
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Ciclismo",
-            workoutName: rideTitle, action: "MANTENER", durationMinutes: rideMins,
-            tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: rideTitle, action: "MANTENER",
+            durationMinutes: rideMins, tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
             workoutDoc: baseRideDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
+          });
+          continue;
+        }
+
+        if (day === longRunDay) {
+          const wName = "Ciclismo de Soltura & Asimilación Post-Tirada (30m Z1)";
+          usedBikeWorkoutNames.add(wName);
+          result.push({
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: wName, action: "MANTENER",
+            durationMinutes: 30, tss: 18, powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.55)}W (55% FTP)` : "55% FTP",
+            justification: "Recuperación activa y lavado metabólico sin estrés articular concurrente con la tirada larga.",
+            workoutDoc: "Warmup\n- 5m 50% FTP\n\nMain\n- 20m 55% FTP (90-95 rpm)\n\nCooldown\n- 5m 45% FTP", isRestDay: false,
           });
           continue;
         }

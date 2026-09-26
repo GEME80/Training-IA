@@ -23,6 +23,14 @@ interface HeadCoachMicrocycleCardProps {
 
 const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
+function gymShortDesc(workoutDoc?: string, focus?: string): string {
+  if (focus && focus.length > 3) return focus;
+  if (!workoutDoc) return "Fortalecimiento neuromuscular";
+  const lines = workoutDoc.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith("---"));
+  const first = lines[0] || "";
+  return first.length > 50 ? first.slice(0, 47) + "…" : first;
+}
+
 export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = ({
   plan,
   weekNumber,
@@ -43,7 +51,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
       case "Ciclismo":
         return <Bike className="h-3.5 w-3.5 text-sky-500" />;
       case "Fuerza":
-        return <Dumbbell className="h-3.5 w-3.5 text-amber-500" />;
+        return <Dumbbell className="h-3.5 w-3.5 text-purple-500" />;
       default:
         return <Moon className="h-3.5 w-3.5 text-slate-400" />;
     }
@@ -199,8 +207,61 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
                 dayGroup.sessions.map((item, sIdx) => {
                   const cardKey = `${dayGroup.dayName}-${sIdx}`;
                   const isExpanded = expandedCardKey === cardKey;
+                  const isGym = item.discipline === "Fuerza";
                   const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
 
+                  // ── TARJETA ESPECIALIZADA DE FUERZA (ESTILO GYM PURPLE) ──
+                  if (isGym) {
+                    const gymDesc = gymShortDesc(item.workoutDoc, item.powerTarget || item.focus);
+                    return (
+                      <div
+                        key={sIdx}
+                        onClick={() => setExpandedCardKey(isExpanded ? null : cardKey)}
+                        className="w-full rounded-xl border border-purple-200/90 dark:border-purple-800/80 bg-purple-50/30 dark:bg-purple-950/20 hover:border-purple-400 shadow-2xs overflow-hidden flex flex-col justify-between transition-all cursor-pointer p-2.5 space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between text-xs font-bold font-mono bg-purple-100/90 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border-b border-purple-200/90 dark:border-purple-800/70 -mx-2.5 -mt-2.5 px-2.5 py-1.5 mb-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <Dumbbell className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                            <span>{item.durationMinutes || 35}m</span>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200/70 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300">
+                            Gym
+                          </span>
+                        </div>
+
+                        <div>
+                          <p
+                            className="text-[11px] font-bold text-slate-800 dark:text-slate-200 line-clamp-2 min-h-[26px] leading-tight"
+                            title={item.workoutName || "Fortalecimiento"}
+                          >
+                            {item.workoutName || "Fortalecimiento"}
+                          </p>
+                          {gymDesc && (
+                            <p className="text-[10px] text-purple-700 dark:text-purple-300 font-mono leading-snug line-clamp-2 opacity-90 mt-1">
+                              {gymDesc}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-purple-200/60 dark:border-purple-900/60 text-slate-600 dark:text-slate-400 gap-1 mt-auto">
+                          <span className="truncate">
+                            {item.tss || 25} TSS{item.powerTarget ? ` · ⚡${item.powerTarget.split("•")[0].trim()}` : ""}
+                          </span>
+                        </div>
+
+                        {isExpanded && item.justification && (
+                          <div className="pt-1.5 border-t border-purple-200/50 dark:border-purple-900/50 text-[10px] text-slate-600 dark:text-slate-300 leading-snug">
+                            <p className="italic flex items-start gap-1">
+                              <Info className="h-3 w-3 text-purple-500 shrink-0 mt-0.5" />
+                              <span>{item.justification}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // ── TARJETA AERÓBICA (CARRERA / CICLISMO) O DESCANSO ──
                   return (
                     <div
                       key={sIdx}

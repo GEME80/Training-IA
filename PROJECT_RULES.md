@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.71)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.79)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.77).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.79).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versiones 3.78 - 3.79: Reingeniería Fisiológica y Visual del Head Coach (Intervalos Reales, Desglose Estructurado y Protección de Fin de Semana):
+  * Visualización Fidedigna de Intervalos y Cero Mocks (v3.79): Sustitución del mock genérico de 3 barras por el componente oficial `WorkoutChart` renderizando `item.workoutDoc`. Visualización auténtica de zonas de vatios/ritmo, descansos y series reales con paridad 100% con el calendario.
+  * Tarjetas Especializadas de Gym & Desglose Desplegado (v3.79): Sesiones de fortalecimiento sin falsos gráficos de potencia; despliegue enriquecido con Rondas, Descanso y Ejercicios específicos (Hip Thrust, Drop Jumps, etc.).
+  * Desglose Estructurado Aeróbico (v3.79): Al expandir tarjetas de Carrera o Ciclismo, visualización nítida de Calentamiento (⏱️), Bloque Principal (⚡), Enfriamiento (🧊) y Justificación Fisiológica (💡).
+  * Lógica Inteligente de Fin de Semana (Cero Repetición y Cero Sobrecarga - v3.79): Un único fondo largo por fin de semana; asignación automática de Ciclismo de Soltura/Asimilación metabólica (Z1 suave) en lugar de duplicar fondos en sábado y domingo.
+  * Reingeniería UX del Head Coach (v3.78): Saludo directo y humano ("Hola Germán, ¿en qué te puedo ayudar hoy?"), eliminación de propuesta intrusiva en caso de continuidad, protocolo de consentimiento previo antes de modificar semanas y formateo visual de veredictos sin etiquetas en texto crudo.
 - Versiones 3.72 - 3.77: Consola de Administración, Visor Metodológico de Macrociclos, Inspector Científico y Tests Fisiológicos:
   * Suite de Ciencia & Modelos Metodológicos Interactivos (v3.77): Tarjetas interactivas (`AdminScientificModelCard`) y modal de inspección fisiológica (`AdminScientificModelDetailModal`, `AdminScientificModelPhasesSection`, `AdminScientificModelDynamicsSection`) con desglose de 4 fases (Base/Build/Peak/Taper) con TSS y zonas, dinámica Banister (rampas de CTL y deload %), progresión de tirada larga con caps de tiempo y mitigación articular por biotipo.
   * Inspector de Protocolos y Tests de Campo (v3.77): Tarjetas (`AdminFieldTestCard`) y modal (`AdminFieldTestDetailModal`) para Stryd CP (3/9 min y 20m TT), Ciclismo FTP (20m y Ramp Test), Natación CSS (400m/200m) y VAM 5K con sintaxis estructurada para Intervals.icu, criterios de validez y algoritmo de calibración automática.
@@ -702,6 +708,35 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 
 4. **Ley de Feedback Visual Reactivo en Procesos Asíncronos:**
    - Toda acción asíncrona de sincronización ("Sync 3 sem (2:1)", "Esta sem.", etc.) debe proporcionar retroalimentación interactiva inmediata: botón deshabilitado preventivamente, icono en rotación (`animate-spin`) y texto explícito de estado ("Sincronizando...").
+
+---
+
+## 📊 18. LEYES DE VISUALIZACIÓN FIDEDIGNA DE INTERVALOS, DETALLE ESTRUCTURADO Y PROTECCIÓN DE FIN DE SEMANA EN HEAD COACH (v3.79)
+
+1. **Ley de Cero Gráficas Simuladas o Mocks Falsos en Microciclos:**
+   - Queda terminantemente prohibido utilizar barras SVG genéricas o mocks simulados de 3 bloques (`HeadCoachWorkoutBlockChart`) que supongan o falseen los intervalos.
+   - Toda propuesta de microciclo en el Head Coach (`HeadCoachMicrocycleCard.tsx`) debe renderizar intervalos auténticos utilizando el componente oficial [`WorkoutChart`](src/components/WorkoutChart.tsx) alimentado directamente con el documento estructurado `item.workoutDoc`.
+   - Se debe garantizar paridad visual del 100% con la visualización del calendario principal de Intervals.icu: bloques de calentamiento (Z1/Z2), series fraccionadas con colores por intensidad (Z3 Tempo, Z4 Umbral, Z5 VO2Max), intervalos de recuperación y enfriamiento.
+
+2. **Ley de Especialización de Tarjetas de Fortalecimiento (Gym):**
+   - Las sesiones de gimnasio y acondicionamiento neuromuscular nunca deben proyectar gráficos de potencia ni ejes de vatios.
+   - En la tarjeta compacta se muestra el tiempo estimado, badge morado distintivo y el subtítulo del circuito con foco neuromuscular.
+   - Al expandirse (`HeadCoachExpandedGym`), debe proyectar el enfoque biológico (reactividad elástica, fuerza máxima, pliometría o core), estructura de series/rondas y descanso entre series, y el desglose de ejercicios estructurados en viñetas limpias (`Hip Thrust`, `Drop Jumps`, etc.).
+
+3. **Ley del Desglose Estructurado Aeróbico (Carrera y Ciclismo):**
+   - Al expandir una tarjeta de carrera o ciclismo (`HeadCoachExpandedAerobic`), queda prohibido mostrar párrafos planos o justificaciones escuetas no estructuradas.
+   - La visualización debe descomponer nítidamente:
+     * ⏱️ **Calentamiento:** Duración y progresión hacia Z2.
+     * ⚡ **Bloque Principal:** Repeticiones, intervalos, duración y vatios prescritos según Stryd CP o FTP.
+     * 🧊 **Enfriamiento:** Tiempo de vuelta a la calma y lavado de lactato.
+     * 💡 **Objetivo Fisiológico:** Justificación metabólica contextualizada del estímulo.
+
+4. **Ley de Lógica Inteligente de Fin de Semana (Cero Repetición y Cero Sobrecarga en Microciclos):**
+   - El Head Coach debe proteger al atleta de la sobrecarga metabólica en fines de semana:
+     * **Solo un fondo largo aeróbico por fin de semana:** Se prohíbe programar dos fondos largos de 90+ minutos en sábado y domingo simultáneamente.
+     * **Protección de la Tirada Larga:** Si el atleta corre su tirada larga dominical progresiva (Pfitzinger / Canova) y cuenta con sesión de ciclismo ese mismo fin de semana, la sesión complementaria de bicicleta se programa automáticamente como *Ciclismo de Soltura & Asimilación* (30-45m Z1 suave @ 55-60% FTP) o cadencia suave, promoviendo el vaciado de subproductos metabólicos sin interferencia neuromuscular.
+     * **Cero Duplicidad de Entrenamientos:** Dos días consecutivos jamás pueden presentar el mismo título, estructura o estímulo fisiológico.
+
 
 
 

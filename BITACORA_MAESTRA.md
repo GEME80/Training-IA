@@ -4297,6 +4297,46 @@ flowchart TD
     * `deterministicFallback.ts`: 339 LOC
   - `Prueba 4 (Servidor Local):` Servidor Next.js activo en puerto 3000 con respuesta **HTTP 200 OK**.
 
+---
+
+### Versión 3.79 - Visualización Fidedigna de Intervalos, Desglose Estructurado de Sesiones en Head Coach y Protección de Fin de Semana (2026-09-25)
+- **Fecha y Hora:** 25 de Septiembre de 2026 - 21:20 COT.
+- **Directivas Atendidas:**
+  - *"genere una nueva y mira la propuesta analizala y miremos como organizamos por dia los ejercicios para que se vea ordenada. para mi repite ejeercicios no se ve diferencia se puede respetar el modelo pero tenemos muchas rutinas para colocar. genera un plan de mejora"*
+  - *"respeta la matriz temporal. ya muestra las tarjetas como gym. pero mira los entrenamientos de viernes, sabado y domingo es lo mismo cambia los TSS pero no varia el trabajo. vuelvo a preguntar porque no analiza esto"*
+  - *"creo que el error esta en la descripcion del trabajo por eso es que todo se ve igual. en el detalle deberia esto como se define en el macrociclo. revisa un plan y no ejecutes nada"*
+  - *"lo hemos logrado. actualiza la documentacion y las reglas con los cambios realizados"*
+- **Diagnóstico Forense de Causa Raíz:**
+  1. *Gráfico Simulado Falso en Head Coach (`HeadCoachWorkoutBlockChart.tsx`):* El gráfico de la tarjeta del Head Coach evaluaba la cadena de intensidad con una expresión regular rígida (`/interval|series|umbral/`). Cuando la intensidad era `"72-88% Stryd CP"` o `"65-75% FTP"`, el regex fallaba y siempre renderizaba 3 barras SVG fijas (15% azul, 70% verde, 15% gris). Esto hacía que un Fartlek dinámico, series de umbral y un rodaje suave se vieran visualmente idénticos.
+  2. *Texto Plano No Estructurado al Expandir:* Al hacer clic para expandir la tarjeta en el Head Coach, solo se renderizaba un campo unidimensional (`item.justification` o una cadena escueta), sin desglosar los circuitos y rondas de fuerza ni las fases aeróbicas (calentamiento, principal, enfriamiento y objetivo fisiológico), ocultando la riqueza y variedad de ejercicios reales.
+  3. *Incongruencia con Tarjetas de Gym:* Las tarjetas de fortalecimiento se renderizaban con gráficos de potencia vacíos o simulados en lugar de un formato especializado de circuito con enfoque y ejercicios específicos.
+  4. *Sobrecarga y Repetición en Fin de Semana:* En planes combinados de carrera y ciclismo, se generaban fondos duplicados de 90 minutos tanto en sábado como en domingo, compitiendo directamente con la tirada larga dominical.
+- **Soluciones Implementadas:**
+  1. *Integración del Renderizador Oficial de Intervalos (`WorkoutChart` en `HeadCoachMicrocycleCard.tsx`):*
+     - Reemplazo total del mock simulado por el componente canónico [`WorkoutChart`](src/components/WorkoutChart.tsx).
+     - Lectura directa de `item.workoutDoc`: ahora cada sesión aeróbica (Carrera y Ciclismo) proyecta sus bloques reales de intervalos, vatios, zonas de potencia y descansos, alcanzando paridad visual del 100% con la vista de calendario de Intervals.icu.
+  2. *Desacople de Helpers y Desglose Visual Estructurado (`headcoachCardHelpers.tsx` - 157 LOC):*
+     - `parseGymExercises()` y `gymShortDesc()`: Limpieza y estructuración de rutinas de fuerza a partir de descripciones multilínea.
+     - `HeadCoachExpandedGym`: Renderizado especializado para sesiones de Gym con insignias de enfoque, rondas, descansos y viñetas limpias de ejercicios clave (*Hip Thrust, Drop Jumps, Sentadilla Búlgara, Plancha dinámica*).
+     - `HeadCoachExpandedAerobic`: Renderizado especializado para Carrera y Ciclismo descomponiendo:
+       * ⏱️ Calentamiento progresivo.
+       * ⚡ Bloque principal con repeticiones, intervalos e intensidad en vatios / % FTP.
+       * 🧊 Enfriamiento y vuelta a la calma.
+       * 💡 Justificación y objetivo fisiológico.
+  3. *Lógica Inteligente de Fin de Semana (Cero Sobrecarga y Cero Repetición):*
+     - Bandera de control `longRideInjected`: Un único fondo largo por fin de semana.
+     - Si el atleta tiene ciclismo el fin de semana de la tirada larga de carrera, se prescribe automáticamente *Ciclismo de Soltura & Asimilación* (30-45m Z1 suave @ 55-60% FTP) para promover la recuperación activa y el lavado metabólico sin fatiga de glucógeno añadida.
+  4. *Gobernanza Modular Estricta (< 350 LOC):*
+     - `HeadCoachMicrocycleCard.tsx`: Rediseñado y optimizado en 312 LOC.
+     - `headcoachCardHelpers.tsx`: 157 LOC.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos $\le 350$ LOC (`HeadCoachMicrocycleCard.tsx`: 312 LOC, `headcoachCardHelpers.tsx`: 157 LOC).
+  - `Prueba 4 (Servidor en Producción):` Proceso daemon en puerto 3000 respondiendo **HTTP 200 OK**.
+  - `Prueba 5 (Control de Versiones):` Cambios commiteados y empujados exitosamente a GitHub (`origin/main`, commit `3c60a1a`).
+
+
 
 
 

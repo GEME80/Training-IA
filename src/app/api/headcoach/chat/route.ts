@@ -18,10 +18,7 @@ export async function POST(req: NextRequest) {
 
     const isCanonicalAction =
       Boolean(body.isInitialAudit) ||
-      lastMsg.includes("detalle de mi estado") || lastMsg.includes("ver detalle") ||
-      lastMsg.includes("reorganizar") || lastMsg.includes("matriz") || lastMsg.includes("temporal") ||
-      lastMsg.includes("mucha fatiga") || lastMsg.includes("fatiga hoy") ||
-      lastMsg.includes("plan está muy suave") || lastMsg.includes("muy suave") ||
+      lastMsg === "detalle de mi estado" || lastMsg === "ver detalle de mi estado" ||
       lastMsg.includes("confirmar nuevo calendario") || lastMsg.includes("aprobar ajuste") ||
       lastMsg.includes("aplicar mayor carga") || lastMsg.includes("descartar") ||
       lastMsg.includes("prefiero descansar") || lastMsg.includes("mantener plan original");

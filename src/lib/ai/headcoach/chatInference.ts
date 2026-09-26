@@ -124,12 +124,13 @@ export async function executeGeminiInference(
                 parsed.actionType === "REVIEW_PHYSIOLOGY" ||
                 (typeof parsed.reply === "string" && /continuidad/i.test(parsed.reply) && !/ajuste t[aá]ctico/i.test(parsed.reply));
 
+              const isMatrixRequest = allUserText.includes("matriz") || allUserText.includes("temporal") || allUserText.includes("disponibilidad") || allUserText.includes("reorganizar");
               const userExplicitlyRequestedAdjustment =
-                allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
+                isMatrixRequest || allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
                 allUserText.includes("+10%") || allUserText.includes("viaje") || allUserText.includes("cambia") ||
                 allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta");
 
-              if (isContinuityVerdict || !userExplicitlyRequestedAdjustment) {
+              if (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment)) {
                 parsed.actionType = "REVIEW_PHYSIOLOGY";
                 parsed.suggestedPlan = null;
                 if (!parsed.quickReplies || parsed.quickReplies.length === 0) {

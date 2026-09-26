@@ -64,15 +64,7 @@ export function generateWeekTemplate(
   }
   if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
   const longRun = calculateProgressiveLongRun(
-    curatedModel,
-    weekNumber,
-    weekNumber + countdown - 1,
-    isRecovery,
-    phase,
-    countdown,
-    volumeScaleFactor,
-    athleteCtl,
-    runFtp
+    curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp
   );
   const longRunDay = resolveLongRunDay(safeAvailability);
   const longRideDay = resolveLongRideDay(safeAvailability);
@@ -220,7 +212,8 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const isLongRideMatch = !longRideInjected && (day === longRideDay || (!longRideDay && (day === "Sábado" || day === "Domingo")));
+        const isEve = day === "Sábado" && longRunDay === "Domingo";
+        const isLongRideMatch = !longRideInjected && !isEve && (day === longRideDay || (!longRideDay && (day === "Sábado" || day === "Domingo")));
         if (isLongRideMatch && day !== longRunDay) {
           longRideInjected = true;
           const { rideMins, rideTitle, rideJust, rideTarget, workoutDoc: rideWorkoutDoc } = resolveWeekendRide({
@@ -294,7 +287,10 @@ export function generateWeekTemplate(
           continue;
         }
 
-        if (runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay) {
+        const isAdj = (day === "Viernes" && (longRunDay === "Domingo" || longRunDay === "Sábado")) || (day === "Sábado" && longRunDay === "Domingo");
+        const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj && !discList.includes("Fuerza");
+
+        if (isEligibleQuality) {
           let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp);
           const isRunningProgram = curatedModel.sportCategory === "Running";
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {

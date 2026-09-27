@@ -1,10 +1,14 @@
-# ⚡ SGEA Pro (v3.77) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.80) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🧭 **Onboarding Asistido e Interactivo para Intervals.icu (v3.80):** Asistente paso a paso para atletas que no conocen Intervals.icu. Incluye bifurcación amigable (*"Soy nuevo"* vs. *"Ya tengo cuenta"*), guía interactiva para registro 1-clic con Google/Strava, vinculación directa de relojes deportivos (Garmin Connect, Coros, Polar, Strava, Apple Watch vía HealthFit, Suunto, Wahoo), y obtención visual de Athlete ID y Clave API.
+- ⏳ **Sala de Espera Activa (Pre-Aprobación Self-Service) (v3.80):** Mientras el administrador valida al atleta, la pantalla de acceso restringido ofrece una tarjeta proactiva que permite al usuario adelantar la configuración de su cuenta de telemetría y reloj deportivo.
+- 📅 **Calendario Anual Completo Continuo (52 Semanas) & Cero Planes Fantasma (v3.80):** Los atletas sin macrociclo activo visualizan un calendario continuo de 52 semanas de scroll vertical con auto-scroll a la semana actual. Muestra el historial completo de entrenamientos reales ejecutados con estilo de sesión completada (checkmark `✓`, distancia, tiempo, TSS, vatios, pulso) y mantiene las semanas futuras como *"Disponibles para planificar"* con 0 TSS, erradicando planes ficticios de maratón por defecto.
+- 🛡️ **Auto-Sanación y Persistencia Inmutable de Credenciales Cifradas (v3.80):** Preservación estricta de `encryptedApiKey` (AES-256-GCM), biometría y métricas fisiológicas desde documentos de pre-autorización (`preauth_...`) al primer inicio de sesión con Google Auth, eliminando falsos avisos de configuración de perfil.
 - 🔬 **Suite de Ciencia & Modelos Metodológicos Interactivos (v3.77):** Inspección fisiológica profunda al hacer clic en cualquier modelo científico (`AdminScientificModelCard` & `AdminScientificModelDetailModal`), desglosando la periodización por fases (Base, Build, Peak, Taper) con rangos de TSS, dinámicas de carga Banister (límites de Ramp Rate $+CTL/\text{sem}$ y $\%$ de descarga), progresión de tirada larga con caps de tiempo y reglas de mitigación de impacto articular por biotipo.
 - 🧪 **Catálogo Completo e Inspector de Tests de Campo (v3.77):** Protocolos fisiológicos de calibración para Stryd Potencia (3/9 min y 20m TT), Ciclismo FTP (20m y Ramp Test), Natación CSS (400m/200m) y VAM 5K (`AdminFieldTestCard` & `AdminFieldTestDetailModal`). Incluye fórmulas matemáticas, factores dinámicos según CTL, criterios de validez y sintaxis estructurada para Intervals.icu con botón de copiado directo.
 - 📋 **Visor y Editor Funcional de Programas Deportivos (v3.76):** Clic directo en tarjetas de macrociclos para inspección metodológica completa y edición en vivo (`AdminProgramCard`, `AdminProgramDetailModal`, `AdminProgramDetailViewSection`, `AdminProgramDetailEditSection`) con persistencia asíncrona hacia `/api/admin/programs`.

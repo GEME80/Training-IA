@@ -4407,8 +4407,22 @@ flowchart TD
 - **Calendario Anual Continuo de 52 Semanas (`historicalCalendarWeeks.ts` - 186 LOC):** Se genera la ventana anual completa continua (semanas pasadas con o sin entrenamientos + semana actual + semanas futuras proyectables con estado *"Disponible / Sin Plan"* y 0 TSS), permitiendo al atleta navegar todo el año y auto-centrando la semana actual.
 - **Ergonomía en Tarjetas Fisiológicas (`PhysiologicalCards.tsx`):** Se ajustó el layout del encabezado en Potencia Bici y Potencia Run con `min-w-0`, `truncate` y `shrink-0` para prevenir colisiones de texto con la etiqueta `Watts`.
 
+#### E. Reingeniería Móvil de Fechas Determinísticas, Barra de Días con Números, Banner de Fecha Activa y Feed Semanal Fidedigno
+- **Cálculo Determinístico de 7 Fechas (`athleteMobileHelpers.ts` - 56 LOC):** Se erradicó la dependencia de `weekPlan` para conocer las fechas. Ahora `getWeekDates(baseMonday)` genera de forma fija las 7 cadenas `YYYY-MM-DD` (Lunes a Domingo), asociando actividades reales de Intervals.icu incluso si el atleta no tiene plan prescrito.
+- **Barra de 7 Días Ergonómica con Números (`AthleteMobileDayStrip.tsx` - 118 LOC):** Cada botón de día muestra la abreviación (`LUN`..`DOM`), el número del día en fuente grande y legible (`21`..`27`), indicador de hoy (`Hoy` en esmeralda), y punto de estado (verde para entrenos completados, cyan para planificados y neutro para descanso).
+- **Banner de Fecha Activa:** Franja informativa que indica con total claridad el día consultado (ej. `📅 Domingo, 27 de Septiembre · [HOY] · ⚡ 102 TSS`), eliminando cualquier ambigüedad de navegación.
+- **Feed Semanal Enriquecido (`AthleteMobileWeekFeed.tsx` - 120 LOC):** La tarjeta de cada día muestra número de día, icono y nombre de la sesión ejecutada, tiempo, distancia, TSS y badge `✓ Listo`.
+- **Navegación Histórica de 52 Semanas en Móvil:** `buildHistoricalBlueprint` integra las 28 semanas históricas en orden cronológico previo a la semana actual, permitiendo al usuario móvil navegar semanas anteriores con `<` y volver instantáneamente con el botón `🧭 Hoy`.
+
 ### 47.3. Validación y Certificación de Calidad
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
-- **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC (`AthleteCalendarDayColumn.tsx`: 334 LOC, `AthleteCalendarWeekRow.tsx`: 342 LOC, `historicalCalendarWeeks.ts`: 186 LOC).
-- **Servidor:** Proceso activo en puerto 3000 (PID 10025).
+- **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC:
+  * `AthleteMobileAgendaView.tsx`: 297 LOC
+  * `AthleteMobileDayStrip.tsx`: 118 LOC
+  * `athleteMobileHelpers.ts`: 56 LOC
+  * `AthleteMobileWeekFeed.tsx`: 120 LOC
+  * `AthleteMobileExtraCard.tsx`: 141 LOC
+  * `historicalCalendarWeeks.ts`: 194 LOC
+  * `AthleteContinuousCalendar.tsx`: 342 LOC
+- **Servidor:** Proceso activo en puerto 3000 respondiendo **HTTP 200 OK**.

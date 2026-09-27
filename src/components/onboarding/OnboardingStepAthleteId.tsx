@@ -6,21 +6,35 @@ import { User, ExternalLink } from "lucide-react";
 interface OnboardingStepAthleteIdProps {
   athleteId: string;
   setAthleteId: (val: string) => void;
+  onShowGuide?: () => void;
 }
 
 export const OnboardingStepAthleteId: React.FC<OnboardingStepAthleteIdProps> = ({
   athleteId,
   setAthleteId,
+  onShowGuide,
 }) => {
   return (
     <div className="space-y-4 animate-in fade-in">
-      <div className="flex items-center space-x-2">
-        <div className="h-7 w-7 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 flex items-center justify-center font-bold text-xs">
-          1
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="h-7 w-7 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 flex items-center justify-center font-bold text-xs">
+            1
+          </div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+            ¿Dónde encontrar tu Intervals Athlete ID?
+          </h3>
         </div>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-          ¿Dónde encontrar tu Intervals Athlete ID?
-        </h3>
+
+        {onShowGuide && (
+          <button
+            type="button"
+            onClick={onShowGuide}
+            className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+          >
+            ¿No tienes cuenta? Ver guía
+          </button>
+        )}
       </div>
 
       {/* Leyenda Explicativa Paso a Paso */}

@@ -63,6 +63,11 @@ export async function syncUserFromGoogleAuth(userData: {
     let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined;
     let preAuthRunFtp: number | undefined = undefined;
     let preAuthBikeFtp: number | undefined = undefined;
+    let preAuthEncryptedApiKey: any = undefined;
+    let preAuthWeightKg: number | undefined = undefined;
+    let preAuthLthr: number | undefined = undefined;
+    let preAuthRestingHR: number | undefined = undefined;
+    let preAuthMaxHR: number | undefined = undefined;
 
     const sanitizedEmailId = `preauth_${userData.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_")}`;
     const preAuthRef = adminDb.collection("users").doc(sanitizedEmailId);
@@ -76,11 +81,16 @@ export async function syncUserFromGoogleAuth(userData: {
         preAuthAthleteId = pData.intervalsAthleteId || preAuthAthleteId;
         preAuthRunFtp = pData.runFtp || preAuthRunFtp;
         preAuthBikeFtp = pData.bikeFtp || preAuthBikeFtp;
+        preAuthEncryptedApiKey = pData.encryptedApiKey;
+        preAuthWeightKg = pData.weightKg;
+        preAuthLthr = pData.lthr;
+        preAuthRestingHR = pData.restingHR;
+        preAuthMaxHR = pData.maxHR;
       }
       await preAuthRef.delete().catch(() => {});
     }
 
-    // Migrar datos funcionales (Stryd CP, Bike FTP) de documentos anteriores con el mismo email
+    // Migrar datos funcionales (Stryd CP, Bike FTP, API Key) de documentos anteriores con el mismo email
     const emailSnap = await adminDb.collection("users").where("email", "==", userData.email.toLowerCase()).get();
     let existingData: Partial<UserProfileData> = {};
     if (!emailSnap.empty) {
@@ -91,6 +101,10 @@ export async function syncUserFromGoogleAuth(userData: {
           if ((dData.bikeFtp || 0) > (existingData.bikeFtp || 0)) existingData.bikeFtp = dData.bikeFtp;
           if (dData.encryptedApiKey) existingData.encryptedApiKey = dData.encryptedApiKey;
           if (dData.intervalsAthleteId) existingData.intervalsAthleteId = dData.intervalsAthleteId;
+          if (dData.weightKg) existingData.weightKg = dData.weightKg;
+          if (dData.lthr) existingData.lthr = dData.lthr;
+          if (dData.restingHR) existingData.restingHR = dData.restingHR;
+          if (dData.maxHR) existingData.maxHR = dData.maxHR;
           await d.ref.delete().catch(() => {});
         }
       }
@@ -112,6 +126,7 @@ export async function syncUserFromGoogleAuth(userData: {
     }
 
     // Registro de nuevo usuario consolidado
+    const finalEncryptedKey = existingData.encryptedApiKey || preAuthEncryptedApiKey;
     const newProfile: UserProfileData = {
       uid: userData.uid,
       email: userData.email.toLowerCase(),
@@ -120,9 +135,14 @@ export async function syncUserFromGoogleAuth(userData: {
       role: preAuthRole,
       status: preAuthStatus,
       intervalsAthleteId: existingData.intervalsAthleteId || preAuthAthleteId,
-      encryptedApiKey: existingData.encryptedApiKey,
+      encryptedApiKey: finalEncryptedKey,
+      hasApiKey: Boolean(finalEncryptedKey),
       runFtp: existingData.runFtp || preAuthRunFtp,
       bikeFtp: existingData.bikeFtp || preAuthBikeFtp,
+      weightKg: existingData.weightKg || preAuthWeightKg,
+      lthr: existingData.lthr || preAuthLthr,
+      restingHR: existingData.restingHR || preAuthRestingHR,
+      maxHR: existingData.maxHR || preAuthMaxHR,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
       createdAt: now,
       lastLoginAt: now,
@@ -145,6 +165,21 @@ export async function syncUserFromGoogleAuth(userData: {
     updates.photoURL = userData.photoURL;
   }
 
+  // Resiliencia: si al usuario existente le faltaba la API Key o athleteId, buscar en preauth
+  if (!existing.encryptedApiKey || !existing.intervalsAthleteId) {
+    const sanitizedEmailId = `preauth_${userData.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_")}`;
+    const preAuthRef = adminDb.collection("users").doc(sanitizedEmailId);
+    const preAuthDoc = await preAuthRef.get();
+    if (preAuthDoc.exists) {
+      const pData = preAuthDoc.data();
+      if (pData?.encryptedApiKey && !existing.encryptedApiKey) updates.encryptedApiKey = pData.encryptedApiKey;
+      if (pData?.intervalsAthleteId && !existing.intervalsAthleteId) updates.intervalsAthleteId = pData.intervalsAthleteId;
+      if (pData?.runFtp && !existing.runFtp) updates.runFtp = pData.runFtp;
+      if (pData?.bikeFtp && !existing.bikeFtp) updates.bikeFtp = pData.bikeFtp;
+      await preAuthRef.delete().catch(() => {});
+    }
+  }
+
   if (isSuperadmin) {
     if (existing.role !== "admin") updates.role = "admin";
     if (existing.status !== "active") updates.status = "active";
@@ -160,7 +195,9 @@ export async function syncUserFromGoogleAuth(userData: {
   }
 
   await userRef.set(stripUndefined(updates), { merge: true });
-  return { ...existing, ...updates };
+  const merged = { ...existing, ...updates };
+  merged.hasApiKey = Boolean(merged.encryptedApiKey);
+  return merged;
 }
 
 /**

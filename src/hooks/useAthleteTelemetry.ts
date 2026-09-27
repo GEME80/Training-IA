@@ -95,7 +95,7 @@ export function useAthleteTelemetry({
       const targetApiKey = apiKey || apiKeyCache || "";
 
       if (!isSuper && targetAthleteId.toLowerCase() === "i442091") { setIsLiveConnected(false); return; }
-      if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey) { setIsLiveConnected(false); return; }
+      if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey) { setIsLiveConnected(false); return; }
 
       // Disponibilidad SWR: Si se consultó hace menos de 3 min y no es forzado, reusar estado
       const now = Date.now();
@@ -309,7 +309,7 @@ export function useAthleteTelemetry({
 
       setIsLoading(false);
 
-      if (storedAthleteId || storedApiKey || userProfile?.encryptedApiKey) {
+      if (storedAthleteId || storedApiKey || userProfile?.encryptedApiKey || userProfile?.hasApiKey) {
         refreshTelemetry(storedAthleteId, storedApiKey, resolvedRunFtp, resolvedBikeFtp, true);
       } else {
         setIsLiveConnected(false);
@@ -321,12 +321,12 @@ export function useAthleteTelemetry({
     };
 
     init();
-  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate, userProfile?.encryptedApiKey, isSuper, userStorage, refreshTelemetry]);
+  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate, userProfile?.encryptedApiKey, userProfile?.hasApiKey, isSuper, userStorage, refreshTelemetry]);
 
   // Heartbeat de auto-recuperación
   useEffect(() => {
     if (isLiveConnected || isLoading) return;
-    if (!profile.id && !apiKeyCache && !userProfile?.encryptedApiKey) return;
+    if (!profile.id && !apiKeyCache && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey) return;
 
     let retries = 0;
     const interval = setInterval(async () => {

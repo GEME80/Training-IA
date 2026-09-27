@@ -65,10 +65,10 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   gridTemplate, currentWeekRef, onSelectWeek, onOpenAICoach,
   onSyncWeekToIntervals, onSyncTriweeklyBlock, onSelectWorkoutModal,
 }) => {
-  const rawWeekPlan = generateWeekTemplate(
+  const isHistoricalOnly = Boolean(!blueprint || blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly);
+  const rawWeekPlan = isHistoricalOnly ? [] : generateWeekTemplate(
     week, runFtp, bikeFtp, effectiveAvailability,
-    (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
-    blueprint.athleteCtlAtCreation
+    (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation
   );
   const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents);
 
@@ -185,8 +185,8 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-slate-900 dark:text-white text-sm">
-                  {isHistoricalWeek ? "Historial" : `Sem. ${week.weekNumber}`}
-                  {!isHistoricalWeek && (
+                  {isHistoricalWeek || isHistoricalOnly ? (isHistoricalOnly && isCurrentWeek ? "Semana Actual" : "Historial") : `Sem. ${week.weekNumber}`}
+                  {!isHistoricalWeek && !isHistoricalOnly && (
                     <span className="text-slate-400 font-normal text-[11px]"> / {weeksCount}</span>
                   )}
                 </span>
@@ -197,7 +197,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                   <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" title="Semana Actual" />
                 )}
               </div>
-              {isFutureWeek && (
+              {isFutureWeek && !isHistoricalOnly && (
                 <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
                   Próxima
                 </span>
@@ -207,7 +207,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             {/* Badge de Fase del Macrociclo */}
             <div
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] uppercase border leading-tight ${
-                isHistoricalWeek
+                isHistoricalWeek || isHistoricalOnly
                   ? "bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700"
                   : isCurrentWeek
                   ? "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20"
@@ -215,10 +215,10 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                   ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20"
                   : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
               }`}
-              title={isHistoricalWeek ? "Historial" : fullPhaseLabel}
+              title={isHistoricalWeek || isHistoricalOnly ? "Historial" : fullPhaseLabel}
             >
-              {!isHistoricalWeek && <Target className="h-2.5 w-2.5 shrink-0" />}
-              <span className="truncate max-w-[110px]">{phaseShort}</span>
+              {!isHistoricalWeek && !isHistoricalOnly && <Target className="h-2.5 w-2.5 shrink-0" />}
+              <span className="truncate max-w-[110px]">{isHistoricalOnly ? "Sin Plan Activo" : phaseShort}</span>
             </div>
 
             {/* Métricas: Tiempo + TSS */}
@@ -229,10 +229,10 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               </div>
               <div className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 p-1.5">
                 <span className="text-slate-400 text-[9px] block uppercase font-bold">
-                  {displayPlannedTss > 0 ? "TSS Obj" : "TSS"}
+                  {!isHistoricalOnly && displayPlannedTss > 0 ? "TSS Obj" : "TSS"}
                 </span>
                 <strong className="text-cyan-600 dark:text-cyan-400 text-xs">
-                  {displayPlannedTss > 0 ? displayPlannedTss : (effectiveExecuted || "—")}
+                  {!isHistoricalOnly && displayPlannedTss > 0 ? displayPlannedTss : (effectiveExecuted || "—")}
                 </strong>
               </div>
             </div>
@@ -247,7 +247,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                     : completionPct >= 50 ? "text-amber-600 dark:text-amber-400"
                     : "text-slate-500"
                   }`}>
-                    {displayPlannedTss > 0 ? `${completionPct}%` : (effectiveExecuted > 0 ? "Sin plan" : "—")}
+                    {isHistoricalOnly ? "Sin plan" : (displayPlannedTss > 0 ? `${completionPct}%` : (effectiveExecuted > 0 ? "Sin plan" : "—"))}
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -317,7 +317,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               <Sparkles className="h-3.5 w-3.5" />
               <span>Head Coach IA</span>
             </button>
-            {onSyncTriweeklyBlock && !isHistoricalWeek && (
+            {onSyncTriweeklyBlock && !isHistoricalWeek && !isHistoricalOnly && (
               <button
                 type="button"
                 onClick={handleSyncTriweekly}
@@ -329,7 +329,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                 <span>{isSyncingTriweekly ? "Sincronizando..." : "Sync 3 sem (2:1)"}</span>
               </button>
             )}
-            {onSyncWeekToIntervals && (
+            {onSyncWeekToIntervals && !isHistoricalOnly && (
               <button
                 type="button"
                 onClick={handleSyncWeek}

@@ -146,15 +146,9 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
 
   // Vista móvil: agenda de la semana activa
   const activeWeekForAgenda = blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
-  const rawActiveWeekPlan = activeWeekForAgenda
-    ? generateWeekTemplate(
-        activeWeekForAgenda,
-        runFtp,
-        bikeFtp,
-        effectiveAvailability,
-        (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
-        blueprint.athleteCtlAtCreation
-      )
+  const isRealPlan = Boolean(blueprint && blueprint.id !== "historical-timeline-blueprint" && !(blueprint as any).isHistoricalOnly);
+  const rawActiveWeekPlan = isRealPlan && activeWeekForAgenda
+    ? generateWeekTemplate(activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability, (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation)
     : [];
   const activeWeekPlan = activeWeekForAgenda
     ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents)

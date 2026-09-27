@@ -29,6 +29,7 @@ export interface UserProfileData {
   status: UserStatus;
   intervalsAthleteId?: string;
   encryptedApiKey?: EncryptedPayload;
+  hasApiKey?: boolean;
   runFtp?: number; // Stryd CP (W)
   bikeFtp?: number; // Bike FTP (W)
   restingHR?: number;

@@ -118,7 +118,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           signOutUser={signOutUser}
         />
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
-          {!telemetry.apiKeyCache && !userProfile?.encryptedApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
+          {!telemetry.apiKeyCache && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
             <OnboardingBanner onOpenOnboarding={() => telemetry.setIsOnboardingOpen(true)} />
           )}
           <AthleteDashboardViewRouter

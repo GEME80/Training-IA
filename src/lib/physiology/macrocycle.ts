@@ -52,6 +52,8 @@ export interface MacrocycleWeek {
 }
 
 export interface MacrocycleBlueprint {
+  id?: string;
+  isHistoricalOnly?: boolean;
   mode: "MARATHON_SPECIFIC" | "PRE_SEASON_MAINTENANCE" | "GENERAL_MAINTENANCE";
   cycleTitle: string;
   cycleSubtitle?: string;

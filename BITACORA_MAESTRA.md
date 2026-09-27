@@ -4373,10 +4373,38 @@ flowchart TD
     * `chatInference.ts`: 337 LOC
     * `useHeadCoachChat.ts`: 348 LOC
     * `AthleteHeadCoachView.tsx`: 182 LOC
-  - `Prueba 4 (Servidor en Producción):` Proceso daemon en puerto 3000 respondiendo **HTTP 200 OK**.
+---
 
+## 47. Hito: Persistencia de Credenciales Preauth/Auth, Supresión de Planes Fantasma y Rediseño de Onboarding UX/UI para Intervals.icu (27 de Septiembre, 2026)
 
+### 47.1. Contexto y Problemas Reportados
+1. **Pérdida de Clave API en Primer Login:** En usuarios preautorizados (`preauth_...`), al completar su primer inicio de sesión mediante Google Auth, `syncUserFromGoogleAuth` sobreescribía el perfil sin arrastrar `encryptedApiKey`, `weightKg`, `heightCm` o métricas biométricas, dejando al usuario activo pero sin credenciales desencriptables. Esto causaba banners erróneos de *"Configurar perfil"* en móvil y web.
+2. **Generación de Planes Fantasma para Usuarios Nuevos:** Usuarios nuevos sin macrociclo activo (ej. `sylviarey86@gmail.com`) mostraban en la semana 1 del calendario un plan ficticio de Maratón 42K generado por plantillas por defecto. Si un usuario no tiene plan, debe visualizar únicamente sus actividades históricas reales importadas de Intervals.icu sin prescripciones fantasma.
+3. **Fricción en Onboarding para Atletas Nuevos:** Atletas sin cuenta en Intervals.icu o sin conocimientos de sincronización quedaban varados ante solicitudes directas de Athlete ID y API Key, mientras que en estado `pending` solo veían una pantalla estática sin opciones para adelantar su registro.
 
+### 47.2. Soluciones Implementadas
 
+#### A. Persistencia y Sanación de Credenciales (`userProfile.ts`, `/api/auth/sync/route.ts`, `types.ts`)
+- **Preservación Inmutable:** `syncUserFromGoogleAuth` ahora transfiere `encryptedApiKey`, `intervalsId`, `weightKg`, `heightCm`, `lthr`, `restingHR` y `maxHR` desde el documento `preauth_...` al crear el usuario definitivo.
+- **Auto-Sanación (Self-Healing):** Si un usuario autenticado carece de `encryptedApiKey` en su perfil principal pero existe un documento de preautorización previo con dicha clave, el sistema la recupera y enlaza automáticamente.
+- **Bandera Segura de Verificación:** Se incorporó `hasApiKey?: boolean` en `UserProfileData` para informar al frontend si las credenciales existen sin exponer jamás el secreto cifrado.
 
+#### B. Supresión Total de Planes Fantasma (`historicalCalendarWeeks.ts`, `AthleteCalendarWeekRow.tsx`, `AthleteContinuousCalendar.tsx`)
+- En `buildHistoricalBlueprint`, se marca la semana histórica con `isHistoricalOnly: true`, `targetTss: 0`, neutralidad de fases y `distanceType: undefined`.
+- En `AthleteCalendarWeekRow.tsx` y `AthleteContinuousCalendar.tsx`, se condicionó `generateWeekTemplate` para que nunca se ejecute si la semana es meramente histórica (`!isHistoricalOnly`).
+- La barra lateral de la semana muestra *"Sin Plan Activo"*, el TSS real ejecutado y oculta controles de sincronización de plan hacia Intervals.
 
+#### C. Rediseño Integral de Onboarding UX/UI
+- **Selector de Camino Inteligente (`OnboardingPathSelector.tsx` - 93 LOC):** Bifurcación amigable entre *"Soy nuevo en Intervals.icu"* y *"Ya tengo cuenta en Intervals.icu"*.
+- **Guía Asistida Interactiva (`OnboardingIntervalsGuide.tsx` - 277 LOC):** Guía interactiva en 3 pasos:
+  1. *Registro 1-clic gratuito:* Enlace directo a Intervals.icu para registrarse con Google o Strava sin costo.
+  2. *Vincular Reloj:* Instrucciones claras con selector de marcas (Garmin Connect, Coros, Polar, Strava, Suunto, Wahoo, Apple Watch con HealthFit).
+  3. *Obtención de Credenciales:* Explicación precisa de la ubicación del Athlete ID y generación de la Clave API.
+- **Orquestación en Modal (`IntervalsOnboardingModal.tsx` - 309 LOC):** Navegación fluida entre selector, guía, ingreso de credenciales y validación en tiempo real con `/api/test-connection`.
+- **Sala de Espera Activa (`RestrictedAccessView.tsx` - 144 LOC):** Para usuarios en estado `pending`, tarjeta proactiva que les permite adelantar la creación de su cuenta de Intervals y conexión de reloj mientras el administrador habilita su acceso.
+
+### 47.3. Validación y Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC.
+- **Servidor:** Proceso activo en puerto 3000 (PID 10025).

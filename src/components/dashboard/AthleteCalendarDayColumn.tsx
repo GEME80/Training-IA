@@ -164,7 +164,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                 {/* Footer */}
                 <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-emerald-200/60 dark:border-emerald-800/60 pt-1 mt-auto">
                   <span className="text-emerald-800 dark:text-emerald-300">
-                    {execTss > 0 ? `${execTss}/${plannedTss}` : plannedTss} TSS
+                    {execTss > 0 ? (plannedTss > 0 ? `${execTss}/${plannedTss}` : `${execTss}`) : plannedTss} TSS
                     {hasExtra ? (
                       <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
                         {matchedAct.watts ? `· ⚡${matchedAct.watts}W` : ""}

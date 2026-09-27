@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { X, Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
+import { OnboardingPathSelector } from "./onboarding/OnboardingPathSelector";
+import { OnboardingIntervalsGuide } from "./onboarding/OnboardingIntervalsGuide";
 import { OnboardingStepAthleteId } from "./onboarding/OnboardingStepAthleteId";
 import { OnboardingStepApiKey } from "./onboarding/OnboardingStepApiKey";
 import { OnboardingStepVerify, OnboardingTestResult } from "./onboarding/OnboardingStepVerify";
@@ -25,6 +27,9 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
   initialAthleteId = "",
   onSuccess,
 }) => {
+  const [viewMode, setViewMode] = useState<"selector" | "guide" | "wizard">(
+    initialAthleteId ? "wizard" : "selector"
+  );
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
   const [apiKey, setApiKey] = useState<string>("");
@@ -65,7 +70,7 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
 
         setTestResult({
           success: true,
-          message: `¡Conexión exitosa! Hola, ${detectedName}. Tu telemetría biológica ha sido sincronizada.`,
+          message: `¡Conexión exitosa! Hola, ${detectedName}. Tu telemetría deportiva ha sido sincronizada.`,
           athleteName: detectedName,
           athleteId: data.athleteId || athleteId.trim(),
           city: data.city || data.athlete?.city,
@@ -111,10 +116,14 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                  Bienvenido a PULSE AI PRO
+                  {viewMode === "guide"
+                    ? "Guía: Conecta tu Reloj e Intervals.icu"
+                    : "Bienvenido a PULSE AI PRO"}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Configura tu conexión con Intervals.icu en 3 simples pasos
+                  {viewMode === "selector" && "Selecciona cómo deseas configurar tu cuenta"}
+                  {viewMode === "guide" && "Paso a paso para crear tu cuenta gratuita y vincular dispositivos"}
+                  {viewMode === "wizard" && "Configura tu conexión con Intervals.icu en 3 simples pasos"}
                 </p>
               </div>
             </div>
@@ -128,71 +137,100 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
             </button>
           </div>
 
-          {/* Stepper Visual */}
-          <div className="grid grid-cols-3 gap-2 pt-4">
-            <div
-              onClick={() => setCurrentStep(1)}
-              className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
-                currentStep === 1
-                  ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
-                  : athleteId.trim()
-                  ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
-                  : "border-slate-200 dark:border-slate-800 text-slate-400"
-              }`}
-            >
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
-                currentStep === 1 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : athleteId.trim() ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-              }`}>
-                1
-              </span>
-              <span className="text-xs hidden sm:inline">Athlete ID</span>
-            </div>
+          {/* Stepper Visual (Solo cuando estamos en Wizard) */}
+          {viewMode === "wizard" && (
+            <div className="grid grid-cols-3 gap-2 pt-4">
+              <div
+                onClick={() => setCurrentStep(1)}
+                className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
+                  currentStep === 1
+                    ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
+                    : athleteId.trim()
+                    ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
+                    : "border-slate-200 dark:border-slate-800 text-slate-400"
+                }`}
+              >
+                <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
+                  currentStep === 1 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : athleteId.trim() ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                }`}>
+                  1
+                </span>
+                <span className="text-xs hidden sm:inline">Athlete ID</span>
+              </div>
 
-            <div
-              onClick={() => athleteId.trim() && setCurrentStep(2)}
-              className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
-                currentStep === 2
-                  ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
-                  : apiKey.trim()
-                  ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
-                  : "border-slate-200 dark:border-slate-800 text-slate-400"
-              }`}
-            >
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
-                currentStep === 2 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : apiKey.trim() ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-              }`}>
-                2
-              </span>
-              <span className="text-xs hidden sm:inline">Clave API</span>
-            </div>
+              <div
+                onClick={() => athleteId.trim() && setCurrentStep(2)}
+                className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
+                  currentStep === 2
+                    ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
+                    : apiKey.trim()
+                    ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
+                    : "border-slate-200 dark:border-slate-800 text-slate-400"
+                }`}
+              >
+                <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
+                  currentStep === 2 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : apiKey.trim() ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                }`}>
+                  2
+                </span>
+                <span className="text-xs hidden sm:inline">Clave API</span>
+              </div>
 
-            <div
-              onClick={() => athleteId.trim() && apiKey.trim() && setCurrentStep(3)}
-              className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
-                currentStep === 3
-                  ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
-                  : testResult?.success
-                  ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
-                  : "border-slate-200 dark:border-slate-800 text-slate-400"
-              }`}
-            >
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
-                currentStep === 3 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : testResult?.success ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-              }`}>
-                3
-              </span>
-              <span className="text-xs hidden sm:inline">Verificar</span>
+              <div
+                onClick={() => athleteId.trim() && apiKey.trim() && setCurrentStep(3)}
+                className={`cursor-pointer pb-2 border-b-2 transition flex items-center gap-2 ${
+                  currentStep === 3
+                    ? "border-cyan-600 dark:border-cyan-400 text-cyan-700 dark:text-cyan-300 font-bold"
+                    : testResult?.success
+                    ? "border-emerald-500 text-emerald-700 dark:text-emerald-400 font-medium"
+                    : "border-slate-200 dark:border-slate-800 text-slate-400"
+                }`}
+              >
+                <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
+                  currentStep === 3 ? "bg-cyan-600 dark:bg-cyan-500 text-white" : testResult?.success ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                }`}>
+                  3
+                </span>
+                <span className="text-xs hidden sm:inline">Verificar</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Cuerpo del Paso */}
+        {/* Cuerpo del Modal */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {currentStep === 1 && (
-            <OnboardingStepAthleteId athleteId={athleteId} setAthleteId={setAthleteId} />
+          {viewMode === "selector" && (
+            <OnboardingPathSelector
+              onSelectPath={(path) => {
+                if (path === "new") {
+                  setViewMode("guide");
+                } else {
+                  setViewMode("wizard");
+                  setCurrentStep(1);
+                }
+              }}
+            />
           )}
 
-          {currentStep === 2 && (
+          {viewMode === "guide" && (
+            <OnboardingIntervalsGuide
+              onCompleteGuide={() => {
+                setViewMode("wizard");
+                setCurrentStep(1);
+              }}
+              onBackToSelector={() => setViewMode("selector")}
+            />
+          )}
+
+          {viewMode === "wizard" && currentStep === 1 && (
+            <OnboardingStepAthleteId
+              athleteId={athleteId}
+              setAthleteId={setAthleteId}
+              onShowGuide={() => setViewMode("guide")}
+            />
+          )}
+
+          {viewMode === "wizard" && currentStep === 2 && (
             <OnboardingStepApiKey
               apiKey={apiKey}
               setApiKey={setApiKey}
@@ -201,7 +239,7 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
             />
           )}
 
-          {currentStep === 3 && (
+          {viewMode === "wizard" && currentStep === 3 && (
             <OnboardingStepVerify
               athleteId={athleteId}
               apiKey={apiKey}
@@ -212,56 +250,59 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
           )}
         </div>
 
-        {/* Footer de Navegación */}
-        <div className="p-4 sm:px-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex items-center justify-between">
-          <div>
-            {currentStep > 1 ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((s) => (s - 1) as 1 | 2 | 3)}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Anterior</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3.5 py-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-semibold transition cursor-pointer"
-              >
-                Configurar más tarde
-              </button>
-            )}
-          </div>
+        {/* Footer de Navegación (Solo visible en Wizard) */}
+        {viewMode === "wizard" && (
+          <div className="p-4 sm:px-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex items-center justify-between">
+            <div>
+              {currentStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep((s) => (s - 1) as 1 | 2 | 3)}
+                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Anterior</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setViewMode("selector")}
+                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Volver a opciones</span>
+                </button>
+              )}
+            </div>
 
-          <div>
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (currentStep === 1 && athleteId.trim()) setCurrentStep(2);
-                  if (currentStep === 2 && apiKey.trim()) setCurrentStep(3);
-                }}
-                disabled={currentStep === 1 ? !athleteId.trim() : !apiKey.trim()}
-                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                <span>Siguiente</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={!testResult?.success}
-                className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold transition shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50"
-              >
-                <span>Comenzar a Entrenar</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            )}
+            <div>
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentStep === 1 && athleteId.trim()) setCurrentStep(2);
+                    if (currentStep === 2 && apiKey.trim()) setCurrentStep(3);
+                  }}
+                  disabled={currentStep === 1 ? !athleteId.trim() : !apiKey.trim()}
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <span>Siguiente</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={!testResult?.success}
+                  className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold transition shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50"
+                >
+                  <span>Comenzar a Entrenar</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

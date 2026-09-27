@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       success: true,
       profile: {
         ...profile,
-        // Cero datos de claves en claro
+        hasApiKey: Boolean(profile.encryptedApiKey || profile.hasApiKey),
         encryptedApiKey: undefined,
       },
     });

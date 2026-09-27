@@ -146,10 +146,10 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
         <div className="text-center px-1 flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-center gap-1">
             <span className="text-xs font-black text-slate-900 dark:text-white">
-              Semana {selectedMacroWeekIdx + 1} de {weeks.length}
+              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Semana Actual" : `Semana ${selectedMacroWeekIdx + 1} de ${weeks.length}`}
             </span>
             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-              {currentWeek?.phase || "Base"}
+              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Sin Plan Activo" : (currentWeek?.phase || "Base")}
             </span>
             {isCurrentWeek && (
               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 uppercase">
@@ -158,10 +158,14 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             )}
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[240px] mx-auto">
-            {currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica"}
+            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Historial de entrenamientos registrados en Intervals.icu" : (currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica")}
           </p>
           <div className="text-[10px] font-mono text-slate-500 mt-0.5">
-            Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS
+            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly || weekPlannedTss === 0 ? (
+              <>Carga Real: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> TSS</>
+            ) : (
+              <>Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS</>
+            )}
           </div>
         </div>
 

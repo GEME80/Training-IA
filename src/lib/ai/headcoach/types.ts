@@ -132,3 +132,39 @@ export interface SmartActionItem {
   actionType?: "message" | "open_matrix_modal" | "undo_changes";
   customPayload?: any;
 }
+
+export interface ResolvedChatContext {
+  profile: AthleteProfile;
+  physioStatus: import("@/lib/physiology/engine").PhysiologicalStatus;
+  plannedWeekTss: number;
+  actualTss: number;
+  compliancePct: number;
+  targetMinTss: number;
+  targetMaxTss: number;
+  formDiagnostic: string;
+  hasExistingPlan: boolean;
+  currentPlanSummary: string;
+  availabilityFormatted: string;
+  safeAvailability: WeeklyAvailabilityMap;
+  targetPlanningWeekNum: number;
+  planningWeekDates: Array<{ day: string; date: string; formattedDate: string }>;
+  planningStartDateStr: string;
+  planningEndDateStr: string;
+  todayDayName: string;
+  todayDateStr: string;
+  todayDayIndex: number;
+  isCurrentWeek: boolean;
+  hasTrainedToday: boolean;
+  todayExecutedTss: number;
+  todaySessionStatus: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY";
+  isWeekCompleted: boolean;
+  remainingPendingDaysCount: number;
+  isDeload: boolean;
+  coachStyleDescription: string;
+  promptContext: import("@/lib/ai/prompts").HeadCoachPromptContext;
+  effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }>;
+  previousWeekSummary: PreviousWeekSummary;
+  targetTssAdjustmentPct: number;
+  isWeekKickoffAudit: boolean;
+}
+

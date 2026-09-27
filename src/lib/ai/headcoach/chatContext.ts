@@ -8,37 +8,8 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { buildCondensedExecutedMap, formatCompactActivitySummary, formatActivitiesTssBreakdown, formatRecentWellnessSummary } from "@/lib/ai/contextCondenser";
 import { FtpDetectionService } from "@/lib/services/ftpDetectionService";
 import { computePreviousWeekRetrospective } from "./weekRetrospective";
-import { HeadCoachChatRequest, PreviousWeekSummary } from "./types";
-
-export interface ResolvedChatContext {
-  profile: AthleteProfile;
-  physioStatus: PhysiologicalStatus;
-  plannedWeekTss: number;
-  actualTss: number;
-  compliancePct: number;
-  targetMinTss: number;
-  targetMaxTss: number;
-  formDiagnostic: string;
-  hasExistingPlan: boolean;
-  currentPlanSummary: string;
-  availabilityFormatted: string;
-  safeAvailability: WeeklyAvailabilityMap;
-  targetPlanningWeekNum: number;
-  planningWeekDates: Array<{ day: string; date: string; formattedDate: string }>;
-  planningStartDateStr: string;
-  planningEndDateStr: string;
-  todayDayName: string;
-  todayDateStr: string;
-  todayDayIndex: number;
-  isCurrentWeek: boolean;
-  isDeload: boolean;
-  coachStyleDescription: string;
-  promptContext: HeadCoachPromptContext;
-  effectiveExecutedMap: Record<string, { totalTss: number; activities: any[] }>;
-  previousWeekSummary: PreviousWeekSummary;
-  targetTssAdjustmentPct: number;
-  isWeekKickoffAudit: boolean;
-}
+import { HeadCoachChatRequest, PreviousWeekSummary, ResolvedChatContext } from "./types";
+export type { ResolvedChatContext };
 
 export async function resolveChatContext(body: HeadCoachChatRequest): Promise<ResolvedChatContext> {
   const {
@@ -263,6 +234,30 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const activitiesTssBreakdown = formatActivitiesTssBreakdown(effectiveExecutedMap);
   const recentWellnessSummary = formatRecentWellnessSummary(wellness);
 
+  // Detección del estado temporal fisiológico de hoy y de la semana
+  const todayExecData = effectiveExecutedMap[todayDateStr];
+  const hasTrainedToday = isCurrentWeek && Boolean(todayExecData && todayExecData.activities && todayExecData.activities.length > 0);
+  const todayExecutedTss = hasTrainedToday ? (todayExecData?.totalTss || 0) : 0;
+  const todayPlannedSession = Array.isArray(currentPlan) ? currentPlan[todayDayIndex] : null;
+  const isTodayPlannedRest = !todayPlannedSession || todayPlannedSession.discipline === "Descanso" || (todayPlannedSession.tss || 0) === 0;
+  const todaySessionStatus: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY" =
+    hasTrainedToday ? "COMPLETADA_HOY" : isTodayPlannedRest ? "DESCANSO_HOY" : "PENDIENTE_HOY";
+
+  const remainingPendingDays = planningWeekDates.filter((wDate, idx) => {
+    if (!isCurrentWeek) return false;
+    if (idx < todayDayIndex) return false;
+    if (idx === todayDayIndex) return !hasTrainedToday && !isTodayPlannedRest;
+    const pSession = Array.isArray(currentPlan) ? currentPlan[idx] : null;
+    const isRest = !pSession || pSession.discipline === "Descanso" || (pSession.tss || 0) === 0;
+    const hasExec = Boolean(effectiveExecutedMap[wDate.date]?.activities?.length);
+    return !isRest && !hasExec;
+  });
+  const remainingPendingDaysCount = remainingPendingDays.length;
+  const isWeekCompleted = isCurrentWeek && (
+    (todayDayIndex === 6 && (hasTrainedToday || isTodayPlannedRest)) ||
+    remainingPendingDaysCount === 0
+  );
+
   const normalizedProfile = (coachProfile || "balanced").toLowerCase();
   const coachStyleDescription =
     normalizedProfile.includes("conserv")
@@ -289,6 +284,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     todayDayName,
     todayDateStr,
     todayDayIndex,
+    hasTrainedToday,
+    todaySessionStatus,
+    isWeekCompleted,
     macrocyclePhase,
     weeklyAvailability: safeAvailability,
     availabilityFormatted,
@@ -331,6 +329,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     todayDateStr,
     todayDayIndex,
     isCurrentWeek,
+    hasTrainedToday,
+    todayExecutedTss,
+    todaySessionStatus,
+    isWeekCompleted,
+    remainingPendingDaysCount,
     isDeload,
     coachStyleDescription,
     promptContext,

@@ -4336,6 +4336,46 @@ flowchart TD
   - `Prueba 4 (Servidor en Producción):` Proceso daemon en puerto 3000 respondiendo **HTTP 200 OK**.
   - `Prueba 5 (Control de Versiones):` Cambios commiteados y empujados exitosamente a GitHub (`origin/main`, commit `3c60a1a`).
 
+---
+
+### Versión 3.80 - Coherencia Temporal Fisiológica del Head Coach: Detección de Sesión Ejecutada de Hoy, Validación de Cierre de Semana y Proyección Hacia la Próxima Semana (2026-09-27)
+- **Fecha y Hora:** 27 de Septiembre de 2026 - 11:00 COT.
+- **Directivas Atendidas:**
+  - *"Hice ahorita una pregunta a mi head coach ya terminando toda mi semana, ya terminé de correr, está cargado el entrenamiento, y le dije que me sentía mucha fatiga, y él lo que hace es decirme que va a bajar la intensidad cuando ya la semana está terminada y me muestra una propuesta. Está mal como UX, analiza un plan de mejora."*
+- **Diagnóstico Forense de Causa Raíz:**
+  1. *Ceguera del Estado de Hoy (`hasTrainedToday`):* El sistema no verificaba si la sesión de la fecha actual ya había sido registrada en Intervals.icu. Asumía ciegamente que el atleta aún no había entrenado hoy y que cualquier mención de fatiga requería recortar la sesión de hoy.
+  2. *Bug de Índice en el Pasado (`targetDayIdx` en `deterministicFallback.ts`):* Al evaluar fatiga, el fallback ejecutaba `modifiedPlan.findIndex(p => p.tss > 30)`, seleccionando el Martes en el pasado (hace 5 días), modificándolo pero redactando: *"He bajado la intensidad de tu sesión de hoy..."*, a pesar de ser Domingo.
+  3. *Ceguera de Cierre de Semana (`isWeekCompleted`):* El domingo, habiendo terminado la tirada larga, la Semana 1 estaba 100% concluida. Proponer una adaptación sobre una semana terminada rompía la coherencia del entrenamiento y confundía al atleta.
+  4. *Inyección Invasiva de Propuesta sin Consentimiento:* Se devolvía `suggestedPlan` para Semana 1 cuando el atleta solo reportó fatiga post-esfuerzo, en vez de brindar pautas de recuperación y consultar si deseaba adaptar la Próxima Semana.
+- **Soluciones Implementadas:**
+  1. *Capa de Contexto Fisiológico Temporal (`chatContext.ts` y `types.ts`):*
+     - Desacople de `ResolvedChatContext` a `types.ts` (170 LOC) para optimizar líneas.
+     - Cálculo en tiempo real de `hasTrainedToday`, `todayExecutedTss`, `todaySessionStatus` (`"COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY"`), `isWeekCompleted` y `remainingPendingDaysCount`.
+  2. *Reingeniería del Motor de Fatiga y Carga (`deterministicFallback.ts` - 345 LOC):*
+     - **Caso Semana Cerrada (`ctx.isWeekCompleted`):** Valida la fatiga aguda (ATL alta, TSB negativo como -28.1) como respuesta biológica normal a la tirada larga; prescribe pautas de recuperación para hoy (hidratación, carbohidratos, descanso pasivo); `suggestedPlan = null` (cero propuesta para la semana terminada); y ofrece smart actions para la Próxima Semana: `[Planificar Próxima Semana]`.
+     - **Caso Post-Entreno de Hoy (`ctx.hasTrainedToday`):** Reconoce que la sesión de hoy ya fue ejecutada, da pautas de recuperación y ofrece evaluar o suavizar la sesión de mañana si persiste la pesadez.
+     - **Caso Pre-Entreno (`!ctx.hasTrainedToday`):** Modifica estrictamente `todayDayIndex` (hoy, nunca días en el pasado).
+     - `hasActiveProposal = !ctx.isWeekCompleted && (actionType === "ADAPT_WORKOUT")`: Garantiza que una semana terminada jamás inyecte una tarjeta de propuesta.
+  3. *Blindaje de Prompts y Reglas Gemini (`prompts.ts` - 338 LOC & `chatInference.ts` - 337 LOC):*
+     - Inyección de `ESTADO DEL DÍA DE HOY` y `ESTADO DEL MICROCICLO` en el prompt maestro.
+     - Prohibición explícita de prescribir o recortar sesiones ya realizadas en el pasado o en el día de hoy, y prohibición de alterar microciclos terminados.
+     - Congelamiento inmutable de sesiones realizadas hoy en `chatInference.ts`.
+  4. *Navegación Ergonómica de Semanas en Frontend (`useHeadCoachChat.ts` - 348 LOC & `AthleteHeadCoachView.tsx` - 182 LOC):*
+     - Soporte para acción inteligente `Planificar Próxima Semana`, conmutando automáticamente la pestaña hacia `activeWeekNumber + 1` para que cualquier adaptación futura se aplique sobre el microciclo correcto.
+- **Set de Pruebas y Validación:**
+  - `Prueba 1 (Tipado TypeScript):` `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+  - `Prueba 2 (Compilación Next.js):` `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+  - `Prueba 3 (Límites Arquitectónicos):` Todos los archivos modificados cumplen estrictamente $\le 350$ LOC:
+    * `types.ts`: 170 LOC
+    * `chatContext.ts`: 345 LOC
+    * `prompts.ts`: 338 LOC
+    * `deterministicFallback.ts`: 345 LOC
+    * `chatInference.ts`: 337 LOC
+    * `useHeadCoachChat.ts`: 348 LOC
+    * `AthleteHeadCoachView.tsx`: 182 LOC
+  - `Prueba 4 (Servidor en Producción):` Proceso daemon en puerto 3000 respondiendo **HTTP 200 OK**.
+
+
 
 
 

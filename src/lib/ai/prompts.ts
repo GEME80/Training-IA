@@ -81,6 +81,9 @@ export interface HeadCoachPromptContext {
   previousWeekReport?: string;
   isWeekKickoffAudit?: boolean;
   targetTssAdjustmentPct?: number;
+  hasTrainedToday?: boolean;
+  todaySessionStatus?: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY";
+  isWeekCompleted?: boolean;
 }
 
 /**
@@ -148,6 +151,8 @@ ${previousWeekBlock}
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 - Fecha Actual del Sistema: Hoy es ${todayDayName} (${todayDateStr})
+- ESTADO DEL DÍA DE HOY: ${ctx.todaySessionStatus === "COMPLETADA_HOY" ? `SESIÓN DE HOY YA REALIZADA Y REGISTRADA EN INTERVALS.ICU (${todayDayName}). ¡PROHIBIDO PRESCRIBIR O RECORTAR LA SESIÓN DE HOY PORQUE YA SE EJECUTÓ!` : ctx.todaySessionStatus === "DESCANSO_HOY" ? "DÍA DE DESCANSO" : "SESIÓN DE HOY PENDIENTE DE REALIZAR"}
+- ESTADO DEL MICROCICLO: ${ctx.isWeekCompleted ? "MICROCICLO COMPLETADO AL 100%. ¡PROHIBIDO MODIFICAR ESTA SEMANA TERMINADA! Si el atleta reporta fatiga, valida que es la respuesta normal a la sobrecarga, da pautas de recuperación para hoy y ofrece adaptar la PRÓXIMA SEMANA." : "SEMANA EN CURSO"}
 - REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE (action: "MANTENER"). ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
 - REGLA DE MATRIZ CRÍTICA: Salvo orden explícita del atleta en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
 - SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
@@ -182,7 +187,7 @@ ${directiveBlock}
 3. ESTRUCTURA EJECUTIVA EN 3 BLOQUES (120 A 180 PALABRAS MÁXIMO EN "reply" SIN EMOJIS EN LOS TÍTULOS):
    - [ESTADO DEL PROCESO]: 1 sola línea sintetizando semana del bloque, fase activa, adherencia y ritmo de progresión (ej: "Semana ${targetPlanningWeekNum} (${macrocyclePhase?.phaseLabel || "Fase"}) • Cumplimiento: ${compliancePct}% • Progresión: +${Number(physioStatus.rampRate || 0).toFixed(1)} pts/sem").
    - [DIAGNÓSTICO / VEREDICTO]: 1 a 2 oraciones directas declarando CONTINUIDAD DEL PLAN o AJUSTE TÁCTICO con la causa fisiológica explicada de forma clara y accesible (Frescura: ${physioStatus.tsb.toFixed(1)}, HRV, carga de sesiones o perfil Máster ${profile.age || ""}).
-   - [ACCIÓN PRESCRIPTIVA]: 2 oraciones con la instrucción inmediata para HOY (${todayDayName}) (duración exacta y vatios Stryd CP o Bike FTP) + el estímulo clave restante + remisión a la tarjeta interactiva inferior.
+   - [ACCIÓN PRESCRIPTIVA]: Si la sesión de hoy ya fue realizada (${ctx.hasTrainedToday ? "SÍ" : "NO"}) o la semana está terminada, da pautas de recuperación para el resto del día (hidratación, descanso pasivo, recarga de carbohidratos) y ofrece modular la PRÓXIMA SEMANA si hay fatiga. Si la sesión de hoy está pendiente, da la instrucción para hoy (${todayDayName}).
 4. PROHIBIDO ENUMERAR LUNES A DOMINGO EN EL TEXTO DE "reply": Jamás redactes listas día por día en el texto; el microciclo completo va 100% en el objeto "suggestedPlan" que renderiza la tarjeta interactiva visual.
 5. LENGUAJE AMIGABLE Y DIRECTO: En "reply" usa términos comprensibles para el deportista (ej: "base aeróbica / rodaje suave en Z2" en vez de "base mitocondrial"; "estado de forma y frescura" en vez de "telemetría PMC"; "impacto muscular" en vez de "daño excéntrico"). Reserva los términos hiper-técnicos para el campo "reasoning".
 6. PROFUNDIDAD TÉCNICA BAJO DEMANDA: Reserva el análisis biométrico profundo, W/kg, Banister y detalles minuciosos para el campo "reasoning" (se muestra en acordeón desplegable).

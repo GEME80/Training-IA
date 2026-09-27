@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.79)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.80)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.79).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.80).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 3.80: Coherencia Temporal Fisiológica del Head Coach (Detección de Hoy, Cierre de Semana y Proyección a Próxima Semana):
+  * Detección de Sesión Ejecutada de Hoy (hasTrainedToday): Prohibido prescribir o recortar sesiones ya realizadas en el día de hoy.
+  * Cierre de Semana y Validación de Fatiga (isWeekCompleted): Si la semana está terminada (ej. Domingo post-tirada larga), prohibido proponer cambios a la semana cerrada. Se valida la fatiga aguda (ATL/TSB) como respuesta biológica normal a la sobrecarga, se dan pautas de recuperación para hoy y se orienta la adaptación hacia la Próxima Semana.
+  * Smart Action "Planificar Próxima Semana": Conmutación automática hacia la semana siguiente en la interfaz sin tocar la semana concluida.
 - Versiones 3.78 - 3.79: Reingeniería Fisiológica y Visual del Head Coach (Intervalos Reales, Desglose Estructurado y Protección de Fin de Semana):
   * Visualización Fidedigna de Intervalos y Cero Mocks (v3.79): Sustitución del mock genérico de 3 barras por el componente oficial `WorkoutChart` renderizando `item.workoutDoc`. Visualización auténtica de zonas de vatios/ritmo, descansos y series reales con paridad 100% con el calendario.
   * Tarjetas Especializadas de Gym & Desglose Desplegado (v3.79): Sesiones de fortalecimiento sin falsos gráficos de potencia; despliegue enriquecido con Rondas, Descanso y Ejercicios específicos (Hip Thrust, Drop Jumps, etc.).
@@ -736,6 +740,13 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
      * **Solo un fondo largo aeróbico por fin de semana:** Se prohíbe programar dos fondos largos de 90+ minutos en sábado y domingo simultáneamente.
      * **Protección de la Tirada Larga:** Si el atleta corre su tirada larga dominical progresiva (Pfitzinger / Canova) y cuenta con sesión de ciclismo ese mismo fin de semana, la sesión complementaria de bicicleta se programa automáticamente como *Ciclismo de Soltura & Asimilación* (30-45m Z1 suave @ 55-60% FTP) o cadencia suave, promoviendo el vaciado de subproductos metabólicos sin interferencia neuromuscular.
      * **Cero Duplicidad de Entrenamientos:** Dos días consecutivos jamás pueden presentar el mismo título, estructura o estímulo fisiológico.
+
+5. **Ley de Coherencia Temporal y Cierre de Semana:**
+   - Toda respuesta del Head Coach debe verificar obligatoriamente `hasTrainedToday` e `isWeekCompleted`.
+   - Si la sesión de hoy ya fue ejecutada y registrada en Intervals.icu, queda prohibido indicar que se recorta o modifica la sesión de hoy.
+   - Si la semana actual está terminada (domingo con tirada larga concluida o todas las sesiones planificadas ya realizadas), queda terminantemente prohibido generar `suggestedPlan` para esa semana terminada.
+   - La adaptación por fatiga al cierre de semana debe canalizarse mediante validación fisiológica, pautas de recuperación inmediata para hoy y la oferta explícita de adaptar la Próxima Semana.
+
 
 
 

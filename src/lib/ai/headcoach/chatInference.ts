@@ -127,11 +127,13 @@ export async function executeGeminiInference(
                 allUserText.includes("+10%") || allUserText.includes("viaje") || allUserText.includes("cambia") ||
                 allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta");
 
-              if (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment)) {
+              if (ctx.isWeekCompleted || (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment))) {
                 parsed.actionType = "REVIEW_PHYSIOLOGY";
                 parsed.suggestedPlan = null;
                 if (!parsed.quickReplies || parsed.quickReplies.length === 0) {
-                  parsed.quickReplies = ["🎯 Pautas & Vatios de Hoy", "🌙 Confirmar Fin de Semana", "🔍 Ver Zonas de Potencia"];
+                  parsed.quickReplies = ctx.isWeekCompleted
+                    ? ["Planificar Próxima Semana", "Mantener plan previsto", "Ver detalle de mi estado"]
+                    : ["🎯 Pautas & Vatios de Hoy", "🌙 Confirmar Fin de Semana", "🔍 Ver Zonas de Potencia"];
                 }
               } else if (Array.isArray(parsed.suggestedPlan)) {
                 const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -139,9 +141,9 @@ export async function executeGeminiInference(
                   const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
                   const dName = dateInfo.day || dayNamesList[idx % 7] || "Lunes";
                   const itemDate = p.date || dateInfo.date;
-                  const isPast = ctx.isCurrentWeek && Boolean(itemDate && itemDate < ctx.todayDateStr);
+                  const isPast = ctx.isCurrentWeek && Boolean(itemDate && (itemDate < ctx.todayDateStr || (itemDate === ctx.todayDateStr && ctx.hasTrainedToday)));
 
-                  // 1. DÍAS ANTERIORES A HOY: CONGELAMIENTO HISTÓRICO INMUTABLE
+                  // 1. DÍAS ANTERIORES O HOY EJECUTADO: CONGELAMIENTO HISTÓRICO INMUTABLE
                   if (isPast) {
                     const execData = ctx.effectiveExecutedMap[itemDate];
                     if (execData && execData.activities.length > 0) {
@@ -152,15 +154,9 @@ export async function executeGeminiInference(
                       const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : isSwimAct ? "Natacion" : "Carrera";
                       const pWatts = act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada");
                       return {
-                        day: dName,
-                        date: itemDate,
-                        formattedDate: dateInfo.formattedDate,
-                        discipline: disc,
-                        workoutName: act.name || `${disc} Completada`,
-                        action: "MANTENER",
-                        powerTarget: pWatts,
-                        tss: execData.totalTss,
-                        durationMinutes: act.movingTimeMin || 0,
+                        day: dName, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: disc,
+                        workoutName: act.name || `${disc} Completada`, action: "MANTENER",
+                        powerTarget: pWatts, tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
                         justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
                         workoutStructure: "",
                       };
@@ -170,15 +166,10 @@ export async function executeGeminiInference(
                     const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
 
                     return {
-                      day: dName,
-                      date: itemDate,
-                      formattedDate: dateInfo.formattedDate,
+                      day: dName, date: itemDate, formattedDate: dateInfo.formattedDate,
                       discipline: isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera"),
                       workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || plannedSession?.title || "Entrenamiento"})`,
-                      action: "MANTENER",
-                      powerTarget: isRestPlanned ? "0W" : "0 TSS",
-                      tss: 0,
-                      durationMinutes: 0,
+                      action: "MANTENER", powerTarget: isRestPlanned ? "0W" : "0 TSS", tss: 0, durationMinutes: 0,
                       justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
                       workoutStructure: "",
                     };

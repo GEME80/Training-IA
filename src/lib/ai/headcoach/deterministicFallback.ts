@@ -55,15 +55,10 @@ export function handleDeterministicFallback(
           const isWeight = /weight|strength|fuerza/i.test(act.type);
           const disc: PlanItem["discipline"] = isRide ? "Ciclismo" : isWeight ? "Fuerza" : "Carrera";
           return {
-            ...p,
-            date: itemDate,
-            formattedDate: dateInfo.formattedDate,
-            discipline: disc,
-            workoutName: act.name || `${disc} Completada`,
-            action: "MANTENER" as const,
+            ...p, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: disc,
+            workoutName: act.name || `${disc} Completada`, action: "MANTENER" as const,
             powerTarget: act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada"),
-            tss: execData.totalTss,
-            durationMinutes: act.movingTimeMin || 0,
+            tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
             justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
           };
         }
@@ -72,15 +67,9 @@ export function handleDeterministicFallback(
         const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
         const fallbackDisc: PlanItem["discipline"] = (isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera")) as PlanItem["discipline"];
         return {
-          ...p,
-          date: itemDate,
-          formattedDate: dateInfo.formattedDate,
-          discipline: fallbackDisc,
+          ...p, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: fallbackDisc,
           workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || "Entrenamiento"})`,
-          action: "MANTENER" as const,
-          powerTarget: isRestPlanned ? "0W" : "0 TSS",
-          tss: 0,
-          durationMinutes: 0,
+          action: "MANTENER" as const, powerTarget: isRestPlanned ? "0W" : "0 TSS", tss: 0, durationMinutes: 0,
           justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
         };
       }
@@ -107,13 +96,8 @@ export function handleDeterministicFallback(
       const dur = p.durationMinutes || (isRest ? 0 : p.discipline === "Ciclismo" ? 55 : p.discipline === "Fuerza" ? 30 : 45);
       const tssVal = p.tss || (isRest ? 0 : Math.round(dur * 0.75));
       return {
-        ...p,
-        date: itemDate,
-        formattedDate: dateInfo.formattedDate || p.formattedDate,
-        workoutName,
-        title: workoutName,
-        durationMinutes: dur,
-        tss: tssVal,
+        ...p, date: itemDate, formattedDate: dateInfo.formattedDate || p.formattedDate,
+        workoutName, title: workoutName, durationMinutes: dur, tss: tssVal,
       };
     });
 
@@ -244,49 +228,70 @@ ${actionPlanText}`;
       ];
     }
   }
-  // FLUJO C: Siento mucha fatiga hoy
+  // FLUJO C: Siento fatiga
   else if (lowerMsg.includes("fatiga") || lowerMsg.includes("cansad") || lowerMsg.includes("dolor") || lowerMsg.includes("molestia")) {
-    actionType = "ADAPT_WORKOUT";
-    const targetDayIdx = modifiedPlan.findIndex((p) => (p.tss || 0) > 30) !== -1
-      ? modifiedPlan.findIndex((p) => (p.tss || 0) > 30)
-      : 1;
-    if (modifiedPlan[targetDayIdx]) {
-      const prevSession = modifiedPlan[targetDayIdx];
-      modifiedPlan[targetDayIdx] = {
-        ...prevSession,
-        workoutName: "Carrera Regenerativa Z1/Z2 (Descarga Activa)",
-        durationMinutes: Math.max(25, (prevSession.durationMinutes || 50) - 20),
-        tss: Math.max(15, (prevSession.tss || 50) - 20),
-        action: "MODIFICAR",
-      };
+    if (ctx.isWeekCompleted) {
+      actionType = "REVIEW_PHYSIOLOGY";
+      replyMsg = `¡Gran trabajo completando tu semana y tu tirada larga! Es totalmente normal sentir una fatiga profunda en este momento: tu fatiga aguda (ATL) está en ${Number(ctx.physioStatus.atl || 0).toFixed(1)} y tu frescura (TSB) en ${Number(ctx.physioStatus.tsb || 0).toFixed(1)}. Esto confirma que lograste el estímulo de sobrecarga necesario para tu adaptación biológica.\n\nPara el resto de hoy: descanso pasivo total, hidratación con electrolitos y recarga de carbohidratos. Tu Semana ${targetPlanningWeekNum} está completada con éxito.\n\n¿Deseas que preparemos la Semana ${targetPlanningWeekNum + 1} (Próxima Semana) con un inicio suave (descanso o rodaje regenerativo) por si la fatiga persiste?`;
+      smartActions = [
+        { label: "Planificar Próxima Semana", variant: "primary", icon: "calendar-sync" },
+        { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
+      ];
+    } else if (ctx.hasTrainedToday) {
+      actionType = "REVIEW_PHYSIOLOGY";
+      replyMsg = `Comprendido. Ya completaste tu sesión de hoy (${ctx.todayDayName}), por lo que esta fatiga es una respuesta biológica normal al esfuerzo realizado. Para hoy lo primordial es la asimilación y descanso.\n\nNo tocaremos tu sesión de hoy porque ya fue ejecutada. Si mañana aún sientes pesadez en las piernas, podemos suavizar la sesión siguiente. ¿Deseas que adaptemos la sesión de mañana o evaluamos al despertar?`;
+      smartActions = [
+        { label: "Suavizar sesión de mañana", variant: "primary", icon: "trending-down" },
+        { label: "Evaluar mañana al despertar", variant: "secondary", icon: "check" },
+      ];
+    } else {
+      actionType = "ADAPT_WORKOUT";
+      const targetDayIdx = ctx.todayDayIndex;
+      if (modifiedPlan[targetDayIdx]) {
+        const prevSession = modifiedPlan[targetDayIdx];
+        modifiedPlan[targetDayIdx] = {
+          ...prevSession,
+          workoutName: "Carrera Regenerativa Z1/Z2 (Descarga Activa)",
+          durationMinutes: Math.max(25, (prevSession.durationMinutes || 50) - 20),
+          tss: Math.max(15, (prevSession.tss || 50) - 20),
+          action: "MODIFICAR",
+        };
+      }
+      replyMsg = `Comprendido. Escuchar al cuerpo antes de entrenar es clave. He bajado la intensidad de tu sesión de hoy (${ctx.todayDayName}) a un rodaje regenerativo (Zona 1/2) acortado en 20 minutos para limpiar fatiga acumulada sin perder constancia.\n\n¿Aprobamos el ajuste para hoy o prefieres descanso total?`;
+      smartActions = [
+        { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
+        { label: "Prefiero descansar hoy", variant: "secondary", icon: "x" },
+      ];
     }
-    replyMsg = "Comprendido. Escuchar al cuerpo es clave. He bajado la intensidad de tu sesión de hoy a un rodaje regenerativo (Zona 1/2) y acortado el tiempo en 20 minutos. Esto ayudará a limpiar la fatiga acumulada sin perder tu constancia.\n\n¿Aprobamos el ajuste o prefieres descansar hoy?";
-    smartActions = [
-      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-      { label: "Prefiero descansar hoy", variant: "secondary", icon: "x" },
-    ];
   }
   // FLUJO D: El plan está muy suave
   else if (lowerMsg.includes("suave") || lowerMsg.includes("aumentar") || lowerMsg.includes("mayor carga")) {
-    actionType = "ADAPT_WORKOUT";
-    const targetDayIdx = modifiedPlan.findIndex((p) => (p.tss || 0) > 30) !== -1
-      ? modifiedPlan.findIndex((p) => (p.tss || 0) > 30)
-      : 1;
-    if (modifiedPlan[targetDayIdx]) {
-      const prevSession = modifiedPlan[targetDayIdx];
-      modifiedPlan[targetDayIdx] = {
-        ...prevSession,
-        workoutName: "Carrera de Intervalos + 2 Bloques Extra de Umbral",
-        durationMinutes: (prevSession.durationMinutes || 50) + 15,
-        tss: (prevSession.tss || 50) + 25,
-        action: "MODIFICAR",
-      };
+    if (ctx.isWeekCompleted) {
+      actionType = "REVIEW_PHYSIOLOGY";
+      replyMsg = `Has asimilado la Semana ${targetPlanningWeekNum} con un nivel de rendimiento sobresaliente. Dado que la semana actual ya concluyó con éxito, si deseas mayor estímulo podemos programar una sobrecarga progresiva (+10% TSS) para la Semana ${targetPlanningWeekNum + 1}.\n\n¿Deseas proyectar mayor carga para la Próxima Semana?`;
+      smartActions = [
+        { label: "Planificar Próxima Semana (+10% TSS)", variant: "primary", icon: "trending-up" },
+        { label: "Mantener progresión actual", variant: "secondary", icon: "check" },
+      ];
+    } else {
+      actionType = "ADAPT_WORKOUT";
+      const targetDayIdx = ctx.hasTrainedToday ? Math.min(6, ctx.todayDayIndex + 1) : ctx.todayDayIndex;
+      if (modifiedPlan[targetDayIdx]) {
+        const prevSession = modifiedPlan[targetDayIdx];
+        modifiedPlan[targetDayIdx] = {
+          ...prevSession,
+          workoutName: "Carrera de Intervalos + 2 Bloques Extra de Umbral",
+          durationMinutes: (prevSession.durationMinutes || 50) + 15,
+          tss: (prevSession.tss || 50) + 25,
+          action: "MODIFICAR",
+        };
+      }
+      replyMsg = `Me alegra ver que estás asimilando tan bien la carga. He añadido 2 bloques extra de umbral a la sesión de ${ctx.hasTrainedToday ? "mañana" : "hoy"} para generar un mayor estímulo, subiendo el TSS semanal en 25 puntos de forma segura.\n\n¿Aplicamos la mayor carga al microciclo?`;
+      smartActions = [
+        { label: "Aplicar Mayor Carga", variant: "primary", icon: "check" },
+        { label: "Mantener plan original", variant: "secondary", icon: "x" },
+      ];
     }
-    replyMsg = "Me alegra ver que estás asimilando tan bien la carga. He añadido 2 bloques extra de umbral a tu sesión de intervalos de mañana para generar un mayor estímulo, subiendo el TSS semanal en 25 puntos de forma segura.\n\n¿Aplicamos la mayor carga al microciclo?";
-    smartActions = [
-      { label: "Aplicar Mayor Carga", variant: "primary", icon: "check" },
-      { label: "Mantener plan original", variant: "secondary", icon: "x" },
-    ];
   }
   // FASE 3: Confirmación / Aprobación
   else if (lowerMsg.includes("confirmar") || lowerMsg.includes("aprobar") || lowerMsg.includes("aplicar")) {
@@ -314,11 +319,9 @@ ${actionPlanText}`;
     ];
   }
 
-  // SUGGESTED_PLAN SOLO se incluye cuando hay una propuesta de cambio activa
+  // SUGGESTED_PLAN SOLO se incluye cuando hay una adaptación activa y la semana NO está concluida
   const hasActiveProposal =
-    (lowerMsg.includes("matriz") || lowerMsg.includes("temporal") || lowerMsg.includes("disponibilidad")) ||
-    (lowerMsg.includes("fatiga") || lowerMsg.includes("cansad") || lowerMsg.includes("dolor") || lowerMsg.includes("molestia")) ||
-    (lowerMsg.includes("suave") || lowerMsg.includes("aumentar") || lowerMsg.includes("mayor carga"));
+    !ctx.isWeekCompleted && (actionType === "ADAPT_WORKOUT" || (actionType as any) === "MODIFY_WORKOUT");
 
   const finalPlan = (hasActiveProposal && modifiedPlan && modifiedPlan.length > 0)
     ? (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0

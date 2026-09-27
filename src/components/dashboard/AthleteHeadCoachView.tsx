@@ -101,6 +101,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     email,
     onApplyPlanAndSync,
     onPlanUpdate,
+    onSelectWeek: setActiveWeekNumber,
   });
 
   let startStr: string | undefined;

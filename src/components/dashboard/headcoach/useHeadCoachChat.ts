@@ -41,6 +41,7 @@ export interface UseHeadCoachChatProps {
   email?: string;
   onApplyPlanAndSync?: (plan?: PlanItem[]) => Promise<void>;
   onPlanUpdate?: (updatedPlan: PlanItem[]) => void;
+  onSelectWeek?: (weekNumber: number) => void;
 }
 
 export function useHeadCoachChat({
@@ -60,6 +61,7 @@ export function useHeadCoachChat({
   email,
   onApplyPlanAndSync,
   onPlanUpdate,
+  onSelectWeek,
 }: UseHeadCoachChatProps) {
   const [isApplying, setIsApplying] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
@@ -120,12 +122,9 @@ export function useHeadCoachChat({
         ? currentPlan
         : selectedWeekData
         ? generateWeekTemplate(
-            selectedWeekData,
-            profile.run_ftp,
-            profile.bike_ftp,
+            selectedWeekData, profile.run_ftp, profile.bike_ftp,
             (temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
-            (effectiveBlueprint?.distanceType as any) || "MARATON_42K",
-            profile.ctl
+            (effectiveBlueprint?.distanceType as any) || "MARATON_42K", profile.ctl
           )
         : currentPlan;
 
@@ -199,14 +198,14 @@ export function useHeadCoachChat({
       setSyncFeedback("¡Microciclo sincronizado exitosamente con Intervals.icu!");
       setTimeout(() => setSyncFeedback(null), 4000);
 
-      const successMsg: HeadCoachMessageData = {
-        id: `sync-${Date.now()}`,
-        role: "assistant",
-        text: "¡Microciclo actualizado con éxito! Tus sesiones ya están sincronizadas. Que tengas un excelente entrenamiento.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        smartActions: [{ label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" }],
-      };
-      setMessages((prev) => [...prev, successMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `sync-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          text: "¡Microciclo actualizado con éxito! Tus sesiones ya están sincronizadas. Que tengas un excelente entrenamiento.",
+          smartActions: [{ label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" }],
+        },
+      ]);
     } catch (e: any) {
       setSyncFeedback(`Error al sincronizar: ${e.message || "Verifica credenciales"}`);
     } finally {
@@ -223,14 +222,14 @@ export function useHeadCoachChat({
       setSyncFeedback("Cambios deshechos. Tu plan original ha sido restaurado.");
       setTimeout(() => setSyncFeedback(null), 4000);
 
-      const restoreMsg: HeadCoachMessageData = {
-        id: `restore-${Date.now()}`,
-        role: "assistant",
-        text: "Cambios deshechos. Tu plan original ha sido restaurado con éxito.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        smartActions: INITIAL_SMART_ACTIONS,
-      };
-      setMessages((prev) => [...prev, restoreMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `restore-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          text: "Cambios deshechos. Tu plan original ha sido restaurado con éxito.",
+          smartActions: INITIAL_SMART_ACTIONS,
+        },
+      ]);
       setPreviousPlanSnapshot(null);
     } catch (e: any) {
       setSyncFeedback(`Error al restaurar: ${e.message || "Error al revertir"}`);
@@ -299,14 +298,19 @@ export function useHeadCoachChat({
       return;
     }
 
+    if (/planificar pr[oó]xima semana/i.test(rawLabel)) {
+      const nextWeekNum = activeWeekNumber + 1;
+      if (onSelectWeek) onSelectWeek(nextWeekNum);
+      handleSendMessage(`Planificar semana ${nextWeekNum}`);
+      return;
+    }
+
     handleSendMessage(rawLabel);
   };
 
   const handleApplyTemporaryMatrix = (tempAvail: WeeklyAvailabilityMap) => {
     setTemporaryAvailability(tempAvail);
-    setMessages((prev) =>
-      prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m))
-    );
+    setMessages((prev) => prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m)));
     handleSendMessage(
       "He configurado una matriz de deportes temporal para esta semana. Adapta el microciclo distribuyendo los estímulos según esta nueva disponibilidad.",
       { temporaryAvailability: tempAvail }
@@ -314,17 +318,17 @@ export function useHeadCoachChat({
   };
 
   const handleCancelInlineMatrix = () => {
-    setMessages((prev) =>
-      prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m))
-    );
-    const cancelMsg: HeadCoachMessageData = {
-      id: `cancel-matrix-${Date.now()}`,
-      role: "assistant",
-      text: "Ajuste de matriz cancelado. Mantenemos tu microciclo tal como estaba planificado.",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      smartActions: INITIAL_SMART_ACTIONS,
-    };
-    setMessages((prev) => [...prev, cancelMsg]);
+    setMessages((prev) => prev.map((m) => (m.showInlineMatrix ? { ...m, showInlineMatrix: false } : m)));
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `cancel-matrix-${Date.now()}`,
+        role: "assistant",
+        text: "Ajuste de matriz cancelado. Mantenemos tu microciclo tal como estaba planificado.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        smartActions: INITIAL_SMART_ACTIONS,
+      },
+    ]);
   };
 
   return {

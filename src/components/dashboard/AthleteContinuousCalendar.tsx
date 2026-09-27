@@ -17,6 +17,7 @@ import { AthleteCalendarWeekRow } from "./AthleteCalendarWeekRow";
 import { AthleteMobileAgendaView } from "./AthleteMobileAgendaView";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 import { buildHistoricalCalendarWeeks } from "@/lib/physiology/historicalCalendarWeeks";
+import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 
 interface AthleteContinuousCalendarProps {
   blueprint: MacrocycleBlueprint;
@@ -110,19 +111,19 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [blueprintWeeks, currentBlueprintWeek, currentMonStr]);
 
-  /**
-   * Array unificado para renderizar de arriba a abajo:
-   * [futuras_lejanas..., futuras_próximas, semana_actual, pasada_1, pasada_2, ...]
-   *
-   * Las futuras se muestran en orden de más lejana (arriba) a más próxima (arriba-centro),
-   * luego semana actual, luego histórico de más reciente (centro-abajo) a más antiguo.
-   */
+  const pastWeeks = useMemo(() => {
+    const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
+    const fromBp = blueprintWeeks
+      .filter((w) => w.startDate < cutoff)
+      .sort((a, b) => b.startDate.localeCompare(a.startDate));
+    return fromBp.length > 0 ? fromBp : historicalWeeks;
+  }, [blueprintWeeks, currentBlueprintWeek, currentMonStr, historicalWeeks]);
+
   const allYearWeeks = useMemo(() => {
-    const futureSorted = [...futureWeeks].reverse(); // lejanas primero (top)
+    const futureSorted = [...futureWeeks].reverse();
     const currentSlot = currentBlueprintWeek ? [currentBlueprintWeek] : [];
-    // Histórico ya viene reciente→antiguo desde buildHistoricalCalendarWeeks
-    return [...futureSorted, ...currentSlot, ...historicalWeeks];
-  }, [futureWeeks, currentBlueprintWeek, historicalWeeks]);
+    return [...futureSorted, ...currentSlot, ...pastWeeks];
+  }, [futureWeeks, currentBlueprintWeek, pastWeeks]);
 
   const totalWeeksLabel = allYearWeeks.length;
 
@@ -197,6 +198,8 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
               if (currentWeekRef.current) {
                 currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
               }
+              const curIdx = blueprint.weeks ? resolveCurrentWeekIndex(blueprint.weeks) : 0;
+              onSelectWeek(curIdx);
             }}
             className="flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
             title="Ir a la semana actual"

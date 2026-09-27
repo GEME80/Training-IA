@@ -4,6 +4,7 @@ import React from "react";
 import { Footprints, Bike, Dumbbell, Waves, Zap, Heart } from "lucide-react";
 import { DailyExecutedActivity } from "@/lib/intervals/types";
 import { PlanItem } from "@/lib/gemini/engine";
+import { formatDayMonthShort } from "./athleteMobileHelpers";
 
 interface AthleteMobileExtraCardProps {
   activity: DailyExecutedActivity;
@@ -25,18 +26,6 @@ const renderActivityIcon = (type: string, name?: string) => {
     return <Waves className="h-4 w-4 text-sky-500" />;
   }
   return <Dumbbell className="h-4 w-4 text-purple-500" />;
-};
-
-const formatDisplayDate = (dateStr: string) => {
-  if (!dateStr) return "";
-  const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    const day = parseInt(parts[2], 10);
-    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const m = parseInt(parts[1], 10) - 1;
-    return `${day} ${months[m] || ""}`;
-  }
-  return dateStr;
 };
 
 export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
@@ -67,11 +56,11 @@ export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
           durationMinutes: extra.movingTimeMin,
           tss: extra.tss,
           action: "MANTENER",
-          justification: `Actividad adicional registrada en Intervals.icu (${extra.name}).`,
+          justification: `Actividad registrada en Intervals.icu (${extra.name}).`,
           workoutDoc: "",
         })
       }
-      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 shadow-xs touch-bounce space-y-3 cursor-pointer hover:border-slate-400 transition"
+      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700/60 shadow-xs touch-bounce space-y-3 cursor-pointer hover:border-emerald-400 transition"
     >
       {/* Cabecera */}
       <div className="flex items-center justify-between">
@@ -82,10 +71,10 @@ export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-500 uppercase">
-                {dayName} • {formatDisplayDate(dateStr)}
+                {dayName} • {formatDayMonthShort(dateStr)}
               </span>
-              <span className="px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] font-black uppercase">
-                + Extra
+              <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase border border-emerald-500/20">
+                ✓ Sesión Ejecutada
               </span>
             </div>
             <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
@@ -110,8 +99,8 @@ export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
 
         <div>
           <span className="text-[9px] uppercase text-slate-400 block font-sans">Carga TSS</span>
-          <strong className="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center justify-center gap-0.5">
-            <Zap className="h-3 w-3 text-amber-500" />
+          <strong className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-0.5">
+            <Zap className="h-3 w-3 text-emerald-500" />
             {extra.tss} TSS
           </strong>
         </div>
@@ -132,8 +121,8 @@ export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({
       </div>
 
       <div className="pt-0.5 flex items-center justify-between text-xs">
-        <span className="text-[10px] text-slate-400 font-medium">Actividad externa de Intervals.icu</span>
-        <span className="text-xs font-bold text-cyan-600 flex items-center gap-0.5">
+        <span className="text-[10px] text-slate-400 font-medium">Registrado en Intervals.icu</span>
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
           Ver Detalle →
         </span>
       </div>

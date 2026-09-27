@@ -118,8 +118,16 @@ export function buildHistoricalBlueprint(
   const nowSunday = new Date(nowMonday);
   nowSunday.setDate(nowMonday.getDate() + 6);
 
+  // 1. Semanas pasadas (28 semanas en orden cronológico: antigua -> reciente)
+  const pastWeeks = buildHistoricalCalendarWeeks({
+    blueprintStartDate: currentMondayStr,
+    dailyExecutedActivities,
+    maxWeeksBack: 28,
+  }).reverse();
+
+  // 2. Semana actual en curso
   const currentWeek: MacrocycleWeek = {
-    weekNumber: 1,
+    weekNumber: pastWeeks.length + 1,
     countdownWeeks: 0,
     startDate: currentMondayStr,
     endDate: formatLocalDateToYMD(nowSunday),
@@ -137,7 +145,7 @@ export function buildHistoricalBlueprint(
     isPastWeek: false,
   };
 
-  // Ventana futura de 23 semanas para proyectar en el calendario continuo anual (23 + 1 + 28 = 52 semanas)
+  // 3. Ventana futura de 23 semanas para proyectar en el calendario anual continuo (28 + 1 + 23 = 52 semanas)
   const futureWeeksCount = 23;
   const futureWeeks: MacrocycleWeek[] = [];
   for (let i = 1; i <= futureWeeksCount; i++) {
@@ -149,7 +157,7 @@ export function buildHistoricalBlueprint(
     const fSunStr = formatLocalDateToYMD(fSun);
 
     futureWeeks.push({
-      weekNumber: i + 1,
+      weekNumber: pastWeeks.length + 1 + i,
       countdownWeeks: 0,
       startDate: fMonStr,
       endDate: fSunStr,
@@ -169,7 +177,7 @@ export function buildHistoricalBlueprint(
     } as any);
   }
 
-  const allWeeks = [currentWeek, ...futureWeeks];
+  const allWeeks = [...pastWeeks, currentWeek, ...futureWeeks];
 
   return {
     id: "historical-timeline-blueprint",
@@ -178,7 +186,7 @@ export function buildHistoricalBlueprint(
     startDate: currentMondayStr,
     totalWeeks: allWeeks.length,
     weeks: allWeeks,
-    currentWeekIndex: 0,
+    currentWeekIndex: pastWeeks.length,
     athleteCtlAtCreation: athleteProfile?.ctl || 40,
     availabilitySnapshot: undefined,
     isHistoricalOnly: true,

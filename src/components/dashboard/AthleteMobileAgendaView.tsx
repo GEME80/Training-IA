@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
@@ -9,7 +9,9 @@ import { getMondayOfWeekStr } from "@/lib/dateUtils";
 import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
 import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
 import { MobileWeekFeedItem } from "./AthleteMobileWeekFeed";
+import { AthleteMobileDayStrip } from "./AthleteMobileDayStrip";
 import { matchDailyActivities } from "./matchDailyActivities";
+import { dayShortNames, getWeekDates, formatDayMonthShort } from "./athleteMobileHelpers";
 
 interface AthleteMobileAgendaViewProps {
   blueprint: MacrocycleBlueprint;
@@ -20,20 +22,6 @@ interface AthleteMobileAgendaViewProps {
   dailyExecutedActivities?: DailyExecutedMap;
   onSelectWorkoutModal: (item: PlanItem) => void;
   onOpenAICoach?: () => void;
-}
-
-const dayShortNames = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
-
-function formatDayMonthShort(dateStr: string): string {
-  if (!dateStr) return "";
-  const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    const day = parseInt(parts[2], 10);
-    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const m = parseInt(parts[1], 10) - 1;
-    return `${day} ${months[m] || ""}`;
-  }
-  return dateStr;
 }
 
 export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = ({
@@ -51,38 +39,37 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
   const currentMonStr = getMondayOfWeekStr();
   const isCurrentWeek = currentWeek?.startDate === currentMonStr;
 
-  // Agrupar items de la semana por fecha/día
+  // 1. Asignar determinísticamente los 7 días de la semana con fechas reales YYYY-MM-DD
   const daysMap = useMemo(() => {
+    const baseMonday = currentWeek?.startDate || currentMonStr;
+    const dates = getWeekDates(baseMonday);
     const map: { [dayIdx: number]: { date: string; items: PlanItem[] } } = {};
     for (let i = 0; i < 7; i++) {
-      map[i] = { date: "", items: [] };
+      map[i] = { date: dates[i] || "", items: [] };
     }
 
     weekPlan.forEach((item) => {
-      let dayIdx = 0;
-      if (item.date && currentWeek?.startDate) {
-        const start = new Date(currentWeek.startDate + "T00:00:00");
-        const current = new Date(item.date + "T00:00:00");
-        const diffDays = Math.round((current.getTime() - start.getTime()) / 86400000);
-        if (diffDays >= 0 && diffDays < 7) dayIdx = diffDays;
+      let dayIdx = -1;
+      if (item.date) {
+        dayIdx = dates.indexOf(item.date);
       }
-      if (!map[dayIdx]) map[dayIdx] = { date: item.date || "", items: [] };
-      map[dayIdx].items.push(item);
-      if (!map[dayIdx].date && item.date) map[dayIdx].date = item.date;
+      if (dayIdx >= 0 && dayIdx < 7) {
+        map[dayIdx].items.push(item);
+      }
     });
 
     return map;
-  }, [weekPlan, currentWeek]);
+  }, [weekPlan, currentWeek?.startDate, currentMonStr]);
 
-  // Encontrar el día de HOY dentro de la semana seleccionada
+  // 2. Encontrar el día de HOY dentro de la semana seleccionada
   const todayDayIdx = useMemo(() => {
     for (let i = 0; i < 7; i++) {
       if (daysMap[i]?.date === todayStr) return i;
     }
-    return 0; // Default lunes si no coincide
+    return 0; // Default lunes si hoy no está en esta semana
   }, [daysMap, todayStr]);
 
-  // Totales de carga de la semana activa
+  // 3. Totales de carga de la semana activa (TSS planificado y TSS real ejecutado)
   const { weekPlannedTss, weekExecutedTss } = useMemo(() => {
     let pTss = 0;
     let eTss = 0;
@@ -90,17 +77,25 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
       if (!item.isRestDay && item.discipline !== "Descanso") {
         pTss += item.tss || 0;
       }
-      const actDay = dailyExecutedActivities[item.date];
-      if (actDay?.totalTss) {
-        eTss += actDay.totalTss;
-      }
     });
+    // Sumar TSS real de las actividades ejecutadas en los 7 días de esta semana
+    for (let i = 0; i < 7; i++) {
+      const dStr = daysMap[i]?.date;
+      if (dStr && dailyExecutedActivities[dStr]?.totalTss) {
+        eTss += dailyExecutedActivities[dStr].totalTss;
+      }
+    }
     return { weekPlannedTss: pTss, weekExecutedTss: eTss };
-  }, [weekPlan, dailyExecutedActivities]);
+  }, [weekPlan, daysMap, dailyExecutedActivities]);
 
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(todayDayIdx);
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  // Sincronizar el día seleccionado cuando cambia la semana
+  useEffect(() => {
+    setSelectedDayIdx(todayDayIdx);
+  }, [todayDayIdx, selectedMacroWeekIdx]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -129,6 +124,10 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
     return matchDailyActivities(selectedDayItems, executedActivities);
   }, [selectedDayItems, executedActivities]);
 
+  const weekRangeLabel = currentWeek?.startDate
+    ? `${formatDayMonthShort(currentWeek.startDate)} - ${formatDayMonthShort(currentWeek.endDate)}`
+    : "";
+
   return (
     <div className="space-y-3.5 select-none md:hidden animate-fadeIn">
       {/* 1. Selector de Semana Ergonómico Móvil con Carga Acumulada */}
@@ -146,7 +145,9 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
         <div className="text-center px-1 flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-center gap-1">
             <span className="text-xs font-black text-slate-900 dark:text-white">
-              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Semana Actual" : `Semana ${selectedMacroWeekIdx + 1} de ${weeks.length}`}
+              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
+                ? isCurrentWeek ? "Semana Actual" : `Semana ${weekRangeLabel}`
+                : `Semana ${selectedMacroWeekIdx + 1} de ${weeks.length}`}
             </span>
             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
               {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Sin Plan Activo" : (currentWeek?.phase || "Base")}
@@ -158,7 +159,9 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             )}
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[240px] mx-auto">
-            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Historial de entrenamientos registrados en Intervals.icu" : (currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica")}
+            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
+              ? weekRangeLabel ? `Rango: ${weekRangeLabel}` : "Historial de entrenamientos registrados en Intervals.icu"
+              : (currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica")}
           </p>
           <div className="text-[10px] font-mono text-slate-500 mt-0.5">
             {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly || weekPlannedTss === 0 ? (
@@ -180,7 +183,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
         </button>
       </div>
 
-      {/* 2. Barra de Control de Vista: Toggle [ Día | Semana ] + 7 Días */}
+      {/* 2. Barra de Control de Vista: Toggle [ Día | Semana ] */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
           {viewMode === "day" ? "Detalle Diario" : "Agenda Semanal"}
@@ -213,62 +216,24 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
 
       {viewMode === "day" ? (
         <>
-          {/* Barra Horizontal de los 7 Días de la Semana */}
-          <div className="grid grid-cols-7 gap-1 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            {dayShortNames.map((name, idx) => {
-              const dayInfo = daysMap[idx];
-              const isSelected = selectedDayIdx === idx;
-              const isToday = dayInfo?.date === todayStr;
-              const hasExecution = dayInfo?.date ? !!dailyExecutedActivities[dayInfo.date]?.totalTss : false;
-              const firstItem = dayInfo?.items[0];
-              const isRest = firstItem?.isRestDay || firstItem?.discipline === "Descanso";
-              const dayFormatted = dayInfo?.date ? formatDayMonthShort(dayInfo.date) : "";
+          {/* 3. Tira de 7 Días con Número Grande y Banner de Fecha Actual */}
+          <AthleteMobileDayStrip
+            daysMap={daysMap}
+            selectedDayIdx={selectedDayIdx}
+            onSelectDay={setSelectedDayIdx}
+            todayStr={todayStr}
+            dailyExecutedActivities={dailyExecutedActivities}
+          />
 
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedDayIdx(idx)}
-                  className={`flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-all cursor-pointer relative touch-bounce ${
-                    isSelected
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-md scale-[1.02]"
-                      : isToday
-                      ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold border border-emerald-500/30"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100"
-                  }`}
-                >
-                  <span className="text-[9px] font-bold tracking-tight opacity-75">{name}</span>
-                  <span className="text-[10px] font-mono font-black mt-0.5 leading-none whitespace-nowrap">{dayFormatted}</span>
-
-                  <div className="mt-1 flex items-center justify-center h-2">
-                    {hasExecution ? (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" title="Ejecutado" />
-                    ) : isRest ? (
-                      <span className="h-1 w-1 rounded-full bg-slate-300" title="Descanso" />
-                    ) : (
-                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" title="Programado" />
-                    )}
-                  </div>
-
-                  {isToday && !isSelected && (
-                    <span className="absolute -top-1 px-1 py-0.2 rounded-full bg-emerald-500 text-slate-950 text-[7px] font-black uppercase">
-                      Hoy
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tarjetas del Día Seleccionado con Swipe Gestual */}
+          {/* 4. Tarjetas del Día Seleccionado con Swipe Gestual */}
           <div
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             className="space-y-2.5 transition-transform"
           >
             {matchedItems.length === 0 && extraActivities.length === 0 ? (
-              <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-                Día de descanso sin sesiones programadas.
+              <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
+                Día de descanso sin sesiones registradas.
               </div>
             ) : (
               <>
@@ -300,7 +265,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
           </div>
         </>
       ) : (
-        /* Vista Feed Semanal tipo TrainingPeaks */
+        /* 5. Vista Feed Semanal tipo TrainingPeaks */
         <div className="space-y-2">
           {dayShortNames.map((name, idx) => {
             const dayData = daysMap[idx] || { date: "", items: [] };

@@ -4401,10 +4401,14 @@ flowchart TD
   2. *Vincular Reloj:* Instrucciones claras con selector de marcas (Garmin Connect, Coros, Polar, Strava, Suunto, Wahoo, Apple Watch con HealthFit).
   3. *Obtención de Credenciales:* Explicación precisa de la ubicación del Athlete ID y generación de la Clave API.
 - **Orquestación en Modal (`IntervalsOnboardingModal.tsx` - 309 LOC):** Navegación fluida entre selector, guía, ingreso de credenciales y validación en tiempo real con `/api/test-connection`.
-- **Sala de Espera Activa (`RestrictedAccessView.tsx` - 144 LOC):** Para usuarios en estado `pending`, tarjeta proactiva que les permite adelantar la creación de su cuenta de Intervals y conexión de reloj mientras el administrador habilita su acceso.
+#### D. Visualización de Entrenamientos Reales y Calendario Anual Continuo de 52 Semanas
+- **Fecha Explícita en Columnas de Días (`AthleteCalendarWeekRow.tsx` - 342 LOC):** Se calcula de forma determinística la fecha `YYYY-MM-DD` de cada uno de los 7 días sumando el offset al lunes (`week.startDate`) y se pasa `dateStr` a `AthleteCalendarDayColumn`.
+- **Renderizado Oficial de Actividades Ejecutadas (`AthleteCalendarDayColumn.tsx` - 334 LOC):** Cuando el atleta no tiene plan pero sí ejecutó sesiones en Intervals.icu, cada actividad se renderiza como sesión oficial completada en estilo esmeralda (icono de disciplina, tiempo en movimiento, distancia, checkmark `✓`, nombre limpio, TSS, watts y pulso). Si no hubo actividad ni plan, se muestra un slot limpio y sutil de día libre / descanso sin marcar error de omitida.
+- **Calendario Anual Continuo de 52 Semanas (`historicalCalendarWeeks.ts` - 186 LOC):** Se genera la ventana anual completa continua (semanas pasadas con o sin entrenamientos + semana actual + semanas futuras proyectables con estado *"Disponible / Sin Plan"* y 0 TSS), permitiendo al atleta navegar todo el año y auto-centrando la semana actual.
+- **Ergonomía en Tarjetas Fisiológicas (`PhysiologicalCards.tsx`):** Se ajustó el layout del encabezado en Potencia Bici y Potencia Run con `min-w-0`, `truncate` y `shrink-0` para prevenir colisiones de texto con la etiqueta `Watts`.
 
 ### 47.3. Validación y Certificación de Calidad
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
-- **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC.
+- **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC (`AthleteCalendarDayColumn.tsx`: 334 LOC, `AthleteCalendarWeekRow.tsx`: 342 LOC, `historicalCalendarWeeks.ts`: 186 LOC).
 - **Servidor:** Proceso activo en puerto 3000 (PID 10025).

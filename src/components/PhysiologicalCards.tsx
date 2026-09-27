@@ -337,14 +337,14 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
             title="Tus vatios umbral para correr a ritmo exigente y sostenible (Stryd CP)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-amber-400 transition flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">👟</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <div className="flex items-center space-x-1 min-w-0">
+                <span className="text-sm shrink-0">👟</span>
+                <span className="text-xs font-black tracking-tight text-slate-800 truncate">
                   Potencia Run
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-amber-600 font-mono">
+              <span className="text-[10px] font-bold text-amber-600 font-mono shrink-0">
                 Watts
               </span>
             </div>
@@ -363,14 +363,14 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
             title="Tus vatios umbral pedaleando durante 1 hora (FTP Ciclismo)"
             className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-cyan-400 transition flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">🚴</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <div className="flex items-center space-x-1 min-w-0">
+                <span className="text-sm shrink-0">🚴</span>
+                <span className="text-xs font-black tracking-tight text-slate-800 truncate">
                   Potencia Bici
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-cyan-600 font-mono">
+              <span className="text-[10px] font-bold text-cyan-600 font-mono shrink-0">
                 Watts
               </span>
             </div>

@@ -41,29 +41,7 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
     : currentMondayStr;
   const refMondayDate = getMonday(referenceMondayStr);
 
-  // Encontrar la semana más antigua con actividades
-  const activityDates = Object.keys(dailyExecutedActivities)
-    .filter((d) => {
-      const actData = dailyExecutedActivities[d];
-      return actData && actData.activities && actData.activities.length > 0;
-    })
-    .sort();
-
-  // Calcular cuántas semanas reales hay disponibles hacia atrás
-  let effectiveWeeksBack = maxWeeksBack;
-  if (activityDates.length > 0) {
-    const earliestActDate = activityDates[0];
-    const earliestMonday = getMonday(earliestActDate);
-    const diffMs = refMondayDate.getTime() - earliestMonday.getTime();
-    if (diffMs > 0) {
-      const diffWeeks = Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000));
-      effectiveWeeksBack = Math.min(diffWeeks, maxWeeksBack);
-    } else {
-      // No hay semanas anteriores a la referencia
-      effectiveWeeksBack = 0;
-    }
-  }
-
+  const effectiveWeeksBack = Math.max(0, maxWeeksBack);
   if (effectiveWeeksBack <= 0) return [];
 
   const historicalWeeks: MacrocycleWeek[] = [];
@@ -130,21 +108,12 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
   return historicalWeeks;
 }
 
-/** Construye un blueprint de respaldo usando sólo el historial ejecutado (sin plan activo). */
+/** Construye un blueprint de respaldo anual unificado cuando el atleta no tiene macrociclo activo */
 export function buildHistoricalBlueprint(
   dailyExecutedActivities: DailyExecutedMap = {},
   athleteProfile?: any
 ): MacrocycleBlueprint {
   const currentMondayStr = getMondayOfWeekStr();
-  const todayStr = getLocalTodayStr();
-
-  // Pasadas en orden reciente→antiguo para el array de weeks
-  const pastWeeks = buildHistoricalCalendarWeeks({
-    blueprintStartDate: currentMondayStr,
-    dailyExecutedActivities,
-    maxWeeksBack: 52,
-  });
-
   const nowMonday = getMonday(currentMondayStr);
   const nowSunday = new Date(nowMonday);
   nowSunday.setDate(nowMonday.getDate() + 6);
@@ -168,17 +137,48 @@ export function buildHistoricalBlueprint(
     isPastWeek: false,
   };
 
-  // Para el blueprint: histórico (antiguo→reciente) + semana actual
-  const allWeeks = [...[...pastWeeks].reverse(), currentWeek];
+  // Ventana futura de 23 semanas para proyectar en el calendario continuo anual (23 + 1 + 28 = 52 semanas)
+  const futureWeeksCount = 23;
+  const futureWeeks: MacrocycleWeek[] = [];
+  for (let i = 1; i <= futureWeeksCount; i++) {
+    const fMon = new Date(nowMonday);
+    fMon.setDate(nowMonday.getDate() + i * 7);
+    const fSun = new Date(fMon);
+    fSun.setDate(fMon.getDate() + 6);
+    const fMonStr = formatLocalDateToYMD(fMon);
+    const fSunStr = formatLocalDateToYMD(fSun);
+
+    futureWeeks.push({
+      weekNumber: i + 1,
+      countdownWeeks: 0,
+      startDate: fMonStr,
+      endDate: fSunStr,
+      formattedRange: `${fMonStr.slice(5)} - ${fSunStr.slice(5)}`,
+      phase: "RECOVERY",
+      phaseLabel: "Sin Plan Activo",
+      microcycleType: "DESCARGA_ASIMILACION",
+      microcycleLabel: "Disponible",
+      microcycleBadgeColor: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      targetTss: 0,
+      maxLongRunMinutes: 0,
+      focusDescription: "Semana disponible para proyectar macrociclo con IA",
+      isCurrentWeek: false,
+      isRecoveryWeek: false,
+      isPastWeek: false,
+      isHistorical: false,
+    } as any);
+  }
+
+  const allWeeks = [currentWeek, ...futureWeeks];
 
   return {
     id: "historical-timeline-blueprint",
     cycleTitle: "Historial de Carga & Entrenamientos Realizados",
     distanceType: undefined,
-    startDate: allWeeks[0]?.startDate || currentMondayStr,
+    startDate: currentMondayStr,
     totalWeeks: allWeeks.length,
     weeks: allWeeks,
-    currentWeekIndex: allWeeks.length - 1,
+    currentWeekIndex: 0,
     athleteCtlAtCreation: athleteProfile?.ctl || 40,
     availabilitySnapshot: undefined,
     isHistoricalOnly: true,

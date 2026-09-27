@@ -12,48 +12,29 @@ interface AthleteCalendarDayColumnProps {
   todayStr: string;
   dailyExecutedActivities?: DailyExecutedMap;
   onSelectWorkoutModal: (item: PlanItem) => void;
+  dateStr?: string;
+  isHistoricalOnly?: boolean;
 }
 
-const fmtDuration = (mins: number) =>
-  mins >= 60
-    ? `${Math.floor(mins / 60)}h${mins % 60 > 0 ? `${mins % 60}m` : ""}`
-    : `${mins}m`;
-
-const disciplineIcon = (discipline: string, cls = "h-3.5 w-3.5") => {
-  if (discipline === "Carrera") return <Footprints className={cls} />;
-  if (discipline === "Ciclismo") return <Bike className={cls} />;
-  if (discipline === "Natacion" || discipline === "Natación") return <Waves className={cls} />;
-  return <Dumbbell className={cls} />;
-};
-
+const fmtDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}` : `${m}m`);
+const disciplineIcon = (d: string, cls = "h-3.5 w-3.5") =>
+  d === "Carrera" ? <Footprints className={cls} /> : d === "Ciclismo" ? <Bike className={cls} /> : d === "Natacion" || d === "Natación" ? <Waves className={cls} /> : <Dumbbell className={cls} />;
 const activityIcon = (type: string, name = "", cls = "h-3.5 w-3.5") => {
-  const t = type.toLowerCase();
-  const n = name.toLowerCase();
-  if (/run|carrera/.test(t) || /carrera|run/.test(n))
-    return <Footprints className={`${cls} text-amber-600 dark:text-amber-400`} />;
-  if (/ride|bike|ciclismo|virtualride/.test(t) || /ciclismo|bike/.test(n))
-    return <Bike className={`${cls} text-sky-600 dark:text-sky-400`} />;
-  if (/swim|nataci/.test(t) || /nataci|swim/.test(n))
-    return <Waves className={`${cls} text-cyan-600 dark:text-cyan-400`} />;
+  const [t, n] = [type.toLowerCase(), name.toLowerCase()];
+  if (/run|carrera/.test(t) || /carrera|run/.test(n)) return <Footprints className={`${cls} text-amber-600 dark:text-amber-400`} />;
+  if (/ride|bike|ciclismo|virtualride/.test(t) || /ciclismo|bike/.test(n)) return <Bike className={`${cls} text-sky-600 dark:text-sky-400`} />;
+  if (/swim|nataci/.test(t) || /nataci|swim/.test(n)) return <Waves className={`${cls} text-cyan-600 dark:text-cyan-400`} />;
   return <Dumbbell className={`${cls} text-purple-600 dark:text-purple-400`} />;
 };
 
-/** Extrae la duración efectiva de un item sin parsear el workoutDoc */
 function resolveDisplayDuration(item: PlanItem): number {
   const fromTitle = item.workoutName.match(/\((\d+)\s*m(?:in)?\)/i);
   if (fromTitle) return parseInt(fromTitle[1], 10);
-  if (item.discipline === "Fuerza")
-    return item.durationMinutes && item.durationMinutes >= 15 ? item.durationMinutes : 35;
-  return item.durationMinutes || 45;
+  return item.discipline === "Fuerza" && item.durationMinutes && item.durationMinutes >= 15 ? item.durationMinutes : item.durationMinutes || 45;
 }
 
-/** Nombre limpio de la sesión sin tags de acciones */
 const cleanName = (name: string) => name.replace(/\[.*?\]\s*/g, "").trim();
 
-/**
- * Extrae una descripción muy corta (≤ 60 chars) de un workoutDoc de Fuerza.
- * Toma la primera línea no vacía que no sea un encabezado de sección (no empieza con #).
- */
 function gymShortDesc(workoutDoc: string): string {
   if (!workoutDoc) return "";
   const lines = workoutDoc.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith("---"));
@@ -67,9 +48,11 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
   todayStr,
   dailyExecutedActivities,
   onSelectWorkoutModal,
+  dateStr: propDateStr,
+  isHistoricalOnly = false,
 }) => {
   const firstItem = dayItems[0];
-  const dateStr = firstItem?.date || "";
+  const dateStr = propDateStr || firstItem?.date || "";
   const isToday = dateStr === todayStr;
   const isPastDay = dateStr < todayStr;
 
@@ -270,58 +253,81 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
           );
         })}
 
-        {/* Actividades extra no planificadas */}
-        {extraActivities.map((extraAct, eIdx) => (
-          <div
-            key={`extra-${eIdx}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectWorkoutModal({
-                id: `extra-${extraAct.id}`,
-                date: dateStr,
-                formattedDate: firstItem?.formattedDate || dateStr.slice(5),
-                day: dayName,
-                discipline:
-                  extraAct.type === "WeightTraining" ? "Fuerza"
-                  : extraAct.type === "Ride" || extraAct.type === "VirtualRide" ? "Ciclismo"
-                  : extraAct.type === "Run" ? "Carrera"
-                  : "Fuerza",
-                workoutName: extraAct.name,
-                durationMinutes: extraAct.movingTimeMin,
-                tss: extraAct.tss,
-                action: "MANTENER",
-                justification: `Actividad adicional registrada en Intervals.icu (${extraAct.name}).`,
-                workoutDoc: "",
-              });
-            }}
-            className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 shadow-2xs overflow-hidden flex flex-col hover:border-slate-400 hover:shadow-sm transition cursor-pointer group"
-          >
-            {/* Header */}
-            <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-slate-200/60 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700/60">
-              <div className="flex items-center gap-1">
-                {activityIcon(extraAct.type, extraAct.name)}
-                <span>{extraAct.movingTimeMin}m</span>
-                {extraAct.distanceKm ? <span className="text-[9px] opacity-70">· {extraAct.distanceKm}k</span> : null}
-              </div>
-              <span className="px-1.5 rounded bg-slate-300/70 dark:bg-slate-700 text-[9px] font-bold">+ Extra</span>
-            </div>
-            {/* Título */}
-            <div className="px-2 pt-1.5 pb-1">
-              <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 leading-tight line-clamp-1">
-                {extraAct.name}
-              </p>
-            </div>
-            {/* Footer */}
-            <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-200/60 dark:border-slate-800 pt-1 mt-auto">
-              <span className="text-slate-600 dark:text-slate-400">
-                {extraAct.tss} TSS
-                {extraAct.watts ? ` · ⚡${extraAct.watts}W` : ""}
-                {extraAct.heartrate ? ` · ❤️${extraAct.heartrate}` : ""}
-              </span>
-              <ChevronRight className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
+        {/* Día libre cuando no hay plan ni actividades ejecutadas */}
+        {matchedEntries.length === 0 && extraActivities.length === 0 && (
+          <div className="flex items-center justify-center rounded-xl min-h-[75px] bg-slate-50/40 dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800 text-[10px] font-mono text-slate-400 gap-1.5">
+            <Moon className="h-3.5 w-3.5 opacity-60" />
+            <span>{isToday ? "Libre hoy" : isPastDay ? "Libre" : "—"}</span>
           </div>
-        ))}
+        )}
+
+        {/* Actividades ejecutadas en modo histórico o adicionales */}
+        {extraActivities.map((extraAct, eIdx) => {
+          const isRealHistorical = isHistoricalOnly || matchedEntries.length === 0;
+          return (
+            <div
+              key={`extra-${eIdx}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectWorkoutModal({
+                  id: `extra-${extraAct.id}`,
+                  date: dateStr,
+                  formattedDate: firstItem?.formattedDate || dateStr.slice(5),
+                  day: dayName,
+                  discipline:
+                    extraAct.type === "WeightTraining" ? "Fuerza"
+                    : extraAct.type === "Ride" || extraAct.type === "VirtualRide" ? "Ciclismo"
+                    : extraAct.type === "Run" ? "Carrera"
+                    : "Fuerza",
+                  workoutName: extraAct.name,
+                  durationMinutes: extraAct.movingTimeMin,
+                  tss: extraAct.tss,
+                  action: "MANTENER",
+                  justification: `Actividad registrada en Intervals.icu (${extraAct.name}).`,
+                  workoutDoc: "",
+                });
+              }}
+              className={`rounded-xl border shadow-2xs overflow-hidden flex flex-col hover:shadow-sm transition cursor-pointer group ${
+                isRealHistorical
+                  ? "border-emerald-400 dark:border-emerald-700/80 bg-emerald-50/70 dark:bg-emerald-950/35 hover:border-emerald-500"
+                  : "border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:border-slate-400"
+              }`}
+            >
+              {/* Header */}
+              <div className={`px-2 py-1 flex items-center justify-between text-xs font-bold font-mono border-b ${
+                isRealHistorical
+                  ? "bg-emerald-100/90 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200 border-emerald-200/90 dark:border-emerald-800/80"
+                  : "bg-slate-200/60 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60"
+              }`}>
+                <div className="flex items-center gap-1">
+                  {activityIcon(extraAct.type, extraAct.name)}
+                  <span>{extraAct.movingTimeMin}m</span>
+                  {extraAct.distanceKm ? <span className="text-[9px] opacity-70">· {extraAct.distanceKm}k</span> : null}
+                </div>
+                {isRealHistorical ? (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black shadow-2xs">✓</span>
+                ) : (
+                  <span className="px-1.5 rounded bg-slate-300/70 dark:bg-slate-700 text-[9px] font-bold">+ Extra</span>
+                )}
+              </div>
+              {/* Título */}
+              <div className="px-2 pt-1.5 pb-1">
+                <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 leading-tight line-clamp-1">
+                  {cleanName(extraAct.name)}
+                </p>
+              </div>
+              {/* Footer */}
+              <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-200/60 dark:border-slate-800 pt-1 mt-auto">
+                <span className={isRealHistorical ? "text-emerald-800 dark:text-emerald-300" : "text-slate-600 dark:text-slate-400"}>
+                  {extraAct.tss} TSS
+                  {extraAct.watts ? ` · ⚡${extraAct.watts}W` : ""}
+                  {extraAct.heartrate ? ` · ❤️${extraAct.heartrate}` : ""}
+                </span>
+                <ChevronRight className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
-import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { WeeklyAvailabilityMap, PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
+import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { parseWorkoutDoc } from "../WorkoutChart";
 import { AthleteCalendarDayColumn } from "./AthleteCalendarDayColumn";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
+import { formatLocalDateToYMD } from "@/lib/dateUtils";
 
 interface AthleteCalendarWeekRowProps {
   week: MacrocycleWeek; wIdx: number; weeksCount: number; isCurrentWeek: boolean;
@@ -26,12 +27,10 @@ interface AthleteCalendarWeekRowProps {
 const fmtMins = (m: number) =>
   m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}` : m > 0 ? `${m}m` : "—";
 
-/** Barra de disciplina compacta para el panel lateral */
 function DisciplineBar({
   icon, mins, tss, executedTss, textColor, barColor, isPastWeek,
 }: {
-  icon: React.ReactNode; mins: number; tss: number; executedTss: number;
-  textColor: string; barColor: string; isPastWeek: boolean;
+  icon: React.ReactNode; mins: number; tss: number; executedTss: number; textColor: string; barColor: string; isPastWeek: boolean;
 }) {
   if (mins <= 0 && executedTss <= 0) return null;
   const displayed = executedTss > 0 ? executedTss : isPastWeek ? tss : 0;
@@ -49,13 +48,10 @@ function DisciplineBar({
   );
 }
 
-/** Resuelve la etiqueta corta legible de la fase */
 function resolvePhaseShortLabel(week: MacrocycleWeek, isHistorical: boolean): string {
   if (isHistorical) return "Historial";
   const raw = week.phaseLabel || week.phase || "";
-  if (!raw) return "Base";
-  // Acortar etiquetas largas para el panel lateral
-  return raw.replace(/Fase \d+:\s*/i, "").trim().split(" ").slice(0, 3).join(" ");
+  return raw ? raw.replace(/Fase \d+:\s*/i, "").trim().split(" ").slice(0, 3).join(" ") : "Base";
 }
 
 export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
@@ -79,22 +75,14 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     e.stopPropagation();
     if (isSyncingTriweekly || isSyncingCurrentWeek || !onSyncTriweeklyBlock) return;
     setIsSyncingTriweekly(true);
-    try {
-      await onSyncTriweeklyBlock(wIdx);
-    } finally {
-      setIsSyncingTriweekly(false);
-    }
+    try { await onSyncTriweeklyBlock(wIdx); } finally { setIsSyncingTriweekly(false); }
   };
 
   const handleSyncWeek = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isSyncingTriweekly || isSyncingCurrentWeek || !onSyncWeekToIntervals) return;
     setIsSyncingCurrentWeek(true);
-    try {
-      await onSyncWeekToIntervals(weekPlan);
-    } finally {
-      setIsSyncingCurrentWeek(false);
-    }
+    try { await onSyncWeekToIntervals(weekPlan); } finally { setIsSyncingCurrentWeek(false); }
   };
 
   let totalMins = 0, plannedTss = 0;
@@ -102,7 +90,13 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   let swimMins = 0, swimTss = 0, strengthMins = 0, strengthTss = 0;
   let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0;
   let execDirectTotalTss = 0;
-  const processedDates = new Set<string>();
+
+  const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const weekDates: string[] = [];
+  if (week.startDate) {
+    const p = week.startDate.split("-").map(Number);
+    for (let i = 0; i < 7; i++) weekDates.push(formatLocalDateToYMD(new Date(p[0], p[1] - 1, p[2] + i)));
+  }
 
   weekPlan.forEach((item) => {
     const parsed = parseWorkoutDoc(item.workoutDoc, item.discipline);
@@ -114,23 +108,21 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
       if (d === "carrera" || d === "run") { runMins += m; runTss += t; }
       else if (d === "ciclismo" || d === "ride") { bikeMins += m; bikeTss += t; }
       else if (d === "natacion" || d === "natación" || d === "swim") { swimMins += m; swimTss += t; }
-      else if (d === "fuerza" || d === "fortalecimiento" || d === "weighttraining" || d === "gym") {
-        strengthMins += m; strengthTss += t;
-      }
+      else if (d === "fuerza" || d === "fortalecimiento" || d === "weighttraining" || d === "gym") strengthMins += m, strengthTss += t;
     }
-    if (item.date && !processedDates.has(item.date)) {
-      processedDates.add(item.date);
-      const actDay = dailyExecutedActivities?.[item.date];
-      if (actDay && actDay.totalTss > 0) {
-        execDirectTotalTss += actDay.totalTss;
-        actDay.activities?.forEach((a) => {
-          const type = (a.type || "").toLowerCase();
-          if (/run|carrera/.test(type)) execRunTss += a.tss;
-          else if (/ride|ciclismo|bike|virtualride/.test(type)) execBikeTss += a.tss;
-          else if (/swim|nataci/.test(type)) execSwimTss += a.tss;
-          else if (/weighttraining|weight|gym|fuerza|strength/.test(type)) execStrengthTss += a.tss;
-        });
-      }
+  });
+
+  weekDates.forEach((wDate) => {
+    const actDay = dailyExecutedActivities?.[wDate];
+    if (actDay && actDay.totalTss > 0) {
+      execDirectTotalTss += actDay.totalTss;
+      actDay.activities?.forEach((a) => {
+        const type = (a.type || "").toLowerCase();
+        if (/run|carrera/.test(type)) execRunTss += a.tss;
+        else if (/ride|ciclismo|bike|virtualride/.test(type)) execBikeTss += a.tss;
+        else if (/swim|nataci/.test(type)) execSwimTss += a.tss;
+        else if (/weighttraining|weight|gym|fuerza|strength/.test(type)) execStrengthTss += a.tss;
+      });
     }
   });
 
@@ -283,14 +275,15 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
 
         {/* ── COLUMNAS 2–8: 7 DÍAS DE LA SEMANA ── */}
         {(() => {
-          const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
           const dayItemsMap: Record<string, PlanItem[]> = {};
           daysOfWeek.forEach((d) => (dayItemsMap[d] = []));
           weekPlan.forEach((item) => { if (dayItemsMap[item.day]) dayItemsMap[item.day].push(item); });
-          return daysOfWeek.map((dayName) => (
+          return daysOfWeek.map((dayName, dIdx) => (
             <AthleteCalendarDayColumn
               key={dayName}
               dayName={dayName}
+              dateStr={weekDates[dIdx]}
+              isHistoricalOnly={isHistoricalOnly}
               dayItems={dayItemsMap[dayName] || []}
               todayStr={todayStr}
               dailyExecutedActivities={dailyExecutedActivities}

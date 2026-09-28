@@ -13,6 +13,7 @@ import {
   User,
   AlertCircle,
   Unlink,
+  Eye,
 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
@@ -23,6 +24,7 @@ interface AdminUsersTableProps {
   onEdit: (user: AdminUserListItem) => void;
   onDelete: (user: AdminUserListItem) => void;
   onStatusChange: (targetUid: string, targetEmail: string, newStatus: UserStatus) => void;
+  onInspectAthlete?: (user: AdminUserListItem) => void;
 }
 
 export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
@@ -30,6 +32,7 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
   onEdit,
   onDelete,
   onStatusChange,
+  onInspectAthlete,
 }) => {
   if (users.length === 0) {
     return (
@@ -56,6 +59,7 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
             onEdit={onEdit}
             onDelete={onDelete}
             onStatusChange={onStatusChange}
+            onInspectAthlete={onInspectAthlete}
           />
         ))}
       </div>
@@ -196,6 +200,19 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             <span>Aprobar</span>
+                          </button>
+                        )}
+
+                        {/* Botón Inspeccionar / Ver como atleta (Solo Lectura) */}
+                        {onInspectAthlete && (
+                          <button
+                            type="button"
+                            onClick={() => onInspectAthlete(u)}
+                            title={`Inspeccionar Home de ${u.displayName || u.email} en modo solo lectura`}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 hover:text-purple-800 border border-purple-200 transition cursor-pointer text-xs font-bold shrink-0 shadow-2xs"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-purple-600" />
+                            <span>Ver como atleta</span>
                           </button>
                         )}
 

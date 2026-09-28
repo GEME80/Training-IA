@@ -14,10 +14,11 @@ import { isMasterAdminEmail } from "@/lib/env";
 import { getOffsetForWeek } from "@/lib/physiology/macrocycle";
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 import { useAuth } from "@/context/AuthContext";
-import { getUserStorage } from "@/lib/storage/userStorage";
+import { getUserStorage, createReadOnlyMemoryStorage } from "@/lib/storage/userStorage";
 import { useAthleteTelemetry } from "@/hooks/useAthleteTelemetry";
 import { useSeasonPlans } from "@/hooks/useSeasonPlans";
 import { useIntervalsSync } from "@/hooks/useIntervalsSync";
+import { AdminUserListItem } from "@/lib/db/types";
 
 interface AthleteDashboardProps {
   isSettingsOpen: boolean;
@@ -31,6 +32,8 @@ interface AthleteDashboardProps {
   onSelectView?: (view: "landing" | "dashboard" | "admin") => void;
   onLiveConnectedChange?: (connected: boolean) => void;
   onGeminiConnectedChange?: (connected: boolean) => void;
+  targetAthlete?: AdminUserListItem | null;
+  isReadOnly?: boolean;
 }
 
 export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
@@ -41,28 +44,102 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   setIsSeasonStudioOpen,
   onSelectView,
   onLiveConnectedChange,
+  targetAthlete,
+  isReadOnly = false,
 }) => {
   const { user, userProfile, signOutUser, refreshProfile } = useAuth();
-  const userStorage = useMemo(() => getUserStorage(user?.uid), [user?.uid]);
+
+  const isAuditing = Boolean(targetAthlete);
+  const effectiveReadOnly = isAuditing || Boolean(isReadOnly);
+
+  // Perfil complementario de Firestore si estamos auditando un atleta específico
+  const [targetAthleteFullProfile, setTargetAthleteFullProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!targetAthlete?.uid) {
+      setTargetAthleteFullProfile(null);
+      return;
+    }
+    let isMounted = true;
+    fetch(`/api/profile?uid=${encodeURIComponent(targetAthlete.uid)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.profile) {
+          setTargetAthleteFullProfile(data.profile);
+        }
+      })
+      .catch((err) => console.warn("Aviso al consultar perfil completo de atleta auditado:", err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [targetAthlete?.uid]);
+
+  const effectiveUserProfile = useMemo(() => {
+    if (!targetAthlete) return userProfile;
+    return {
+      uid: targetAthlete.uid,
+      email: targetAthlete.email,
+      displayName: targetAthlete.displayName || "Atleta",
+      role: targetAthlete.role,
+      status: targetAthlete.status,
+      intervalsAthleteId: targetAthlete.intervalsAthleteId,
+      runFtp: targetAthlete.runFtp,
+      bikeFtp: targetAthlete.bikeFtp,
+      weightKg: targetAthlete.weightKg,
+      heightCm: targetAthlete.heightCm,
+      hasApiKey: targetAthlete.hasIntervalsKey,
+      ...targetAthleteFullProfile,
+    };
+  }, [targetAthlete, userProfile, targetAthleteFullProfile]);
+
+  const effectiveUser = useMemo(() => {
+    if (!targetAthlete) return user;
+    return {
+      uid: targetAthlete.uid,
+      email: targetAthlete.email,
+      displayName: targetAthlete.displayName || "Atleta",
+      photoURL: targetAthlete.photoURL || user?.photoURL || null,
+    };
+  }, [targetAthlete, user]);
+
+  // Si estamos en modo auditoría usamos almacenamiento volátil en memoria para no tocar localStorage del admin
+  const userStorage = useMemo(() => {
+    if (isAuditing) {
+      return createReadOnlyMemoryStorage();
+    }
+    return getUserStorage(user?.uid);
+  }, [isAuditing, user?.uid]);
+
   const [activeNavSection, setActiveNavSection] = useState<AthleteSidebarNavSection>("dashboard");
   const [selectedWorkoutModal, setSelectedWorkoutModal] = useState<PlanItem | null>(null);
   const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
 
-  const telemetry = useAthleteTelemetry({ user, userProfile, userStorage, refreshProfile, onLiveConnectedChange });
+  const telemetry = useAthleteTelemetry({
+    user: effectiveUser,
+    userProfile: effectiveUserProfile,
+    userStorage,
+    refreshProfile: isAuditing ? undefined : refreshProfile,
+    onLiveConnectedChange,
+    isReadOnly: effectiveReadOnly,
+  });
+
   const sync = useIntervalsSync({
     athleteId: telemetry.profile.id,
     apiKeyCache: telemetry.apiKeyCache,
     runFtp: telemetry.profile.run_ftp,
     bikeFtp: telemetry.profile.bike_ftp,
     ctl: telemetry.profile.ctl,
-    user,
-    userProfile,
+    user: effectiveUser,
+    userProfile: effectiveUserProfile,
     userStorage,
     onOpenSettings: (tab) => { setSettingsTab(tab); setIsSettingsOpen(true); },
+    isReadOnly: effectiveReadOnly,
   });
+
   const season = useSeasonPlans({
-    user,
-    userProfile,
+    user: effectiveUser,
+    userProfile: effectiveUserProfile,
     userStorage,
     profileId: telemetry.profile.id,
     runFtp: telemetry.profile.run_ftp,
@@ -72,6 +149,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     apiKeyCache: telemetry.apiKeyCache,
     refreshTelemetry: telemetry.refreshTelemetry,
     setSyncNotification: sync.setSyncNotification,
+    isReadOnly: effectiveReadOnly,
   });
 
   useEffect(() => {
@@ -90,10 +168,10 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     }
   };
 
-  const isMasterAdmin = isMasterAdminEmail(userProfile?.email || user?.email);
+  const isMasterAdmin = isMasterAdminEmail(effectiveUserProfile?.email || effectiveUser?.email) && !effectiveReadOnly;
   const displayName = telemetry.profile.name && telemetry.profile.name !== "Atleta"
     ? telemetry.profile.name
-    : userProfile?.displayName || user?.displayName || (isMasterAdmin ? "Germán Morales" : "Atleta");
+    : effectiveUserProfile?.displayName || effectiveUser?.displayName || (isMasterAdmin ? "Germán Morales" : "Atleta");
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 dark:bg-slate-950">
@@ -105,12 +183,13 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
         onOpenSeasonStudio={() => setActiveNavSection("season_studio")}
         onOpenCoachChat={() => { selectCoachWeek(); setActiveNavSection("head_coach"); }}
         onOpenSettingsTab={() => setActiveNavSection("physiology")}
+        onSelectView={onSelectView}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <AthleteDashboardHeader
           displayName={displayName}
-          email={userProfile?.email || user?.email || undefined}
-          photoURL={userProfile?.photoURL || user?.photoURL}
+          email={effectiveUserProfile?.email || effectiveUser?.email}
+          photoURL={effectiveUserProfile?.photoURL || effectiveUser?.photoURL}
           isLiveConnected={telemetry.isLiveConnected}
           isRefreshingTelemetry={telemetry.isRefreshingTelemetry}
           onRefreshTelemetry={() => telemetry.refreshTelemetry(telemetry.profile.id, telemetry.apiKeyCache, telemetry.profile.run_ftp, telemetry.profile.bike_ftp)}
@@ -118,7 +197,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           signOutUser={signOutUser}
         />
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
-          {!telemetry.apiKeyCache && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
+          {!isAuditing && !telemetry.apiKeyCache && !effectiveUserProfile?.encryptedApiKey && !effectiveUserProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
             <OnboardingBanner onOpenOnboarding={() => telemetry.setIsOnboardingOpen(true)} />
           )}
           <AthleteDashboardViewRouter
@@ -126,8 +205,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             telemetry={telemetry}
             season={season}
             sync={sync}
-            user={user}
-            userProfile={userProfile}
+            user={effectiveUser}
+            userProfile={effectiveUserProfile}
             displayName={displayName}
             activePlan={activePlan}
             setActivePlan={setActivePlan}
@@ -135,14 +214,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             onNavigateTo={(section) => { if (section === "head_coach") selectCoachWeek(); setActiveNavSection(section); }}
             onLiveConnectedChange={onLiveConnectedChange}
             userStorage={userStorage}
+            isReadOnly={effectiveReadOnly}
           />
           <WorkoutDetailModal
             workout={selectedWorkoutModal}
             dailyExecutedActivities={telemetry.dailyExecutedActivities}
             athleteId={telemetry.profile.id}
             apiKey={telemetry.apiKeyCache}
-            email={user?.email || undefined}
-            uid={user?.uid || undefined}
+            email={effectiveUser?.email || undefined}
+            uid={effectiveUser?.uid || undefined}
             runFtp={telemetry.profile.run_ftp}
             bikeFtp={telemetry.profile.bike_ftp}
             onClose={() => setSelectedWorkoutModal(null)}

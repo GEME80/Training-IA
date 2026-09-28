@@ -24,6 +24,7 @@ interface UseSeasonPlansProps {
   apiKeyCache?: string;
   refreshTelemetry?: (athleteId?: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => Promise<void>;
   setSyncNotification?: (data: SyncNotificationData | null) => void;
+  isReadOnly?: boolean;
 }
 
 function createPhaseInfoFromBlueprint(bp: MacrocycleBlueprint, race?: TargetRace | null): MacrocyclePhaseInfo {
@@ -40,7 +41,8 @@ function createPhaseInfoFromBlueprint(bp: MacrocycleBlueprint, race?: TargetRace
   };
 }
 
-async function persistProfileField(uid: string, email: string, fields: Record<string, any>) {
+async function persistProfileField(uid: string, email: string, fields: Record<string, any>, isReadOnly?: boolean) {
+  if (isReadOnly) return;
   try {
     await fetch("/api/profile", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -61,6 +63,7 @@ export function useSeasonPlans({
   apiKeyCache,
   refreshTelemetry,
   setSyncNotification,
+  isReadOnly = false,
 }: UseSeasonPlansProps) {
   const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
 
@@ -122,6 +125,16 @@ export function useSeasonPlans({
     source: "AI_GENERATED" | "WIZARD_CUSTOM" = "WIZARD_CUSTOM",
     options?: { mode?: "CHAIN" | "REPLACE" }
   ) => {
+    if (isReadOnly) {
+      if (setSyncNotification) {
+        setSyncNotification({
+          title: "Modo Auditoría (Solo Lectura)",
+          message: "No se pueden aplicar planes ni modificar la temporada del atleta en modo auditoría.",
+          type: "error",
+        });
+      }
+      return;
+    }
     const updatedRaces = primaryTargetRace
       ? [primaryTargetRace, ...targetRaces.filter((r) => r.id !== primaryTargetRace.id && r.priority !== "A")]
       : targetRaces;
@@ -181,6 +194,7 @@ export function useSeasonPlans({
   };
 
   const handleUpdateWeekMicrocycle = async (weekIdx: number, newType: any) => {
+    if (isReadOnly) return;
     const currentBp = currentlyViewedPlan?.blueprint || macrocyclePhase?.blueprint;
     if (!currentBp?.weeks?.[weekIdx]) return;
 
@@ -196,12 +210,14 @@ export function useSeasonPlans({
   };
 
   const handleSaveTargetRaces = async (races: TargetRace[]) => {
+    if (isReadOnly) return;
     setTargetRaces(races);
     userStorage.setJSON("target_races", races);
-    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { targetRaces: races });
+    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { targetRaces: races }, isReadOnly);
   };
 
   const handleSaveSeasonPlans = async (plans: SeasonPlanItem[]) => {
+    if (isReadOnly) return;
     setSeasonPlans(plans);
     if (plans.length > 0) {
       userStorage.setJSON("season_plans", plans);
@@ -212,10 +228,11 @@ export function useSeasonPlans({
       setViewingPlanId(null);
       setMacrocyclePhase(null);
     }
-    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { seasonPlans: plans });
+    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { seasonPlans: plans }, isReadOnly);
   };
 
   const handleDeleteActivePlan = async () => {
+    if (isReadOnly) return;
     await handleSaveSeasonPlans([]);
     setViewingPlanId(null);
     setMacrocyclePhase(null);

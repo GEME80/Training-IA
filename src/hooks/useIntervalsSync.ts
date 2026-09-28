@@ -18,6 +18,7 @@ interface UseIntervalsSyncProps {
   userProfile: any;
   userStorage: UserStorage;
   onOpenSettings?: (tab: "intervals") => void;
+  isReadOnly?: boolean;
 }
 
 export function useIntervalsSync({
@@ -30,11 +31,20 @@ export function useIntervalsSync({
   userProfile,
   userStorage,
   onOpenSettings,
+  isReadOnly = false,
 }: UseIntervalsSyncProps) {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<SyncNotificationData | null>(null);
 
   const handleSyncToIntervals = async (planToSync: PlanItem[]) => {
+    if (isReadOnly) {
+      setSyncNotification({
+        title: "Modo Auditoría (Solo Lectura)",
+        message: "Las sincronizaciones a Intervals.icu están deshabilitadas en modo auditoría para proteger los datos del atleta.",
+        type: "error",
+      });
+      return;
+    }
     setIsSyncing(true);
     try {
       const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
@@ -86,6 +96,14 @@ export function useIntervalsSync({
     weeklyAvailability?: WeeklyAvailabilityMap,
     primaryRace?: TargetRace | null
   ) => {
+    if (isReadOnly) {
+      setSyncNotification({
+        title: "Modo Auditoría (Solo Lectura)",
+        message: "Las sincronizaciones a Intervals.icu están deshabilitadas en modo auditoría para proteger los datos del atleta.",
+        type: "error",
+      });
+      return;
+    }
     if (!blueprint || !blueprint.weeks || blueprint.weeks.length === 0) {
       setSyncNotification({
         title: "Sin Macrociclo Activo",
@@ -165,6 +183,14 @@ export function useIntervalsSync({
     primaryRace?: TargetRace | null,
     startWeekIndex: number = 0
   ) => {
+    if (isReadOnly) {
+      setSyncNotification({
+        title: "Modo Auditoría (Solo Lectura)",
+        message: "Las sincronizaciones a Intervals.icu están deshabilitadas en modo auditoría para proteger los datos del atleta.",
+        type: "error",
+      });
+      return;
+    }
     if (!blueprint || !blueprint.weeks || blueprint.weeks.length === 0) {
       setSyncNotification({
         title: "Sin Macrociclo Activo",

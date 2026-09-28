@@ -19,12 +19,14 @@ import { AdminUsersTab } from "./admin/AdminUsersTab";
 import { AdminAISettingsTab } from "./admin/AdminAISettingsTab";
 import { AdminMethodologyTab } from "./admin/AdminMethodologyTab";
 import { useAdminPanelData } from "./admin/useAdminPanelData";
+import { AdminUserListItem } from "@/lib/db/types";
 
 interface AdminPanelProps {
   onGoBackToDashboard?: () => void;
+  onInspectAthlete?: (user: AdminUserListItem) => void;
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onInspectAthlete }) => {
   const [activeTab, setActiveTab] = useState<AdminSidebarTab>("dashboard");
   const data = useAdminPanelData();
 
@@ -189,6 +191,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard }) =
             users={data.users}
             onRefresh={data.fetchUsersAndStats}
             showMessage={data.showMessage}
+            onInspectAthlete={onInspectAthlete}
           />
         )}
 

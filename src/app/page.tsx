@@ -9,6 +9,8 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
+import { AdminImpersonationBanner } from "@/components/admin/AdminImpersonationBanner";
+import { AdminUserListItem } from "@/lib/db/types";
 
 export default function HomePage() {
   const {
@@ -24,6 +26,7 @@ export default function HomePage() {
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<"landing" | "dashboard" | "admin">("dashboard");
+  const [previewAthlete, setPreviewAthlete] = useState<AdminUserListItem | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [settingsTab, setSettingsTab] = useState<"connections" | "physiology" | "availability" | "races" | "macrocycle" | "ai" | "intervals">("connections");
   const [isSeasonStudioOpen, setIsSeasonStudioOpen] = useState<boolean>(false);
@@ -121,13 +124,25 @@ export default function HomePage() {
               athleteName={userProfile?.displayName || user?.displayName || "Atleta"}
               athleteId={userProfile?.intervalsAthleteId || ""}
               activeView="admin"
-              onSelectView={(v) => setCurrentView(v)}
+              onSelectView={(v) => {
+                setPreviewAthlete(null);
+                setCurrentView(v);
+              }}
               onOpenAuthModal={handleOpenAuthModal}
               isIntervalsConnected={isIntervalsConnected}
               isGeminiConnected={isGeminiConnected}
             />
             <main className="py-2.5 sm:py-6 max-w-7xl mx-auto px-2.5 sm:px-6">
-              <AdminPanel onGoBackToDashboard={() => setCurrentView("dashboard")} />
+              <AdminPanel
+                onGoBackToDashboard={() => {
+                  setPreviewAthlete(null);
+                  setCurrentView("dashboard");
+                }}
+                onInspectAthlete={(athlete) => {
+                  setPreviewAthlete(athlete);
+                  setCurrentView("dashboard");
+                }}
+              />
             </main>
           </div>
           <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-center text-xs text-slate-500">
@@ -135,7 +150,10 @@ export default function HomePage() {
               <p>PULSE AI PRO © 2026 • Admin Console</p>
               <button
                 type="button"
-                onClick={() => setCurrentView("dashboard")}
+                onClick={() => {
+                  setPreviewAthlete(null);
+                  setCurrentView("dashboard");
+                }}
                 className="hover:text-cyan-600 font-bold transition cursor-pointer"
               >
                 ← Volver al Dashboard
@@ -145,19 +163,37 @@ export default function HomePage() {
         </div>
       ) : (
         /* VISTA 3: DASHBOARD DEL ATLETA UNIFICADO (Sidebar Continuo de borde a borde) */
-        <AthleteDashboard
-          isSettingsOpen={isSettingsOpen}
-          setIsSettingsOpen={setIsSettingsOpen}
-          settingsTab={settingsTab}
-          setSettingsTab={setSettingsTab}
-          isSeasonStudioOpen={isSeasonStudioOpen}
-          setIsSeasonStudioOpen={setIsSeasonStudioOpen}
-          seasonStudioTab={seasonStudioTab}
-          setSeasonStudioTab={setSeasonStudioTab}
-          onSelectView={(v) => setCurrentView(v)}
-          onLiveConnectedChange={(connected) => setIsIntervalsConnected(connected)}
-          onGeminiConnectedChange={(connected) => setIsGeminiConnected(connected)}
-        />
+        <div className="flex flex-col min-h-screen">
+          {previewAthlete && (
+            <AdminImpersonationBanner
+              athlete={previewAthlete}
+              onExit={() => {
+                setPreviewAthlete(null);
+                setCurrentView("admin");
+              }}
+            />
+          )}
+          <AthleteDashboard
+            targetAthlete={previewAthlete}
+            isReadOnly={Boolean(previewAthlete)}
+            isSettingsOpen={isSettingsOpen}
+            setIsSettingsOpen={setIsSettingsOpen}
+            settingsTab={settingsTab}
+            setSettingsTab={setSettingsTab}
+            isSeasonStudioOpen={isSeasonStudioOpen}
+            setIsSeasonStudioOpen={setIsSeasonStudioOpen}
+            seasonStudioTab={seasonStudioTab}
+            setSeasonStudioTab={setSeasonStudioTab}
+            onSelectView={(v) => {
+              if (previewAthlete && (v === "admin" || v === "landing")) {
+                setPreviewAthlete(null);
+              }
+              setCurrentView(v);
+            }}
+            onLiveConnectedChange={(connected) => setIsIntervalsConnected(connected)}
+            onGeminiConnectedChange={(connected) => setIsGeminiConnected(connected)}
+          />
+        </div>
       )}
       <AuthModal
         isOpen={isAuthModalOpen}

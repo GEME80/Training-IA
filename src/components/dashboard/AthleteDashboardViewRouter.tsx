@@ -24,6 +24,7 @@ interface AthleteDashboardViewRouterProps {
   onNavigateTo: (section: AthleteSidebarNavSection) => void;
   onLiveConnectedChange?: (connected: boolean) => void;
   userStorage: any;
+  isReadOnly?: boolean;
 }
 
 export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProps> = ({
@@ -40,6 +41,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   onNavigateTo,
   onLiveConnectedChange,
   userStorage,
+  isReadOnly = false,
 }) => {
   if (activeNavSection === "dashboard") {
     return (

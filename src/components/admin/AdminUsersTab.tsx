@@ -13,6 +13,7 @@ interface AdminUsersTabProps {
   users: AdminUserListItem[];
   onRefresh: () => void;
   showMessage: (text: string, type: "success" | "error") => void;
+  onInspectAthlete?: (user: AdminUserListItem) => void;
 }
 
 type QuickTabFilter = "ALL" | "ACTIVE" | "PENDING" | "INVITED";
@@ -21,6 +22,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   users,
   onRefresh,
   showMessage,
+  onInspectAthlete,
 }) => {
   const { user, userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -202,6 +204,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         onEdit={(u) => setEditingUser(u)}
         onDelete={(u) => setUserToDelete(u)}
         onStatusChange={handleStatusChange}
+        onInspectAthlete={onInspectAthlete}
       />
 
       {/* Modal 1: Invitar / Pre-registrar */}

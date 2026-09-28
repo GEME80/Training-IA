@@ -63,6 +63,7 @@ export interface AdminUserListItem {
   runFtp?: number;
   bikeFtp?: number;
   weightKg?: number;
+  heightCm?: number;
   restingHR?: number;
   maxHR?: number;
   lthr?: number;

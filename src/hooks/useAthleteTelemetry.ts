@@ -13,6 +13,7 @@ interface UseAthleteTelemetryProps {
   userStorage: UserStorage;
   refreshProfile?: () => Promise<void>;
   onLiveConnectedChange?: (connected: boolean) => void;
+  isReadOnly?: boolean;
 }
 
 export function useAthleteTelemetry({
@@ -21,8 +22,9 @@ export function useAthleteTelemetry({
   userStorage,
   refreshProfile,
   onLiveConnectedChange,
+  isReadOnly = false,
 }: UseAthleteTelemetryProps) {
-  const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
+  const isSuper = isMasterAdminEmail(userProfile?.email || user?.email) && !isReadOnly;
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
@@ -46,6 +48,7 @@ export function useAthleteTelemetry({
   const lastPersistedProfileRef = useRef<string>("");
 
   const persistProfileToApi = useCallback(async (body: Record<string, any>) => {
+    if (isReadOnly) return;
     const serialized = JSON.stringify(body);
     if (serialized === lastPersistedProfileRef.current) return;
     try {
@@ -58,7 +61,7 @@ export function useAthleteTelemetry({
     } catch (e) {
       console.warn("Aviso al persistir perfil en API:", e);
     }
-  }, []);
+  }, [isReadOnly]);
 
   const latestWellness = useMemo(() => {
     if (!wellnessHistory?.length) return null;
@@ -160,6 +163,10 @@ export function useAthleteTelemetry({
   );
 
   const handleSaveSettings = async (data: any) => {
+    if (isReadOnly) {
+      console.warn("Modo auditoría / solo lectura: guardado de configuración deshabilitado");
+      return;
+    }
     const athleteIdToUse = data.intervalsAthleteId || data.athleteId;
     const setters: Array<[string, any, (v: any) => void]> = [
       ["athlete_id", athleteIdToUse, (v) => setProfile((p) => ({ ...p, id: v }))],
@@ -231,11 +238,13 @@ export function useAthleteTelemetry({
     let updated = visibleMetrics.includes(id) ? visibleMetrics.filter((m) => m !== id) : [...visibleMetrics, id];
     if (updated.length === 0) updated = ["ctl"];
     setVisibleMetrics(updated);
+    if (isReadOnly) return;
     userStorage.setJSON("visible_metrics", updated);
     await handleSaveSettings({ visibleMetrics: updated });
   };
 
   const handleOnboardingSuccess = async (data: { athleteId: string; apiKey: string; athleteName?: string; runFtp?: number; bikeFtp?: number }) => {
+    if (isReadOnly) return;
     setApiKeyCache(data.apiKey);
     userStorage.setItem("intervals_api_key", data.apiKey);
     userStorage.setItem("athlete_id", data.athleteId);
@@ -313,7 +322,7 @@ export function useAthleteTelemetry({
         refreshTelemetry(storedAthleteId, storedApiKey, resolvedRunFtp, resolvedBikeFtp, true);
       } else {
         setIsLiveConnected(false);
-        if (!userStorage.getItem("onboarding_welcomed") && !isSuper) {
+        if (!userStorage.getItem("onboarding_welcomed") && !isSuper && !isReadOnly) {
           setIsOnboardingOpen(true);
           userStorage.setItem("onboarding_welcomed", "true");
         }

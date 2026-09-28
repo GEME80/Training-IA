@@ -126,3 +126,41 @@ export function purgeAllSessionStorage(): void {
     });
   } catch {}
 }
+
+/**
+ * Almacenamiento en memoria volátil para modo auditoría/solo lectura (Impersonation).
+ * No toca window.localStorage en lo absoluto, garantizando que ninguna acción
+ * o dato del atleta auditado contamine o sobreescriba el navegador del administrador.
+ */
+export function createReadOnlyMemoryStorage(initialData: Record<string, string> = {}): UserScopedStorage {
+  const store = new Map<string, string>(Object.entries(initialData));
+
+  return {
+    getItem(key: string): string | null {
+      return store.get(key) ?? null;
+    },
+    setItem(key: string, value: string): void {
+      store.set(key, value);
+    },
+    removeItem(key: string): void {
+      store.delete(key);
+    },
+    getJSON<T>(key: string): T | null {
+      const raw = this.getItem(key);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw) as T;
+      } catch {
+        return null;
+      }
+    },
+    setJSON<T>(key: string, value: T): void {
+      try {
+        this.setItem(key, JSON.stringify(value));
+      } catch {}
+    },
+    clear(): void {
+      store.clear();
+    },
+  };
+}

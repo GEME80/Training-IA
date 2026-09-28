@@ -13,6 +13,7 @@ import {
   Clock,
   AlertCircle,
   Unlink,
+  Eye,
 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
@@ -22,6 +23,7 @@ interface AdminUserCardMobileProps {
   onEdit: (user: AdminUserListItem) => void;
   onDelete: (user: AdminUserListItem) => void;
   onStatusChange: (targetUid: string, targetEmail: string, newStatus: UserStatus) => void;
+  onInspectAthlete?: (user: AdminUserListItem) => void;
 }
 
 export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
@@ -29,6 +31,7 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
   onEdit,
   onDelete,
   onStatusChange,
+  onInspectAthlete,
 }) => {
   const isRootAdmin = isMasterAdminEmail(u.email);
   const isPending = u.status === "pending";
@@ -156,6 +159,18 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>Aprobar</span>
+          </button>
+        )}
+
+        {onInspectAthlete && (
+          <button
+            type="button"
+            onClick={() => onInspectAthlete(u)}
+            className="flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200 transition cursor-pointer shrink-0"
+            title="Ver cómo ve la app (Solo lectura)"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span>Ver</span>
           </button>
         )}
 

@@ -147,10 +147,18 @@ export function useSeasonPlans({
     const sDate = syncedBlueprint.startDate || todayStr;
     const eDate = syncedBlueprint.weeks?.[syncedBlueprint.weeks.length - 1]?.endDate || todayStr;
 
+    const resolvedGoalType =
+      syncedBlueprint.mode === "GENERAL_MAINTENANCE" ||
+      syncedBlueprint.mode === "PRE_SEASON_MAINTENANCE"
+        ? "MAINTENANCE"
+        : syncedBlueprint.distanceType
+        ? syncedBlueprint.distanceType.toUpperCase()
+        : "CUSTOM_MACROCYCLE";
+
     const newPlanItem: SeasonPlanItem = {
       id: "plan-" + Date.now(),
       planName: syncedBlueprint.cycleTitle,
-      goalType: "MARATON_42K",
+      goalType: resolvedGoalType,
       blueprint: syncedBlueprint,
       startDate: sDate,
       endDate: eDate,

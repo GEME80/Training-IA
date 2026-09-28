@@ -1,19 +1,62 @@
-# 📋 PLAN MAESTRO DE EJECUCIÓN: Running Multimodal (Potencia • Híbrido • Ritmo • Pulso) — SGEA v3.80
+# 📋 PLAN MAESTRO DE EJECUCIÓN: Sistema Dual de Running (Potencia Stryd vs. Modelo Híbrido HR + Ritmo) — SGEA v3.80
 
-> **OBJETIVO DIRECTO:**
-> 1. Si el atleta tiene Stryd: **Entrena 100% por Potencia (Vatios / % CP)**. El código y flujo actual se mantiene **intacto e idéntico**.
-> 2. Si el atleta NO tiene Stryd: Entrena en **Modo Híbrido (Series por Ritmo `min/km` + Fondos por Pulso `bpm`)**, con opción de elegir Solo Ritmo o Solo Pulso.
-> 3. Los 18 modelos existentes **no se duplican**. Un adaptador ligero traduce la carrera al vuelo según la métrica del atleta.
+> **REGLA FUNDAMENTAL Y DEFINITIVA:**
+> El sistema soporta **exclusivamente dos modelos de running**:
+> 1. **⚡ MODELO 1: POTENCIA EXCLUSIVA (STRYD):** Para atletas con potenciómetro. Entrenan **100% por vatios (% CP)**. El código y flujo actual se mantiene **intacto e idéntico**.
+> 2. **⏱️❤️ MODELO 2: HÍBRIDO (RITMO + HR):** Para atletas sin potenciómetro. **NO hay modos aislados de "solo ritmo" ni "solo pulso"**. Todo corredor sin Stryd entrena en el **Modelo Híbrido**:
+>    - **Series, intervalos y calidad:** Se prescriben por **Ritmo (`% Pace` en Intervals / `min/km` en tarjeta)**.
+>    - **Fondos largos, rodajes suaves y regenerativos:** Se prescriben por **Frecuencia Cardíaca (`% LTHR` en Intervals / `bpm` en tarjeta)**.
+> 3. **Zonas en el Perfil del Atleta:**
+>    - Atleta Potencia: Zonas Stryd Power.
+>    - Atleta Híbrido: **Zonas de Ritmo (Pace Zones Z1-Z6 en `min/km`)** + **Zonas de Frecuencia Cardíaca (Z1-Z7 en `bpm`)**.
+> 4. Los 18 modelos existentes **no se duplican**. El adaptador fisiológico traduce la carrera al vuelo entre Potencia e Híbrido.
 
 ---
 
-## 🎯 REGLAS DE ORO DEL PLAN (CERO CONFUSIÓN)
+## 🎯 COMPARATIVA DIRECTA DE LOS 2 MODELOS
 
-1. **Invarianza de Potencia:** Un atleta con `runFtp > 0` o checkbox de Stryd activo no nota ningún cambio. Sus vatios, entrenamientos y sincronización a Intervals.icu son 100% idénticos a v3.79.
-2. **Ciclismo y Fuerza:** Ciclismo sigue siempre por vatios (`% FTP`) y fuerza por rutinas funcionales (`WeightTraining`).
-3. **Estándar para Atletas sin Stryd:** El sistema les asigna automáticamente el **Modo Híbrido** (la mejor práctica deportiva):
-   - **Series y Calidad:** Manda el **Ritmo** (`% Pace` en Intervals / `min/km` en tarjeta).
-   - **Fondos y Rodajes Suaves:** Manda el **Pulso** (`% LTHR` en Intervals / `bpm` en tarjeta).
+```
+                    ¿TIENES POTENCIÓMETRO DE CARRERA (STRYD)?
+                                       │
+                      ┌────────────────┴────────────────┐
+                      ▼                                 ▼
+           [ SÍ: CHECKBOX MARCADO ]          [ NO: CHECKBOX DESMARCADO ]
+                      │                                 │
+           ⚡ MODELO POTENCIA                ⏱️❤️ MODELO HÍBRIDO
+           • 100% Vatios (% CP)              • Series/Calidad: RITMO (min/km)
+           • Cero mezcla de variables        • Fondos/Suaves: CORAZÓN (bpm / % LTHR)
+           • Código actual 100% intacto      • Zonas de Ritmo + Zonas de Pulso
+```
+
+| Aspecto | ⚡ 1. Modelo Potencia (Stryd) | ⏱️❤️ 2. Modelo Híbrido (HR + Ritmo) |
+| :--- | :--- | :--- |
+| **Población Objetivo** | Corredores con podómetro Stryd | Corredores sin podómetro de carrera |
+| **Prescripción en Calidad (Series)** | Vatios Stryd (`240W • 95% CP`) | Ritmo en min/km (`4:15/km • 105% Pace`) |
+| **Prescripción en Fondos / Suaves** | Vatios Stryd (`195W • 78% CP`) | Frecuencia Cardíaca (`142-148 bpm • 80-84% LTHR`) |
+| **Sintaxis en Intervals.icu** | `- 45m 80% FTP` (constante) | Series: `- 4x 1000m 105% Pace` • Fondos: `- 1h30m 80% LTHR` |
+| **Zonas en Perfil** | Zonas Stryd Power (W) | **Zonas por Ritmo (Z1-Z6 min/km)** + **Zonas HR (Z1-Z7 bpm)** |
+| **Activación en Perfil** | `[x] Entreno con Potenciómetro` | `[ ] Entreno con Potenciómetro` (Automático Híbrido) |
+
+> [!NOTE]
+> **Disciplinas Complementarias:**
+> - **Ciclismo:** Siempre se rige por vatios de pedaleo (`bikeFtp` / `% FTP`).
+> - **Fuerza:** Siempre se prescribe como rutinas funcionales (`WeightTraining`).
+> - **Natación:** Siempre se rige por ritmo técnico (`CSS` / `100m`).
+
+---
+
+## 🏃 TABLA DE ZONAS POR RITMO (A CREAR EN EL PERFIL PARA MODO HÍBRIDO)
+
+Calculadas dinámicamente a partir del **Ritmo Umbral** (Threshold Pace / VAM, ej. 4:30/km):
+
+| Zona de Ritmo | Nombre Fisiológico | % del Ritmo Umbral | Rango Calculado (Umbral 4:30/km) | Uso en el Modelo Híbrido |
+| :--- | :--- | :--- | :--- | :--- |
+| **Z1 - Fácil** | Recuperación Activa | < 75% Pace | `5:45 - 6:30 /km` | Calentamiento y enfriamiento |
+| **Z2 - Moderado** | Fondo Aeróbico | 75 - 85% Pace | `5:00 - 5:45 /km` | Referencia de paso en fondos Z2 |
+| **Z3 - Tempo** | Tempo / Aeróbico Alto | 85 - 94% Pace | `4:35 - 5:00 /km` | Bloques a ritmo maratón |
+| **Z4 - Umbral** | Umbral de Lactato (LT) | 95 - 104% Pace | `4:20 - 4:35 /km` | **Series de Umbral (Pace rector)** |
+| **Z5 - Intervalo** | Potencia Aeróbica (VO2max) | 105 - 115% Pace | `3:55 - 4:20 /km` | **Series VO2max (Pace rector)** |
+| **Z6 - Repetición** | Capacidad Anaeróbica | > 115% Pace | `< 3:55 /km` | **Rectas y Cuestas (Pace rector)** |
 
 ---
 
@@ -21,10 +64,10 @@
 
 ```mermaid
 flowchart LR
-    P1["Paso 1: Tipos & DB"] --> P2["Paso 2: Adaptador Universal"]
-    P2 --> P3["Paso 3: Generadores & Sync"]
-    P3 --> P4["Paso 4: Head Coach IA"]
-    P4 --> P5["Paso 5: UI & Perfil"]
+    P1["Paso 1: Tipos & DB (Solo 2 Modos)"] --> P2["Paso 2: Adaptador Universal"]
+    P2 --> P3["Paso 3: Zonas por Ritmo en UI"]
+    P3 --> P4["Paso 4: Generadores & Sync"]
+    P4 --> P5["Paso 5: Head Coach IA"]
     P5 --> P6["Paso 6: Set de Pruebas"]
 ```
 
@@ -37,119 +80,111 @@ flowchart LR
 - `src/lib/validation/schemas.ts`
 
 **Acciones concretas:**
-1. Crear el tipo de unión:
+1. Definir los dos únicos modos:
    ```typescript
-   export type RunningTrainingMode = "POWER" | "HYBRID" | "PACE" | "HEART_RATE";
+   export type RunningTrainingMode = "POWER" | "HYBRID";
    ```
 2. Agregar a `UserProfileData` y `AthleteProfile`:
    - `hasRunningPowerMeter?: boolean;` (checkbox de Stryd)
-   - `runningTrainingMode?: RunningTrainingMode;` (modalidad)
+   - `runningTrainingMode?: RunningTrainingMode;` (por defecto "POWER" si tiene Stryd, o "HYBRID")
    - `runThresholdPaceSecPerKm?: number;` (ritmo umbral en segundos, ej. 270s = 4:30/km)
    - `runThresholdPaceStr?: string;` (ritmo umbral legible, ej. "4:30")
-3. Agregar a Zod en `schemas.ts` para permitir validación en las APIs.
+3. Validación en Zod (`schemas.ts`).
 
 ---
 
-### PASO 2: Adaptador Fisiológico Universal (El Puente)
+### PASO 2: Adaptador Fisiológico Universal (`runningWorkoutAdapter.ts`)
 **Archivo nuevo a crear:**
-- `src/lib/physiology/runningWorkoutAdapter.ts` (< 180 LOC)
+- `src/lib/physiology/runningWorkoutAdapter.ts` (< 150 LOC)
 
 **Acciones concretas:**
-1. Crear función `resolveRunningMode(profile)`:
+1. `resolveRunningMode(profile)`:
    - Si `hasRunningPowerMeter === true` o `runFtp > 0` -> Retorna `"POWER"`.
-   - Si tiene valor explícito (`"HYBRID"`, `"PACE"`, `"HEART_RATE"`) -> Lo retorna.
-   - Si no está configurado y no tiene Stryd -> Retorna `"HYBRID"`.
-2. Crear función `adaptRunningWorkoutDoc(workoutDoc, discipline, isQuality, mode)`:
-   - Si `discipline !== "Carrera"` o `mode === "POWER"` -> Retorna el texto intacto (con `% FTP`).
-   - Si `mode === "HYBRID"` -> Reemplaza `% FTP` por `% Pace` si es calidad, o por `% LTHR` si es fondo/suave.
-   - Si `mode === "PACE"` -> Reemplaza `% FTP` por `% Pace`.
-   - Si `mode === "HEART_RATE"` -> Reemplaza `% FTP` por `% LTHR`.
-3. Crear función `formatIntensityTarget(params)`:
-   - Si es Potencia o Ciclismo -> `240W (80% CP)` o `180W (70% FTP)`.
-   - Si es Ritmo -> `4:45/km (80% Pace)`.
-   - Si es Pulso -> `145 bpm (80% LTHR)`.
+   - Si no -> Retorna `"HYBRID"`.
+2. `calculatePaceZones(thresholdPaceSec: number)`:
+   - Calcula dinámicamente las 6 zonas de ritmo (Z1 a Z6) en `min/km`.
+3. `adaptRunningWorkoutDoc(workoutDoc, discipline, isQuality, mode)`:
+   - Si `discipline !== "Carrera"` o `mode === "POWER"` -> Retorna el texto intacto con `% FTP`.
+   - Si `mode === "HYBRID"`:
+     - Calidad (series, intervalos, fartlek, tempo) -> Reemplaza `% FTP` por `% Pace`.
+     - Suaves y Fondos (regenerativo, fondo Z2, tirada larga) -> Reemplaza `% FTP` por `% LTHR`.
+4. `formatIntensityTarget(params)`:
+   - Potencia o Ciclismo -> `240W (80% CP)` o `180W (70% FTP)`.
+   - Híbrido en Calidad -> `4:15/km (105% Pace)`.
+   - Híbrido en Fondos/Suaves -> `145 bpm (82% LTHR)`.
 
 ---
 
-### PASO 3: Generadores de Planes, Macrociclos y Sincronización
+### PASO 3: Zonas por Ritmo en el Perfil y UI
 **Archivos a modificar:**
-- `src/lib/gemini/deterministicPlanGenerator.ts`
-- `src/lib/ai/knowledge/longRunPeriodization.ts`
-- `src/lib/ai/knowledge/index.ts`
-- `src/lib/services/intervalsSyncService.ts`
-
-**Acciones concretas:**
-1. En `deterministicPlanGenerator.ts`:
-   - Resolver `runningMode = resolveRunningMode(profile)`.
-   - En sesiones de carrera, aplicar `adaptRunningWorkoutDoc` al `workoutDoc` y `formatIntensityTarget` al `powerTarget`.
-   - En ciclismo: mantener 100% vatios y `% FTP`.
-2. En `longRunPeriodization.ts` y tiradas largas:
-   - Si es modo `POWER`: vatios y `% CP` (idéntico a hoy).
-   - Si es `HYBRID` o `HEART_RATE`: pulso en `bpm` y `% LTHR`.
-   - Si es `PACE`: ritmo en `min/km` y `% Pace`.
-3. En `intervalsSyncService.ts`:
-   - Despachar el `workoutDoc` adaptado (`% FTP`, `% Pace` o `% LTHR`) para que el reloj del corredor (Garmin/Coros) cargue las alertas de zona exactas.
-
----
-
-### PASO 4: Agente Head Coach & Prompts
-**Archivos a modificar:**
-- `src/lib/ai/prompts.ts`
-- `src/lib/ai/headcoach/chatContext.ts`
-- `src/lib/ai/defaultPrompts.ts`
-
-**Acciones concretas:**
-1. En `chatContext.ts`, resolver el `runningMode` del atleta y pasarlo al contexto del prompt.
-2. En `prompts.ts` (`buildHeadCoachSystemPrompt`), inyectar la instrucción unívoca:
-   - Si es `POWER`: Hablar exclusivamente de vatios Stryd (% CP).
-   - Si es `HYBRID`: Hablar de ritmo en series e intervalos, y de pulso/FC en rodajes suaves y fondos.
-   - Si es `PACE`: Hablar exclusivamente de ritmo (min/km).
-   - Si es `HEART_RATE`: Hablar exclusivamente de pulso y zonas cardíacas.
-
----
-
-### PASO 5: Interfaz de Usuario y Ergonomía del Perfil
-**Archivos a modificar:**
+- `src/components/profile/AthleteZonesViewer.tsx`
 - `src/components/profile/AthleteEditProfileModal.tsx`
 - `src/components/profile/ProfilePhysiologyTab.tsx`
 - `src/components/profile/AthleteProfileHeroCard.tsx`
-- `src/components/profile/AthleteZonesViewer.tsx`
 - `src/components/WorkoutChart.tsx`
 - `src/components/dashboard/AthleteCalendarDayTile.tsx`
 - `src/components/dashboard/AthleteMobileWorkoutCard.tsx`
 
 **Acciones concretas:**
-1. **Modal de Edición y Pestaña de Fisiología:**
-   - Checkbox: `[x] Entreno con Potenciómetro de Carrera (Stryd)`.
-   - Si está marcado: muestra input de Stryd CP (vatios).
-   - Si está desmarcado: muestra selector con 3 opciones:
-     - `(●) Híbrido: Ritmo en Series + Pulso en Fondos (Recomendado)`
-     - `( ) Solo Ritmo (min/km)`
-     - `( ) Solo Frecuencia Cardíaca (bpm)`
-     - Inputs para calibrar Ritmo Umbral (`min/km`) y LTHR (`bpm`).
+1. **Zonas por Ritmo en `AthleteZonesViewer.tsx`:**
+   - Crear la columna **"Zonas de Carrera por Ritmo (Pace Zones)"** con las 6 zonas en `min/km`.
+   - Si el atleta es Híbrido, se muestran activas tanto las Zonas de Ritmo como las Zonas de Frecuencia Cardíaca con la insignia `[MODO HÍBRIDO ACTIVO]`.
+   - Si el atleta es Potencia, se resalta la columna de Stryd Power con `[MODO POTENCIA ACTIVO]`.
 2. **Tarjeta de Cabecera del Atleta (`AthleteProfileHeroCard.tsx`):**
-   - Mostrar badge con la modalidad activa:
-     - ⚡ `Potencia Stryd (${runFtp}W)`
-     - ⏱️❤️ `Híbrido (${paceStr}/km • ${lthr} bpm)`
-     - ⏱️ `Solo Ritmo (${paceStr}/km)`
-     - ❤️ `Solo Pulso (${lthr} bpm)`
-3. **Gráfico de Entrenamientos (`WorkoutChart.tsx`):**
-   - El tooltip muestra `245W` si es potencia, `148 bpm` si es pulso, o `4:50/km` si es ritmo.
-4. **Visor de Zonas (`AthleteZonesViewer.tsx`):**
-   - Añadir tabla de Zonas de Ritmo (Z1-Z5 Daniels/Pace) con badge `[ACTIVA]` en la modalidad del atleta.
-5. **Tarjetas de Calendario:**
-   - Mostrar icono dinámico: ⚡ para vatios, ⏱️ para ritmo, ❤️ para pulso.
+   - Si es Potencia: Badge ⚡ `Potencia Stryd (${runFtp}W)`.
+   - Si es Híbrido: Badge ⏱️❤️ `Modo Híbrido (${paceStr}/km • ${lthr} bpm)`.
+3. **Modal de Edición y Pestaña de Fisiología:**
+   - Checkbox directo:
+     `[x] Entreno con Potenciómetro de Carrera (Stryd)`
+   - Si está marcado: Modo Potencia (muestra campo de Stryd CP).
+   - Si está desmarcado: Muestra badge *"Modo Híbrido Activo (Series por Ritmo + Fondos por Pulso)"* con campos para calibrar:
+     - **Ritmo Umbral (`min/km`)** (sincronizable con Intervals.icu `threshold_pace`).
+     - **FC Umbral (LTHR)** en bpm.
+4. **Gráfico `WorkoutChart.tsx`:**
+   - Tooltips interactivos: vatios en modo Potencia, o ritmo/pulso según corresponda en modo Híbrido.
+
+---
+
+### PASO 4: Generadores de Planes y Sincronización con Intervals.icu
+**Archivos a modificar:**
+- `src/lib/gemini/deterministicPlanGenerator.ts`
+- `src/lib/ai/knowledge/longRunPeriodization.ts`
+- `src/lib/services/intervalsSyncService.ts`
+
+**Acciones concretas:**
+1. En `deterministicPlanGenerator.ts`:
+   - En sesiones de carrera, aplicar `adaptRunningWorkoutDoc` y `formatIntensityTarget`.
+   - En ciclismo: mantener vatios y `% FTP`.
+2. En `longRunPeriodization.ts`:
+   - En modo `POWER`: vatios y `% CP`.
+   - En modo `HYBRID`: pulso en `bpm` y `% LTHR`.
+3. En `intervalsSyncService.ts`:
+   - Despachar a Intervals.icu el `workoutDoc` adaptado (`% FTP` para potencia; `% Pace` en series y `% LTHR` en fondos para híbrido).
+
+---
+
+### PASO 5: Agente Head Coach & Prompts
+**Archivos a modificar:**
+- `src/lib/ai/prompts.ts`
+- `src/lib/ai/headcoach/chatContext.ts`
+
+**Acciones concretas:**
+1. Inyectar en el prompt del Head Coach:
+   - Si el atleta es `POWER`: Hablar exclusivamente en vatios Stryd (% CP).
+   - Si el atleta es `HYBRID`: Hablar en **Ritmo (`min/km`) para series y calidad**, y en **Frecuencia Cardíaca (`bpm` y `% LTHR`) para rodajes suaves y tiradas largas**.
 
 ---
 
 ### PASO 6: Set de Pruebas & Validación Obligatoria
-1. **Verificación de Tipado:** `./node_modules/.bin/tsc --noEmit` (Código 0).
+1. **Tipado:** `./node_modules/.bin/tsc --noEmit` (Código 0).
 2. **Compilación de Producción:** `npm run build` (Código 0).
-3. **Auditoría de Invarianza Stryd:** Verificar que un atleta con Stryd no sufre ninguna modificación de vatios ni sintaxis.
-4. **Auditoría de Atleta sin Stryd:** Verificar que un atleta en modo Híbrido tiene series por ritmo y fondos por pulso.
+3. **Auditoría de Atleta Stryd:** Verificar que un atleta con potenciómetro activo no experimenta ningún cambio en vatios ni sintaxis.
+4. **Auditoría de Atleta Híbrido:** Verificar que las series salen con ritmo y los fondos con pulso, y que las zonas de ritmo se calculan correctamente en el perfil.
 
 ---
 
 ## 🚀 CONFIRMACIÓN PARA EJECUTAR
 
-Este plan es directo, quirúrgico y no altera ningún modelo científico existente. Si estás de acuerdo, responde **"Procede"** o pulsa **Proceed** y arrancamos inmediatamente con el **Paso 1**.
+El plan ahora es **100% nítido: Solo existen 2 modelos (Potencia Stryd vs. Híbrido HR + Ritmo)** y se incluye la creación de las **Zonas por Ritmo en el perfil**.
+
+Si estás de acuerdo, responde **"Procede"** o pulsa **Proceed** y comenzamos con la ejecución inmediata del **Paso 1**.

@@ -97,15 +97,28 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
     );
   }
 
+  const isMaintenancePlan =
+    activePlan.goalType === "MAINTENANCE" ||
+    activePlan.goalType === "MANTENIMIENTO" ||
+    activePlan.blueprint?.mode === "GENERAL_MAINTENANCE" ||
+    activePlan.blueprint?.mode === "PRE_SEASON_MAINTENANCE" ||
+    !activePlan.blueprint?.primaryRace;
+
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-xs">
       {/* Header del Plan */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-black border border-emerald-500/20">
-            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-            EN EJECUCIÓN
-          </span>
+          {isMaintenancePlan ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-black border border-slate-400/20">
+              🛡️ MANTENIMIENTO & SALUD
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-black border border-emerald-500/20">
+              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              EN EJECUCIÓN
+            </span>
+          )}
           <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold">
             Semana 1 de {totalWeeks}
           </span>
@@ -116,7 +129,7 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
             <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">
               {planTitle}
             </h3>
-            {primaryRace && (
+            {!isMaintenancePlan && primaryRace && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-black border border-amber-400/30">
                 <Trophy className="h-3 w-3 text-amber-500" />
                 {primaryRace.name}

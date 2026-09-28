@@ -228,7 +228,7 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button type="button" onClick={() => { onChangePlanTitle("Construcción de Base Aeróbica (GPP)"); onChangeDistance("42k"); onChangeWeeksCount(12); }} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left hover:border-emerald-500 transition cursor-pointer">
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold block">Fase 1</span>
                 <strong className="text-xs text-slate-900 dark:text-white block">Base Aeróbica</strong>
@@ -238,11 +238,6 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                 <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold block">Fase 2</span>
                 <strong className="text-xs text-slate-900 dark:text-white block">Umbral & Vatios</strong>
                 <span className="text-[10px] text-slate-400">8 semanas</span>
-              </button>
-              <button type="button" onClick={() => { onChangePlanTitle("Mantenimiento Físico"); onChangeDistance("maintenance"); onChangeWeeksCount(6); }} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left hover:border-emerald-500 transition cursor-pointer">
-                <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold block">Fase 3</span>
-                <strong className="text-xs text-slate-900 dark:text-white block">Mantenimiento</strong>
-                <span className="text-[10px] text-slate-400">6 semanas</span>
               </button>
             </div>
           )}

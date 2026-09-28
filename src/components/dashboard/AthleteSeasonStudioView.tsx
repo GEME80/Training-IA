@@ -30,6 +30,7 @@ interface AthleteSeasonStudioViewProps {
   onSaveTargetRaces: (races: TargetRace[]) => void;
   onSaveSeasonPlans: (plans: SeasonPlanItem[]) => void;
   onApplyPlan?: (newBlueprint: MacrocycleBlueprint, options?: { mode: "CHAIN" | "REPLACE" }) => void;
+  onPersistAvailability?: (map: Record<string, string[]>) => Promise<void>;
   onNavigateToDashboard?: () => void;
   onNavigateToProfile?: () => void;
   onOpenHeadCoach?: () => void;
@@ -55,6 +56,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   onSaveTargetRaces,
   onSaveSeasonPlans,
   onApplyPlan,
+  onPersistAvailability,
   onNavigateToDashboard,
   onNavigateToProfile,
   onOpenHeadCoach,
@@ -126,9 +128,18 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
     const startDate = new Date(today.setDate(diff)).toISOString().split("T")[0];
 
+    const distType =
+      prog.key === "MANTENIMIENTO" || prog.discipline === "Salud"
+        ? "maintenance"
+        : prog.discipline === "Triatlón" ? "triathlon_703"
+        : prog.key === "BASE_BUILD" ? "42k"
+        : prog.discipline === "Carrera" ? (prog.weeks <= 12 ? "21k" : "42k")
+        : "42k";
+
     const blueprint = generateCustomMacrocycleBlueprint({
-      distanceType: (prog.discipline === "Triatlón" ? "triathlon_703" : prog.discipline === "Carrera" ? "42k" : "maintenance"),
-      startDate, weeksCount: prog.weeks, customGoal: prog.name, primaryRace: primaryRace || undefined,
+      distanceType: distType,
+      startDate, weeksCount: prog.weeks, customGoal: prog.name,
+      primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
       athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
     });
 
@@ -140,7 +151,8 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       totalWeeks: prog.weeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
     };
     onSaveSeasonPlans([newPlanItem]);
-    showNotification(`¡Programa "${prog.name}" activado en el calendario!`);
+    setIsDesignSectionOpen(false);
+    showNotification(`¡Programa "${prog.name}" activado como Plan Vigente!`);
   };
 
   const handleGenerateAIPlan = async (userPrompt: string, weeksCount: number, primaryDiscipline: string) => {
@@ -151,21 +163,29 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
       const startDate = new Date(today.setDate(diff)).toISOString().split("T")[0];
 
+      const isMaint = /manten|salud|health|longev/i.test(primaryDiscipline + userPrompt);
+      const isTri = /triat|triath/i.test(primaryDiscipline);
+      const isTrail = /trail|ultra|monta/i.test(primaryDiscipline);
+      const isCycling = /cicl|bici|fondo|bike/i.test(primaryDiscipline);
+      const distType = isMaint ? "maintenance" : isTri ? "triathlon_703" : isTrail ? "trail_50k" : isCycling ? "cycling_fondo" : "42k";
+
       const blueprint = generateCustomMacrocycleBlueprint({
-        distanceType: (primaryDiscipline.toLowerCase().includes("triatl") ? "triathlon_703" : "42k"),
-        startDate, weeksCount, customGoal: userPrompt, primaryRace: primaryRace || undefined,
+        distanceType: distType,
+        startDate, weeksCount, customGoal: userPrompt,
+        primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
         athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
       });
 
       if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
       const lastWeek = blueprint.weeks[blueprint.weeks.length - 1];
       const newPlanItem: SeasonPlanItem = {
-        id: "plan_" + Date.now(), planName: userPrompt, goalType: "CUSTOM_MACROCYCLE",
+        id: "plan_" + Date.now(), planName: userPrompt, goalType: distType.toUpperCase(),
         startDate: blueprint.startDate, endDate: lastWeek ? lastWeek.endDate : startDate,
         totalWeeks: weeksCount, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
       };
       onSaveSeasonPlans([newPlanItem]);
-      showNotification("¡Macrociclo personalizado activado!");
+      setIsDesignSectionOpen(false);
+      showNotification("¡Macrociclo personalizado activado como Plan Vigente!");
     } finally {
       setIsGeneratingAI(false);
     }
@@ -311,6 +331,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                     onGenerateAIPlan={handleGenerateAIPlan}
                     onApplyDirectBlueprint={handleApplyDirectBlueprint}
                     onNavigateToProfile={onNavigateToProfile}
+                    onPersistAvailability={onPersistAvailability}
                     isGenerating={isGeneratingAI}
                   />
                 )}

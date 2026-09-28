@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Zap, Footprints, Bike, Dumbbell, Waves, Mountain, HeartPulse, Layers, Check, ExternalLink } from "lucide-react";
+import { Zap, Footprints, Bike, Dumbbell, Waves, Mountain, HeartPulse, Layers, Check, ExternalLink, Moon } from "lucide-react";
 import { WeeklyAvailabilityMap, DisciplineType, DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
 import { CompactAvailabilityMatrix } from "@/components/profile/CompactAvailabilityMatrix";
 
@@ -59,12 +59,12 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
   ];
 
   const daysList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const disciplineOptions: { id: DisciplineType; label: string; icon: string }[] = [
-    { id: "Carrera", label: "Carrera", icon: "🏃" },
-    { id: "Ciclismo", label: "Bici", icon: "🚴" },
-    { id: "Fuerza", label: "Fuerza", icon: "🏋️" },
-    { id: "Natacion", label: "Nado", icon: "🌊" },
-    { id: "Descanso", label: "Descanso", icon: "🌙" },
+  const disciplineOptions: { id: DisciplineType; label: string; icon: React.ElementType; colorActive: string }[] = [
+    { id: "Carrera", label: "Carrera", icon: Footprints, colorActive: "bg-amber-500 text-white" },
+    { id: "Ciclismo", label: "Bici", icon: Bike, colorActive: "bg-sky-500 text-white" },
+    { id: "Fuerza", label: "Fuerza", icon: Dumbbell, colorActive: "bg-purple-500 text-white" },
+    { id: "Natacion", label: "Nado", icon: Waves, colorActive: "bg-cyan-500 text-white" },
+    { id: "Descanso", label: "Descanso", icon: Moon, colorActive: "bg-slate-500 text-white" },
   ];
 
   const toggleDayDiscipline = (day: string, discId: DisciplineType) => {
@@ -234,6 +234,7 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
                 <div className="flex flex-wrap gap-1">
                   {disciplineOptions.map((opt) => {
                     const isActive = dayDiscs.includes(opt.id);
+                    const Icon = opt.icon;
                     return (
                       <button
                         key={opt.id}
@@ -241,12 +242,12 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
                         onClick={() => toggleDayDiscipline(day, opt.id)}
                         className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold transition cursor-pointer flex items-center gap-0.5 ${
                           isActive
-                            ? "bg-emerald-500 text-white shadow-2xs"
+                            ? opt.colorActive
                             : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
                         }`}
                         title={`Marcar ${opt.label} para ${day}`}
                       >
-                        <span>{opt.icon}</span>
+                        <Icon className="h-2.5 w-2.5" />
                         <span>{opt.label}</span>
                       </button>
                     );

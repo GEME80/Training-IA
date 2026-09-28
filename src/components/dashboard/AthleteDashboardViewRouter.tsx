@@ -89,6 +89,15 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   }
 
   if (activeNavSection === "season_studio") {
+    const handlePersistAvailability = async (newMap: Record<string, string[]>) => {
+      try {
+        await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weeklyAvailability: newMap }),
+        });
+      } catch { /* silent fail — localStorage already saved */ }
+    };
     return (
       <AthleteSeasonStudioView
         athleteId={telemetry.profile.id}
@@ -112,6 +121,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         onApplyPlan={(newBlueprint, options) =>
           season.handleApplyMacrocycle(newBlueprint, undefined, "WIZARD_CUSTOM", options)
         }
+        onPersistAvailability={handlePersistAvailability}
         onNavigateToDashboard={() => onNavigateTo("dashboard")}
         onOpenHeadCoach={() => onNavigateTo("head_coach")}
       />

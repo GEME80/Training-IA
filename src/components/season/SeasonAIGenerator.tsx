@@ -38,6 +38,7 @@ interface SeasonAIGeneratorProps {
   onGenerateAIPlan: (userPrompt: string, weeksCount: number, primaryDiscipline: string) => Promise<void>;
   onApplyDirectBlueprint?: (blueprint: MacrocycleBlueprint, planTitle: string) => void;
   onNavigateToProfile?: () => void;
+  onPersistAvailability?: (map: Record<string, string[]>) => Promise<void>;
   isGenerating: boolean;
 }
 
@@ -62,6 +63,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   onGenerateAIPlan,
   onApplyDirectBlueprint,
   onNavigateToProfile,
+  onPersistAvailability,
   isGenerating,
 }) => {
   const { user } = useAuth();
@@ -69,9 +71,10 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
 
-  const [planTitle, setPlanTitle] = useState(
-    primaryRace ? `Macrociclo para ${primaryRace.name} (${primaryRace.distance?.toUpperCase()})` : "Macrociclo de Temporada"
-  );
+  const [planTitle, setPlanTitle] = useState(() => {
+    if (primaryRace) return `Macrociclo para ${primaryRace.name} (${(primaryRace.distance || "").toUpperCase()})`;
+    return "Macrociclo de Temporada";
+  });
   const [targetDistance, setTargetDistance] = useState<string>(primaryRace?.distance || "42k");
   const [customDistanceText, setCustomDistanceText] = useState<string>("");
   const [isCustomDistance, setIsCustomDistance] = useState<boolean>(false);
@@ -193,21 +196,9 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
               <p className="text-[11px] text-slate-400 font-mono">Paso {currentStep} de 4 • {steps[currentStep - 1]?.label}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleGenerateAI}
-              disabled={isGeneratingPlan || isGenerating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-sm animate-pulse hover:animate-none"
-              title="Generar macrociclo de inmediato con la IA"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{isGeneratingPlan || isGenerating ? "Generando..." : "⚡ Generar con IA Ahora"}</span>
-            </button>
-            <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              Motor v3.2
-            </span>
-          </div>
+          <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            Motor v3.2
+          </span>
         </div>
 
         <div className="grid grid-cols-4 gap-1.5 text-xs font-mono">
@@ -270,6 +261,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           onChangeWeeklyAvailability={(newMap) => {
             setLocalWeeklyAvailability(newMap);
             try { userStorage.setJSON("weekly_availability", newMap); } catch {}
+            if (onPersistAvailability) onPersistAvailability(newMap as Record<string, string[]>).catch(() => {});
           }}
           onNavigateToProfile={onNavigateToProfile}
         />
@@ -312,32 +304,18 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
             </button>
           ) : <div />}
 
-          <div className="flex items-center gap-2">
-            {currentStep < 3 && (
-              <button
-                type="button"
-                onClick={handleGenerateAI}
-                disabled={isGeneratingPlan || isGenerating}
-                className="px-4 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-xs font-mono transition cursor-pointer border border-emerald-500/30 flex items-center space-x-1"
-                title="Saltar configuración avanzada y generar con IA de inmediato"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Generar Directo (1 Clic)</span>
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => {
-                if (currentStep === 3) handleGenerateAI();
-                else setCurrentStep((prev) => (prev + 1) as any);
-              }}
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
-            >
-              <span>{currentStep === 3 ? "Generar con IA" : "Siguiente"}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (currentStep === 3) handleGenerateAI();
+              else setCurrentStep((prev) => (prev + 1) as any);
+            }}
+            disabled={currentStep === 3 && (isGeneratingPlan || isGenerating)}
+            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
+          >
+            <span>{currentStep === 3 ? (isGeneratingPlan || isGenerating ? "Generando..." : "Generar con Head Coach IA") : "Siguiente"}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
     </div>

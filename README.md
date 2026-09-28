@@ -1,10 +1,11 @@
-# ⚡ SGEA Pro (v3.80) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.81) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 👁️ **Modo Auditoría / Solo Lectura de Atletas para Administradores (v3.81):** Inspección fidedigna e instantánea de la interfaz, métricas, calendario y telemetría de cualquier atleta registrado desde la consola de administración con 1 clic ("Ver como atleta"). Aislamiento total en memoria volátil (`createReadOnlyMemoryStorage`) para no alterar el `localStorage` del administrador, banner superior de seguridad (`AdminImpersonationBanner`) con retorno inmediato a la consola, y bloqueo estricto de mutaciones accidentales hacia Firestore o Intervals.icu.
 - 🧭 **Onboarding Asistido e Interactivo para Intervals.icu (v3.80):** Asistente paso a paso para atletas que no conocen Intervals.icu. Incluye bifurcación amigable (*"Soy nuevo"* vs. *"Ya tengo cuenta"*), guía interactiva para registro 1-clic con Google/Strava, vinculación directa de relojes deportivos (Garmin Connect, Coros, Polar, Strava, Apple Watch vía HealthFit, Suunto, Wahoo), y obtención visual de Athlete ID y Clave API.
 - ⏳ **Sala de Espera Activa (Pre-Aprobación Self-Service) (v3.80):** Mientras el administrador valida al atleta, la pantalla de acceso restringido ofrece una tarjeta proactiva que permite al usuario adelantar la configuración de su cuenta de telemetría y reloj deportivo.
 - 📅 **Calendario Anual Completo Continuo (52 Semanas) & Cero Planes Fantasma (v3.80):** Los atletas sin macrociclo activo visualizan un calendario continuo de 52 semanas de scroll vertical con auto-scroll a la semana actual. Muestra el historial completo de entrenamientos reales ejecutados con estilo de sesión completada (checkmark `✓`, distancia, tiempo, TSS, vatios, pulso) y mantiene las semanas futuras como *"Disponibles para planificar"* con 0 TSS, erradicando planes ficticios de maratón por defecto.

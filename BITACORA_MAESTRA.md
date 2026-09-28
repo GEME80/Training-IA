@@ -4437,3 +4437,53 @@ flowchart TD
   * `AthleteContinuousCalendar.tsx`: 342 LOC
 - **Servidor:** Proceso activo en puerto 3000 respondiendo **HTTP 200 OK**.
 
+---
+
+## 48. Hito 48: Modo Auditoría de Atleta en Solo Lectura (Impersonation Seguro) con Aislamiento Total en Memoria (v3.81)
+
+### 48.1. Contexto y Necesidad Operativa
+1. **Inspección de Experiencia del Atleta sin Depender de Contraseñas:** El administrador necesitaba auditar con exactitud cómo se visualiza el Home y el Calendario de cada atleta registrado (para evaluar sincronización de telemetría de Intervals.icu, zonas de potencia, eventos, adherencia y diseño ergonómico) sin requerir credenciales ni iniciar sesión en cuentas ajenas.
+2. **Requisito Crítico de Inmutabilidad (Cero Riesgo):** La inspección debía ser estrictamente de Solo Lectura. No se debe permitir ninguna modificación accidental en Firestore (perfil, umbrales, macrociclos), ni sincronizaciones destructivas hacia Intervals.icu (`/api/sync-intervals`), ni contaminación del `localStorage` en el navegador del administrador con datos de atletas auditados.
+
+### 48.2. Solución Arquitectónica Implementada
+
+#### A. Aislamiento de Almacenamiento en Memoria Volátil (`userStorage.ts`)
+- Se implementó `createReadOnlyMemoryStorage(initialData?: Record<string, string>): UserScopedStorage`.
+- En modo auditoría, el dashboard sustituye el `getUserStorage(uid)` conectado a `window.localStorage` por un almacenamiento en memoria RAM pura.
+- Todas las operaciones de lectura o escritura temporal quedan confinadas a un `Map<string, string>` volátil que se destruye automáticamente al salir de la vista previa, garantizando cero contaminación o cruce de sesiones en el navegador del administrador.
+
+#### B. Barra Superior Fija de Seguridad (`AdminImpersonationBanner.tsx` - 89 LOC)
+- Se diseñó un banner superior persistente (`sticky top-0 z-50`) con diseño de alta visibilidad (fondo oscuro con borde púrpura pulsante).
+- Muestra el nombre y correo del atleta auditado, su `intervalsAthleteId`, y sus potencias de referencia (Stryd CP / Bike FTP).
+- Incorpora la etiqueta *"Auditoría (Solo Lectura) • Mutaciones bloqueadas"* y el botón prioritario `[ ← Salir y volver a Admin ]` para retornar instantáneamente a la consola de administración.
+
+#### C. Punto de Entrada 1-Clic en la Consola (`AdminUsersTable.tsx` & `AdminUserCardMobile.tsx`)
+- Tanto en la tabla panorámica de escritorio como en las tarjetas táctiles móviles de `AdminUsersTab`, se agregó el botón con icono `<Eye className="h-3.5 w-3.5" />` y etiqueta *"Ver como atleta"*.
+- Conduce directamente al dashboard del atleta auditado configurando `previewAthlete` en `page.tsx`.
+
+#### D. Blindaje Integral de Mutaciones en Hooks y Rutas (`AthleteDashboard.tsx`, `useAthleteTelemetry.ts`, `useIntervalsSync.ts`, `useSeasonPlans.ts`)
+- **`AthleteDashboard.tsx`:** Inyecta un perfil sintético (`effectiveUserProfile`) y un usuario efectivo (`effectiveUser`), silenciando banners de bienvenida y modales intrusivos durante la inspección.
+- **`useAthleteTelemetry.ts`:** Cuando `isReadOnly` está activo:
+  * `persistProfileToApi` se cancela de inmediato sin llamar a `/api/profile`.
+  * `handleSaveSettings` y `handleSaveAvailability` se desactivan.
+  * Se neutraliza el fallback hacia el `intervalsAthleteId` del master admin, forzando la evaluación estricta de las credenciales del atleta.
+- **`useIntervalsSync.ts`:** Las funciones de sincronización (`handleSyncToIntervals`, `handleSyncFullMacrocycleToIntervals`, `handleSyncTriweeklyBlockToIntervals`) detectan el flag `isReadOnly` y emiten una alerta de seguridad impidiendo cualquier petición HTTP hacia `/api/sync-intervals`.
+- **`useSeasonPlans.ts`:** Todas las operaciones de creación, edición, guardado o borrado de macrociclos (`handleApplyMacrocycle`, `handleUpdateWeekMicrocycle`, `handleSaveTargetRaces`, `handleSaveSeasonPlans`, `handleDeleteActivePlan`) quedan bloqueadas ante `isReadOnly = true`.
+
+### 48.3. Validación y Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Regla 3:** Todos los archivos creados y modificados se mantienen estrictamente $< 350$ LOC:
+  * `AdminImpersonationBanner.tsx`: 89 LOC
+  * `AdminUsersTable.tsx`: 275 LOC
+  * `AdminUserCardMobile.tsx`: 219 LOC
+  * `AdminUsersTab.tsx`: 239 LOC
+  * `AdminPanel.tsx`: 238 LOC
+  * `AthleteDashboard.tsx`: 237 LOC
+  * `AthleteDashboardViewRouter.tsx`: 222 LOC
+  * `useAthleteTelemetry.ts`: 350 LOC
+  * `useIntervalsSync.ts`: 279 LOC
+  * `useSeasonPlans.ts`: 350 LOC
+  * `userStorage.ts`: 168 LOC
+- **Servidor:** Proceso activo en puerto 3000 respondiendo **HTTP 200 OK**.
+

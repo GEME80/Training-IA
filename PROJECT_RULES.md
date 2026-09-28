@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.80)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.81)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.80).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.81).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 3.81: Modo Auditoría de Atleta en Solo Lectura (Impersonation Seguro) con Aislamiento en Memoria:
+  * Inspección Fidedigna 1-Clic: Botón "Ver como atleta" en la consola de administración (`AdminUsersTable` y `AdminUserCardMobile`), permitiendo al administrador inspeccionar el Home exacto de cualquier atleta registrado.
+  * Aislamiento Total en Memoria Volátil (`createReadOnlyMemoryStorage`): Cero escrituras o mutaciones en el `localStorage` del administrador, previniendo contaminación de sesiones o solapamiento de claves locales.
+  * Banner Superior Fijo de Seguridad (`AdminImpersonationBanner`): Franja visual persistente de alta prioridad que identifica al atleta auditado, sus métricas de referencia y botón de retorno inmediato a la consola de administración.
+  * Blindaje Contra Mutaciones: Prohibición estricta de escrituras en Firestore (`/api/profile`, `/api/macrocycles`) y cancelaciones automáticas con alerta en subidas a Intervals.icu (`/api/sync-intervals`).
 - Versión 3.80: Onboarding Interactivo, Coherencia Temporal Fisiológica y Calendario Continuo sin Planes Fantasma:
   * Onboarding Asistido para Intervals.icu: Bifurcación entre nuevos atletas y usuarios existentes (`OnboardingPathSelector`), con guía paso a paso interactiva para creación gratuita de cuenta, vinculación de relojes deportivos (Garmin, Coros, Polar, Strava, Apple Watch) y obtención de credenciales (`OnboardingIntervalsGuide`).
   * Sala de Espera Activa (Pre-Aprobación): En estado `pending`, `RestrictedAccessView` ofrece una tarjeta para que el usuario adelante la creación de su cuenta de telemetría y reloj deportivo antes de la aprobación del admin.
@@ -73,6 +78,7 @@ Leyes Inviolables de Gobernanza:
 8. Cero Datos Quemados y Protocolo SSOT para Agentes: Prohibido terminantemente el uso de mocks o datos quemados de biotipo (peso, altura, CP, FTP, fechas). Toda consulta de atleta se resuelve dinámicamente desde la fuente viva (`TelemetryService.evaluate` o `getAthleteSSOT`).
 9. Aislamiento Multi-Atleta y Borrado Quirúrgico: La purga de eventos en Intervals.icu se restringe estrictamente a prefijos de la plataforma (`[PULSE AI]` y `[SGEA]`) dentro de la ventana de fechas del plan y se ejecuta exclusivamente sobre el `athleteId` autenticado.
 10. Eficiencia Extrema de Tokens (FinOps): Cero lecturas de archivos completos; búsquedas directas con grep_search; micro-lecturas acotadas (<= 20-30 LOC); respuestas concisas y ejecutivas; compresión de telemetría y prompt caching.
+11. Modo Auditoría e Impersonación Segura (Read-Only & Memory Storage): Al inspeccionar el dashboard de un atleta (`isReadOnly = true`), queda estrictamente prohibida cualquier mutación (persistencia a Firestore, sincronización hacia Intervals.icu o escritura en localStorage). Todo estado temporal se maneja exclusivamente en memoria volátil (`createReadOnlyMemoryStorage`) y la sesión del administrador debe preservarse 100% aislada.
 
 Por favor, confirma que leíste PROJECT_RULES.md y BITACORA_MAESTRA.md (Sección 15), resume el estado actual y presenta tu propuesta de arquitectura para los Agentes de IA.
 ```

@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       role,
       status,
       intervalsAthleteId,
+      rawApiKey,
       runFtp,
       bikeFtp,
       requesterEmail,
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
       role: role || "athlete",
       status: status || "active",
       intervalsAthleteId,
+      rawApiKey,
       runFtp,
       bikeFtp,
     });

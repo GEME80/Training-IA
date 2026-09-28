@@ -60,13 +60,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
 
   const effectiveBlueprint = useMemo(() => {
     if (blueprint) return blueprint;
-    const hasActs = Object.keys(dailyExecutedActivities || {}).some(
-      (k) => dailyExecutedActivities[k]?.activities?.length > 0
-    );
-    if (hasActs) {
-      return buildHistoricalBlueprint(dailyExecutedActivities, profile);
-    }
-    return null;
+    return buildHistoricalBlueprint(dailyExecutedActivities, profile);
   }, [blueprint, dailyExecutedActivities, profile]);
 
   const dashboardHeader = (

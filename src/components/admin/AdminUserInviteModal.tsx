@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserPlus, Copy, Check, Info, Sparkles, X } from "lucide-react";
+import { UserPlus, Copy, Check, Info, Sparkles, X, Eye, EyeOff } from "lucide-react";
 import { UserRole, UserStatus } from "@/lib/db/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -27,6 +27,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
   const [role, setRole] = useState<UserRole>("athlete");
   const [status, setStatus] = useState<UserStatus>("pending");
   const [intervalsId, setIntervalsId] = useState<string>("");
+  const [intervalsApiKey, setIntervalsApiKey] = useState<string>("");
+  const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [runFtp, setRunFtp] = useState<number>(300);
   const [bikeFtp, setBikeFtp] = useState<number>(250);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -53,6 +55,7 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
           role,
           status,
           intervalsAthleteId: intervalsId.trim(),
+          rawApiKey: intervalsApiKey.trim() || undefined,
           runFtp: Number(runFtp) || 300,
           bikeFtp: Number(bikeFtp) || 250,
           requesterEmail,
@@ -185,6 +188,26 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
                 placeholder="i123456"
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
               />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">Intervals.icu API Key (Opcional)</label>
+              <div className="relative">
+                <input
+                  type={showApiKey ? "text" : "password"}
+                  value={intervalsApiKey}
+                  onChange={(e) => setIntervalsApiKey(e.target.value)}
+                  placeholder="Clave de API para sincronización inmediata"
+                  className="w-full px-3 py-2 pr-9 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

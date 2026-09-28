@@ -243,6 +243,7 @@ export interface PreauthorizeUserParams {
   role?: UserRole;
   status?: UserStatus;
   intervalsAthleteId?: string;
+  rawApiKey?: string;
   runFtp?: number;
   bikeFtp?: number;
 }
@@ -270,6 +271,7 @@ export async function preauthorizeUser(
     role: params.role || "athlete",
     status: params.status || "pending",
     intervalsAthleteId: params.intervalsAthleteId?.trim() || undefined,
+    encryptedApiKey: params.rawApiKey?.trim() ? encryptSensitiveData(params.rawApiKey.trim()) : undefined,
     runFtp: params.runFtp ? Number(params.runFtp) : undefined,
     bikeFtp: params.bikeFtp ? Number(params.bikeFtp) : undefined,
     isPreAuthorized: true,
@@ -278,11 +280,7 @@ export async function preauthorizeUser(
     lastLoginAt: now,
   };
 
-  // Limpiar campos undefined
-  const cleanData: Record<string, any> = {};
-  for (const [k, v] of Object.entries(data)) {
-    if (v !== undefined) cleanData[k] = v;
-  }
+  const cleanData = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
 
   try {
     await preauthRef.set(cleanData, { merge: true });
@@ -329,18 +327,20 @@ export async function updateUserDetails(
   const doc = await userRef.get();
   if (!doc.exists) throw new Error("Usuario no encontrado.");
 
-  const cleanUpdates: Record<string, any> = { updatedAt: new Date().toISOString() };
-  if (updates.displayName !== undefined) cleanUpdates.displayName = updates.displayName.trim();
-  if (updates.role !== undefined) cleanUpdates.role = updates.role;
-  if (updates.status !== undefined) cleanUpdates.status = updates.status;
-  if (updates.intervalsAthleteId !== undefined) cleanUpdates.intervalsAthleteId = updates.intervalsAthleteId.trim();
-  if (updates.runFtp !== undefined) cleanUpdates.runFtp = Number(updates.runFtp);
-  if (updates.bikeFtp !== undefined) cleanUpdates.bikeFtp = Number(updates.bikeFtp);
-  if (updates.weightKg !== undefined) cleanUpdates.weightKg = Number(updates.weightKg) || undefined;
-  if (updates.restingHR !== undefined) cleanUpdates.restingHR = Number(updates.restingHR) || undefined;
-  if (updates.maxHR !== undefined) cleanUpdates.maxHR = Number(updates.maxHR) || undefined;
-  if (updates.lthr !== undefined) cleanUpdates.lthr = Number(updates.lthr) || undefined;
-  if (updates.rawApiKey?.trim()) cleanUpdates.encryptedApiKey = encryptSensitiveData(updates.rawApiKey.trim());
+  const cleanUpdates: Record<string, any> = {
+    updatedAt: new Date().toISOString(),
+    ...(updates.displayName !== undefined && { displayName: updates.displayName.trim() }),
+    ...(updates.role !== undefined && { role: updates.role }),
+    ...(updates.status !== undefined && { status: updates.status }),
+    ...(updates.intervalsAthleteId !== undefined && { intervalsAthleteId: updates.intervalsAthleteId.trim() }),
+    ...(updates.runFtp !== undefined && { runFtp: Number(updates.runFtp) }),
+    ...(updates.bikeFtp !== undefined && { bikeFtp: Number(updates.bikeFtp) }),
+    ...(updates.weightKg !== undefined && { weightKg: Number(updates.weightKg) || undefined }),
+    ...(updates.restingHR !== undefined && { restingHR: Number(updates.restingHR) || undefined }),
+    ...(updates.maxHR !== undefined && { maxHR: Number(updates.maxHR) || undefined }),
+    ...(updates.lthr !== undefined && { lthr: Number(updates.lthr) || undefined }),
+    ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),
+  };
 
   await userRef.update(cleanUpdates);
   return { success: true, message: "Datos del atleta actualizados con éxito." };

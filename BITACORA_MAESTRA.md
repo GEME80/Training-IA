@@ -4414,10 +4414,20 @@ flowchart TD
 - **Feed Semanal Enriquecido (`AthleteMobileWeekFeed.tsx` - 120 LOC):** La tarjeta de cada día muestra número de día, icono y nombre de la sesión ejecutada, tiempo, distancia, TSS y badge `✓ Listo`.
 - **Navegación Histórica de 52 Semanas en Móvil:** `buildHistoricalBlueprint` integra las 28 semanas históricas en orden cronológico previo a la semana actual, permitiendo al usuario móvil navegar semanas anteriores con `<` y volver instantáneamente con el botón `🧭 Hoy`.
 
+#### F. Solución Universal de Calendario Continuo para Atletas sin Plan Activo y Credenciales Inmediatas
+- **Eliminación del Condicional Bloqueante en Dashboard (`AthleteDashboardOverview.tsx` - 215 LOC):** Se eliminó la compuerta `if (hasActs)` que ocultaba el calendario y las tarjetas fisiológicas para atletas sin plan o en su primera carga. Ahora `effectiveBlueprint` retorna `buildHistoricalBlueprint` de forma incondicional (`effectiveBlueprint = blueprint || buildHistoricalBlueprint(...)`), garantizando que la cuadrícula anual continua de 52 semanas se dibuje siempre, mostrando las sesiones ejecutadas en Intervals.icu en cuanto llegan los datos, días libres limpios y semanas futuras listas para proyectar con IA.
+- **Resolución Multinivel de Credenciales Intervals.icu (`credentials.ts` - 92 LOC):** Se dotó a `resolveIntervalsCredentials` de búsqueda en cascada por `uid`, por `email` en la colección de usuarios, y por documento preautorizado `preauth_${sanitizedEmail}`, asegurando el descifrado inmediato de la clave de Intervals.icu incluso si el atleta fue pre-registrado por el administrador antes de su primer login.
+- **Soporte de API Key en Preautorización y Modal de Invitación (`adminUsers.ts` - 348 LOC, `route.ts` - 72 LOC, `AdminUserInviteModal.tsx` - 277 LOC):** El administrador ahora puede ingresar el `Athlete ID` y la `API Key` de Intervals.icu directamente al invitar al atleta. El servidor cifra la clave con AES-256-GCM y la resguarda en el perfil de preautorización, permitiendo sincronización inmediata sin fricción.
+
 ### 47.3. Validación y Certificación de Calidad
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
 - **Regla 3:** Todos los componentes modificados y creados se mantienen estrictamente $< 350$ LOC:
+  * `AdminUserInviteModal.tsx`: 277 LOC
+  * `adminUsers.ts`: 348 LOC
+  * `AthleteDashboardOverview.tsx`: 215 LOC
+  * `credentials.ts`: 92 LOC
+  * `preauthorize/route.ts`: 72 LOC
   * `AthleteMobileAgendaView.tsx`: 297 LOC
   * `AthleteMobileDayStrip.tsx`: 118 LOC
   * `athleteMobileHelpers.ts`: 56 LOC
@@ -4426,3 +4436,4 @@ flowchart TD
   * `historicalCalendarWeeks.ts`: 194 LOC
   * `AthleteContinuousCalendar.tsx`: 342 LOC
 - **Servidor:** Proceso activo en puerto 3000 respondiendo **HTTP 200 OK**.
+

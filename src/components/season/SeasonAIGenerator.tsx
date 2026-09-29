@@ -183,7 +183,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   };
 
   return (
-    <div className="space-y-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 shadow-xs">
+    <div className="space-y-4">
       {/* 1. CABECERA & NAVEGADOR DE PASOS */}
       <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center justify-between">

@@ -36,7 +36,8 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
   onAddRace,
   onDeleteRace,
 }) => {
-  const [isFormOpen, setIsFormOpen] = useState<boolean>(targetRaces.length === 0);
+  const [isSectionOpen, setIsSectionOpen] = useState<boolean>(targetRaces.length === 0);
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isCustomDistance, setIsCustomDistance] = useState<boolean>(false);
   const [customDistanceText, setCustomDistanceText] = useState<string>("");
 
@@ -80,25 +81,39 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* 1. CABECERA & BOTÓN DESPLEGABLE DE AÑADIR CARRERA */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Trophy className="h-4 w-4 text-amber-500" />
-            <h4 className="text-sm font-black text-slate-900 dark:text-white">
-              Mis Competiciones & Objetivos ({targetRaces.length})
-            </h4>
-          </div>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+      {/* Header colapsable */}
+      <button
+        type="button"
+        onClick={() => setIsSectionOpen(!isSectionOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-amber-500" />
+          <h4 className="text-sm font-black text-slate-900 dark:text-white">
+            Mis Competiciones & Objetivos
+            {targetRaces.length > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] font-mono">
+                {targetRaces.length}
+              </span>
+            )}
+          </h4>
+        </div>
+        {isSectionOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+      </button>
 
+      {isSectionOpen && (
+      <div className="px-4 pb-4 space-y-3">
+        {/* Botón añadir */}
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => setIsFormOpen(!isFormOpen)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-700 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
           >
             <Plus className="h-3.5 w-3.5 text-cyan-400 dark:text-cyan-600" />
-            <span>{isFormOpen ? "Cerrar" : "Añadir Carrera"}</span>
-            {isFormOpen ? <ChevronUp className="h-3 w-3 ml-0.5" /> : <ChevronDown className="h-3 w-3 ml-0.5" />}
+            <span>{isFormOpen ? "Cancelar" : "Añadir Carrera"}</span>
+            {isFormOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </button>
         </div>
 
@@ -106,7 +121,7 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
         {isFormOpen && (
           <form
             onSubmit={handleFormSubmit}
-            className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3 animate-fadeIn"
+            className="border border-slate-100 dark:border-slate-800 rounded-2xl p-3 space-y-3 animate-fadeIn bg-slate-50/60 dark:bg-slate-950/40"
           >
             {/* Nombre y Fecha */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -244,85 +259,81 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
             </div>
           </form>
         )}
-      </div>
 
-      {/* 3. HERO OBJETIVO PRINCIPAL (TIPO A) */}
-      {primaryRace && (
-        <SeasonPrimaryRaceCard
-          primaryRace={primaryRace}
-          weeksLeft={getWeeksLeft(primaryRace.date)}
-          onDeleteRace={onDeleteRace}
-        />
-      )}
+        {/* 3. HERO OBJETIVO PRINCIPAL (TIPO A) */}
+        {primaryRace && (
+          <SeasonPrimaryRaceCard
+            primaryRace={primaryRace}
+            weeksLeft={getWeeksLeft(primaryRace.date)}
+            onDeleteRace={onDeleteRace}
+          />
+        )}
 
-      {/* 4. COMPETICIONES SECUNDARIAS (TIPO B & C) */}
-      {secondaryRaces.length > 0 && (
-        <div className="space-y-2">
-          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase px-1 block">
-            Competiciones Secundarias & Test ({secondaryRaces.length})
-          </span>
-
+        {/* 4. COMPETICIONES SECUNDARIAS (TIPO B & C) */}
+        {secondaryRaces.length > 0 && (
           <div className="space-y-2">
-            {secondaryRaces.map((race) => {
-              const weeksLeft = getWeeksLeft(race.date);
-              return (
-                <div
-                  key={race.id}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-black font-mono ${
-                        race.priority === "B"
-                          ? "bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30"
-                          : "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
-                      }`}>
-                        Tipo {race.priority}
-                      </span>
-                      <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {race.name}
-                      </h5>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-sky-500" />
-                        {race.date}
-                      </span>
-                      <span>• {race.distance?.toUpperCase()}</span>
-                      {weeksLeft !== null && (
-                        <span className="text-sky-600 dark:text-sky-400 font-bold">
-                          ⏳ {weeksLeft > 0 ? `-${weeksLeft}w` : "¡Hoy!"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onDeleteRace(race.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                    title="Eliminar carrera"
+            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase px-1 block">
+              Competiciones Secundarias & Test ({secondaryRaces.length})
+            </span>
+            <div className="space-y-2">
+              {secondaryRaces.map((race) => {
+                const weeksLeft = getWeeksLeft(race.date);
+                return (
+                  <div
+                    key={race.id}
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 flex items-center justify-between gap-3 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-black font-mono ${
+                          race.priority === "B"
+                            ? "bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30"
+                            : "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
+                        }`}>
+                          Tipo {race.priority}
+                        </span>
+                        <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">{race.name}</h5>
+                      </div>
+                      <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-sky-500" />
+                          {race.date}
+                        </span>
+                        <span>• {race.distance?.toUpperCase()}</span>
+                        {weeksLeft !== null && (
+                          <span className="text-sky-600 dark:text-sky-400 font-bold">
+                            ⏳ {weeksLeft > 0 ? `-${weeksLeft}w` : "¡Hoy!"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteRace(race.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                      title="Eliminar carrera"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {targetRaces.length === 0 && (
-        <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 text-center space-y-2">
-          <Flag className="h-6 w-6 text-slate-400 mx-auto" />
-          <div className="text-xs font-bold text-slate-600 dark:text-slate-400">
-            No tienes carreras registradas en tu calendario
+        {targetRaces.length === 0 && !isFormOpen && (
+          <div className="py-6 text-center space-y-2">
+            <Flag className="h-6 w-6 text-slate-400 mx-auto" />
+            <div className="text-xs font-bold text-slate-600 dark:text-slate-400">
+              No tienes carreras registradas
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Añade tu prueba objetivo (Tipo A) o tests preparatorios (Tipo B/C).
+            </p>
           </div>
-          <p className="text-[11px] text-slate-400">
-            Añade tu prueba objetivo principal (Tipo A) o tests preparatorios (Tipo B/C) para sincronizar tu periodización.
-          </p>
-        </div>
+        )}
+      </div>
       )}
     </div>
   );

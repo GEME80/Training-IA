@@ -36,7 +36,7 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
   onAddRace,
   onDeleteRace,
 }) => {
-  const [isSectionOpen, setIsSectionOpen] = useState<boolean>(targetRaces.length === 0);
+  const [isSectionOpen, setIsSectionOpen] = useState<boolean>(true);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isCustomDistance, setIsCustomDistance] = useState<boolean>(false);
   const [customDistanceText, setCustomDistanceText] = useState<string>("");

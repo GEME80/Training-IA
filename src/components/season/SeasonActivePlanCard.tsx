@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Layers, Calendar, Sparkles, CheckCircle2, Clock, Trash2, Trophy } from "lucide-react";
+import { Layers, Calendar, Sparkles, CheckCircle2, Clock, Trash2, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import { SeasonPlanItem, TargetRace } from "@/lib/physiology/macrocycle";
 import { SeasonCurveChart } from "./wizard/SeasonCurveChart";
 
@@ -25,6 +25,7 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
   onDeletePlan,
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isChartExpanded, setIsChartExpanded] = useState(false);
 
   const blueprintWeeks = activePlan?.blueprint?.weeks || [];
   const totalWeeks = activePlan?.totalWeeks || blueprintWeeks.length || 16;
@@ -149,15 +150,24 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
         </div>
       </div>
 
-      {/* Gráfica de Curva de Temporada Real */}
-      {blueprintWeeks.length > 0 ? (
-        <SeasonCurveChart weeks={blueprintWeeks} />
-      ) : (
-        <div className="space-y-1.5 pt-1">
-          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
-            Periodización & Fases ({totalWeeks} Semanas):
+      {/* Gráfica de Curva de Temporada — compacta con toggle */}
+      <div className="space-y-1">
+        <button
+          type="button"
+          onClick={() => setIsChartExpanded(!isChartExpanded)}
+          className="w-full flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
+        >
+          <span className="uppercase tracking-wider">Curva de Periodización y Carga (TSS)</span>
+          <span className="flex items-center gap-0.5 text-slate-400">
+            {isChartExpanded ? <><ChevronUp className="h-3 w-3" /> Compactar</> : <><ChevronDown className="h-3 w-3" /> Expandir</>}
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        </button>
+
+        {isChartExpanded && blueprintWeeks.length > 0 ? (
+          <SeasonCurveChart weeks={blueprintWeeks} />
+        ) : (
+          /* Vista compacta: fases como pills */
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
             {dynamicPhases.map((ph, i) => (
               <div
                 key={i}
@@ -167,17 +177,13 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
                     : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-medium border border-slate-100 dark:border-slate-800"
                 }`}
               >
-                <span className="block text-[11px] truncate leading-tight font-bold">
-                  {ph.label}
-                </span>
-                <span className={`block text-[9px] font-mono ${ph.active ? "text-emerald-100" : "text-slate-400"}`}>
-                  Sem {ph.weeks}
-                </span>
+                <span className="block text-[11px] truncate leading-tight font-bold">{ph.label}</span>
+                <span className={`block text-[9px] font-mono ${ph.active ? "text-emerald-100" : "text-slate-400"}`}>Sem {ph.weeks}</span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Botones de Acción */}
       <div className="flex flex-wrap items-center gap-2 pt-1">

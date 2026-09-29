@@ -23,40 +23,42 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
   const approaches = [
     {
       id: "Entrenamiento Cruzado",
-      title: "Entrenamiento Cruzado (Recomendado)",
-      subtitle: "Combina carrera con sesiones de ciclismo suave y fuerza para sumar volumen aeróbico protegiendo las articulaciones.",
+      title: "Entrenamiento Cruzado",
+      subtitle: "Combina tu deporte principal con ciclismo o fuerza para ganar volumen aeróbico protegiendo las articulaciones.",
       icon: Zap,
-      badge: "⭐ Menos Impacto",
+      accent: "text-emerald-600 dark:text-emerald-400",
+      recommended: true,
     },
     {
       id: "Solo Running",
-      title: "Solo Running (Puro Asfalto)",
-      subtitle: "Preparación enfocada 100% en correr, con carreras continuas suaves, series de ritmo y tiradas largas.",
+      title: "Carrera a Pie",
+      subtitle: "Preparación enfocada en correr: rodajes suaves, series de ritmo y tiradas largas. Válido para 5K, 10K, media, maratón y trail.",
       icon: Footprints,
-      badge: "Específico Maratón",
+      accent: "text-amber-600 dark:text-amber-400",
     },
     {
       id: "Triatlón",
       title: "Triatlón / Multideporte",
-      subtitle: "Entrenamientos distribuidos armónicamente entre natación, ciclismo y carrera a pie.",
+      subtitle: "Entrenamientos distribuidos entre natación, ciclismo y carrera. Apto para distancias Sprint, Olímpico, 70.3 e Ironman.",
       icon: Waves,
-      badge: "70.3 / Olímpico",
+      accent: "text-sky-600 dark:text-sky-400",
     },
     {
       id: "Trail Running",
       title: "Trail Running & Montaña",
-      subtitle: "Énfasis en volumen por tiempo, potencia en subida y resistencia muscular en desniveles.",
+      subtitle: "Énfasis en volumen por tiempo, potencia en subida y resistencia muscular en terreno técnico y desniveles.",
       icon: Mountain,
-      badge: "Montaña",
+      accent: "text-stone-600 dark:text-stone-400",
     },
     {
       id: "Mantenimiento",
       title: "Mantenimiento & Salud General",
-      subtitle: "Carga estable, estimulación cardiovascular y recuperación activa equilibrada.",
+      subtitle: "Carga estable y equilibrada para mantener la condición física, la salud cardiovascular y la recuperación activa.",
       icon: HeartPulse,
-      badge: "Equilibrio",
+      accent: "text-rose-600 dark:text-rose-400",
     },
   ];
+
 
   const daysList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const disciplineOptions: { id: DisciplineType; label: string; icon: React.ElementType; colorActive: string }[] = [
@@ -167,22 +169,20 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
                   <div className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
                     isSelected
                       ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                      : "bg-slate-100 dark:bg-slate-800"
                   }`}>
-                    <Icon className="h-4 w-4" />
+                    <Icon className={`h-4 w-4 ${isSelected ? "text-white" : appr.accent}`} />
                   </div>
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                        {appr.title}
-                      </h4>
-                      <span className="px-2 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-mono font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {appr.badge}
-                      </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">{appr.title}</h4>
+                      {"recommended" in appr && appr.recommended && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-[9px] font-mono font-black text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          ⭐ Recomendado
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      {appr.subtitle}
-                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{appr.subtitle}</p>
                   </div>
                 </div>
 
@@ -196,6 +196,7 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
               </div>
             );
           })}
+
         </div>
       </div>
 

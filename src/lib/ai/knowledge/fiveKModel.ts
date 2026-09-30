@@ -120,13 +120,13 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
           name: "Micro-Intervalos Dinámicos de Velocidad Billat (30s/30s)",
           powerTarget: "108% CP en intervalos",
           justification: "Aumenta la potencia aeróbica y la resistencia a ritmos rápidos.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nBloque 1 (10x 30s/30s)\n10x\n- 30s 108% FTP\n- 30s 55% FTP\n\nRecuperación\n- 3m 55% FTP\n\nBloque 2 (10x 30s/30s)\n10x\n- 30s 108% FTP\n- 30s 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\n10x\n- 30s 108% FTP\n- 30s 55% FTP\n\nRecuperación\n- 3m 55% FTP\n\n10x\n- 30s 108% FTP\n- 30s 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Series de Potencia Fraccionada (6x 1m45s @ 105% CP)",
           powerTarget: "105% CP",
           justification: "Desarrolla la capacidad de sostener un ritmo exigente con buena técnica.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nSeries Principales\n6x\n- 1m45s 105% FTP\n- 1m30s 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n6x\n- 1m45s 105% FTP\n- 1m30s 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Series de VO2max Progresivas (5x 2m30s @ 103% CP)",
@@ -152,7 +152,7 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
           name: "Simulación de Ritmo 5K (3x 4m15s @ 102% CP)",
           powerTarget: "102% CP",
           justification: "Ajusta la sensación de paso y la confianza de cara a la competición.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nSeries Específicas\n3x\n- 4m15s 102% FTP\n- 2m 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n3x\n- 4m15s 102% FTP\n- 2m 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Series de Chispa y Cambio de Marcha (4x 2m @ 103% + 4x 30s @ 110% CP)",
@@ -178,7 +178,7 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
           name: "Despertar Muscular Rápido (30m con 4 rectas progresivas)",
           powerTarget: "105% CP en rectas",
           justification: "Mantiene el tono muscular y la frescura 2-3 días antes de la carrera.",
-          workoutDoc: "Calentamiento\n- 15m 65% FTP\n\nRectas de Puesta a Punto\n4x\n- 20s 105% FTP\n- 40s 50% FTP\n\nEnfriamiento\n- 10m 55% FTP",
+          workoutDoc: "Warmup\n- 15m 65% FTP\n\nMain\n4x\n- 20s 105% FTP\n- 40s 50% FTP\n\nCooldown\n- 10m 55% FTP",
         },
         {
           name: "Activación Suave Pre-Competición (25m con 3 cambios de 30s)",

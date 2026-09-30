@@ -116,7 +116,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
     const fromBp = blueprintWeeks
       .filter((w) => w.startDate < cutoff)
       .sort((a, b) => b.startDate.localeCompare(a.startDate));
-    return fromBp.length > 0 ? fromBp : historicalWeeks;
+    return [...fromBp, ...historicalWeeks];
   }, [blueprintWeeks, currentBlueprintWeek, currentMonStr, historicalWeeks]);
 
   const allYearWeeks = useMemo(() => {

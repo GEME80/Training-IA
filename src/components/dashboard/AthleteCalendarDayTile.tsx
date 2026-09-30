@@ -66,13 +66,13 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
   const isMissed = !isRest && !matchedActivity && isPastDay;
 
   const renderPlannedIcon = () =>
-    item.discipline === "Carrera" ? <Footprints className="h-3.5 w-3.5" /> : item.discipline === "Ciclismo" ? <Bike className="h-3.5 w-3.5" /> : item.discipline === "Natacion" ? <Waves className="h-3.5 w-3.5" /> : <Dumbbell className="h-3.5 w-3.5" />;
+    item.discipline === "Carrera" ? <Footprints className="h-3.5 w-3.5" /> : item.discipline === "Ciclismo" ? <Bike className="h-3.5 w-3.5 text-sky-500" /> : ((item.discipline as string) === "Natacion" || (item.discipline as string) === "Natación") ? <Waves className="h-3.5 w-3.5 text-teal-400" /> : <Dumbbell className="h-3.5 w-3.5 text-purple-500" />;
 
   const renderActivityIcon = (type: string, name?: string) => {
     const s = `${type} ${name || ""}`.toLowerCase();
     if (s.includes("run") || s.includes("carrera")) return <Footprints className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />;
     if (s.includes("ride") || s.includes("bike") || s.includes("ciclismo")) return <Bike className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />;
-    if (s.includes("swim") || s.includes("nataci")) return <Waves className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />;
+    if (s.includes("swim") || s.includes("nataci")) return <Waves className="h-3.5 w-3.5 text-teal-500 dark:text-teal-400" />;
     return <Dumbbell className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />;
   };
 

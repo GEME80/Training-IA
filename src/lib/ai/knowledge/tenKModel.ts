@@ -89,7 +89,7 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
           name: "Fartlek Progresivo por Sensaciones (45m)",
           powerTarget: "85% CP en cambios",
           justification: "Despierta el ritmo de piernas de forma progresiva y natural.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nCambios de Ritmo\n5x\n- 2m 85% FTP\n- 2m 65% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\n5x\n- 2m 85% FTP\n- 2m 65% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Carrera Continua Progresiva en Zona 2-3 (45m)",
@@ -121,25 +121,25 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
           name: "Escalera de Velocidad en Pista (200m -> 400m -> 600m -> 800m -> 400m -> 200m)",
           powerTarget: "102-114% CP",
           justification: "Reclutamiento de fibras rápidas, reactividad del tobillo y VO2max.",
-          workoutDoc: "Warmup\n- 12m 65% FTP\n\nMain (Escalera Progresiva)\n- 40s 114% FTP (200m)\n- 1m 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 2m10s 104% FTP (600m)\n- 2m 55% FTP\n- 2m55s 102% FTP (800m)\n- 2m30s 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 40s 114% FTP (200m)\n\nCooldown\n- 10m 55% FTP",
+          workoutDoc: "Warmup\n- 12m 65% FTP\n\nMain\n- 40s 114% FTP (200m)\n- 1m 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 2m10s 104% FTP (600m)\n- 2m 55% FTP\n- 2m55s 102% FTP (800m)\n- 2m30s 55% FTP\n- 1m20s 108% FTP (400m)\n- 1m30s 55% FTP\n- 40s 114% FTP (200m)\n\nCooldown\n- 10m 55% FTP",
         },
         {
           name: "Series de Potencia Específica (5x 3m30s @ 102% CP)",
           powerTarget: "102% CP",
           justification: "Mejora la capacidad de sostener un ritmo fuerte sin acumular fatiga excesiva.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nSeries Principales\n5x\n- 3m30s 102% FTP\n- 2m 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n5x\n- 3m30s 102% FTP\n- 2m 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Bloques de Umbral Continuo (3x 7m30s @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Eleva el umbral de crucero y enseña a gestionar la energía en la segunda mitad del 10K.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nBloques de Umbral\n3x\n- 7m30s 98% FTP\n- 2m30s 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n3x\n- 7m30s 98% FTP\n- 2m30s 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Tempo Run de Resistencia a Ritmo de Medio Maratón (25m @ 92% CP)",
           powerTarget: "92% CP",
           justification: "Eficiencia glucolítica moderada a ritmo submáximo continuo.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain (Tempo Sostenido)\n- 25m 92% FTP\n\nCooldown\n- 10m 55% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n- 25m 92% FTP\n\nCooldown\n- 10m 55% FTP",
         },
         {
           name: "Series Escalonadas de Umbral y VO2max (3x 5m @ 97% + 3x 1m30s @ 105% CP)",
@@ -159,7 +159,7 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
           name: "Simulación de Ritmo 10K (3x 12m @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Consolida la confianza y la regularidad de paso de cara a la carrera.",
-          workoutDoc: "Calentamiento\n- 15m 68% FTP\n\nSeries Largas\n3x\n- 12m 98% FTP\n- 2m30s 55% FTP\n\nEnfriamiento\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n3x\n- 12m 98% FTP\n- 2m30s 55% FTP\n\nCooldown\n- 10m 60% FTP",
         },
         {
           name: "Bloques Rotos de Ritmo de Competición (4x 5m @ 100% CP con recup corta)",

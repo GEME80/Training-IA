@@ -18,12 +18,12 @@ interface AthleteCalendarDayColumnProps {
 
 const fmtDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}` : `${m}m`);
 const disciplineIcon = (d: string, cls = "h-3.5 w-3.5") =>
-  d === "Carrera" ? <Footprints className={cls} /> : d === "Ciclismo" ? <Bike className={cls} /> : d === "Natacion" || d === "Natación" ? <Waves className={cls} /> : <Dumbbell className={cls} />;
+  d === "Carrera" ? <Footprints className={`${cls} text-amber-500`} /> : d === "Ciclismo" ? <Bike className={`${cls} text-sky-400`} /> : d === "Natacion" || d === "Natación" ? <Waves className={`${cls} text-teal-400`} /> : <Dumbbell className={`${cls} text-purple-500`} />;
 const activityIcon = (type: string, name = "", cls = "h-3.5 w-3.5") => {
   const [t, n] = [type.toLowerCase(), name.toLowerCase()];
   if (/run|carrera/.test(t) || /carrera|run/.test(n)) return <Footprints className={`${cls} text-amber-600 dark:text-amber-400`} />;
   if (/ride|bike|ciclismo|virtualride/.test(t) || /ciclismo|bike/.test(n)) return <Bike className={`${cls} text-sky-600 dark:text-sky-400`} />;
-  if (/swim|nataci/.test(t) || /nataci|swim/.test(n)) return <Waves className={`${cls} text-cyan-600 dark:text-cyan-400`} />;
+  if (/swim|nataci/.test(t) || /nataci|swim/.test(n)) return <Waves className={`${cls} text-teal-500 dark:text-teal-400`} />;
   return <Dumbbell className={`${cls} text-purple-600 dark:text-purple-400`} />;
 };
 
@@ -278,6 +278,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
                     extraAct.type === "WeightTraining" ? "Fuerza"
                     : extraAct.type === "Ride" || extraAct.type === "VirtualRide" ? "Ciclismo"
                     : extraAct.type === "Run" ? "Carrera"
+                    : extraAct.type === "Swim" ? "Natacion"
                     : "Fuerza",
                   workoutName: extraAct.name,
                   durationMinutes: extraAct.movingTimeMin,

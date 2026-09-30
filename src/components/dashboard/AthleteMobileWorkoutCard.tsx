@@ -31,8 +31,8 @@ const formatDisplayDate = (dateStr: string) => {
 
 const getDisciplineIcon = (disc: string) => {
   if (disc === "Carrera") return <Footprints className="h-4 w-4 text-amber-500" />;
-  if (disc === "Ciclismo") return <Bike className="h-4 w-4 text-cyan-500" />;
-  if (disc === "Natacion") return <Waves className="h-4 w-4 text-sky-500" />;
+  if (disc === "Ciclismo") return <Bike className="h-4 w-4 text-sky-400" />;
+  if (disc === "Natacion" || disc === "Natación") return <Waves className="h-4 w-4 text-teal-400" />;
   if (disc === "Fuerza") return <Dumbbell className="h-4 w-4 text-purple-500" />;
   return <Moon className="h-4 w-4 text-slate-400" />;
 };

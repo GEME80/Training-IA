@@ -77,8 +77,8 @@ export function selectQualityWorkout(
   const runOnly = (rawList || []).filter((w) => {
     const txt = (w.name + " " + w.justification + " " + w.workoutDoc).toLowerCase();
     const isSwim = txt.includes("nataci") || txt.includes("nado") || txt.includes("swim") || txt.includes("brazada") || txt.includes("css ");
-    const isPureBike = txt.includes("ciclismo") && !txt.includes("carrera") && !txt.includes("run") && !txt.includes("brick");
-    return !isSwim && !isPureBike;
+    const hasBikeOrBrick = txt.includes("ciclismo") || txt.includes("bici") || txt.includes("pedaleo") || txt.includes("bike") || txt.includes("brick") || txt.includes("transición");
+    return !isSwim && !hasBikeOrBrick;
   });
 
   const list = runOnly.length > 0 ? runOnly : [

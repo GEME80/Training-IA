@@ -4729,3 +4729,38 @@ flowchart TD
   * `src/components/profile/QuickThresholdModal.tsx`: 161 LOC
   * `src/components/profile/AthleteZonesTab.tsx`: 124 LOC
 
+---
+
+## 53. Versión 3.84: Desdoblamiento de Bricks Triatlón, Calendario Continuo 52 Semanas, Paleta Teal Natación & Visualización TSS
+
+### 53.1. Objetivos del Release
+1. **Desdoblamiento y Aislamiento de Bricks en Triatlón:**
+   - **Corrección de Bug de Contaminación:** Se corrigió la condición de selección donde un día de carrera a pie recibía una sesión de ciclismo/brick ("1h10m Bici + 20m Run") y contaminaba los vatios Stryd con objetivos de FTP de ciclismo.
+   - **Desdoblamiento Automático:** En días multideporte/brick, el generador crea 2 `PlanItem`s separados e independientes (1 Ciclismo con % FTP + 1 Carrera con % CP/Pace), permitiendo ejecución, cronometrado y sincronización limpia a Garmin/Intervals.
+   - **Sanitización de Macrociclos Activos:** `macrocycleSanitizer.ts` inspecciona y repara macrociclos en Firestore sustituyendo cualquier sesión de bici en día de carrera por series puras de calidad de carrera.
+2. **Calendario Continuo de 52 Semanas para Todos los Atletas:**
+   - Corrección en `AthleteContinuousCalendar.tsx` donde los atletas con macrociclos activos veían solo 1 o 2 semanas pasadas. Ahora se concatenan las semanas pasadas del macrociclo con el histórico completo de Intervals.icu (`[...fromBp, ...historicalWeeks]`), garantizando la vista ininterrumpida de 52 semanas.
+3. **Identidad Visual Teal / Aqua Marina para Natación:**
+   - Estandarización de color distintivo `teal-400` / `teal-500` para natación en todo el frontend (tarjetas de microciclo, tarjetas móviles, columnas de calendario, modales y leyendas). Ciclismo preserva `sky-400` y Carrera `emerald-400`.
+4. **Métricas Clave (TSS y Duración) en Modal de Entrenamiento:**
+   - `WorkoutDetailModal.tsx` muestra de forma destacada en la cabecera los badges de TSS planificado (`⚡ ${plannedTss} TSS`), duración (`⏱️ ${duration}m`), y TSS ejecutado (`✓ ${executedTss} TSS`), además de soporte para natación y cálculo contextual de potencia.
+5. **Estandarización de Modelos de Conocimiento:**
+   - `fiveKModel.ts` y `tenKModel.ts` adaptados a la sintaxis estándar de Intervals.icu (`Warmup`, `Main`, `Cooldown`, `Nx`) con series por distancia y rodajes Z2.
+
+### 53.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/dashboard/AthleteContinuousCalendar.tsx`: 342 LOC
+  * `src/components/dashboard/AthleteCalendarDayTile.tsx`: 342 LOC
+  * `src/components/dashboard/AthleteCalendarDayColumn.tsx`: 335 LOC
+  * `src/components/dashboard/AthleteMobileWorkoutCard.tsx`: 183 LOC
+  * `src/components/macrocycle/MacrocycleActiveWeekWorkspace.tsx`: 186 LOC
+  * `src/components/macrocycle/MacrocycleDayScheduleCard.tsx`: 210 LOC
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 269 LOC
+  * `src/lib/physiology/macrocycleTemplateHelpers.ts`: 323 LOC
+  * `src/lib/physiology/macrocycleTemplates.ts`: 343 LOC
+  * `src/lib/physiology/macrocycleSanitizer.ts`: 110 LOC
+  * `src/lib/ai/knowledge/fiveKModel.ts`: 301 LOC
+  * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
+
+

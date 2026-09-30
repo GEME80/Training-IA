@@ -120,7 +120,7 @@ export function generateDeterministicAnalysis(
           durationMinutes: 75,
           tss: 60,
           justification: "Doble estímulo multideporte combinando hidrodinámica y resistencia terrestre.",
-          workoutDoc: `Bloque 1: Natación Técnica\n- 35m Nado Z1-Z2 Mixto\n\nBloque 2: ${secDisc}\n- 40m Aeróbico Base`,
+          workoutDoc: `Bloque 1: Natación Técnica\nWarmup\n- 200m 70% Pace\nMain\n- 800m 85% Pace\nCooldown\n- 100m 60% Pace\n\nBloque 2: ${secDisc}\n- 40m Aeróbico Base`,
           isRestDay: false,
         };
       }
@@ -156,7 +156,7 @@ export function generateDeterministicAnalysis(
         durationMinutes: 45,
         tss: 38,
         justification: "Estímulo cardiovascular hidrodinámico sin impacto osteoarticular.",
-        workoutDoc: "Warmup\n- 200m Nado Suave Z1\n\nMain (6x 100m)\n- 100m Ritmo Aeróbico Medio c/20s desc\n\nCooldown\n- 100m Nado Espalda / Suave",
+        workoutDoc: "Warmup\n- 200m 70% Pace\n\nMain\n6x\n- 100m 90% Pace\n- 20s recovery\n\nCooldown\n- 100m 60% Pace",
         isRestDay: false,
       };
     }

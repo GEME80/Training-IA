@@ -1,5 +1,6 @@
 import { adminDb } from "../firebase/admin";
 import { MacrocycleBlueprint, TargetRace } from "../physiology/macrocycle";
+import { sanitizeMacrocycleBlueprint } from "../physiology/macrocycleSanitizer";
 
 export interface StoredMacrocycleData {
   id: string;
@@ -24,14 +25,15 @@ export async function saveMacrocycleToFirestore(
 ): Promise<string> {
   const macrocycleId = `macro_${Date.now()}`;
   const now = new Date().toISOString();
+  const cleanBlueprint = sanitizeMacrocycleBlueprint(blueprint);
 
   const payload: StoredMacrocycleData = {
     id: macrocycleId,
     athleteId,
     createdAt: now,
     updatedAt: now,
-    blueprint,
-    primaryRace: primaryRace || blueprint.primaryRace,
+    blueprint: cleanBlueprint,
+    primaryRace: primaryRace || cleanBlueprint.primaryRace,
     isActive: true,
     source,
   };
@@ -47,10 +49,10 @@ export async function saveMacrocycleToFirestore(
       await activeRef.set({
         activeMacrocycleId: macrocycleId,
         updatedAt: now,
-        cycleTitle: blueprint.cycleTitle,
-        totalWeeks: blueprint.totalWeeks,
-        startDate: blueprint.startDate,
-        primaryRace: primaryRace || blueprint.primaryRace,
+        cycleTitle: cleanBlueprint.cycleTitle,
+        totalWeeks: cleanBlueprint.totalWeeks,
+        startDate: cleanBlueprint.startDate,
+        primaryRace: primaryRace || cleanBlueprint.primaryRace,
       }, { merge: true });
     } catch (err) {
       console.warn("Aviso: No se pudo escribir en Firestore Admin, persistiendo en caché de sesión:", err);
@@ -83,7 +85,11 @@ export async function getActiveMacrocycleFromFirestore(
           .get();
 
         if (macroDoc.exists) {
-          return macroDoc.data() as StoredMacrocycleData;
+          const rawData = macroDoc.data() as StoredMacrocycleData;
+          return {
+            ...rawData,
+            blueprint: sanitizeMacrocycleBlueprint(rawData.blueprint),
+          };
         }
       }
     }

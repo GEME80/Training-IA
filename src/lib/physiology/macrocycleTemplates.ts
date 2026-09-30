@@ -77,10 +77,6 @@ export function generateWeekTemplate(
     const formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
 
     let discList = getDayDisciplines(safeAvailability, day);
-    if (curatedModel.sportCategory === "Running") {
-      discList = discList.filter((d) => d !== "Natacion");
-      if (discList.length === 0) discList = ["Descanso"];
-    }
 
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
@@ -110,7 +106,7 @@ export function generateWeekTemplate(
           result.push({
             day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18,
             powerTarget: "Sensibilidad Acuática", justification: "Contacto suave con el agua y soltura de brazos pre-competición.",
-            workoutDoc: "Calentamiento\n- 200m Nado Suave\n\nActivación Ligera (4x)\n- 25m Nado Ágil @ Ritmo Carrera\n- 25m Suave\n\nEnfriamiento\n- 100m Nado Fácil", isRestDay: false,
+            workoutDoc: "Warmup\n- 200m 70% Pace\n\nMain\n4x\n- 25m 95% Pace\n- 25m 60% Pace\n\nCooldown\n- 100m 60% Pace", isRestDay: false,
           });
           continue;
         }

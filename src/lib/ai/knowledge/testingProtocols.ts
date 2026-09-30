@@ -138,21 +138,20 @@ export const SWIM_TEST_CSS_400_200: PhysiologicalTestDefinition = {
   recommendedWeekIndex: 2,
   protocolDescription:
     "Protocolo estándar para determinar el Ritmo Crítico de Nado (Critical Swim Speed). Permite calcular las zonas de entrenamiento aeróbico.",
-  workoutDoc: `Calentamiento
-- 300m Nado suave variado (estilo libre y espalda)
-- 4x 50m Progresivos con 15s descanso
+  workoutDoc: `Warmup
+- 300m 70% Pace
+4x
+- 50m 85% Pace
+- 15s recovery
 
-Test 1 - 400m Contrarreloj a Máximo Esfuerzo Constante
-- 400m All-Out (Registrar tiempo exacto T400)
+Main
+- 400m 100% Pace (Test T400 All-Out)
+- 200m 60% Pace
+- 5m recovery
+- 200m 105% Pace (Test T200 All-Out)
 
-Recuperación Activa
-- 200m Nado suave y soltura con 5 min descanso fuera del agua
-
-Test 2 - 200m Contrarreloj a Máximo Esfuerzo Constante
-- 200m All-Out (Registrar tiempo exacto T200)
-
-Soltura y Enfriamiento
-- 200m Nado muy suave regenerativo`,
+Cooldown
+- 200m 60% Pace`,
   calculationFormula: "CSS (m/s) = (400 - 200) / (T400 - T200 en segundos). Ritmo CSS = 100 / CSS (segundos/100m).",
 };
 

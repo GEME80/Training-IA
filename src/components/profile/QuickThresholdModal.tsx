@@ -18,8 +18,8 @@ const METRIC_CONFIG: Record<
   { title: string; subtitle: string; unit: string; icon: any; iconColor: string; isNumeric: boolean; placeholder: string }
 > = {
   RUN_FTP: {
-    title: "Potencia Crítica Stryd (Run)",
-    subtitle: "Ajusta tu CP para calibrar las zonas de potencia de carrera (Z1-Z5)",
+    title: "Potencia de Carrera (CP / FTP)",
+    subtitle: "Ajusta tu potencia crítica para calibrar las zonas de potencia de carrera (Z1-Z5)",
     unit: "W",
     icon: Footprints,
     iconColor: "text-amber-500",

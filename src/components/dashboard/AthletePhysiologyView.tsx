@@ -153,7 +153,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       weeklyAvailability,
     });
     showNotification(
-      `Modo de carrera cambiado a: ${newMode === "POWER" ? "⚡ Potencia Stryd" : "⏱️❤️ Híbrido (Ritmo + FC)"}`
+      `Modo de carrera cambiado a: ${newMode === "POWER" ? "⚡ Potencia Carrera" : "⏱️❤️ Híbrido (Ritmo + FC)"}`
     );
   };
 
@@ -212,7 +212,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
             Perfil del Atleta & Fisiología
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Parámetros antropométricos, potencia crítica Stryd, FTP de ciclismo, ritmo umbral y zonas.
+            Parámetros antropométricos, potencia de carrera (CP), FTP de ciclismo, ritmo umbral y zonas.
           </p>
         </div>
         {successMessage && (
@@ -250,7 +250,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       <AthleteCollapsibleSection
         id="section-zones"
         title="Zonas de Entrenamiento & Ritmos"
-        subtitle={hasRunningPowerMeter ? "Potencia Stryd CP, Ciclismo FTP y Frecuencia Cardíaca (LTHR)" : "Ritmo Umbral (Z1-Z6), Ciclismo FTP y Frecuencia Cardíaca (LTHR)"}
+        subtitle={hasRunningPowerMeter ? "Potencia de Carrera (CP), Ciclismo FTP y Frecuencia Cardíaca (LTHR)" : "Ritmo Umbral (Z1-Z6), Ciclismo FTP y Frecuencia Cardíaca (LTHR)"}
         icon={Zap}
         iconColor="text-amber-500"
         defaultOpenMobile={true}

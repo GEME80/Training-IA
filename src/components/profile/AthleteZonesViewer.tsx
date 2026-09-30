@@ -103,16 +103,16 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
       <div className="flex items-center justify-between px-1">
         <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5">
           <Activity className="h-3.5 w-3.5 text-sky-500" />
-          Zonas de Entrenamiento Fisiológicas (Intervals.icu & Stryd)
+          Zonas de Entrenamiento Fisiológicas (Intervals.icu)
         </h4>
         <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-          {isPowerActive ? "⚡ Modo Activo: Potencia Stryd" : "⏱️❤️ Modo Activo: Híbrido (Ritmo + FC)"}
+          {isPowerActive ? "⚡ Modo Activo: Potencia Carrera" : "⏱️❤️ Modo Activo: Híbrido (Ritmo + FC)"}
         </span>
       </div>
 
-      {/* Grid de 4 Columnas Tabulares: Ritmo, Stryd Potencia, FC y Ciclismo */}
+      {/* Grid de 4 Columnas Tabulares: Ritmo, Potencia Carrera, FC y Ciclismo */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
-        {/* COLUMNA 1: ZONAS POR RITMO (Visible siempre, editable con recálculo en vivo) */}
+        {/* COLUMNA 1: ZONAS POR RITMO */}
         <div
           className={`rounded-2xl border ${
             isHybridActive
@@ -136,16 +136,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             currentDisplayValue={livePaceStr}
             unit="/km"
             subLabel="Umbral"
-            onLiveChange={(val) => {
-              setLivePaceStr(val);
-              const sec = parsePaceToSeconds(val);
-              if (sec > 0) setLivePaceSec(sec);
-            }}
-            onCommit={async (val) => {
-              const sec = parsePaceToSeconds(val);
-              if (sec > 0) setLivePaceSec(sec);
-              if (onUpdateThreshold) await onUpdateThreshold("RUN_PACE", val);
-            }}
           />
 
           {suggestedRunPace && onApplySuggestion && onDismissSuggestion && (
@@ -168,7 +158,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           </div>
         </div>
 
-        {/* COLUMNA 2: STRYD RUNNING POWER (Visible siempre, editable con recálculo en vivo) */}
+        {/* COLUMNA 2: POTENCIA CARRERA */}
         <div
           className={`rounded-2xl border ${
             isPowerActive
@@ -180,30 +170,18 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             icon={Footprints}
             iconBgColor={isPowerActive ? "bg-amber-500/10" : "bg-slate-100 dark:bg-slate-800"}
             iconColor={isPowerActive ? "text-amber-600 dark:text-amber-400" : "text-slate-500"}
-            title="Potencia Stryd"
+            title="Potencia Carrera"
             subtitle="Watts por Zona"
             modeBadge={
               isPowerActive ? (
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 leading-none">ACTIVA RUN</span>
               ) : (
-                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">STRYD</span>
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">CP/FTP</span>
               )
             }
             currentDisplayValue={String(liveRunFtp)}
             unit="W"
-            subLabel="CP"
-            isNumericOnly
-            onLiveChange={(val) => {
-              const n = Number(val);
-              if (!isNaN(n)) setLiveRunFtp(n);
-            }}
-            onCommit={async (val) => {
-              const n = Number(val);
-              if (!isNaN(n)) {
-                setLiveRunFtp(n);
-                if (onUpdateThreshold) await onUpdateThreshold("RUN_FTP", n);
-              }
-            }}
+            subLabel="Umbral CP"
           />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -237,19 +215,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             }
             currentDisplayValue={String(liveLthr)}
             unit="bpm"
-            subLabel="Umbral"
-            isNumericOnly
-            onLiveChange={(val) => {
-              const n = Number(val);
-              if (!isNaN(n)) setLiveLthr(n);
-            }}
-            onCommit={async (val) => {
-              const n = Number(val);
-              if (!isNaN(n)) {
-                setLiveLthr(n);
-                if (onUpdateThreshold) await onUpdateThreshold("LTHR", n);
-              }
-            }}
+            subLabel="Umbral LTHR"
           />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -268,7 +234,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           </div>
         </div>
 
-        {/* COLUMNA 4: CICLISMO POWER (FTP) (Visible siempre, editable con recálculo en vivo) */}
+        {/* COLUMNA 4: CICLISMO POWER (FTP) */}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs">
           <EditableZoneCardHeader
             icon={Bike}
@@ -281,19 +247,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             }
             currentDisplayValue={String(liveBikeFtp)}
             unit="W"
-            subLabel="FTP"
-            isNumericOnly
-            onLiveChange={(val) => {
-              const n = Number(val);
-              if (!isNaN(n)) setLiveBikeFtp(n);
-            }}
-            onCommit={async (val) => {
-              const n = Number(val);
-              if (!isNaN(n)) {
-                setLiveBikeFtp(n);
-                if (onUpdateThreshold) await onUpdateThreshold("BIKE_FTP", n);
-              }
-            }}
+            subLabel="Umbral FTP"
           />
 
           {suggestedBikeFtp && onApplySuggestion && onDismissSuggestion && (

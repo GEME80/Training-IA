@@ -80,7 +80,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               </h3>
               {activeMode === "POWER" ? (
                 <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
-                  ⚡ STRYD POWER ({runFtp > 0 ? `${runFtp}W` : "Sin CP"})
+                  ⚡ POTENCIA CARRERA ({runFtp > 0 ? `${runFtp}W` : "Sin CP"})
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
@@ -119,7 +119,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 }`}
               >
                 <Footprints className="h-3.5 w-3.5" />
-                <span>⚡ Potencia Stryd</span>
+                <span>⚡ Potencia Carrera</span>
               </button>
               <button
                 type="button"
@@ -149,12 +149,12 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
 
       {/* KPI Strip: 5 Umbrales Fisiológicos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
-        {/* 1. Stryd CP */}
+        {/* 1. Potencia Carrera (CP) */}
         <div
           onClick={() => onEditThreshold?.("RUN_FTP")}
           role="button"
           tabIndex={0}
-          title="Haz clic para editar la Potencia Stryd (CP)"
+          title="Haz clic para ajustar la Potencia de Carrera (CP)"
           className={`rounded-xl border ${
             activeMode === "POWER"
               ? "border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20"
@@ -164,8 +164,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Footprints className="h-3.5 w-3.5 text-amber-500" />
-              Stryd CP (Run)
-              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-amber-500 transition" />
+              Potencia Carrera
             </span>
             <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
           </div>
@@ -179,14 +178,9 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— W</span>
               )}
             </span>
-            <span
-              className={`text-[9px] font-mono font-bold ${
-                activeMode === "POWER"
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-slate-400"
-              }`}
-            >
-              {activeMode === "POWER" ? "Modo Activo" : "Referencia"}
+            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition flex items-center gap-1">
+              <Edit3 className="h-2.5 w-2.5" />
+              <span>Ajustar CP</span>
             </span>
           </div>
         </div>
@@ -196,7 +190,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           onClick={() => onEditThreshold?.("RUN_PACE")}
           role="button"
           tabIndex={0}
-          title="Haz clic para editar el Ritmo Umbral de Carrera"
+          title="Haz clic para ajustar el Ritmo Umbral de Carrera"
           className={`rounded-xl border ${
             activeMode === "HYBRID"
               ? "border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
@@ -207,7 +201,6 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
             <span className="flex items-center gap-1">
               <Timer className="h-3.5 w-3.5 text-emerald-500" />
               Ritmo Umbral
-              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-emerald-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-emerald-600 font-bold">
               {activeMode === "HYBRID" ? "Pace Calidad" : "Daniels"}
@@ -217,14 +210,9 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
               {displayPace}
             </span>
-            <span
-              className={`text-[9px] font-mono font-bold ${
-                activeMode === "HYBRID"
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-slate-400"
-              }`}
-            >
-              {activeMode === "HYBRID" ? "Híbrido Activo" : "Referencia"}
+            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition flex items-center gap-1">
+              <Edit3 className="h-2.5 w-2.5" />
+              <span>Ajustar Pace</span>
             </span>
           </div>
         </div>
@@ -234,14 +222,13 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           onClick={() => onEditThreshold?.("BIKE_FTP")}
           role="button"
           tabIndex={0}
-          title="Haz clic para editar el FTP de Ciclismo"
+          title="Haz clic para ajustar el FTP de Ciclismo"
           className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between cursor-pointer group hover:border-sky-400 hover:ring-2 hover:ring-sky-400/20 hover:scale-[1.01] transition-all select-none"
         >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Bike className="h-3.5 w-3.5 text-sky-500" />
               Ciclismo FTP
-              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-sky-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-sky-600 font-bold">⚡ {relativeBikePower} W/kg</span>
           </div>
@@ -255,7 +242,10 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— W</span>
               )}
             </span>
-            <span className="text-[9px] font-mono text-slate-400">Umbral Funcional</span>
+            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 group-hover:bg-sky-500 group-hover:text-white transition flex items-center gap-1">
+              <Edit3 className="h-2.5 w-2.5" />
+              <span>Ajustar FTP</span>
+            </span>
           </div>
         </div>
 
@@ -264,14 +254,13 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           onClick={() => onEditThreshold?.("LTHR")}
           role="button"
           tabIndex={0}
-          title="Haz clic para editar la FC Umbral (LTHR)"
+          title="Haz clic para ajustar la FC Umbral (LTHR)"
           className={`rounded-xl border ${activeMode === "HYBRID" ? "border-2 border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/20" : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"} p-3 flex flex-col justify-between cursor-pointer group hover:border-rose-400 hover:ring-2 hover:ring-rose-400/20 hover:scale-[1.01] transition-all select-none`}
         >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <HeartPulse className="h-3.5 w-3.5 text-rose-500" />
               FC Umbral (LTHR)
-              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-rose-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-rose-600 font-bold">{maxHR && maxHR > 0 ? `Máx ${maxHR}` : "Sin Máx"}</span>
           </div>
@@ -285,7 +274,10 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— bpm</span>
               )}
             </span>
-            <span className="text-[9px] font-mono text-slate-400">{activeMode === "HYBRID" ? "Fondos & Suaves" : "Lactato Z4"}</span>
+            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-white transition flex items-center gap-1">
+              <Edit3 className="h-2.5 w-2.5" />
+              <span>Ajustar FC</span>
+            </span>
           </div>
         </div>
 

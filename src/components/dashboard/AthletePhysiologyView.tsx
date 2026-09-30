@@ -180,6 +180,32 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     showNotification("Perfil y umbrales guardados con éxito");
   };
 
+  const handleToggleRunningMode = async (newMode: RunningTrainingMode) => {
+    const hasPower = newMode === "POWER";
+    setRunningTrainingMode(newMode);
+    setHasRunningPowerMeter(hasPower);
+    await onSave({
+      runningTrainingMode: newMode,
+      hasRunningPowerMeter: hasPower,
+      runFtp,
+      bikeFtp,
+      weightKg,
+      heightCm,
+      birthDate,
+      gender,
+      lthr,
+      restingHR,
+      maxHR,
+      runThresholdPaceStr,
+      runThresholdPaceSecPerKm,
+      displayName: athleteName,
+      weeklyAvailability,
+    });
+    showNotification(
+      `Modo de carrera cambiado a: ${newMode === "POWER" ? "⚡ Potencia Stryd" : "⏱️❤️ Híbrido (Ritmo + FC)"}`
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -219,6 +245,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         runThresholdPaceStr={runThresholdPaceStr}
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
         onOpenEditModal={() => setIsEditModalOpen(true)}
+        onToggleMode={handleToggleRunningMode}
       />
 
       {/* 2. VISOR MULTI-DEPORTE DE ZONAS */}

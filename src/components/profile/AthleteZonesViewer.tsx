@@ -82,93 +82,107 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
         </span>
       </div>
 
-      {/* Grid de Columnas Verticales Tabulares */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-        {/* COLUMNA 1: ZONAS POR RITMO (Visible y activa para atletas Híbridos) */}
-        {isHybridActive && (
-          <div className="rounded-2xl border-2 border-emerald-500/80 dark:border-emerald-500/60 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-sm ring-2 ring-emerald-500/10">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <div className="flex items-center space-x-2">
-                <div className="p-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <Timer className="h-4 w-4" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    Zonas por Ritmo (Pace)
+      {/* Grid de 4 Columnas Tabulares: Ritmo, Stryd Potencia, FC y Ciclismo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+        {/* COLUMNA 1: ZONAS POR RITMO (Visible siempre para consulta y activa en Híbrido) */}
+        <div
+          className={`rounded-2xl border ${
+            isHybridActive
+              ? "border-2 border-emerald-500/80 dark:border-emerald-500/60 ring-2 ring-emerald-500/10"
+              : "border-slate-200 dark:border-slate-800"
+          } bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center space-x-2">
+              <div className={`p-1 rounded-lg ${isHybridActive ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
+                <Timer className="h-4 w-4" />
+              </div>
+              <div>
+                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  Ritmo Carrera (Pace)
+                  {isHybridActive ? (
                     <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">ACTIVA SERIES</span>
-                  </h5>
-                  <span className="text-[10px] font-mono text-slate-400">Daniels / Intervals</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
-                  {formatPace(effPaceSec)} /km
-                </span>
-                <span className="block text-[9px] font-mono text-slate-400">Umbral</span>
+                  ) : (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">DANIELS</span>
+                  )}
+                </h5>
+                <span className="text-[10px] font-mono text-slate-400">Min/km por Zona</span>
               </div>
             </div>
-
-            <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
-              {paceZones.map((z) => (
-                <div key={z.id} className="pt-1.5 first:pt-0 flex items-center justify-between text-xs font-mono">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] font-bold text-slate-400 w-5">{z.id}</span>
-                    <span className={`font-bold ${z.nameColor}`}>{z.name}</span>
-                  </div>
-                  <div className="text-right flex items-center space-x-3">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">{z.pct}</span>
-                    <strong className="text-slate-900 dark:text-white w-28 text-right">{z.range}</strong>
-                  </div>
-                </div>
-              ))}
+            <div className="text-right">
+              <span className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
+                {formatPace(effPaceSec)} /km
+              </span>
+              <span className="block text-[9px] font-mono text-slate-400">Umbral</span>
             </div>
           </div>
-        )}
 
-        {/* COLUMNA STRYD RUNNING POWER (Activa si tiene potencia) */}
-        {(isPowerActive || runFtp > 0) && (
-          <div className={`rounded-2xl border ${isPowerActive ? "border-2 border-amber-500/80 dark:border-amber-500/60 ring-2 ring-amber-500/10" : "border-slate-200 dark:border-slate-800 opacity-75"} bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}>
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <div className="flex items-center space-x-2">
-                <div className="p-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Footprints className="h-4 w-4" />
+          <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+            {paceZones.map((z) => (
+              <div key={z.id} className="pt-1.5 first:pt-0 flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-bold text-slate-400 w-5">{z.id}</span>
+                  <span className={`font-bold ${z.nameColor}`}>{z.name}</span>
                 </div>
-                <div>
-                  <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                    Potencia Carrera (Stryd)
-                    {isPowerActive && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 leading-none">ACTIVA RUN</span>
-                    )}
-                  </h5>
-                  <span className="text-[10px] font-mono text-slate-400">Zonas Stryd Power</span>
+                <div className="text-right flex items-center space-x-2">
+                  <span className="text-[10px] text-slate-400 hidden 2xl:inline">{z.pct}</span>
+                  <strong className="text-slate-900 dark:text-white text-[11px]">{z.range}</strong>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-xs font-black font-mono text-amber-600 dark:text-amber-400">
-                  {runFtp > 0 ? `${runFtp} W` : "— W"}
-                </span>
-                <span className="block text-[9px] font-mono text-slate-400">CP</span>
+            ))}
+          </div>
+        </div>
+
+        {/* COLUMNA 2: STRYD RUNNING POWER (Visible siempre, activa en modo Potencia) */}
+        <div
+          className={`rounded-2xl border ${
+            isPowerActive
+              ? "border-2 border-amber-500/80 dark:border-amber-500/60 ring-2 ring-amber-500/10"
+              : "border-slate-200 dark:border-slate-800 opacity-80"
+          } bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center space-x-2">
+              <div className={`p-1 rounded-lg ${isPowerActive ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
+                <Footprints className="h-4 w-4" />
+              </div>
+              <div>
+                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  Potencia Stryd (CP)
+                  {isPowerActive ? (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 leading-none">ACTIVA RUN</span>
+                  ) : (
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">STRYD</span>
+                  )}
+                </h5>
+                <span className="text-[10px] font-mono text-slate-400">Watts por Zona</span>
               </div>
             </div>
-
-            <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
-              {strydZones.map((z) => (
-                <div key={z.id} className="pt-1.5 first:pt-0 flex items-center justify-between text-xs font-mono">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] font-bold text-slate-400 w-5">{z.id}</span>
-                    <span className={`font-bold ${z.nameColor}`}>{z.name}</span>
-                  </div>
-                  <div className="text-right flex items-center space-x-3">
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">{z.pct}</span>
-                    <strong className="text-slate-900 dark:text-white w-24 text-right">{z.range}</strong>
-                  </div>
-                </div>
-              ))}
+            <div className="text-right">
+              <span className="text-xs font-black font-mono text-amber-600 dark:text-amber-400">
+                {runFtp > 0 ? `${runFtp} W` : "— W"}
+              </span>
+              <span className="block text-[9px] font-mono text-slate-400">CP</span>
             </div>
           </div>
-        )}
 
-        {/* COLUMNA: FRECUENCIA CARDÍACA */}
+          <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+            {strydZones.map((z) => (
+              <div key={z.id} className="pt-1.5 first:pt-0 flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-bold text-slate-400 w-5">{z.id}</span>
+                  <span className={`font-bold ${z.nameColor}`}>{z.name}</span>
+                </div>
+                <div className="text-right flex items-center space-x-2">
+                  <span className="text-[10px] text-slate-400 hidden 2xl:inline">{z.pct}</span>
+                  <strong className="text-slate-900 dark:text-white text-[11px]">{z.range}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* COLUMNA 3: FRECUENCIA CARDÍACA */}
         <div className={`rounded-2xl border ${isHybridActive ? "border-2 border-rose-500/80 dark:border-rose-500/60 ring-2 ring-rose-500/10" : "border-slate-200 dark:border-slate-800"} bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}>
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
             <div className="flex items-center space-x-2">

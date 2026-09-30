@@ -23,6 +23,7 @@ interface AthleteProfileHeroCardProps {
   runThresholdPaceSecPerKm?: number;
   runThresholdPaceStr?: string;
   onOpenEditModal: () => void;
+  onToggleMode?: (newMode: RunningTrainingMode) => void;
 }
 
 export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
@@ -43,6 +44,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   runThresholdPaceSecPerKm,
   runThresholdPaceStr,
   onOpenEditModal,
+  onToggleMode,
 }) => {
   const activeMode = resolveRunningMode({
     hasRunningPowerMeter,
@@ -101,59 +103,119 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
         </div>
 
-        {/* Botón de Editar */}
-        <button
-          type="button"
-          onClick={onOpenEditModal}
-          className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
-        >
-          <Edit3 className="h-3.5 w-3.5" />
-          <span>Editar Perfil</span>
-        </button>
+        {/* Acciones: Selector Rápido de Modelo + Botón Editar */}
+        <div className="flex flex-wrap items-center gap-2">
+          {onToggleMode && (
+            <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => onToggleMode("POWER")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  activeMode === "POWER"
+                    ? "bg-amber-500 text-slate-950 font-black shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Footprints className="h-3.5 w-3.5" />
+                <span>⚡ Potencia Stryd</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleMode("HYBRID")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  activeMode === "HYBRID"
+                    ? "bg-emerald-500 text-white font-black shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Timer className="h-3.5 w-3.5" />
+                <span>⏱️❤️ Híbrido</span>
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={onOpenEditModal}
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            <span>Editar Perfil</span>
+          </button>
+        </div>
       </div>
 
-      {/* KPI Strip: 4 Umbrales Principales */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-        {/* 1. Métrica de Carrera: Stryd CP o Ritmo Umbral */}
-        {activeMode === "POWER" ? (
-          <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20 p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-              <span className="flex items-center gap-1">
-                <Footprints className="h-3.5 w-3.5 text-amber-500" />
-                Stryd CP (Run)
-              </span>
-              <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-                {runFtp && runFtp > 0 ? (
-                  <>
-                    {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
-                  </>
-                ) : (
-                  <span className="text-slate-400 font-medium text-base">— W</span>
-                )}
-              </span>
-              <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold">Modo Activo</span>
-            </div>
+      {/* KPI Strip: 5 Umbrales Fisiológicos */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+        {/* 1. Stryd CP */}
+        <div
+          className={`rounded-xl border ${
+            activeMode === "POWER"
+              ? "border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20"
+              : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
+          } p-3 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span className="flex items-center gap-1">
+              <Footprints className="h-3.5 w-3.5 text-amber-500" />
+              Stryd CP (Run)
+            </span>
+            <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
           </div>
-        ) : (
-          <div className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20 p-3 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-              <span className="flex items-center gap-1">
-                <Timer className="h-3.5 w-3.5 text-emerald-500" />
-                Ritmo Umbral
-              </span>
-              <span className="text-[10px] font-mono text-emerald-600 font-bold">Pace Calidad</span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-                {displayPace}
-              </span>
-              <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">Híbrido Activo</span>
-            </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {runFtp && runFtp > 0 ? (
+                <>
+                  {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
+                </>
+              ) : (
+                <span className="text-slate-400 font-medium text-base">— W</span>
+              )}
+            </span>
+            <span
+              className={`text-[9px] font-mono font-bold ${
+                activeMode === "POWER"
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-slate-400"
+              }`}
+            >
+              {activeMode === "POWER" ? "Modo Activo" : "Referencia"}
+            </span>
           </div>
-        )}
+        </div>
+
+        {/* 2. Ritmo Umbral (Pace) */}
+        <div
+          className={`rounded-xl border ${
+            activeMode === "HYBRID"
+              ? "border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
+              : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
+          } p-3 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span className="flex items-center gap-1">
+              <Timer className="h-3.5 w-3.5 text-emerald-500" />
+              Ritmo Umbral
+            </span>
+            <span className="text-[10px] font-mono text-emerald-600 font-bold">
+              {activeMode === "HYBRID" ? "Pace Calidad" : "Daniels"}
+            </span>
+          </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+              {displayPace}
+            </span>
+            <span
+              className={`text-[9px] font-mono font-bold ${
+                activeMode === "HYBRID"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-slate-400"
+              }`}
+            >
+              {activeMode === "HYBRID" ? "Híbrido Activo" : "Referencia"}
+            </span>
+          </div>
+        </div>
 
         {/* 2. Bike FTP */}
         <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">

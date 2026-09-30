@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Layers, Calendar, Sparkles, CheckCircle2, Clock, Trash2, Trophy, ChevronDown, ChevronUp } from "lucide-react";
+import { Layers, Calendar, Sparkles, CheckCircle2, Clock, Trash2, Trophy, Flame } from "lucide-react";
 import { SeasonPlanItem, TargetRace } from "@/lib/physiology/macrocycle";
 import { SeasonCurveChart } from "./wizard/SeasonCurveChart";
+import { MacrocyclePhaseBreakdown } from "./wizard/MacrocyclePhaseBreakdown";
 
 interface SeasonActivePlanCardProps {
   activePlan: SeasonPlanItem | null;
@@ -18,14 +19,12 @@ interface SeasonActivePlanCardProps {
 export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
   activePlan,
   primaryRace,
-  seasonPlansCount,
   onNavigateToDashboard,
   onOpenHeadCoach,
   onOpenDesigner,
   onDeletePlan,
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [isChartExpanded, setIsChartExpanded] = useState(false);
 
   const blueprintWeeks = activePlan?.blueprint?.weeks || [];
   const totalWeeks = activePlan?.totalWeeks || blueprintWeeks.length || 16;
@@ -40,36 +39,9 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
     : 320;
   const avgHoursStr = (avgWeeklyTss / 60).toFixed(1);
 
-  const dynamicPhases = useMemo(() => {
-    if (!activePlan || blueprintWeeks.length === 0) {
-      const b1 = Math.max(1, Math.round(totalWeeks * 0.35));
-      const b2 = Math.max(b1 + 1, Math.round(totalWeeks * 0.6));
-      const pk = Math.max(b2 + 1, Math.round(totalWeeks * 0.85));
-      return [
-        { label: "Base", weeks: `1-${b1}`, active: true },
-        { label: "Construcción", weeks: `${b1 + 1}-${b2}`, active: false },
-        { label: "Pico", weeks: `${b2 + 1}-${pk}`, active: false },
-        { label: "Taper", weeks: `${pk + 1}-${totalWeeks}`, active: false },
-      ];
-    }
-
-    const groups: { phase: string; label: string; start: number; end: number }[] = [];
-    blueprintWeeks.forEach((w) => {
-      const last = groups[groups.length - 1];
-      const pLabel = w.phaseLabel || w.phase;
-      if (!last || last.phase !== w.phase) {
-        groups.push({ phase: w.phase, label: pLabel, start: w.weekNumber, end: w.weekNumber });
-      } else {
-        last.end = w.weekNumber;
-      }
-    });
-
-    return groups.map((g, idx) => ({
-      label: g.label,
-      weeks: g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`,
-      active: idx === 0,
-    }));
-  }, [activePlan, blueprintWeeks, totalWeeks]);
+  const maxLongRun = useMemo(() => {
+    return Math.max(0, ...blueprintWeeks.map((w) => w.maxLongRunMinutes || 0));
+  }, [blueprintWeeks]);
 
   if (!activePlan) {
     return (
@@ -106,9 +78,9 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
     !activePlan.blueprint?.primaryRace;
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4 shadow-xs">
-      {/* Header del Plan */}
-      <div className="space-y-1.5">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 space-y-4 shadow-xs">
+      {/* 1. Header del Plan */}
+      <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center justify-between">
           {isMaintenancePlan ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-black border border-slate-400/20">
@@ -121,7 +93,7 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
             </span>
           )}
           <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold">
-            Semana 1 de {totalWeeks}
+            {totalWeeks} Semanas Totales
           </span>
         </div>
 
@@ -142,50 +114,41 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
               <Calendar className="h-3.5 w-3.5 text-sky-500" />
               {activePlan.startDate} → {activePlan.endDate}
             </span>
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
-              <Clock className="h-3.5 w-3.5 text-emerald-500" />
-              ~{avgHoursStr}h / semana
-            </span>
+          </div>
+        </div>
+
+        {/* Resumen Métrico Rápido (Estilo Stryd) */}
+        <div className="grid grid-cols-3 gap-2 pt-2 font-mono text-center">
+          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800">
+            <span className="text-[9px] text-slate-400 uppercase block font-bold">Carga Media</span>
+            <strong className="text-xs font-black text-slate-800 dark:text-slate-200">{avgWeeklyTss} TSS</strong>
+          </div>
+          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800">
+            <span className="text-[9px] text-slate-400 uppercase block font-bold">Volumen Semanal</span>
+            <strong className="text-xs font-black text-emerald-600 dark:text-emerald-400">~{avgHoursStr} h</strong>
+          </div>
+          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800">
+            <span className="text-[9px] text-slate-400 uppercase block font-bold">Tirada Pico</span>
+            <strong className="text-xs font-black text-sky-600 dark:text-sky-400">{maxLongRun > 0 ? `${maxLongRun} min` : "Específico"}</strong>
           </div>
         </div>
       </div>
 
-      {/* Gráfica de Curva de Temporada — compacta con toggle */}
-      <div className="space-y-1">
-        <button
-          type="button"
-          onClick={() => setIsChartExpanded(!isChartExpanded)}
-          className="w-full flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
-        >
-          <span className="uppercase tracking-wider">Curva de Periodización y Carga (TSS)</span>
-          <span className="flex items-center gap-0.5 text-slate-400">
-            {isChartExpanded ? <><ChevronUp className="h-3 w-3" /> Compactar</> : <><ChevronDown className="h-3 w-3" /> Expandir</>}
-          </span>
-        </button>
+      {/* 2. Gráfica Compacta con Fases Inferiores Integradas (Estilo Stryd) */}
+      {blueprintWeeks.length > 0 && (
+        <SeasonCurveChart weeks={blueprintWeeks} showPhasesRow={true} />
+      )}
 
-        {isChartExpanded && blueprintWeeks.length > 0 ? (
-          <SeasonCurveChart weeks={blueprintWeeks} />
-        ) : (
-          /* Vista compacta: fases como pills */
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
-            {dynamicPhases.map((ph, i) => (
-              <div
-                key={i}
-                className={`rounded-xl p-2 text-center transition-all ${
-                  ph.active
-                    ? "bg-emerald-500 text-white font-black shadow-xs"
-                    : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-medium border border-slate-100 dark:border-slate-800"
-                }`}
-              >
-                <span className="block text-[11px] truncate leading-tight font-bold">{ph.label}</span>
-                <span className={`block text-[9px] font-mono ${ph.active ? "text-emerald-100" : "text-slate-400"}`}>Sem {ph.weeks}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 3. Desglose y Descripción Detallada por Fases */}
+      {blueprintWeeks.length > 0 && (
+        <MacrocyclePhaseBreakdown
+          weeks={blueprintWeeks}
+          planTitle={planTitle}
+          primaryRaceName={primaryRace?.name}
+        />
+      )}
 
-      {/* Botones de Acción */}
+      {/* 4. Botones de Acción */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         {onNavigateToDashboard && (
           <button

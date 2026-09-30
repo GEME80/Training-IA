@@ -6,23 +6,28 @@ import { MacrocycleWeek } from "@/lib/physiology/macrocycle";
 interface SeasonCurveChartProps {
   weeks: MacrocycleWeek[];
   activeWeekIndex?: number;
+  showPhasesRow?: boolean;
 }
 
-export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activeWeekIndex }) => {
+export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({
+  weeks,
+  activeWeekIndex,
+  showPhasesRow = true,
+}) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   if (!weeks || weeks.length === 0) return null;
 
   const totalWeeks = weeks.length;
-  const maxTssValue = Math.max(400, ...weeks.map((w) => w.targetTss || 300));
+  const maxTssValue = Math.max(380, ...weeks.map((w) => w.targetTss || 300));
   const minTssValue = 0;
 
-  const chartWidth = 700;
-  const chartHeight = 185;
-  const paddingLeft = 45;
-  const paddingRight = 25;
-  const paddingTop = 28;
-  const paddingBottom = 30;
+  const chartWidth = 650;
+  const chartHeight = 125;
+  const paddingLeft = 36;
+  const paddingRight = 16;
+  const paddingTop = 18;
+  const paddingBottom = 22;
 
   const plotWidth = chartWidth - paddingLeft - paddingRight;
   const plotHeight = chartHeight - paddingTop - paddingBottom;
@@ -38,7 +43,6 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
     return paddingTop + plotHeight - ratio * plotHeight;
   };
 
-  // Puntos para la línea SVG y área
   const points = weeks.map((w, idx) => ({
     x: getX(idx),
     y: getY(w.targetTss || 250),
@@ -48,7 +52,6 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  // Calcular semana actual ("Dónde vamos")
   const currentActiveIndex = useMemo(() => {
     if (typeof activeWeekIndex === "number" && activeWeekIndex >= 0 && activeWeekIndex < weeks.length) {
       return activeWeekIndex;
@@ -84,19 +87,31 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
     return "#06b6d4"; // Cyan
   };
 
+  // Agrupación de fases continuas para el indicador inferior
+  const phaseSpans = useMemo(() => {
+    const spans: { phase: string; label: string; startIdx: number; endIdx: number }[] = [];
+    weeks.forEach((w, idx) => {
+      const last = spans[spans.length - 1];
+      const pLabel = w.phaseLabel || (w.phase.includes("BASE") ? "Base" : w.phase.includes("BUILD") ? "Construcción" : w.phase.includes("PEAK") ? "Pico" : w.phase.includes("TAPER") ? "Taper" : "Carrera");
+      if (!last || last.phase !== w.phase) {
+        spans.push({ phase: w.phase, label: pLabel, startIdx: idx, endIdx: idx });
+      } else {
+        last.endIdx = idx;
+      }
+    });
+    return spans;
+  }, [weeks]);
+
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 space-y-2 font-mono shadow-xs">
-      <div className="flex items-center justify-between text-xs">
-        <span className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-          📈 Curva de Periodización y Carga (TSS)
+    <div className="rounded-xl bg-slate-50/70 dark:bg-slate-950/60 p-3 border border-slate-200/80 dark:border-slate-800 space-y-1.5 font-mono">
+      <div className="flex items-center justify-between text-xs pb-0.5">
+        <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-[11px]">
+          📈 Curva de Carga Semanal (TSS)
         </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold bg-sky-50 dark:bg-sky-950/40 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-800 flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] text-sky-700 dark:text-sky-300 font-bold bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
-            Vas en: Sem {currentPoint?.week.weekNumber || 1}
-          </span>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-            {totalWeeks} Semanas
+            Semana {currentPoint?.week.weekNumber || 1} de {totalWeeks}
           </span>
         </div>
       </div>
@@ -107,15 +122,15 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
           className="w-full h-auto overflow-visible select-none"
         >
           <defs>
-            <linearGradient id="areaGradientLight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.08" />
+            <linearGradient id="areaGradientCompact" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.28" />
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.08" />
               <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
           {/* Eje Y Líneas Guía */}
-          {[0, 100, 200, 300, 400].map((val) => {
+          {[0, 150, 300].map((val) => {
             const y = getY(val);
             return (
               <g key={val}>
@@ -125,16 +140,16 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
                   x2={chartWidth - paddingRight}
                   y2={y}
                   stroke="#e2e8f0"
-                  strokeDasharray="3 3"
-                  strokeWidth="0.8"
-                  className="dark:stroke-slate-800"
+                  strokeDasharray="2 2"
+                  strokeWidth="0.7"
+                  className="dark:stroke-slate-800/80"
                 />
                 <text
-                  x={paddingLeft - 8}
+                  x={paddingLeft - 6}
                   y={y + 3}
                   textAnchor="end"
                   fill="#94a3b8"
-                  fontSize="8"
+                  fontSize="7.5"
                   fontWeight="bold"
                 >
                   {val}
@@ -144,62 +159,43 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
           })}
 
           {/* Área de la Curva */}
-          <path d={areaD} fill="url(#areaGradientLight)" />
+          <path d={areaD} fill="url(#areaGradientCompact)" />
 
           {/* Línea de la Curva */}
           <path
             d={pathD}
             fill="none"
             stroke="#10b981"
-            strokeWidth="2.5"
+            strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Indicador 'Dónde vamos' (Línea Vertical y Badge Luminoso) */}
+          {/* Indicador 'Dónde vamos' */}
           {currentPoint && (
             <g className="pointer-events-none">
               <line
                 x1={currentPoint.x}
-                y1={paddingTop - 12}
+                y1={paddingTop - 6}
                 x2={currentPoint.x}
                 y2={paddingTop + plotHeight}
                 stroke="#0284c7"
-                strokeWidth="1.5"
-                strokeDasharray="3 3"
-                opacity="0.85"
+                strokeWidth="1.2"
+                strokeDasharray="2 2"
+                opacity="0.9"
               />
               <circle
                 cx={currentPoint.x}
                 cy={currentPoint.y}
-                r="10"
+                r="7"
                 fill="#0284c7"
                 opacity="0.2"
                 className="animate-ping"
               />
-              <rect
-                x={currentPoint.x - 30}
-                y={paddingTop - 20}
-                width="60"
-                height="15"
-                rx="7.5"
-                fill="#0284c7"
-                className="shadow-xs"
-              />
-              <text
-                x={currentPoint.x}
-                y={paddingTop - 9}
-                textAnchor="middle"
-                fill="#ffffff"
-                fontSize="7.5"
-                fontWeight="900"
-              >
-                📍 HOY (SEM {currentPoint.week.weekNumber})
-              </text>
             </g>
           )}
 
-          {/* Puntos y Valles de Descarga */}
+          {/* Puntos de semanas */}
           {points.map((pt, idx) => {
             const isRecovery = pt.week.microcycleType === "DESCARGA_ASIMILACION";
             const isRace = pt.week.phase === "RACE_WEEK" || idx === totalWeeks - 1;
@@ -222,71 +218,79 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({ weeks, activ
                 <circle
                   cx={pt.x}
                   cy={pt.y}
-                  r={isCurrent ? 6 : isRace ? 5 : isRecovery ? 4 : 3.5}
+                  r={isCurrent ? 4.5 : isRace ? 4 : isRecovery ? 3 : 2.5}
                   fill={dotColor}
                   stroke="#ffffff"
-                  strokeWidth={isCurrent ? "2" : "1.5"}
+                  strokeWidth={isCurrent ? "1.8" : "1"}
                 />
               </g>
             );
           })}
 
-          {/* Eje X Etiquetas de Semanas Clave */}
-          {points
-            .filter((_, idx) => idx === 0 || idx === Math.floor(totalWeeks / 3) || idx === Math.floor((totalWeeks * 2) / 3) || idx === totalWeeks - 1)
-            .map((pt, i) => (
+          {/* Eje X: Semanas */}
+          {points.map((pt, i) => {
+            const isLabeled = i === 0 || i === Math.floor(totalWeeks / 3) || i === Math.floor((totalWeeks * 2) / 3) || i === totalWeeks - 1 || i === currentActiveIndex;
+            if (!isLabeled) return null;
+            return (
               <text
                 key={i}
                 x={pt.x}
-                y={chartHeight - 6}
+                y={chartHeight - 4}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize="9"
-                fontWeight="bold"
+                fontSize="8"
+                fontWeight={i === currentActiveIndex ? "900" : "bold"}
               >
-                Sem {pt.week.weekNumber}
+                S{pt.week.weekNumber}
               </text>
-            ))}
+            );
+          })}
         </svg>
 
-        {/* Tooltip Dinámico Luminoso */}
+        {/* Tooltip Dinámico */}
         {hoveredPoint && (
-          <div
-            className="absolute top-1 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-slate-900/95 border border-emerald-400 dark:border-emerald-600 rounded-xl px-3 py-1.5 shadow-lg text-center z-20 pointer-events-none text-xs animate-fadeIn backdrop-blur-xs"
-          >
-            <div className="flex items-center justify-center gap-2 font-bold">
-              <span className="text-slate-900 dark:text-white">Semana {hoveredPoint.week.weekNumber}</span>
-              <span className="text-emerald-600 dark:text-emerald-400">({hoveredPoint.week.formattedRange})</span>
-              <span className="text-amber-600 dark:text-amber-400 font-black">{hoveredPoint.week.targetTss} TSS</span>
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white border border-emerald-500/40 rounded-lg px-2.5 py-1 shadow-md text-center z-20 pointer-events-none text-[10px] animate-fadeIn backdrop-blur-xs">
+            <div className="flex items-center justify-center gap-1.5 font-bold">
+              <span>Sem {hoveredPoint.week.weekNumber}</span>
+              <span className="text-emerald-400 font-mono">{hoveredPoint.week.targetTss} TSS</span>
             </div>
-            <p className="text-[10px] text-slate-600 dark:text-slate-300">
+            <p className="text-[9px] text-slate-300 truncate max-w-[200px]">
               {hoveredPoint.week.phaseLabel} • {hoveredPoint.week.microcycleLabel || "Carga"}
             </p>
           </div>
         )}
       </div>
 
-      {/* Leyenda de Fases Luminosa */}
-      <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-        <span className="flex items-center gap-1 font-bold text-sky-700 dark:text-sky-400">
-          <span className="h-2 w-2 rounded-full bg-sky-600 inline-block" /> Vas en Sem {currentPoint?.week.weekNumber || 1}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" /> Base
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> Construcción
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" /> Pico
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-purple-500 inline-block" /> Tapering
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-yellow-400 inline-block" /> Carrera
-        </span>
-      </div>
+      {/* ── BANDA DE FASES INFERIOR ESTILO STRYD (Directamente bajo el eje) ── */}
+      {showPhasesRow && (
+        <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800/80">
+          <div className="flex items-center gap-1 w-full">
+            {phaseSpans.map((span, sIdx) => {
+              const spanWeeksCount = span.endIdx - span.startIdx + 1;
+              const flexWeight = spanWeeksCount / totalWeeks;
+              const color = getPhaseColor(span.phase);
+              return (
+                <div
+                  key={sIdx}
+                  style={{ flex: flexWeight }}
+                  className="rounded-md px-1.5 py-1 text-center truncate border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs"
+                  title={`${span.label}: Semanas ${span.startIdx + 1} a ${span.endIdx + 1}`}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-[9px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {span.label}
+                    </span>
+                  </div>
+                  <span className="text-[8px] text-slate-400 font-mono block">
+                    {span.startIdx === span.endIdx ? `S${span.startIdx + 1}` : `S${span.startIdx + 1}-${span.endIdx + 1}`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

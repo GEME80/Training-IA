@@ -4,6 +4,7 @@ import React from "react";
 import { Sparkles, Rocket, Bot, CheckCircle2, ArrowLeft } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { SeasonCurveChart } from "./SeasonCurveChart";
+import { MacrocyclePhaseBreakdown } from "./MacrocyclePhaseBreakdown";
 
 interface SeasonWizardStep4PreviewProps {
   blueprint: MacrocycleBlueprint | null;
@@ -98,9 +99,16 @@ export const SeasonWizardStep4Preview: React.FC<SeasonWizardStep4PreviewProps> =
       </div>
 
       {/* 2. GRÁFICA VISUAL INTERACTIVA DE LA CURVA DE TEMPORADA */}
-      <SeasonCurveChart weeks={blueprint.weeks} />
+      <SeasonCurveChart weeks={blueprint.weeks} showPhasesRow={true} />
 
-      {/* 3. JUSTIFICACIÓN & NOTAS DE LA IA */}
+      {/* 3. DESGLOSE Y DESCRIPCIÓN POR FASES (ESTILO STRYD) */}
+      <MacrocyclePhaseBreakdown
+        weeks={blueprint.weeks}
+        planTitle={planTitle || blueprint.cycleTitle}
+        primaryRaceName={blueprint.primaryRace?.name}
+      />
+
+      {/* 4. JUSTIFICACIÓN & NOTAS DE LA IA */}
       {aiNotes && aiNotes.length > 0 && (
         <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-3.5 border border-slate-200 dark:border-slate-800 space-y-1.5">
           <span className="text-[10px] font-mono font-bold text-slate-500 uppercase flex items-center gap-1">

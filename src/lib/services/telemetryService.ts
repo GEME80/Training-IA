@@ -6,6 +6,7 @@ import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/li
 import { EvaluateRequest } from "@/lib/validation/schemas";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
 import { FtpDetectionService, FtpCalibrationEvent } from "@/lib/services/ftpDetectionService";
+import { PaceDetectionService, PaceCalibrationEvent } from "@/lib/services/paceDetectionService";
 
 export interface TelemetryEvaluationResult {
   success: boolean;
@@ -19,6 +20,7 @@ export interface TelemetryEvaluationResult {
   executedWeeklyTss: number;
   dailyExecutedActivities: DailyExecutedMap;
   recentFtpCalibration?: FtpCalibrationEvent;
+  recentPaceCalibration?: PaceCalibrationEvent;
   warning?: string;
 }
 
@@ -66,6 +68,7 @@ export class TelemetryService {
       let executedWeeklyTss = 0;
       let dailyExecutedActivities: DailyExecutedMap = {};
       let recentFtpCalibration: FtpCalibrationEvent | undefined = undefined;
+      let recentPaceCalibration: PaceCalibrationEvent | undefined = undefined;
 
       if (effectiveAthleteId && effectiveApiKey) {
         try {
@@ -236,8 +239,7 @@ export class TelemetryService {
             const resolvedRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0);
             const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
 
-            // Detección y Calibración Automática de Tests de FTP
-            let resolvedBikeFtp = initialBikeFtp;
+            // Detección de Tests de FTP (Sugerencia para aprobación del atleta)
             try {
               const ftpCal = await FtpDetectionService.evaluateActivitiesForFtpUpdate({
                 activities: activitiesData || [],
@@ -247,11 +249,30 @@ export class TelemetryService {
                 currentBikeFtp: initialBikeFtp,
               });
               if (ftpCal?.detected && ftpCal.newFtp > 0) {
-                resolvedBikeFtp = ftpCal.newFtp;
                 recentFtpCalibration = ftpCal;
+                // No sobreescribimos initialBikeFtp automáticamente: el atleta decide
               }
             } catch (calErr) {
               console.warn("Aviso al evaluar test de FTP en telemetría:", calErr);
+            }
+
+            // Detección de Tests de Ritmo de Carrera
+            try {
+              const currentPaceSec = storedUser?.profile.runThresholdPaceSecPerKm || 285;
+              const currentPaceStr = storedUser?.profile.runThresholdPaceStr || "4:45";
+              const paceCal = PaceDetectionService.evaluateActivitiesForPaceUpdate({
+                activities: activitiesData || [],
+                athleteId: effectiveAthleteId,
+                apiKey: effectiveApiKey,
+                uid,
+                currentPaceSec,
+                currentPaceStr,
+              });
+              if (paceCal?.detected) {
+                recentPaceCalibration = paceCal;
+              }
+            } catch (paceErr) {
+              console.warn("Aviso al evaluar test de ritmo en telemetría:", paceErr);
             }
 
             // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
@@ -271,7 +292,7 @@ export class TelemetryService {
               maxHR: intervalsMaxHR ? Number(intervalsMaxHR) : undefined,
               lthr: intervalsLthr ? Number(intervalsLthr) : undefined,
               run_ftp: resolvedRunFtp,
-              bike_ftp: resolvedBikeFtp,
+              bike_ftp: initialBikeFtp,
             };
           }
         } catch (clientErr) {
@@ -297,6 +318,7 @@ export class TelemetryService {
         executedWeeklyTss,
         dailyExecutedActivities,
         recentFtpCalibration,
+        recentPaceCalibration,
       };
     } catch (err: unknown) {
       console.error("Error en TelemetryService.evaluate:", err);

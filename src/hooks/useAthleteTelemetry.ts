@@ -30,18 +30,16 @@ export function useAthleteTelemetry({
   const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
-
   const [apiKeyCache, setApiKeyCache] = useState<string>("");
   const [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
-  const [visibleMetrics, setVisibleMetrics] = useState<string[]>(
-    userProfile?.visibleMetrics || DEFAULT_VISIBLE_METRICS
-  );
-
+  const [visibleMetrics, setVisibleMetrics] = useState<string[]>(userProfile?.visibleMetrics || DEFAULT_VISIBLE_METRICS);
   const [wellnessHistory, setWellnessHistory] = useState<AthleteWellness[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [weeklyExecutedTss, setWeeklyExecutedTss] = useState<number>(0);
   const [dailyExecutedActivities, setDailyExecutedActivities] = useState<DailyExecutedMap>({});
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
+  const [recentFtpCalibration, setRecentFtpCalibration] = useState<any>(null);
+  const [recentPaceCalibration, setRecentPaceCalibration] = useState<any>(null);
 
   const lastFetchTimestampRef = useRef<number>(0);
   const lastPersistedProfileRef = useRef<string>("");
@@ -120,6 +118,8 @@ export function useAthleteTelemetry({
           if (data.dailyExecutedActivities) setDailyExecutedActivities(data.dailyExecutedActivities);
           if (Array.isArray(data.wellness)) setWellnessHistory(data.wellness);
           if (Array.isArray(data.events)) setCalendarEvents(data.events);
+          if (data.recentFtpCalibration) setRecentFtpCalibration(data.recentFtpCalibration);
+          if (data.recentPaceCalibration) setRecentPaceCalibration(data.recentPaceCalibration);
 
           const p = data.profile || {};
           const [resBike, resRun] = [p.bike_ftp || bikeFtp || profile.bike_ftp, p.run_ftp || runFtp || profile.run_ftp];
@@ -331,11 +331,9 @@ export function useAthleteTelemetry({
 
     let retries = 0;
     const interval = setInterval(async () => {
-      if (retries >= 5) { clearInterval(interval); return; }
-      retries++;
+      if (++retries >= 5) clearInterval(interval);
       await refreshTelemetry(profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, true);
     }, 10000);
-
     return () => clearInterval(interval);
   }, [isLiveConnected, isLoading, profile.id, apiKeyCache, profile.run_ftp, profile.bike_ftp, refreshTelemetry, userProfile?.encryptedApiKey]);
 
@@ -343,6 +341,7 @@ export function useAthleteTelemetry({
     profile, setProfile, physioStatus, setPhysioStatus, wellnessHistory, latestWellness, historicalSummary,
     weeklyExecutedTss, dailyExecutedActivities, calendarEvents, setCalendarEvents, isLiveConnected, setIsLiveConnected,
     isRefreshingTelemetry, isLoading, apiKeyCache, geminiKeyCache, visibleMetrics,
+    recentFtpCalibration, setRecentFtpCalibration, recentPaceCalibration, setRecentPaceCalibration,
     isOnboardingOpen, setIsOnboardingOpen, refreshTelemetry, handleToggleMetric, handleSaveSettings, handleOnboardingSuccess,
   };
 }

@@ -123,46 +123,65 @@ export class FtpDetectionService {
         continue;
       }
 
-      // 3. Ejecutar actualización síncrona bidireccional
-      const client = new IntervalsClient(athleteId, apiKey);
-      try {
-        // A. Actualizar Sport Settings en Intervals.icu
-        const sports = await client.getSportSettings().catch(() => []);
-        const rideSport = (sports || []).find((s: any) =>
-          s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
-          /ride|cycling|bike/i.test(String(s.id))
-        );
+      const dateStr = act.start_date_local ? act.start_date_local.split("T")[0] : "";
+      const sign = delta > 0 ? `+${delta}W` : `${delta}W`;
 
-        if (rideSport?.id) {
-          await client.updateSportSettings(rideSport.id, { ftp: candidateFtp });
-        }
-        await client.updateAthlete({ icu_ftp: candidateFtp } as any).catch(() => null);
-
-        // B. Actualizar en Firestore si se suministró uid
-        if (uid) {
-          await saveUserProfile(uid, { bikeFtp: candidateFtp });
-        }
-
-        const dateStr = act.start_date_local ? act.start_date_local.split("T")[0] : "";
-        const sign = delta > 0 ? `+${delta}W` : `${delta}W`;
-        const direction = delta > 0 ? "incrementó" : "ajustó";
-
-        return {
-          detected: true,
-          activityId: String(act.id),
-          activityName: act.name || "Test de FTP",
-          date: dateStr,
-          previousFtp: currentBikeFtp,
-          newFtp: candidateFtp,
-          deltaWatts: delta,
-          source,
-          message: `🎯 Test de FTP detectado el ${dateStr}. Tu FTP de ciclismo se ${direction} de ${currentBikeFtp}W a ${candidateFtp}W (${sign}). Zonas y TSS recalculados automáticamente.`,
-        };
-      } catch (err) {
-        console.warn("Aviso al actualizar FTP en Intervals.icu o Firestore:", err);
-      }
+      // Retornar la sugerencia detectada sin sobreescribir automáticamente (Soberanía del atleta)
+      return {
+        detected: true,
+        activityId: String(act.id),
+        activityName: act.name || "Test de FTP",
+        date: dateStr,
+        previousFtp: currentBikeFtp,
+        newFtp: candidateFtp,
+        deltaWatts: delta,
+        source,
+        message: `🎯 Test de FTP detectado en "${act.name || "Actividad"}" (${dateStr}): ${candidateFtp}W (${sign} sobre tus ${currentBikeFtp}W actuales).`,
+      };
     }
 
     return null;
   }
+
+  /**
+   * Aplica la calibración de FTP aprobada explícitamente por el atleta
+   * hacia Intervals.icu y Firestore.
+   */
+  static async applyFtpCalibration(params: {
+    athleteId: string;
+    apiKey: string;
+    uid?: string;
+    candidateFtp: number;
+  }): Promise<boolean> {
+    const { athleteId, apiKey, uid, candidateFtp } = params;
+    if (!athleteId || !apiKey || candidateFtp <= 50) return false;
+
+    try {
+      const client = new IntervalsClient(athleteId, apiKey);
+      const sports = await client.getSportSettings().catch(() => []);
+      const rideSport = (sports || []).find((s: any) =>
+        s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
+        /ride|cycling|bike/i.test(String(s.id))
+      );
+
+      if (rideSport?.id) {
+        await client.updateSportSettings(rideSport.id, { ftp: candidateFtp }).catch((err) => {
+          console.warn("Aviso al actualizar sport-settings FTP en Intervals:", err);
+        });
+      }
+      await client.updateAthlete({ icu_ftp: candidateFtp } as any).catch(() => null);
+
+      if (uid) {
+        await saveUserProfile(uid, { bikeFtp: candidateFtp }).catch((err) => {
+          console.warn("Aviso al persistir bikeFtp en Firestore:", err);
+        });
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Error al aplicar calibración de FTP:", err);
+      return false;
+    }
+  }
 }
+

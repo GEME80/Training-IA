@@ -5,7 +5,10 @@ import { Footprints, Bike, HeartPulse, Activity, Timer } from "lucide-react";
 import { calculatePaceZones, parsePaceToSeconds, formatPace, resolveRunningMode } from "@/lib/physiology/runningWorkoutAdapter";
 import { RunningTrainingMode } from "@/lib/db/types";
 
-interface AthleteZonesViewerProps {
+import { EditableZoneCardHeader } from "./EditableZoneCardHeader";
+import { SuggestedThresholdBanner, ThresholdSuggestionItem } from "./SuggestedThresholdBanner";
+
+export interface AthleteZonesViewerProps {
   runFtp: number;
   bikeFtp: number;
   lthr: number;
@@ -14,6 +17,11 @@ interface AthleteZonesViewerProps {
   hasRunningPowerMeter?: boolean;
   runThresholdPaceSecPerKm?: number;
   runThresholdPaceStr?: string;
+  onUpdateThreshold?: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR", val: string | number) => Promise<void>;
+  suggestedBikeFtp?: ThresholdSuggestionItem | null;
+  suggestedRunPace?: ThresholdSuggestionItem | null;
+  onApplySuggestion?: (suggestion: ThresholdSuggestionItem) => Promise<void>;
+  onDismissSuggestion?: (suggestion: ThresholdSuggestionItem) => void;
 }
 
 export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
@@ -25,6 +33,11 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
   hasRunningPowerMeter,
   runThresholdPaceSecPerKm,
   runThresholdPaceStr,
+  onUpdateThreshold,
+  suggestedBikeFtp,
+  suggestedRunPace,
+  onApplySuggestion,
+  onDismissSuggestion,
 }) => {
   const activeMode = resolveRunningMode({
     hasRunningPowerMeter,
@@ -32,39 +45,54 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
     runFtp,
   });
 
-  const effPaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr);
-  const paceZones = useMemo(() => calculatePaceZones(effPaceSec), [effPaceSec]);
+  // Estados locales en vivo para recálculo reactivo instantáneo mientras el atleta escribe
+  const [livePaceStr, setLivePaceStr] = React.useState<string>(runThresholdPaceStr || "4:45");
+  const [livePaceSec, setLivePaceSec] = React.useState<number>(runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr));
+  const [liveRunFtp, setLiveRunFtp] = React.useState<number>(runFtp || 0);
+  const [liveBikeFtp, setLiveBikeFtp] = React.useState<number>(bikeFtp || 0);
+  const [liveLthr, setLiveLthr] = React.useState<number>(lthr || 0);
+
+  React.useEffect(() => {
+    if (runThresholdPaceStr) setLivePaceStr(runThresholdPaceStr);
+    if (runThresholdPaceSecPerKm) setLivePaceSec(runThresholdPaceSecPerKm);
+  }, [runThresholdPaceStr, runThresholdPaceSecPerKm]);
+
+  React.useEffect(() => { setLiveRunFtp(runFtp || 0); }, [runFtp]);
+  React.useEffect(() => { setLiveBikeFtp(bikeFtp || 0); }, [bikeFtp]);
+  React.useEffect(() => { setLiveLthr(lthr || 0); }, [lthr]);
+
+  const paceZones = useMemo(() => calculatePaceZones(livePaceSec || 285), [livePaceSec]);
 
   // 1. ZONAS STRYD RUNNING POWER (Estilo exacto Stryd / Intervals)
   const strydZones = [
-    { id: "Z1", name: "Fácil", nameColor: "text-amber-500 dark:text-amber-400", pct: "65 - 80 % CP", range: runFtp > 0 ? `${Math.round(runFtp * 0.65)} - ${Math.round(runFtp * 0.80)} W` : "—" },
-    { id: "Z2", name: "Moderado", nameColor: "text-amber-600 dark:text-amber-300", pct: "80 - 90 % CP", range: runFtp > 0 ? `${Math.round(runFtp * 0.80)} - ${Math.round(runFtp * 0.90)} W` : "—" },
-    { id: "Z3", name: "Umbral", nameColor: "text-orange-500 dark:text-orange-400", pct: "90 - 100 % CP", range: runFtp > 0 ? `${Math.round(runFtp * 0.90)} - ${runFtp} W` : "—" },
-    { id: "Z4", name: "Intervalo", nameColor: "text-orange-600 dark:text-orange-500", pct: "100 - 115 % CP", range: runFtp > 0 ? `${runFtp} - ${Math.round(runFtp * 1.15)} W` : "—" },
-    { id: "Z5", name: "Repetición", nameColor: "text-rose-600 dark:text-rose-400", pct: "115 - 300 % CP", range: runFtp > 0 ? `${Math.round(runFtp * 1.15)}+ W` : "—" },
-    { id: "SS", name: "Sweet Spot", nameColor: "text-teal-600 dark:text-teal-400", pct: "84 - 97 % CP", range: runFtp > 0 ? `${Math.round(runFtp * 0.84)} - ${Math.round(runFtp * 0.97)} W` : "—" },
+    { id: "Z1", name: "Fácil", nameColor: "text-amber-500 dark:text-amber-400", pct: "65 - 80 % CP", range: liveRunFtp > 0 ? `${Math.round(liveRunFtp * 0.65)} - ${Math.round(liveRunFtp * 0.80)} W` : "—" },
+    { id: "Z2", name: "Moderado", nameColor: "text-amber-600 dark:text-amber-300", pct: "80 - 90 % CP", range: liveRunFtp > 0 ? `${Math.round(liveRunFtp * 0.80)} - ${Math.round(liveRunFtp * 0.90)} W` : "—" },
+    { id: "Z3", name: "Umbral", nameColor: "text-orange-500 dark:text-orange-400", pct: "90 - 100 % CP", range: liveRunFtp > 0 ? `${Math.round(liveRunFtp * 0.90)} - ${liveRunFtp} W` : "—" },
+    { id: "Z4", name: "Intervalo", nameColor: "text-orange-600 dark:text-orange-500", pct: "100 - 115 % CP", range: liveRunFtp > 0 ? `${liveRunFtp} - ${Math.round(liveRunFtp * 1.15)} W` : "—" },
+    { id: "Z5", name: "Repetición", nameColor: "text-rose-600 dark:text-rose-400", pct: "115 - 300 % CP", range: liveRunFtp > 0 ? `${Math.round(liveRunFtp * 1.15)}+ W` : "—" },
+    { id: "SS", name: "Sweet Spot", nameColor: "text-teal-600 dark:text-teal-400", pct: "84 - 97 % CP", range: liveRunFtp > 0 ? `${Math.round(liveRunFtp * 0.84)} - ${Math.round(liveRunFtp * 0.97)} W` : "—" },
   ];
 
   // 2. ZONAS CICLISMO POWER COGGAN
   const cyclingZones = [
-    { id: "Z1", name: "Recuperación", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 55% FTP", range: bikeFtp > 0 ? `< ${Math.round(bikeFtp * 0.55)} W` : "—" },
-    { id: "Z2", name: "Resistencia (Fondo)", nameColor: "text-sky-600 dark:text-sky-400", pct: "56 - 75% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.56)} - ${Math.round(bikeFtp * 0.75)} W` : "—" },
-    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "76 - 90% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.76)} - ${Math.round(bikeFtp * 0.90)} W` : "—" },
-    { id: "Z4", name: "Umbral (FTP)", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "91 - 105% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 0.91)} - ${Math.round(bikeFtp * 1.05)} W` : "—" },
-    { id: "Z5", name: "VO2max", nameColor: "text-amber-600 dark:text-amber-400", pct: "106 - 120% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 1.06)} - ${Math.round(bikeFtp * 1.20)} W` : "—" },
-    { id: "Z6", name: "Cap. Anaeróbica", nameColor: "text-orange-600 dark:text-orange-400", pct: "121 - 150% FTP", range: bikeFtp > 0 ? `${Math.round(bikeFtp * 1.21)} - ${Math.round(bikeFtp * 1.50)} W` : "—" },
-    { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 150% FTP", range: bikeFtp > 0 ? `> ${Math.round(bikeFtp * 1.50)} W` : "—" },
+    { id: "Z1", name: "Recuperación", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 55% FTP", range: liveBikeFtp > 0 ? `< ${Math.round(liveBikeFtp * 0.55)} W` : "—" },
+    { id: "Z2", name: "Resistencia (Fondo)", nameColor: "text-sky-600 dark:text-sky-400", pct: "56 - 75% FTP", range: liveBikeFtp > 0 ? `${Math.round(liveBikeFtp * 0.56)} - ${Math.round(liveBikeFtp * 0.75)} W` : "—" },
+    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "76 - 90% FTP", range: liveBikeFtp > 0 ? `${Math.round(liveBikeFtp * 0.76)} - ${Math.round(liveBikeFtp * 0.90)} W` : "—" },
+    { id: "Z4", name: "Umbral (FTP)", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "91 - 105% FTP", range: liveBikeFtp > 0 ? `${Math.round(liveBikeFtp * 0.91)} - ${Math.round(liveBikeFtp * 1.05)} W` : "—" },
+    { id: "Z5", name: "VO2max", nameColor: "text-amber-600 dark:text-amber-400", pct: "106 - 120% FTP", range: liveBikeFtp > 0 ? `${Math.round(liveBikeFtp * 1.06)} - ${Math.round(liveBikeFtp * 1.20)} W` : "—" },
+    { id: "Z6", name: "Cap. Anaeróbica", nameColor: "text-orange-600 dark:text-orange-400", pct: "121 - 150% FTP", range: liveBikeFtp > 0 ? `${Math.round(liveBikeFtp * 1.21)} - ${Math.round(liveBikeFtp * 1.50)} W` : "—" },
+    { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 150% FTP", range: liveBikeFtp > 0 ? `> ${Math.round(liveBikeFtp * 1.50)} W` : "—" },
   ];
 
   // 3. ZONAS FRECUENCIA CARDÍACA (Intervals / LTHR)
   const hrZones = [
-    { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: lthr > 0 ? `0 - ${Math.round(lthr * 0.83)} bpm` : "—" },
-    { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.83) + 1} - ${Math.round(lthr * 0.88)} bpm` : "—" },
-    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.88) + 1} - ${Math.round(lthr * 0.92)} bpm` : "—" },
-    { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.93)} - ${Math.round(lthr * 0.98)} bpm` : "—" },
-    { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.98) + 1} - ${lthr} bpm` : "—" },
-    { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: lthr > 0 ? `${lthr + 1} - ${Math.round(lthr * 1.03)} bpm` : "—" },
-    { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: lthr > 0 ? `${Math.round(lthr * 1.04)} - ${maxHR > 0 ? `${maxHR} bpm` : "Máx"}` : "—" },
+    { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: liveLthr > 0 ? `0 - ${Math.round(liveLthr * 0.83)} bpm` : "—" },
+    { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: liveLthr > 0 ? `${Math.round(liveLthr * 0.83) + 1} - ${Math.round(liveLthr * 0.88)} bpm` : "—" },
+    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: liveLthr > 0 ? `${Math.round(liveLthr * 0.88) + 1} - ${Math.round(liveLthr * 0.92)} bpm` : "—" },
+    { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: liveLthr > 0 ? `${Math.round(liveLthr * 0.93)} - ${Math.round(liveLthr * 0.98)} bpm` : "—" },
+    { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: liveLthr > 0 ? `${Math.round(liveLthr * 0.98) + 1} - ${liveLthr} bpm` : "—" },
+    { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: liveLthr > 0 ? `${liveLthr + 1} - ${Math.round(liveLthr * 1.03)} bpm` : "—" },
+    { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: liveLthr > 0 ? `${Math.round(liveLthr * 1.04)} - ${maxHR > 0 ? `${maxHR} bpm` : "Máx"}` : "—" },
   ];
 
   const isPowerActive = activeMode === "POWER";
@@ -84,7 +112,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
 
       {/* Grid de 4 Columnas Tabulares: Ritmo, Stryd Potencia, FC y Ciclismo */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
-        {/* COLUMNA 1: ZONAS POR RITMO (Visible siempre para consulta y activa en Híbrido) */}
+        {/* COLUMNA 1: ZONAS POR RITMO (Visible siempre, editable con recálculo en vivo) */}
         <div
           className={`rounded-2xl border ${
             isHybridActive
@@ -92,30 +120,37 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
               : "border-slate-200 dark:border-slate-800"
           } bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center space-x-2">
-              <div className={`p-1 rounded-lg ${isHybridActive ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
-                <Timer className="h-4 w-4" />
-              </div>
-              <div>
-                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  Ritmo Carrera (Pace)
-                  {isHybridActive ? (
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">ACTIVA SERIES</span>
-                  ) : (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">DANIELS</span>
-                  )}
-                </h5>
-                <span className="text-[10px] font-mono text-slate-400">Min/km por Zona</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
-                {formatPace(effPaceSec)} /km
-              </span>
-              <span className="block text-[9px] font-mono text-slate-400">Umbral</span>
-            </div>
-          </div>
+          <EditableZoneCardHeader
+            icon={Timer}
+            iconBgColor={isHybridActive ? "bg-emerald-500/10" : "bg-slate-100 dark:bg-slate-800"}
+            iconColor={isHybridActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}
+            title="Ritmo Carrera"
+            subtitle="Min/km por Zona"
+            modeBadge={
+              isHybridActive ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">ACTIVA SERIES</span>
+              ) : (
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">DANIELS</span>
+              )
+            }
+            currentDisplayValue={livePaceStr}
+            unit="/km"
+            subLabel="Umbral"
+            onLiveChange={(val) => {
+              setLivePaceStr(val);
+              const sec = parsePaceToSeconds(val);
+              if (sec > 0) setLivePaceSec(sec);
+            }}
+            onCommit={async (val) => {
+              const sec = parsePaceToSeconds(val);
+              if (sec > 0) setLivePaceSec(sec);
+              if (onUpdateThreshold) await onUpdateThreshold("RUN_PACE", val);
+            }}
+          />
+
+          {suggestedRunPace && onApplySuggestion && onDismissSuggestion && (
+            <SuggestedThresholdBanner suggestion={suggestedRunPace} onApply={onApplySuggestion} onDismiss={onDismissSuggestion} />
+          )}
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             {paceZones.map((z) => (
@@ -133,7 +168,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           </div>
         </div>
 
-        {/* COLUMNA 2: STRYD RUNNING POWER (Visible siempre, activa en modo Potencia) */}
+        {/* COLUMNA 2: STRYD RUNNING POWER (Visible siempre, editable con recálculo en vivo) */}
         <div
           className={`rounded-2xl border ${
             isPowerActive
@@ -141,30 +176,35 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
               : "border-slate-200 dark:border-slate-800 opacity-80"
           } bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center space-x-2">
-              <div className={`p-1 rounded-lg ${isPowerActive ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
-                <Footprints className="h-4 w-4" />
-              </div>
-              <div>
-                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  Potencia Stryd (CP)
-                  {isPowerActive ? (
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 leading-none">ACTIVA RUN</span>
-                  ) : (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">STRYD</span>
-                  )}
-                </h5>
-                <span className="text-[10px] font-mono text-slate-400">Watts por Zona</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-black font-mono text-amber-600 dark:text-amber-400">
-                {runFtp > 0 ? `${runFtp} W` : "— W"}
-              </span>
-              <span className="block text-[9px] font-mono text-slate-400">CP</span>
-            </div>
-          </div>
+          <EditableZoneCardHeader
+            icon={Footprints}
+            iconBgColor={isPowerActive ? "bg-amber-500/10" : "bg-slate-100 dark:bg-slate-800"}
+            iconColor={isPowerActive ? "text-amber-600 dark:text-amber-400" : "text-slate-500"}
+            title="Potencia Stryd"
+            subtitle="Watts por Zona"
+            modeBadge={
+              isPowerActive ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 leading-none">ACTIVA RUN</span>
+              ) : (
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">STRYD</span>
+              )
+            }
+            currentDisplayValue={String(liveRunFtp)}
+            unit="W"
+            subLabel="CP"
+            isNumericOnly
+            onLiveChange={(val) => {
+              const n = Number(val);
+              if (!isNaN(n)) setLiveRunFtp(n);
+            }}
+            onCommit={async (val) => {
+              const n = Number(val);
+              if (!isNaN(n)) {
+                setLiveRunFtp(n);
+                if (onUpdateThreshold) await onUpdateThreshold("RUN_FTP", n);
+              }
+            }}
+          />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             {strydZones.map((z) => (
@@ -182,30 +222,35 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           </div>
         </div>
 
-        {/* COLUMNA 3: FRECUENCIA CARDÍACA */}
+        {/* COLUMNA 3: FRECUENCIA CARDÍACA (Visible siempre, editable con recálculo en vivo) */}
         <div className={`rounded-2xl border ${isHybridActive ? "border-2 border-rose-500/80 dark:border-rose-500/60 ring-2 ring-rose-500/10" : "border-slate-200 dark:border-slate-800"} bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}>
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <HeartPulse className="h-4 w-4" />
-              </div>
-              <div>
-                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  Frecuencia Cardíaca
-                  {isHybridActive && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500 text-white leading-none">ACTIVA FONDOS</span>
-                  )}
-                </h5>
-                <span className="text-[10px] font-mono text-slate-400">{lthr > 0 ? `LTHR ${lthr} bpm` : "Sin LTHR"}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-black font-mono text-rose-600 dark:text-rose-400">
-                {lthr > 0 ? `${lthr} bpm` : "— bpm"}
-              </span>
-              <span className="block text-[9px] font-mono text-slate-400">Umbral</span>
-            </div>
-          </div>
+          <EditableZoneCardHeader
+            icon={HeartPulse}
+            iconBgColor={isHybridActive ? "bg-rose-500/10" : "bg-slate-100 dark:bg-slate-800"}
+            iconColor={isHybridActive ? "text-rose-600 dark:text-rose-400" : "text-slate-500"}
+            title="Frecuencia Cardíaca"
+            subtitle={liveLthr > 0 ? `LTHR ${liveLthr} bpm` : "Sin LTHR"}
+            modeBadge={
+              isHybridActive ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500 text-white leading-none">ACTIVA FONDOS</span>
+              ) : undefined
+            }
+            currentDisplayValue={String(liveLthr)}
+            unit="bpm"
+            subLabel="Umbral"
+            isNumericOnly
+            onLiveChange={(val) => {
+              const n = Number(val);
+              if (!isNaN(n)) setLiveLthr(n);
+            }}
+            onCommit={async (val) => {
+              const n = Number(val);
+              if (!isNaN(n)) {
+                setLiveLthr(n);
+                if (onUpdateThreshold) await onUpdateThreshold("LTHR", n);
+              }
+            }}
+          />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             {hrZones.map((z) => (
@@ -223,28 +268,37 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           </div>
         </div>
 
-        {/* COLUMNA: CICLISMO POWER (FTP) */}
+        {/* COLUMNA 4: CICLISMO POWER (FTP) (Visible siempre, editable con recálculo en vivo) */}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
-                <Bike className="h-4 w-4" />
-              </div>
-              <div>
-                <h5 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  Potencia Ciclismo (FTP)
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500 text-white leading-none">ACTIVA BICI</span>
-                </h5>
-                <span className="text-[10px] font-mono text-slate-400">Coggan Power</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-black font-mono text-sky-600 dark:text-sky-400">
-                {bikeFtp > 0 ? `${bikeFtp} W` : "— W"}
-              </span>
-              <span className="block text-[9px] font-mono text-slate-400">FTP</span>
-            </div>
-          </div>
+          <EditableZoneCardHeader
+            icon={Bike}
+            iconBgColor="bg-sky-500/10"
+            iconColor="text-sky-600 dark:text-sky-400"
+            title="Potencia Ciclismo"
+            subtitle="Coggan Power"
+            modeBadge={
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500 text-white leading-none">ACTIVA BICI</span>
+            }
+            currentDisplayValue={String(liveBikeFtp)}
+            unit="W"
+            subLabel="FTP"
+            isNumericOnly
+            onLiveChange={(val) => {
+              const n = Number(val);
+              if (!isNaN(n)) setLiveBikeFtp(n);
+            }}
+            onCommit={async (val) => {
+              const n = Number(val);
+              if (!isNaN(n)) {
+                setLiveBikeFtp(n);
+                if (onUpdateThreshold) await onUpdateThreshold("BIKE_FTP", n);
+              }
+            }}
+          />
+
+          {suggestedBikeFtp && onApplySuggestion && onDismissSuggestion && (
+            <SuggestedThresholdBanner suggestion={suggestedBikeFtp} onApply={onApplySuggestion} onDismiss={onDismissSuggestion} />
+          )}
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             {cyclingZones.map((z) => (
@@ -265,3 +319,4 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
     </div>
   );
 };
+

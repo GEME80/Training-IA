@@ -178,6 +178,28 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   }
 
   if (activeNavSection === "physiology") {
+    const suggestedBikeFtp = telemetry.recentFtpCalibration ? {
+      id: telemetry.recentFtpCalibration.activityId || "bike-ftp",
+      metric: "BIKE_FTP" as const,
+      activityName: telemetry.recentFtpCalibration.activityName || "Test FTP Ciclismo",
+      date: telemetry.recentFtpCalibration.date,
+      currentValue: `${telemetry.recentFtpCalibration.previousFtp}W`,
+      suggestedValue: `${telemetry.recentFtpCalibration.newFtp}W`,
+      deltaLabel: `${telemetry.recentFtpCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentFtpCalibration.deltaWatts}W`,
+      message: telemetry.recentFtpCalibration.message,
+    } : null;
+
+    const suggestedRunPace = telemetry.recentPaceCalibration ? {
+      id: telemetry.recentPaceCalibration.activityId || "run-pace",
+      metric: "RUN_PACE" as const,
+      activityName: telemetry.recentPaceCalibration.activityName || "Test Ritmo Running",
+      date: telemetry.recentPaceCalibration.date,
+      currentValue: telemetry.recentPaceCalibration.previousPaceStr,
+      suggestedValue: telemetry.recentPaceCalibration.newPaceStr,
+      deltaLabel: `${telemetry.recentPaceCalibration.deltaSecPerKm < 0 ? "" : "+"}${telemetry.recentPaceCalibration.deltaSecPerKm}s/km`,
+      message: telemetry.recentPaceCalibration.message,
+    } : null;
+
     return (
       <AthletePhysiologyView
         athleteId={telemetry.profile.id}
@@ -203,6 +225,22 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         weeklyAvailability={season.weeklyAvailability}
         visibleMetrics={telemetry.visibleMetrics}
         isLiveConnected={telemetry.isLiveConnected}
+        suggestedBikeFtp={suggestedBikeFtp}
+        suggestedRunPace={suggestedRunPace}
+        onApplySuggestion={async (sug) => {
+          if (sug.metric === "BIKE_FTP") {
+            const numVal = parseInt(String(sug.suggestedValue), 10);
+            await telemetry.handleSaveSettings({ bikeFtp: numVal });
+            telemetry.setRecentFtpCalibration(null);
+          } else if (sug.metric === "RUN_PACE") {
+            await telemetry.handleSaveSettings({ runThresholdPaceStr: String(sug.suggestedValue) });
+            telemetry.setRecentPaceCalibration(null);
+          }
+        }}
+        onDismissSuggestion={(sug) => {
+          if (sug.metric === "BIKE_FTP") telemetry.setRecentFtpCalibration(null);
+          if (sug.metric === "RUN_PACE") telemetry.setRecentPaceCalibration(null);
+        }}
         onTestConnection={async (testAthleteId) => {
           const activeApiKey = telemetry.apiKeyCache || userStorage.getItem("intervals_api_key") || "";
           const res = await fetch("/api/test-connection", {

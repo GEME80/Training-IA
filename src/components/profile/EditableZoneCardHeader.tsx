@@ -10,12 +10,6 @@ interface EditableZoneCardHeaderProps {
   title: string;
   subtitle: string;
   modeBadge?: React.ReactNode;
-  currentDisplayValue: string;
-  unit: string;
-  subLabel: string;
-  isNumericOnly?: boolean;
-  onLiveChange?: (rawVal: string) => void;
-  onCommit?: (newVal: string) => Promise<void>;
 }
 
 export const EditableZoneCardHeader: React.FC<EditableZoneCardHeaderProps> = ({
@@ -25,9 +19,6 @@ export const EditableZoneCardHeader: React.FC<EditableZoneCardHeaderProps> = ({
   title,
   subtitle,
   modeBadge,
-  currentDisplayValue,
-  unit,
-  subLabel,
 }) => {
   return (
     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -43,14 +34,6 @@ export const EditableZoneCardHeader: React.FC<EditableZoneCardHeaderProps> = ({
           </h5>
           <span className="text-[10px] font-mono text-slate-400 block truncate">{subtitle}</span>
         </div>
-      </div>
-
-      {/* Lado Derecho: Valor de Referencia Limpio */}
-      <div className="text-right shrink-0 pl-2">
-        <span className="text-xs font-black font-mono text-slate-900 dark:text-white block">
-          {currentDisplayValue} <span className="text-[10px] font-sans font-normal text-slate-400">{unit}</span>
-        </span>
-        <span className="block text-[9px] font-mono text-slate-400">{subLabel}</span>
       </div>
     </div>
   );

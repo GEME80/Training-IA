@@ -133,9 +133,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
                 <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">DANIELS</span>
               )
             }
-            currentDisplayValue={livePaceStr}
-            unit="/km"
-            subLabel="Umbral"
           />
 
           {suggestedRunPace && onApplySuggestion && onDismissSuggestion && (
@@ -179,9 +176,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
                 <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">CP/FTP</span>
               )
             }
-            currentDisplayValue={String(liveRunFtp)}
-            unit="W"
-            subLabel="Umbral CP"
           />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -207,15 +201,12 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             iconBgColor={isHybridActive ? "bg-rose-500/10" : "bg-slate-100 dark:bg-slate-800"}
             iconColor={isHybridActive ? "text-rose-600 dark:text-rose-400" : "text-slate-500"}
             title="Frecuencia Cardíaca"
-            subtitle={liveLthr > 0 ? `LTHR ${liveLthr} bpm` : "Sin LTHR"}
+            subtitle="7 Zonas Fisiológicas"
             modeBadge={
               isHybridActive ? (
                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500 text-white leading-none">ACTIVA FONDOS</span>
               ) : undefined
             }
-            currentDisplayValue={String(liveLthr)}
-            unit="bpm"
-            subLabel="Umbral LTHR"
           />
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -245,9 +236,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             modeBadge={
               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500 text-white leading-none">ACTIVA BICI</span>
             }
-            currentDisplayValue={String(liveBikeFtp)}
-            unit="W"
-            subLabel="Umbral FTP"
           />
 
           {suggestedBikeFtp && onApplySuggestion && onDismissSuggestion && (

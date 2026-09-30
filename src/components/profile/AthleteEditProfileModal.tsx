@@ -193,17 +193,6 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
                 </div>
               </div>
             </div>
-
-            {/* Nota de Soberanía de Zonas: Se configuran en las tarjetas */}
-            <div className="p-3.5 rounded-xl border border-sky-200/80 dark:border-sky-800/80 bg-sky-50/60 dark:bg-sky-950/40 space-y-1.5">
-              <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-xs">
-                <Activity className="h-4 w-4 text-sky-500 shrink-0" />
-                <span>Métricas de Rendimiento & Zonas Fisiológicas</span>
-              </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                La <strong>Potencia Stryd (CP)</strong>, el <strong>Ritmo Umbral</strong>, el <strong>FTP de Ciclismo</strong> y la <strong>Frecuencia Cardíaca (LTHR)</strong> se configuran directamente haciendo clic en las tarjetas de la pantalla principal para que veas el recálculo reactivo de las zonas en tiempo real.
-              </p>
-            </div>
           </div>
 
           {/* Bloque 3: Conexión Intervals.icu */}

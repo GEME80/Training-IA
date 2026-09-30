@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer } from "lucide-react";
+import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer, Zap } from "lucide-react";
 import { RunningTrainingMode } from "@/lib/db/types";
 import { resolveRunningMode, formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
@@ -80,11 +80,11 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               </h3>
               {activeMode === "POWER" ? (
                 <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
-                  ⚡ POTENCIA CARRERA ({runFtp > 0 ? `${runFtp}W` : "Sin CP"})
+                  POTENCIA CARRERA ({runFtp > 0 ? `${runFtp}W` : "Sin CP"})
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
-                  ⏱️❤️ HÍBRIDO (Pace {displayPace} • {lthr ? `${lthr} bpm` : "Sin LTHR"})
+                  HÍBRIDO (Pace {displayPace} • {lthr ? `${lthr} bpm` : "Sin LTHR"})
                 </span>
               )}
               {email && (
@@ -118,8 +118,8 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <Footprints className="h-3.5 w-3.5" />
-                <span>⚡ Potencia Carrera</span>
+                <Zap className="h-3.5 w-3.5" />
+                <span>Potencia Carrera</span>
               </button>
               <button
                 type="button"
@@ -131,7 +131,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 }`}
               >
                 <Timer className="h-3.5 w-3.5" />
-                <span>⏱️❤️ Híbrido</span>
+                <span>Híbrido</span>
               </button>
             </div>
           )}

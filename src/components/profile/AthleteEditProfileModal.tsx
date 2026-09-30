@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Save, Footprints, Bike, HeartPulse, Moon, Activity, Check, Radio, Key, User, Loader2 } from "lucide-react";
-import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { X, Save, Activity, Check, Radio, Key, User, Loader2 } from "lucide-react";
 
 export interface AthleteProfileFormData {
   displayName?: string;
@@ -84,12 +83,9 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
     e.preventDefault();
     setIsSaving(true);
     try {
-      const paceSec = parsePaceToSeconds(form.runThresholdPaceStr || "4:45");
-      const mode = form.hasRunningPowerMeter ? "POWER" : "HYBRID";
       await onSave({
+        ...initialData,
         ...form,
-        runningTrainingMode: mode,
-        runThresholdPaceSecPerKm: paceSec,
       });
       setSavedSuccess(true);
       setTimeout(() => {
@@ -198,94 +194,15 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
               </div>
             </div>
 
-            {/* Selector de Modalidad Running: Potencia Stryd vs Híbrido */}
-            <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.hasRunningPowerMeter ?? true}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      update("hasRunningPowerMeter", checked);
-                      update("runningTrainingMode", checked ? "POWER" : "HYBRID");
-                    }}
-                    className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 h-4 w-4"
-                  />
-                  <span>¿Entrenas con Potenciómetro de Carrera (Stryd)?</span>
-                </label>
-                <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${form.hasRunningPowerMeter ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-cyan-500/10 text-cyan-600 border-cyan-500/30"}`}>
-                  {form.hasRunningPowerMeter ? "⚡ MODO POTENCIA" : "⏱️❤️ MODO HÍBRIDO"}
-                </span>
+            {/* Nota de Soberanía de Zonas: Se configuran en las tarjetas */}
+            <div className="p-3.5 rounded-xl border border-sky-200/80 dark:border-sky-800/80 bg-sky-50/60 dark:bg-sky-950/40 space-y-1.5">
+              <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-xs">
+                <Activity className="h-4 w-4 text-sky-500 shrink-0" />
+                <span>Métricas de Rendimiento & Zonas Fisiológicas</span>
               </div>
-
-              {form.hasRunningPowerMeter ? (
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                      <Footprints className="h-3.5 w-3.5 text-amber-500" /> Stryd Potencia Crítica (CP)
-                    </label>
-                    <SyncBadge />
-                  </div>
-                  <div className="relative mt-1">
-                    <input type="number" placeholder="247" value={form.runFtp || ""} onChange={(e) => update("runFtp", Number(e.target.value))} className={numInputClass} />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                      <Footprints className="h-3.5 w-3.5 text-cyan-500" /> Ritmo Umbral Funcional (min/km)
-                    </label>
-                    <span className="text-[10px] text-cyan-600 font-mono">Series x Ritmo • Fondos x LTHR</span>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="4:45"
-                    value={form.runThresholdPaceStr || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      update("runThresholdPaceStr", val);
-                      update("runThresholdPaceSecPerKm", parsePaceToSeconds(val));
-                    }}
-                    className={inputClass}
-                  />
-                  <p className="text-[10px] text-slate-400">
-                    Modo Híbrido: Los entrenamientos de calidad usarán tu Ritmo Umbral ({form.runThresholdPaceStr || "4:45"}/km) y los rodajes aeróbicos tu FC Umbral ({form.lthr || 165} bpm).
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Ciclismo FTP */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Bike className="h-3.5 w-3.5 text-sky-500" /> Ciclismo FTP
-                </label>
-                <SyncBadge />
-              </div>
-              <div className="relative mt-1">
-                <input type="number" placeholder="220" value={form.bikeFtp || ""} onChange={(e) => update("bikeFtp", Number(e.target.value))} className={numInputClass} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
-              </div>
-            </div>
-
-            {/* Frecuencia Cardíaca */}
-            <div className="grid grid-cols-3 gap-2.5 pt-1">
-              <div>
-                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><HeartPulse className="h-3 w-3 text-rose-500 shrink-0" /> FC Umbral</label><IntervalsBadge /></div>
-                <input type="number" placeholder="bpm" value={form.lthr || ""} onChange={(e) => update("lthr", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
-              </div>
-              <div>
-                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><Moon className="h-3 w-3 text-indigo-500 shrink-0" /> FC Reposo</label><IntervalsBadge /></div>
-                <input type="number" placeholder="bpm" value={form.restingHR || ""} onChange={(e) => update("restingHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
-              </div>
-              <div>
-                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><Activity className="h-3 w-3 text-emerald-500 shrink-0" /> FC Máxima</label><IntervalsBadge /></div>
-                <input type="number" placeholder="bpm" value={form.maxHR || ""} onChange={(e) => update("maxHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
-              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                La <strong>Potencia Stryd (CP)</strong>, el <strong>Ritmo Umbral</strong>, el <strong>FTP de Ciclismo</strong> y la <strong>Frecuencia Cardíaca (LTHR)</strong> se configuran directamente haciendo clic en las tarjetas de la pantalla principal para que veas el recálculo reactivo de las zonas en tiempo real.
+              </p>
             </div>
           </div>
 

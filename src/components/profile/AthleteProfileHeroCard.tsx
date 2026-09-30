@@ -24,6 +24,7 @@ interface AthleteProfileHeroCardProps {
   runThresholdPaceStr?: string;
   onOpenEditModal: () => void;
   onToggleMode?: (newMode: RunningTrainingMode) => void;
+  onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR") => void;
 }
 
 export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
@@ -45,6 +46,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   runThresholdPaceStr,
   onOpenEditModal,
   onToggleMode,
+  onEditThreshold,
 }) => {
   const activeMode = resolveRunningMode({
     hasRunningPowerMeter,
@@ -149,16 +151,21 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
         {/* 1. Stryd CP */}
         <div
+          onClick={() => onEditThreshold?.("RUN_FTP")}
+          role="button"
+          tabIndex={0}
+          title="Haz clic para editar la Potencia Stryd (CP)"
           className={`rounded-xl border ${
             activeMode === "POWER"
               ? "border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20"
               : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
-          } p-3 flex flex-col justify-between`}
+          } p-3 flex flex-col justify-between cursor-pointer group hover:border-amber-400 hover:ring-2 hover:ring-amber-400/20 hover:scale-[1.01] transition-all select-none`}
         >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Footprints className="h-3.5 w-3.5 text-amber-500" />
               Stryd CP (Run)
+              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-amber-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
           </div>
@@ -186,16 +193,21 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
 
         {/* 2. Ritmo Umbral (Pace) */}
         <div
+          onClick={() => onEditThreshold?.("RUN_PACE")}
+          role="button"
+          tabIndex={0}
+          title="Haz clic para editar el Ritmo Umbral de Carrera"
           className={`rounded-xl border ${
             activeMode === "HYBRID"
               ? "border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
               : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
-          } p-3 flex flex-col justify-between`}
+          } p-3 flex flex-col justify-between cursor-pointer group hover:border-emerald-400 hover:ring-2 hover:ring-emerald-400/20 hover:scale-[1.01] transition-all select-none`}
         >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Timer className="h-3.5 w-3.5 text-emerald-500" />
               Ritmo Umbral
+              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-emerald-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-emerald-600 font-bold">
               {activeMode === "HYBRID" ? "Pace Calidad" : "Daniels"}
@@ -217,12 +229,19 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
         </div>
 
-        {/* 2. Bike FTP */}
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">
+        {/* 3. Bike FTP */}
+        <div
+          onClick={() => onEditThreshold?.("BIKE_FTP")}
+          role="button"
+          tabIndex={0}
+          title="Haz clic para editar el FTP de Ciclismo"
+          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between cursor-pointer group hover:border-sky-400 hover:ring-2 hover:ring-sky-400/20 hover:scale-[1.01] transition-all select-none"
+        >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Bike className="h-3.5 w-3.5 text-sky-500" />
               Ciclismo FTP
+              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-sky-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-sky-600 font-bold">⚡ {relativeBikePower} W/kg</span>
           </div>
@@ -240,12 +259,19 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
         </div>
 
-        {/* 3. LTHR FC Umbral */}
-        <div className={`rounded-xl border ${activeMode === "HYBRID" ? "border-2 border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/20" : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"} p-3 flex flex-col justify-between`}>
+        {/* 4. LTHR FC Umbral */}
+        <div
+          onClick={() => onEditThreshold?.("LTHR")}
+          role="button"
+          tabIndex={0}
+          title="Haz clic para editar la FC Umbral (LTHR)"
+          className={`rounded-xl border ${activeMode === "HYBRID" ? "border-2 border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/20" : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"} p-3 flex flex-col justify-between cursor-pointer group hover:border-rose-400 hover:ring-2 hover:ring-rose-400/20 hover:scale-[1.01] transition-all select-none`}
+        >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <HeartPulse className="h-3.5 w-3.5 text-rose-500" />
               FC Umbral (LTHR)
+              <Edit3 className="h-2.5 w-2.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-rose-500 transition" />
             </span>
             <span className="text-[10px] font-mono text-rose-600 font-bold">{maxHR && maxHR > 0 ? `Máx ${maxHR}` : "Sin Máx"}</span>
           </div>

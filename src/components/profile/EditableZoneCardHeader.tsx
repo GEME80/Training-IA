@@ -147,15 +147,15 @@ export const EditableZoneCardHeader: React.FC<EditableZoneCardHeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="group flex items-baseline justify-end gap-1.5 text-right cursor-pointer hover:opacity-80 transition select-none"
+            className="group flex items-center justify-end gap-1.5 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/50 hover:border-sky-400 hover:bg-sky-50/50 dark:hover:bg-sky-950/30 transition cursor-pointer select-none text-right"
             title="Haz clic para editar este umbral"
           >
             <div>
-              <span className="text-xs font-black font-mono text-slate-900 dark:text-white flex items-center gap-1 justify-end">
+              <span className="text-xs font-black font-mono text-slate-900 dark:text-white flex items-center gap-1.5 justify-end">
                 {currentDisplayValue} {unit}
-                <Edit3 className="h-2.5 w-2.5 text-slate-400 group-hover:text-sky-500 transition" />
+                <Edit3 className="h-3 w-3 text-slate-400 group-hover:text-sky-500 transition" />
               </span>
-              <span className="block text-[9px] font-mono text-slate-400">{subLabel}</span>
+              <span className="block text-[9px] font-mono text-slate-400 group-hover:text-sky-500/80 transition">{subLabel} • Editar</span>
             </div>
           </button>
         )}

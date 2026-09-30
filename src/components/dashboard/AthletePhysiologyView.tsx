@@ -11,6 +11,7 @@ import { AthleteEditProfileModal, AthleteProfileFormData } from "../profile/Athl
 import { ProfileAvailabilityTab } from "../profile/ProfileAvailabilityTab";
 import { AthleteIntervalsConnectionCard } from "../profile/AthleteIntervalsConnectionCard";
 import { AthleteCollapsibleSection } from "../profile/AthleteCollapsibleSection";
+import { QuickThresholdModal, EditableThresholdMetric } from "../profile/QuickThresholdModal";
 import { AthletePhysiologyViewProps } from "./AthletePhysiologyView.types";
 
 export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
@@ -24,6 +25,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   onTestConnection, onSave, onUpdateAvailability,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [quickEditMetric, setQuickEditMetric] = useState<EditableThresholdMetric | null>(null);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
   const [athleteName, setAthleteName] = useState<string>(initialAthleteName);
   const [runFtp, setRunFtp] = useState<number>(initialRunFtp || 0);
@@ -61,11 +63,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     if (initialRunningMode !== undefined) setRunningTrainingMode(initialRunningMode);
     if (initialThresholdPaceStr !== undefined) setRunThresholdPaceStr(initialThresholdPaceStr);
     if (initialThresholdPaceSec !== undefined) setRunThresholdPaceSecPerKm(initialThresholdPaceSec);
-  }, [
-    initialAvailability, initialAthleteId, initialApiKey, initialAthleteName, initialRunFtp, initialBikeFtp,
-    initialWeight, initialHeight, initialBirthDate, initialGender, initialRestingHR, initialLthr, initialMaxHR,
-    initialHasPower, initialRunningMode, initialThresholdPaceStr, initialThresholdPaceSec
-  ]);
+  }, [initialAvailability, initialAthleteId, initialApiKey, initialAthleteName, initialRunFtp, initialBikeFtp, initialWeight, initialHeight, initialBirthDate, initialGender, initialRestingHR, initialLthr, initialMaxHR, initialHasPower, initialRunningMode, initialThresholdPaceStr, initialThresholdPaceSec]);
 
   const calculatedAge = React.useMemo(() => {
     if (!birthDate) return undefined;
@@ -245,6 +243,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
         onOpenEditModal={() => setIsEditModalOpen(true)}
         onToggleMode={handleToggleRunningMode}
+        onEditThreshold={(m) => setQuickEditMetric(m)}
       />
 
       {/* 2. VISOR MULTI-DEPORTE DE ZONAS */}
@@ -326,6 +325,22 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           intervalsAthleteId: athleteId, apiKey,
         }}
         onSave={handleSaveModalData}
+      />
+
+      {/* 6. MODAL DE EDICIÓN RÁPIDA DE UMBRAL */}
+      <QuickThresholdModal
+        isOpen={Boolean(quickEditMetric)}
+        metric={quickEditMetric}
+        currentValue={
+          quickEditMetric === "RUN_PACE" ? runThresholdPaceStr :
+          quickEditMetric === "RUN_FTP" ? runFtp :
+          quickEditMetric === "BIKE_FTP" ? bikeFtp :
+          quickEditMetric === "LTHR" ? (lthr || 0) : ""
+        }
+        onClose={() => setQuickEditMetric(null)}
+        onSave={async (m, v) => {
+          await handleUpdateThreshold(m, v);
+        }}
       />
     </div>
   );

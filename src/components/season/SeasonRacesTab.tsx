@@ -51,7 +51,6 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
     { label: "70.3 Triatlón", value: "triathlon_703" },
     { label: "Full 140.6", value: "triathlon_1406" as any },
     { label: "Ultra Trail", value: "ultra" as any },
-    { label: "Mantenimiento", value: "maintenance" },
   ];
 
   const priorityPills: { label: string; value: "A" | "B" | "C" }[] = [

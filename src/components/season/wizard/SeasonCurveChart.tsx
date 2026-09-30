@@ -247,14 +247,16 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({
           })}
         </svg>
 
-        {/* Tooltip Dinámico */}
+        {/* Tooltip Dinámico Elegante */}
         {hoveredPoint && (
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white border border-emerald-500/40 rounded-lg px-2.5 py-1 shadow-md text-center z-20 pointer-events-none text-[10px] animate-fadeIn backdrop-blur-xs">
-            <div className="flex items-center justify-center gap-1.5 font-bold">
-              <span>Sem {hoveredPoint.week.weekNumber}</span>
-              <span className="text-emerald-400 font-mono">{hoveredPoint.week.targetTss} TSS</span>
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-slate-800/95 text-slate-900 dark:text-white border border-emerald-400 dark:border-emerald-500/50 rounded-xl px-3 py-1.5 shadow-lg text-center z-20 pointer-events-none text-[11px] animate-fadeIn backdrop-blur-md">
+            <div className="flex items-center justify-center gap-2 font-black">
+              <span className="text-slate-800 dark:text-slate-100">Semana {hoveredPoint.week.weekNumber}</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                {hoveredPoint.week.targetTss} TSS
+              </span>
             </div>
-            <p className="text-[9px] text-slate-300 truncate max-w-[200px]">
+            <p className="text-[10px] text-slate-500 dark:text-slate-300 font-medium truncate max-w-[260px] pt-0.5">
               {hoveredPoint.week.phaseLabel} • {hoveredPoint.week.microcycleLabel || "Carga"}
             </p>
           </div>

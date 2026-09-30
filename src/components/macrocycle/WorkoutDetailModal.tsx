@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Code2,
-  Check,
-  X,
-  Footprints,
-  Bike,
-  Dumbbell,
-  Waves,
-  Moon,
-  HelpCircle,
-  Zap,
-} from "lucide-react";
+import { Code2, Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
@@ -280,11 +269,16 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
           // Interpolar % FTP / CP con vatios calculados reales si tenemos el umbral del atleta
           const enrichedWorkoutDoc = workout.workoutDoc.split("\n").map((line) => {
-            if (effectiveFtp > 0 && /%\s*(?:ftp|cp)/i.test(line)) {
-              return line.replace(/(\d+)\s*%\s*(?:ftp|cp)/gi, (match, pctStr) => {
-                const pct = parseInt(pctStr, 10);
-                const watts = Math.round((effectiveFtp * pct) / 100);
-                return `${pct}% ${ftpLabel} (${watts}W)`;
+            if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
+              return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\([^)]*[wW]\))?/gi, (_, p1, p2) => {
+                const n1 = parseInt(p1, 10);
+                const w1 = Math.round((effectiveFtp * n1) / 100);
+                if (p2) {
+                  const n2 = parseInt(p2, 10);
+                  const w2 = Math.round((effectiveFtp * n2) / 100);
+                  return `${n1}-${n2}% ${ftpLabel} (${w1}-${w2}W)`;
+                }
+                return `${n1}% ${ftpLabel} (${w1}W)`;
               });
             }
             return line;

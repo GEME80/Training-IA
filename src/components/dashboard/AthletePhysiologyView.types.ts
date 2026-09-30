@@ -20,6 +20,8 @@ export interface AthletePhysiologyViewProps {
   runningTrainingMode?: RunningTrainingMode;
   runThresholdPaceStr?: string;
   runThresholdPaceSecPerKm?: number;
+  swimCssStr?: string;
+  swimCssSecPer100m?: number;
   apiKey?: string;
   ctl: number;
   atl: number;

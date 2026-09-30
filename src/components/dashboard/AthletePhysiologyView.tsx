@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { User, Check, Zap, CalendarDays, Radio } from "lucide-react";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, DisciplineType, normalizeDisciplines } from "@/lib/gemini/engine";
 import { RunningTrainingMode } from "@/lib/db/types";
-import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { parsePaceToSeconds, parseSwimPaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 import { AthleteZonesTab } from "../profile/AthleteZonesTab";
 import { AthleteBioProfileTab } from "../profile/AthleteBioProfileTab";
 import { AthleteIntervalsTab } from "../profile/AthleteIntervalsTab";
@@ -20,6 +20,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   birthDate: initialBirthDate = "", gender: initialGender, restingHR: initialRestingHR, lthr: initialLthr, maxHR: initialMaxHR,
   hasRunningPowerMeter: initialHasPower, runningTrainingMode: initialRunningMode,
   runThresholdPaceStr: initialThresholdPaceStr, runThresholdPaceSecPerKm: initialThresholdPaceSec,
+  swimCssStr: initialSwimCssStr, swimCssSecPer100m: initialSwimCssSec,
   apiKey: initialApiKey = "", ctl, atl, tsb, weeklyAvailability: initialAvailability, isLiveConnected = false,
   suggestedBikeFtp, suggestedRunPace, suggestedRunFtp, onApplySuggestion, onDismissSuggestion,
   onTestConnection, onSave, onUpdateAvailability,
@@ -42,6 +43,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>(initialRunningMode || (initialRunFtp > 0 ? "POWER" : "HYBRID"));
   const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>(initialThresholdPaceStr || "4:45");
   const [runThresholdPaceSecPerKm, setRunThresholdPaceSecPerKm] = useState<number>(initialThresholdPaceSec || 285);
+  const [swimCssStr, setSwimCssStr] = useState<string>(initialSwimCssStr || "1:45");
+  const [swimCssSecPer100m, setSwimCssSecPer100m] = useState<number>(initialSwimCssSec || 105);
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(initialAvailability || DEFAULT_WEEKLY_AVAILABILITY);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -63,7 +66,9 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     if (initialRunningMode !== undefined) setRunningTrainingMode(initialRunningMode);
     if (initialThresholdPaceStr !== undefined) setRunThresholdPaceStr(initialThresholdPaceStr);
     if (initialThresholdPaceSec !== undefined) setRunThresholdPaceSecPerKm(initialThresholdPaceSec);
-  }, [initialAvailability, initialAthleteId, initialApiKey, initialAthleteName, initialRunFtp, initialBikeFtp, initialWeight, initialHeight, initialBirthDate, initialGender, initialRestingHR, initialLthr, initialMaxHR, initialHasPower, initialRunningMode, initialThresholdPaceStr, initialThresholdPaceSec]);
+    if (initialSwimCssStr !== undefined) setSwimCssStr(initialSwimCssStr);
+    if (initialSwimCssSec !== undefined) setSwimCssSecPer100m(initialSwimCssSec);
+  }, [initialAvailability, initialAthleteId, initialApiKey, initialAthleteName, initialRunFtp, initialBikeFtp, initialWeight, initialHeight, initialBirthDate, initialGender, initialRestingHR, initialLthr, initialMaxHR, initialHasPower, initialRunningMode, initialThresholdPaceStr, initialThresholdPaceSec, initialSwimCssStr, initialSwimCssSec]);
 
   const calculatedAge = React.useMemo(() => {
     if (!birthDate) return undefined;
@@ -118,7 +123,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       displayName: bioData.displayName, birthDate: bioData.birthDate, gender: bioData.gender,
       weightKg: bioData.weightKg, heightCm: bioData.heightCm,
       runFtp, bikeFtp, lthr, restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
-      runThresholdPaceStr, runThresholdPaceSecPerKm, intervalsAthleteId: athleteId, apiKey, weeklyAvailability,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m,
+      intervalsAthleteId: athleteId, apiKey, weeklyAvailability,
     });
     showNotification("Perfil antropométrico guardado y sincronizado.");
   };
@@ -130,7 +136,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       intervalsAthleteId: creds.athleteId, apiKey: creds.apiKey,
       displayName: athleteName, birthDate, gender, weightKg, heightCm,
       runFtp, bikeFtp, lthr, restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
-      runThresholdPaceStr, runThresholdPaceSecPerKm, weeklyAvailability,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m, weeklyAvailability,
     });
     showNotification("Credenciales de Intervals.icu guardadas.");
   };
@@ -142,14 +148,16 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     await onSave({
       runningTrainingMode: newMode, hasRunningPowerMeter: hasPower,
       runFtp, bikeFtp, weightKg, heightCm, birthDate, gender, lthr, restingHR, maxHR,
-      runThresholdPaceStr, runThresholdPaceSecPerKm, displayName: athleteName, weeklyAvailability,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m, displayName: athleteName, weeklyAvailability,
     });
     showNotification(`Modo cambiado a: ${newMode === "POWER" ? "Potencia Carrera" : "Híbrido (Ritmo + FC)"}`);
   };
 
-  const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR", val: string | number) => {
+  const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => {
     let pSec = runThresholdPaceSecPerKm;
     let pStr = runThresholdPaceStr;
+    let sSec = swimCssSecPer100m;
+    let sStr = swimCssStr;
     let rFtp = runFtp;
     let bFtp = bikeFtp;
     let hLthr = lthr;
@@ -168,12 +176,18 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     } else if (metric === "LTHR") {
       hLthr = Number(val);
       setLthr(hLthr);
+    } else if (metric === "SWIM_CSS") {
+      sStr = String(val);
+      sSec = parseSwimPaceToSeconds(sStr);
+      setSwimCssStr(sStr);
+      setSwimCssSecPer100m(sSec);
     }
 
     await onSave({
       runFtp: rFtp, bikeFtp: bFtp, lthr: hLthr, restingHR, maxHR,
       weightKg, heightCm, birthDate, gender, displayName: athleteName,
       runThresholdPaceStr: pStr, runThresholdPaceSecPerKm: pSec,
+      swimCssStr: sStr, swimCssSecPer100m: sSec,
       hasRunningPowerMeter, runningTrainingMode, weeklyAvailability,
     });
     showNotification("Umbral actualizado y sincronizado.");
@@ -267,7 +281,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           gender={gender} weightKg={weightKg} heightCm={heightCm} runFtp={runFtp} bikeFtp={bikeFtp}
           lthr={lthr} restingHR={restingHR} maxHR={maxHR} hasRunningPowerMeter={hasRunningPowerMeter}
           runningTrainingMode={runningTrainingMode} runThresholdPaceStr={runThresholdPaceStr}
-          runThresholdPaceSecPerKm={runThresholdPaceSecPerKm} suggestedBikeFtp={suggestedBikeFtp}
+          runThresholdPaceSecPerKm={runThresholdPaceSecPerKm} swimCssSecPer100m={swimCssSecPer100m}
+          swimCssStr={swimCssStr} suggestedBikeFtp={suggestedBikeFtp}
           suggestedRunPace={suggestedRunPace} suggestedRunFtp={suggestedRunFtp} onNavigateToProfile={() => setActiveTab("profile")}
           onToggleMode={handleToggleRunningMode} onEditThreshold={(m) => setQuickEditMetric(m)}
           onUpdateThreshold={handleUpdateThreshold} onApplySuggestion={onApplySuggestion}
@@ -310,7 +325,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           quickEditMetric === "RUN_PACE" ? runThresholdPaceStr :
           quickEditMetric === "RUN_FTP" ? runFtp :
           quickEditMetric === "BIKE_FTP" ? bikeFtp :
-          quickEditMetric === "LTHR" ? (lthr || 0) : ""
+          quickEditMetric === "LTHR" ? (lthr || 0) :
+          quickEditMetric === "SWIM_CSS" ? swimCssStr : ""
         }
         onClose={() => setQuickEditMetric(null)}
         onSave={async (m, v) => {

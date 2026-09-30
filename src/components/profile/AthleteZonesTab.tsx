@@ -23,13 +23,16 @@ interface AthleteZonesTabProps {
   runningTrainingMode: RunningTrainingMode;
   runThresholdPaceStr: string;
   runThresholdPaceSecPerKm: number;
+  swimCssSecPer100m?: number;
+  swimCssStr?: string;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
   suggestedRunFtp?: ThresholdSuggestionItem | null;
+  suggestedSwimCss?: ThresholdSuggestionItem | null;
   onNavigateToProfile: () => void;
   onToggleMode: (newMode: RunningTrainingMode) => void;
-  onEditThreshold: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR") => void;
-  onUpdateThreshold: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR", val: string | number) => Promise<void>;
+  onEditThreshold: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS") => void;
+  onUpdateThreshold: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => Promise<void>;
   onApplySuggestion?: (sug: ThresholdSuggestionItem) => Promise<void>;
   onDismissSuggestion?: (suggestion: ThresholdSuggestionItem) => void;
 }
@@ -51,9 +54,12 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
   runningTrainingMode,
   runThresholdPaceStr,
   runThresholdPaceSecPerKm,
+  swimCssSecPer100m,
+  swimCssStr,
   suggestedBikeFtp,
   suggestedRunPace,
   suggestedRunFtp,
+  suggestedSwimCss,
   onNavigateToProfile,
   onToggleMode,
   onEditThreshold,
@@ -81,12 +87,14 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         runningTrainingMode={runningTrainingMode}
         runThresholdPaceStr={runThresholdPaceStr}
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
+        swimCssSecPer100m={swimCssSecPer100m}
+        swimCssStr={swimCssStr}
         onNavigateToProfile={onNavigateToProfile}
         onToggleMode={onToggleMode}
         onEditThreshold={onEditThreshold}
       />
 
-      {/* Visor de las 4 tablas de zonas de entrenamiento fisiológicas */}
+      {/* Visor de las 5 tablas de zonas de entrenamiento fisiológicas */}
       <AthleteZonesViewer
         runFtp={runFtp}
         bikeFtp={bikeFtp}
@@ -96,14 +104,18 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         runningTrainingMode={runningTrainingMode}
         runThresholdPaceStr={runThresholdPaceStr}
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
+        swimCssSecPer100m={swimCssSecPer100m}
+        swimCssStr={swimCssStr}
         onUpdateThreshold={onUpdateThreshold}
         suggestedBikeFtp={suggestedBikeFtp}
         suggestedRunPace={suggestedRunPace}
         suggestedRunFtp={suggestedRunFtp}
+        suggestedSwimCss={suggestedSwimCss}
         onApplySuggestion={onApplySuggestion || (async (sug) => {
           if (sug.metric === "BIKE_FTP") await onUpdateThreshold("BIKE_FTP", Number(sug.suggestedValue));
           else if (sug.metric === "RUN_PACE") await onUpdateThreshold("RUN_PACE", String(sug.suggestedValue));
           else if (sug.metric === "RUN_FTP") await onUpdateThreshold("RUN_FTP", Number(sug.suggestedValue));
+          else if (sug.metric === "SWIM_CSS") await onUpdateThreshold("SWIM_CSS", String(sug.suggestedValue));
         })}
         onDismissSuggestion={onDismissSuggestion}
       />

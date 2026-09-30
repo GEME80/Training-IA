@@ -38,6 +38,8 @@ export interface UserProfileData {
   bikeFtp?: number; // Bike FTP (W)
   runThresholdPaceSecPerKm?: number; // Ritmo umbral en segundos/km (ej. 270 = 4:30/km)
   runThresholdPaceStr?: string; // Ritmo umbral legible (ej. "4:30")
+  swimCssSecPer100m?: number; // Ritmo umbral de natación (CSS) en segundos/100m (ej. 105 = 1:45/100m)
+  swimCssStr?: string; // Ritmo umbral de natación legible (ej. "1:45")
   restingHR?: number;
   maxHR?: number;
   lthr?: number;

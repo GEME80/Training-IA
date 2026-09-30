@@ -4691,3 +4691,41 @@ flowchart TD
   * `RunPowerDetectionService.ts`: 139 LOC ($\\le 350$)
   * `PaceDetectionService.ts`: 198 LOC ($\\le 350$)
 - **Git Commit:** `32bda71` y sincronizado en rama `main`.
+
+---
+
+## 52. Versión 3.83: Motor Multideporte de Workouts (Natación CSS & Carrera Híbrida Distancia/Tiempo)
+
+### 52.1. Objetivos del Release
+1. **Natación (Swim Workouts & CSS SSOT):**
+   - **Corrección de Duración Anómala (10h $\rightarrow$ 45-55m):** Sustitución de sintaxis informal por especificación 100% compliant con el parser de Intervals.icu (`Warmup`, `Main`, `Nx`, `- 100m 100% Pace`, `- 15s recovery`, `Cooldown`).
+   - **Critical Swim Speed (CSS):** Incorporación del umbral anaeróbico de natación en segundos y formato `mm:ss/100m` en el perfil del atleta, visor de zonas (Z1 a Z5), modal de edición rápida y sincronización bidireccional vía `sportSettings` con Intervals.icu.
+2. **Carrera (Running - Mix Distancia & Tiempo):**
+   - Soporte inteligente para series en pista por distancia (`200m`, `400m`, `800m`, `1000m`) y test de control (`Test 5K`, `Test 3K`), manteniendo la prescripción por tiempo en rodajes Z2/Z1 y series largas.
+   - Preservación 100% intacta del modelo de potencia Stryd (% CP) para atletas con potenciómetro y soporte híbrido (% Pace / % LTHR) para atletas sin potenciómetro.
+3. **Ciclismo & Fuerza:**
+   - Preservación total de entrenamientos estructurados de ciclismo (% FTP) y rutinas de fuerza funcional sin regresiones.
+
+### 52.2. Arquitectura de Cambios y Módulos
+- `src/lib/db/types.ts` & `src/lib/intervals/types.ts`: Incorporación de `swimCssSecPer100m`, `swimCssStr` y `swim_threshold_pace`.
+- `src/lib/physiology/swimWorkoutsBaseBuild.ts` & `src/lib/physiology/swimWorkoutsPeakTaper.ts`: 27 sesiones de natación reescritas con sintaxis estándar Intervals.icu.
+- `src/lib/physiology/runningWorkoutAdapter.ts`: Métodos `calculateSwimCssZones`, `formatSwimPace`, `parseSwimPaceToSeconds` e interpolación dinámica multideporte.
+- `src/components/profile/AthleteZonesViewer.tsx` & `AthleteProfileHeroCard.tsx`: Visualización de 5 zonas CSS y tarjeta KPI con botón de ajuste rápido.
+- `src/components/profile/QuickThresholdModal.tsx` & `AthleteEditProfileModal.tsx`: Edición de ritmo CSS en formato `mm:ss` o segundos.
+- `src/app/api/sync-settings/route.ts` & `src/lib/intervals/client.ts`: Sincronización automática de `threshold_pace` para el deporte Natación en Intervals.icu.
+- `src/components/WorkoutChart.tsx`: Parsing mejorado de bloques de distancia ($\ge 100\text{m}$) y recuperaciones activas/pasivas.
+
+### 52.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/lib/intervals/client.ts`: 256 LOC
+  * `src/lib/physiology/runningWorkoutAdapter.ts`: 334 LOC
+  * `src/components/dashboard/AthletePhysiologyView.tsx`: 338 LOC
+  * `src/components/profile/AthleteProfileHeroCard.tsx`: 346 LOC
+  * `src/hooks/useAthleteTelemetry.ts`: 349 LOC
+  * `src/components/WorkoutChart.tsx`: 340 LOC
+  * `src/components/profile/AthleteZonesViewer.tsx`: 277 LOC
+  * `src/components/profile/AthleteEditProfileModal.tsx`: 250 LOC
+  * `src/components/profile/QuickThresholdModal.tsx`: 161 LOC
+  * `src/components/profile/AthleteZonesTab.tsx`: 124 LOC
+

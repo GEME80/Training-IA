@@ -19,6 +19,8 @@ export interface AthleteProfileFormData {
   runningTrainingMode?: "POWER" | "HYBRID";
   runThresholdPaceStr?: string;
   runThresholdPaceSecPerKm?: number;
+  swimCssStr?: string;
+  swimCssSecPer100m?: number;
   intervalsAthleteId?: string;
   apiKey?: string;
 }

@@ -118,6 +118,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
       const val = parseInt(minsMatch[1], 10);
       if (isSwim && val >= 25) {
         total += Math.max(0.5, Math.round((val / 50) * 10) / 10);
+      } else if (!isSwim && val >= 100) {
+        total += Math.max(0.4, Math.round((val / 225) * 10) / 10);
       } else {
         total += Math.min(val, 120);
       }
@@ -127,6 +129,7 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
   };
 
   const parseIntensity = (raw: string): number => {
+    if (/recovery|descanso|rest|pausa/i.test(raw)) return 50;
     const pctMatch = raw.match(/(\d+)\s*%/);
     if (pctMatch) return parseInt(pctMatch[1], 10);
     const rangeMatch = raw.match(/(\d+)\s*-\s*(\d+)\s*%/);

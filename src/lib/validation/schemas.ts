@@ -36,6 +36,8 @@ export const ProfileUpdateRequestSchema = z.object({
   runningTrainingMode: z.enum(["POWER", "HYBRID"]).nullable().optional(),
   runThresholdPaceSecPerKm: z.number().nullable().optional(),
   runThresholdPaceStr: z.string().nullable().optional(),
+  swimCssSecPer100m: z.number().nullable().optional(),
+  swimCssStr: z.string().nullable().optional(),
   restingHR: z.number().nullable().optional(),
   maxHR: z.number().nullable().optional(),
   lthr: z.number().nullable().optional(),

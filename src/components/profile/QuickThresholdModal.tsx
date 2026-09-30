@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Check, Loader2, Footprints, Bike, HeartPulse, Timer } from "lucide-react";
+import { X, Check, Loader2, Footprints, Bike, HeartPulse, Timer, Waves } from "lucide-react";
 
-export type EditableThresholdMetric = "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR";
+export type EditableThresholdMetric = "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS";
 
 interface QuickThresholdModalProps {
   isOpen: boolean;
@@ -52,6 +52,15 @@ const METRIC_CONFIG: Record<
     iconColor: "text-rose-500",
     isNumeric: true,
     placeholder: "168",
+  },
+  SWIM_CSS: {
+    title: "Ritmo Umbral Natación (CSS)",
+    subtitle: "Ajusta tu velocidad crítica de nado (CSS) para recalcular las zonas de ritmo acuático (min/100m)",
+    unit: "/100m",
+    icon: Waves,
+    iconColor: "text-cyan-500",
+    isNumeric: false,
+    placeholder: "1:45",
   },
 };
 

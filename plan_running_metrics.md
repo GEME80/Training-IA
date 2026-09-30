@@ -1,211 +1,182 @@
-# 📋 PLAN MAESTRO DE EJECUCIÓN: Sistema Dual de Running (Potencia Stryd vs. Modelo Híbrido HR + Ritmo) con Recalibración Dinámica Automática — SGEA v3.80
-
-> **REGLA FUNDAMENTAL Y DEFINITIVA:**
-> 1. **⚡ MODELO 1: POTENCIA EXCLUSIVA (STRYD):** Para atletas con potenciómetro. Entrenan **100% por vatios (% CP)**. El código y flujo actual se mantiene **intacto e idéntico**.
-> 2. **⏱️❤️ MODELO 2: HÍBRIDO (RITMO + HR):** Para atletas sin potenciómetro. **NO hay modos aislados de solo ritmo o solo pulso**. Todo corredor sin Stryd entrena en el **Modelo Híbrido**:
->    - **Series, intervalos y calidad:** Se prescriben por **Ritmo (`% Pace` en Intervals / `min/km` en tarjeta)**.
->    - **Fondos largos, rodajes suaves y regenerativos:** Se prescriben por **Frecuencia Cardíaca (`% LTHR` en Intervals / `bpm` en tarjeta)**.
-> 3. **🔄 RECALIBRACIÓN DINÁMICA REACTIVA:** Al actualizarse cualquiera de los datos fisiológicos (**Potencia Stryd, Ritmo Umbral o LTHR/FC**), los entrenamientos del calendario, macrociclo y gráficas **se ajustan y recalculan automáticamente en tiempo real**:
->    - Si cambia Stryd CP: Se recalculan todos los vatios planificados en carrera.
->    - Si cambia el Ritmo Umbral: Se recalculan los `min/km` de todas las series de calidad.
->    - Si cambia el LTHR / FC: Se recalculan las pulsaciones `bpm` de todos los fondos y rodajes.
->    - Si cambia de Potencia a Híbrido (o viceversa): El plan transmuta su métrica rectora al instante.
-> 4. **Zonas en el Perfil:** Zonas Stryd Power para atletas con potencia, y **Zonas por Ritmo (Z1-Z6 min/km)** + **Zonas HR (Z1-Z7 bpm)** para atletas híbridos.
-> 5. Cero duplicación de los 18 modelos existentes.
-
----
-
-## 🎯 COMPARATIVA DIRECTA DE LOS 2 MODELOS
-
-```
-                    ¿TIENES POTENCIÓMETRO DE CARRERA (STRYD)?
-                                       │
-                      ┌────────────────┴────────────────┐
-                      ▼                                 ▼
-           [ SÍ: CHECKBOX MARCADO ]          [ NO: CHECKBOX DESMARCADO ]
-                      │                                 │
-           ⚡ MODELO POTENCIA                ⏱️❤️ MODELO HÍBRIDO (HR + RITMO)
-           • 100% Vatios (% CP)              • Series/Calidad: RITMO (min/km)
-           • Cero mezcla de variables        • Fondos/Suaves: CORAZÓN (bpm / % LTHR)
-           • Código actual 100% intacto      • Zonas de Ritmo + Zonas de Pulso
-```
-
-| Aspecto | ⚡ 1. Modelo Potencia (Stryd) | ⏱️❤️ 2. Modelo Híbrido (HR + Ritmo) |
-| :--- | :--- | :--- |
-| **Población Objetivo** | Corredores con podómetro Stryd | Corredores sin podómetro de carrera |
-| **Prescripción en Calidad (Series)** | Vatios Stryd (`240W • 95% CP`) | Ritmo en min/km (`4:15/km • 105% Pace`) |
-| **Prescripción en Fondos / Suaves** | Vatios Stryd (`195W • 78% CP`) | Frecuencia Cardíaca (`142-148 bpm • 80-84% LTHR`) |
-| **Sintaxis en Intervals.icu** | `- 45m 80% FTP` (constante) | Series: `- 4x 1000m 105% Pace` • Fondos: `- 1h30m 80% LTHR` |
-| **Zonas en Perfil** | Zonas Stryd Power (W) | **Zonas por Ritmo (Z1-Z6 min/km)** + **Zonas HR (Z1-Z7 bpm)** |
-| **Activación en Perfil** | `[x] Entreno con Potenciómetro` | `[ ] Entreno con Potenciómetro` (Automático Híbrido) |
-| **Respuesta a Nuevos Datos** | Recalcula Vatios en vivo | Recalcula Ritmos (`min/km`) y Pulsaciones (`bpm`) en vivo |
-
----
-
-## 🔄 MOTOR DE RECALIBRACIÓN DINÁMICA AUTOMÁTICA
+# 📋 PLAN MAESTRO INTEGRAL DE EJECUCIÓN: Motor Multideporte de Workouts (Running Dual Mix, Natación CSS 100% Intervals Compliant, Breakthroughs y Recalibración Reactiva) — SGEA v3.83
 
 > [!IMPORTANT]
-> **Cero Datos Quemados y Reactividad Inmediata:**
-> Toda sesión de entrenamiento almacena porcentajes relativos de intensidad (`% CP`, `% Pace`, `% LTHR`). Al cambiar una métrica en el perfil del atleta, los targets absolutos se recalculan en caliente:
-> 1. **Al actualizar Stryd CP (ej. de 250W a 275W):**
->    - Sesión al 80% CP: Pasa de `200W` a `220W` automáticamente.
->    - `WorkoutChart` recalcula los tooltips de vatios de inmediato.
-> 2. **Al actualizar Ritmo Umbral (ej. de 4:30/km a 4:15/km):**
->    - Serie al 105% Pace: Pasa de `4:17/km` a `4:03/km` automáticamente.
->    - Las 6 Zonas de Ritmo (Z1 a Z6) en el perfil se reajustan en tiempo real.
-> 3. **Al actualizar LTHR / Frecuencia Cardíaca (ej. de 165 a 168 bpm):**
->    - Fondo al 82% LTHR: Pasa de `135 bpm` a `138 bpm` automáticamente.
->    - Las Zonas de Frecuencia Cardíaca en el perfil se reajustan en tiempo real.
-> 4. **Al conmutar entre Potencia e Híbrido:**
->    - El calendario transmuta inmediatamente los badges (⚡ vs ⏱️❤️) y las unidades de prescripción sin necesidad de regenerar el macrociclo desde cero.
-> 5. **Sincronización Cloud con Intervals.icu:**
->    - Al pulsar "Sincronizar a Intervals", los eventos del calendario externo se sobrescriben con los targets recalibrados.
+> **ESTADO DEL PLAN: EN REVISIÓN (PENDIENTE DE APROBACIÓN EXPLÍCITA).**
+> **REGLA DE BLOQUEO:** Ningún cambio de código o comando destructivo se ejecutará hasta recibir la confirmación y el "OK" formal del usuario.
 
 ---
 
-## 🏃 TABLA DE ZONAS POR RITMO (EN EL PERFIL PARA MODO HÍBRIDO)
+## 🧭 1. CONTEXTO, AVANCES PREVIOS (CONVERSACIÓN "Plan de Ritmo/HR") Y NUEVAS NECESIDADES
 
-Calculadas dinámicamente a partir del **Ritmo Umbral** (Threshold Pace / VAM, ej. 4:30/km):
+### 🏆 1.1. Logros Consolidados y Verificados en el Repositorio (v3.83 - Commits `35cca19`, `ff0e2db`, `8183bff`, `32bda71`, `58ef03a`):
+1. **Rediseño UX Modular de Perfil en 4 Pestañas (`AthletePhysiologyView.tsx`):**
+   - Consolidación limpia sin interfaces duplicadas:
+     * **Pestaña 1 (`AthleteZonesTab.tsx`):** Zonas & Umbrales (Potencia de Carrera, Ritmo Umbral, FC LTHR y Ciclismo FTP con tarjetas de calibración/breakthroughs interactivas).
+     * **Pestaña 2 (`AthleteBioProfileTab.tsx`):** Perfil & Biometría (peso, altura, fecha de nacimiento, sexo, FC reposo, FC máx, selector de modo de carrera).
+     * **Pestaña 3 (`AthleteAvailabilityTab.tsx`):** Matriz de disponibilidad semanal.
+     * **Pestaña 4 (`AthleteIntervalsTab.tsx`):** Conexión dedicada a Intervals.icu (credenciales, Athlete ID, estado en vivo y sincronización).
+   - Eliminación de dobles iconos, textos azules obsoletos y redundancias en tarjetas secundarias.
+   - Generalización de la métrica: *"Potencia de Carrera (Running Power)"*, compatible con podómetro Stryd y potencia nativa de muñeca Garmin.
+2. **Motor Universal de Detección de Breakthroughs (`BreakthroughDetectionService.ts`):**
+   - Detección de picos de rendimiento no solo en tests formales, sino en cualquier sesión real de carrera (potencia y ritmo) y ciclismo (eFTP).
+   - **Compuerta de Carga Interna Fisiológica para Ritmo:** Solo detecta mejoras de ritmo si $\text{avgHR} \ge 88\% \text{ LTHR}$ o $\ge 82\% \text{ FC Máxima}$, erradicando falsos positivos por viento a favor o bajadas de GPS.
+3. **Recalibración Dinámica Reactiva de Vatios (`WorkoutDetailModal.tsx` & `WorkoutChart.tsx`):**
+   - Limpieza automática de vatios hardcodeados antiguos en descripciones estructuradas y recalibración en vivo de rangos (ej. `88-92% CP (308-322W)`).
+   - Sincronización automática de nuevos umbrales a Intervals.icu (`POST /api/sync-settings`) para actualizar `sportSettings`.
 
-| Zona de Ritmo | Nombre Fisiológico | % del Ritmo Umbral | Rango Calculado (Umbral 4:30/km) | Uso en el Modelo Híbrido |
+---
+
+### ⚠️ 1.2. Nuevos Cuellos de Botella Detectados para Resolver:
+1. **Natación (Bug de 10 Horas y Ausencia de CSS):**
+   - **Causa Raíz:** Las plantillas de natación (`swimWorkoutsBaseBuild.ts`, `swimWorkoutsPeakTaper.ts`) poseen sintaxis coloquial no estándar (`50m - 100m - 150m...`, `c/15s`, `(Punto muerto / 1 brazo)`). Al sincronizar con Intervals.icu, el parser se desborda y calcula hasta **10 horas** de duración.
+   - **Dato Faltante:** En el perfil del atleta no existe la métrica **CSS (Critical Swim Speed / Ritmo Umbral en seg/100m y min/100m)**, impidiendo a Intervals.icu y a Pulse calcular tiempos y zonas acuáticas reales.
+2. **Carrera a Pie (Mix Inteligente Distancia vs. Tiempo):**
+   - La regla rígida de prescribir únicamente por tiempo limitaba la efectividad en:
+     * **Series fraccionadas de pista y repeticiones:** $200\text{m}$, $400\text{m}$, $800\text{m}$, $1.000\text{m}$, $2.000\text{m}$ (donde el corredor necesita referencias métricas de cronómetro).
+     * **Tests de Control Fisiológico:** $\text{Test 5K}$, $\text{Test 3K}$, $\text{Test 1K / Cooper}$ (distancia fija para medir progreso temporal).
+     * **Fondos Largos y Rodajes Z2:** Mantener **Tiempo** (ej. 45m, 1h30m) para blindar el control de carga sin sobrecargas por kilometraje.
+
+---
+
+## 🎯 2. MATRIZ DE PRESCRIPCIÓN MULTIDEPORTE DEFINITIVA
+
+```
+                                  EVALUACIÓN DEL ATLETA POR DISCIPLINA
+                                                    │
+             ┌──────────────────┬───────────────────┴───────────────────┬──────────────────┐
+             ▼                  ▼                                       ▼                  ▼
+        🏊 NATACIÓN        🏃 CARRERA (STRYD / HÍBRIDO)            🚴 CICLISMO        🏋️ FUERZA
+      • Métrica: CSS     • Stryd: % CP (Vatios)                  • Métrica: % FTP   • Circuitos por Fases
+      • Bloques limpios  • Híbrido: % Pace (Series) / % LTHR     • Cadencia (RPM)   • Rondas / Reps / RPE
+      • Sintaxis oficial • Mix: Distancia en series, Tiempo Z2   • Tests de 20m     • Rotación Coprima
+```
+
+| Disciplina | Tipología de Sesión | Unidad Principal | Métrica Rector en Tarjeta UI | Sintaxis en Intervals.icu |
 | :--- | :--- | :--- | :--- | :--- |
-| **Z1 - Fácil** | Recuperación Activa | < 75% Pace | `5:45 - 6:30 /km` | Calentamiento y enfriamiento |
-| **Z2 - Moderado** | Fondo Aeróbico | 75 - 85% Pace | `5:00 - 5:45 /km` | Referencia de paso en fondos Z2 |
-| **Z3 - Tempo** | Tempo / Aeróbico Alto | 85 - 94% Pace | `4:35 - 5:00 /km` | Bloques a ritmo maratón |
-| **Z4 - Umbral** | Umbral de Lactato (LT) | 95 - 104% Pace | `4:20 - 4:35 /km` | **Series de Umbral (Pace rector)** |
-| **Z5 - Intervalo** | Potencia Aeróbica (VO2max) | 105 - 115% Pace | `3:55 - 4:20 /km` | **Series VO2max (Pace rector)** |
-| **Z6 - Repetición** | Capacidad Anaeróbica | > 115% Pace | `< 3:55 /km` | **Rectas y Cuestas (Pace rector)** |
+| **Natación** | Técnica / Base / CSS / Velocidad | Distancia (Metros) | Metros + Tiempo Estimado (según CSS) | `Warmup`<br>`- 300m 60% Pace`<br>`Main`<br>`- 6x`<br>`  - 100m 100% Pace`<br>`  - 15s recovery`<br>`Cooldown`<br>`- 150m 50% Pace` |
+| **Carrera (Stryd)** | Series de Pista / Calidad | Distancia (m) o Tiempo | Vatios (`275W • 98% CP`) | `- 8x 400m 98% FTP`<br>`  - 60s recovery` |
+| **Carrera (Stryd)** | Fondos / Rodajes Z2 | Tiempo (min/h) | Vatios (`200W • 75% CP`) | `- 1h15m 75% FTP` |
+| **Carrera (Híbrido)**| Series de Pista / Calidad | Distancia (m) o Tiempo | Ritmo (`4:05/km • 105% Pace`) | `- 6x 1000m 105% Pace`<br>`  - 90s recovery` |
+| **Carrera (Híbrido)**| Fondos / Rodajes Z2 | Tiempo (min/h) | Pulso (`142 bpm • 82% LTHR`) | `- 1h20m 82% LTHR` |
+| **Carrera (Ambos)** | Test de Control (5K / 3K) | Distancia Fija | Ritmo libre / Max Esfuerzo | `- 5000m Max Effort (Test 5K)` |
+| **Ciclismo** | Rodajes, SweetSpot, VO2max | Tiempo (min/h) | Vatios (`220W • 88% FTP`) | `- 3x 12m 90% FTP` |
+| **Fuerza** | Estructural, Máxima, Potencia | Ejercicios / Series | Minutos + Ejercicios + RPE | `Warmup`<br>`- 5m Movilidad`<br>`Main (3 Rondas)`<br>`- 10x Sentadillas búlgaras` |
 
 ---
 
-## 🛠️ PASO A PASO DE IMPLEMENTACIÓN
+## 🛠️ 3. PLAN DE ACCIÓN PASO A PASO (PARA FUTURA EJECUCIÓN)
 
 ```mermaid
-flowchart LR
-    P1["Paso 1: Tipos & DB (2 Modos)"] --> P2["Paso 2: Adaptador & Recalibrador"]
-    P2 --> P3["Paso 3: Zonas en Perfil & UI"]
-    P3 --> P4["Paso 4: Generadores & Sync"]
-    P4 --> P5["Paso 5: Head Coach IA"]
-    P5 --> P6["Paso 6: Set de Pruebas"]
+flowchart TD
+    P1["Paso 1: Tipos & DB (CSS Natación + Mix Carrera)"] --> P2["Paso 2: Saneamiento de Sintaxis Natación (100% Intervals)"]
+    P2 --> P3["Paso 3: Adaptador Universal & Recalibrador (Pace/HR/CSS/Power)"]
+    P3 --> P4["Paso 4: UI de Perfil & Zonas (CSS + Pace + Stryd + HR)"]
+    P4 --> P5["Paso 5: Generador Multideporte & Intervals Sync Service"]
+    P5 --> P6["Paso 6: Detección Breakthroughs Natación CSS & Head Coach"]
+    P6 --> P7["Paso 7: Validación & Test Suite (0 Errores Build)"]
 ```
 
 ---
 
-### PASO 1: Tipos y Modelo de Datos (SSOT)
-**Archivos a modificar:**
+### 🔹 PASO 1: Tipos, Modelo de Datos & SSOT
+**Archivos:**
 - `src/lib/db/types.ts`
 - `src/lib/intervals/types.ts`
 - `src/lib/validation/schemas.ts`
 
-**Acciones concretas:**
-1. Definir los dos únicos modos:
-   ```typescript
-   export type RunningTrainingMode = "POWER" | "HYBRID";
-   ```
-2. Agregar a `UserProfileData` y `AthleteProfile`:
-   - `hasRunningPowerMeter?: boolean;` (checkbox de Stryd)
-   - `runningTrainingMode?: RunningTrainingMode;` (por defecto "POWER" si tiene Stryd, o "HYBRID")
-   - `runThresholdPaceSecPerKm?: number;` (ritmo umbral en segundos, ej. 270s = 4:30/km)
-   - `runThresholdPaceStr?: string;` (ritmo umbral legible, ej. "4:30")
-3. Validación en Zod (`schemas.ts`).
+**Acciones Concretas:**
+1. Agregar soporte de **Natación CSS** a `AthleteProfile` y `UserProfileData`:
+   - `swimCssSecPer100m?: number;` (segundos por 100m, ej. `105` = 1:45/100m)
+   - `swimCssStr?: string;` (formato texto, ej. `"1:45"`)
+2. Consolidar campos de carrera con soporte mixto de distancia/tiempo y potencia/híbrido.
+3. Actualizar validación de esquemas Zod en `schemas.ts`.
 
 ---
 
-### PASO 2: Adaptador Fisiológico Universal y Motor de Recalibración
-**Archivo nuevo a crear:**
-- `src/lib/physiology/runningWorkoutAdapter.ts` (< 180 LOC)
+### 🔹 PASO 2: Saneamiento Total de Natación (`workoutDoc` 100% Intervals Compliant)
+**Archivos:**
+- `src/lib/physiology/swimWorkoutsBaseBuild.ts`
+- `src/lib/physiology/swimWorkoutsPeakTaper.ts`
+- `src/lib/physiology/swimWorkoutPool.ts`
 
-**Acciones concretas:**
-1. `resolveRunningMode(profile)`:
-   - Si `hasRunningPowerMeter === true` o `runFtp > 0` -> Retorna `"POWER"`.
-   - Si no -> Retorna `"HYBRID"`.
-2. `calculatePaceZones(thresholdPaceSec: number)`:
-   - Calcula dinámicamente las 6 zonas de ritmo (Z1 a Z6) en `min/km`.
-3. `adaptRunningWorkoutDoc(workoutDoc, discipline, isQuality, mode)`:
-   - Si `discipline !== "Carrera"` o `mode === "POWER"` -> Retorna texto intacto con `% FTP`.
-   - Si `mode === "HYBRID"`:
-     - Calidad (series, intervalos, fartlek, tempo) -> Reemplaza `% FTP` por `% Pace`.
-     - Suaves y Fondos (regenerativo, fondo Z2, tirada larga) -> Reemplaza `% FTP` por `% LTHR`.
-4. `recalculateWorkoutTarget(rawTarget, metrics)`:
-   - **Función de recalibración universal:** Toma cualquier string de target (ej. `80% CP` o `105% Pace` o `82% LTHR`) y, al recibir los nuevos valores de `runFtp`, `thresholdPaceSec` o `lthr`, calcula y formatea inmediatamente:
-     - En Potencia: `220W (80% CP)`
-     - En Híbrido (Calidad): `4:03/km (105% Pace)`
-     - En Híbrido (Fondos): `138 bpm (82% LTHR)`
+**Acciones Concretas:**
+1. Erradicar de raíz toda sintaxis informal en descripciones de nado:
+   - Reemplazar guiones múltiples (`50m - 100m - 150m...`) por bloques escalonados individuales.
+   - Reemplazar `c/15s`, `c/20s` o `c/2m desc` por `- 15s recovery` o `- 20s rest`.
+   - Reemplazar textos informales dentro de series (`(Punto muerto / 1 brazo)`) por estructura `Main / 6x / - 50m Drill / - 15s recovery`.
+2. Garantizar que la suma de pasos del entrenamiento resulte matemáticamente en la duración real de la sesión (40-55 min), eliminando el desborde a 10 horas en Intervals.icu.
 
 ---
 
-### PASO 3: Zonas por Ritmo en el Perfil y Reactividad UI
-**Archivos a modificar:**
-- `src/components/profile/AthleteZonesViewer.tsx`
-- `src/components/profile/AthleteEditProfileModal.tsx`
-- `src/components/profile/ProfilePhysiologyTab.tsx`
-- `src/components/profile/AthleteProfileHeroCard.tsx`
-- `src/components/WorkoutChart.tsx`
-- `src/components/dashboard/AthleteCalendarDayTile.tsx`
-- `src/components/dashboard/AthleteMobileWorkoutCard.tsx`
-
-**Acciones concretas:**
-1. **Zonas por Ritmo en `AthleteZonesViewer.tsx`:**
-   - Crear la columna **"Zonas de Carrera por Ritmo (Pace Zones)"** con las 6 zonas en `min/km`.
-   - Reactiva: si el atleta edita su ritmo umbral en el perfil, los rangos de Z1 a Z6 se recalculan instantáneamente.
-   - Mostrar insignias `[MODO ACTIVO]`: Zonas Stryd para potencia, o Zonas Ritmo + Zonas LTHR para híbrido.
-2. **Tarjeta de Cabecera del Atleta (`AthleteProfileHeroCard.tsx`):**
-   - Si es Potencia: Badge ⚡ `Potencia Stryd (${runFtp}W)`.
-   - Si es Híbrido: Badge ⏱️❤️ `Modo Híbrido (${paceStr}/km • ${lthr} bpm)`.
-3. **Modal de Edición y Pestaña de Fisiología:**
-   - Checkbox: `[x] Entreno con Potenciómetro de Carrera (Stryd)`.
-   - Si está desmarcado: Muestra campos para calibrar:
-     - **Ritmo Umbral (`min/km`)** (sincronizable con Intervals.icu `threshold_pace`).
-     - **FC Umbral (LTHR)** en bpm.
-   - **Efecto Inmediato:** Al hacer clic en Guardar, el estado global se actualiza y recalcula todas las sesiones del calendario sin requerir recargar la página.
-4. **Gráfico `WorkoutChart.tsx`:**
-   - Tooltips reactivos: muestra vatios calculados con el `runFtp` vigente, o min/km y bpm con el ritmo/lthr vigente.
-
----
-
-### PASO 4: Generadores de Planes, Sincronización y Recalibración
-**Archivos a modificar:**
-- `src/lib/gemini/deterministicPlanGenerator.ts`
+### 🔹 PASO 3: Adaptador Fisiológico Universal y Motor de Recalibración
+**Archivos:**
+- `src/lib/physiology/runningWorkoutAdapter.ts`
 - `src/lib/physiology/macrocycleTemplateHelpers.ts`
-- `src/lib/physiology/macrocycleTemplates.ts`
-- `src/lib/ai/knowledge/longRunPeriodization.ts`
-- `src/lib/services/intervalsSyncService.ts`
 
-**Acciones concretas:**
-1. En `macrocycleTemplateHelpers.ts`:
-   - Extender `interpolatePowerTarget` para soportar `interpolateWorkoutTarget(rawTarget, { runFtp, bikeFtp, thresholdPaceSec, lthr, mode })`.
-   - Al cambiar `runFtp`, `thresholdPace` o `lthr`, los textos descriptivos de las tarjetas se interpolan con los nuevos valores numéricos.
-2. En `deterministicPlanGenerator.ts` y `macrocycleTemplates.ts`:
-   - Incorporar `runningMode` y métricas fisiológicas para prescribir las sesiones adaptadas.
-3. En `intervalsSyncService.ts`:
-   - Despachar a Intervals.icu el `workoutDoc` recalibrado (`% FTP` para potencia; `% Pace` en series y `% LTHR` en fondos para híbrido).
+**Acciones Concretas:**
+1. Extender `interpolateWorkoutTarget(rawTarget, opts)` para dar soporte a:
+   - **Potencia Carrera / Ciclismo:** Interpolación dinámica de W y % CP / % FTP.
+   - **Híbrido Carrera:** Interpolación dinámica de `min/km (% Pace)` en series y `bpm (% LTHR)` en fondos.
+   - **Natación CSS:** Interpolación de ritmos por 100m y cálculo de tiempo estimado según el CSS del atleta.
+   - **Series por Distancia:** Soporte para targets métricos (`200m`, `400m`, `800m`, `1000m`, `5000m Test`).
 
 ---
 
-### PASO 5: Agente Head Coach & Prompts
-**Archivos a modificar:**
+### 🔹 PASO 4: Zonas en Perfil & Reactividad UI
+**Archivos:**
+- `src/components/profile/AthleteZonesTab.tsx`
+- `src/components/profile/AthleteBioProfileTab.tsx`
+- `src/components/profile/AthleteZonesViewer.tsx`
+- `src/components/WorkoutChart.tsx`
+- `src/components/modals/WorkoutDetailModal.tsx`
+
+**Acciones Concretas:**
+1. **Natación CSS en Zonas & Perfil:**
+   - Incorporar la tarjeta de **Ritmo Umbral de Natación (CSS - min/100m)** en `AthleteZonesTab.tsx`.
+   - Incorporar visualizador de las 5 Zonas Acuáticas (Z1 Aeróbico Suave a Z5 Sprint de Velocidad).
+   - Permitir editar el CSS directamente desde `AthleteBioProfileTab.tsx` o `AthleteZonesTab.tsx`.
+2. **Visualización Reactiva en `WorkoutChart.tsx`:**
+   - Soporte para pasos de distancia en natación y series de running, mostrando ritmos calculados y descansos claros en el gráfico.
+
+---
+
+### 🔹 PASO 5: Generador Multideporte & Intervals Sync Service
+**Archivos:**
+- `src/lib/gemini/deterministicPlanGenerator.ts`
+- `src/lib/physiology/macrocycleTemplates.ts`
+- `src/lib/services/intervalsSyncService.ts`
+- `src/lib/intervals/client.ts`
+
+**Acciones Concretas:**
+1. En `intervalsSyncService.ts`: Despachar las descripciones de natación saneadas con `type: "Swim"` y descansos reconocibles por el parser de Intervals.icu.
+2. En `client.ts`: Extraer automáticamente `threshold_pace` del `sportSettings` de tipo `"Swim"` al autenticarse o sincronizar con Intervals.icu.
+
+---
+
+### 🔹 PASO 6: Detección de Breakthroughs en Natación CSS & Head Coach
+**Archivos:**
+- `src/lib/physiology/BreakthroughDetectionService.ts`
+- `src/lib/physiology/SwimCssDetectionService.ts` (nuevo módulo atómico < 150 LOC)
 - `src/lib/ai/prompts.ts`
 - `src/lib/ai/headcoach/chatContext.ts`
 
-**Acciones concretas:**
-1. Inyectar en el prompt del Head Coach:
-   - Si el atleta es `POWER`: Prescribir y evaluar exclusivamente en vatios Stryd (% CP).
-   - Si el atleta es `HYBRID`: Prescribir series por Ritmo (`min/km`), y fondos por Frecuencia Cardíaca (`bpm` y `% LTHR`).
-   - El Head Coach reconoce las recalibraciones recientes de ritmo, pulso o potencia para justificar sus recomendaciones.
+**Acciones Concretas:**
+1. Crear `SwimCssDetectionService.ts` para detectar mejoras en el ritmo CSS a partir de actividades de natación en piscina (ej. tests 400m/200m o series continuas a ritmo alto).
+2. Conectar el detector al orquestador `BreakthroughDetectionService.ts` para generar tarjetas de calibración de CSS en `AthleteZonesTab.tsx`.
+3. Inyectar el CSS del atleta en la memoria y prompt del Head Coach IA.
 
 ---
 
-### PASO 6: Set de Pruebas & Validación Obligatoria
-1. **Tipado:** `./node_modules/.bin/tsc --noEmit` (Código 0).
-2. **Compilación de Producción:** `npm run build` (Código 0).
-3. **Auditoría de Invarianza Stryd:** Verificar que un atleta con potenciómetro activo no experimenta ningún cambio en vatios ni sintaxis.
-4. **Auditoría de Recalibración Dinámica en Vivo:**
-   - Test: Cambiar `runFtp` de 250 a 280W -> Verificar que los vatios de las tarjetas de carrera se incrementan proporcionalmente.
-   - Test: Cambiar Ritmo Umbral de 4:30 a 4:15/km -> Verificar que las series en modo Híbrido se recalculan a ritmos más rápidos y las Zonas de Ritmo se actualizan.
-   - Test: Cambiar LTHR de 165 a 170 bpm -> Verificar que los fondos en modo Híbrido se recalculan a pulsaciones más altas.
+### 🔹 PASO 7: Set de Pruebas & Verificación Obligatoria
+1. **Tipado Estricto:** `npx tsc --noEmit` (Código 0).
+2. **Build de Producción:** `npm run build` (Código 0).
+3. **Auditoría de Invarianza Stryd/Ciclismo:** Cero regresiones en atletas de potencia.
+4. **Auditoría de Natación Intervals:** Verificación de que los eventos de natación sincronizan con tiempo exacto (ej. 45-50 min) y cero desbordes a 10 horas.
+5. **Auditoría de Modularidad:** Todos los archivos modificados o creados estrictamente $< 350$ LOC.
 
 ---
 
-## 🚀 CONFIRMACIÓN PARA EJECUTAR
+## 🛑 4. ESPERA DE CONFIRMACIÓN
 
-El plan ahora incorpora formalmente el **Motor de Recalibración Dinámica Automática** para Potencia, Ritmo y Corazón. Si estás de acuerdo, responde **"Procede"** o pulsa **Proceed** y arrancamos inmediatamente con el **Paso 1**.
+El plan maestro se encuentra completamente actualizado y alineado con los últimos cambios y la documentación del sistema.
+**A la espera de tu aprobación explícita ("Procede" / "OK") para iniciar la ejecución del Paso 1.**

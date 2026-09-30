@@ -5,7 +5,7 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { athleteId, apiKey, uid, email, runFtp, bikeFtp, weightKg, birthDate, gender, lthr, maxHR, restingHR } = body;
+    const { athleteId, apiKey, uid, email, runFtp, bikeFtp, swimCssSecPer100m, weightKg, birthDate, gender, lthr, maxHR, restingHR } = body;
 
     const { athleteId: effId, apiKey: effKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
     if (!effKey || !effId) {
@@ -15,11 +15,12 @@ export async function POST(req: NextRequest) {
     const client = new IntervalsClient(effId, effKey);
     const syncResults: Record<string, any> = {};
 
-    // 1. Sincronizar FTP de carrera (Stryd) y ciclismo en sport-settings
+    // 1. Sincronizar FTP de carrera, ciclismo y CSS de natación en sport-settings
     try {
       const sportSettings = await client.getSportSettings();
       const runSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /run/i.test(t)) || /run/i.test(String(s.id)));
       const rideSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /ride|cycling|bike/i.test(t)) || /ride|cycling|bike/i.test(String(s.id)));
+      const swimSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id)));
 
       if (runSetting?.id && (runFtp || lthr || maxHR)) {
         const patch: Record<string, any> = { ...runSetting };
@@ -36,6 +37,16 @@ export async function POST(req: NextRequest) {
         if (maxHR) patch.max_hr = Number(maxHR);
         await client.updateSportSettings(rideSetting.id, patch);
         if (bikeFtp) syncResults.bikeFtp = `${bikeFtp}W`;
+      }
+      if (swimSetting?.id && (swimCssSecPer100m || lthr || maxHR)) {
+        const patch: Record<string, any> = { ...swimSetting };
+        if (swimCssSecPer100m && Number(swimCssSecPer100m) > 0) {
+          patch.threshold_pace = Number((100 / Number(swimCssSecPer100m)).toFixed(4));
+        }
+        if (lthr) patch.lthr = Number(lthr);
+        if (maxHR) patch.max_hr = Number(maxHR);
+        await client.updateSportSettings(swimSetting.id, patch);
+        if (swimCssSecPer100m) syncResults.swimCss = `${swimCssSecPer100m}s/100m`;
       }
     } catch (sErr: any) {
       syncResults.sportWarning = sErr?.message;

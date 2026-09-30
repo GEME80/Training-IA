@@ -20,6 +20,9 @@ export interface AthleteProfile {
   threshold_pace?: number; // m/s en Intervals.icu
   runThresholdPaceSecPerKm?: number; // seg/km
   runThresholdPaceStr?: string; // min/km e.g. "4:30"
+  swimCssSecPer100m?: number; // seg/100m
+  swimCssStr?: string; // min/100m e.g. "1:45"
+  swim_threshold_pace?: number; // m/s en Intervals.icu
   run_ftp?: number; // Stryd Potencia Crítica (CP / Run FTP)
   bike_ftp?: number; // FTP Ciclismo
   icu_ftp?: number; // FTP General Intervals
@@ -52,6 +55,7 @@ export const AVAILABLE_METRIC_INDICATORS: MetricIndicatorConfig[] = [
   { id: "rampRate", name: "Ritmo de Progresión", category: "PERFORMANCE", icon: "📐", unit: "/sem", description: "Incremento semanal de carga de forma segura y sin riesgo de lesión", defaultVisible: true },
   { id: "strydCp", name: "Potencia de Carrera (Run)", category: "THRESHOLDS", icon: "👟", unit: "Watts", description: "Vatios umbral para correr a ritmo exigente y sostenible", defaultVisible: true },
   { id: "runPace", name: "Ritmo Umbral (Pace)", category: "THRESHOLDS", icon: "👟⏱️", unit: "min/km", description: "Ritmo umbral de carrera sostenible en series e intervalos", defaultVisible: false },
+  { id: "swimCss", name: "Ritmo Umbral Natación (CSS)", category: "THRESHOLDS", icon: "🏊⏱️", unit: "min/100m", description: "Velocidad crítica de nado (CSS) sostenible en series e intervalos", defaultVisible: false },
   { id: "bikeFtp", name: "Potencia en Bici (FTP)", category: "THRESHOLDS", icon: "🚴", unit: "Watts", description: "Tus vatios umbral pedaleando a ritmo exigente durante 1 hora", defaultVisible: true },
   { id: "hrv", name: "Recuperación (HRV)", category: "RECOVERY", icon: "💓", unit: "ms", description: "Variabilidad cardíaca: qué tan recuperado está tu sistema nervioso", defaultVisible: false },
   { id: "restingHr", name: "Pulso en Reposo", category: "RECOVERY", icon: "🫀", unit: "bpm", description: "Pulsaciones al despertar; si sube, puede indicar fatiga o inicio de enfermedad", defaultVisible: false },

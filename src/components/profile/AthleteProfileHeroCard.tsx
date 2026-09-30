@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer, Zap } from "lucide-react";
+import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer, Zap, Waves } from "lucide-react";
 import { RunningTrainingMode } from "@/lib/db/types";
-import { resolveRunningMode, formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { resolveRunningMode, formatPace, parsePaceToSeconds, formatSwimPace, parseSwimPaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface AthleteProfileHeroCardProps {
   athleteName: string;
@@ -22,10 +22,12 @@ interface AthleteProfileHeroCardProps {
   hasRunningPowerMeter?: boolean;
   runThresholdPaceSecPerKm?: number;
   runThresholdPaceStr?: string;
+  swimCssSecPer100m?: number;
+  swimCssStr?: string;
   onOpenEditModal?: () => void;
   onNavigateToProfile?: () => void;
   onToggleMode?: (newMode: RunningTrainingMode) => void;
-  onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR") => void;
+  onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS") => void;
 }
 
 export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
@@ -45,6 +47,8 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   hasRunningPowerMeter,
   runThresholdPaceSecPerKm,
   runThresholdPaceStr,
+  swimCssSecPer100m,
+  swimCssStr,
   onOpenEditModal,
   onNavigateToProfile,
   onToggleMode,
@@ -58,6 +62,9 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
 
   const effPaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr);
   const displayPace = runThresholdPaceStr || (effPaceSec > 0 ? `${formatPace(effPaceSec)}/km` : "— /km");
+
+  const effSwimCssSec = swimCssSecPer100m || parseSwimPaceToSeconds(swimCssStr);
+  const displaySwimCss = swimCssStr || (effSwimCssSec > 0 ? `${formatSwimPace(effSwimCssSec)}/100m` : "— /100m");
 
   const relativeRunPower = weightKg && weightKg > 0 && runFtp && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "—";
   const relativeBikePower = weightKg && weightKg > 0 && bikeFtp && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "—";
@@ -151,8 +158,8 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
         </div>
       </div>
 
-      {/* KPI Strip: 5 Umbrales Fisiológicos */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+      {/* KPI Strip: Umbrales Fisiológicos Multideporte */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1">
         {/* 1. Potencia Carrera (CP) */}
         <div
           onClick={() => onEditThreshold?.("RUN_FTP")}
@@ -168,12 +175,12 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Footprints className="h-3.5 w-3.5 text-amber-500" />
-              Potencia Carrera
+              Potencia Run
             </span>
             <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
               {runFtp && runFtp > 0 ? (
                 <>
                   {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
@@ -182,9 +189,9 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— W</span>
               )}
             </span>
-            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition flex items-center gap-1">
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition flex items-center gap-1">
               <Edit3 className="h-2.5 w-2.5" />
-              <span>Ajustar CP</span>
+              <span>Ajustar</span>
             </span>
           </div>
         </div>
@@ -207,16 +214,16 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               Ritmo Umbral
             </span>
             <span className="text-[10px] font-mono text-emerald-600 font-bold">
-              {activeMode === "HYBRID" ? "Pace Calidad" : "Daniels"}
+              {activeMode === "HYBRID" ? "Pace Run" : "Daniels"}
             </span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
               {displayPace}
             </span>
-            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition flex items-center gap-1">
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition flex items-center gap-1">
               <Edit3 className="h-2.5 w-2.5" />
-              <span>Ajustar Pace</span>
+              <span>Ajustar</span>
             </span>
           </div>
         </div>
@@ -237,7 +244,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
             <span className="text-[10px] font-mono text-sky-600 font-bold">⚡ {relativeBikePower} W/kg</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
               {bikeFtp && bikeFtp > 0 ? (
                 <>
                   {bikeFtp} <span className="text-xs text-slate-400 font-sans">W</span>
@@ -246,14 +253,40 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— W</span>
               )}
             </span>
-            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 group-hover:bg-sky-500 group-hover:text-white transition flex items-center gap-1">
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 group-hover:bg-sky-500 group-hover:text-white transition flex items-center gap-1">
               <Edit3 className="h-2.5 w-2.5" />
-              <span>Ajustar FTP</span>
+              <span>Ajustar</span>
             </span>
           </div>
         </div>
 
-        {/* 4. LTHR FC Umbral */}
+        {/* 4. Natación CSS */}
+        <div
+          onClick={() => onEditThreshold?.("SWIM_CSS")}
+          role="button"
+          tabIndex={0}
+          title="Haz clic para ajustar el Ritmo CSS de Natación"
+          className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 dark:bg-cyan-950/20 p-3 flex flex-col justify-between cursor-pointer group hover:border-cyan-400 hover:ring-2 hover:ring-cyan-400/20 hover:scale-[1.01] transition-all select-none"
+        >
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+            <span className="flex items-center gap-1">
+              <Waves className="h-3.5 w-3.5 text-cyan-500" />
+              Natación CSS
+            </span>
+            <span className="text-[10px] font-mono text-cyan-600 font-bold">100m</span>
+          </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
+              {displaySwimCss}
+            </span>
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-white transition flex items-center gap-1">
+              <Edit3 className="h-2.5 w-2.5" />
+              <span>Ajustar</span>
+            </span>
+          </div>
+        </div>
+
+        {/* 5. LTHR FC Umbral */}
         <div
           onClick={() => onEditThreshold?.("LTHR")}
           role="button"
@@ -264,12 +297,12 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <HeartPulse className="h-3.5 w-3.5 text-rose-500" />
-              FC Umbral (LTHR)
+              FC Umbral
             </span>
             <span className="text-[10px] font-mono text-rose-600 font-bold">{maxHR && maxHR > 0 ? `Máx ${maxHR}` : "Sin Máx"}</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
               {lthr && lthr > 0 ? (
                 <>
                   {lthr} <span className="text-xs text-slate-400 font-sans">bpm</span>
@@ -278,24 +311,24 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— bpm</span>
               )}
             </span>
-            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-white transition flex items-center gap-1">
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-white transition flex items-center gap-1">
               <Edit3 className="h-2.5 w-2.5" />
-              <span>Ajustar FC</span>
+              <span>Ajustar</span>
             </span>
           </div>
         </div>
 
-        {/* 4. FC Reposo */}
+        {/* 6. FC Reposo */}
         <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Moon className="h-3.5 w-3.5 text-indigo-500" />
-              FC Reposo (RHR)
+              FC Reposo
             </span>
             <span className="text-[10px] font-mono text-indigo-600 font-bold">Matutino</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+            <span className="text-base font-black font-mono text-slate-900 dark:text-white">
               {restingHR && restingHR > 0 ? (
                 <>
                   {restingHR} <span className="text-xs text-slate-400 font-sans">bpm</span>

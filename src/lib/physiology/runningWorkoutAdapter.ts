@@ -12,9 +12,20 @@ export interface RunningProfileMetrics {
   runThresholdPaceSecPerKm?: number;
   runThresholdPaceStr?: string;
   threshold_pace?: number; // m/s en Intervals.icu
+  swimCssSecPer100m?: number;
+  swimCssStr?: string;
+  swim_threshold_pace?: number;
 }
 
 export interface PaceZoneItem {
+  id: string;
+  name: string;
+  nameColor: string;
+  pct: string;
+  range: string;
+}
+
+export interface SwimZoneItem {
   id: string;
   name: string;
   nameColor: string;
@@ -39,6 +50,56 @@ export function resolveRunningMode(profile?: RunningProfileMetrics | null): Runn
     return "POWER";
   }
   return "HYBRID";
+}
+
+/**
+ * Convierte segundos por 100m a string de ritmo "M:SS"
+ */
+export function formatSwimPace(secPer100m?: number): string {
+  if (!secPer100m || secPer100m <= 0 || !Number.isFinite(secPer100m)) return "—";
+  const mins = Math.floor(secPer100m / 60);
+  const secs = Math.round(secPer100m % 60);
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+/**
+ * Parsea string de ritmo natación "1:45" o "1:45/100m" a segundos por 100m
+ */
+export function parseSwimPaceToSeconds(paceStr?: string): number {
+  if (!paceStr) return 105; // 1:45 por defecto
+  const clean = paceStr.replace("/100m", "").replace("/100", "").trim();
+  const parts = clean.split(":");
+  if (parts.length === 2) {
+    const mins = parseInt(parts[0], 10) || 0;
+    const secs = parseInt(parts[1], 10) || 0;
+    return mins * 60 + secs;
+  }
+  const numeric = parseFloat(clean);
+  return !Number.isNaN(numeric) && numeric > 0 ? Math.round(numeric * 60) : 105;
+}
+
+/**
+ * Calcula dinámicamente las 5 zonas de natación basadas en CSS (Jan Olbrecht / Joe Friel)
+ */
+export function calculateSwimCssZones(cssSec: number = 105): SwimZoneItem[] {
+  const css = cssSec > 0 ? cssSec : 105;
+  const z1Start = Math.round(css / 0.65);
+  const z1End = Math.round(css / 0.75);
+  const z2Start = Math.round(css / 0.75);
+  const z2End = Math.round(css / 0.85);
+  const z3Start = Math.round(css / 0.85);
+  const z3End = Math.round(css / 0.94);
+  const z4Start = Math.round(css / 0.95);
+  const z4End = Math.round(css / 1.05);
+  const z5End = Math.round(css / 1.15);
+
+  return [
+    { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% CSS", range: `${formatSwimPace(z1End)} - ${formatSwimPace(z1Start)} /100m` },
+    { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "75 - 85% CSS", range: `${formatSwimPace(z2End)} - ${formatSwimPace(z2Start)} /100m` },
+    { id: "Z3", name: "Tempo / Crucero", nameColor: "text-teal-600 dark:text-teal-400", pct: "85 - 94% CSS", range: `${formatSwimPace(z3End)} - ${formatSwimPace(z3Start)} /100m` },
+    { id: "Z4", name: "Umbral CSS", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "95 - 105% CSS", range: `${formatSwimPace(z4End)} - ${formatSwimPace(z4Start)} /100m` },
+    { id: "Z5", name: "Sprint / VO2max", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 105% CSS", range: `< ${formatSwimPace(z5End)} /100m` },
+  ];
 }
 
 /**
@@ -151,12 +212,13 @@ export function interpolateWorkoutTarget(
     runFtp?: number;
     bikeFtp?: number;
     thresholdPaceSec?: number;
+    swimCssSec?: number;
     lthr?: number;
     isQuality?: boolean;
   } = {}
 ): string {
   if (!rawTarget) return rawTarget;
-  const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, lthr = 165, isQuality = false } = opts;
+  const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, swimCssSec = 105, lthr = 165, isQuality = false } = opts;
 
   // 1. Ciclismo: 100% vatios FTP
   if (discipline === "Ciclismo") {
@@ -168,6 +230,23 @@ export function interpolateWorkoutTarget(
         return `${Math.round(bikeFtp * (p1 / 100))}-${Math.round(bikeFtp * (p2 / 100))}W (${p1}-${p2}% FTP)`;
       })
       .replace(/(?<![(-])\b(\d+)\s*%\s*FTP/gi, (_, p) => `${Math.round(bikeFtp * (parseInt(p, 10) / 100))}W (${p}% FTP)`);
+  }
+
+  // 2. Natación: Ritmo CSS por 100m
+  if (discipline === "Natacion") {
+    const css = swimCssSec > 0 ? swimCssSec : 105;
+    return rawTarget.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CSS|Pace)|(\d+)\s*%\s*(?:CSS|Pace))/gi, (_, r1, r2, s1) => {
+      if (r1 && r2) {
+        const p1 = parseInt(r1, 10);
+        const p2 = parseInt(r2, 10);
+        const sec1 = Math.round(css / (p1 / 100));
+        const sec2 = Math.round(css / (p2 / 100));
+        return `${formatSwimPace(Math.max(sec1, sec2))}-${formatSwimPace(Math.min(sec1, sec2))}/100m (${p1}-${p2}% CSS)`;
+      }
+      const p = parseInt(s1, 10);
+      const sec = Math.round(css / (p / 100));
+      return `${formatSwimPace(sec)}/100m (${p}% CSS)`;
+    });
   }
 
   if (discipline !== "Carrera") return rawTarget;

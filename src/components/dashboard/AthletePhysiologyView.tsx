@@ -5,14 +5,14 @@ import { User, Check, Zap, CalendarDays, Radio } from "lucide-react";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, DisciplineType, normalizeDisciplines } from "@/lib/gemini/engine";
 import { RunningTrainingMode } from "@/lib/db/types";
 import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
-import { AthleteProfileHeroCard } from "../profile/AthleteProfileHeroCard";
-import { AthleteZonesViewer } from "../profile/AthleteZonesViewer";
-import { AthleteEditProfileModal, AthleteProfileFormData } from "../profile/AthleteEditProfileModal";
+import { AthleteZonesTab } from "../profile/AthleteZonesTab";
+import { AthleteBioProfileTab } from "../profile/AthleteBioProfileTab";
+import { AthleteIntervalsTab } from "../profile/AthleteIntervalsTab";
 import { ProfileAvailabilityTab } from "../profile/ProfileAvailabilityTab";
-import { AthleteIntervalsConnectionCard } from "../profile/AthleteIntervalsConnectionCard";
-import { AthleteCollapsibleSection } from "../profile/AthleteCollapsibleSection";
 import { QuickThresholdModal, EditableThresholdMetric } from "../profile/QuickThresholdModal";
 import { AthletePhysiologyViewProps } from "./AthletePhysiologyView.types";
+
+export type AthleteViewTab = "zones" | "profile" | "availability" | "intervals";
 
 export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   athleteId: initialAthleteId = "", athleteName: initialAthleteName = "Atleta", email = "",
@@ -24,7 +24,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   suggestedBikeFtp, suggestedRunPace, onApplySuggestion, onDismissSuggestion,
   onTestConnection, onSave, onUpdateAvailability,
 }) => {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<AthleteViewTab>("zones");
   const [quickEditMetric, setQuickEditMetric] = useState<EditableThresholdMetric | null>(null);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
   const [athleteName, setAthleteName] = useState<string>(initialAthleteName);
@@ -80,22 +80,20 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const handleToggleDayDiscipline = (dayKey: string, disc: DisciplineType) => {
     const current = normalizeDisciplines(weeklyAvailability[dayKey]);
     let updated: DisciplineType[] = [];
-    if (disc === "Descanso") {
-      updated = ["Descanso"];
-    } else {
+    if (disc === "Descanso") updated = ["Descanso"];
+    else {
       const withoutRest = current.filter((d: DisciplineType) => d !== "Descanso");
       updated = withoutRest.includes(disc) ? withoutRest.filter((d) => d !== disc) : [...withoutRest, disc];
       if (updated.length === 0) updated = ["Descanso"];
     }
-    const newMap: WeeklyAvailabilityMap = { ...weeklyAvailability, [dayKey]: updated };
-    setWeeklyAvailability(newMap);
+    setWeeklyAvailability({ ...weeklyAvailability, [dayKey]: updated });
   };
 
   const handleSaveAvailability = async (mapToSave: WeeklyAvailabilityMap) => {
     setWeeklyAvailability(mapToSave);
     if (onUpdateAvailability) await onUpdateAvailability(mapToSave);
     else await onSave({ weeklyAvailability: mapToSave });
-    showNotification("Matriz semanal guardada con éxito en la base de datos.");
+    showNotification("Matriz semanal guardada con éxito.");
   };
 
   const handleResetCanonical = async () => {
@@ -106,29 +104,35 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     setWeeklyAvailability(canonical);
     if (onUpdateAvailability) await onUpdateAvailability(canonical);
     else await onSave({ weeklyAvailability: canonical });
-    showNotification("Matriz restablecida a la configuración canónica recomendada.");
+    showNotification("Matriz restablecida a la configuración recomendada.");
   };
 
-  const handleSaveModalData = async (data: AthleteProfileFormData) => {
-    if (data.displayName) setAthleteName(data.displayName);
-    if (data.runFtp !== undefined) setRunFtp(data.runFtp);
-    if (data.bikeFtp !== undefined) setBikeFtp(data.bikeFtp);
-    if (data.weightKg !== undefined) setWeightKg(data.weightKg);
-    if (data.heightCm !== undefined) setHeightCm(data.heightCm);
-    if (data.birthDate) setBirthDate(data.birthDate);
-    if (data.gender) setGender(data.gender);
-    if (data.lthr !== undefined) setLthr(data.lthr);
-    if (data.restingHR !== undefined) setRestingHR(data.restingHR);
-    if (data.maxHR !== undefined) setMaxHR(data.maxHR);
-    if (data.hasRunningPowerMeter !== undefined) setHasRunningPowerMeter(data.hasRunningPowerMeter);
-    if (data.runningTrainingMode) setRunningTrainingMode(data.runningTrainingMode);
-    if (data.runThresholdPaceStr) setRunThresholdPaceStr(data.runThresholdPaceStr);
-    if (data.runThresholdPaceSecPerKm !== undefined) setRunThresholdPaceSecPerKm(data.runThresholdPaceSecPerKm);
-    if (data.intervalsAthleteId) setAthleteId(data.intervalsAthleteId);
-    if (data.apiKey) setApiKey(data.apiKey);
+  const handleSaveBio = async (bioData: { displayName: string; birthDate?: string; gender?: "M" | "F" | "OTHER"; weightKg?: number; heightCm?: number }) => {
+    setAthleteName(bioData.displayName);
+    if (bioData.birthDate !== undefined) setBirthDate(bioData.birthDate);
+    if (bioData.gender !== undefined) setGender(bioData.gender);
+    if (bioData.weightKg !== undefined) setWeightKg(bioData.weightKg);
+    if (bioData.heightCm !== undefined) setHeightCm(bioData.heightCm);
 
-    await onSave({ ...data, weeklyAvailability });
-    showNotification("Perfil y umbrales guardados con éxito");
+    await onSave({
+      displayName: bioData.displayName, birthDate: bioData.birthDate, gender: bioData.gender,
+      weightKg: bioData.weightKg, heightCm: bioData.heightCm,
+      runFtp, bikeFtp, lthr, restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, intervalsAthleteId: athleteId, apiKey, weeklyAvailability,
+    });
+    showNotification("Perfil antropométrico guardado y sincronizado.");
+  };
+
+  const handleSaveIntervals = async (creds: { athleteId: string; apiKey: string }) => {
+    setAthleteId(creds.athleteId);
+    setApiKey(creds.apiKey);
+    await onSave({
+      intervalsAthleteId: creds.athleteId, apiKey: creds.apiKey,
+      displayName: athleteName, birthDate, gender, weightKg, heightCm,
+      runFtp, bikeFtp, lthr, restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, weeklyAvailability,
+    });
+    showNotification("Credenciales de Intervals.icu guardadas.");
   };
 
   const handleToggleRunningMode = async (newMode: RunningTrainingMode) => {
@@ -136,31 +140,14 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     setRunningTrainingMode(newMode);
     setHasRunningPowerMeter(hasPower);
     await onSave({
-      runningTrainingMode: newMode,
-      hasRunningPowerMeter: hasPower,
-      runFtp,
-      bikeFtp,
-      weightKg,
-      heightCm,
-      birthDate,
-      gender,
-      lthr,
-      restingHR,
-      maxHR,
-      runThresholdPaceStr,
-      runThresholdPaceSecPerKm,
-      displayName: athleteName,
-      weeklyAvailability,
+      runningTrainingMode: newMode, hasRunningPowerMeter: hasPower,
+      runFtp, bikeFtp, weightKg, heightCm, birthDate, gender, lthr, restingHR, maxHR,
+      runThresholdPaceStr, runThresholdPaceSecPerKm, displayName: athleteName, weeklyAvailability,
     });
-    showNotification(
-      `Modo de carrera cambiado a: ${newMode === "POWER" ? "⚡ Potencia Carrera" : "⏱️❤️ Híbrido (Ritmo + FC)"}`
-    );
+    showNotification(`Modo cambiado a: ${newMode === "POWER" ? "Potencia Carrera" : "Híbrido (Ritmo + FC)"}`);
   };
 
-  const handleUpdateThreshold = async (
-    metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR",
-    val: string | number
-  ) => {
+  const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR", val: string | number) => {
     let pSec = runThresholdPaceSecPerKm;
     let pStr = runThresholdPaceStr;
     let rFtp = runFtp;
@@ -184,27 +171,17 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     }
 
     await onSave({
-      runFtp: rFtp,
-      bikeFtp: bFtp,
-      lthr: hLthr,
-      restingHR,
-      maxHR,
-      weightKg,
-      heightCm,
-      birthDate,
-      gender,
-      displayName: athleteName,
-      runThresholdPaceStr: pStr,
-      runThresholdPaceSecPerKm: pSec,
-      hasRunningPowerMeter,
-      runningTrainingMode,
-      weeklyAvailability,
+      runFtp: rFtp, bikeFtp: bFtp, lthr: hLthr, restingHR, maxHR,
+      weightKg, heightCm, birthDate, gender, displayName: athleteName,
+      runThresholdPaceStr: pStr, runThresholdPaceSecPerKm: pSec,
+      hasRunningPowerMeter, runningTrainingMode, weeklyAvailability,
     });
     showNotification("Umbral actualizado y sincronizado.");
   };
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
+      {/* 1. Header Principal */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
           <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -212,7 +189,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
             Perfil del Atleta & Fisiología
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Parámetros antropométricos, potencia de carrera (CP), FTP de ciclismo, ritmo umbral y zonas.
+            Control de umbrales, biometría, matriz de disponibilidad y sincronización Intervals.icu.
           </p>
         </div>
         {successMessage && (
@@ -223,111 +200,109 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         )}
       </div>
 
-      {/* 1. HERO ATHLETE CARD */}
-      <AthleteProfileHeroCard
-        athleteName={athleteName}
-        email={email}
-        calculatedAge={calculatedAge}
-        birthDate={birthDate}
-        gender={gender}
-        weightKg={weightKg}
-        heightCm={heightCm}
-        runFtp={runFtp}
-        bikeFtp={bikeFtp}
-        lthr={lthr}
-        restingHR={restingHR}
-        maxHR={maxHR}
-        hasRunningPowerMeter={hasRunningPowerMeter}
-        runningTrainingMode={runningTrainingMode}
-        runThresholdPaceStr={runThresholdPaceStr}
-        runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
-        onOpenEditModal={() => setIsEditModalOpen(true)}
-        onToggleMode={handleToggleRunningMode}
-        onEditThreshold={(m) => setQuickEditMetric(m)}
-      />
+      {/* 2. Barra de Pestañas */}
+      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveTab("zones")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+            activeTab === "zones"
+              ? "bg-amber-500 text-slate-950 font-black shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          }`}
+        >
+          <Zap className="h-4 w-4" />
+          <span>Zonas & Umbrales</span>
+        </button>
 
-      {/* 2. VISOR MULTI-DEPORTE DE ZONAS */}
-      <AthleteCollapsibleSection
-        id="section-zones"
-        title="Zonas de Entrenamiento & Ritmos"
-        subtitle={hasRunningPowerMeter ? "Potencia de Carrera (CP), Ciclismo FTP y Frecuencia Cardíaca (LTHR)" : "Ritmo Umbral (Z1-Z6), Ciclismo FTP y Frecuencia Cardíaca (LTHR)"}
-        icon={Zap}
-        iconColor="text-amber-500"
-        defaultOpenMobile={true}
-        summaryBadge={
-          <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
-            {hasRunningPowerMeter ? `${runFtp}W CP` : `${runThresholdPaceStr}/km`} • {bikeFtp > 0 ? `${bikeFtp}W FTP` : "Sin FTP"}
-          </span>
-        }
-      >
-        <AthleteZonesViewer
-          runFtp={runFtp}
-          bikeFtp={bikeFtp}
-          lthr={lthr || 0}
-          maxHR={maxHR || 0}
-          hasRunningPowerMeter={hasRunningPowerMeter}
-          runningTrainingMode={runningTrainingMode}
-          runThresholdPaceStr={runThresholdPaceStr}
-          runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
-          onUpdateThreshold={handleUpdateThreshold}
-          suggestedBikeFtp={suggestedBikeFtp}
-          suggestedRunPace={suggestedRunPace}
-          onApplySuggestion={onApplySuggestion || (async (sug) => {
-            if (sug.metric === "BIKE_FTP") await handleUpdateThreshold("BIKE_FTP", Number(sug.suggestedValue));
-            else if (sug.metric === "RUN_PACE") await handleUpdateThreshold("RUN_PACE", String(sug.suggestedValue));
-          })}
+        <button
+          type="button"
+          onClick={() => setActiveTab("profile")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+            activeTab === "profile"
+              ? "bg-sky-500 text-white font-black shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          }`}
+        >
+          <User className="h-4 w-4" />
+          <span>Perfil & Biometría</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("availability")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+            activeTab === "availability"
+              ? "bg-emerald-500 text-white font-black shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          }`}
+        >
+          <CalendarDays className="h-4 w-4" />
+          <span>Disponibilidad</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("intervals")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+            activeTab === "intervals"
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          }`}
+        >
+          <Radio className="h-4 w-4 text-sky-500" />
+          <span>Conexión Intervals</span>
+          {isLiveConnected || !!apiKey ? (
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+          )}
+        </button>
+      </div>
+
+      {/* 3. Contenido de Pestaña */}
+      {activeTab === "zones" && (
+        <AthleteZonesTab
+          athleteName={athleteName} email={email} calculatedAge={calculatedAge} birthDate={birthDate}
+          gender={gender} weightKg={weightKg} heightCm={heightCm} runFtp={runFtp} bikeFtp={bikeFtp}
+          lthr={lthr} restingHR={restingHR} maxHR={maxHR} hasRunningPowerMeter={hasRunningPowerMeter}
+          runningTrainingMode={runningTrainingMode} runThresholdPaceStr={runThresholdPaceStr}
+          runThresholdPaceSecPerKm={runThresholdPaceSecPerKm} suggestedBikeFtp={suggestedBikeFtp}
+          suggestedRunPace={suggestedRunPace} onNavigateToProfile={() => setActiveTab("profile")}
+          onToggleMode={handleToggleRunningMode} onEditThreshold={(m) => setQuickEditMetric(m)}
+          onUpdateThreshold={handleUpdateThreshold} onApplySuggestion={onApplySuggestion}
           onDismissSuggestion={onDismissSuggestion}
         />
-      </AthleteCollapsibleSection>
+      )}
 
-      {/* 3. MATRIZ SEMANAL */}
-      <AthleteCollapsibleSection
-        id="section-availability"
-        title="Matriz Semanal de Disponibilidad"
-        subtitle="Distribución de días de carrera, rodillo, gimnasio y descansos fisiológicos"
-        icon={CalendarDays}
-        iconColor="text-emerald-500"
-        summaryBadge={<span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">7 días</span>}
-      >
-        <ProfileAvailabilityTab weeklyAvailability={weeklyAvailability} onToggleDayDiscipline={handleToggleDayDiscipline} onSaveAvailability={handleSaveAvailability} onResetToCanonical={handleResetCanonical} />
-      </AthleteCollapsibleSection>
+      {activeTab === "profile" && (
+        <div className="animate-fadeIn">
+          <AthleteBioProfileTab
+            athleteName={athleteName} email={email} birthDate={birthDate} gender={gender}
+            weightKg={weightKg} heightCm={heightCm} onSaveBio={handleSaveBio}
+          />
+        </div>
+      )}
 
-      {/* 4. CONEXIÓN INTERVALS */}
-      <AthleteCollapsibleSection
-        id="section-intervals"
-        title="Conexión Intervals"
-        subtitle="Telemetría en vivo, credenciales AES-256 y sincronización deportiva"
-        icon={Radio}
-        iconColor="text-sky-500"
-        summaryBadge={
-          isLiveConnected || !!apiKey ? (
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
-              🟢 ACTIVA{athleteId ? ` (${athleteId})` : ""}
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 font-mono text-[10px] font-bold border border-rose-500/20">
-              🔴 DESCONECTADO
-            </span>
-          )
-        }
-      >
-        <AthleteIntervalsConnectionCard athleteId={athleteId} hasApiKey={isLiveConnected || !!apiKey} onOpenEditModal={() => setIsEditModalOpen(true)} onTestConnection={onTestConnection} />
-      </AthleteCollapsibleSection>
+      {activeTab === "availability" && (
+        <div className="animate-fadeIn">
+          <ProfileAvailabilityTab
+            weeklyAvailability={weeklyAvailability} onToggleDayDiscipline={handleToggleDayDiscipline}
+            onSaveAvailability={handleSaveAvailability} onResetToCanonical={handleResetCanonical}
+          />
+        </div>
+      )}
 
-      {/* 5. MODAL DE EDICIÓN */}
-      <AthleteEditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        initialData={{
-          displayName: athleteName, email, birthDate, gender, weightKg, heightCm,
-          runFtp, bikeFtp, lthr, restingHR, maxHR,
-          hasRunningPowerMeter, runningTrainingMode, runThresholdPaceStr, runThresholdPaceSecPerKm,
-          intervalsAthleteId: athleteId, apiKey,
-        }}
-        onSave={handleSaveModalData}
-      />
+      {activeTab === "intervals" && (
+        <div className="animate-fadeIn">
+          <AthleteIntervalsTab
+            athleteId={athleteId} apiKey={apiKey} isLiveConnected={isLiveConnected}
+            onSaveCredentials={handleSaveIntervals} onTestConnection={onTestConnection}
+          />
+        </div>
+      )}
 
-      {/* 6. MODAL DE EDICIÓN RÁPIDA DE UMBRAL */}
+      {/* 4. Modal de Edición Rápida de Umbral [ ✎ Ajustar ] */}
       <QuickThresholdModal
         isOpen={Boolean(quickEditMetric)}
         metric={quickEditMetric}

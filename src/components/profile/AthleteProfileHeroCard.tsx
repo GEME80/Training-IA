@@ -22,7 +22,8 @@ interface AthleteProfileHeroCardProps {
   hasRunningPowerMeter?: boolean;
   runThresholdPaceSecPerKm?: number;
   runThresholdPaceStr?: string;
-  onOpenEditModal: () => void;
+  onOpenEditModal?: () => void;
+  onNavigateToProfile?: () => void;
   onToggleMode?: (newMode: RunningTrainingMode) => void;
   onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR") => void;
 }
@@ -45,6 +46,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   runThresholdPaceSecPerKm,
   runThresholdPaceStr,
   onOpenEditModal,
+  onNavigateToProfile,
   onToggleMode,
   onEditThreshold,
 }) => {
@@ -136,14 +138,16 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onOpenEditModal}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs"
-          >
-            <Edit3 className="h-3.5 w-3.5" />
-            <span>Editar Perfil</span>
-          </button>
+          {(onNavigateToProfile || onOpenEditModal) && (
+            <button
+              type="button"
+              onClick={onNavigateToProfile || onOpenEditModal}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-xs"
+            >
+              <Edit3 className="h-3.5 w-3.5" />
+              <span>Editar Perfil</span>
+            </button>
+          )}
         </div>
       </div>
 

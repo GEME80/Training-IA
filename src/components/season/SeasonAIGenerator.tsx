@@ -116,6 +116,12 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
     }
   }, [primaryRace, resolvedStartDate]);
 
+  React.useEffect(() => {
+    if (weeklyAvailability && Object.keys(weeklyAvailability).length > 0) {
+      setLocalWeeklyAvailability(weeklyAvailability);
+    }
+  }, [weeklyAvailability]);
+
   const handleGenerateAI = async () => {
     setIsGeneratingPlan(true);
     setCurrentStep(4);

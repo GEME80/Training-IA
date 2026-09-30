@@ -91,10 +91,16 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   if (activeNavSection === "season_studio") {
     const handlePersistAvailability = async (newMap: Record<string, string[]>) => {
       try {
+        season.setWeeklyAvailability(newMap as any);
+        userStorage.setJSON("weekly_availability", newMap);
         await fetch("/api/profile", {
-          method: "PATCH",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ weeklyAvailability: newMap }),
+          body: JSON.stringify({
+            uid: user?.uid || "",
+            email: user?.email || userProfile?.email || "",
+            weeklyAvailability: newMap,
+          }),
         });
       } catch { /* silent fail — localStorage already saved */ }
     };

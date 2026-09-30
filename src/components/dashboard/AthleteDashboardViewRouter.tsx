@@ -200,6 +200,17 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
       message: telemetry.recentPaceCalibration.message,
     } : null;
 
+    const suggestedRunFtp = telemetry.recentRunPowerCalibration ? {
+      id: telemetry.recentRunPowerCalibration.activityId || "run-power",
+      metric: "RUN_FTP" as const,
+      activityName: telemetry.recentRunPowerCalibration.activityName || "Potencia de Carrera",
+      date: telemetry.recentRunPowerCalibration.date,
+      currentValue: `${telemetry.recentRunPowerCalibration.previousWatts}W`,
+      suggestedValue: `${telemetry.recentRunPowerCalibration.newWatts}W`,
+      deltaLabel: `${telemetry.recentRunPowerCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentRunPowerCalibration.deltaWatts}W`,
+      message: telemetry.recentRunPowerCalibration.message,
+    } : null;
+
     return (
       <AthletePhysiologyView
         athleteId={telemetry.profile.id}
@@ -227,6 +238,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         isLiveConnected={telemetry.isLiveConnected}
         suggestedBikeFtp={suggestedBikeFtp}
         suggestedRunPace={suggestedRunPace}
+        suggestedRunFtp={suggestedRunFtp}
         onApplySuggestion={async (sug) => {
           if (sug.metric === "BIKE_FTP") {
             const numVal = parseInt(String(sug.suggestedValue), 10);
@@ -235,11 +247,16 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           } else if (sug.metric === "RUN_PACE") {
             await telemetry.handleSaveSettings({ runThresholdPaceStr: String(sug.suggestedValue) });
             telemetry.setRecentPaceCalibration(null);
+          } else if (sug.metric === "RUN_FTP") {
+            const numVal = parseInt(String(sug.suggestedValue), 10);
+            await telemetry.handleSaveSettings({ runFtp: numVal });
+            telemetry.setRecentRunPowerCalibration(null);
           }
         }}
         onDismissSuggestion={(sug) => {
           if (sug.metric === "BIKE_FTP") telemetry.setRecentFtpCalibration(null);
           if (sug.metric === "RUN_PACE") telemetry.setRecentPaceCalibration(null);
+          if (sug.metric === "RUN_FTP") telemetry.setRecentRunPowerCalibration(null);
         }}
         onTestConnection={async (testAthleteId) => {
           const activeApiKey = telemetry.apiKeyCache || userStorage.getItem("intervals_api_key") || "";

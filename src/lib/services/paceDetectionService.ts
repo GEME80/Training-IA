@@ -23,6 +23,8 @@ export interface PaceDetectionParams {
   uid?: string;
   currentPaceSec?: number;
   currentPaceStr?: string;
+  lthr?: number;
+  maxHR?: number;
 }
 
 /**
@@ -35,7 +37,7 @@ export class PaceDetectionService {
    * o mejoras de ritmo umbral.
    */
   static evaluateActivitiesForPaceUpdate(params: PaceDetectionParams): PaceCalibrationEvent | null {
-    const { activities, currentPaceSec = 285, currentPaceStr = "4:45" } = params;
+    const { activities, currentPaceSec = 285, currentPaceStr = "4:45", lthr, maxHR } = params;
 
     if (!activities || !Array.isArray(activities) || activities.length === 0) {
       return null;
@@ -79,6 +81,14 @@ export class PaceDetectionService {
       // Detección explícita de test o competencia en nombre/descripción
       const isExplicitTest = /test|umbral|prueba.*ritmo|control.*ritmo|cooper|all-?out/i.test(fullText);
       const isRace = /race|competici[oó]n|marat[oó]n|media\s*marat[oó]n/i.test(fullText) || act.icu_training_load_type === "Race";
+
+      // Filtro de Carga Interna (FC): Si no es test explícito ni carrera, la FC media debe
+      // respaldar que fue un esfuerzo cercano al umbral (evitar bajadas/errores de GPS)
+      const avgHr = act.average_heartrate || act.icu_average_heartrate || 0;
+      if (!isExplicitTest && !isRace && avgHr > 0) {
+        if (lthr && lthr > 0 && avgHr < lthr * 0.88) continue;
+        if (maxHR && maxHR > 0 && avgHr < maxHR * 0.82) continue;
+      }
 
       let candidatePaceSec: number | undefined = undefined;
       let source: "5K_TEST" | "10K_TEST" | "RUN_TEST" = "RUN_TEST";

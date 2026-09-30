@@ -29,6 +29,7 @@ export interface AthletePhysiologyViewProps {
   isLiveConnected?: boolean;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
+  suggestedRunFtp?: ThresholdSuggestionItem | null;
   onApplySuggestion?: (suggestion: ThresholdSuggestionItem) => Promise<void>;
   onDismissSuggestion?: (suggestion: ThresholdSuggestionItem) => void;
   onTestConnection?: (athleteId: string) => Promise<{ success: boolean; athleteName?: string; error?: string }>;

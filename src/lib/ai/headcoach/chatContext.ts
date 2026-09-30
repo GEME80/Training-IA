@@ -6,7 +6,7 @@ import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { buildCondensedExecutedMap, formatCompactActivitySummary, formatActivitiesTssBreakdown, formatRecentWellnessSummary } from "@/lib/ai/contextCondenser";
-import { FtpDetectionService } from "@/lib/services/ftpDetectionService";
+import { BreakthroughDetectionService } from "@/lib/services/breakthroughDetectionService";
 import { computePreviousWeekRetrospective } from "./weekRetrospective";
 import { HeadCoachChatRequest, PreviousWeekSummary, ResolvedChatContext } from "./types";
 export type { ResolvedChatContext };
@@ -81,16 +81,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         if (icuDob) {
           const birth = new Date(icuDob);
           if (!isNaN(birth.getTime())) {
-            const now = new Date();
-            let age = now.getFullYear() - birth.getFullYear();
-            const monthDiff = now.getMonth() - birth.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+            const age = Math.floor((Date.now() - birth.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
             if (age > 0 && age < 120) computedAge = age;
           }
         }
-        if (!computedAge && (body as any).age) {
-          computedAge = Number((body as any).age);
-        }
+        if (!computedAge && (body as any).age) computedAge = Number((body as any).age);
 
         const resolvedSex: "M" | "F" | "OTHER" = (gender === "M" || anyAth.sex === "M" || anyAth.gender === "M") ? "M" : ((gender === "F" || anyAth.sex === "F" || anyAth.gender === "F") ? "F" : "M");
         const rawHeight = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
@@ -98,8 +93,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const resolvedWeight = weight || anyAth.weight || (wellness[0] as any)?.weight || ath?.weight;
         const resolvedRunFtp = (runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0;
         const resolvedBikeFtp = (bikeFtp ? Number(bikeFtp) : undefined) || rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || 0;
-
-        // Fisiología dinámica calculada (no quemada): Tanaka 208 - 0.7 * age si hay edad
         const defaultMaxHr = computedAge ? Math.round(208 - 0.7 * computedAge) : 185;
         const defaultLthr = Math.round(defaultMaxHr * 0.88);
         const defaultRestingHr = 55;
@@ -121,14 +114,25 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       wellness = Array.isArray(wel) ? wel : [];
       pastActivities = Array.isArray(acts) ? acts : [];
 
-      if (pastActivities.length > 0 && profile.bike_ftp) {
+      if (pastActivities.length > 0) {
         try {
-          const ftpCal = await FtpDetectionService.evaluateActivitiesForFtpUpdate({
-            activities: pastActivities, athleteId: effectiveAthleteId, apiKey: effectiveApiKey, uid, currentBikeFtp: profile.bike_ftp,
+          const bResults = await BreakthroughDetectionService.evaluateAll({
+            activities: pastActivities, athleteId: effectiveAthleteId, apiKey: effectiveApiKey, uid,
+            currentBikeFtp: profile.bike_ftp, currentRunFtp: profile.run_ftp,
+            currentPaceSec: (profile as any).runThresholdPaceSecPerKm,
+            currentPaceStr: (profile as any).runThresholdPaceStr,
+            lthr: profile.lthr, maxHR: profile.maxHR,
           });
-          if (ftpCal?.detected && ftpCal.newFtp > 0) {
-            profile.bike_ftp = ftpCal.newFtp;
-            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD FISIOLÓGICA RECIENTE: ${ftpCal.message}`;
+          if (bResults.recentFtpCalibration?.detected) {
+            profile.bike_ftp = bResults.recentFtpCalibration.newFtp;
+            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD CICLISMO (FTP): ${bResults.recentFtpCalibration.message}`;
+          }
+          if (bResults.recentPaceCalibration?.detected) {
+            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}🏃 NOVEDAD RITMO CARRERA: ${bResults.recentPaceCalibration.message}`;
+          }
+          if (bResults.recentRunPowerCalibration?.detected) {
+            profile.run_ftp = bResults.recentRunPowerCalibration.newWatts;
+            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD POTENCIA CARRERA: ${bResults.recentRunPowerCalibration.message}`;
           }
         } catch {}
       }

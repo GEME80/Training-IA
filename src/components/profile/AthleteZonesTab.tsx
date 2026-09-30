@@ -25,6 +25,7 @@ interface AthleteZonesTabProps {
   runThresholdPaceSecPerKm: number;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
+  suggestedRunFtp?: ThresholdSuggestionItem | null;
   onNavigateToProfile: () => void;
   onToggleMode: (newMode: RunningTrainingMode) => void;
   onEditThreshold: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR") => void;
@@ -52,6 +53,7 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
   runThresholdPaceSecPerKm,
   suggestedBikeFtp,
   suggestedRunPace,
+  suggestedRunFtp,
   onNavigateToProfile,
   onToggleMode,
   onEditThreshold,
@@ -97,9 +99,11 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         onUpdateThreshold={onUpdateThreshold}
         suggestedBikeFtp={suggestedBikeFtp}
         suggestedRunPace={suggestedRunPace}
+        suggestedRunFtp={suggestedRunFtp}
         onApplySuggestion={onApplySuggestion || (async (sug) => {
           if (sug.metric === "BIKE_FTP") await onUpdateThreshold("BIKE_FTP", Number(sug.suggestedValue));
           else if (sug.metric === "RUN_PACE") await onUpdateThreshold("RUN_PACE", String(sug.suggestedValue));
+          else if (sug.metric === "RUN_FTP") await onUpdateThreshold("RUN_FTP", Number(sug.suggestedValue));
         })}
         onDismissSuggestion={onDismissSuggestion}
       />

@@ -5,8 +5,10 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { EvaluateRequest } from "@/lib/validation/schemas";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
-import { FtpDetectionService, FtpCalibrationEvent } from "@/lib/services/ftpDetectionService";
-import { PaceDetectionService, PaceCalibrationEvent } from "@/lib/services/paceDetectionService";
+import { FtpCalibrationEvent } from "@/lib/services/ftpDetectionService";
+import { PaceCalibrationEvent } from "@/lib/services/paceDetectionService";
+import { RunPowerCalibrationEvent } from "@/lib/services/runPowerDetectionService";
+import { BreakthroughDetectionService } from "@/lib/services/breakthroughDetectionService";
 
 export interface TelemetryEvaluationResult {
   success: boolean;
@@ -21,6 +23,7 @@ export interface TelemetryEvaluationResult {
   dailyExecutedActivities: DailyExecutedMap;
   recentFtpCalibration?: FtpCalibrationEvent;
   recentPaceCalibration?: PaceCalibrationEvent;
+  recentRunPowerCalibration?: RunPowerCalibrationEvent;
   warning?: string;
 }
 
@@ -69,6 +72,7 @@ export class TelemetryService {
       let dailyExecutedActivities: DailyExecutedMap = {};
       let recentFtpCalibration: FtpCalibrationEvent | undefined = undefined;
       let recentPaceCalibration: PaceCalibrationEvent | undefined = undefined;
+      let recentRunPowerCalibration: RunPowerCalibrationEvent | undefined = undefined;
 
       if (effectiveAthleteId && effectiveApiKey) {
         try {
@@ -238,47 +242,33 @@ export class TelemetryService {
             const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
             const resolvedRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0);
             const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
+            const initialRunFtp = customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0);
+            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
+            const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
 
-            // Detección de Tests de FTP (Sugerencia para aprobación del atleta)
+            // Detección unificada de Breakthroughs (Ciclismo, Ritmo y Potencia de Carrera)
             try {
-              const ftpCal = await FtpDetectionService.evaluateActivitiesForFtpUpdate({
+              const breakthroughs = await BreakthroughDetectionService.evaluateAll({
                 activities: activitiesData || [],
                 athleteId: effectiveAthleteId,
                 apiKey: effectiveApiKey,
                 uid,
                 currentBikeFtp: initialBikeFtp,
+                currentRunFtp: initialRunFtp,
+                currentPaceSec: storedUser?.profile.runThresholdPaceSecPerKm || 285,
+                currentPaceStr: storedUser?.profile.runThresholdPaceStr || "4:45",
+                lthr: intervalsLthr,
+                maxHR: intervalsMaxHR,
               });
-              if (ftpCal?.detected && ftpCal.newFtp > 0) {
-                recentFtpCalibration = ftpCal;
-                // No sobreescribimos initialBikeFtp automáticamente: el atleta decide
-              }
-            } catch (calErr) {
-              console.warn("Aviso al evaluar test de FTP en telemetría:", calErr);
-            }
-
-            // Detección de Tests de Ritmo de Carrera
-            try {
-              const currentPaceSec = storedUser?.profile.runThresholdPaceSecPerKm || 285;
-              const currentPaceStr = storedUser?.profile.runThresholdPaceStr || "4:45";
-              const paceCal = PaceDetectionService.evaluateActivitiesForPaceUpdate({
-                activities: activitiesData || [],
-                athleteId: effectiveAthleteId,
-                apiKey: effectiveApiKey,
-                uid,
-                currentPaceSec,
-                currentPaceStr,
-              });
-              if (paceCal?.detected) {
-                recentPaceCalibration = paceCal;
-              }
-            } catch (paceErr) {
-              console.warn("Aviso al evaluar test de ritmo en telemetría:", paceErr);
+              recentFtpCalibration = breakthroughs.recentFtpCalibration;
+              recentPaceCalibration = breakthroughs.recentPaceCalibration;
+              recentRunPowerCalibration = breakthroughs.recentRunPowerCalibration;
+            } catch (breakthroughErr) {
+              console.warn("Aviso al evaluar Breakthroughs en telemetría:", breakthroughErr);
             }
 
             // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
             const intervalsRestingHR = (latestWellness as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
-            const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
-            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
 
             profile = {
               ...athleteData,
@@ -319,6 +309,7 @@ export class TelemetryService {
         dailyExecutedActivities,
         recentFtpCalibration,
         recentPaceCalibration,
+        recentRunPowerCalibration,
       };
     } catch (err: unknown) {
       console.error("Error en TelemetryService.evaluate:", err);

@@ -21,7 +21,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   hasRunningPowerMeter: initialHasPower, runningTrainingMode: initialRunningMode,
   runThresholdPaceStr: initialThresholdPaceStr, runThresholdPaceSecPerKm: initialThresholdPaceSec,
   apiKey: initialApiKey = "", ctl, atl, tsb, weeklyAvailability: initialAvailability, isLiveConnected = false,
-  suggestedBikeFtp, suggestedRunPace, onApplySuggestion, onDismissSuggestion,
+  suggestedBikeFtp, suggestedRunPace, suggestedRunFtp, onApplySuggestion, onDismissSuggestion,
   onTestConnection, onSave, onUpdateAvailability,
 }) => {
   const [activeTab, setActiveTab] = useState<AthleteViewTab>("zones");
@@ -268,7 +268,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           lthr={lthr} restingHR={restingHR} maxHR={maxHR} hasRunningPowerMeter={hasRunningPowerMeter}
           runningTrainingMode={runningTrainingMode} runThresholdPaceStr={runThresholdPaceStr}
           runThresholdPaceSecPerKm={runThresholdPaceSecPerKm} suggestedBikeFtp={suggestedBikeFtp}
-          suggestedRunPace={suggestedRunPace} onNavigateToProfile={() => setActiveTab("profile")}
+          suggestedRunPace={suggestedRunPace} suggestedRunFtp={suggestedRunFtp} onNavigateToProfile={() => setActiveTab("profile")}
           onToggleMode={handleToggleRunningMode} onEditThreshold={(m) => setQuickEditMetric(m)}
           onUpdateThreshold={handleUpdateThreshold} onApplySuggestion={onApplySuggestion}
           onDismissSuggestion={onDismissSuggestion}

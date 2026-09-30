@@ -40,6 +40,7 @@ export function useAthleteTelemetry({
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
   const [recentFtpCalibration, setRecentFtpCalibration] = useState<any>(null);
   const [recentPaceCalibration, setRecentPaceCalibration] = useState<any>(null);
+  const [recentRunPowerCalibration, setRecentRunPowerCalibration] = useState<any>(null);
 
   const lastFetchTimestampRef = useRef<number>(0);
   const lastPersistedProfileRef = useRef<string>("");
@@ -120,6 +121,7 @@ export function useAthleteTelemetry({
           if (Array.isArray(data.events)) setCalendarEvents(data.events);
           if (data.recentFtpCalibration) setRecentFtpCalibration(data.recentFtpCalibration);
           if (data.recentPaceCalibration) setRecentPaceCalibration(data.recentPaceCalibration);
+          if (data.recentRunPowerCalibration) setRecentRunPowerCalibration(data.recentRunPowerCalibration);
 
           const p = data.profile || {};
           const [resBike, resRun] = [p.bike_ftp || bikeFtp || profile.bike_ftp, p.run_ftp || runFtp || profile.run_ftp];
@@ -341,7 +343,7 @@ export function useAthleteTelemetry({
     profile, setProfile, physioStatus, setPhysioStatus, wellnessHistory, latestWellness, historicalSummary,
     weeklyExecutedTss, dailyExecutedActivities, calendarEvents, setCalendarEvents, isLiveConnected, setIsLiveConnected,
     isRefreshingTelemetry, isLoading, apiKeyCache, geminiKeyCache, visibleMetrics,
-    recentFtpCalibration, setRecentFtpCalibration, recentPaceCalibration, setRecentPaceCalibration,
+    recentFtpCalibration, setRecentFtpCalibration, recentPaceCalibration, setRecentPaceCalibration, recentRunPowerCalibration, setRecentRunPowerCalibration,
     isOnboardingOpen, setIsOnboardingOpen, refreshTelemetry, handleToggleMetric, handleSaveSettings, handleOnboardingSuccess,
   };
 }

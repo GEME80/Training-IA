@@ -20,6 +20,7 @@ export interface AthleteZonesViewerProps {
   onUpdateThreshold?: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR", val: string | number) => Promise<void>;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
+  suggestedRunFtp?: ThresholdSuggestionItem | null;
   onApplySuggestion?: (suggestion: ThresholdSuggestionItem) => Promise<void>;
   onDismissSuggestion?: (suggestion: ThresholdSuggestionItem) => void;
 }
@@ -36,6 +37,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
   onUpdateThreshold,
   suggestedBikeFtp,
   suggestedRunPace,
+  suggestedRunFtp,
   onApplySuggestion,
   onDismissSuggestion,
 }) => {
@@ -177,6 +179,10 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
               )
             }
           />
+
+          {suggestedRunFtp && onApplySuggestion && onDismissSuggestion && (
+            <SuggestedThresholdBanner suggestion={suggestedRunFtp} onApply={onApplySuggestion} onDismiss={onDismissSuggestion} />
+          )}
 
           <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
             {strydZones.map((z) => (

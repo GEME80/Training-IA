@@ -196,7 +196,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
       date: telemetry.recentPaceCalibration.date,
       currentValue: telemetry.recentPaceCalibration.previousPaceStr,
       suggestedValue: telemetry.recentPaceCalibration.newPaceStr,
-      deltaLabel: `${telemetry.recentPaceCalibration.deltaSecPerKm < 0 ? "" : "+"}${telemetry.recentPaceCalibration.deltaSecPerKm}s/km`,
+      deltaLabel: `${(telemetry.recentPaceCalibration.deltaSec ?? 0) < 0 ? "" : "+"}${telemetry.recentPaceCalibration.deltaSec ?? 0}s/km`,
       message: telemetry.recentPaceCalibration.message,
     } : null;
 

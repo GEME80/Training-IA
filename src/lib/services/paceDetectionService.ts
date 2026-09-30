@@ -72,24 +72,42 @@ export class PaceDetectionService {
 
       const paceSecPerKm = Math.round(1000 / avgSpeed);
 
+      // Distancias estándar
       const is5k = distanceM >= 4800 && distanceM <= 5400;
       const is10k = distanceM >= 9600 && distanceM <= 10600;
-      const isExplicitTest = /test|umbral|prueba|control|cooper/i.test(fullText);
+      
+      // Detección explícita de test o competencia en nombre/descripción
+      const isExplicitTest = /test|umbral|prueba.*ritmo|control.*ritmo|cooper|all-?out/i.test(fullText);
+      const isRace = /race|competici[oó]n|marat[oó]n|media\s*marat[oó]n/i.test(fullText) || act.icu_training_load_type === "Race";
 
       let candidatePaceSec: number | undefined = undefined;
       let source: "5K_TEST" | "10K_TEST" | "RUN_TEST" = "RUN_TEST";
 
-      if (is5k) {
-        source = "5K_TEST";
-        // Fórmula Daniels: Ritmo umbral (T) ≈ Ritmo 5k * 1.05 (+12 a 15 seg/km)
-        candidatePaceSec = Math.round(paceSecPerKm * 1.05);
+      if (isExplicitTest || isRace) {
+        if (is5k) {
+          source = "5K_TEST";
+          candidatePaceSec = Math.round(paceSecPerKm * 1.05);
+        } else if (is10k) {
+          source = "10K_TEST";
+          candidatePaceSec = paceSecPerKm;
+        } else if (movingSec >= 900 && movingSec <= 3600) {
+          source = "RUN_TEST";
+          candidatePaceSec = paceSecPerKm;
+        }
+      } else if (is5k) {
+        // En entrenamientos cotidianos sin etiqueta de test: SOLO sugerir si fue un breakthrough
+        // (es decir, el atleta corrió notablemente más rápido que su umbral actual)
+        const calcPace = Math.round(paceSecPerKm * 1.05);
+        if (calcPace < currentPaceSec - 3) {
+          source = "5K_TEST";
+          candidatePaceSec = calcPace;
+        }
       } else if (is10k) {
-        source = "10K_TEST";
-        // Ritmo 10k es aproximadamente ritmo de umbral funcional (T)
-        candidatePaceSec = paceSecPerKm;
-      } else if (isExplicitTest && movingSec >= 1000 && movingSec <= 2000) {
-        source = "RUN_TEST";
-        candidatePaceSec = paceSecPerKm;
+        // En entrenamientos cotidianos sin etiqueta de test: SOLO sugerir si fue más rápido
+        if (paceSecPerKm < currentPaceSec - 3) {
+          source = "10K_TEST";
+          candidatePaceSec = paceSecPerKm;
+        }
       }
 
       if (!candidatePaceSec || candidatePaceSec < 150 || candidatePaceSec > 450) continue;
@@ -97,6 +115,9 @@ export class PaceDetectionService {
       // Requerir al menos 3 segundos/km de diferencia frente al umbral actual
       const deltaSec = candidatePaceSec - currentPaceSec;
       if (Math.abs(deltaSec) < 3) continue;
+
+      // Un entreno regular nunca degrada el umbral a un ritmo más lento (evitar falsos positivos en rodajes Z2)
+      if (deltaSec > 0 && !isExplicitTest && !isRace) continue;
 
       const dateStr = act.start_date_local ? act.start_date_local.split("T")[0] : "";
       const candidateStr = formatPace(candidatePaceSec);

@@ -4607,3 +4607,87 @@ flowchart TD
 
 
 
+
+
+---
+
+## 51. SISTEMA INTEGRAL DE BREAKTHROUGHS MULTIDISCIPLINAR, REDISEÑO UX DE PERFIL/ZONAS Y RECALIBRACIÓN REACTIVA DE ENTRENAMIENTOS (CP/FTP) (v3.83)
+
+### 51.1. Contexto Fisiológico y Motivación
+1. **Detección Continua vs. Dependencia de Tests Formales:**
+   En el entrenamiento de alta competición, los atletas a menudo logran picos de rendimiento (*breakthroughs*) durante entrenamientos ordinarios de tempo, fartlek o tiradas largas sin realizar un test formal de laboratorio o protocolo cerrado (20m TT / Ramp Test).
+2. **Filtrado por Carga Interna Fisiológica (Heart Rate Load):**
+   Para evitar falsos positivos en Ritmo Umbral (T-Pace Daniels) generados por viento a favor o desniveles negativos en carreras de calle, se implementó una compuerta fisiológica obligatoria: solo se detectan mejoras de ritmo si la frecuencia cardíaca promedio del esfuerzo se sitúa en zona umbral o superior ($\\ge 88\\%$ LTHR o $\\ge 82\\%$ FC Máxima).
+3. **Rediseño UX de Perfil & Zonas Fisiológicas:**
+   Erradicación de interfaces redundantes (modal emergente de "Editar Perfil" duplicado con el espacio de perfil del atleta). Consolidación en 4 pestañas directas e intuitivas con diseño minimalista, eliminando dobles iconos y textos azules residuales.
+4. **Recalibración Dinámica de Vatios en Entrenamientos:**
+   Garantizar que al actualizar el umbral (Stryd CP o FTP de ciclismo), la prescripción estructurada (`WorkoutDetailModal.tsx` y `WorkoutChart.tsx`) limpie vatios obsoletos de forma reactiva, recalcule rangos de potencia (`88-92% Stryd CP (308-322W)`) y sincronice bidireccionalmente con Intervals.icu y relojes Garmin/Coros.
+
+### 51.2. Módulos & Arquitectura Implementados
+
+#### A. Motor Unificado de Detección de Breakthroughs (`BreakthroughDetectionService.ts` - 75 LOC)
+- Servicio orquestador modular y desacoplado que evalúa las actividades recientes de cualquier disciplina:
+  - **Ciclismo (Bike FTP):** Delega en `FtpDetectionService.ts` evaluando p20m (95%), 12m, 8m y eFTP.
+  - **Carrera con Potencia (Stryd CP):** Delega en `RunPowerDetectionService.ts` evaluando p20m, test 3/9m y picos de potencia sostenida.
+  - **Carrera con Ritmo (Daniels/VDOT):** Delega en `PaceDetectionService.ts` aplicando la validación de carga interna cardiovascular.
+- Invocado de manera transparente en la carga de telemetría (`useAthleteTelemetry.ts`) y en la memoria del Head Coach IA (`chatContext.ts`).
+
+#### B. Detección Especializada de Potencia de Carrera (`RunPowerDetectionService.ts` - 139 LOC)
+- Identificación de tests estructurados de campo (protocolos Stryd 3/9m y 20m TT) y picos sostenidos de vatios en cualquier sesión de carrera.
+- Generación de objetos de calibración reactiva (`recentRunPowerCalibration`) con deltas claros (`+14W`, porcentaje de mejora y sugerencia accionable).
+
+#### C. Detección de Ritmo con Compuerta de Carga Interna (`PaceDetectionService.ts` - 198 LOC)
+- Inclusión del validador de carga interna:
+  ```typescript
+  const lthr = profile.lthr || 0;
+  const maxHR = profile.maxHR || 0;
+  const satisfiesInternalLoad = (lthr > 0 && avgHR >= lthr * 0.88) || (maxHR > 0 && avgHR >= maxHR * 0.82);
+  ```
+  Erradica anomalías de GPS o tramos en descenso prolongado.
+
+#### D. Rediseño Modular de Perfil en 4 Pestañas (`AthletePhysiologyView.tsx` - 322 LOC)
+- Estructura limpia y desacoplada en 4 pestañas:
+  1. `Zonas & Umbrales` (`AthleteZonesTab.tsx` - 112 LOC): Tarjetas de Potencia Carrera (Stryd CP), Ritmo Umbral, FC (LTHR) y Ciclismo FTP con banners interactivos para aplicar o descartar mejoras detectadas.
+  2. `Perfil & Biometría` (`AthleteBioProfileTab.tsx` - 150 LOC): Edición directa de peso, altura, fecha de nacimiento, sexo, FC reposo, FC máx y modo de entrenamiento de carrera.
+  3. `Disponibilidad` (`AthleteAvailabilityTab.tsx` - 120 LOC): Matriz semanal de días y horas.
+  4. `Conexión Intervals` (`AthleteIntervalsTab.tsx` - 110 LOC): Credenciales, Athlete ID, estado en vivo y sincronización.
+- Eliminación de dobles iconos en botones superiores, eliminación del texto azul obsoleto, y supresión de indicadores de cálculo redundantes en tarjetas secundarias.
+
+#### E. Recalibración Reactiva de Vatios y Rangos (`WorkoutDetailModal.tsx` - 341 LOC & `WorkoutChart.tsx` - 337 LOC)
+- **Soporte de Rangos & Limpieza de Vatios Obsoletos:**
+  `enrichedWorkoutDoc` analiza líneas como:
+  ```text
+  Warmup
+  - 15m @ 70% Stryd CP (235W)
+
+  6x Fartlek Ágil
+  - 1m @ 88-92% Stryd CP (309W)
+  - 2m @ 68% Stryd CP (228W)
+  ```
+  Detecta rangos y porcentajes simples, limpia cualquier vatio antiguo hardcodeado entre paréntesis y reemplaza dinámicamente con los vatios del nuevo umbral:
+  ```text
+  Warmup
+  - 15m @ 70% Stryd CP (245W)
+
+  6x Fartlek Ágil
+  - 1m @ 88-92% Stryd CP (308-322W)
+  - 2m @ 68% Stryd CP (238W)
+  ```
+- **Tooltips Reactivos en `WorkoutChart.tsx`:** Los bloques escalonados eliminan vatios obsoletos de la etiqueta y calculan el vatio actual en hover con base en `athleteFtp`.
+
+#### F. Sincronización Bidireccional con Intervals.icu y Relojes Deportivos
+- Al guardar o aceptar un nuevo CP/FTP, Pulse actualiza inmediatamente `POST /api/profile` (Firestore DB) y `POST /api/sync-settings` (Intervals.icu `sportSettings` y perfil de atleta).
+- Intervals.icu recalcula al instante las dianas de vatios de todas las sesiones futuras planificadas en su calendario porque las sesiones están almacenadas como porcentajes del umbral.
+- Al sincronizar con Garmin Connect o Coros, el reloj descarga la sesión con los vatios actualizados automáticamente.
+
+### 51.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Regla Estricta de Modularidad:**
+  * `WorkoutDetailModal.tsx`: 341 LOC ($\\le 350$)
+  * `WorkoutChart.tsx`: 337 LOC ($\\le 350$)
+  * `AthletePhysiologyView.tsx`: 322 LOC ($\\le 350$)
+  * `useAthleteTelemetry.ts`: 350 LOC ($\\le 350$)
+  * `BreakthroughDetectionService.ts`: 75 LOC ($\\le 350$)
+  * `RunPowerDetectionService.ts`: 139 LOC ($\\le 350$)
+  * `PaceDetectionService.ts`: 198 LOC ($\\le 350$)
+- **Git Commit:** `32bda71` y sincronizado en rama `main`.

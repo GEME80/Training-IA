@@ -1,10 +1,16 @@
-# ⚡ SGEA Pro (v3.82) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.83) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🚀 **Detección Unificada de Breakthroughs, Rediseño UX de Zonas & Recalibración Dinámica de Vatios (v3.83):**
+  - **Motor Multidisciplinar (`BreakthroughDetectionService`):** Detección continua de mejoras de umbral en cualquier entrenamiento ordinario o de calidad para Ciclismo (FTP), Carrera con Potencia (Stryd CP) y Carrera por Ritmo (Daniels VDOT).
+  - **Filtro Estricto de Carga Interna Cardiovascular:** Las mejoras en Ritmo Umbral exigen validación de esfuerzo real ($\ge 88\%$ LTHR o $\ge 82\%$ FC Máx) erradicando falsos positivos por desniveles o anomalías de GPS.
+  - **Rediseño UX de Perfil en 4 Pestañas (`AthletePhysiologyView`):** Eliminación del modal redundante de edición de perfil y consolidación en 4 vistas claras (`Zonas & Umbrales`, `Perfil & Biometría`, `Disponibilidad`, `Conexión Intervals`).
+  - **Recalibración Dinámica de Vatios y Rangos:** Las tarjetas y modales de entrenamiento (`WorkoutDetailModal.tsx` y `WorkoutChart.tsx`) limpian al vuelo los vatios obsoletos y recalculan rangos de potencia (`88-92% Stryd CP (308-322W)`) instantáneamente al modificar el CP/FTP.
+  - **Sincronización Transparente con Relojes GPS:** La actualización de umbrales se propaga a las configuraciones de deporte en Intervals.icu, recalculando las dianas de la semana para que Garmin y Coros descarguen los nuevos vatios sin intervención manual.
 - 🏆 **Macrociclos y Temporadas Estilo Stryd (Palladino) (v3.82):** Rediseño completo de la experiencia de planificación y visualización de macrociclos:
   - **Curva de Carga Compacta con Fases Integradas:** Altura optimizada a `125px` con track inferior de fases (*Base*, *Construcción*, *Pico*, *Tapering*) conectado directamente bajo el eje temporal de semanas, erradicando cajas flotantes y botones innecesarios para desplegar la gráfica.
   - **Tooltip Luminoso y Elegante:** Tarjeta flotante con efecto glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro.

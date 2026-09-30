@@ -228,6 +228,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         subtitle={hasRunningPowerMeter ? "Potencia Stryd CP, Ciclismo FTP y Frecuencia Cardíaca (LTHR)" : "Ritmo Umbral (Z1-Z6), Ciclismo FTP y Frecuencia Cardíaca (LTHR)"}
         icon={Zap}
         iconColor="text-amber-500"
+        defaultOpenMobile={true}
         summaryBadge={
           <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
             {hasRunningPowerMeter ? `${runFtp}W CP` : `${runThresholdPaceStr}/km`} • {bikeFtp > 0 ? `${bikeFtp}W FTP` : "Sin FTP"}

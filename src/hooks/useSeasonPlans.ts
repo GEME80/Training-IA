@@ -7,10 +7,15 @@ import {
 } from "@/lib/physiology/macrocycle";
 import { resolveCurrentWeekIndex, syncBlueprintToCurrentDate, syncAndCalibrateBlueprint } from "@/lib/physiology/macrocycleSync";
 import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
-import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { UserStorage } from "@/lib/storage/userStorage";
 import { isMasterAdminEmail } from "@/lib/env";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
+import {
+  createPhaseInfoFromBlueprint,
+  persistProfileField,
+  mergeTargetRacesList,
+} from "@/lib/physiology/seasonPlanHelpers";
 
 interface UseSeasonPlansProps {
   user: any;
@@ -27,43 +32,10 @@ interface UseSeasonPlansProps {
   isReadOnly?: boolean;
 }
 
-function createPhaseInfoFromBlueprint(bp: MacrocycleBlueprint, race?: TargetRace | null): MacrocyclePhaseInfo {
-  return {
-    phase: bp.currentWeek?.phase || "MAINTENANCE", phaseLabel: bp.cycleTitle || "Macrociclo Activo",
-    cycleBadgeLabel: bp.mode === "PRE_SEASON_MAINTENANCE" ? "🔵 MANTENIMIENTO PRE-TEMPORADA" : "🏃 CICLO ACTIVO",
-    cycleBadgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    weeksRemaining: bp.totalWeeks, daysRemaining: bp.totalWeeks ? bp.totalWeeks * 7 : null,
-    primaryRace: race || bp.primaryRace || null, guideline: bp.currentWeek?.focusDescription || "",
-    suggestedFocus: "Macrociclo Activo", badgeColor: "bg-amber-500/20 text-amber-300",
-    maxLongRunMinutes: bp.currentWeek?.maxLongRunMinutes || 60,
-    isSpecificMarathonPhase: bp.mode === "MARATHON_SPECIFIC",
-    weeklyTssTarget: `${bp.currentWeek?.targetTss || 350} TSS`, blueprint: bp,
-  };
-}
-
-async function persistProfileField(uid: string, email: string, fields: Record<string, any>, isReadOnly?: boolean) {
-  if (isReadOnly) return;
-  try {
-    await fetch("/api/profile", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid: uid || "demo-user", email, ...fields }),
-    });
-  } catch (e) { console.warn("Aviso al persistir en perfil:", e); }
-}
-
 export function useSeasonPlans({
-  user,
-  userProfile,
-  userStorage,
-  profileId,
-  runFtp,
-  bikeFtp,
-  ctl,
-  historicalMetrics,
-  apiKeyCache,
-  refreshTelemetry,
-  setSyncNotification,
-  isReadOnly = false,
+  user, userProfile, userStorage, profileId, runFtp, bikeFtp,
+  ctl, historicalMetrics, apiKeyCache, refreshTelemetry,
+  setSyncNotification, isReadOnly = false,
 }: UseSeasonPlansProps) {
   const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
 
@@ -135,11 +107,10 @@ export function useSeasonPlans({
       }
       return;
     }
-    const updatedRaces = primaryTargetRace
-      ? [primaryTargetRace, ...targetRaces.filter((r) => r.id !== primaryTargetRace.id && r.priority !== "A")]
-      : targetRaces;
+    const updatedRaces = mergeTargetRacesList(targetRaces, primaryTargetRace || newBlueprint.primaryRace, userProfile?.targetRaces);
 
     const syncedBlueprint = syncBlueprintToCurrentDate(newBlueprint);
+    setTargetRaces(updatedRaces);
     userStorage.setJSON("target_races", updatedRaces);
     userStorage.setJSON("active_blueprint", syncedBlueprint);
 
@@ -148,23 +119,16 @@ export function useSeasonPlans({
     const eDate = syncedBlueprint.weeks?.[syncedBlueprint.weeks.length - 1]?.endDate || todayStr;
 
     const resolvedGoalType =
-      syncedBlueprint.mode === "GENERAL_MAINTENANCE" ||
-      syncedBlueprint.mode === "PRE_SEASON_MAINTENANCE"
+      syncedBlueprint.mode === "GENERAL_MAINTENANCE" || syncedBlueprint.mode === "PRE_SEASON_MAINTENANCE"
         ? "MAINTENANCE"
         : syncedBlueprint.distanceType
         ? syncedBlueprint.distanceType.toUpperCase()
         : "CUSTOM_MACROCYCLE";
 
     const newPlanItem: SeasonPlanItem = {
-      id: "plan-" + Date.now(),
-      planName: syncedBlueprint.cycleTitle,
-      goalType: resolvedGoalType,
-      blueprint: syncedBlueprint,
-      startDate: sDate,
-      endDate: eDate,
-      totalWeeks: syncedBlueprint.totalWeeks || 16,
-      status: calculatePlanStatus(sDate, eDate),
-      orderIndex: options?.mode === "CHAIN" ? seasonPlans.length : 0,
+      id: "plan-" + Date.now(), planName: syncedBlueprint.cycleTitle, goalType: resolvedGoalType,
+      blueprint: syncedBlueprint, startDate: sDate, endDate: eDate, totalWeeks: syncedBlueprint.totalWeeks || 16,
+      status: calculatePlanStatus(sDate, eDate), orderIndex: options?.mode === "CHAIN" ? seasonPlans.length : 0,
       createdAt: new Date().toISOString(),
     };
 
@@ -179,8 +143,7 @@ export function useSeasonPlans({
 
     try {
       await fetch("/api/macrocycles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ athleteId: profileId, blueprint: syncedBlueprint, primaryRace: primaryTargetRace || syncedBlueprint.primaryRace, source }),
       });
     } catch (e) {
@@ -255,17 +218,12 @@ export function useSeasonPlans({
 
   useEffect(() => {
     const initPlans = async () => {
-      const storedRaces = userStorage.getJSON<TargetRace[]>("target_races");
+      const storedRaces = userStorage.getJSON<TargetRace[]>("target_races") || [];
       const storedPlans = userStorage.getJSON<SeasonPlanItem[]>("season_plans");
 
-      if (userProfile?.targetRaces?.length) {
-        setTargetRaces(userProfile.targetRaces);
-        userStorage.setJSON("target_races", userProfile.targetRaces);
-      } else if (storedRaces?.length) {
-        setTargetRaces(storedRaces);
-      } else {
-        setTargetRaces([]);
-      }
+      let mergedRaces = mergeTargetRacesList(storedRaces, null, userProfile?.targetRaces);
+      setTargetRaces(mergedRaces);
+      userStorage.setJSON("target_races", mergedRaces);
 
       let resolvedPlans: SeasonPlanItem[] = [];
       if (userProfile?.seasonPlans?.length) resolvedPlans = userProfile.seasonPlans;
@@ -294,8 +252,9 @@ export function useSeasonPlans({
               };
               resolvedPlans = [restoredPlan];
               if (macroData.macrocycle.primaryRace) {
-                setTargetRaces([macroData.macrocycle.primaryRace]);
-                userStorage.setJSON("target_races", [macroData.macrocycle.primaryRace]);
+                mergedRaces = mergeTargetRacesList(mergedRaces, macroData.macrocycle.primaryRace, userProfile?.targetRaces);
+                setTargetRaces(mergedRaces);
+                userStorage.setJSON("target_races", mergedRaces);
               }
             }
           }
@@ -338,7 +297,7 @@ export function useSeasonPlans({
           const currentIdx = resolveCurrentWeekIndex(bp.weeks);
           setSelectedMacroWeekIdx(currentIdx);
           if (bp.weeks?.[currentIdx]) setWeekOffset(getOffsetForWeek(bp.weeks[currentIdx]));
-          setMacrocyclePhase(createPhaseInfoFromBlueprint(bp));
+          setMacrocyclePhase(createPhaseInfoFromBlueprint(bp, bp.primaryRace));
         }
         if (hasUpgraded) {
           persistProfileField(user?.uid, user?.email || userProfile?.email || "", { seasonPlans: syncedPlans });
@@ -348,24 +307,27 @@ export function useSeasonPlans({
       }
 
       const storedAvail = userStorage.getJSON<WeeklyAvailabilityMap>("weekly_availability");
-      const rawAvail = userProfile?.weeklyAvailability || (storedAvail && typeof storedAvail === "object" && Object.keys(storedAvail).length > 0 ? storedAvail : undefined);
-      if (rawAvail) {
-        const sanitized = resolveEffectiveAvailability(rawAvail);
-        setWeeklyAvailability(sanitized);
-        userStorage.setJSON("weekly_availability", sanitized);
-      }
+      if (userProfile?.weeklyAvailability) setWeeklyAvailability(resolveEffectiveAvailability(userProfile.weeklyAvailability));
+      else if (storedAvail) setWeeklyAvailability(resolveEffectiveAvailability(storedAvail));
     };
 
     initPlans();
-  }, [user?.uid, userProfile?.seasonPlans, userProfile?.targetRaces, userProfile?.weeklyAvailability, userStorage, profileId, isSuper, user?.email, userProfile?.email, userProfile?.intervalsAthleteId, historicalMetrics, ctl]);
+  }, [userProfile, profileId, isSuper]);
+
+  const handlePersistAvailability = async (map: Record<string, string[]>) => {
+    if (isReadOnly) return;
+    const resolved = resolveEffectiveAvailability(map as any);
+    setWeeklyAvailability(resolved);
+    userStorage.setJSON("weekly_availability", resolved);
+    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { weeklyAvailability: resolved }, isReadOnly);
+  };
 
   return {
     targetRaces, setTargetRaces, seasonPlans, setSeasonPlans, viewingPlanId, setViewingPlanId,
-    weekOffset, setWeekOffset, selectedMacroWeekIdx, setSelectedMacroWeekIdx,
-    weeklyAvailability, setWeeklyAvailability, macrocyclePhase, setMacrocyclePhase,
-    activePlanItem, upcomingPlanItem, currentlyViewedPlan, primaryARace, blueprint,
-    isMaintenanceCycle, primaryRace, weeks, selectedWeek, calculatedWeekNumber,
+    selectedMacroWeekIdx, setSelectedMacroWeekIdx, weekOffset, setWeekOffset,
+    weeklyAvailability, macrocyclePhase, primaryARace, primaryRace, blueprint, weeks,
+    selectedWeek, calculatedWeekNumber, activePlanItem, upcomingPlanItem, currentlyViewedPlan,
     handleApplyMacrocycle, handleUpdateWeekMicrocycle, handleSaveTargetRaces,
-    handleSaveSeasonPlans, handleDeleteActivePlan,
+    handleSaveSeasonPlans, handleDeleteActivePlan, handlePersistAvailability,
   };
 }

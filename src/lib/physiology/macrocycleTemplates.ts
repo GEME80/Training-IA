@@ -39,7 +39,7 @@ export function generateWeekTemplate(
   const countdown = week.countdownWeeks || Math.max(1, 16 - (weekNumber || 1) + 1);
   const totalWeeks = (week as any).totalWeeks || (weekNumber + countdown - 1) || 16;
   const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
-  const isRaceWeek = phase === "RACE_WEEK" || countdown === 1;
+  const isRaceWeek = phase === "RACE_WEEK" || countdown === 1 || microcycleType === "COMPETICION";
 
   const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
@@ -90,6 +90,8 @@ export function generateWeekTemplate(
         continue;
       }
 
+      const isEveOfRace = (primaryRaceDate && Math.abs(new Date(primaryRaceDate).getTime() - d.getTime()) <= 86400000) || day === "Sábado";
+
       for (const disc of discList) {
         if (disc === "Descanso") continue;
         if (disc === "Natacion") {
@@ -117,11 +119,10 @@ export function generateWeekTemplate(
           continue;
         }
         if (disc === "Carrera") {
-          const isSat = day === "Sábado";
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera",
-            workoutName: isSat ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
-            durationMinutes: isSat ? 15 : 25, tss: isSat ? 9 : 16,
+            workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
+            durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16,
             powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave", justification: "Soltura neuromuscular con mínimo impacto articular.",
             workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 10m 70% FTP\n3x\n- 20s 85% FTP\n- 40s 55% FTP\n\nCooldown\n- 5m 60% FTP", isRestDay: false,
           });

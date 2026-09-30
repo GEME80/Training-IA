@@ -4763,5 +4763,38 @@ flowchart TD
   * `src/lib/ai/knowledge/fiveKModel.ts`: 301 LOC
   * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
 
+---
+
+## 54. Versión 3.85: Paleta Teal en Calendario Continuo, Consolidación Universal de Competencias (Tipo A, B, C) & Blindaje de Víspera Pre-Carrera
+
+### 54.1. Objetivos del Release
+1. **Diferenciación Visual Estricta: Natación (Teal) vs Fuerza/Gym (Morado):**
+   - **Corrección de Fallback en Calendario Continuo:** En `AthleteCalendarDayTile.tsx` y `AthleteCalendarDayColumn.tsx`, la disciplina `Natacion` caía en el `else` por defecto (estilo púrpura/morado de gimnasio). Se configuró explícitamente su estilo distintivo:
+     * Cabecera: `bg-[#e6f7f6] dark:bg-teal-950/50 text-[#0c7a76] dark:text-teal-300 border-[#bfece8] dark:border-teal-900/50`.
+     * Bordes y hover: `hover:border-teal-400 dark:hover:border-teal-500`.
+     * Icono: `<Waves className="text-teal-500 shrink-0" />`.
+     * Pastilla/Badge: `Plan` (Teal), reservando `Gym` (Morado) exclusivamente para sesiones de `Fuerza`.
+2. **Consolidación Universal de Competencias (Tipo A, B y C) en "Mi Temporada":**
+   - **Corrección de Sobrescritura de Carreras:** En `useSeasonPlans.ts`, al recuperar un macrociclo activo desde Firestore, `setTargetRaces([macroData.macrocycle.primaryRace])` borraba todas las carreras secundarias Tipo B y Tipo C. Se implementó `mergeTargetRacesList` en `seasonPlanHelpers.ts` para fusionar y conservar todas las pruebas del atleta (incluyendo *Giro de Rigo*, *Ironman 70.3*, etc.).
+   - La sección **"Mis Competiciones & Objetivos"** ahora muestra el listado completo ordenado por prioridad (`🥇 Tipo A`, `🥈 Tipo B`, `🥉 Tipo C`).
+3. **Blindaje Pre-Competitivo Universal (Víspera Suave / Descarga):**
+   - **Erradicación de Sobrecarga Pre-Carrera:** Se corrigió el bug donde un atleta con una competición recibía un fondo de ciclismo de `2h45m (112 TSS)` o series de impacto el sábado previo al domingo de carrera.
+   - Para cualquier día inmediatamente anterior a una prueba o carrera (Tipo A, B o C):
+     * Quedan erradicados los fondos y series intensas.
+     * Se prescribe automáticamente **Activación Ligera Pre-Carrera** (15m trote suave Z1 / 30m pedaleo soltura Z1 con TSS $\le 15$) o **Descanso Pasivo**.
+4. **Recalibración Multi-Atleta en Firestore:**
+   - Inclusión de **Georg Schmitt** (`i729730`) en `recalibrateService.ts` con su plan para *Ironman Cartagena 70.3* y persistencia en Firestore.
+
+### 54.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/dashboard/AthleteCalendarDayTile.tsx`: 344 LOC
+  * `src/components/dashboard/AthleteCalendarDayColumn.tsx`: 340 LOC
+  * `src/hooks/useSeasonPlans.ts`: 333 LOC
+  * `src/lib/physiology/seasonPlanHelpers.ts`: 75 LOC
+  * `src/lib/physiology/macrocycleTemplates.ts`: 345 LOC
+  * `src/lib/services/recalibrateService.ts`: 116 LOC
+
+
 
 

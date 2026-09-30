@@ -195,15 +195,20 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
           // ── SESIÓN PLANIFICADA (futura o presente) ──
           const isAerobicDisc = item.discipline === "Carrera" || item.discipline === "Ciclismo";
           const isGym = item.discipline === "Fuerza";
+          const isSwim = (item.discipline as string) === "Natacion" || (item.discipline as string) === "Natación";
           const headerColors =
             item.discipline === "Carrera"
               ? "bg-[#fcf2eb] dark:bg-amber-950/40 text-[#8C564B] dark:text-amber-300 border-[#f6ddcd] dark:border-amber-900/50"
               : item.discipline === "Ciclismo"
               ? "bg-[#e8f4fd] dark:bg-sky-950/50 text-[#0863b2] dark:text-sky-300 border-[#cde6fb] dark:border-sky-900/50"
+              : isSwim
+              ? "bg-[#e6f7f6] dark:bg-teal-950/50 text-[#0c7a76] dark:text-teal-300 border-[#bfece8] dark:border-teal-900/50"
               : "bg-purple-100/80 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border-purple-200/90 dark:border-purple-800/70";
           const cardColors =
             isGym
               ? "border-purple-200/90 dark:border-purple-800/80 bg-purple-50/25 dark:bg-purple-950/20 hover:border-purple-400"
+              : isSwim
+              ? "border-teal-200/90 dark:border-teal-800/80 bg-white dark:bg-slate-900 hover:border-teal-400 dark:hover:border-teal-500"
               : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500";
           const badgeLabel = isGym ? "Gym" : "Plan";
           const gymDesc = isGym ? gymShortDesc(item.workoutDoc || "") : "";

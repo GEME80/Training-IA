@@ -242,6 +242,8 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
                   ? "bg-[#fcf2eb] dark:bg-amber-950/40 text-[#8C564B] dark:text-amber-300 border-[#f6ddcd] dark:border-amber-900/50"
                   : item.discipline === "Ciclismo"
                   ? "bg-[#e8f4fd] dark:bg-sky-950/50 text-[#0863b2] dark:text-sky-300 border-[#cde6fb] dark:border-sky-900/50"
+                  : ((item.discipline as string) === "Natacion" || (item.discipline as string) === "Natación")
+                  ? "bg-[#e6f7f6] dark:bg-teal-950/50 text-[#0c7a76] dark:text-teal-300 border-[#bfece8] dark:border-teal-900/50"
                   : "bg-[#f3effb] dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border-[#e1d8f5] dark:border-purple-900/50"
               }`}
             >

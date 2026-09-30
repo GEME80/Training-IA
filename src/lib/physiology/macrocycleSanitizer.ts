@@ -75,8 +75,13 @@ export function sanitizeMacrocycleBlueprint(blueprint: MacrocycleBlueprint): Mac
 
       // 2. Blindaje de Carrera: Erradicar sesiones de Bici/Brick contaminadas en días de Carrera
       if (discipline === "Carrera") {
+        const isLegitT2Run = item.activityType === "Brick" && !doc.toLowerCase().includes("bici") && !doc.toLowerCase().includes("ciclismo");
+        if (isLegitT2Run) {
+          return item;
+        }
+
         const hasBikePollution =
-          /brick|ciclismo|bici|transición t2/i.test(name) ||
+          (/brick|ciclismo|bici/i.test(name) && !name.toLowerCase().includes("transición t2")) ||
           /bloque 1: ciclismo|1h\d+m bici|bici @/i.test(doc);
 
         if (hasBikePollution) {

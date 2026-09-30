@@ -4736,8 +4736,8 @@ flowchart TD
 ### 53.1. Objetivos del Release
 1. **Desdoblamiento y Aislamiento de Bricks en Triatlón:**
    - **Corrección de Bug de Contaminación:** Se corrigió la condición de selección donde un día de carrera a pie recibía una sesión de ciclismo/brick ("1h10m Bici + 20m Run") y contaminaba los vatios Stryd con objetivos de FTP de ciclismo.
-   - **Desdoblamiento Automático:** En días multideporte/brick, el generador crea 2 `PlanItem`s separados e independientes (1 Ciclismo con % FTP + 1 Carrera con % CP/Pace), permitiendo ejecución, cronometrado y sincronización limpia a Garmin/Intervals.
-   - **Sanitización de Macrociclos Activos:** `macrocycleSanitizer.ts` inspecciona y repara macrociclos en Firestore sustituyendo cualquier sesión de bici en día de carrera por series puras de calidad de carrera.
+   - **Desdoblamiento Automático & Transiciones T2 de Fin de Semana:** En fases BUILD y PEAK para atletas de triatlón (`triathlon_short`, `triathlon_703`, `triathlon_1406`), el generador añade automáticamente la sesión complementaria de **Transición T2 Post-Ciclismo** (`15-30m @ 85% CP`) desdoblada como actividad independiente de Carrera junto al Fondo de Ciclismo.
+   - **Sanitización de Macrociclos Activos:** `macrocycleSanitizer.ts` inspecciona y repara macrociclos en Firestore preservando transiciones T2 legítimas y sustituyendo cualquier contaminación de bici en días de carrera por series puras de calidad.
 2. **Calendario Continuo de 52 Semanas para Todos los Atletas:**
    - Corrección en `AthleteContinuousCalendar.tsx` donde los atletas con macrociclos activos veían solo 1 o 2 semanas pasadas. Ahora se concatenan las semanas pasadas del macrociclo con el histórico completo de Intervals.icu (`[...fromBp, ...historicalWeeks]`), garantizando la vista ininterrumpida de 52 semanas.
 3. **Identidad Visual Teal / Aqua Marina para Natación:**
@@ -4758,9 +4758,10 @@ flowchart TD
   * `src/components/macrocycle/MacrocycleDayScheduleCard.tsx`: 210 LOC
   * `src/components/macrocycle/WorkoutDetailModal.tsx`: 269 LOC
   * `src/lib/physiology/macrocycleTemplateHelpers.ts`: 323 LOC
-  * `src/lib/physiology/macrocycleTemplates.ts`: 343 LOC
-  * `src/lib/physiology/macrocycleSanitizer.ts`: 110 LOC
+  * `src/lib/physiology/macrocycleTemplates.ts`: 345 LOC
+  * `src/lib/physiology/macrocycleSanitizer.ts`: 116 LOC
   * `src/lib/ai/knowledge/fiveKModel.ts`: 301 LOC
   * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
+
 
 

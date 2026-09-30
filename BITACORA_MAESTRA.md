@@ -4485,5 +4485,60 @@ flowchart TD
   * `useIntervalsSync.ts`: 279 LOC
   * `useSeasonPlans.ts`: 350 LOC
   * `userStorage.ts`: 168 LOC
-- **Servidor:** Proceso activo en puerto 3000 respondiendo **HTTP 200 OK**.
+---
+
+## 49. Hito 49: Rediseño UX/UI de Mi Temporada & Planificación Estilo Stryd (Palladino) y Sincronización Bidireccional de Matriz Deportiva (v3.82)
+
+### 49.1. Contexto y Objetivos del Rediseño
+1. **Curva de Periodización Compacta con Fases Integradas:** La versión previa presentaba una gráfica de curva excesivamente alta (185px) y cajas flotantes desconectadas que obligaban al atleta a desplegar para ver la gráfica. Siguiendo el modelo de **Stryd (Palladino)**, se requería una gráfica estética y compacta con las fases conectadas directamente bajo el eje temporal de semanas.
+2. **Desglose y Comprensión Fisiológica por Fases:** Los atletas requerían entender con claridad qué adaptaciones metabólicas ocurren en cada bloque (Base, Construcción, Pico, Tapering), su volumen proyectado en horas, TSS semanal y duración de la tirada larga máxima.
+3. **Distribución Visual en 2 Columnas:** La vista de *Mi Temporada* se encontraba apilada en una sola columna vertical donde la sección *"Mis Competiciones & Objetivos"* quedaba relegada al fondo. Se reorganizó a un layout equilibrado de 2 columnas donde el plan activo y el diseñador conviven con el gestor de competiciones al lado.
+4. **Saneamiento de Opciones de Carrera:** En la creación de competiciones se eliminó la opción errónea de "Mantenimiento", garantizando que solo existan distancias y modalidades de carrera reales.
+5. **Sincronización Bidireccional de Matriz Deportiva (SSOT):** La matriz semanal configurada en el perfil del atleta y la seleccionada en el diseñador de macrociclos debían ser exactamente la misma fuente de verdad persistida de forma reactiva en Firestore.
+
+### 49.2. Solución Arquitectónica Implementada
+
+#### A. Curva de Carga Compacta con Fases Inferiores (`SeasonCurveChart.tsx` - 296 LOC)
+- Altura reducida a **125px** con proporciones optimizadas para web y móvil.
+- **Track de Fases Conectado:** Debajo del eje X de semanas se incorpora una banda segmentada proporcional al número de semanas de cada fase (*Base*, *Construcción*, *Pico*, *Tapering*, *Competición*) con sus colores distintivos y rangos de semanas.
+- **Tooltip Flotante Elegante:** Tarjeta estilizada con fondo glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro, erradicando el cuadro negro anterior.
+
+#### B. Componente de Desglose Fisiológico por Fases (`MacrocyclePhaseBreakdown.tsx` - 157 LOC)
+- Nuevo módulo educativo desplegable inspirado en las descripciones de planes de Stryd.
+- Explica los objetivos de cada etapa:
+  - **Fase 1 (Base Aeróbica):** Desarrollo mitocondrial, volumen y economía de carrera.
+  - **Fase 2 (Construcción & Umbral):** Ritmo sostenido y tolerancia al lactato.
+  - **Fase 3 (Pico & Simulación):** Tirada larga máxima y ritmo objetivo de competición.
+  - **Fase 4 (Tapering & Puesta a Punto):** Asimilación y frescura fisiológica para la prueba.
+- Muestra el TSS promedio semanal y la duración de la tirada pico de cada bloque.
+
+#### C. Tarjeta de Plan Activo con Resumen Métrico (`SeasonActivePlanCard.tsx` - 212 LOC)
+- Incorpora tarjetas métricas superiores: **Carga Media (TSS)**, **Volumen Semanal (~horas)** y **Tirada Pico (minutos)**.
+- Integra de forma continua la gráfica compacta y el desglose de fases.
+
+#### D. Layout de 2 Columnas Panorámico (`AthleteSeasonStudioView.tsx` - 328 LOC)
+- **Columna Izquierda (7 columnas):** Macrociclo Activo y Wizard Diseñador IA / Biblioteca de Programas.
+- **Columna Derecha (5 columnas):** **Mis Competiciones & Objetivos siempre visible al lado**, con su tarjeta de objetivo principal Tipo A, carreras secundarias Tipo B/C y formulario de registro rápido.
+
+#### E. Depuración del Registro de Carreras (`SeasonRacesTab.tsx` - 340 LOC)
+- Eliminación definitiva del botón "Mantenimiento" en el formulario de competiciones, restringiendo a distancias oficiales: 42K, 21K, 10K, 5K, Gran Fondo, Triatlones, Ultra Trail y Personalizado.
+
+#### F. Sincronización Bidireccional de Matriz Deportiva (`AthleteDashboardViewRouter.tsx` & `SeasonAIGenerator.tsx`)
+- `AthleteDashboardViewRouter` implementa `handlePersistAvailability` con envío `POST` a `/api/profile` incluyendo `uid` y `email`, actualizando el estado `season.weeklyAvailability` y `userStorage`.
+- `SeasonAIGenerator` incluye reactividad vía `useEffect` para actualizar su estado local inmediatamente cuando el perfil del atleta cambia.
+
+### 49.3. Validación y Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Compilación de Producción:** `next build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Regla 3:** Todos los componentes se mantienen estrictamente $< 350$ LOC:
+  * `SeasonCurveChart.tsx`: 296 LOC
+  * `MacrocyclePhaseBreakdown.tsx`: 157 LOC
+  * `SeasonActivePlanCard.tsx`: 212 LOC
+  * `AthleteSeasonStudioView.tsx`: 328 LOC
+  * `SeasonRacesTab.tsx`: 340 LOC
+  * `SeasonAIGenerator.tsx`: 329 LOC
+  * `SeasonWizardStep4Preview.tsx`: 151 LOC
+  * `AthleteDashboardViewRouter.tsx`: 238 LOC
+- **Despliegue:** Rollout en Firebase App Hosting confirmado y activo en producción.
+
 

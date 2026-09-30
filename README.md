@@ -1,10 +1,16 @@
-# ⚡ SGEA Pro (v3.81) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.82) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🏆 **Macrociclos y Temporadas Estilo Stryd (Palladino) (v3.82):** Rediseño completo de la experiencia de planificación y visualización de macrociclos:
+  - **Curva de Carga Compacta con Fases Integradas:** Altura optimizada a `125px` con track inferior de fases (*Base*, *Construcción*, *Pico*, *Tapering*) conectado directamente bajo el eje temporal de semanas, erradicando cajas flotantes y botones innecesarios para desplegar la gráfica.
+  - **Tooltip Luminoso y Elegante:** Tarjeta flotante con efecto glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro.
+  - **Desglose Fisiológico por Fases (`MacrocyclePhaseBreakdown`):** Módulo educativo que detalla objetivos mitocondriales, TSS promedio, volumen en horas, tirada pico y adaptaciones para cada fase del macrociclo.
+  - **Layout en 2 Columnas Equilibrado:** Macrociclo activo y diseñador en la columna principal (7 cols), con **Mis Competiciones & Objetivos siempre visible** al lado (5 cols) para registro directo de carreras (42K, 21K, 10K, 5K, Gran Fondo, Triatlón, Ultra Trail) sin opciones impropias como mantenimiento en carreras.
+  - **Sincronización Bidireccional de Matriz Deportiva (SSOT):** Persistencia unificada y reactiva de la disponibilidad semanal entre el Perfil del Atleta y el Diseñador de Macrociclos vía `POST /api/profile` y Firestore.
 - 👁️ **Modo Auditoría / Solo Lectura de Atletas para Administradores (v3.81):** Inspección fidedigna e instantánea de la interfaz, métricas, calendario y telemetría de cualquier atleta registrado desde la consola de administración con 1 clic ("Ver como atleta"). Aislamiento total en memoria volátil (`createReadOnlyMemoryStorage`) para no alterar el `localStorage` del administrador, banner superior de seguridad (`AdminImpersonationBanner`) con retorno inmediato a la consola, y bloqueo estricto de mutaciones accidentales hacia Firestore o Intervals.icu.
 - 🧭 **Onboarding Asistido e Interactivo para Intervals.icu (v3.80):** Asistente paso a paso para atletas que no conocen Intervals.icu. Incluye bifurcación amigable (*"Soy nuevo"* vs. *"Ya tengo cuenta"*), guía interactiva para registro 1-clic con Google/Strava, vinculación directa de relojes deportivos (Garmin Connect, Coros, Polar, Strava, Apple Watch vía HealthFit, Suunto, Wahoo), y obtención visual de Athlete ID y Clave API.
 - ⏳ **Sala de Espera Activa (Pre-Aprobación Self-Service) (v3.80):** Mientras el administrador valida al atleta, la pantalla de acceso restringido ofrece una tarjeta proactiva que permite al usuario adelantar la configuración de su cuenta de telemetría y reloj deportivo.

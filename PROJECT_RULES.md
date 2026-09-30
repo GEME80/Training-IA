@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.81)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.82)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,17 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.81).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.82).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 3.82: Rediseño UX/UI de Mi Temporada & Planificación Estilo Stryd (Palladino) y Sincronización Bidireccional de Matriz Deportiva:
+  * Gráfica Compacta con Fases Inferiores Integradas (`SeasonCurveChart` - 125px): Altura reducida y banda de fases (*Base*, *Construcción*, *Pico*, *Tapering*, *Competición*) ubicada directamente bajo el eje X temporal, eliminando cajas flotantes y botones innecesarios para desplegar la curva.
+  * Tooltip Luminoso y Elegante: Tarjeta con fondo glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro, erradicando el cuadro negro anterior.
+  * Desglose Fisiológico por Fases (`MacrocyclePhaseBreakdown`): Módulo educativo que detalla objetivos de cada etapa (Base, Construcción, Pico, Tapering), TSS promedio semanal y duración de la tirada pico.
+  * Layout Panorámico de 2 Columnas: Macrociclo activo y diseñador en la columna izquierda (7 cols), y panel **Mis Competiciones & Objetivos siempre visible** en la columna derecha (5 cols) para registro directo de carreras.
+  * Depuración de Carreras (`SeasonRacesTab`): Eliminación definitiva de "Mantenimiento" en el formulario de competiciones, restringiendo a distancias y modalidades de carrera reales.
+  * Sincronización Bidireccional de Matriz Deportiva (SSOT): Persistencia unificada y reactiva de la disponibilidad semanal entre el Perfil del Atleta y el Diseñador de Macrociclos vía `POST /api/profile` y Firestore.
 - Versión 3.81: Modo Auditoría de Atleta en Solo Lectura (Impersonation Seguro) con Aislamiento en Memoria:
   * Inspección Fidedigna 1-Clic: Botón "Ver como atleta" en la consola de administración (`AdminUsersTable` y `AdminUserCardMobile`), permitiendo al administrador inspeccionar el Home exacto de cualquier atleta registrado.
   * Aislamiento Total en Memoria Volátil (`createReadOnlyMemoryStorage`): Cero escrituras o mutaciones en el `localStorage` del administrador, previniendo contaminación de sesiones o solapamiento de claves locales.

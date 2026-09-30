@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Footprints, Bike, HeartPulse, Moon, Edit3, Zap, Activity } from "lucide-react";
+import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer } from "lucide-react";
+import { RunningTrainingMode } from "@/lib/db/types";
+import { resolveRunningMode, formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface AthleteProfileHeroCardProps {
   athleteName: string;
@@ -16,6 +18,10 @@ interface AthleteProfileHeroCardProps {
   lthr?: number;
   restingHR?: number;
   maxHR?: number;
+  runningTrainingMode?: RunningTrainingMode;
+  hasRunningPowerMeter?: boolean;
+  runThresholdPaceSecPerKm?: number;
+  runThresholdPaceStr?: string;
   onOpenEditModal: () => void;
 }
 
@@ -32,8 +38,21 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   lthr,
   restingHR,
   maxHR,
+  runningTrainingMode,
+  hasRunningPowerMeter,
+  runThresholdPaceSecPerKm,
+  runThresholdPaceStr,
   onOpenEditModal,
 }) => {
+  const activeMode = resolveRunningMode({
+    hasRunningPowerMeter,
+    runningTrainingMode,
+    runFtp,
+  });
+
+  const effPaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr);
+  const displayPace = runThresholdPaceStr || (effPaceSec > 0 ? `${formatPace(effPaceSec)}/km` : "— /km");
+
   const relativeRunPower = weightKg && weightKg > 0 && runFtp && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "—";
   const relativeBikePower = weightKg && weightKg > 0 && bikeFtp && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "—";
   const bmi = weightKg && weightKg > 0 && heightCm && heightCm > 0 ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : "—";
@@ -51,13 +70,19 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
             {(athleteName || "AT").slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-black text-slate-900 dark:text-white">
                 {athleteName || "Atleta"}
               </h3>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
-                PRO ATHLETE
-              </span>
+              {activeMode === "POWER" ? (
+                <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-[10px] font-bold border border-amber-500/20">
+                  ⚡ STRYD POWER ({runFtp > 0 ? `${runFtp}W` : "Sin CP"})
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
+                  ⏱️❤️ HÍBRIDO (Pace {displayPace} • {lthr ? `${lthr} bpm` : "Sin LTHR"})
+                </span>
+              )}
               {email && (
                 <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                   • {email}
@@ -89,28 +114,46 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
 
       {/* KPI Strip: 4 Umbrales Principales */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-        {/* 1. Stryd CP */}
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-            <span className="flex items-center gap-1">
-              <Footprints className="h-3.5 w-3.5 text-amber-500" />
-              Stryd CP (Run)
-            </span>
-            <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
+        {/* 1. Métrica de Carrera: Stryd CP o Ritmo Umbral */}
+        {activeMode === "POWER" ? (
+          <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20 p-3 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+              <span className="flex items-center gap-1">
+                <Footprints className="h-3.5 w-3.5 text-amber-500" />
+                Stryd CP (Run)
+              </span>
+              <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+                {runFtp && runFtp > 0 ? (
+                  <>
+                    {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
+                  </>
+                ) : (
+                  <span className="text-slate-400 font-medium text-base">— W</span>
+                )}
+              </span>
+              <span className="text-[9px] font-mono text-amber-600 dark:text-amber-400 font-bold">Modo Activo</span>
+            </div>
           </div>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
-              {runFtp && runFtp > 0 ? (
-                <>
-                  {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
-                </>
-              ) : (
-                <span className="text-slate-400 font-medium text-base">— W</span>
-              )}
-            </span>
-            <span className="text-[9px] font-mono text-slate-400">Potencia Crítica</span>
+        ) : (
+          <div className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20 p-3 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+              <span className="flex items-center gap-1">
+                <Timer className="h-3.5 w-3.5 text-emerald-500" />
+                Ritmo Umbral
+              </span>
+              <span className="text-[10px] font-mono text-emerald-600 font-bold">Pace Calidad</span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-lg font-black font-mono text-slate-900 dark:text-white">
+                {displayPace}
+              </span>
+              <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">Híbrido Activo</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 2. Bike FTP */}
         <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">
@@ -136,7 +179,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
         </div>
 
         {/* 3. LTHR FC Umbral */}
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 flex flex-col justify-between">
+        <div className={`rounded-xl border ${activeMode === "HYBRID" ? "border-2 border-rose-500/40 bg-rose-500/5 dark:bg-rose-950/20" : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"} p-3 flex flex-col justify-between`}>
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <HeartPulse className="h-3.5 w-3.5 text-rose-500" />
@@ -154,7 +197,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span className="text-slate-400 font-medium text-base">— bpm</span>
               )}
             </span>
-            <span className="text-[9px] font-mono text-slate-400">Lactato Z4</span>
+            <span className="text-[9px] font-mono text-slate-400">{activeMode === "HYBRID" ? "Fondos & Suaves" : "Lactato Z4"}</span>
           </div>
         </div>
 
@@ -163,9 +206,9 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
             <span className="flex items-center gap-1">
               <Moon className="h-3.5 w-3.5 text-indigo-500" />
-              FC Reposo
+              FC Reposo (RHR)
             </span>
-            <span className="text-[10px] font-mono text-indigo-600 font-bold">Vagal</span>
+            <span className="text-[10px] font-mono text-indigo-600 font-bold">Matutino</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-lg font-black font-mono text-slate-900 dark:text-white">

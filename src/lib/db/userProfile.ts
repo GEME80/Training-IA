@@ -2,7 +2,7 @@ import { adminDb } from "../firebase/admin";
 import { encryptSensitiveData, decryptSensitiveData } from "../crypto";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "../gemini/engine";
 import { isMasterAdminEmail, getSuperadminEmail } from "../env";
-import { UserProfileData, UserRole, UserStatus } from "./types";
+import { UserProfileData, UserRole, UserStatus, RunningTrainingMode } from "./types";
 
 // Re-exportación completa de tipos y módulos para mantener 100% de retrocompatibilidad
 export * from "./types";
@@ -213,6 +213,10 @@ export async function saveUserProfile(
     rawApiKey?: string;
     runFtp?: number;
     bikeFtp?: number;
+    hasRunningPowerMeter?: boolean;
+    runningTrainingMode?: RunningTrainingMode;
+    runThresholdPaceSecPerKm?: number;
+    runThresholdPaceStr?: string;
     restingHR?: number;
     maxHR?: number;
     lthr?: number;
@@ -245,8 +249,12 @@ export async function saveUserProfile(
       role: existingData?.role ?? (isMasterAdminEmail(data.email) ? "admin" : "athlete"),
       status: existingData?.status ?? (isMasterAdminEmail(data.email) ? "active" : "pending"),
       intervalsAthleteId: data.intervalsAthleteId ?? existingData?.intervalsAthleteId,
+      hasRunningPowerMeter: data.hasRunningPowerMeter ?? existingData?.hasRunningPowerMeter,
+      runningTrainingMode: data.runningTrainingMode ?? existingData?.runningTrainingMode,
       runFtp: data.runFtp ?? existingData?.runFtp,
       bikeFtp: data.bikeFtp ?? existingData?.bikeFtp,
+      runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? existingData?.runThresholdPaceSecPerKm,
+      runThresholdPaceStr: data.runThresholdPaceStr ?? existingData?.runThresholdPaceStr,
       restingHR: data.restingHR ?? existingData?.restingHR,
       maxHR: data.maxHR ?? existingData?.maxHR,
       lthr: data.lthr ?? existingData?.lthr,
@@ -309,10 +317,7 @@ export async function getUserProfileDecrypted(
     const userRef = adminDb.collection("users").doc(uid);
     const doc = await userRef.get();
 
-    if (!doc.exists) {
-      return null;
-    }
-
+    if (!doc.exists) return null;
     const profile = doc.data() as UserProfileData;
     const isSuper = isMasterAdminEmail(profile.email);
 
@@ -324,7 +329,6 @@ export async function getUserProfileDecrypted(
     }
 
     let decryptedApiKey: string | null = null;
-
     if (profile.encryptedApiKey) {
       try {
         decryptedApiKey = decryptSensitiveData(profile.encryptedApiKey);
@@ -333,10 +337,7 @@ export async function getUserProfileDecrypted(
       }
     }
 
-    return {
-      profile,
-      decryptedApiKey,
-    };
+    return { profile, decryptedApiKey };
   } catch (err) {
     console.warn(`Aviso al consultar usuario ${uid} en Firestore adminDb:`, err);
     return null;

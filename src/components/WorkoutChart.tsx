@@ -320,7 +320,7 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
                 backgroundColor: color,
                 minWidth: "2px",
               }}
-              title={`${seg.durationMins >= 1 ? `${Math.round(seg.durationMins)}m` : `${Math.round(seg.durationMins * 60)}s`} @ ${seg.intensityPercent}%${athleteFtp && athleteFtp > 0 ? ` (${Math.round((athleteFtp * seg.intensityPercent) / 100)}W)` : ""}`}
+              title={seg.label ? `${seg.label}${athleteFtp && athleteFtp > 0 && !seg.label.includes("W") && !seg.label.includes("/km") && !seg.label.includes("bpm") ? ` (${Math.round((athleteFtp * seg.intensityPercent) / 100)}W)` : ""}` : `${seg.durationMins >= 1 ? `${Math.round(seg.durationMins)}m` : `${Math.round(seg.durationMins * 60)}s`} @ ${seg.intensityPercent}%${athleteFtp && athleteFtp > 0 ? ` (${Math.round((athleteFtp * seg.intensityPercent) / 100)}W)` : ""}`}
             />
           );
         })}

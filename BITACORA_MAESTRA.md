@@ -4541,4 +4541,69 @@ flowchart TD
   * `AthleteDashboardViewRouter.tsx`: 238 LOC
 - **Despliegue:** Rollout en Firebase App Hosting confirmado y activo en producción.
 
+---
+
+## 50. Implementación de Modalidad Dual de Carrera: Potencia Stryd (CP) vs. Modelo Híbrido (Ritmo + Frecuencia Cardíaca)
+
+### 50.1. Diagnóstico y Visión de Producto
+- **Problema Detectado:** Los atletas que no disponían de potenciómetro para correr (Stryd) recibían prescripciones en vatios de carrera (`% CP`), lo que imposibilitaba ejecutar los entrenamientos con precisión en Garmin/Intervals.icu.
+- **Principio Fundamental Innegociable:**
+  1. **Protección Absoluta del Modelo de Potencia:** Los atletas con Stryd entrenan **100% por potencia** (`% CP` / Watts) con cero modificaciones a su flujo, planes o sintaxis.
+  2. **Modelo Híbrido Estricto para Atletas sin Potenciómetro:** Todo corredor sin Stryd entrena en **Modelo Híbrido** (Series/Calidad por **Ritmo Umbral** y Fondos/Recuperación por **Frecuencia Cardíaca LTHR**).
+  3. **Zero-Code Drift:** No duplicar ni triplicar los 18 modelos científicos (`src/lib/ai/knowledge/`). Se desarrolló un adaptador fisiológico universal en tiempo de ejecución.
+  4. **Recalibración Dinámica:** Al actualizar la Potencia Crítica (Stryd CP), el Ritmo Umbral o la FC Umbral (LTHR), los objetivos de los entrenamientos se recalculan automáticamente sin regenerar el macrociclo.
+
+### 50.2. Arquitectura & Módulos Implementados
+
+#### A. Adaptador Fisiológico Universal (`runningWorkoutAdapter.ts` - 256 LOC)
+- **`resolveRunningMode(profile)`:** Determina `"POWER"` o `"HYBRID"` de forma determinista y retrocompatible con la telemetría de Intervals.icu y Firestore.
+- **`calculatePaceZones(thresholdPaceSec)`:** Genera las 6 zonas de ritmo funcionales (Z1 Fácil, Z2 Moderado, Z3 Tempo, Z4 Umbral, Z5 Intervalo, Z6 Repetición) en `min/km` siguiendo la metodología de Jack Daniels / Intervals.icu.
+- **`adaptRunningWorkoutDoc(doc, discipline, isQuality, mode)`:** Traduce la sintaxis de carrera:
+  - En modo `POWER`: mantiene intacta la prescripción en `% CP` / `% FTP`.
+  - En modo `HYBRID` (Calidad): traduce a `% Pace` para que Intervals.icu y Garmin configuren las alertas por ritmo.
+  - En modo `HYBRID` (Fondos/Aeróbico): traduce a `% LTHR` para que el control de intensidad sea cardiovascular.
+- **`interpolateWorkoutTarget(rawTarget, opts)`:** Motor de interpolación reactiva que recalcula dinámicamente Watts, `min/km` o `bpm` en base a los umbrales actuales del atleta.
+- **`adaptRunningPlanItem(item, opts)`:** Helper atómico para adaptar un `PlanItem` completo en tiempo de ejecución.
+
+#### B. Visor de Zonas por Ritmo & Badges Dinámicos (`AthleteZonesViewer.tsx` - 254 LOC)
+- Incorpora la tarjeta de **Zonas por Ritmo (Z1-Z6 en min/km)** con visualización del ritmo umbral funcional.
+- Etiquetas dinámicas de activación: `[ACTIVA RUN]`, `[ACTIVA SERIES]` y `[ACTIVA FONDOS]`.
+- Badges dinámicos de cabecera que distinguen entre `⚡ STRYD POWER` y `⏱️❤️ HÍBRIDO (Pace/HR)`.
+
+#### C. Hero Card del Perfil del Atleta (`AthleteProfileHeroCard.tsx` - 230 LOC)
+- Incorpora badge distintivo de la modalidad de carrera del atleta.
+- Alterna el KPI principal de carrera entre **Stryd CP (W)** y **Ritmo Umbral (/km)** según la modalidad seleccionada.
+
+#### D. Formulario de Edición & Selector de Modalidad (`AthleteEditProfileModal.tsx` - 298 LOC & `ProfilePhysiologyTab.tsx` - 286 LOC)
+- Checkbox directo: *"¿Entrenas con Potenciómetro de Carrera (Stryd)?"*.
+  - Si está marcado: modo Potencia Stryd con input de vatios CP.
+  - Si está desmarcado: activa el Modo Híbrido con input de Ritmo Umbral (`min/km`) y aviso de directiva fisiológica.
+
+#### E. Persistencia & Hook de Telemetría (`useAthleteTelemetry.ts` - 308 LOC)
+- Sincroniza `hasRunningPowerMeter`, `runningTrainingMode`, `runThresholdPaceStr` y `runThresholdPaceSecPerKm` en Firestore (`/api/profile`) y `userStorage`.
+- Refactorizado y optimizado de 357 LOC a **308 LOC** cumpliendo estrictamente con la Regla de Modularidad (< 350 LOC).
+
+#### F. Motores de Prescripción & Sincronización Intervals (`macrocycleTemplates.ts` & `deterministicPlanGenerator.ts`)
+- `generateWeekTemplate` y `generateDeterministicAnalysis` adaptan automáticamente las sesiones de carrera al Modo Híbrido cuando corresponde, manteniendo 100% intacto el flujo de atletas con Stryd.
+- `WorkoutChart.tsx` actualiza sus tooltips para mostrar los ritmos en `min/km` y pulsos en `bpm`.
+- `prompts.ts` instruye al Head Coach sobre la modalidad del atleta, prohibiendo prescribir vatios a corredores en Modo Híbrido.
+
+### 50.3. Verificación & Certificación de Calidad
+- **Pruebas Unitarias de Fisiología:** `scratch/test_running_metrics.js` $\rightarrow$ **100% PASSED**.
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Regla de Modularidad:** Todos los archivos modificados y creados se mantienen estrictamente $< 350$ LOC:
+  * `runningWorkoutAdapter.ts`: 256 LOC
+  * `AthleteZonesViewer.tsx`: 254 LOC
+  * `AthleteProfileHeroCard.tsx`: 230 LOC
+  * `AthleteEditProfileModal.tsx`: 298 LOC
+  * `ProfilePhysiologyTab.tsx`: 286 LOC
+  * `AthletePhysiologyView.tsx`: 256 LOC
+  * `useAthleteTelemetry.ts`: 308 LOC
+  * `macrocycleTemplates.ts`: 348 LOC
+  * `macrocycleTemplateHelpers.ts`: 323 LOC
+  * `deterministicPlanGenerator.ts`: 338 LOC
+  * `prompts.ts`: 340 LOC
+
+
 

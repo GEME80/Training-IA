@@ -43,7 +43,6 @@ export function useAthleteTelemetry({
   const [dailyExecutedActivities, setDailyExecutedActivities] = useState<DailyExecutedMap>({});
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
 
-  // FinOps & Resiliencia SWR: timestamps de caché y snapshots en memoria
   const lastFetchTimestampRef = useRef<number>(0);
   const lastPersistedProfileRef = useRef<string>("");
 
@@ -53,14 +52,8 @@ export function useAthleteTelemetry({
     if (serialized === lastPersistedProfileRef.current) return;
     try {
       lastPersistedProfileRef.current = serialized;
-      await fetch("/api/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: serialized,
-      });
-    } catch (e) {
-      console.warn("Aviso al persistir perfil en API:", e);
-    }
+      await fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: serialized });
+    } catch (e) { console.warn("Aviso al persistir perfil en API:", e); }
   }, [isReadOnly]);
 
   const latestWellness = useMemo(() => {
@@ -73,24 +66,23 @@ export function useAthleteTelemetry({
     return computePMCHistoricalSummary(wellnessHistory);
   }, [wellnessHistory]);
 
-  const [profile, setProfile] = useState<AthleteProfile>(() => ({
-    id: userProfile?.intervalsAthleteId || "",
-    name: userProfile?.displayName || user?.displayName || "Atleta",
-    ctl: 0,
-    atl: 0,
-    tsb: 0,
-    rampRate: 0,
-    restingHR: userProfile?.restingHR ?? (Number(userStorage.getItem("resting_hr")) || undefined),
-    lthr: userProfile?.lthr ?? (Number(userStorage.getItem("lthr")) || undefined),
-    maxHR: userProfile?.maxHR ?? (Number(userStorage.getItem("max_hr")) || undefined),
-    run_ftp: userProfile?.runFtp || 0,
-    bike_ftp: userProfile?.bikeFtp || 0,
-    weight: userProfile?.weightKg,
-    heightCm: userProfile?.heightCm,
-    gender: userProfile?.gender ?? (userStorage.getItem("gender") as "M" | "F" | "OTHER" | null) ?? undefined,
-    birthDate: userProfile?.birthDate,
-    visibleMetrics: userProfile?.visibleMetrics,
-  }));
+  const [profile, setProfile] = useState<AthleteProfile>(() => {
+    const hasPwr = userProfile?.hasRunningPowerMeter ?? (userProfile?.runFtp ? userProfile.runFtp > 0 : (Number(userStorage.getItem("run_ftp")) || 0) > 0);
+    return {
+      id: userProfile?.intervalsAthleteId || "", name: userProfile?.displayName || user?.displayName || "Atleta",
+      ctl: 0, atl: 0, tsb: 0, rampRate: 0,
+      restingHR: userProfile?.restingHR ?? (Number(userStorage.getItem("resting_hr")) || undefined),
+      lthr: userProfile?.lthr ?? (Number(userStorage.getItem("lthr")) || undefined),
+      maxHR: userProfile?.maxHR ?? (Number(userStorage.getItem("max_hr")) || undefined),
+      run_ftp: userProfile?.runFtp || 0, bike_ftp: userProfile?.bikeFtp || 0,
+      hasRunningPowerMeter: hasPwr, runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+      runThresholdPaceStr: userProfile?.runThresholdPaceStr || userStorage.getItem("run_threshold_pace_str") || "4:45",
+      runThresholdPaceSecPerKm: userProfile?.runThresholdPaceSecPerKm || Number(userStorage.getItem("run_threshold_pace_sec")) || 285,
+      weight: userProfile?.weightKg, heightCm: userProfile?.heightCm,
+      gender: userProfile?.gender ?? (userStorage.getItem("gender") as "M" | "F" | "OTHER" | null) ?? undefined,
+      birthDate: userProfile?.birthDate, visibleMetrics: userProfile?.visibleMetrics,
+    };
+  });
 
   const refreshTelemetry = useCallback(
     async (athleteId?: string, apiKey?: string, runFtp?: number, bikeFtp?: number, forceRefresh: boolean = false) => {
@@ -100,11 +92,8 @@ export function useAthleteTelemetry({
       if (!isSuper && targetAthleteId.toLowerCase() === "i442091") { setIsLiveConnected(false); return; }
       if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey) { setIsLiveConnected(false); return; }
 
-      // Disponibilidad SWR: Si se consultó hace menos de 3 min y no es forzado, reusar estado
       const now = Date.now();
-      if (!forceRefresh && lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < 180000)) {
-        return;
-      }
+      if (!forceRefresh && lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < 180000)) return;
 
       try {
         setIsRefreshingTelemetry(true);
@@ -163,75 +152,75 @@ export function useAthleteTelemetry({
   );
 
   const handleSaveSettings = async (data: any) => {
-    if (isReadOnly) {
-      console.warn("Modo auditoría / solo lectura: guardado de configuración deshabilitado");
-      return;
-    }
+    if (isReadOnly) return;
     const athleteIdToUse = data.intervalsAthleteId || data.athleteId;
-    const setters: Array<[string, any, (v: any) => void]> = [
-      ["athlete_id", athleteIdToUse, (v) => setProfile((p) => ({ ...p, id: v }))],
-      ["display_name", data.displayName, (v) => setProfile((p) => ({ ...p, name: v }))],
-      ["run_ftp", data.runFtp, (v) => setProfile((p) => ({ ...p, run_ftp: v }))],
-      ["bike_ftp", data.bikeFtp, (v) => setProfile((p) => ({ ...p, bike_ftp: v }))],
-      ["height_cm", data.heightCm, (v) => setProfile((p) => ({ ...p, heightCm: v }))],
-      ["weight_kg", data.weightKg, (v) => setProfile((p) => ({ ...p, weight: v }))],
-      ["gender", data.gender, (v) => setProfile((p) => ({ ...p, gender: v }))],
-      ["birth_date", data.birthDate, (v) => setProfile((p) => ({ ...p, birthDate: v }))],
-      ["lthr", data.lthr, (v) => setProfile((p) => ({ ...p, lthr: v }))],
-      ["resting_hr", data.restingHR, (v) => setProfile((p) => ({ ...p, restingHR: v }))],
-      ["max_hr", data.maxHR, (v) => setProfile((p) => ({ ...p, maxHR: v }))],
+    const storageKeys: Array<[string, any]> = [
+      ["athlete_id", athleteIdToUse], ["display_name", data.displayName], ["run_ftp", data.runFtp], ["bike_ftp", data.bikeFtp],
+      ["height_cm", data.heightCm], ["weight_kg", data.weightKg], ["gender", data.gender], ["birth_date", data.birthDate],
+      ["lthr", data.lthr], ["resting_hr", data.restingHR], ["max_hr", data.maxHR],
+      ["has_running_power_meter", data.hasRunningPowerMeter], ["running_training_mode", data.runningTrainingMode],
+      ["run_threshold_pace_str", data.runThresholdPaceStr], ["run_threshold_pace_sec", data.runThresholdPaceSecPerKm],
     ];
-    setters.forEach(([k, v, set]) => { if (v !== undefined && v !== null) { userStorage.setItem(k, String(v)); set(v); } });
+    storageKeys.forEach(([k, v]) => { if (v !== undefined && v !== null) userStorage.setItem(k, String(v)); });
+
+    setProfile((prev) => ({
+      ...prev,
+      id: athleteIdToUse || prev.id,
+      name: data.displayName || prev.name,
+      run_ftp: data.runFtp ?? prev.run_ftp,
+      bike_ftp: data.bikeFtp ?? prev.bike_ftp,
+      heightCm: data.heightCm ?? prev.heightCm,
+      weight: data.weightKg ?? prev.weight,
+      gender: data.gender ?? prev.gender,
+      birthDate: data.birthDate ?? prev.birthDate,
+      lthr: data.lthr ?? prev.lthr,
+      restingHR: data.restingHR ?? prev.restingHR,
+      maxHR: data.maxHR ?? prev.maxHR,
+      hasRunningPowerMeter: data.hasRunningPowerMeter ?? prev.hasRunningPowerMeter,
+      runningTrainingMode: data.runningTrainingMode || prev.runningTrainingMode,
+      runThresholdPaceStr: data.runThresholdPaceStr || prev.runThresholdPaceStr,
+      runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? prev.runThresholdPaceSecPerKm,
+    }));
 
     if (data.apiKey) { setApiKeyCache(data.apiKey); userStorage.setItem("intervals_api_key", data.apiKey); }
     if (data.geminiApiKey) { setGeminiKeyCache(data.geminiApiKey); userStorage.setItem("custom_gemini_key", data.geminiApiKey); }
     if (data.visibleMetrics) { setVisibleMetrics(data.visibleMetrics); userStorage.setJSON("visible_metrics", data.visibleMetrics); }
 
-    const effectiveWeight = data.weightKg !== undefined ? data.weightKg : profile.weight;
-    const effectiveHeight = data.heightCm !== undefined ? data.heightCm : profile.heightCm;
-    const effectiveRunFtp = data.runFtp || profile.run_ftp;
-    const effectiveBikeFtp = data.bikeFtp || profile.bike_ftp;
-    const effectiveBirth = data.birthDate || profile.birthDate;
-    const effectiveGender = data.gender || profile.gender;
+    const effWeight = data.weightKg ?? profile.weight, effHeight = data.heightCm ?? profile.heightCm;
+    const effRunFtp = data.runFtp ?? profile.run_ftp, effBikeFtp = data.bikeFtp ?? profile.bike_ftp;
     const targetApiKey = data.apiKey || apiKeyCache || userStorage.getItem("intervals_api_key") || "";
 
     await persistProfileToApi({
       uid: user?.uid || "", email: user?.email || userProfile?.email || "",
       displayName: data.displayName || profile.name || user?.displayName || userProfile?.displayName,
       intervalsAthleteId: athleteIdToUse || profile.id, rawApiKey: targetApiKey,
-      runFtp: effectiveRunFtp, bikeFtp: effectiveBikeFtp,
-      lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
-      restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
-      maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
-      weightKg: effectiveWeight, heightCm: effectiveHeight, birthDate: effectiveBirth, gender: effectiveGender,
+      runFtp: effRunFtp, bikeFtp: effBikeFtp,
+      lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
+      hasRunningPowerMeter: data.hasRunningPowerMeter ?? profile.hasRunningPowerMeter,
+      runningTrainingMode: data.runningTrainingMode || profile.runningTrainingMode,
+      runThresholdPaceStr: data.runThresholdPaceStr || profile.runThresholdPaceStr,
+      runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? profile.runThresholdPaceSecPerKm,
+      weightKg: effWeight, heightCm: effHeight, birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
       weeklyAvailability: data.weeklyAvailability, visibleMetrics: data.visibleMetrics || visibleMetrics,
     });
 
-    // Sincronizar hacia Intervals.icu esperando confirmación antes de refrescar
     if (athleteIdToUse || profile.id || user?.uid) {
       try {
         await fetch("/api/sync-settings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            athleteId: athleteIdToUse || profile.id, apiKey: targetApiKey || undefined,
-            uid: user?.uid, email: user?.email || userProfile?.email || "",
-            runFtp: effectiveRunFtp, bikeFtp: effectiveBikeFtp,
-            weightKg: effectiveWeight, birthDate: effectiveBirth, gender: effectiveGender,
-            lthr: data.lthr !== undefined ? data.lthr : profile.lthr,
-            restingHR: data.restingHR !== undefined ? data.restingHR : profile.restingHR,
-            maxHR: data.maxHR !== undefined ? data.maxHR : profile.maxHR,
+            athleteId: athleteIdToUse || profile.id, apiKey: targetApiKey || undefined, uid: user?.uid, email: user?.email || userProfile?.email || "",
+            runFtp: effRunFtp, bikeFtp: effBikeFtp, weightKg: effWeight, birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
+            lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
           }),
         });
-      } catch (syncErr) {
-        console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr);
-      }
+      } catch (syncErr) { console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr); }
     }
 
     if (refreshProfile) {
       try { await refreshProfile(); } catch (authErr) { console.warn("Aviso al refrescar perfil en AuthContext:", authErr); }
     }
-    await refreshTelemetry(athleteIdToUse || profile.id, targetApiKey || data.apiKey, effectiveRunFtp, effectiveBikeFtp, true);
+    await refreshTelemetry(athleteIdToUse || profile.id, targetApiKey || data.apiKey, effRunFtp, effBikeFtp, true);
   };
 
   const handleToggleMetric = async (id: string) => {
@@ -306,13 +295,16 @@ export function useAthleteTelemetry({
 
       const resolvedRunFtp = !isSuper && stored.runFtp === 327 ? 0 : stored.runFtp;
       const resolvedBikeFtp = !isSuper && stored.bikeFtp === 240 ? 0 : stored.bikeFtp;
+      const hasPwr = userProfile?.hasRunningPowerMeter ?? (resolvedRunFtp > 0);
 
       setProfile((prev) => ({
-        ...prev, id: storedAthleteId, run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
+        ...prev, id: storedAthleteId, run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp, hasRunningPowerMeter: hasPwr,
+        runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+        runThresholdPaceStr: userProfile?.runThresholdPaceStr || userStorage.getItem("run_threshold_pace_str") || prev.runThresholdPaceStr || "4:45",
+        runThresholdPaceSecPerKm: userProfile?.runThresholdPaceSecPerKm || Number(userStorage.getItem("run_threshold_pace_sec")) || prev.runThresholdPaceSecPerKm || 285,
         weight: stored.weight ? Number(stored.weight) : userProfile?.weightKg ?? prev.weight,
         heightCm: stored.height ? Number(stored.height) : userProfile?.heightCm ?? prev.heightCm,
-        gender: stored.gender || (userProfile?.gender ?? prev.gender),
-        birthDate: stored.birthDate || (userProfile?.birthDate ?? prev.birthDate),
+        gender: stored.gender || (userProfile?.gender ?? prev.gender), birthDate: stored.birthDate || (userProfile?.birthDate ?? prev.birthDate),
         lthr: stored.lthr ?? prev.lthr, restingHR: stored.restingHR ?? prev.restingHR, maxHR: stored.maxHR ?? prev.maxHR,
       }));
 
@@ -330,7 +322,7 @@ export function useAthleteTelemetry({
     };
 
     init();
-  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate, userProfile?.encryptedApiKey, userProfile?.hasApiKey, isSuper, userStorage, refreshTelemetry]);
+  }, [user?.uid, userProfile?.intervalsAthleteId, userProfile?.weightKg, userProfile?.heightCm, userProfile?.gender, userProfile?.birthDate, userProfile?.encryptedApiKey, userProfile?.hasApiKey, userProfile?.hasRunningPowerMeter, userProfile?.runningTrainingMode, userProfile?.runThresholdPaceStr, userProfile?.runThresholdPaceSecPerKm, isSuper, userStorage, refreshTelemetry]);
 
   // Heartbeat de auto-recuperación
   useEffect(() => {

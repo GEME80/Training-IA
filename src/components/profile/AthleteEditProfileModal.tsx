@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Save, Footprints, Bike, HeartPulse, Moon, Activity, Check, Radio, Key, User, Loader2 } from "lucide-react";
+import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
 export interface AthleteProfileFormData {
   displayName?: string;
@@ -15,6 +16,10 @@ export interface AthleteProfileFormData {
   lthr?: number;
   restingHR?: number;
   maxHR?: number;
+  hasRunningPowerMeter?: boolean;
+  runningTrainingMode?: "POWER" | "HYBRID";
+  runThresholdPaceStr?: string;
+  runThresholdPaceSecPerKm?: number;
   intervalsAthleteId?: string;
   apiKey?: string;
 }
@@ -48,6 +53,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
 
   useEffect(() => {
     if (isOpen) {
+      const hasPwr = initialData.hasRunningPowerMeter ?? ((initialData.runFtp || 0) > 0);
       setForm({
         displayName: initialData.displayName || "Atleta",
         email: initialData.email || "",
@@ -60,6 +66,10 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
         lthr: initialData.lthr || 0,
         restingHR: initialData.restingHR || 0,
         maxHR: initialData.maxHR || 0,
+        hasRunningPowerMeter: hasPwr,
+        runningTrainingMode: initialData.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+        runThresholdPaceStr: initialData.runThresholdPaceStr || "4:45",
+        runThresholdPaceSecPerKm: initialData.runThresholdPaceSecPerKm || 285,
         intervalsAthleteId: initialData.intervalsAthleteId || "",
         apiKey: initialData.apiKey || "",
       });
@@ -74,7 +84,13 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
     e.preventDefault();
     setIsSaving(true);
     try {
-      await onSave(form);
+      const paceSec = parsePaceToSeconds(form.runThresholdPaceStr || "4:45");
+      const mode = form.hasRunningPowerMeter ? "POWER" : "HYBRID";
+      await onSave({
+        ...form,
+        runningTrainingMode: mode,
+        runThresholdPaceSecPerKm: paceSec,
+      });
       setSavedSuccess(true);
       setTimeout(() => {
         setSavedSuccess(false);
@@ -90,11 +106,8 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-      {/* Fondo oscuro opaco cliqueable para cerrar */}
       <div className="fixed inset-0" onClick={onClose} />
-
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden ring-1 ring-black/10">
-        {/* Header Minimalista */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
@@ -105,18 +118,12 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
               <p className="text-[11px] text-slate-400">Identidad, biometría y umbrales de rendimiento</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition"
-          >
+          <button type="button" onClick={onClose} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
-          {/* Leyenda Compacta de Flujo de Datos */}
           <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-[10px] font-mono">
             <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 font-bold text-[9px]">📤 Sincroniza</span>
@@ -156,14 +163,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
                 </div>
                 <div className="grid grid-cols-3 gap-1 mt-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                   {[{ id: "M", label: "Hombre" }, { id: "F", label: "Mujer" }, { id: "OTHER", label: "Otro" }].map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => update("gender", g.id)}
-                      className={`py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center ${
-                        form.gender === g.id ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-bold" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                      }`}
-                    >
+                    <button key={g.id} type="button" onClick={() => update("gender", g.id)} className={`py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center ${form.gender === g.id ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-bold" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}>
                       {g.label}
                     </button>
                   ))}
@@ -172,9 +172,9 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
             </div>
           </div>
 
-          {/* Bloque 2: Biometría & Potencia */}
+          {/* Bloque 2: Biometría & Umbrales */}
           <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biometría & Potencia</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biometría & Rendimiento</span>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center justify-between">
@@ -198,60 +198,92 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <Footprints className="h-3.5 w-3.5 text-amber-500" /> Stryd CP (Carrera)
-                  </label>
-                  <SyncBadge />
-                </div>
-                <div className="relative mt-1">
-                  <input type="number" value={form.runFtp || ""} onChange={(e) => update("runFtp", Number(e.target.value))} className={numInputClass} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
-                </div>
+            {/* Selector de Modalidad Running: Potencia Stryd vs Híbrido */}
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.hasRunningPowerMeter ?? true}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      update("hasRunningPowerMeter", checked);
+                      update("runningTrainingMode", checked ? "POWER" : "HYBRID");
+                    }}
+                    className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 h-4 w-4"
+                  />
+                  <span>¿Entrenas con Potenciómetro de Carrera (Stryd)?</span>
+                </label>
+                <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${form.hasRunningPowerMeter ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-cyan-500/10 text-cyan-600 border-cyan-500/30"}`}>
+                  {form.hasRunningPowerMeter ? "⚡ MODO POTENCIA" : "⏱️❤️ MODO HÍBRIDO"}
+                </span>
               </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <Bike className="h-3.5 w-3.5 text-sky-500" /> Ciclismo FTP
-                  </label>
-                  <SyncBadge />
+
+              {form.hasRunningPowerMeter ? (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                      <Footprints className="h-3.5 w-3.5 text-amber-500" /> Stryd Potencia Crítica (CP)
+                    </label>
+                    <SyncBadge />
+                  </div>
+                  <div className="relative mt-1">
+                    <input type="number" placeholder="247" value={form.runFtp || ""} onChange={(e) => update("runFtp", Number(e.target.value))} className={numInputClass} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
+                  </div>
                 </div>
-                <div className="relative mt-1">
-                  <input type="number" value={form.bikeFtp || ""} onChange={(e) => update("bikeFtp", Number(e.target.value))} className={numInputClass} />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                      <Footprints className="h-3.5 w-3.5 text-cyan-500" /> Ritmo Umbral Funcional (min/km)
+                    </label>
+                    <span className="text-[10px] text-cyan-600 font-mono">Series x Ritmo • Fondos x LTHR</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="4:45"
+                    value={form.runThresholdPaceStr || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      update("runThresholdPaceStr", val);
+                      update("runThresholdPaceSecPerKm", parsePaceToSeconds(val));
+                    }}
+                    className={inputClass}
+                  />
+                  <p className="text-[10px] text-slate-400">
+                    Modo Híbrido: Los entrenamientos de calidad usarán tu Ritmo Umbral ({form.runThresholdPaceStr || "4:45"}/km) y los rodajes aeróbicos tu FC Umbral ({form.lthr || 165} bpm).
+                  </p>
                 </div>
+              )}
+            </div>
+
+            {/* Ciclismo FTP */}
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                  <Bike className="h-3.5 w-3.5 text-sky-500" /> Ciclismo FTP
+                </label>
+                <SyncBadge />
+              </div>
+              <div className="relative mt-1">
+                <input type="number" placeholder="220" value={form.bikeFtp || ""} onChange={(e) => update("bikeFtp", Number(e.target.value))} className={numInputClass} />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">W</span>
               </div>
             </div>
 
             {/* Frecuencia Cardíaca */}
             <div className="grid grid-cols-3 gap-2.5 pt-1">
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                    <HeartPulse className="h-3 w-3 text-rose-500 shrink-0" /> FC Umbral
-                  </label>
-                  <IntervalsBadge />
-                </div>
+                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><HeartPulse className="h-3 w-3 text-rose-500 shrink-0" /> FC Umbral</label><IntervalsBadge /></div>
                 <input type="number" placeholder="bpm" value={form.lthr || ""} onChange={(e) => update("lthr", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                    <Moon className="h-3 w-3 text-indigo-500 shrink-0" /> FC Reposo
-                  </label>
-                  <IntervalsBadge />
-                </div>
+                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><Moon className="h-3 w-3 text-indigo-500 shrink-0" /> FC Reposo</label><IntervalsBadge /></div>
                 <input type="number" placeholder="bpm" value={form.restingHR || ""} onChange={(e) => update("restingHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
-                    <Activity className="h-3 w-3 text-emerald-500 shrink-0" /> FC Máxima
-                  </label>
-                  <IntervalsBadge />
-                </div>
+                <div className="flex items-center justify-between"><label className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate"><Activity className="h-3 w-3 text-emerald-500 shrink-0" /> FC Máxima</label><IntervalsBadge /></div>
                 <input type="number" placeholder="bpm" value={form.maxHR || ""} onChange={(e) => update("maxHR", Number(e.target.value))} className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
               </div>
             </div>
@@ -280,19 +312,10 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <span className="text-[11px] text-slate-400 hidden sm:inline">Sincronización automática con Intervals.icu</span>
             <div className="flex items-center space-x-2 ml-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSaving}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              >
+              <button type="button" onClick={onClose} disabled={isSaving} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                 Cancelar
               </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs disabled:opacity-70"
-              >
+              <button type="submit" disabled={isSaving} className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition cursor-pointer shadow-xs disabled:opacity-70">
                 {savedSuccess ? (
                   <>
                     <Check className="h-3.5 w-3.5 text-emerald-500" />

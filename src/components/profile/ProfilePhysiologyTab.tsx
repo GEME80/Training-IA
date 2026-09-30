@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Activity,
-  Zap,
-  Heart,
-  Sliders,
-  Check,
-} from "lucide-react";
+import { Activity, Zap, Heart, Sliders, Check, Footprints } from "lucide-react";
 import { AVAILABLE_METRIC_INDICATORS } from "@/lib/intervals/types";
 
 interface ProfilePhysiologyTabProps {
@@ -32,6 +26,10 @@ interface ProfilePhysiologyTabProps {
   tanakaMaxHR: number;
   visibleMetrics: string[];
   onToggleMetric: (id: string) => void;
+  hasRunningPowerMeter?: boolean;
+  setHasRunningPowerMeter?: (v: boolean) => void;
+  runThresholdPaceStr?: string;
+  setRunThresholdPaceStr?: (v: string) => void;
 }
 
 export const ProfilePhysiologyTab: React.FC<ProfilePhysiologyTabProps> = ({
@@ -56,6 +54,10 @@ export const ProfilePhysiologyTab: React.FC<ProfilePhysiologyTabProps> = ({
   tanakaMaxHR,
   visibleMetrics,
   onToggleMetric,
+  hasRunningPowerMeter = true,
+  setHasRunningPowerMeter,
+  runThresholdPaceStr = "4:45",
+  setRunThresholdPaceStr,
 }) => {
   return (
     <div className="space-y-4 animate-fadeIn">
@@ -115,40 +117,76 @@ export const ProfilePhysiologyTab: React.FC<ProfilePhysiologyTabProps> = ({
         </div>
       </div>
 
-      {/* Tarjeta 1: Potencia Stryd & Ciclismo */}
+      {/* Tarjeta 1: Rendimiento Carrera & Ciclismo */}
       <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
           <div className="flex items-center space-x-2">
             <Zap className="h-4 w-4 text-amber-500" />
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-              1. Umbrales de Potencia (Stryd CP & Ciclismo FTP)
+              1. Modalidad & Umbrales (Carrera & Ciclismo)
             </h3>
           </div>
-          {relativePower && (
+          {relativePower && hasRunningPowerMeter && (
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">
               ⚡ {relativePower} W/kg
             </span>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
-              Stryd Potencia Crítica (CP)
-            </label>
-            <div className="relative mt-1">
+        {/* Checkbox selector modalidad carrera */}
+        {setHasRunningPowerMeter && (
+          <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 cursor-pointer">
               <input
-                type="number"
-                min="0"
-                max="600"
-                value={runFtp || ""}
-                onChange={(e) => setRunFtp(Number(e.target.value))}
-                placeholder="247"
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 pr-8 text-xs font-mono font-bold text-slate-900 dark:text-white shadow-sm"
+                type="checkbox"
+                checked={hasRunningPowerMeter}
+                onChange={(e) => setHasRunningPowerMeter(e.target.checked)}
+                className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 h-4 w-4"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">W</span>
-            </div>
+              <span>Entreno con Potenciómetro Stryd (W)</span>
+            </label>
+            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${hasRunningPowerMeter ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-cyan-500/10 text-cyan-600 border-cyan-500/30"}`}>
+              {hasRunningPowerMeter ? "⚡ POTENCIA" : "⏱️❤️ HÍBRIDO (Pace/HR)"}
+            </span>
           </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {hasRunningPowerMeter ? (
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+                Stryd Potencia Crítica (CP)
+              </label>
+              <div className="relative mt-1">
+                <input
+                  type="number"
+                  min="0"
+                  max="600"
+                  value={runFtp || ""}
+                  onChange={(e) => setRunFtp(Number(e.target.value))}
+                  placeholder="247"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 pr-8 text-xs font-mono font-bold text-slate-900 dark:text-white shadow-sm"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">W</span>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                <Footprints className="h-3 w-3 text-cyan-500" /> Ritmo Umbral (min/km)
+              </label>
+              <div className="relative mt-1">
+                <input
+                  type="text"
+                  value={runThresholdPaceStr}
+                  onChange={(e) => setRunThresholdPaceStr?.(e.target.value)}
+                  placeholder="4:45"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 pr-12 text-xs font-mono font-bold text-slate-900 dark:text-white shadow-sm"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">/km</span>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">

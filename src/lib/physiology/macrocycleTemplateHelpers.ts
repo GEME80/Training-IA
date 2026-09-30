@@ -1,6 +1,7 @@
 import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
+import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a);
@@ -32,45 +33,28 @@ export function buildRestDay(day: string, dateStr: string, formattedDate: string
   };
 }
 
-export function interpolatePowerTarget(rawTarget: string, runFtp?: number, bikeFtp?: number): string {
+export function interpolatePowerTarget(
+  rawTarget: string,
+  runFtp?: number,
+  bikeFtp?: number,
+  opts?: {
+    discipline?: string;
+    mode?: "POWER" | "HYBRID";
+    thresholdPaceSec?: number;
+    lthr?: number;
+    isQuality?: boolean;
+  }
+): string {
   if (!rawTarget) return rawTarget;
-  let res = rawTarget;
-
-  // Interpolar % CP con runFtp (Stryd)
-  if (runFtp && runFtp > 0) {
-    // Rangos: "88-92% CP" o "72% a 84% CP"
-    res = res.replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*CP|(\d+)\s*-\s*(\d+)\s*%\s*CP)/gi, (_, a1, a2, r1, r2) => {
-      const p1 = parseInt(a1 || r1, 10);
-      const p2 = parseInt(a2 || r2, 10);
-      const w1 = Math.round(runFtp * (p1 / 100));
-      const w2 = Math.round(runFtp * (p2 / 100));
-      return `${w1}-${w2}W (${p1}-${p2}% CP)`;
-    });
-    // Caso individual: solo si no está ya entre paréntesis
-    res = res.replace(/(?<![(-])\b(\d+)\s*%\s*CP/gi, (_, p) => {
-      const w = Math.round(runFtp * (parseInt(p, 10) / 100));
-      return `${w}W (${p}% CP)`;
-    });
-  }
-
-  // Interpolar % FTP con bikeFtp (Ciclismo)
-  if (bikeFtp && bikeFtp > 0) {
-    // Rangos: "85-95% FTP" o "80% a 90% FTP"
-    res = res.replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*FTP|(\d+)\s*-\s*(\d+)\s*%\s*FTP)/gi, (_, a1, a2, r1, r2) => {
-      const p1 = parseInt(a1 || r1, 10);
-      const p2 = parseInt(a2 || r2, 10);
-      const w1 = Math.round(bikeFtp * (p1 / 100));
-      const w2 = Math.round(bikeFtp * (p2 / 100));
-      return `${w1}-${w2}W (${p1}-${p2}% FTP)`;
-    });
-    // Caso individual: solo si no está ya entre paréntesis
-    res = res.replace(/(?<![(-])\b(\d+)\s*%\s*FTP/gi, (_, p) => {
-      const w = Math.round(bikeFtp * (parseInt(p, 10) / 100));
-      return `${w}W (${p}% FTP)`;
-    });
-  }
-
-  return res;
+  return interpolateWorkoutTarget(rawTarget, {
+    runFtp,
+    bikeFtp,
+    discipline: opts?.discipline || (bikeFtp && !runFtp ? "Ciclismo" : "Carrera"),
+    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "HYBRID"),
+    thresholdPaceSec: opts?.thresholdPaceSec,
+    lthr: opts?.lthr,
+    isQuality: opts?.isQuality,
+  });
 }
 
 export function selectQualityWorkout(

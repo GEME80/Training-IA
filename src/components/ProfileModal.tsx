@@ -99,6 +99,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [restingHR, setRestingHR] = useState<number>(0);
   const [maxHR, setMaxHR] = useState<number>(0);
   const [lthr, setLthr] = useState<number>(0);
+  const [hasRunningPowerMeter, setHasRunningPowerMeter] = useState<boolean>(true);
+  const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>("4:45");
 
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(
     initialWeeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY
@@ -238,6 +240,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       if (storedResting) setRestingHR(Number(storedResting));
       if (storedMaxHR) setMaxHR(Number(storedMaxHR));
       if (storedLthr) setLthr(Number(storedLthr));
+      const storedHasPwr = userStorage.getItem("has_running_power_meter");
+      if (storedHasPwr !== null) setHasRunningPowerMeter(storedHasPwr === "true");
+      const storedPaceStr = userStorage.getItem("run_threshold_pace_str");
+      if (storedPaceStr) setRunThresholdPaceStr(storedPaceStr);
 
       if (storedGeminiKey) setGeminiApiKey(storedGeminiKey);
       if (storedModel) setSelectedModel(storedModel);
@@ -312,6 +318,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       userStorage.setItem("enable_grounding", enableGrounding ? "true" : "false");
       userStorage.setItem("coach_profile", coachProfile);
       userStorage.setItem("custom_prompt", customPrompt);
+      userStorage.setItem("has_running_power_meter", hasRunningPowerMeter ? "true" : "false");
+      userStorage.setItem("run_threshold_pace_str", runThresholdPaceStr);
       userStorage.setJSON("weekly_availability", weeklyAvailability);
       userStorage.setJSON("visible_metrics", visibleMetrics);
 
@@ -477,6 +485,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               tanakaMaxHR={tanakaMaxHR}
               visibleMetrics={visibleMetrics}
               onToggleMetric={handleToggleMetric}
+              hasRunningPowerMeter={hasRunningPowerMeter}
+              setHasRunningPowerMeter={setHasRunningPowerMeter}
+              runThresholdPaceStr={runThresholdPaceStr}
+              setRunThresholdPaceStr={setRunThresholdPaceStr}
             />
           )}
 

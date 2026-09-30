@@ -147,6 +147,7 @@ ${previousWeekBlock}
 - Atleta: ${profile.name || "Atleta"}${profile.id ? ` (ID: ${profile.id})` : ""}
 - Demografía: ${profile.age ? `${profile.age} años (${masterStr})` : "Edad no especificada"} | Sexo: ${profile.gender === "F" ? "Femenino" : profile.gender === "M" ? "Masculino" : "No especificado"}${profile.weight ? ` | Peso Corporal: ${profile.weight} kg` : ""}
 - Ratios Potencia/Peso: Stryd Run CP: ${wkgRunStr} | Bike FTP: ${wkgBikeStr}
+- Modalidad Carrera: ${profile.runningTrainingMode === "HYBRID" || (profile.hasRunningPowerMeter === false) ? `MODO HÍBRIDO (Series por Ritmo Umbral: ${profile.runThresholdPaceStr || "4:45"}/km; Fondos/Z1-Z2 por LTHR: ${profile.lthr || 165} bpm. Atleta sin Stryd, no prescribir vatios en running)` : `MODO POTENCIA STRYD (${profile.run_ftp || 0}W CP. Prescripción 100% por vatios % CP)`}
 - Stryd CP (Potencia Carrera): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado"}
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}

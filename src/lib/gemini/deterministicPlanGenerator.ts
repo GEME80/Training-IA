@@ -3,6 +3,7 @@ import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
 import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
 import { resolveSpecializedStrengthWorkout } from "../physiology/specializedStrengthCoaches";
 import { BIKE_TEST_20M_FTP } from "../ai/knowledge/testingProtocols";
+import { adaptRunningPlanItem, resolveRunningMode } from "../physiology/runningWorkoutAdapter";
 import {
   AgentDecisionOutput,
   PlanItem,
@@ -288,42 +289,35 @@ export function generateDeterministicAnalysis(
     if (isLongRun && !isFatigued) {
       const longMins = phase === "PEAK" ? 105 : 75;
       return {
-        day,
-        date: dateInfo.date,
-        formattedDate: dateInfo.formattedDate,
-        discipline: "Carrera",
-        workoutName: phase === "PEAK"
-          ? "Fondo Específico Maratón Stryd (1h45m)"
-          : "Tirada Larga Progresiva Stryd (1h15m)",
-        action: "MANTENER",
-        durationMinutes: longMins,
-        tss: Math.round(longMins * 0.85),
+        day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Carrera",
+        workoutName: phase === "PEAK" ? "Fondo Específico Maratón Stryd (1h45m)" : "Tirada Larga Progresiva Stryd (1h15m)",
+        action: "MANTENER", durationMinutes: longMins, tss: Math.round(longMins * 0.85),
         powerTarget: `${Math.round(runFtp * 0.84)}W (84% CP)`,
         justification: "Desarrollo de durabilidad y potencia específica de competición en Z2-Z3 Stryd.",
-        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 84, phase),
-        isRestDay: false,
+        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 84, phase), isRestDay: false,
       };
     }
 
     return {
-      day,
-      date: dateInfo.date,
-      formattedDate: dateInfo.formattedDate,
-      discipline: "Carrera",
-      workoutName: isFatigued
-        ? "Trote Suave Z1 Regenerativo Stryd (35m)"
-        : "Carrera Continua Progresiva Z1-Z2 Stryd (45m)",
-      action: isFatigued ? "MODIFICAR" : "MANTENER",
-      durationMinutes: isFatigued ? 35 : 45,
-      tss: isFatigued ? 26 : 42,
+      day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Carrera",
+      workoutName: isFatigued ? "Trote Suave Z1 Regenerativo Stryd (35m)" : "Carrera Continua Progresiva Z1-Z2 Stryd (45m)",
+      action: isFatigued ? "MODIFICAR" : "MANTENER", durationMinutes: isFatigued ? 35 : 45, tss: isFatigued ? 26 : 42,
       powerTarget: `${Math.round(runFtp * (isFatigued ? 0.72 : 0.81))}W (${isFatigued ? "72% CP Z1" : "81% CP Z2"})`,
-      justification: isFatigued
-        ? "Atenuación a Z1 para proteger tono parasimpático y acelerar recuperación."
-        : "Carrera aeróbica base para consistencia de fitness.",
-      workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70, phase),
-      isRestDay: false,
+      justification: isFatigued ? "Atenuación a Z1 para proteger tono parasimpático y acelerar recuperación." : "Carrera aeróbica base para consistencia de fitness.",
+      workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70, phase), isRestDay: false,
     };
   });
+
+  const runningMode = resolveRunningMode(profile);
+  const finalPlan = runningMode === "HYBRID"
+    ? suggestedPlan.map((item) =>
+        adaptRunningPlanItem(item, {
+          mode: "HYBRID",
+          thresholdPaceSec: profile.runThresholdPaceSecPerKm,
+          lthr: profile.lthr,
+        })
+      )
+    : suggestedPlan;
 
   return {
     status: status.status,
@@ -338,6 +332,6 @@ export function generateDeterministicAnalysis(
       `4. Matriz Base: ${Object.entries(availability).map(([d, disc]) => `${d}: ${Array.isArray(disc) ? disc.join("+") : disc}`).join(", ")}.`,
     ],
     modelUsed: "Motor Fisiológico Determinístico",
-    suggestedPlan,
+    suggestedPlan: finalPlan,
   };
 }

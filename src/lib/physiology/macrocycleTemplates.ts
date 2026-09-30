@@ -12,6 +12,7 @@ import {
   resolveRaceWorkout, resolveRaceSundayWorkout, resolveWeekendRide,
   resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
 } from "./macrocycleTemplateHelpers";
+import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
 
@@ -22,7 +23,13 @@ export function generateWeekTemplate(
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType?: MacrocycleDistanceType,
   athleteCtl?: number,
-  primaryRaceDate?: string
+  primaryRaceDate?: string,
+  runningOpts?: {
+    mode?: "POWER" | "HYBRID";
+    thresholdPaceSec?: number;
+    thresholdPaceStr?: string;
+    lthr?: number;
+  }
 ): PlanItem[] {
   const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -101,28 +108,23 @@ export function generateWeekTemplate(
 
         if (disc === "Natacion") {
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Natacion",
-            workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18,
+            day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18,
             powerTarget: "Sensibilidad Acuática", justification: "Contacto suave con el agua y soltura de brazos pre-competición.",
             workoutDoc: "Calentamiento\n- 200m Nado Suave\n\nActivación Ligera (4x)\n- 25m Nado Ágil @ Ritmo Carrera\n- 25m Suave\n\nEnfriamiento\n- 100m Nado Fácil", isRestDay: false,
           });
           continue;
         }
-
         if (disc === "Ciclismo") {
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Ciclismo",
-            workoutName: "Pedaleo Ciclista de Soltura & Ajuste Mecánico (30m Z1)", action: "MANTENER", durationMinutes: 30, tss: 18,
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: "Pedaleo Ciclista de Soltura & Ajuste Mecánico (30m Z1)", action: "MANTENER", durationMinutes: 30, tss: 18,
             powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.55)}W (55% FTP)` : "55% FTP", justification: "Verificación de cambios, presión de ruedas y soltura de piernas.",
             workoutDoc: "Warmup\n- 10m 50% FTP\n\nMain\n- 15m 55% FTP con 2x30s 80% FTP\n\nCooldown\n- 5m 45% FTP", isRestDay: false,
           });
           continue;
         }
-
         if (disc === "Fuerza") {
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Fuerza",
-            workoutName: "Movilidad Articular & Activación Ligera (15m)", action: "MANTENER", durationMinutes: 15, tss: 8,
+            day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: "Movilidad Articular & Activación Ligera (15m)", action: "MANTENER", durationMinutes: 15, tss: 8,
             powerTarget: "Movilidad Articular", justification: "Descompresión articular y activación refleja sin carga externa.",
             workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Hombros y Columna Torácica\n- 5m Respiración y Relajación", isRestDay: false,
           });
@@ -160,9 +162,7 @@ export function generateWeekTemplate(
         if (swimTest) {
           swimTestInjected = true;
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Natacion",
-            workoutName: `🎯 TEST DE CALIBRACIÓN SWIM: ${swimTest.testName}`, action: "MANTENER", durationMinutes: 50, tss: 50,
-            powerTarget: swimTest.targetMetric, justification: swimTest.protocolDescription, workoutDoc: swimTest.workoutDoc, isRestDay: false,
+            day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: `🎯 TEST DE CALIBRACIÓN SWIM: ${swimTest.testName}`, action: "MANTENER", durationMinutes: 50, tss: 50, powerTarget: swimTest.targetMetric, justification: swimTest.protocolDescription, workoutDoc: swimTest.workoutDoc, isRestDay: false,
           });
           continue;
         }
@@ -185,10 +185,7 @@ export function generateWeekTemplate(
         if (bikeTest) {
           bikeTestInjected = true;
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Ciclismo",
-            workoutName: `🧪 TEST OFICIAL FTP: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 65, tss: 68,
-            powerTarget: bikeFtp ? `Test 20m @ All-Out (FTP actual: ${bikeFtp}W)` : "Test 20m FTP All-Out",
-            justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: `🧪 TEST OFICIAL FTP: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 65, tss: 68, powerTarget: bikeFtp ? `Test 20m @ All-Out (FTP actual: ${bikeFtp}W)` : "Test 20m FTP All-Out", justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
           });
           continue;
         }
@@ -259,9 +256,7 @@ export function generateWeekTemplate(
         if (runTest) {
           runTestInjected = true;
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Carrera",
-            workoutName: `🎯 TEST DE CAMPO RUN: ${runTest.testName}`, action: "MANTENER", durationMinutes: 55, tss: 62,
-            powerTarget: runTest.targetMetric, justification: runTest.protocolDescription, workoutDoc: runTest.workoutDoc, isRestDay: false,
+            day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: `🎯 TEST DE CAMPO RUN: ${runTest.testName}`, action: "MANTENER", durationMinutes: 55, tss: 62, powerTarget: runTest.targetMetric, justification: runTest.protocolDescription, workoutDoc: runTest.workoutDoc, isRestDay: false,
           });
           continue;
         }
@@ -270,8 +265,7 @@ export function generateWeekTemplate(
           usedRunWorkoutNames.add(longRun.workoutName);
           const addons = resolveWorkoutAddons({ durationMinutes: longRun.minutes, sport: "Carrera", isQualityOrLong: true });
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Carrera",
-            workoutName: longRun.workoutName, action: "MANTENER", durationMinutes: longRun.minutes,
+            day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: longRun.workoutName, action: "MANTENER", durationMinutes: longRun.minutes,
             tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
             justification: `Tirada progresiva de ${longRun.km} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
             workoutDoc: longRun.workoutDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
@@ -300,12 +294,7 @@ export function generateWeekTemplate(
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
             const phaseList = curatedModel.workoutVariations.qualityWorkouts[phase.toLowerCase() as "base" | "build" | "peak" | "taper"] || [];
             const nonBrick = phaseList.find((v) => !v.name.toLowerCase().includes("brick")) || phaseList[0];
-            if (nonBrick) {
-              q = {
-                name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp),
-                justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc,
-              };
-            }
+            if (nonBrick) q = { name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp), justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc };
           }
           usedRunWorkoutNames.add(q.name);
           const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
@@ -341,6 +330,17 @@ export function generateWeekTemplate(
 
       result.push(buildRestDay(day, dateStr, formattedDate));
     }
+  }
+
+  const runningMode = runningOpts?.mode || (runFtp && runFtp > 0 ? "POWER" : "HYBRID");
+  if (runningMode === "HYBRID") {
+    return result.map((item) =>
+      adaptRunningPlanItem(item, {
+        mode: "HYBRID",
+        thresholdPaceSec: runningOpts?.thresholdPaceSec,
+        lthr: runningOpts?.lthr,
+      })
+    );
   }
 
   return result;

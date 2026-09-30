@@ -20,6 +20,8 @@ export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
   Domingo: ["Carrera"],
 };
 
+export type RunningTrainingMode = "POWER" | "HYBRID";
+
 export interface UserProfileData {
   uid: string;
   email: string;
@@ -30,8 +32,12 @@ export interface UserProfileData {
   intervalsAthleteId?: string;
   encryptedApiKey?: EncryptedPayload;
   hasApiKey?: boolean;
+  hasRunningPowerMeter?: boolean;
+  runningTrainingMode?: RunningTrainingMode;
   runFtp?: number; // Stryd CP (W)
   bikeFtp?: number; // Bike FTP (W)
+  runThresholdPaceSecPerKm?: number; // Ritmo umbral en segundos/km (ej. 270 = 4:30/km)
+  runThresholdPaceStr?: string; // Ritmo umbral legible (ej. "4:30")
   restingHR?: number;
   maxHR?: number;
   lthr?: number;

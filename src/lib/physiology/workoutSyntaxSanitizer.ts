@@ -53,16 +53,33 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       // a) Eliminar arroba "@" que confunde algunos dispositivos Garmin
       line = line.replace(/@\s*/g, "");
 
-      // b) Convertir notas de metros o comentarios entre paréntesis al final a comillas dobles:
-      // Ej: "- 40s 110% Pace (200m)" => '- 40s 110% Pace "200m"'
-      line = line.replace(/\s*\(([^)]+)\)\s*$/, (_m, note) => ` "${note.trim()}"`);
-
-      // c) Si el corredor es exclusivo por ritmo, forzar conversión de % CP / % FTP a % Pace
-      if (options?.isRunPaceOnly || (options?.discipline === "Carrera" && options?.isRunPaceOnly)) {
-        line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
+      // b) Transformar pasos fraccionados con tiempo forzado y nota de distancia
+      // Ej: "- 40s 110% Pace (200m)" o '- 40s 110% Pace "200m"' => '- 200m 110% Pace'
+      // Preserva descansos por tiempo intactos: '- 1m 55% Pace', '- 1m30s 55% Pace'
+      const legacyDistanceMatch = line.match(
+        /^-\s*(?:\d+h)?(?:\d+m(?:in)?)?(?:\d+s)?\s+(.*?)\s+["\(](\d+\s*(?:m|km|metros?))(?:\s+[^"\)]*)?["\)]\s*$/i
+      );
+      if (legacyDistanceMatch) {
+        const intensity = legacyDistanceMatch[1].trim();
+        const rawDist = legacyDistanceMatch[2].trim().toLowerCase().replace(/\s*metros?/, "m").replace(/\s+/, "");
+        line = `- ${rawDist} ${intensity}`;
       }
 
-      // d) Limpiar espacios redundantes dentro de la línea
+      // c) Normalizar palabras completas como 'metros' o espacios en distancias: "- 200 metros" => "- 200m"
+      line = line.replace(/^-\s*(\d+)\s*(?:metros?|m)\b/i, "- $1m");
+      line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
+
+      // d) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles
+      line = line.replace(/\s*\(([^)]+)\)\s*$/, (_m, note) => ` "${note.trim()}"`);
+
+      // e) Normalización de unidades de carrera (Pace para atletas sin Stryd, CP para atletas Stryd)
+      if (options?.isRunPaceOnly || (options?.discipline === "Carrera" && options?.isRunPaceOnly)) {
+        line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
+      } else if (options?.discipline === "Carrera") {
+        line = line.replace(/%\s*FTP\b/gi, "% CP");
+      }
+
+      // f) Limpiar espacios redundantes dentro de la línea
       line = line.replace(/\s{2,}/g, " ").trim();
     }
 

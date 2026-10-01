@@ -5011,3 +5011,37 @@ flowchart TD
   * `src/lib/gemini/deterministicPlanGenerator.ts`: 337 LOC
   * `src/lib/gemini/engine.ts`: 213 LOC
 
+---
+
+## [2026-10-01] - Versión 3.92: Prescripción Universal por Distancia Real (Metros/Km) en Intervalos con Descansos Fisiológicos por Tiempo
+
+### 61.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Adopción del Estándar Internacional de Atletismo:**
+   - **Series Fraccionadas por Distancia Real:** Los pasos de trabajo en entrenamientos fraccionados de pista o ruta se prescriben por distancia métrica canónica (`- 200m 110% Pace`, `- 400m 106% Pace`, `- 600m 102% Pace`, `- 800m 100% Pace`, `- 1000m 100% CP`, `- 2000m 98% CP`, `- 4km 82% CP`).
+   - **Recuperaciones Intactas por Tiempo:** Los descansos se mantienen estrictamente por tiempo biológico (`- 1m 55% Pace`, `- 1m30s 55% Pace`, `- 2m 55% Pace`, `- 2m30s 55% Pace`), garantizando la asimilación del lactato programada.
+2. **Auto-Transformación Retroactiva en el Sanitizador Universal (`workoutSyntaxSanitizer.ts`):**
+   - Detecta pasos heredados que tenían tiempos aproximados con notas de distancia (ej: `- 40s 110% Pace "200m"` o `- 40s 110% Pace (200m)`) y los convierte automáticamente a su expresión métrica pura: `- 200m 110% Pace`.
+   - Normaliza entradas coloquiales como `- 200 metros` a `- 200m` y `- 1 km` a `- 1km`.
+   - **Impacto Retroactivo Inmediato:** Cualquier atleta con sesiones de pista ya agendadas en su calendario se visualiza de forma limpia y canónica en tiempo real.
+3. **Escala Visual y Proporcional en `WorkoutChart.tsx`:**
+   - Soporte para kilómetros (`kmMatch`) y estimación matemática de duración basada en ritmo de carrera (~225 m/min) para pasos $\ge 100$ metros.
+   - La gráfica de la escalera piramidal refleja con exactitud la duración esperada según el ritmo objetivo del atleta, preservando el ancho exacto de los descansos por tiempo.
+4. **Actualización de Modelos Fisiológicos de Conocimiento:**
+   - Estandarizados a distancia + descanso por tiempo en:
+     * `triathlonModel.ts`: Escalera incremental en pista (200m -> 400m -> 600m -> 800m).
+     * `marathonModel.ts`: Escalera de potencia (200m-800m), bloques de 2.000m (`- 2000m 98% CP`) e intervalos de 4 km (`- 4km 82% CP`).
+     * `tenKModel.ts`: Escalera de velocidad en pista (200m -> 400m -> 600m -> 800m -> 400m -> 200m).
+     * `athleteMomentsModels.ts`: Series de 1000m (`4x - 1000m 100% CP`).
+
+### 61.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/lib/physiology/workoutSyntaxSanitizer.ts`: 94 LOC
+  * `src/components/WorkoutChart.tsx`: 348 LOC
+  * `src/lib/ai/knowledge/triathlonModel.ts`: 343 LOC
+  * `src/lib/ai/knowledge/marathonModel.ts`: 336 LOC
+  * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
+  * `src/lib/ai/knowledge/athleteMomentsModels.ts`: 493 LOC (módulo preexistente)
+
+

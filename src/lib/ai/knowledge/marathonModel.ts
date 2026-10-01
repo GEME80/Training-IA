@@ -120,7 +120,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Escalera Incremental de Potencia Aeróbica (200m -> 400m -> 600m -> 800m)",
           powerTarget: "100-112% CP",
           justification: "Reclutamiento progresivo de unidades motoras rápidas y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 40s 112% CP \"200m\"\n- 1m 55% CP\n- 1m25s 108% CP \"400m\"\n- 1m30s 55% CP\n- 2m15s 104% CP \"600m\"\n- 2m 55% CP\n- 3m 100% CP \"800m\"\n- 2m30s 55% CP\n- 2m15s 104% CP \"600m\"\n- 1m30s 55% CP\n- 1m25s 108% CP \"400m\"\n- 1m 55% CP\n- 40s 112% CP \"200m\"\n\nCooldown\n- 10m 60% CP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 200m 112% CP\n- 1m 55% CP\n- 400m 108% CP\n- 1m30s 55% CP\n- 600m 104% CP\n- 2m 55% CP\n- 800m 100% CP\n- 2m30s 55% CP\n- 600m 104% CP\n- 2m 55% CP\n- 400m 108% CP\n- 1m30s 55% CP\n- 200m 112% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Series Umbral Stryd Z4 (4x8m @ 100% CP)",
@@ -132,19 +132,19 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Bloques Largos de Umbral en Pista/Ruta (3x 2.000m @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Resistencia a la fatiga específica en tramos de 2 km a ritmo umbral.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n3x\n- 8m30s 98% FTP\n- 2m30s 60% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 2000m)\n3x\n- 2000m 98% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Intervalos de Ritmo Maratón Extensivo (3x4km @ 82% CP)",
           powerTarget: "82% CP",
           justification: "Automatización biomecánica a potencia específica de competición.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n3x\n- 20m 82% FTP\n- 5m 68% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 4km)\n3x\n- 4km 82% CP\n- 5m 68% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Series Largas de Umbral (3x10m @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Sostenimiento metabólico en zona de máximo estado estable de lactato.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n3x\n- 10m 98% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n3x\n- 10m 98% CP\n- 3m 65% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Tempo Continuo de Resistencia (35m @ 84% CP)",

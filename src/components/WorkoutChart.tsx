@@ -112,6 +112,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     const isSwim = /nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw);
     // Limpiar notas entre paréntesis o comillas antes de parsear duración para evitar capturas erróneas (ej: "(200m)")
     const clean = raw.replace(/\s*\(.*?\)/g, "").replace(/\s*".*?"/g, "").trim();
+    const kmMatch = clean.match(/(\d+(?:\.\d+)?)\s*km\b/i);
+    if (kmMatch) return Math.max(0.5, Math.round(parseFloat(kmMatch[1]) * 4.5 * 10) / 10);
     const minsMatch = clean.match(/(\d+)\s*m(?:in)?/i);
     const secsMatch = clean.match(/(\d+)\s*s/i);
     const hoursMatch = clean.match(/(\d+)\s*h/i);
@@ -291,12 +293,11 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   }
 
   const getSegmentColor = (intensity: number) => {
-    if (intensity <= 65) return "#34d399"; // Recuperación (<65%)
-    if (intensity <= 80) return "#10b981"; // Fácil / Z1 (65-80%)
-    if (intensity <= 90) return "#facc15"; // Moderado / Z2 (80-90%)
-    if (intensity <= 100) return "#fb923c"; // Umbral / Z3 (90-100%)
-    if (intensity <= 115) return "#ef4444"; // Intervalo / Z4 (100-115%)
-    return "#a855f7"; // Repetición / Z5 (>115%)
+    if (intensity <= 65) return "#34d399";
+    if (intensity <= 80) return "#10b981";
+    if (intensity <= 90) return "#facc15";
+    if (intensity <= 100) return "#fb923c";
+    return intensity <= 115 ? "#ef4444" : "#a855f7";
   };
 
   const maxIntensity = Math.max(...segments.map((s) => s.intensityPercent), 115);

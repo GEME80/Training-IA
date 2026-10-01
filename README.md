@@ -1,10 +1,15 @@
-# ⚡ SGEA Pro (v3.83) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.93) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🏃 **Sintaxis Canónica `mtr` para Intervalos de Pista/Ruta & Descansos por Tiempo en Intervals.icu y Garmin (v3.93):**
+  - **Estandarización Oficial `mtr`:** En Intervals.icu, `m` denota exclusivamente minutos. Se adopta la sintaxis canónica oficial `mtr` para metros (`200mtr`, `400mtr`, `800mtr`, `1000mtr`, `2000mtr`) y `km` para kilómetros (`4km`), garantizando que la API de Intervals.icu genere pasos estructurados con `Target: Distance` exactos para relojes Garmin Connect (.FIT).
+  - **Descansos Fisiológicos por Tiempo (`m`/`s`):** Las pausas de recuperación se mantienen en tiempo biológico (`1m`, `1m30s`, `2m`), asegurando la recuperación y asimilación metabólica programada sin desviaciones por ritmos de trote.
+  - **Erradicación de Heurísticas Ambiguas en `WorkoutChart`:** Eliminación del umbral arbitrario `val >= 100`. Parser 100% determinista que discrimina distancias métricas (`mtr`, `km`) de duraciones en minutos (`m`, `min`, protegiendo fondos ciclistas de 120m) y segundos (`s`).
+  - **Normalización Retroactiva Inteligente (`workoutSyntaxSanitizer.ts`):** Convierte automáticamente cualquier paso heredado con notas o formatos antiguos en la visualización del calendario y sincronización sin intervención manual del atleta.
 - 🚀 **Detección Unificada de Breakthroughs, Rediseño UX de Zonas & Recalibración Dinámica de Vatios (v3.83):**
   - **Motor Multidisciplinar (`BreakthroughDetectionService`):** Detección continua de mejoras de umbral en cualquier entrenamiento ordinario o de calidad para Ciclismo (FTP), Carrera con Potencia (Stryd CP) y Carrera por Ritmo (Daniels VDOT).
   - **Filtro Estricto de Carga Interna Cardiovascular:** Las mejoras en Ritmo Umbral exigen validación de esfuerzo real ($\ge 88\%$ LTHR o $\ge 82\%$ FC Máx) erradicando falsos positivos por desniveles o anomalías de GPS.
@@ -54,7 +59,7 @@
 - 🏋️ **Suite Especializada de Fortalecimiento (S&C):** Agentes de fuerza biomecánica dedicados para Running, Ciclismo, Triatlón, Trail y Prehab/Longevidad.
 - 🔄 **Motor Anti-Repetición con Rotación Coprima:** Algoritmo matemático $\gcd(L, s) = 1$ para variación continua semana tras semana sin sesiones idénticas consecutivas.
 - 📅 **Día de Carrera Flexible (Sábado o Domingo):** Ubicación automática de la competición oficial en Sábado o Domingo con asignación de descanso regenerativo post-carrera.
-- ⚡ **Integración Nativa con Stryd & Garmin (100% Legal):** Prescripción estricta por Tiempo + % CP/FTP en carrera (cero distancias con % CP).
+- ⚡ **Integración Nativa con Stryd, Garmin e Intervals.icu (100% Canónica):** Prescripción métrica canónica por distancia real (`mtr`, `km`) y tiempo (`m`, `s`) con `% CP` (Stryd) o `% Pace` (Daniels) para carrera y `% FTP` para ciclismo.
 - 🔄 **Capa de Servicios & Controladores Delgados:** Lógica desacoplada en `src/lib/services/` con rutas API ultraligeras ($\le 30\text{ LOC}$) y validación declarativa con **Zod**.
 - 💰 **Gobernanza FinOps & Compresión de Contexto:** Condensador de actividades ejecutadas a formato tabular ultra-denso (`contextCondenser.ts`), ahorrando **~70% en tokens**.
 - 🚀 **Resiliencia SWR & Firestore Dirty Checking:** Caché en memoria de telemetría (TTL 3 min) y control de mutaciones con `useRef` para eliminar llamadas y escrituras redundantes.

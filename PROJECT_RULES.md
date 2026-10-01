@@ -306,7 +306,7 @@ flowchart TD
    - **Subagentes:**
      - *Subagente 3.1 (Type Safety Sentinel):* Ejecución estricta de `./node_modules/.bin/tsc --noEmit` y erradicación de `any`.
      - *Subagente 3.2 (Port & Process Governor):* Garantía de puerto `3000` exclusivo (`npm run dev:clean`) y eliminación de procesos zombis.
-     - *Subagente 3.3 (Stryd Workout Syntax Validator):* Auditoría estricta de que **ningún** workout use distancia con `% FTP`.
+     - *Subagente 3.3 (Stryd Workout Syntax Validator):* Auditoría estricta de que **ningún** workout use distancia con `% FTP` (ciclismo siempre por tiempo). En carrera, validación de distancias canónicas en `mtr` (metros) o `km`, descansos por tiempo en `m` (minutos) o `s`, y asignación coherente de `% CP` (atletas con Stryd) vs `% Pace` (atletas sin Stryd).
      - *Subagente 3.4 (Security & Modular Architecture Auditor):* Control estricto del límite de **350 líneas por archivo**, APIs $\le 80\text{ LOC}$, `AthleteDashboard` < 160 LOC, desacoplamiento de dependencias y auditoría de `firestore.rules`.
 
 ### 🔒 9.3. Protocolo de Verdad Única (SSOT) para Agentes y Scripts (Prohibición de Mocks Ficticios)
@@ -689,8 +689,10 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
      * *Fase Peak:* Fondos Cumbre Específicos Canova con bloques al 82-83% CP.
      * *Descargas:* Reducción estricta del 22% de volumen manteniendo zancada ágil.
 
-2. **Ley de Escaleras de Intervalos y Bloques Extensivos:**
-   - La suite de calidad de Running y Triatlón debe incorporar fraccionados progresivos (escaleras $200\text{m} \rightarrow 400\text{m} \rightarrow 600\text{m} \rightarrow 800\text{m}$) prescritos en tiempo y % FTP/CP Stryd, y bloques largos de umbral en pista/asfalto ($3\times 2.000\text{m @ } 98\% \text{ CP}$).
+2. **Ley de Escaleras de Intervalos y Bloques Extensivos (Prescripción Canónica por Distancia `mtr`/`km` y Descanso en Tiempo):**
+   - La suite de calidad de Running y Triatlón debe prescribir los pasos fraccionados de trabajo por **distancia real canónica**: escaleras métricas ($200\text{mtr} \rightarrow 400\text{mtr} \rightarrow 600\text{mtr} \rightarrow 800\text{mtr}$) y bloques largos de umbral en pista/asfalto ($3\times 2.000\text{mtr @ } 98\% \text{ CP}$ o series en $\text{km}$).
+   - Los descansos o pausas de asimilación deben ser estrictamente por **tiempo** (ej. $1\text{m}$, $1\text{m}30\text{s}$, $2\text{m}$) para garantizar el vaciado de lactato planificado.
+   - En la sintaxis de Intervals.icu y exportación Garmin FIT, se exige la especificación `mtr` para metros y `km` para kilómetros, reservando `m` exclusivamente para minutos de tiempo.
 
 3. **Ley del Fin de Semana de Ciclismo con Propósito Biomecánico:**
    - Los fondos de sábado deben alternar Cadencia & Torque (bloques a 60 rpm para fuerza articularmente segura y 100 rpm para coordinación neuromuscular), Sweetspot aeróbico ($2\times 10\text{m @ } 85\% \text{ FTP}$) y fondos continuos de asimilación Z2.
@@ -766,9 +768,26 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
    - Si la semana actual está terminada (domingo con tirada larga concluida o todas las sesiones planificadas ya realizadas), queda terminantemente prohibido generar `suggestedPlan` para esa semana terminada.
    - La adaptación por fatiga al cierre de semana debe canalizarse mediante validación fisiológica, pautas de recuperación inmediata para hoy y la oferta explícita de adaptar la Próxima Semana.
 
+---
 
+## 📐 19. LEYES DE SINTAXIS CANÓNICA DE WORKOUTS PARA INTERVALS.ICU Y GARMIN CONNECT (v3.93)
 
+1. **Ley Inmutable de la Unidad Métrica (`mtr` vs `m`):**
+   - En la especificación oficial de Intervals.icu, la letra `m` significa **minutos** exclusivamente (ej. `- 1m 55% Pace` son 60 segundos de descanso, `- 120m 65% FTP` son 120 minutos de ciclismo).
+   - Para prescribir distancia en metros en carrera o pista, se DEBE utilizar obligatoriamente el sufijo canónico **`mtr`** (ej. `- 200mtr 110% Pace`, `- 400mtr 106% Pace`, `- 800mtr 100% Pace`, `- 1000mtr 100% CP`, `- 2000mtr 98% CP`).
+   - Para distancia en kilómetros se utiliza **`km`** (ej. `- 4km 82% CP`).
+   - Queda estrictamente prohibido usar `- 200m` para referirse a 200 metros, ya que Intervals.icu lo interpreta como un paso de 200 minutos (más de 3 horas), desconfigurando el archivo `.FIT` y la pantalla de workout del reloj Garmin.
 
+2. **Ley de Descansos Estrictos por Tiempo Biológico:**
+   - Todo descanso o pausa de recuperación entre series fraccionadas en carrera debe prescribirse por **tiempo** (`- 1m 55% Pace`, `- 1m30s 55% Pace`, `- 2m 55% Pace`), permitiendo que el reloj Garmin/Coros del atleta controle la pausa exacta de asimilación metabólica sin depender de distancias de trote imprecisas.
 
+3. **Ley de Parsers Deterministas y Cero Heurísticas Ambiguas:**
+   - Los motores de visualización (`WorkoutChart.tsx`) y de sanitización (`workoutSyntaxSanitizer.ts`) deben parsear de forma determinista y sin ambigüedad:
+     * `km` $\rightarrow$ Distancia en kilómetros ($4.5\text{ min/km}$).
+     * `mtr` / `metros` $\rightarrow$ Distancia en metros ($m / 225\text{ min}$).
+     * `m` / `min` $\rightarrow$ Duración directa en minutos (descanso de 1m = 1 min; tirada de 120m en bici = 120 min). Queda erradicada cualquier heurística arbitraria tipo `val >= 100`.
+     * `s` $\rightarrow$ Duración directa en segundos.
 
+4. **Ley de Normalización Retroactiva Inteligente:**
+   - El servicio `workoutSyntaxSanitizer.ts` debe interceptar y transformar retroactivamente cualquier sesión histórica o heredada con anotaciones textuales (ej. `- 40s 110% Pace "200m"` $\rightarrow$ `- 200mtr 110% Pace`), garantizando que la visualización del atleta y la sincronización con Garmin sean siempre puras y canónicas.
 

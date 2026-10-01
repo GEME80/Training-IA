@@ -23,6 +23,7 @@ import {
 import { PlanItem, getWeekDates } from "@/lib/gemini/engine";
 import { MacrocycleWeek, getOffsetForWeek } from "@/lib/physiology/macrocycle";
 import { WorkoutChart } from "./WorkoutChart";
+import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 
 interface WeeklyPlannerProps {
   initialPlan: PlanItem[];
@@ -560,14 +561,14 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                     >
                       <span className="flex items-center gap-1">
                         <Code2 className="h-3 w-3" />
-                        Sintaxis Stryd
+                        {item.discipline === "Carrera" && runFtp > 0 ? "Sintaxis Stryd" : item.discipline === "Ciclismo" ? "Sintaxis FTP" : "Sintaxis Estructurada"}
                       </span>
                       <span>{isExpanded ? "▲" : "▼"}</span>
                     </button>
 
                     {isExpanded && (
                       <pre className="mt-1.5 max-h-32 overflow-x-auto rounded-lg bg-slate-950 p-2 font-mono text-[9px] text-slate-300 border border-slate-800 whitespace-pre-wrap animate-fadeIn">
-                        {item.workoutDoc}
+                        {sanitizeWorkoutDoc(item.workoutDoc, { discipline: item.discipline, isRunPaceOnly: item.discipline === "Carrera" && runFtp === 0 })}
                       </pre>
                     )}
                   </div>

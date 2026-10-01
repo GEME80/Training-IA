@@ -3,6 +3,7 @@
 import React from "react";
 import { Info } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
+import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 
 export interface FormattedAerobicSection {
   warmup?: string;
@@ -43,9 +44,9 @@ export function parseGymExercises(workoutDoc?: string): FormattedGymStructure {
 }
 
 export function parseAerobicSections(workoutDoc?: string, workoutStructure?: string): FormattedAerobicSection {
-  const doc = workoutDoc || workoutStructure || "";
-  if (!doc) return { mainParts: [] };
-
+  const raw = workoutDoc || workoutStructure || "";
+  if (!raw) return { mainParts: [] };
+  const doc = sanitizeWorkoutDoc(raw);
   const lines = doc.split("\n").map((l) => l.trim()).filter(Boolean);
   let warmup: string | undefined;
   let cooldown: string | undefined;

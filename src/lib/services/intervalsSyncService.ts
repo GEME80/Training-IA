@@ -114,6 +114,7 @@ export class IntervalsSyncService {
       const canonicalDescription = sanitizeWorkoutDoc(workoutText, {
         discipline: item.discipline,
         isRunPaceOnly,
+        forIntervalsSync: true,
       });
 
       const eventPayload: CalendarEvent = {

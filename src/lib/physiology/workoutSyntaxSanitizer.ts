@@ -11,6 +11,7 @@
 export interface SanitizeOptions {
   discipline?: string;
   isRunPaceOnly?: boolean;
+  forIntervalsSync?: boolean;
 }
 
 /**
@@ -65,8 +66,16 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
         line = `- ${rawDist} ${intensity}`;
       }
 
-      // c) Normalizar palabras completas como 'metros' o espacios en distancias: "- 200 metros" => "- 200m"
-      line = line.replace(/^-\s*(\d+)\s*(?:metros?|m)\b/i, "- $1m");
+      // c) Normalizar distancias:
+      // En Intervals.icu 'm' significa minutos. Para metros exige 'mtr' (ej: 200mtr, 400mtr)
+      if (options?.forIntervalsSync) {
+        line = line.replace(/^-\s*(\d+)\s*(?:metros?|mtr|m)\b/i, (_m, num) => {
+          const val = parseInt(num, 10);
+          return val >= 50 ? `- ${val}mtr` : `- ${val}m`;
+        });
+      } else {
+        line = line.replace(/^-\s*(\d+)\s*(?:metros?|m)\b/i, "- $1m");
+      }
       line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
 
       // d) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles

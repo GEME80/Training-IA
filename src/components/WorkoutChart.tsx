@@ -114,7 +114,7 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     const clean = raw.replace(/\s*\(.*?\)/g, "").replace(/\s*".*?"/g, "").trim();
     const kmMatch = clean.match(/(\d+(?:\.\d+)?)\s*km\b/i);
     if (kmMatch) return Math.max(0.5, Math.round(parseFloat(kmMatch[1]) * 4.5 * 10) / 10);
-    const minsMatch = clean.match(/(\d+)\s*m(?:in)?/i);
+    const minsMatch = clean.match(/(\d+)\s*(?:mtr|m(?:in)?)/i);
     const secsMatch = clean.match(/(\d+)\s*s/i);
     const hoursMatch = clean.match(/(\d+)\s*h/i);
 

@@ -17,6 +17,12 @@ interface AthleteCalendarWeekRowProps {
   blueprint: MacrocycleBlueprint; runFtp: number; bikeFtp: number;
   effectiveAvailability: WeeklyAvailabilityMap; weeklyExecutedTss: number;
   dailyExecutedActivities: DailyExecutedMap; calendarEvents?: CalendarEvent[];
+  runningOpts?: {
+    mode?: "POWER" | "HYBRID";
+    thresholdPaceSec?: number;
+    thresholdPaceStr?: string;
+    lthr?: number;
+  };
   todayStr: string; gridTemplate: string; currentWeekRef: React.RefObject<HTMLDivElement | null>;
   onSelectWeek: (idx: number) => void; onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
@@ -57,14 +63,15 @@ function resolvePhaseShortLabel(week: MacrocycleWeek, isHistorical: boolean): st
 export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   week, wIdx, weeksCount, isCurrentWeek, isFutureWeek, isSelectedWeek, isPastWeek,
   calendarWeekNumber, blueprint, runFtp, bikeFtp, effectiveAvailability,
-  weeklyExecutedTss, dailyExecutedActivities, calendarEvents, todayStr,
+  weeklyExecutedTss, dailyExecutedActivities, calendarEvents, runningOpts, todayStr,
   gridTemplate, currentWeekRef, onSelectWeek, onOpenAICoach,
   onSyncWeekToIntervals, onSyncTriweeklyBlock, onSelectWorkoutModal,
 }) => {
   const isHistoricalOnly = Boolean(!blueprint || blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly);
   const rawWeekPlan = isHistoricalOnly ? [] : generateWeekTemplate(
     week, runFtp, bikeFtp, effectiveAvailability,
-    (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation
+    (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
+    undefined, runningOpts
   );
   const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents);
 

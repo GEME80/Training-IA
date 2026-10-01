@@ -197,7 +197,10 @@ export function adaptRunningWorkoutDoc(
     return workoutDoc;
   }
   const targetDirective = isQuality ? "% Pace" : "% LTHR";
-  return workoutDoc.replace(/%\s*FTP/gi, targetDirective).replace(/%\s*CP/gi, targetDirective);
+  return workoutDoc
+    .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, targetDirective)
+    .replace(/\bStryd\s*CP\b/gi, isQuality ? "Pace" : "LTHR")
+    .replace(/\s*\(\d+W\)/gi, "");
 }
 
 /**
@@ -325,8 +328,17 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
       })
     : item.powerTarget;
 
+  let adaptedName = item.workoutName;
+  if (adaptedName) {
+    const nameDirective = isQuality ? "% Pace" : "% LTHR";
+    adaptedName = adaptedName
+      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, nameDirective)
+      .replace(/\bStryd\s*CP\b/gi, isQuality ? "Pace" : "FC");
+  }
+
   return {
     ...item,
+    workoutName: adaptedName || item.workoutName,
     workoutDoc: adaptedDoc,
     powerTarget: adaptedTarget || item.powerTarget,
   };

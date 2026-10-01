@@ -28,8 +28,9 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const effAthleteId = athleteId || userProfile?.intervalsAthleteId;
   const effApiKey = apiKey || (userProfile as any)?.intervalsApiKey;
   const effEmail = email || user?.email || undefined;
-  const effRunFtp = runFtp || userProfile?.runFtp || 0;
-  const effBikeFtp = bikeFtp || userProfile?.bikeFtp || 0;
+  const isCurrentUser = !athleteId || athleteId === userProfile?.intervalsAthleteId;
+  const effRunFtp = typeof runFtp === "number" ? runFtp : (isCurrentUser ? (userProfile?.runFtp || 0) : 0);
+  const effBikeFtp = typeof bikeFtp === "number" ? bikeFtp : (isCurrentUser ? (userProfile?.bikeFtp || 0) : 0);
   const effUid = uid || user?.uid || undefined;
 
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
@@ -202,8 +203,26 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         )}
 
         {workout.workoutDoc && (() => {
-          const effectiveFtp = workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : 0;
-          const ftpLabel = workout.discipline === "Carrera" ? "Stryd CP" : "FTP";
+          const isRunPower = workout.discipline === "Carrera" && effRunFtp > 0;
+          const isBike = workout.discipline === "Ciclismo";
+          const isStrength = workout.discipline === "Fuerza";
+          const isSwim = workout.discipline === "Natacion";
+
+          const sectionTitle = isStrength
+            ? "Prescripción de la Sesión de Fuerza:"
+            : isRunPower
+            ? "Prescripción Estructurada (Stryd CP):"
+            : workout.discipline === "Carrera"
+            ? "Prescripción Estructurada (Ritmo & FC):"
+            : isBike
+            ? "Prescripción Estructurada (Bici FTP):"
+            : isSwim
+            ? "Prescripción Estructurada (Ritmo CSS):"
+            : "Prescripción Estructurada:";
+
+          const showWattBadge = (isRunPower && effRunFtp > 0) || (isBike && effBikeFtp > 0);
+          const effectiveFtp = isRunPower ? effRunFtp : isBike ? effBikeFtp : 0;
+          const ftpLabel = isRunPower ? "Stryd CP" : "FTP";
 
           const enrichedWorkoutDoc = workout.workoutDoc.split("\n").map((line) => {
             if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
@@ -218,6 +237,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                 return `${n1}% ${ftpLabel} (${w1}W)`;
               });
             }
+            if (!isRunPower && workout.discipline === "Carrera") {
+              // Strip out any accidental watt annotations in hybrid mode
+              return line.replace(/\s*\(\d+W\)/gi, "").replace(/\bStryd\s*CP\b/gi, "Pace / FC");
+            }
             return line;
           }).join("\n");
 
@@ -226,11 +249,11 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  {workout.discipline === "Fuerza" ? "Prescripción de la Sesión de Fuerza:" : `Prescripción Estructurada (${workout.discipline === "Carrera" ? "Stryd CP" : "Bici FTP"}):`}
+                  {sectionTitle}
                 </span>
-                {effectiveFtp > 0 && workout.discipline !== "Fuerza" && (
+                {showWattBadge && (
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
-                    ⚡ {ftpLabel} Atleta: <strong>{effectiveFtp}W</strong>
+                    ⚡ {isRunPower ? `Stryd CP Atleta: ${effRunFtp}W` : `FTP Atleta: ${effBikeFtp}W`}
                   </span>
                 )}
               </div>

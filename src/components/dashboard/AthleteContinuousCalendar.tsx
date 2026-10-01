@@ -5,11 +5,8 @@ import { CalendarDays, Compass } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import {
-  WeeklyAvailabilityMap,
-  DEFAULT_WEEKLY_AVAILABILITY,
-  PlanItem,
-  resolveEffectiveAvailability,
-  isLegacyAvailability,
+  WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, PlanItem,
+  resolveEffectiveAvailability, isLegacyAvailability,
 } from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
 import { getLocalTodayStr, getMondayOfWeekStr } from "@/lib/dateUtils";
@@ -20,23 +17,13 @@ import { buildHistoricalCalendarWeeks } from "@/lib/physiology/historicalCalenda
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
 
 interface AthleteContinuousCalendarProps {
-  blueprint: MacrocycleBlueprint;
-  selectedMacroWeekIdx: number;
-  onSelectWeek: (idx: number) => void;
-  runFtp?: number;
-  bikeFtp?: number;
-  weeklyAvailability?: WeeklyAvailabilityMap;
-  weeklyExecutedTss?: number;
-  dailyExecutedActivities?: DailyExecutedMap;
-  calendarEvents?: CalendarEvent[];
-  onOpenAICoach: (weekIdx?: number) => void;
-  onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
-  onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
-  onSelectWorkoutModal: (item: PlanItem) => void;
-  /** Encabezado del dashboard ("Mi Dashboard" + Tabs) anclado dentro del bloque sticky maestro */
-  dashboardHeaderSlot?: React.ReactNode;
-  /** Contenido opcional que se renderiza dentro del bloque sticky maestro, encima del título del calendario. */
-  stickyTopSlot?: React.ReactNode;
+  blueprint: MacrocycleBlueprint; selectedMacroWeekIdx: number; onSelectWeek: (idx: number) => void;
+  runFtp?: number; bikeFtp?: number; weeklyAvailability?: WeeklyAvailabilityMap;
+  weeklyExecutedTss?: number; dailyExecutedActivities?: DailyExecutedMap; calendarEvents?: CalendarEvent[];
+  runningOpts?: { mode?: "POWER" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
+  onOpenAICoach: (weekIdx?: number) => void; onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
+  onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>; onSelectWorkoutModal: (item: PlanItem) => void;
+  dashboardHeaderSlot?: React.ReactNode; stickyTopSlot?: React.ReactNode;
 }
 
 function getWeekOfYear(dateStr: string): number {
@@ -67,6 +54,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   weeklyExecutedTss = 0,
   dailyExecutedActivities = {},
   calendarEvents = [],
+  runningOpts,
   onOpenAICoach,
   onSyncWeekToIntervals,
   onSyncTriweeklyBlock,
@@ -149,7 +137,11 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const activeWeekForAgenda = blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
   const isRealPlan = Boolean(blueprint && blueprint.id !== "historical-timeline-blueprint" && !(blueprint as any).isHistoricalOnly);
   const rawActiveWeekPlan = isRealPlan && activeWeekForAgenda
-    ? generateWeekTemplate(activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability, (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation)
+    ? generateWeekTemplate(
+        activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability,
+        (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
+        undefined, runningOpts
+      )
     : [];
   const activeWeekPlan = activeWeekForAgenda
     ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents)
@@ -311,6 +303,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                     weeklyExecutedTss={weeklyExecutedTss}
                     dailyExecutedActivities={dailyExecutedActivities}
                     calendarEvents={calendarEvents}
+                    runningOpts={runningOpts}
                     todayStr={todayStr}
                     gridTemplate={gridTemplate}
                     currentWeekRef={currentWeekRef}

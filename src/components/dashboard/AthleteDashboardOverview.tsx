@@ -10,6 +10,7 @@ import { AthleteProfile, AthleteWellness, DailyExecutedMap, CalendarEvent } from
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { buildHistoricalBlueprint } from "@/lib/physiology/historicalCalendarWeeks";
+import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface AthleteDashboardOverviewProps {
   physioStatus: PhysiologicalStatus | null;
@@ -147,6 +148,12 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 weeklyExecutedTss={weeklyExecutedTss}
                 dailyExecutedActivities={dailyExecutedActivities}
                 calendarEvents={calendarEvents}
+                runningOpts={{
+                  mode: (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "HYBRID" || !profile.run_ftp) ? "HYBRID" : "POWER",
+                  thresholdPaceSec: profile.runThresholdPaceSecPerKm || parsePaceToSeconds(profile.runThresholdPaceStr || "4:45"),
+                  thresholdPaceStr: profile.runThresholdPaceStr || "4:45",
+                  lthr: profile.lthr || 163,
+                }}
                 onOpenAICoach={onOpenAICoach}
                 onSyncWeekToIntervals={onSyncWeekToIntervals}
                 onSyncTriweeklyBlock={onSyncTriweeklyBlock}

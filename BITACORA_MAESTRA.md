@@ -4926,3 +4926,46 @@ flowchart TD
   * `src/components/profile/AthleteZonesTab.tsx`: 124 LOC
   * `src/components/profile/ProfilePhysiologyTab.tsx`: 332 LOC
   * `src/lib/ai/prompts.ts`: 339 LOC
+
+---
+
+## [2026-10-01] - Versión 3.90: Unificación de Iconografía Vectorial en Telemetría & Arquitectura Responsiva de Tarjetas Fisiológicas
+
+### 59.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Unificación Vectorial de Iconos (Lucide SVG):**
+   - **Erradicación de Emojis Heterogéneos:** Sustituidos los emojis disonantes (`📈`, `⚡`, `🔋`, `📐`, `👟`, `🚴`, `💓`, etc.) por iconos vectoriales Lucide que guardan relación 100% idéntica con el Hero Card del atleta:
+     * **Potencia Run:** `<Footprints />` en acento ámbar (`text-amber-500`).
+     * **Potencia Bici (FTP):** `<Bike />` en acento cielo (`text-sky-500`).
+     * **Ritmo Umbral:** `<Timer />` en acento esmeralda (`text-emerald-500`).
+     * **Natación CSS:** `<Waves />` en acento cyan (`text-cyan-500`).
+     * **Forma Física (CTL):** `<TrendingUp />` en acento azul (`text-blue-500`).
+     * **Fatiga (ATL):** `<Zap />` en acento ámbar (`text-amber-500`).
+     * **Frescura (TSB):** `<BatteryCharging />` en acento esmeralda/dinámico según valor.
+     * **Progresión (/sem):** `<ArrowUpRight />` en acento teal (`text-teal-500`).
+     * **Recuperación (HRV):** `<HeartPulse />` en acento rose (`text-rose-500`).
+     * **FC Reposo (RHR):** `<Heart />` en acento púrpura (`text-purple-500`).
+     * **Sueño:** `<Moon />` en acento índigo (`text-indigo-500`).
+     * **W/kg:** `<Scale />` en acento esmeralda (`text-emerald-500`).
+     * **Edad / Tanaka:** `<User />` en acento pink (`text-pink-500`).
+     * **Eficiencia (EF):** `<Gauge />` en acento teal (`text-teal-500`).
+2. **Modularización Atómica ($\le 350$ LOC):**
+   - Desacoplado el componente monolítico anterior de 547 líneas en dos submódulos atómicos:
+     * `src/components/dashboard/PhysiologicalMetricCard.tsx` (96 LOC): Tarjeta atómica individual con tipografía mono, truncado de texto y micro-interacciones hover.
+     * `src/components/dashboard/physiologicalMetricBuilders.ts` (241 LOC): Normalizador puro de configuraciones métricas y semántica TSB.
+     * `src/components/PhysiologicalCards.tsx` (220 LOC): Contenedor orquestador responsivo.
+3. **Diseño 100% Responsivo:**
+   - **Móvil (< md):** Chip horizontal deslizante ultra-compacto (`overflow-x-auto no-scrollbar`) con iconos proporcionales y botón interactivo `Ver (6)` / `Plegar`.
+   - **Desktop / Expandido (md+):** Grid fluido adaptable (`grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7`).
+   - **Popover de Personalización:** Modal flotante protegido con ancho relativo `w-[calc(100vw-2rem)] max-w-xs sm:w-64` para prevenir overflow horizontal en pantallas de 320-390px.
+4. **Sincronización en Pestaña de Fisiología (`ProfilePhysiologyTab.tsx`):**
+   - El selector de telemetría visible ahora renderiza los mismos iconos vectoriales Lucide.
+
+### 59.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/dashboard/PhysiologicalMetricCard.tsx`: 96 LOC
+  * `src/components/dashboard/physiologicalMetricBuilders.ts`: 241 LOC
+  * `src/components/PhysiologicalCards.tsx`: 220 LOC
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: 224 LOC
+  * `src/components/profile/ProfilePhysiologyTab.tsx`: 339 LOC

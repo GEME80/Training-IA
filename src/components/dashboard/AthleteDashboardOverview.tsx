@@ -173,6 +173,8 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                     efficiencyFactor={profile.icu_efficiency_factor}
                     visibleMetrics={visibleMetrics}
                     onToggleMetric={onToggleMetric}
+                    runThresholdPaceStr={profile.runThresholdPaceStr}
+                    swimCssStr={profile.swimCssStr}
                   />
                 }
               />

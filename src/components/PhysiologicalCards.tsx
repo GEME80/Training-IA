@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AlertTriangle, SlidersHorizontal, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { DEFAULT_VISIBLE_METRICS, AVAILABLE_METRIC_INDICATORS } from "@/lib/intervals/types";
+import {
+  PhysiologicalMetricCard,
+  METRIC_ICONS_MAP,
+} from "./dashboard/PhysiologicalMetricCard";
+import { buildMetricConfigs } from "./dashboard/physiologicalMetricBuilders";
 
 interface PhysiologicalCardsProps {
   status: PhysiologicalStatus | null;
@@ -18,6 +23,8 @@ interface PhysiologicalCardsProps {
   efficiencyFactor?: number | null;
   visibleMetrics?: string[];
   onToggleMetric?: (id: string) => void;
+  runThresholdPaceStr?: string | null;
+  swimCssStr?: string | null;
 }
 
 export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
@@ -33,63 +40,54 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
   efficiencyFactor,
   visibleMetrics = DEFAULT_VISIBLE_METRICS,
   onToggleMetric,
+  runThresholdPaceStr = "4:45",
+  swimCssStr = "1:45",
 }) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const activeMetrics = visibleMetrics && visibleMetrics.length > 0 ? visibleMetrics : DEFAULT_VISIBLE_METRICS;
 
+  const metricConfigs = useMemo(() => {
+    return buildMetricConfigs({
+      status,
+      runFtp,
+      bikeFtp,
+      weightKg,
+      age,
+      restingHR,
+      hrv,
+      sleepQuality,
+      sleepSecs,
+      efficiencyFactor,
+      runThresholdPaceStr,
+      swimCssStr,
+    });
+  }, [status, runFtp, bikeFtp, weightKg, age, restingHR, hrv, sleepQuality, sleepSecs, efficiencyFactor, runThresholdPaceStr, swimCssStr]);
+
   if (!status) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {activeMetrics.map((id) => (
-          <div
-            key={id}
-            className="h-16 rounded-2xl bg-slate-100 border border-slate-200 animate-pulse"
-          />
+          <div key={id} className="h-16 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse" />
         ))}
       </div>
     );
   }
 
-  const getTsbColor = (tsb: number) => {
-    if (tsb > 5) return "text-emerald-600";
-    if (tsb >= -15) return "text-teal-600";
-    if (tsb >= -25) return "text-amber-600";
-    return "text-rose-600";
-  };
-
-  const getTsbContextLabel = (tsb: number) => {
-    if (tsb > 5) return "frescura";
-    if (tsb >= -15) return "óptimo";
-    if (tsb >= -25) return "sobrecarga";
-    return "fatiga";
-  };
-
-  const formattedRampRate = Number(status.rampRate || 0).toFixed(1);
-  const rampDisplay = Number(formattedRampRate) > 0 ? `+${formattedRampRate}` : formattedRampRate;
-
-  // Calculos derivados
-  const wKgRun = runFtp && weightKg ? (runFtp / weightKg).toFixed(2) : null;
-  const wKgBike = bikeFtp && weightKg ? (bikeFtp / weightKg).toFixed(2) : null;
-  const tanakaMaxHR = age ? Math.round(208 - 0.7 * age) : null;
-  const currentHrv = hrv || status.currentHrv;
-  const currentRhr = restingHR || status.restingHR;
-  const sleepHours = sleepSecs ? (sleepSecs / 3600).toFixed(1) : null;
-
   return (
     <div className="space-y-2.5 animate-fadeIn">
-      {/* Alerta de Fatiga / Sobrecarga Crítica (Solo si existe riesgo real) */}
+      {/* Alerta de Fatiga / Sobrecarga Crítica */}
       {status.status === "OVERTRAINING_RISK" && (
-        <div className="flex items-center space-x-2.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs text-red-800 shadow-sm">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-600" />
+        <div className="flex items-center space-x-2.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 px-3.5 py-2 text-xs text-red-800 dark:text-red-300 shadow-2xs">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
           <div>
-            <strong className="text-red-700">Riesgo de Fatiga Alta: </strong>
+            <strong className="text-red-700 dark:text-red-400">Riesgo de Fatiga Alta: </strong>
             TSB crítico ({Number(status.tsb).toFixed(1)}). Se sugiere trote suave Z1 o descanso.
           </div>
         </div>
       )}
 
-      {/* Barra de Título & Personalización de Métricas (In-Place) */}
+      {/* Barra de Título & Personalización Responsiva */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
           Tu Estado de Rendimiento y Recuperación
@@ -100,7 +98,7 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
           <button
             type="button"
             onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-            className="flex md:hidden items-center space-x-1 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition shadow-xs cursor-pointer"
+            className="flex md:hidden items-center space-x-1 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition shadow-2xs cursor-pointer"
           >
             <span>{isMobileExpanded ? "Plegar" : `Ver (${activeMetrics.length})`}</span>
             {isMobileExpanded ? <ChevronUp className="h-3 w-3 text-sky-500" /> : <ChevronDown className="h-3 w-3 text-sky-500" />}
@@ -111,21 +109,18 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
               <button
                 type="button"
                 onClick={() => setIsConfigOpen(!isConfigOpen)}
-                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-bold transition shadow-xs cursor-pointer"
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-bold transition shadow-2xs cursor-pointer"
               >
                 <SlidersHorizontal className="h-3 w-3 text-sky-500" />
                 <span className="hidden sm:inline">Personalizar ({activeMetrics.length})</span>
                 <span className="sm:hidden">Ajustes</span>
               </button>
 
-              {/* Popover flotante con checkboxes */}
+              {/* Popover flotante responsivo con lista de métricas */}
               {isConfigOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsConfigOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-1.5 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl z-50 animate-fadeIn space-y-2">
+                  <div className="fixed inset-0 z-40" onClick={() => setIsConfigOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-[calc(100vw-2rem)] max-w-xs sm:w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl z-50 animate-fadeIn space-y-2">
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
                       <span className="text-xs font-black text-slate-900 dark:text-white">
                         Métricas Visibles
@@ -133,7 +128,7 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
                       <button
                         type="button"
                         onClick={() => setIsConfigOpen(false)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -142,6 +137,9 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
                     <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                       {AVAILABLE_METRIC_INDICATORS.map((metric) => {
                         const isChecked = activeMetrics.includes(metric.id);
+                        const iconData = METRIC_ICONS_MAP[metric.id];
+                        const MetricIcon = iconData ? iconData.icon : null;
+
                         return (
                           <div
                             key={metric.id}
@@ -152,12 +150,16 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
                                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                           >
-                            <div className="flex items-center space-x-1.5">
-                              <span>{metric.icon}</span>
-                              <span>{metric.name}</span>
+                            <div className="flex items-center space-x-1.5 truncate">
+                              {MetricIcon ? (
+                                <MetricIcon className={`h-3.5 w-3.5 shrink-0 ${iconData.color}`} />
+                              ) : (
+                                <span>{metric.icon}</span>
+                              )}
+                              <span className="truncate">{metric.name}</span>
                             </div>
                             <div
-                              className={`h-4 w-4 rounded-md flex items-center justify-center border ${
+                              className={`h-4 w-4 rounded-md flex items-center justify-center border shrink-0 ml-1.5 ${
                                 isChecked
                                   ? "bg-sky-600 border-sky-600 text-white"
                                   : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
@@ -177,369 +179,41 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
         </div>
       </div>
 
-      {/* Vista Compacta Horizontal Exclusiva para Móvil (cuando no está expandido) */}
+      {/* Vista Compacta Horizontal Exclusiva para Móvil (< md) cuando no está expandido */}
       {!isMobileExpanded && (
         <div className="flex md:hidden items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
-          {activeMetrics.includes("ctl") && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">📈</span>
-              <span className="font-bold text-blue-700 dark:text-blue-300">CTL</span>
-              <strong className="text-slate-900 dark:text-white font-black">{Number(status.ctl).toFixed(1)}</strong>
-            </div>
-          )}
-          {activeMetrics.includes("atl") && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">⚡</span>
-              <span className="font-bold text-amber-700 dark:text-amber-300">ATL</span>
-              <strong className="text-slate-900 dark:text-white font-black">{Number(status.atl).toFixed(1)}</strong>
-            </div>
-          )}
-          {activeMetrics.includes("tsb") && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">🌱</span>
-              <span className="font-bold text-slate-500">TSB</span>
-              <strong className={`font-black ${getTsbColor(status.tsb)}`}>{Number(status.tsb).toFixed(0)}</strong>
-            </div>
-          )}
-          {activeMetrics.includes("run_ftp") && runFtp && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-orange-50/80 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/60 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">🏃</span>
-              <span className="font-bold text-orange-700 dark:text-orange-300">Run</span>
-              <strong className="text-slate-900 dark:text-white font-black">{runFtp}W</strong>
-            </div>
-          )}
-          {activeMetrics.includes("bike_ftp") && bikeFtp && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-cyan-50/80 dark:bg-cyan-950/40 border border-cyan-200/80 dark:border-cyan-800/60 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">🚴</span>
-              <span className="font-bold text-cyan-700 dark:text-cyan-300">Bici</span>
-              <strong className="text-slate-900 dark:text-white font-black">{bikeFtp}W</strong>
-            </div>
-          )}
-          {activeMetrics.includes("ramp_rate") && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 shrink-0 font-mono text-[11px]">
-              <span className="text-[10px]">📐</span>
-              <span className="font-bold text-purple-700 dark:text-purple-300">Ramp</span>
-              <strong className="text-slate-900 dark:text-white font-black">{rampDisplay}</strong>
-            </div>
-          )}
+          {activeMetrics.map((metricId) => {
+            const cfg = metricConfigs[metricId];
+            if (!cfg) return null;
+            const Icon = cfg.icon;
+
+            return (
+              <div
+                key={metricId}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shrink-0 font-mono text-[11px] shadow-2xs"
+              >
+                <Icon className={`h-3 w-3 ${cfg.iconColor}`} />
+                <span className={`font-bold ${cfg.badgeColor}`}>{cfg.badge}</span>
+                <strong className={`font-black ${cfg.valueColor || "text-slate-900 dark:text-white"}`}>
+                  {cfg.value}
+                </strong>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Grid Modular Dinámico: Visible siempre en desktop (md:grid), y en móvil solo si está expandido */}
-      <div className={`${isMobileExpanded ? "grid" : "hidden md:grid"} grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2.5`}>
-        {/* 1. FORMA FÍSICA / CTL */}
-        {activeMetrics.includes("ctl") && (
-          <div
-            title="Nivel de forma aeróbica acumulado en las últimas 6 semanas (CTL)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-blue-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">📈</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Forma Física
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-blue-600 font-mono">
-                CTL
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-slate-900">
-                {Number(status.ctl).toFixed(1)}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">nivel</span>
-            </div>
-          </div>
-        )}
-
-        {/* 2. FATIGA / ATL */}
-        {activeMetrics.includes("atl") && (
-          <div
-            title="Cansancio muscular y cardiovascular acumulado en los últimos 7 días (ATL)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-amber-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm text-amber-500">⚡</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Fatiga
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-amber-600 font-mono">
-                ATL
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-amber-600">
-                {Number(status.atl).toFixed(1)}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">reciente</span>
-            </div>
-          </div>
-        )}
-
-        {/* 3. FRESCURA / TSB */}
-        {activeMetrics.includes("tsb") && (
-          <div
-            title="Disponibilidad física y energía para rendir hoy (TSB)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-emerald-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">🔋</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Frescura
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-emerald-600 font-mono">
-                TSB
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className={`text-lg font-black font-mono ${getTsbColor(status.tsb)}`}>
-                {status.tsb > 0 ? `+${Math.round(status.tsb)}` : Math.round(status.tsb)}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">{getTsbContextLabel(status.tsb)}</span>
-            </div>
-          </div>
-        )}
-
-        {/* 4. PROGRESIÓN */}
-        {activeMetrics.includes("rampRate") && (
-          <div
-            title="Incremento semanal de carga de forma segura y sin riesgo de lesión"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-teal-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">📐</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Progresión
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-teal-600 font-mono">
-                /sem
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-slate-800">
-                {rampDisplay}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">ritmo</span>
-            </div>
-          </div>
-        )}
-
-        {/* 5. POTENCIA RUN */}
-        {activeMetrics.includes("strydCp") && (
-          <div
-            title="Tus vatios umbral para correr a ritmo exigente y sostenible (Stryd CP)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-amber-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between gap-1 min-w-0">
-              <div className="flex items-center space-x-1 min-w-0">
-                <span className="text-sm shrink-0">👟</span>
-                <span className="text-xs font-black tracking-tight text-slate-800 truncate">
-                  Potencia Run
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-amber-600 font-mono shrink-0">
-                Watts
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-amber-600">
-                {runFtp ? `${runFtp} W` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">umbral</span>
-            </div>
-          </div>
-        )}
-
-        {/* 6. POTENCIA BICI */}
-        {activeMetrics.includes("bikeFtp") && (
-          <div
-            title="Tus vatios umbral pedaleando durante 1 hora (FTP Ciclismo)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-cyan-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between gap-1 min-w-0">
-              <div className="flex items-center space-x-1 min-w-0">
-                <span className="text-sm shrink-0">🚴</span>
-                <span className="text-xs font-black tracking-tight text-slate-800 truncate">
-                  Potencia Bici
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-cyan-600 font-mono shrink-0">
-                Watts
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-cyan-600">
-                {bikeFtp ? `${bikeFtp} W` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">FTP</span>
-            </div>
-          </div>
-        )}
-
-        {/* 7. RECUPERACIÓN (HRV) */}
-        {activeMetrics.includes("hrv") && (
-          <div
-            title="Variabilidad cardíaca: qué tan recuperado está tu sistema nervioso (HRV)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-rose-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">💓</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Recuperación
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-rose-600 font-mono">
-                HRV
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-rose-600">
-                {currentHrv ? `${currentHrv} ms` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">
-                {status.hrvZScore != null ? `Z ${status.hrvZScore > 0 ? `+${status.hrvZScore}` : status.hrvZScore}` : "vagal"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* 8. FC REPOSO */}
-        {activeMetrics.includes("restingHr") && (
-          <div
-            title="Frecuencia cardíaca en reposo matutina (RHR)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-purple-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">🫀</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  FC Reposo
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-purple-600 font-mono">
-                RHR
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-purple-700">
-                {currentRhr ? `${currentRhr} bpm` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">basal</span>
-            </div>
-          </div>
-        )}
-
-        {/* 9. SUEÑO */}
-        {activeMetrics.includes("sleep") && (
-          <div
-            title="Calidad y horas de sueño sincronizado"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-indigo-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">😴</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Sueño
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-indigo-600 font-mono">
-                Sleep
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-indigo-700">
-                {sleepHours ? `${sleepHours}h` : sleepQuality ? `${sleepQuality}%` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">recuperación</span>
-            </div>
-          </div>
-        )}
-
-        {/* 10. RELACIÓN W/KG */}
-        {activeMetrics.includes("wKg") && (
-          <div
-            title="Potencia relativa por kilo de peso corporal (Stryd / Bike)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-emerald-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">⚖️</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  W/kg
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-emerald-600 font-mono">
-                {weightKg ? `${weightKg}kg` : "Relativo"}
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-sm font-black font-mono text-slate-900">
-                {wKgRun ? `🏃 ${wKgRun}` : ""}{wKgBike ? ` • 🚴 ${wKgBike}` : !wKgRun ? "—" : ""}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">W/kg</span>
-            </div>
-          </div>
-        )}
-
-        {/* 11. EDAD & TANAKA */}
-        {activeMetrics.includes("ageBiometrics") && (
-          <div
-            title="Edad cronológica y FC Máxima estimada según fórmula Tanaka (208 - 0.7*Edad)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-pink-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">🎂</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Edad
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-pink-600 font-mono">
-                {tanakaMaxHR ? `${tanakaMaxHR} max` : "Tanaka"}
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-pink-700">
-                {age ? `${age} años` : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">biometría</span>
-            </div>
-          </div>
-        )}
-
-        {/* 12. FACTOR DE EFICIENCIA AERÓBICA */}
-        {activeMetrics.includes("efficiencyFactor") && (
-          <div
-            title="Factor de Eficiencia Aeróbica (EF = Potencia Normalizada / FC Media)"
-            className="group relative rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs hover:border-teal-400 transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-sm">🎯</span>
-                <span className="text-xs font-black tracking-tight text-slate-800">
-                  Eficiencia
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-teal-600 font-mono">
-                EF
-              </span>
-            </div>
-            <div className="mt-1 flex items-baseline justify-between">
-              <span className="text-lg font-black font-mono text-teal-700">
-                {efficiencyFactor ? efficiencyFactor.toFixed(2) : "—"}
-              </span>
-              <span className="text-[10px] text-slate-400 font-sans">W/bpm</span>
-            </div>
-          </div>
-        )}
+      {/* Grid Dinámico Responsivo: Siempre visible en desktop (md:grid), y en móvil si está expandido */}
+      <div
+        className={`${
+          isMobileExpanded ? "grid" : "hidden md:grid"
+        } grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-2.5`}
+      >
+        {activeMetrics.map((metricId) => {
+          const cfg = metricConfigs[metricId];
+          if (!cfg) return null;
+          return <PhysiologicalMetricCard key={metricId} config={cfg} />;
+        })}
       </div>
     </div>
   );

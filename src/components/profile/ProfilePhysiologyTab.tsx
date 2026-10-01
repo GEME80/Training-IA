@@ -3,6 +3,7 @@
 import React from "react";
 import { Activity, Zap, Heart, Sliders, Check, Footprints } from "lucide-react";
 import { AVAILABLE_METRIC_INDICATORS } from "@/lib/intervals/types";
+import { METRIC_ICONS_MAP } from "@/components/dashboard/PhysiologicalMetricCard";
 
 interface ProfilePhysiologyTabProps {
   birthDate: string;
@@ -318,7 +319,13 @@ export const ProfilePhysiologyTab: React.FC<ProfilePhysiologyTabProps> = ({
                 }`}
               >
                 <div className="flex items-center space-x-1.5 truncate">
-                  <span>{metric.icon}</span>
+                  {METRIC_ICONS_MAP[metric.id] ? (
+                    React.createElement(METRIC_ICONS_MAP[metric.id].icon, {
+                      className: `h-3.5 w-3.5 shrink-0 ${isChecked ? "text-cyan-400" : METRIC_ICONS_MAP[metric.id].color}`,
+                    })
+                  ) : (
+                    <span>{metric.icon}</span>
+                  )}
                   <span className="text-[11px] truncate">{metric.name}</span>
                 </div>
                 {isChecked && <Check className="h-3 w-3 shrink-0 ml-1 text-cyan-400" />}

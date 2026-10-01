@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Footprints, Bike, HeartPulse, Activity, Timer, Waves } from "lucide-react";
+import { Footprints, Bike, HeartPulse, Activity, Timer, Waves, Zap } from "lucide-react";
 import {
   calculatePaceZones,
   parsePaceToSeconds,
@@ -25,6 +25,7 @@ export interface AthleteZonesViewerProps {
   runThresholdPaceStr?: string;
   swimCssSecPer100m?: number;
   swimCssStr?: string;
+  onToggleMode?: (newMode: RunningTrainingMode) => void;
   onUpdateThreshold?: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => Promise<void>;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
@@ -45,6 +46,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
   runThresholdPaceStr,
   swimCssSecPer100m,
   swimCssStr,
+  onToggleMode,
   onUpdateThreshold,
   suggestedBikeFtp,
   suggestedRunPace,
@@ -124,9 +126,50 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           <Activity className="h-3.5 w-3.5 text-sky-500" />
           Zonas de Entrenamiento Fisiológicas (Intervals.icu)
         </h4>
-        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-          {isPowerActive ? "⚡ Modo Activo: Potencia Carrera" : "⏱️ Modo Activo: Ritmo (Pace)"}
-        </span>
+        {onToggleMode ? (
+          <button
+            type="button"
+            onClick={() => onToggleMode(isPowerActive ? "HYBRID" : "POWER")}
+            title="Haz clic para alternar entre Modo Potencia y Modo Ritmo"
+            className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer ${
+              isPowerActive
+                ? "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+            }`}
+          >
+            {isPowerActive ? (
+              <>
+                <Zap className="h-3 w-3 text-amber-500 fill-amber-500/30" />
+                <span>Modo Activo: Potencia</span>
+              </>
+            ) : (
+              <>
+                <Timer className="h-3 w-3 text-emerald-500" />
+                <span>Modo Activo: Ritmo</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <span
+            className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 shadow-2xs ${
+              isPowerActive
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+            }`}
+          >
+            {isPowerActive ? (
+              <>
+                <Zap className="h-3 w-3 text-amber-500 fill-amber-500/30" />
+                <span>Modo Activo: Potencia</span>
+              </>
+            ) : (
+              <>
+                <Timer className="h-3 w-3 text-emerald-500" />
+                <span>Modo Activo: Ritmo</span>
+              </>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-start">

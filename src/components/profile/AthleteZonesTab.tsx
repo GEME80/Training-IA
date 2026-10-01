@@ -105,6 +105,7 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
         swimCssSecPer100m={swimCssSecPer100m}
         swimCssStr={swimCssStr}
+        onToggleMode={onToggleMode}
         onUpdateThreshold={onUpdateThreshold}
         suggestedBikeFtp={suggestedBikeFtp}
         suggestedRunPace={suggestedRunPace}

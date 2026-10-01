@@ -4902,7 +4902,27 @@ flowchart TD
   * `src/lib/physiology/engine.ts`: 261 LOC
   * `src/lib/physiology/macrocycleTemplates.ts`: 347 LOC
 
+---
 
+## [2026-10-01] - Versión 3.89: Modernización de Indicadores de Modo (Ritmo vs Potencia) & Sincronización Interactiva en Zonas Fisiológicas
 
+### 58.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Normalización del Indicador de Modo en Zonas Fisiológicas (`AthleteZonesViewer.tsx`):**
+   - **Erradicación de "Híbrido (Ritmo + FC)":** Se sustituyó la nomenclatura anterior por la semántica unificada:
+     - **Modo Potencia:** `Modo Activo: Potencia` acompañado del icono Lucide `<Zap />` en acento ámbar (`text-amber-500 fill-amber-500/30`).
+     - **Modo Ritmo:** `Modo Activo: Ritmo` acompañado del icono Lucide `<Timer />` en acento esmeralda (`text-emerald-500`).
+   - **Interactividad Directa:** El badge actúa como botón interactivo conmutativo cuando se dispone de `onToggleMode`, permitiendo al usuario cambiar instantáneamente entre Modo Ritmo y Modo Potencia desde la propia barra de Zonas de Intervals.
+2. **Propagación en Pestaña de Zonas (`AthleteZonesTab.tsx`):**
+   - Inyección del prop `onToggleMode` a `AthleteZonesViewer` para sincronización bidireccional inmediata con el estado global del atleta.
+3. **Consistencia en Pestaña de Fisiología & Prompts de IA:**
+   - **`ProfilePhysiologyTab.tsx`:** Actualizado el selector de telemetría a `⏱️ RITMO` / `⚡ POTENCIA`.
+   - **`src/lib/ai/prompts.ts`:** Sustituida la directriz `MODO HÍBRIDO` por `MODO RITMO`, instruyendo al LLM a prescribir por ritmo umbral/pace sin residuales de potencia en atletas sin potenciómetro.
 
-
+### 58.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/profile/AthleteZonesViewer.tsx`: 320 LOC
+  * `src/components/profile/AthleteZonesTab.tsx`: 124 LOC
+  * `src/components/profile/ProfilePhysiologyTab.tsx`: 332 LOC
+  * `src/lib/ai/prompts.ts`: 339 LOC

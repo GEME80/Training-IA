@@ -145,8 +145,8 @@ export const ProfilePhysiologyTab: React.FC<ProfilePhysiologyTabProps> = ({
               />
               <span>Entreno con Potenciómetro Stryd (W)</span>
             </label>
-            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${hasRunningPowerMeter ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-cyan-500/10 text-cyan-600 border-cyan-500/30"}`}>
-              {hasRunningPowerMeter ? "⚡ POTENCIA" : "⏱️ RITMO (Pace)"}
+            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${hasRunningPowerMeter ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"}`}>
+              {hasRunningPowerMeter ? "⚡ POTENCIA" : "⏱️ RITMO"}
             </span>
           </div>
         )}

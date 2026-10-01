@@ -4795,6 +4795,41 @@ flowchart TD
   * `src/lib/physiology/macrocycleTemplates.ts`: 345 LOC
   * `src/lib/services/recalibrateService.ts`: 116 LOC
 
+---
+
+## 55. Versión 3.86: Aislamiento de Modo Híbrido en Running & Garantía de Transiciones Brick Semanales en Triatlón
+
+### 55.1. Objetivos del Release
+1. **Aislamiento Estricto del Modo Híbrido en Running (Cero Vatios / Sin Contaminación Cruzada):**
+   - **Eliminación del Fallback Cruzado en Modal:** En `WorkoutDetailModal.tsx`, se corrigió el fallback donde atletas sin potenciómetro (`run_ftp: 0`) caían en `userProfile?.runFtp` del administrador (336W), mostrando `Stryd CP Atleta: 336W` y vatios calculados en running.
+   - **Encabezado Adaptativo:** Si el atleta es híbrido, el modal muestra `</> PRESCRIPCIÓN ESTRUCTURADA (RITMO & FC):` sin insignias de vatios en carrera, preservando intacto el FTP de ciclismo (ej. `FTP Atleta: 214W`).
+   - **Traducción Universal en Títulos y Documentos (`runningWorkoutAdapter.ts`):** Convierte sufijos como `@ 75-88% CP` a `@ 75-88% Pace` (calidad) o `@ 75-88% LTHR` (fondos/aeróbico), y purga cualquier anotación residual de vatios `(XX W)`.
+   - **Propagación de Métricas en el Calendario Continuo:** `AthleteDashboardOverview.tsx`, `AthleteContinuousCalendar.tsx` y `AthleteCalendarWeekRow.tsx` propagan el Ritmo Umbral y FC Umbral (LTHR) del atleta directamente al generador de plantillas.
+2. **Garantía Universal de Transiciones Brick para Triatletas (`macrocycleTemplates.ts`):**
+   - **Corrección de Bricks Ausentes:** El generador restringía los Bricks exclusivamente a fases `BUILD` y `PEAK`, dejando desprovistas las fases `BASE_1`, `BASE_2` y `TAPER`.
+   - **Regla Universal de Triatlón:** Todo triatleta cuenta ahora con **1 sesión Brick semanal obligatoria** en el día de su fondo ciclista durante todas las semanas no de descarga:
+     * **Base 1 & Base 2:** `Transición T2 Técnica & Adaptación (15m @ 72% CP / FC Z2)`.
+     * **Build & Peak:** `Transición T2 Post-Ciclismo (15-30m @ 85% CP / Ritmo Competición)`.
+     * **Taper:** `Mini-Transición T2 de Activación (10-12m @ 75% CP)`.
+   - **Separación Limpia:** El Brick se estructura en dos actividades independientes:
+     * Tarjeta 1: *Fondo de Ciclismo* (duración, TSS y vatios FTP).
+     * Tarjeta 2: *Transición T2 Post-Ciclismo* (duración, TSS, ritmo o % CP).
+3. **Blindaje de Víspera Universal (`filterEveWorkouts`):**
+   - En la víspera de cualquier competición (Tipo A, B o C), se erradican sesiones de Fuerza y Bricks, manteniendo únicamente un pedaleo de soltura (30m Z1 — 18 TSS) o trote ligero (15m — 9 TSS).
+
+### 55.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/lib/physiology/macrocycleTemplates.ts`: 350 LOC
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 292 LOC
+  * `src/lib/physiology/runningWorkoutAdapter.ts`: 346 LOC
+  * `src/components/dashboard/AthleteContinuousCalendar.tsx`: 335 LOC
+  * `src/components/dashboard/AthleteCalendarWeekRow.tsx`: 349 LOC
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: 222 LOC
+  * `src/lib/intervals/calendarHydration.ts`: 208 LOC
+  * `src/lib/physiology/seasonPlanHelpers.ts`: 116 LOC
+
+
 
 
 

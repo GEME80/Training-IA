@@ -1,5 +1,29 @@
 import { CuratedTrainingModel } from "./types";
 import { RUN_TEST_STRYD_3_9, RUN_TEST_20M_TT } from "./testingProtocols";
+import {
+  RUN_DISTANCE_ESCALERA_200_800,
+  RUN_DISTANCE_BLOQUES_3X_2000M,
+  RUN_DISTANCE_EXTENSIVO_3X_4KM,
+  RUN_DISTANCE_SERIES_5X_1000M,
+  RUN_DISTANCE_SERIES_6X_800M,
+} from "./workoutPools/runningDistancePool";
+import {
+  RUN_FARTLEK_MONEGETTI,
+  RUN_FARTLEK_POLACO_FLOTACION,
+  RUN_FARTLEK_SUECO_PIRAMIDAL,
+  RUN_BILLAT_30_30,
+  RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
+  RUN_TEMPO_BLOQUES_3X_10M,
+  RUN_PIRAMIDE_CONTINUA_Z2_Z3,
+} from "./workoutPools/runningFartlekPool";
+import {
+  BIKE_RONNESTAD_30_15,
+  BIKE_TABATA_40_20,
+  BIKE_ESCALERA_PIRAMIDAL_VAM,
+  BIKE_OVER_UNDERS_SHUTTLING,
+  BIKE_TORQUE_BAJA_CADENCIA,
+  BIKE_SWEETSPOT_EXTENSIVO,
+} from "./workoutPools/cyclingIntervalPool";
 
 export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   modelId: "MARATHON_42K",
@@ -11,7 +35,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
     "Jack Daniels & Stryd Team (Critical Power % CP)",
   ],
   description:
-    "Modelo científico rector para maratón 42K. Progresión ondulada de tirada larga desde 14 km hasta 34 km (85% de la distancia) y supercompensación en Tapering.",
+    "Modelo científico rector para maratón 42K. Progresión ondulada de tirada larga desde 14 km hasta 34 km y supercompensación en Tapering.",
   targetDistanceKm: 42.2,
   periodizationStyle: "Periodización por Bloques Progresivos 3:1 o 2:1 Preventivo",
   phaseDistributions: [
@@ -28,7 +52,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
       phaseKey: "BUILD",
       phaseName: "Construcción de Umbral y Potencia Crítica",
       percentageDuration: 0.35,
-      focusDescription: "Elevación del umbral anaeróbico, series extensivas de umbral y tolerancia al lactato.",
+      focusDescription: "Elevación del umbral anaeróbico, alternancia 50/50 de series de pista en 'mtr' y fartleks por tiempo.",
       weeklyTssRange: { min: 370, max: 480 },
       longRunGuideline: "Fondos progresivos de 22 a 28 km (115 a 145 min) con bloques al 78-83% Stryd CP (Ritmo Maratón).",
       recommendedIntensityZones: ["Series Umbral (98-102% CP)", "Tempo Específico (85-90% CP)", "Ritmo Maratón (78-83% CP)"],
@@ -60,9 +84,9 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
     startKm: 16,
     peakKm: 34,
     startMinutes: 85,
-    peakMinutes: 165, // Cap metodológico Canova/Daniels/Pfitzinger (máx 2h45 / 165 min)
+    peakMinutes: 165,
     targetIntensityPercentCpOrFtp: "80-84% CP en base y 88-93% CP en bloques específicos",
-    description: "Progresión de 16km a 32-34km (máximo 165 min / 2h45) en semana cumbre -4, con descargas 2:1 o 3:1 y 3 semanas de tapering conservando ritmo maratón.",
+    description: "Progresión de 16km a 32-34km (máx 165 min / 2h45) con descargas 2:1 o 3:1 y 3 semanas de tapering.",
     taperKmSequence: [24, 18, 10],
     taperMinutesSequence: [115, 85, 45],
   },
@@ -90,93 +114,51 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   workoutVariations: {
     qualityWorkouts: {
       base: [
-        {
-          name: "Fartlek de Cuestas Cortas Stryd (45m)",
-          powerTarget: "96% CP en cuesta",
-          justification: "Reclutamiento de unidades motoras rápidas y fuerza reactiva sin acidosis láctica.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n6x\n- 45s 96% FTP\n- 1m15s 60% FTP\n\nCooldown\n- 10m 60% FTP",
-        },
-        {
-          name: "Carrera Continua Progresiva en Pirámide Aeróbica (45m)",
-          powerTarget: "70% a 82% CP",
-          justification: "Construcción de eficiencia mitocondrial con aceleración final controlada.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n- 20m 78% FTP\n- 5m 83% FTP\n\nCooldown\n- 5m 60% FTP",
-        },
-        {
-          name: "Fartlek Sueco Piramidal (45m)",
-          powerTarget: "90-94% CP en tramos rápidos",
-          justification: "Cambios de ritmo orgánicos para estimular el VO2max y la soltura neuromuscular.",
-          workoutDoc: "Warmup\n- 12m 68% FTP\n\nMain\n- 1m 92% FTP\n- 1m 65% FTP\n- 2m 90% FTP\n- 1m 65% FTP\n- 3m 88% FTP\n- 2m 65% FTP\n- 2m 90% FTP\n- 1m 65% FTP\n- 1m 92% FTP\n\nCooldown\n- 8m 60% FTP",
-        },
+        RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
+        RUN_PIRAMIDE_CONTINUA_Z2_Z3,
+        RUN_FARTLEK_SUECO_PIRAMIDAL,
         {
           name: "Series de Capacidad Aeróbica (4x4m @ 88% CP)",
           powerTarget: "88% CP",
           justification: "Estímulo de capilarización y aclaramiento eficiente de lactato.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n4x\n- 4m 88% FTP\n- 2m 65% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n4x\n- 4m 88% CP\n- 2m 65% CP\n\nCooldown\n- 10m 60% CP",
         },
       ],
       build: [
-        {
-          name: "Escalera Incremental de Potencia Aeróbica (200m -> 400m -> 600m -> 800m)",
-          powerTarget: "100-112% CP",
-          justification: "Reclutamiento progresivo de unidades motoras rápidas y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 200mtr 112% CP\n- 1m 55% CP\n- 400mtr 108% CP\n- 1m30s 55% CP\n- 600mtr 104% CP\n- 2m 55% CP\n- 800mtr 100% CP\n- 2m30s 55% CP\n- 600mtr 104% CP\n- 2m 55% CP\n- 400mtr 108% CP\n- 1m30s 55% CP\n- 200mtr 112% CP\n\nCooldown\n- 10m 60% CP",
-        },
-        {
-          name: "Series Umbral Stryd Z4 (4x8m @ 100% CP)",
-          powerTarget: "100% CP",
-          justification: "Elevación de la potencia crítica y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\n4x\n- 8m 100% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
-        },
-        {
-          name: "Bloques Largos de Umbral en Pista/Ruta (3x 2.000m @ 98% CP)",
-          powerTarget: "98% CP",
-          justification: "Resistencia a la fatiga específica en tramos de 2 km a ritmo umbral.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 2000m)\n3x\n- 2000mtr 98% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
-        },
-        {
-          name: "Intervalos de Ritmo Maratón Extensivo (3x4km @ 82% CP)",
-          powerTarget: "82% CP",
-          justification: "Automatización biomecánica a potencia específica de competición.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 4km)\n3x\n- 4km 82% CP\n- 5m 68% CP\n\nCooldown\n- 10m 60% CP",
-        },
-        {
-          name: "Series Largas de Umbral (3x10m @ 98% CP)",
-          powerTarget: "98% CP",
-          justification: "Sostenimiento metabólico en zona de máximo estado estable de lactato.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\n3x\n- 10m 98% CP\n- 3m 65% CP\n\nCooldown\n- 10m 60% CP",
-        },
-        {
-          name: "Tempo Continuo de Resistencia (35m @ 84% CP)",
-          powerTarget: "84% CP",
-          justification: "Adaptación neuromuscular y eficiencia energética a ritmo sub-umbral.",
-          workoutDoc: "Warmup\n- 12m 68% FTP\n\nMain\n- 35m 84% FTP\n\nCooldown\n- 8m 60% FTP",
-        },
+        RUN_DISTANCE_ESCALERA_200_800,
+        RUN_FARTLEK_MONEGETTI,
+        RUN_DISTANCE_BLOQUES_3X_2000M,
+        RUN_FARTLEK_POLACO_FLOTACION,
+        RUN_DISTANCE_SERIES_5X_1000M,
+        RUN_BILLAT_30_30,
+        RUN_DISTANCE_EXTENSIVO_3X_4KM,
+        RUN_TEMPO_BLOQUES_3X_10M,
+        RUN_DISTANCE_SERIES_6X_800M,
       ],
       peak: [
         {
           name: "Bloque Específico Canova (2x6km @ 83% CP)",
           powerTarget: "83% CP",
           justification: "Densidad de ritmo maratón con fatiga acumulada.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n2x\n- 30m 83% FTP\n- 7m 68% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n2x\n- 30m 83% CP\n- 7m 68% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Simulación de Ritmo Competitivo (3x5km @ 82% CP)",
           powerTarget: "82% CP",
           justification: "Prueba de ritmo, avituallamiento y control de vatios Stryd.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n3x\n- 25m 82% FTP\n- 5m 68% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n3x\n- 25m 82% CP\n- 5m 68% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Carrera Continua Progresiva con Final Específico (50m Z2 + 20m @ 84% CP)",
           powerTarget: "72% a 84% CP",
           justification: "Simulación de segunda mitad de maratón con depleción glucogénica parcial.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain\n- 35m 72% FTP\n- 20m 84% FTP\n\nCooldown\n- 5m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain\n- 35m 72% CP\n- 20m 84% CP\n\nCooldown\n- 5m 60% CP",
         },
         {
           name: "Intervalos Canova Combinados (20m @ 82% + 15m @ 84% + 10m @ 88% CP)",
           powerTarget: "82% a 88% CP",
           justification: "Aceleración final y reclutamiento de fibras rápidas en fatiga.",
-          workoutDoc: "Warmup\n- 12m 68% FTP\n\nMain\n- 20m 82% FTP\n- 5m 65% FTP\n- 15m 84% FTP\n- 5m 65% FTP\n- 10m 88% FTP\n\nCooldown\n- 8m 60% FTP",
+          workoutDoc: "Warmup\n- 12m 68% CP\n\nMain\n- 20m 82% CP\n- 5m 65% CP\n- 15m 84% CP\n- 5m 65% CP\n- 10m 88% CP\n\nCooldown\n- 8m 60% CP",
         },
       ],
       taper: [
@@ -184,133 +166,73 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Activación Breve con Strides Reactivos (35m)",
           powerTarget: "105% CP",
           justification: "Despertar neuromuscular con mínimo impacto previo a la carrera.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n4x\n- 30s 105% FTP\n- 1m 55% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n4x\n- 30s 105% CP\n- 1m 55% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Puesta a Punto a Ritmo de Carrera (30m con 3x4m @ 82% CP)",
           powerTarget: "82% CP",
           justification: "Recordatorio biomecánico de ritmo maratón sin fatiga metabólica.",
-          workoutDoc: "Warmup\n- 12m 68% FTP\n\n3x\n- 4m 82% FTP\n- 2m 55% FTP\n\nCooldown\n- 5m 60% FTP",
+          workoutDoc: "Warmup\n- 12m 68% CP\n\n3x\n- 4m 82% CP\n- 2m 55% CP\n\nCooldown\n- 5m 60% CP",
         },
         {
           name: "Rodaje Suave con Toques de Ritmo Maratón (25m con 2x5m @ 80% CP)",
           powerTarget: "80% CP en toques",
           justification: "Afinamiento y confirmación de sensaciones de apoyo y soltura.",
-          workoutDoc: "Warmup\n- 10m 68% FTP\n\n2x\n- 5m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 5m 60% FTP",
-        },
-        {
-          name: "Soltura Regenerativa Pre-Maratón (20m con 4 Strides @ 105% CP)",
-          powerTarget: "68% CP + Strides",
-          justification: "Movilización ligera y contacto ágil con el suelo 48h antes de la competición.",
-          workoutDoc: "Warmup\n- 6m 60% FTP\n\nMain\n- 10m 68% FTP\n\n4x\n- 20s 105% FTP\n- 40s 55% FTP\n\nCooldown\n- 2m 55% FTP",
+          workoutDoc: "Warmup\n- 10m 68% CP\n\n2x\n- 5m 80% CP\n- 2m 55% CP\n\nCooldown\n- 5m 60% CP",
         },
       ],
     },
     bikeMidWeekWorkouts: [
-      {
-        name: "Ciclismo Z2 con Variaciones de Cadencia 95-105 rpm (50m)",
-        powerTarget: "70% FTP",
-        justification: "Eficiencia biomecánica y cadencia fluida sin impacto articular.",
-        workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 10m 50% FTP",
-        durationMin: 50,
-      },
-      {
-        name: "Sweetspot Progresivo Ciclismo (3x8m @ 85% FTP)",
-        powerTarget: "85% FTP",
-        justification: "Estímulo de potencia aeróbica y densidad mitocondrial sin acidosis.",
-        workoutDoc: "Warmup\n- 15m 55% FTP\n\n3x\n- 8m 85% FTP\n- 3m 55% FTP\n\nCooldown\n- 10m 50% FTP",
-        durationMin: 55,
-      },
-      {
-        name: "Micro-Aceleraciones Neuromusculares (45m con 6x20s @ 110% FTP)",
-        powerTarget: "110% FTP en sprints",
-        justification: "Reclutamiento de unidades motoras y reactividad de piernas sin impacto.",
-        workoutDoc: "Warmup\n- 15m 55% FTP\n\n6x\n- 20s 110% FTP\n- 1m40s 60% FTP\n\nMain\n- 10m 68% FTP\n\nCooldown\n- 10m 50% FTP",
-        durationMin: 45,
-      },
-      {
-        name: "Ciclismo Z2 Regenerativo Suave (45m)",
-        powerTarget: "60% FTP",
-        justification: "Recuperación activa y lavado de metabolitos.",
-        workoutDoc: "Warmup\n- 10m 50% FTP\n\nMain\n- 25m 60% FTP\n\nCooldown\n- 10m 45% FTP",
-        durationMin: 45,
-      },
-      {
-        name: "Over-Unders Umbral Suaves (3x [2m @ 95% / 2m @ 80% FTP])",
-        powerTarget: "95% / 80% FTP",
-        justification: "Mejora de la capacidad de aclaramiento de lactato pedaleando.",
-        workoutDoc: "Warmup\n- 15m 55% FTP\n\n3x\n- 2m 95% FTP\n- 2m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 10m 50% FTP",
-        durationMin: 50,
-      },
-      {
-        name: "Fuerza Resistencia Ciclismo (45m @ 60 rpm 76% FTP)",
-        powerTarget: "76% FTP @ baja cadencia",
-        justification: "Fuerza específica de cuádriceps y glúteo sin sobrecarga articular.",
-        workoutDoc: "Warmup\n- 12m 55% FTP\n\n3x\n- 6m 76% FTP (60 rpm)\n- 3m 60% FTP (95 rpm)\n\nCooldown\n- 6m 50% FTP",
-        durationMin: 45,
-      },
+      BIKE_RONNESTAD_30_15,
+      BIKE_SWEETSPOT_EXTENSIVO,
+      BIKE_ESCALERA_PIRAMIDAL_VAM,
+      BIKE_OVER_UNDERS_SHUTTLING,
+      BIKE_TORQUE_BAJA_CADENCIA,
+      BIKE_TABATA_40_20,
     ],
     recoveryAerobicWorkouts: [
       {
         name: "Carrera Continua Z2 Base + 5 Strides Reactivos (45m)",
         powerTarget: "81% CP + Strides @ 115% CP",
         justification: "Reactividad elástica del tendón de Aquiles y economía de zancada.",
-        workoutDoc: "Warmup\n- 10m 74% FTP\n\nMain\n- 25m 81% FTP\n\n5x\n- 20s 115% FTP\n- 40s 65% FTP\n\nCooldown\n- 5m 65% FTP",
+        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 25m 81% CP\n\n5x\n- 20s 115% CP\n- 40s 65% CP\n\nCooldown\n- 5m 65% CP",
         durationMin: 45,
       },
       {
         name: "Carrera Continua Aeróbica Z2 (45m)",
         powerTarget: "81% CP",
         justification: "Consistencia aeróbica y volumen mitocondrial.",
-        workoutDoc: "Warmup\n- 10m 74% FTP\n\nMain\n- 30m 81% FTP\n\nCooldown\n- 5m 65% FTP",
+        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 30m 81% CP\n\nCooldown\n- 5m 65% CP",
         durationMin: 45,
       },
       {
         name: "Carrera Continua Progresiva Suave (45m)",
         powerTarget: "78% a 84% CP",
         justification: "Estimulación hemodinámica gradual y aclimatación de ritmo.",
-        workoutDoc: "Warmup\n- 15m 74% FTP\n\nMain\n- 20m 80% FTP\n- 5m 84% FTP\n\nCooldown\n- 5m 65% FTP",
+        workoutDoc: "Warmup\n- 15m 74% CP\n\nMain\n- 20m 80% CP\n- 5m 84% CP\n\nCooldown\n- 5m 65% CP",
         durationMin: 45,
       },
       {
         name: "Carrera Continua de Asimilación & Cadencia 180 spm (40m)",
         powerTarget: "78% CP",
         justification: "Eficiencia biomecánica, contacto de suelo breve y recuperación activa.",
-        workoutDoc: "Warmup\n- 10m 72% FTP\n\nMain\n- 25m 78% FTP\n\nCooldown\n- 5m 65% FTP",
+        workoutDoc: "Warmup\n- 10m 72% CP\n\nMain\n- 25m 78% CP\n\nCooldown\n- 5m 65% CP",
         durationMin: 40,
       },
       {
         name: "Trote Regenerativo Suave Z1 (35m)",
         powerTarget: "72% CP",
         justification: "Lavado neuromuscular y oxigenación celular sin estrés biológico.",
-        workoutDoc: "Warmup\n- 8m 60% FTP\n\nMain\n- 22m 65% FTP\n\nCooldown\n- 5m 55% FTP",
+        workoutDoc: "Warmup\n- 8m 60% CP\n\nMain\n- 22m 65% CP\n\nCooldown\n- 5m 55% CP",
         durationMin: 35,
       },
     ],
     strengthWorkouts: [
       {
-        name: "Fuerza Sóleo & Pliometría Reactiva (Drop Jumps & Tobillo)",
-        focus: "Sóleo y Tobillo",
-        justification: "Fortalecimiento del tendón de Aquiles para absorber el impacto de maratón.",
-        workoutDoc: "Warmup\n- 5m Mobility\n\nMain\n- 15m Pliometría Sóleo, Gemelo & Core\n\nCooldown\n- 5m Stretch",
-      },
-      {
-        name: "Fuerza Isométrica de Cadena Posterior & Glúteo Medio",
-        focus: "Glúteo y Cadera",
-        justification: "Estabilidad pélvica para evitar colapso de rodilla en fatiga.",
-        workoutDoc: "Warmup\n- 5m Mobility\n\nMain\n- 15m Puentes, Abductores & Planchas\n\nCooldown\n- 5m Stretch",
-      },
-      {
-        name: "Fuerza Máxima & Potencia de Pierna (Sentadilla Búlgara & Core)",
-        focus: "Cuádriceps y Cadera",
-        justification: "Desarrollo de fuerza propulsiva y estabilidad articular.",
-        workoutDoc: "Warmup\n- 5m Mobility\n\nMain\n- 15m Sentadillas Búlgaras, Peso Muerto & Core\n\nCooldown\n- 5m Stretch",
-      },
-      {
-        name: "Movilidad Articular Dinámica & Descarga Miofascial (25m)",
-        focus: "Recuperación y Core",
-        justification: "Alivio de tensiones miofasciales y mantenimiento del rango de movimiento.",
-        workoutDoc: "Warmup\n- 5m Foam Roller\n\nMain\n- 15m Movilidad Dinámica, Cadera y Tobillo\n\nCooldown\n- 5m Respiración",
+        name: "Tríada S&C: Sóleo Excéntrico + Estabilidad Escapular + Core Anti-Rotación",
+        focus: "Sóleo, Escápula y Core",
+        justification: "Fortalecimiento tridimensional para absorber el impacto del maratón y mantener la postura.",
+        workoutDoc: "Warmup\n- 5m Movilidad Dinámica\n\nMain\n- 12x Sóleo excéntrico en escalón (3s bajada)\n- 12x Face-pulls con banda elástica\n- 12x Press Pallof con banda\n\nCooldown\n- 5m Foam Roller",
       },
     ],
   },
@@ -323,7 +245,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   crossTrainingRules: {
     recommendedBikeZ2WeeklyMin: 60,
     recommendedStrengthSessionsPerWeek: 1,
-    notes: "Sesión de rodillo Z2 para sumar volumen aeróbico con cero impacto articular. Sesión de fuerza para tren inferior.",
+    notes: "Sesión de rodillo Z2 para sumar volumen aeróbico con cero impacto articular.",
   },
   banisterRampRateLimits: {
     minCtlPerWeek: 1.5,
@@ -332,5 +254,3 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
 };
 
 export { HALF_MARATHON_21K_MODEL } from "./halfMarathonModel";
-
-

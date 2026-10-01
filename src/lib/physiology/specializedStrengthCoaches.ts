@@ -1,5 +1,11 @@
 import { StrengthWorkoutDefinition } from "./strengthWorkoutPool";
 import { getCoprimeStride } from "./macrocycleTemplateHelpers";
+import {
+  STRENGTH_TRIAD_1_SOLEUS_SCAPULA_ROTATION,
+  STRENGTH_TRIAD_2_POSTERIOR_DORSAL_EXTENSION,
+  STRENGTH_TRIAD_4_ECCENTRIC_TRAP_TRENDELENBURG,
+  STRENGTH_TRIAD_5_REGENERATIVE_MOBILITY_PREHAB,
+} from "../ai/knowledge/workoutPools/strengthTriadPool";
 
 /**
  * 🏋️ SUITE DE 5 COACHES DE FORTALECIMIENTO ESPECIALIZADOS (S&C)
@@ -9,6 +15,7 @@ import { getCoprimeStride } from "./macrocycleTemplateHelpers";
 // S1: Running & Marathon Strength Coach
 const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
   BASE: [
+    STRENGTH_TRIAD_1_SOLEUS_SCAPULA_ROTATION,
     {
       name: "S1: Sóleo Excéntrico & Stiffness de Tobillo Stryd LSS (35m)",
       focus: "Sóleo, Tendón de Aquiles y Leg Spring Stiffness",
@@ -43,6 +50,7 @@ const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
     },
   ],
   BUILD: [
+    STRENGTH_TRIAD_2_POSTERIOR_DORSAL_EXTENSION,
     {
       name: "S1: Cadena Posterior Propulsiva & Hip Thrust Pesado (35m)",
       focus: "Glúteo Mayor, Isquiosurales y Fase de Impulso",
@@ -163,6 +171,7 @@ const S4_TRAIL_POOL: Record<string, StrengthWorkoutDefinition[]> = {
     },
   ],
   BUILD: [
+    STRENGTH_TRIAD_4_ECCENTRIC_TRAP_TRENDELENBURG,
     {
       name: "S4: Resistencia Excéntrica Avanzada & Potencia en Cuesta (35m)",
       focus: "Propulsión en Cuesta y Mitigación de DOMS",
@@ -195,6 +204,7 @@ const S5_PREHAB_POOL: Record<string, StrengthWorkoutDefinition[]> = {
     },
   ],
   TAPER: [
+    STRENGTH_TRIAD_5_REGENERATIVE_MOBILITY_PREHAB,
     {
       name: "S5: Movilidad Articular Dinámica & Descarga Pre-Competición (20m)",
       focus: "Descompresión Articular y Liberación Miofascial",

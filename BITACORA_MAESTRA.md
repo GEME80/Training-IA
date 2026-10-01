@@ -5075,5 +5075,33 @@ flowchart TD
   * `src/lib/ai/knowledge/marathonModel.ts`: 336 LOC
   * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
 
+---
 
+## [2026-10-01] - Versión 3.94: Ampliación Masiva de Variedad de Entrenamientos y Arquitectura Modular de Workout Pools (Running, Ciclismo y Tríadas S&C)
+
+### 63.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Creación de la Arquitectura Modular `workoutPools/`:**
+   - Desacoplamiento de las librerías de entrenamiento en submódulos atómicos especializados bajo `src/lib/ai/knowledge/workoutPools/`:
+     * `runningDistancePool.ts` (192 LOC): Series clásicas de velocidad (8x 400mtr), VO2max (6x 800mtr), umbral Daniels (5x 1000mtr), escaleras métricas (200m -> 800m), piramidales descendentes (1200m + 800m + 400m + 200m), bloques de umbral Canova (3x 2000mtr), bloques extensivos (3x 4km), millas clásicas (4x 1600mtr) y repeticiones de reactividad (12x 200mtr). Todas con pausas canónicas por tiempo.
+     * `runningFartlekPool.ts` (158 LOC): Fartlek Monegetti australiano (2x 90s + 4x 60s + 4x 30s + 4x 15s), Fartlek Polaco con flotación activa (4x [3m / 2m Z2]), Fartlek Sueco piramidal, Micro-intervalos Billat 30s/30s, Cuestas neuromusculares, bloques de umbral Daniels (3x 10m) y pirámides aeróbicas Z1-Z3.
+     * `cyclingIntervalPool.ts` (181 LOC): Micro-intervalos Rønnestad 30/15 (3x 10x [30s / 15s] @ 120% FTP), Tabatas ciclistas 40/20, Escaleras piramidales de vatios (1m-2m-3m-4m), Over-unders de aclaramiento de lactato (3x 9m [2m @ 92% / 1m @ 108%]), Fuerza y torque a baja cadencia (4x 6m @ 55-60 rpm) y Sweetspot extensivo (3x 15m).
+     * `cyclingOutdoorPool.ts` (99 LOC): Fondos libres outdoor de fin de semana no encorsetados por rodillo, guiados por misiones según terreno (Repechos libres en subida, Cadencia y fluidez a 88-98 rpm, Final vivo Fast-Finish, y Fondo puro de asimilación Z2).
+     * `strengthTriadPool.ts` (165 LOC): Estructuración obligatoria en Tríada Anatómica (Bloque 1: Tren Inferior & Pie/Sóleo/LSS + Bloque 2: Tren Superior, Postura & Escápula + Bloque 3: Core Tridimensional Anti-Movimiento).
+2. **Alternancia Inteligente 50/50 en Calidad de Carrera:**
+   - En la fase Build de Maratón, 21K, 10K y 5K, las semanas pares e impares rotan limpiamente entre pista por distancia métrica canónica y fartleks por tiempo.
+3. **Optimización de LOC Budgets:**
+   - La modularización redujo drásticamente el tamaño de los modelos maestros:
+     * `marathonModel.ts`: Reducido de 336 a **256 LOC**.
+     * `halfMarathonModel.ts`: Reducido de 328 a **230 LOC**.
+     * `tenKModel.ts`: Reducido de 315 a **215 LOC**.
+     * `fiveKModel.ts`: Reducido de 301 a **208 LOC**.
+     * `triathlonModel.ts`: Reducido de 344 a **220 LOC**.
+     * `cyclingModel.ts`: Reducido de 307 a **205 LOC**.
+     * `cyclingSpecialtyModels.ts`: Reducido a **313 LOC**.
+     * `macrocycleTemplateHelpers.ts`: Reducido a **314 LOC**.
+
+### 63.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $ightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0 en 2.8s)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $ightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):** 100% de los archivos nuevos y modificados cumplen la regla inmutable.
 

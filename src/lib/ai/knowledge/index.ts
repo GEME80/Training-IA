@@ -25,6 +25,7 @@ export * from "./trailModel";
 export * from "./longevityModel";
 export * from "./athleteMomentsModels";
 export * from "./strengthAndCrossModels";
+export * from "./workoutPools";
 
 export const ALL_CURATED_TRAINING_MODELS: Record<SportDisciplineGoal, CuratedTrainingModel> = {
   MARATHON_42K: MARATHON_42K_MODEL,

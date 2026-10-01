@@ -1,5 +1,6 @@
 import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
+import { ALL_CYCLING_OUTDOOR_WORKOUTS } from "../ai/knowledge/workoutPools/cyclingOutdoorPool";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 
@@ -251,26 +252,14 @@ export function resolveWeekendRide(params: {
     rideMins = [110, 120, 105][(weekNumber - 1) % 3];
     rideTitle = `Fondo Específico Ciclismo (${rideMins}m Z2/Z3)`;
   } else {
-    // Alternancia dinámica de estímulo de fin de semana para Ciclismo
-    const style = (weekNumber - 1) % 3;
-    if (style === 0) {
-      rideMins = [90, 100, 95][(weekNumber - 1) % 3];
-      rideTitle = `Fondo Ciclismo con Variaciones de Cadencia (${rideMins}m)`;
-      rideJust = "Fuerza y eficiencia neuromuscular alternando 60 y 100 rpm.";
-      rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.68)}W (68% FTP)` : "68% FTP";
-      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain (Cadencia Dinámica)\n4x\n- 6m 72% FTP "60 rpm"\n- 4m 65% FTP "100 rpm"\n\n- ${Math.max(15, rideMins - 65)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
-    } else if (style === 1) {
-      rideMins = [85, 95, 90][(weekNumber - 1) % 3];
-      rideTitle = `Fondo Ciclismo con Bloques Sweetspot (${rideMins}m)`;
-      rideJust = "Estímulo aeróbico profundo sin impacto sobre tendón de Aquiles.";
-      rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.72)}W` : "Z2 con 2x10m Sweetspot";
-      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain (Sweetspot)\n2x\n- 10m 85% FTP\n- 5m 55% FTP\n\n- ${Math.max(15, rideMins - 55)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
-    } else {
-      rideMins = [85, 95, 90, 100][(weekNumber - 1) % 4];
-      rideTitle = `Fondo Resistencia Continua Z2 (${rideMins}m)`;
-      rideJust = "Densidad mitocondrial y volumen continuo.";
-      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
-    }
+    // Fondos Outdoor Libres con Misión Fisiológica (Rotación de fin de semana)
+    const outdoorPool = ALL_CYCLING_OUTDOOR_WORKOUTS;
+    const sel = outdoorPool[(weekNumber - 1) % outdoorPool.length];
+    rideMins = isRecovery ? Math.min(90, Math.round(sel.durationMin * 0.75)) : sel.durationMin;
+    rideTitle = sel.name;
+    rideJust = sel.justification;
+    rideTarget = interpolatePowerTarget(sel.powerTarget, undefined, bikeFtp);
+    workoutDoc = sel.workoutDoc;
   }
 
   return { rideMins, rideTitle, rideJust, rideTarget, workoutDoc };

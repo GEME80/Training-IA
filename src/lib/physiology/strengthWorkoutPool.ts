@@ -3,6 +3,14 @@
  * Periodizado por fases con rotación coprima anti-repetición.
  */
 
+import {
+  STRENGTH_TRIAD_1_SOLEUS_SCAPULA_ROTATION,
+  STRENGTH_TRIAD_2_POSTERIOR_DORSAL_EXTENSION,
+  STRENGTH_TRIAD_3_BULGARIAN_SERRATUS_PELVIS,
+  STRENGTH_TRIAD_4_ECCENTRIC_TRAP_TRENDELENBURG,
+  STRENGTH_TRIAD_5_REGENERATIVE_MOBILITY_PREHAB,
+} from "../ai/knowledge/workoutPools/strengthTriadPool";
+
 export interface StrengthWorkoutDefinition {
   name: string;
   focus: string;
@@ -34,6 +42,8 @@ function getCoprimeStride(length: number, preferred: number = 2): number {
 
 export const STRENGTH_WORKOUT_POOL: Record<string, StrengthWorkoutDefinition[]> = {
   BASE: [
+    STRENGTH_TRIAD_1_SOLEUS_SCAPULA_ROTATION,
+    STRENGTH_TRIAD_3_BULGARIAN_SERRATUS_PELVIS,
     {
       name: "Fuerza Estructural & Estabilidad de Cadera y Glúteo (35m)",
       focus: "Glúteo Medio, Cuádriceps y Estabilidad Lumbo-Pélvica",
@@ -85,6 +95,8 @@ export const STRENGTH_WORKOUT_POOL: Record<string, StrengthWorkoutDefinition[]> 
   ],
 
   BUILD: [
+    STRENGTH_TRIAD_2_POSTERIOR_DORSAL_EXTENSION,
+    STRENGTH_TRIAD_4_ECCENTRIC_TRAP_TRENDELENBURG,
     {
       name: "Potencia Reactiva, Pliometría & Elasticidad de Tobillos (30m)",
       focus: "Sóleo, Tendón de Aquiles y Stiffness Neuromuscular",
@@ -179,6 +191,7 @@ export const STRENGTH_WORKOUT_POOL: Record<string, StrengthWorkoutDefinition[]> 
   ],
 
   TAPER: [
+    STRENGTH_TRIAD_5_REGENERATIVE_MOBILITY_PREHAB,
     {
       name: "Movilidad Articular & Descarga Miofascial (20m)",
       focus: "Liberación Miofascial y Flexibilidad Dinámica",

@@ -1,5 +1,13 @@
 import { CuratedTrainingModel } from "./types";
 import { BIKE_TEST_20M_FTP, BIKE_TEST_RAMP } from "./testingProtocols";
+import {
+  BIKE_RONNESTAD_30_15,
+  BIKE_TABATA_40_20,
+  BIKE_ESCALERA_PIRAMIDAL_VAM,
+  BIKE_OVER_UNDERS_SHUTTLING,
+  BIKE_TORQUE_BAJA_CADENCIA,
+  BIKE_SWEETSPOT_EXTENSIVO,
+} from "./workoutPools/cyclingIntervalPool";
 
 /**
  * Modelo Científico para Ciclismo — Escalada y Puertos (Hunter Allen)
@@ -92,27 +100,22 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
   workoutVariations: {
     qualityWorkouts: {
       base: [
-        {
-          name: "Series de Fuerza en Subida a Cadencia Controlada (3x 8m)",
-          powerTarget: "85% FTP a 60 rpm",
-          justification: "Fortalece los cuádriceps y glúteos para empujar vatios en rampas duras.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nSubidas de Fuerza (60 rpm)\n3x\n- 8m 85% FTP\n- 4m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
-        },
+        BIKE_TORQUE_BAJA_CADENCIA,
+        BIKE_SWEETSPOT_EXTENSIVO,
       ],
       build: [
-        {
-          name: "Ascensiones Continuas a Ritmo de Umbral (3x 12m)",
-          powerTarget: "98% FTP",
-          justification: "Enseña a mantener un ritmo fuerte y constante durante subidas largas.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nPuertos de Umbral\n3x\n- 12m 98% FTP\n- 5m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
-        },
+        BIKE_OVER_UNDERS_SHUTTLING,
+        BIKE_ESCALERA_PIRAMIDAL_VAM,
+        BIKE_TORQUE_BAJA_CADENCIA,
+        BIKE_RONNESTAD_30_15,
       ],
       peak: [
+        BIKE_OVER_UNDERS_SHUTTLING,
         {
           name: "Over-Unders en Subida para Cambio de Pendiente (4x 9m)",
           powerTarget: "95% / 105% FTP alternado",
           justification: "Aumenta la tolerancia cuando la pendiente se empina bruscamente.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nBloques Over-Under (9m)\n4x\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 4m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
+          workoutDoc: "Warmup\n- 15m 55% FTP\n\n4x\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 4m 50% FTP\n\nCooldown\n- 10m 50% FTP",
         },
       ],
       taper: [
@@ -120,34 +123,29 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
           name: "Activación Suave con Toques de Ritmo (40m)",
           powerTarget: "95% FTP en toques",
           justification: "Despertar neuromuscular sin acumular fatiga residual.",
-          workoutDoc: "Calentamiento\n- 15m 50% FTP\n\nToques de Ritmo\n3x\n- 1m30s 95% FTP\n- 2m 50% FTP\n\nEnfriamiento\n- 10m 45% FTP",
+          workoutDoc: "Warmup\n- 15m 50% FTP\n\n3x\n- 1m30s 95% FTP\n- 2m 50% FTP\n\nCooldown\n- 10m 45% FTP",
         },
       ],
     },
     bikeMidWeekWorkouts: [
-      {
-        name: "Pedaleo Suave Regenerativo y Cadencia Ágil (45m)",
-        powerTarget: "60% FTP",
-        justification: "Suaviza las piernas y favorece la asimilación del esfuerzo.",
-        workoutDoc: "Calentamiento\n- 10m 50% FTP\n\nPedaleo Cómodo\n- 25m 60% FTP\n\nEnfriamiento\n- 10m 45% FTP",
-        durationMin: 45,
-      },
+      BIKE_TORQUE_BAJA_CADENCIA,
+      BIKE_ESCALERA_PIRAMIDAL_VAM,
     ],
     recoveryAerobicWorkouts: [
       {
         name: "Pedaleo Suave de Recuperación (35m)",
         powerTarget: "52% FTP",
         justification: "Mueve las piernas con mínimo estrés.",
-        workoutDoc: "Pedaleo Suave\n- 35m 52% FTP",
+        workoutDoc: "Main\n- 35m 52% FTP",
         durationMin: 35,
       },
     ],
     strengthWorkouts: [
       {
-        name: "Fuerza de Core y Estabilidad Lumbar para Subidas",
-        focus: "Zona Lumbar, Glúteos y Abdomen",
+        name: "Tríada S&C Ciclismo: Torque Cuádriceps + Estabilidad Aero Escapular + Core Lumbar",
+        focus: "Pierna, Escápula y Core",
         justification: "Mantiene la posición firme en el sillín y evita sobrecargas lumbares.",
-        workoutDoc: "Movilidad\n- 5m Articular\n\nFuerza Funcional\n- 20m Planchas, puentes de cadera y sentadillas isométricas",
+        workoutDoc: "Warmup\n- 5m Movilidad\n\nMain\n- 8x Sentadilla pesada controlada\n- 12x Face-pulls escapulares\n- 35s Plancha prona en acoples aero\n\nCooldown\n- 5m Descompresión",
       },
     ],
   },
@@ -159,80 +157,79 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
   },
   crossTrainingRules: {
     recommendedStrengthSessionsPerWeek: 2,
-    notes: "Fuerza de glúteos y lumbares para proteger la espalda en ascensiones duras.",
+    notes: "Fuerza específica para escalada (cuádriceps, glúteos y lumbares).",
   },
   banisterRampRateLimits: {
-    minCtlPerWeek: 1.8,
-    maxCtlPerWeek: 4.2,
+    minCtlPerWeek: 2.0,
+    maxCtlPerWeek: 4.5,
   },
 };
 
 /**
- * Modelo Científico para Ciclismo — Potencia y Cambios de Ritmo (Coggan)
+ * Modelo Científico para Ciclismo — Criterium y Explosividad (Hunter Allen)
  */
 export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
   modelId: "CYCLING_CRITERIUM",
   sportCategory: "Cycling",
-  displayName: "PULSE Ciclismo — Potencia y Cambios de Ritmo",
+  displayName: "PULSE Ciclismo — Criterium y Circuitos Cortos",
   scientificAuthors: [
-    "Dr. Andrew Coggan (Anaerobic Capacity & Sprints)",
-    "Joe Friel (Crit Power & Micro-Intervals)",
+    "Hunter Allen (Training and Racing with a Power Meter)",
+    "Dr. Andrew Coggan (Anaerobic Capacity and Neuromuscular Power)",
   ],
   description:
-    "Enfocado en aceleraciones explosivas, arrancadas tras curvas y alta potencia en esfuerzos de 1 a 3 minutos.",
-  targetDistanceKm: 70,
-  periodizationStyle: "Periodización Dinámica con Énfasis en Capacidad Anaeróbica y Potencia Rápida (3:1)",
+    "Especializado en carreras en circuito cerrado, cambios bruscos de ritmo, curvas técnicas y sprints.",
+  targetDistanceKm: 60,
+  periodizationStyle: "Periodización Ondulada con Énfasis Anaeróbico (2:1)",
   phaseDistributions: [
     {
       phaseKey: "BASE",
-      phaseName: "Base Aeróbica y Cadencia Rápida",
+      phaseName: "Base Aeróbica y Fuerza Rápida",
       percentageDuration: 0.35,
-      focusDescription: "Desarrollar una base de pedaleo ágil (95-105 rpm) y buena resistencia cardiovascular.",
+      focusDescription: "Desarrollar fondo aeróbico, cadencia ágil y tolerancia a cambios de velocidad.",
       weeklyTssRange: { min: 280, max: 380 },
-      longRunGuideline: "Salida continua de 2h a 3h en Zona 2.",
-      recommendedIntensityZones: ["Zona 2 (60-70% FTP)", "Aceleraciones Cortas"],
+      longRunGuideline: "Salida de 2h a 2h45m con aceleraciones cortas cada 20 minutos.",
+      recommendedIntensityZones: ["Zona 2 Cómoda (60-70% FTP)", "Aceleraciones Ágiles"],
     },
     {
       phaseKey: "BUILD",
-      phaseName: "Potencia de Ataque e Intervalos Cortos",
+      phaseName: "Capacidad Anaeróbica y Arrancadas",
       percentageDuration: 0.40,
-      focusDescription: "Series de 1 a 3 minutos a potencia muy viva para responder a cambios de ritmo.",
-      weeklyTssRange: { min: 380, max: 490 },
-      longRunGuideline: "Salidas de 2h30m a 3h30m con arrancadas de velocidad.",
-      recommendedIntensityZones: ["Series de Potencia (115-130% FTP)", "Sweetspot Dinámico"],
+      focusDescription: "Micro-intervalos Tabata y Rønnestad para tolerar ataques y frenadas repetidas.",
+      weeklyTssRange: { min: 380, max: 480 },
+      longRunGuideline: "Fondo de 2h30m a 3h15m en circuito con cambios constantes.",
+      recommendedIntensityZones: ["Capacidad Anaeróbica (115-130% FTP)", "VO2max Rønnestad"],
     },
     {
       phaseKey: "PEAK",
-      phaseName: "Simulación de Ritmo Vivo y Sprints",
+      phaseName: "Pico de Forma y Simulación de Carrera",
       percentageDuration: 0.15,
-      focusDescription: "Simulación de salidas rápidas de curvas y aceleraciones repetidas.",
-      weeklyTssRange: { min: 400, max: 500 },
-      longRunGuideline: "Salida rápida de 2h30m con bloques continuos de cambios de ritmo.",
-      recommendedIntensityZones: ["Sprints Repetidos (130-150% FTP)"],
+      focusDescription: "Simulaciones de criterium a ritmo de competición y sprints máximos.",
+      weeklyTssRange: { min: 360, max: 460 },
+      longRunGuideline: "Salida de 2h con arrancadas a salida de curva.",
+      recommendedIntensityZones: ["Potencia Neuromuscular", "Ritmo de Criterium"],
     },
     {
       phaseKey: "TAPER",
-      phaseName: "Puesta a Punto Rápida",
+      phaseName: "Puesta a Punto y Máxima Chispa",
       percentageDuration: 0.10,
-      focusDescription: "Máxima frescura y reactividad en las piernas.",
-      weeklyTssRange: { min: 180, max: 260 },
-      longRunGuideline: "Salida ligera de 1h30m con 3 aceleraciones de 20 segundos.",
-      recommendedIntensityZones: ["Activación Corta", "Pedaleo Suave"],
+      focusDescription: "Llegar con las piernas frescas, reactivas y explosivas.",
+      weeklyTssRange: { min: 160, max: 240 },
+      longRunGuideline: "Salida muy suave de 1h15m a 1h45m con 3 sprints de 15 segundos.",
+      recommendedIntensityZones: ["Activación Explosiva", "Descarga Suave"],
     },
   ],
   mandatoryTests: [
     { ...BIKE_TEST_RAMP, recommendedWeekIndex: 2 },
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 6 },
   ],
   longRunRules: {
-    startKm: 45,
+    startKm: 40,
     peakKm: 95,
-    startMinutes: 105,
-    peakMinutes: 210,
-    targetIntensityPercentCpOrFtp: "65-72% FTP con aceleraciones de 120-130% FTP",
-    description: "Salidas de 1h45m a 3h30m con arrancadas dinámicas y 1 semana de tapering.",
-    taperKmSequence: [50],
-    taperMinutesSequence: [100],
+    startMinutes: 90,
+    peakMinutes: 195,
+    targetIntensityPercentCpOrFtp: "68-75% FTP en rodaje y 110-130% FTP en arrancadas",
+    description: "Progresión de 1h30m a 3h15m con arrancadas de curva y 1 semana de tapering.",
+    taperKmSequence: [45],
+    taperMinutesSequence: [90],
   },
   maxLongRunMinutesCap: 210,
   taperingRules: {
@@ -251,27 +248,21 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
   workoutVariations: {
     qualityWorkouts: {
       base: [
-        {
-          name: "Pedaleo Ágil con Aceleraciones de Cadencia (50m)",
-          powerTarget: "70% FTP + Aceleraciones @ 110% FTP",
-          justification: "Mejora la velocidad de pedaleo sin fatigar en exceso.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nPedaleo Principal\n- 20m 70% FTP\n\nAceleraciones\n5x\n- 30s 110% FTP (100+ rpm)\n- 1m30s 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
-        },
+        BIKE_TABATA_40_20,
+        BIKE_SWEETSPOT_EXTENSIVO,
       ],
       build: [
-        {
-          name: "Micro-Intervalos de Ataque (40s a fondo / 20s suave)",
-          powerTarget: "125% FTP en ataques",
-          justification: "Entrena la capacidad de responder a tirones de ritmo y recuperar pedaleando.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nBloque 1 (6x 40s/20s)\n6x\n- 40s 125% FTP\n- 20s 50% FTP\n\nRecuperación\n- 5m 50% FTP\n\nBloque 2 (6x 40s/20s)\n6x\n- 40s 125% FTP\n- 20s 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
-        },
+        BIKE_RONNESTAD_30_15,
+        BIKE_TABATA_40_20,
+        BIKE_ESCALERA_PIRAMIDAL_VAM,
       ],
       peak: [
+        BIKE_RONNESTAD_30_15,
         {
           name: "Simulación de Cambios de Ritmo Repetidos (1h00m)",
           powerTarget: "120% FTP en arrancadas",
           justification: "Ajusta la respuesta rápida y la confianza para acelerar.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nSeries de 2 Minutos Fuertes\n5x\n- 2m 115% FTP\n- 2m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
+          workoutDoc: "Warmup\n- 15m 55% FTP\n\n5x\n- 2m 115% FTP\n- 2m 50% FTP\n\nCooldown\n- 10m 50% FTP",
         },
       ],
       taper: [
@@ -279,25 +270,20 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
           name: "Activación Rápida con 3 Sprints Cortos (35m)",
           powerTarget: "130% FTP en sprints",
           justification: "Prepara la respuesta neuromuscular para el evento.",
-          workoutDoc: "Calentamiento\n- 15m 50% FTP\n\nSprints Cortos\n3x\n- 15s 130% FTP\n- 2m 45% FTP\n\nEnfriamiento\n- 10m 45% FTP",
+          workoutDoc: "Warmup\n- 15m 50% FTP\n\n3x\n- 15s 130% FTP\n- 2m 45% FTP\n\nCooldown\n- 10m 45% FTP",
         },
       ],
     },
     bikeMidWeekWorkouts: [
-      {
-        name: "Pedaleo Suave de Soltura (45m)",
-        powerTarget: "60% FTP",
-        justification: "Oxigena las piernas sin generar cansancio residual.",
-        workoutDoc: "Calentamiento\n- 10m 50% FTP\n\nPedaleo Suave\n- 25m 60% FTP\n\nEnfriamiento\n- 10m 45% FTP",
-        durationMin: 45,
-      },
+      BIKE_TABATA_40_20,
+      BIKE_RONNESTAD_30_15,
     ],
     recoveryAerobicWorkouts: [
       {
         name: "Recuperación Activa en Bicicleta (35m)",
         powerTarget: "50% FTP",
         justification: "Favorece el descanso muscular.",
-        workoutDoc: "Pedaleo Relajado\n- 35m 50% FTP",
+        workoutDoc: "Main\n- 35m 50% FTP",
         durationMin: 35,
       },
     ],
@@ -306,7 +292,7 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
         name: "Fuerza Explosiva y Potencia de Piernas",
         focus: "Cuádriceps, Isquiotibiales y Core",
         justification: "Aporta chispa y fuerza en cada arrancada.",
-        workoutDoc: "Movilidad\n- 5m Articular\n\nPotencia y Saltos Suaves\n- 15m Sentadillas con salto controlado, zancadas dinámicas y planchas",
+        workoutDoc: "Warmup\n- 5m Articular\n\nMain\n- 15m Sentadillas con salto controlado, zancadas dinámicas y planchas",
       },
     ],
   },

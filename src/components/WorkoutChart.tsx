@@ -62,23 +62,12 @@ export function parseStrengthDoc(doc?: string, workoutName?: string): StrengthCi
         const reps = repMatch[1].trim();
         const fullName = repMatch[2].trim();
         const shortName = fullName.replace(/\s*\([^)]*\)/g, "").split(/\s+/).slice(0, 2).join(" ");
-        exercises.push({
-          reps,
-          name: shortName || fullName,
-          raw: clean,
-        });
+        exercises.push({ reps, name: shortName || fullName, raw: clean });
       }
     }
   }
 
-  return {
-    rounds,
-    circuitTitle,
-    warmupMins: 5,
-    cooldownMins: 5,
-    exercises,
-    totalMins,
-  };
+  return { rounds, circuitTitle, warmupMins: 5, cooldownMins: 5, exercises, totalMins };
 }
 
 export function parseWorkoutDoc(doc?: string, discipline?: string): {
@@ -112,11 +101,22 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     const isSwim = /nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw);
     // Limpiar notas entre paréntesis o comillas antes de parsear duración para evitar capturas erróneas (ej: "(200m)")
     const clean = raw.replace(/\s*\(.*?\)/g, "").replace(/\s*".*?"/g, "").trim();
+    // 1. Distancia en Kilómetros (ej: 1km, 2.5km, 5km)
     const kmMatch = clean.match(/(\d+(?:\.\d+)?)\s*km\b/i);
     if (kmMatch) return Math.max(0.5, Math.round(parseFloat(kmMatch[1]) * 4.5 * 10) / 10);
-    const minsMatch = clean.match(/(\d+)\s*(?:mtr|m(?:in)?)/i);
-    const secsMatch = clean.match(/(\d+)\s*s/i);
-    const hoursMatch = clean.match(/(\d+)\s*h/i);
+
+    // 2. Distancia en Metros explícitos 'mtr' o 'metros' (ej: 200mtr, 400mtr, 1000mtr)
+    const mtrMatch = clean.match(/(\d+)\s*(?:mtr|metros?)\b/i);
+    if (mtrMatch) {
+      const mVal = parseInt(mtrMatch[1], 10);
+      if (isSwim) return Math.max(0.5, Math.round((mVal / 50) * 10) / 10);
+      return Math.max(0.3, Math.round((mVal / 225) * 10) / 10);
+    }
+
+    // 3. Duración en Tiempo: horas, minutos ('m'/'min'), segundos ('s')
+    const hoursMatch = clean.match(/(\d+)\s*h\b/i);
+    const minsMatch = clean.match(/(\d+)\s*m(?:in)?\b/i);
+    const secsMatch = clean.match(/(\d+)\s*s\b/i);
 
     let total = 0;
     if (hoursMatch) total += parseInt(hoursMatch[1], 10) * 60;
@@ -124,10 +124,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
       const val = parseInt(minsMatch[1], 10);
       if (isSwim && val >= 25) {
         total += Math.max(0.5, Math.round((val / 50) * 10) / 10);
-      } else if (!isSwim && val >= 100) {
-        total += Math.max(0.4, Math.round((val / 225) * 10) / 10);
       } else {
-        total += Math.min(val, 120);
+        total += val;
       }
     }
     if (secsMatch) total += Math.max(0.2, parseInt(secsMatch[1], 10) / 60);

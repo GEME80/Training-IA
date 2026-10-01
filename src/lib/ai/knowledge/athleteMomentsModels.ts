@@ -177,7 +177,7 @@ export const GENERAL_BUILD_MODEL: CuratedTrainingModel = {
           name: "Series de 1.000m de Potencia de Ritmo (4x 1.000m)",
           powerTarget: "100% CP",
           justification: "Mejora la soltura para correr a ritmos rápidos.",
-          workoutDoc: "Calentamiento\n- 15m 68% CP\n\nMain (Series de 1000m)\n4x\n- 1000m 100% CP\n- 2m 55% CP\n\nEnfriamiento\n- 10m 60% CP",
+          workoutDoc: "Calentamiento\n- 15m 68% CP\n\nMain (Series de 1000m)\n4x\n- 1000mtr 100% CP\n- 2m 55% CP\n\nEnfriamiento\n- 10m 60% CP",
         },
       ],
       peak: [],

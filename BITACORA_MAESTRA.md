@@ -5040,8 +5040,40 @@ flowchart TD
   * `src/lib/physiology/workoutSyntaxSanitizer.ts`: 94 LOC
   * `src/components/WorkoutChart.tsx`: 348 LOC
   * `src/lib/ai/knowledge/triathlonModel.ts`: 343 LOC
-  * `src/lib/ai/knowledge/marathonModel.ts`: 336 LOC
   * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
   * `src/lib/ai/knowledge/athleteMomentsModels.ts`: 493 LOC (módulo preexistente)
+
+---
+
+## [2026-10-01] - Versión 3.93: Adopción Canónica de `mtr` para Distancia en Intervals.icu/Garmin & Erradicación de Heurísticas Ambiguas
+
+### 62.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Adopción Oficial de la Sintaxis `mtr` de Intervals.icu:**
+   - **Causa Raíz:** En Intervals.icu, `m` significa exclusivamente **minutos** (herencia de su origen ciclista). Cualquier valor como `200m` era interpretado como 200 minutos. La especificación oficial para metros en Intervals.icu es **`mtr`**.
+   - **Estandarización Universal:** Todas las series por distancia métrica se normalizan a `mtr` (`- 200mtr 110% Pace`, `- 400mtr 106% Pace`, `- 800mtr 100% Pace`, `- 1000mtr 100% CP`, `- 2000mtr 98% CP`).
+   - **Descansos en `m`:** Los descansos y rodajes por tiempo se mantienen en `m` (`- 1m 55% Pace`, `- 1m30s 55% Pace`, `- 15m 68% Pace`, `- 120m 65% FTP`).
+2. **Erradicación de Heurísticas Ambiguas en `WorkoutChart.tsx`:**
+   - Se eliminó la regla `val >= 100` que ponía en riesgo salidas de fondo en bicicleta (ej. `- 120m 60% FTP` no se confunde jamás con 120 metros).
+   - Ahora el parser es 100% determinista:
+     * Si contiene `km` $\rightarrow$ Distancia en km ($4.5\text{ min/km}$).
+     * Si contiene `mtr` o `metros` $\rightarrow$ Distancia en metros ($m / 225\text{ min}$).
+     * Si contiene `m` o `min` $\rightarrow$ Tiempo directo en minutos (1m descanso = 1 min; 120m bici = 120 min).
+     * Si contiene `s` $\rightarrow$ Tiempo en segundos.
+3. **Sincronización Bidireccional Intervals.icu & Garmin Connect:**
+   - En `intervalsSyncService.ts`, `forIntervalsSync: true` garantiza que Intervals.icu reciba la orden inequívoca `mtr`, generando pasos con `Target: Distance` exactos para el reloj Garmin y calculando el tiempo esperado en Intervals.icu según el ritmo del atleta.
+4. **Modelos Fisiológicos Actualizados:**
+   - Normalizados a `mtr` en `triathlonModel.ts`, `marathonModel.ts`, `tenKModel.ts`, `athleteMomentsModels.ts` y `workoutSyntaxSanitizer.ts`.
+
+### 62.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/lib/physiology/workoutSyntaxSanitizer.ts`: 101 LOC
+  * `src/components/WorkoutChart.tsx`: 346 LOC
+  * `src/lib/services/intervalsSyncService.ts`: 145 LOC
+  * `src/lib/ai/knowledge/triathlonModel.ts`: 343 LOC
+  * `src/lib/ai/knowledge/marathonModel.ts`: 336 LOC
+  * `src/lib/ai/knowledge/tenKModel.ts`: 315 LOC
+
 
 

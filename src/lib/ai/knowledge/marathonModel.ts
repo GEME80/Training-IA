@@ -120,7 +120,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Escalera Incremental de Potencia Aeróbica (200m -> 400m -> 600m -> 800m)",
           powerTarget: "100-112% CP",
           justification: "Reclutamiento progresivo de unidades motoras rápidas y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 200m 112% CP\n- 1m 55% CP\n- 400m 108% CP\n- 1m30s 55% CP\n- 600m 104% CP\n- 2m 55% CP\n- 800m 100% CP\n- 2m30s 55% CP\n- 600m 104% CP\n- 2m 55% CP\n- 400m 108% CP\n- 1m30s 55% CP\n- 200m 112% CP\n\nCooldown\n- 10m 60% CP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 200mtr 112% CP\n- 1m 55% CP\n- 400mtr 108% CP\n- 1m30s 55% CP\n- 600mtr 104% CP\n- 2m 55% CP\n- 800mtr 100% CP\n- 2m30s 55% CP\n- 600mtr 104% CP\n- 2m 55% CP\n- 400mtr 108% CP\n- 1m30s 55% CP\n- 200mtr 112% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Series Umbral Stryd Z4 (4x8m @ 100% CP)",
@@ -132,7 +132,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Bloques Largos de Umbral en Pista/Ruta (3x 2.000m @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Resistencia a la fatiga específica en tramos de 2 km a ritmo umbral.",
-          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 2000m)\n3x\n- 2000m 98% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Bloques de 2000m)\n3x\n- 2000mtr 98% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Intervalos de Ritmo Maratón Extensivo (3x4km @ 82% CP)",

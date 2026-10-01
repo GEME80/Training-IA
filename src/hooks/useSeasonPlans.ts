@@ -11,6 +11,7 @@ import { WeeklyAvailabilityMap, resolveEffectiveAvailability } from "@/lib/gemin
 import { UserStorage } from "@/lib/storage/userStorage";
 import { isMasterAdminEmail } from "@/lib/env";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
+import { CalendarEvent } from "@/lib/intervals/types";
 import {
   createPhaseInfoFromBlueprint,
   persistProfileField,
@@ -30,12 +31,13 @@ interface UseSeasonPlansProps {
   refreshTelemetry?: (athleteId?: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => Promise<void>;
   setSyncNotification?: (data: SyncNotificationData | null) => void;
   isReadOnly?: boolean;
+  calendarEvents?: CalendarEvent[];
 }
 
 export function useSeasonPlans({
   user, userProfile, userStorage, profileId, runFtp, bikeFtp,
   ctl, historicalMetrics, apiKeyCache, refreshTelemetry,
-  setSyncNotification, isReadOnly = false,
+  setSyncNotification, isReadOnly = false, calendarEvents = [],
 }: UseSeasonPlansProps) {
   const isSuper = isMasterAdminEmail(userProfile?.email || user?.email);
 
@@ -107,7 +109,7 @@ export function useSeasonPlans({
       }
       return;
     }
-    const updatedRaces = mergeTargetRacesList(targetRaces, primaryTargetRace || newBlueprint.primaryRace, userProfile?.targetRaces);
+    const updatedRaces = mergeTargetRacesList(targetRaces, primaryTargetRace || newBlueprint.primaryRace, userProfile?.targetRaces, calendarEvents);
 
     const syncedBlueprint = syncBlueprintToCurrentDate(newBlueprint);
     setTargetRaces(updatedRaces);
@@ -221,7 +223,7 @@ export function useSeasonPlans({
       const storedRaces = userStorage.getJSON<TargetRace[]>("target_races") || [];
       const storedPlans = userStorage.getJSON<SeasonPlanItem[]>("season_plans");
 
-      let mergedRaces = mergeTargetRacesList(storedRaces, null, userProfile?.targetRaces);
+      let mergedRaces = mergeTargetRacesList(storedRaces, null, userProfile?.targetRaces, calendarEvents);
       setTargetRaces(mergedRaces);
       userStorage.setJSON("target_races", mergedRaces);
 
@@ -252,7 +254,7 @@ export function useSeasonPlans({
               };
               resolvedPlans = [restoredPlan];
               if (macroData.macrocycle.primaryRace) {
-                mergedRaces = mergeTargetRacesList(mergedRaces, macroData.macrocycle.primaryRace, userProfile?.targetRaces);
+                mergedRaces = mergeTargetRacesList(mergedRaces, macroData.macrocycle.primaryRace, userProfile?.targetRaces, calendarEvents);
                 setTargetRaces(mergedRaces);
                 userStorage.setJSON("target_races", mergedRaces);
               }
@@ -312,7 +314,7 @@ export function useSeasonPlans({
     };
 
     initPlans();
-  }, [userProfile, profileId, isSuper]);
+  }, [userProfile, profileId, isSuper, calendarEvents?.length]);
 
   const handlePersistAvailability = async (map: Record<string, string[]>) => {
     if (isReadOnly) return;

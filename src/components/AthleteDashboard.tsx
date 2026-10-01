@@ -150,6 +150,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     refreshTelemetry: telemetry.refreshTelemetry,
     setSyncNotification: sync.setSyncNotification,
     isReadOnly: effectiveReadOnly,
+    calendarEvents: telemetry.calendarEvents,
   });
 
   useEffect(() => {

@@ -213,7 +213,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             : isRunPower
             ? "Prescripción Estructurada (Stryd CP):"
             : workout.discipline === "Carrera"
-            ? "Prescripción Estructurada (Ritmo & FC):"
+            ? "Prescripción Estructurada (Ritmo):"
             : isBike
             ? "Prescripción Estructurada (Bici FTP):"
             : isSwim
@@ -238,8 +238,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               });
             }
             if (!isRunPower && workout.discipline === "Carrera") {
-              // Strip out any accidental watt annotations in hybrid mode
-              return line.replace(/\s*\(\d+W\)/gi, "").replace(/\bStryd\s*CP\b/gi, "Pace / FC");
+              return line.replace(/\s*\(\d+W\)/gi, "").replace(/%\s*(?:stryd\s*)?(?:ftp|cp)/gi, "% Pace").replace(/\bStryd\s*CP\b/gi, "Pace");
             }
             return line;
           }).join("\n");

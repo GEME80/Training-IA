@@ -15,7 +15,7 @@ export interface AthleteProfile {
   restingHR?: number;
   maxHR?: number;
   lthr?: number;
-  runningTrainingMode?: "POWER" | "HYBRID";
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
   hasRunningPowerMeter?: boolean;
   threshold_pace?: number; // m/s en Intervals.icu
   runThresholdPaceSecPerKm?: number; // seg/km

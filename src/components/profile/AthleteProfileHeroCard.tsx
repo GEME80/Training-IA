@@ -93,7 +93,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/20">
-                  HÍBRIDO (Pace {displayPace} • {lthr ? `${lthr} bpm` : "Sin LTHR"})
+                  RITMO (PACE) (Ritmo {displayPace})
                 </span>
               )}
               {email && (
@@ -132,15 +132,15 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => onToggleMode("HYBRID")}
+                onClick={() => onToggleMode("PACE")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  activeMode === "HYBRID"
+                  activeMode !== "POWER"
                     ? "bg-emerald-500 text-white font-black shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 <Timer className="h-3.5 w-3.5" />
-                <span>Híbrido</span>
+                <span>Ritmo (Pace)</span>
               </button>
             </div>
           )}

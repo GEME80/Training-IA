@@ -136,7 +136,7 @@ export const AthleteMobileWorkoutCard: React.FC<AthleteMobileWorkoutCardProps> =
 
             <div className="truncate">
               <span className="text-[9px] uppercase text-slate-400 block font-sans">
-                {workout.powerTarget ? "Potencia" : "Enfoque"}
+                {workout.discipline === "Carrera" && (!workout.powerTarget?.includes("W") && !workout.powerTarget?.includes("CP")) ? "Ritmo" : workout.powerTarget ? "Potencia" : "Enfoque"}
               </span>
               <strong className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate block" title={workout.powerTarget || workout.discipline}>
                 {workout.powerTarget ? workout.powerTarget.split("•")[0].trim() : workout.discipline}

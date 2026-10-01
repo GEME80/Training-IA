@@ -17,12 +17,7 @@ interface AthleteCalendarWeekRowProps {
   blueprint: MacrocycleBlueprint; runFtp: number; bikeFtp: number;
   effectiveAvailability: WeeklyAvailabilityMap; weeklyExecutedTss: number;
   dailyExecutedActivities: DailyExecutedMap; calendarEvents?: CalendarEvent[];
-  runningOpts?: {
-    mode?: "POWER" | "HYBRID";
-    thresholdPaceSec?: number;
-    thresholdPaceStr?: string;
-    lthr?: number;
-  };
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
   todayStr: string; gridTemplate: string; currentWeekRef: React.RefObject<HTMLDivElement | null>;
   onSelectWeek: (idx: number) => void; onOpenAICoach: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;

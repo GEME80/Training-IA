@@ -102,7 +102,9 @@ export class IntervalsSyncService {
       if (item.intervalsWorkoutText) {
         workoutText = item.intervalsWorkoutText;
       } else if (!workoutText && item.discipline === "Carrera") {
-        workoutText = `Warmup\n- 10m 65% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 45) - 20)}m 75% FTP\n\nCooldown\n- 10m 60% FTP`;
+        const isRunPower = Boolean(item.powerTarget && /\b\d+\s*W\b/i.test(item.powerTarget));
+        const runUnit = isRunPower ? "FTP" : "Pace";
+        workoutText = `Warmup\n- 10m 65% ${runUnit}\n\nMain\n- ${Math.max(10, (item.durationMinutes || 45) - 20)}m 75% ${runUnit}\n\nCooldown\n- 10m 60% ${runUnit}`;
       } else if (!workoutText && item.discipline === "Ciclismo") {
         workoutText = `Warmup\n- 10m 55% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 60) - 20)}m 68% FTP\n\nCooldown\n- 10m 50% FTP`;
       }

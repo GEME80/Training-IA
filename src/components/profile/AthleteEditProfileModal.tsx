@@ -16,7 +16,7 @@ export interface AthleteProfileFormData {
   restingHR?: number;
   maxHR?: number;
   hasRunningPowerMeter?: boolean;
-  runningTrainingMode?: "POWER" | "HYBRID";
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
   runThresholdPaceStr?: string;
   runThresholdPaceSecPerKm?: number;
   swimCssStr?: string;
@@ -68,7 +68,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
         restingHR: initialData.restingHR || 0,
         maxHR: initialData.maxHR || 0,
         hasRunningPowerMeter: hasPwr,
-        runningTrainingMode: initialData.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+        runningTrainingMode: initialData.runningTrainingMode || (hasPwr ? "POWER" : "PACE"),
         runThresholdPaceStr: initialData.runThresholdPaceStr || "4:45",
         runThresholdPaceSecPerKm: initialData.runThresholdPaceSecPerKm || 285,
         intervalsAthleteId: initialData.intervalsAthleteId || "",

@@ -4829,6 +4829,47 @@ flowchart TD
   * `src/lib/intervals/calendarHydration.ts`: 208 LOC
   * `src/lib/physiology/seasonPlanHelpers.ts`: 116 LOC
 
+---
+
+## 56. Versión 3.87: Transición Completa a Modo Ritmo (Pace) para Corredores sin Potenciómetro & Preservación 100% de Vatios Stryd
+
+### 56.1. Objetivos del Release
+1. **Transición Definitiva de Híbrido a Modo Ritmo (Pace):**
+   - **Sustitución Conceptual y Fisiológica:** Se elimina el concepto de "entrenamiento híbrido" para corredores sin potenciómetro de carrera (`run_ftp: 0` o `hasRunningPowerMeter: false`). La prescripción se establece **100% POR RITMO (PACE)** en `min/km` y `% Pace` en toda la plataforma.
+   - **Cero Vatios Residuales:** Erradicación completa de vatios `(XX W)`, `0 W`, `% CP` y marcas residuales de Stryd en entrenamientos de carrera para atletas sin Stryd.
+2. **Invarianza 100% Blindada para Corredores con Potencia Stryd (`POWER`):**
+   - Corredores con potenciómetro Stryd (ej. Germán Morales con 336W CP, Juan Pablo Vásquez con 275W CP) mantienen sus cálculos de vatios exactos, rangos de `% CP` y sintaxis estructurada sin la más mínima degradación ni modificación (`if (mode === "POWER") return item;`).
+   - El FTP de ciclismo en vatios (ej. Georg Schmitt con 214W FTP) se mantiene intacto para rodillos y potenciómetros de bici.
+3. **Alineación Completa del Pipeline de Generación, Sincronización e Interfaz:**
+   - **Tipos y Base de Datos:** `RunningTrainingMode` ampliado formalmente a `"POWER" | "PACE" | "HYBRID"` en `types.ts` y tipos de Intervals.
+   - **Adaptador de Carrera (`runningWorkoutAdapter.ts`):** `resolveRunningMode` resuelve `"PACE"` para atletas sin potenciómetro; `interpolateWorkoutTarget` calcula ritmos exactos en `min/km` y `% Pace`, eliminando caídas espurias a FC/LTHR y purgando todo residuo de vatios.
+   - **Plantillas de Macrociclo & Helpers (`macrocycleTemplates.ts`, `macrocycleTemplateHelpers.ts`, `longRunPeriodization.ts`):** Generación bifronte donde `runFtp > 0` genera vatios Stryd y `runFtp === 0` genera `% Pace`.
+   - **Generador Determinístico (`deterministicPlanGenerator.ts`):** Eliminado el hardcode de 280W en atletas sin Stryd; sesiones dobles, transiciones brick y fondos adaptados a `% Pace`.
+   - **Sincronización a Intervals.icu (`intervalsSyncService.ts`):** Envíos y fallbacks de eventos de carrera utilizan `% Pace` para corredores por ritmo y `% FTP` para corredores con Stryd.
+   - **Experiencia de Usuario (UI/UX):** Modales de edición y visualización (`AthleteEditProfileModal.tsx`, `AthletePhysiologyView.tsx`), tarjetas de día y vista móvil actualizadas con badges claros de `RITMO (PACE)` y pie de tarjeta `⏱️ Ritmo`.
+
+### 56.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/dashboard/AthleteCalendarWeekRow.tsx`: 344 LOC
+  * `src/components/dashboard/AthleteContinuousCalendar.tsx`: 335 LOC
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: 222 LOC
+  * `src/components/dashboard/AthleteMobileWorkoutCard.tsx`: 183 LOC
+  * `src/components/dashboard/AthletePhysiologyView.tsx`: 338 LOC
+  * `src/components/macrocycle/MacrocycleDayScheduleCard.tsx`: 210 LOC
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 291 LOC
+  * `src/components/profile/AthleteEditProfileModal.tsx`: 250 LOC
+  * `src/components/profile/AthleteProfileHeroCard.tsx`: 346 LOC
+  * `src/lib/ai/knowledge/longRunPeriodization.ts`: 103 LOC
+  * `src/lib/db/types.ts`: 116 LOC
+  * `src/lib/gemini/deterministicPlanGenerator.ts`: 337 LOC
+  * `src/lib/intervals/types.ts`: 211 LOC
+  * `src/lib/physiology/macrocycleTemplateHelpers.ts`: 325 LOC
+  * `src/lib/physiology/macrocycleTemplates.ts`: 347 LOC
+  * `src/lib/physiology/runningWorkoutAdapter.ts`: 333 LOC
+  * `src/lib/services/intervalsSyncService.ts`: 137 LOC
+
 
 
 

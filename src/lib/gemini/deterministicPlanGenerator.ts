@@ -25,7 +25,8 @@ export function generateDeterministicAnalysis(
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY
 ): AgentDecisionOutput {
   const isFatigued = status.status === "OVERTRAINING_RISK" || status.status === "CAUTION";
-  const runFtp = profile.run_ftp || 280;
+  const runningMode = resolveRunningMode(profile);
+  const runFtp = runningMode === "POWER" ? (profile.run_ftp || 280) : 0;
   const bikeFtp = profile.bike_ftp || 200;
   const phase = macrocyclePhase?.phase || "MAINTENANCE";
   const isFtpTestWeek = !isFatigued && (macrocyclePhase?.blueprint?.currentWeek?.microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(`${macrocyclePhase?.guideline || ""} ${macrocyclePhase?.suggestedFocus || ""}`));
@@ -59,9 +60,9 @@ export function generateDeterministicAnalysis(
           action: "MANTENER",
           durationMinutes: totalDur,
           tss: totalTss,
-          powerTarget: `${Math.round(runFtp * 0.72)}W (72% CP) + Fuerza Funcional`,
+          powerTarget: runFtp > 0 ? `${Math.round(runFtp * 0.72)}W (72% CP) + Fuerza Funcional` : `72% Pace + Fuerza Funcional`,
           justification: "Doble estímulo coordinado: volumen aeróbico de carrera en Z2 más trabajo de fuerza y pliometría para protección de sóleo/Aquiles.",
-          workoutDoc: `Bloque 1: Carrera Stryd (% CP)\nWarmup\n- 10m 65% FTP\n\nMain\n- ${runDur - 15}m 72% FTP\n\nCooldown\n- 5m 60% FTP\n\nBloque 2: Fuerza Sóleo & Pliometría (WeightTraining)\nWarmup\n- 5m Mobility\n\nMain\n- 15m Pliometría Sóleo, Gemelo & Core`,
+          workoutDoc: `Bloque 1: Carrera ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nWarmup\n- 10m ${runFtp > 0 ? "65% FTP" : "65% Pace"}\n\nMain\n- ${runDur - 15}m ${runFtp > 0 ? "72% FTP" : "72% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% FTP" : "60% Pace"}\n\nBloque 2: Fuerza Sóleo & Pliometría (WeightTraining)\nWarmup\n- 5m Mobility\n\nMain\n- 15m Pliometría Sóleo, Gemelo & Core`,
           isRestDay: false,
         };
       }
@@ -82,9 +83,9 @@ export function generateDeterministicAnalysis(
           action: "MANTENER",
           durationMinutes: totalDur,
           tss: totalTss,
-          powerTarget: `Bici: ${Math.round(bikeFtp * 0.68)}W (68% FTP) • Carrera: ${Math.round(runFtp * 0.78)}W (78% CP)`,
+          powerTarget: `Bici: ${Math.round(bikeFtp * 0.68)}W (68% FTP) • Carrera: ${runFtp > 0 ? `${Math.round(runFtp * 0.78)}W (78% CP)` : "78% Pace"}`,
           justification: "Entrenamiento de transición brick para adaptación neuromuscular a la carrera con pre-fatiga de pedaleo.",
-          workoutDoc: `Bloque 1: Ciclismo Z2 (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m 68% FTP\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición Stryd (% CP)\nMain\n- ${runDur - 5}m 78% FTP\n\nCooldown\n- 5m 60% FTP`,
+          workoutDoc: `Bloque 1: Ciclismo Z2 (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m 68% FTP\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nMain\n- ${runDur - 5}m ${runFtp > 0 ? "78% FTP" : "78% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% FTP" : "60% Pace"}`,
           isRestDay: false,
         };
       }
@@ -262,7 +263,7 @@ export function generateDeterministicAnalysis(
         action: "MANTENER",
         durationMinutes: 45,
         tss: 42,
-        powerTarget: `${Math.round(runFtp * 0.72)}W + Strides @ 115% CP`,
+        powerTarget: runFtp > 0 ? `${Math.round(runFtp * 0.72)}W + Strides @ 115% CP` : `72% Pace + Strides @ 115% Pace`,
         justification: "Estímulo de reactividad elástica del tendón de Aquiles y economía de zancada.",
         workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "Strides", 115, phase),
         isRestDay: false,
@@ -275,11 +276,11 @@ export function generateDeterministicAnalysis(
         date: dateInfo.date,
         formattedDate: dateInfo.formattedDate,
         discipline: "Carrera",
-        workoutName: "Series Umbral Stryd (4x6m @ 100% FTP)",
+        workoutName: runFtp > 0 ? "Series Umbral Stryd (4x6m @ 100% FTP)" : "Series Umbral (4x6m @ 100% Pace)",
         action: "MANTENER",
         durationMinutes: 55,
         tss: 58,
-        powerTarget: `${runFtp}W (100% CP)`,
+        powerTarget: runFtp > 0 ? `${runFtp}W (100% CP)` : "100% Pace",
         justification: "Estímulo de potencia crítica y tolerancia al lactato.",
         workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "THRESHOLD_INTERVALS", 100, phase),
         isRestDay: false,
@@ -290,29 +291,28 @@ export function generateDeterministicAnalysis(
       const longMins = phase === "PEAK" ? 105 : 75;
       return {
         day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Carrera",
-        workoutName: phase === "PEAK" ? "Fondo Específico Maratón Stryd (1h45m)" : "Tirada Larga Progresiva Stryd (1h15m)",
+        workoutName: phase === "PEAK" ? (runFtp > 0 ? "Fondo Específico Maratón Stryd (1h45m)" : "Fondo Específico Maratón (1h45m)") : (runFtp > 0 ? "Tirada Larga Progresiva Stryd (1h15m)" : "Tirada Larga Progresiva (1h15m)"),
         action: "MANTENER", durationMinutes: longMins, tss: Math.round(longMins * 0.85),
-        powerTarget: `${Math.round(runFtp * 0.84)}W (84% CP)`,
-        justification: "Desarrollo de durabilidad y potencia específica de competición en Z2-Z3 Stryd.",
+        powerTarget: runFtp > 0 ? `${Math.round(runFtp * 0.84)}W (84% CP)` : "84% Pace",
+        justification: runFtp > 0 ? "Desarrollo de durabilidad y potencia específica de competición en Z2-Z3 Stryd." : "Desarrollo de durabilidad aeróbica y ritmo específico de competición.",
         workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "LONG_RUN", 84, phase), isRestDay: false,
       };
     }
 
     return {
       day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Carrera",
-      workoutName: isFatigued ? "Trote Suave Z1 Regenerativo Stryd (35m)" : "Carrera Continua Progresiva Z1-Z2 Stryd (45m)",
+      workoutName: isFatigued ? (runFtp > 0 ? "Trote Suave Z1 Regenerativo Stryd (35m)" : "Trote Suave Z1 Regenerativo (35m)") : (runFtp > 0 ? "Carrera Continua Progresiva Z1-Z2 Stryd (45m)" : "Carrera Continua Progresiva Z1-Z2 (45m)"),
       action: isFatigued ? "MODIFICAR" : "MANTENER", durationMinutes: isFatigued ? 35 : 45, tss: isFatigued ? 26 : 42,
-      powerTarget: `${Math.round(runFtp * (isFatigued ? 0.72 : 0.81))}W (${isFatigued ? "72% CP Z1" : "81% CP Z2"})`,
+      powerTarget: runFtp > 0 ? `${Math.round(runFtp * (isFatigued ? 0.72 : 0.81))}W (${isFatigued ? "72% CP Z1" : "81% CP Z2"})` : (isFatigued ? "72% Pace Z1" : "81% Pace Z2"),
       justification: isFatigued ? "Atenuación a Z1 para proteger tono parasimpático y acelerar recuperación." : "Carrera aeróbica base para consistencia de fitness.",
       workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "RECOVERY", 70, phase), isRestDay: false,
     };
   });
 
-  const runningMode = resolveRunningMode(profile);
-  const finalPlan = runningMode === "HYBRID"
+  const finalPlan = (runningMode === "PACE" || runningMode === "HYBRID")
     ? suggestedPlan.map((item) =>
         adaptRunningPlanItem(item, {
-          mode: "HYBRID",
+          mode: "PACE",
           thresholdPaceSec: profile.runThresholdPaceSecPerKm,
           lthr: profile.lthr,
         })

@@ -316,8 +316,10 @@ export function resolveFridayFartlek(runFtp?: number) {
   return {
     workoutName: "Carrera - Fartlek Dinámico & Activación Aeróbica (45m)",
     durationMinutes: 45, tss: 42,
-    powerTarget: runFtp ? `${Math.round(runFtp * 0.72)}-${Math.round(runFtp * 0.88)}W (Z2-Z4)` : "72-88% Stryd CP",
+    powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.72)}-${Math.round(runFtp * 0.88)}W (Z2-Z4)` : "72-88% Pace",
     justification: "Cambios de ritmo alegres y controlados para activar reactividad neuromuscular sin agotar las piernas antes de la tirada larga.",
-    workoutDoc: "Warmup\n- 15m @ 70% CP\n\n6x Fartlek Ágil\n- 1m @ 88-92% CP\n- 2m @ 68% CP\n\nCooldown\n- 12m @ 65% CP",
+    workoutDoc: runFtp && runFtp > 0
+      ? "Warmup\n- 15m @ 70% CP\n\n6x Fartlek Ágil\n- 1m @ 88-92% CP\n- 2m @ 68% CP\n\nCooldown\n- 12m @ 65% CP"
+      : "Warmup\n- 15m @ 70% Pace\n\n6x Fartlek Ágil\n- 1m @ 88-92% Pace\n- 2m @ 68% Pace\n\nCooldown\n- 12m @ 65% Pace",
   };
 }

@@ -19,7 +19,7 @@ export function generateWeekTemplate(
   week: MacrocycleWeek, runFtp?: number, bikeFtp?: number,
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType?: MacrocycleDistanceType, athleteCtl?: number, primaryRaceDate?: string,
-  runningOpts?: { mode?: "POWER" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; }
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; }
 ): PlanItem[] {
   const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -339,12 +339,9 @@ export function generateWeekTemplate(
     }
   }
 
-  const runningMode = runningOpts?.mode || (runFtp && runFtp > 0 ? "POWER" : "HYBRID");
-  if (runningMode === "HYBRID") {
-    return result.map((item) =>
-      adaptRunningPlanItem(item, { mode: "HYBRID", thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr })
-    );
+  const runningMode = runningOpts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
+  if (runningMode === "PACE" || runningMode === "HYBRID") {
+    return result.map((item) => adaptRunningPlanItem(item, { mode: "PACE", thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr }));
   }
-
   return result;
 }

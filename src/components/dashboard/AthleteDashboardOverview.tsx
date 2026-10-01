@@ -149,7 +149,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 dailyExecutedActivities={dailyExecutedActivities}
                 calendarEvents={calendarEvents}
                 runningOpts={{
-                  mode: (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "HYBRID" || !profile.run_ftp) ? "HYBRID" : "POWER",
+                  mode: (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE" || profile.runningTrainingMode === "HYBRID" || !profile.run_ftp) ? "PACE" : "POWER",
                   thresholdPaceSec: profile.runThresholdPaceSecPerKm || parsePaceToSeconds(profile.runThresholdPaceStr || "4:45"),
                   thresholdPaceStr: profile.runThresholdPaceStr || "4:45",
                   lthr: profile.lthr || 163,

@@ -31,9 +31,9 @@ export function buildDynamicLongRunStructure(params: {
       return `${w}W (${pctA}% CP${note ? ` • ${note}` : ""})`;
     }
     if (pctB !== undefined && pctB !== pctA) {
-      return `${pctA}-${pctB}% CP${note ? ` (${note})` : ""}`;
+      return `${pctA}-${pctB}% Pace${note ? ` (${note})` : ""}`;
     }
-    return `${pctA}% CP${note ? ` (${note})` : ""}`;
+    return `${pctA}% Pace${note ? ` (${note})` : ""}`;
   };
 
   if (isPeak) {

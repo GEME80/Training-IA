@@ -35,21 +35,23 @@ export interface SwimZoneItem {
 
 /**
  * Resuelve la modalidad de carrera del atleta garantizando 100% de retrocompatibilidad.
+ * Atletas con Stryd CP o modo explícito POWER -> "POWER" (blindado).
+ * Atletas sin potenciómetro o modo HYBRID previo -> "PACE" (100% por ritmo).
  */
 export function resolveRunningMode(profile?: RunningProfileMetrics | null): RunningTrainingMode {
   if (!profile) return "POWER";
   if (profile.hasRunningPowerMeter === true || profile.runningTrainingMode === "POWER") {
     return "POWER";
   }
-  if (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "HYBRID") {
-    return "HYBRID";
+  if (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE" || profile.runningTrainingMode === "HYBRID") {
+    return "PACE";
   }
   // Si no está definido pero tiene Stryd CP calibrado -> MODO POTENCIA INTACTO
   const effFtp = profile.runFtp ?? profile.run_ftp ?? 0;
   if (effFtp > 0) {
     return "POWER";
   }
-  return "HYBRID";
+  return "PACE";
 }
 
 /**
@@ -184,8 +186,8 @@ export function isQualityRunningWorkout(workoutName?: string, doc?: string, day?
 
 /**
  * Traduce el workoutDoc al vuelo según la modalidad del atleta.
- * En modo POWER devuelve el texto 100% idéntico con % FTP.
- * En modo HYBRID sustituye por % Pace (calidad) o % LTHR (suaves y fondos).
+ * En modo POWER devuelve el texto 100% idéntico con % FTP (INVARIANZA TOTAL).
+ * En modo PACE sustituye invariablemente por % Pace (calidad y fondos) sin vatios.
  */
 export function adaptRunningWorkoutDoc(
   workoutDoc: string,
@@ -196,10 +198,9 @@ export function adaptRunningWorkoutDoc(
   if (!workoutDoc || discipline !== "Carrera" || mode === "POWER") {
     return workoutDoc;
   }
-  const targetDirective = isQuality ? "% Pace" : "% LTHR";
   return workoutDoc
-    .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, targetDirective)
-    .replace(/\bStryd\s*CP\b/gi, isQuality ? "Pace" : "LTHR")
+    .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+    .replace(/\bStryd\s*CP\b/gi, "Pace")
     .replace(/\s*\(\d+W\)/gi, "");
 }
 
@@ -221,13 +222,13 @@ export function interpolateWorkoutTarget(
   } = {}
 ): string {
   if (!rawTarget) return rawTarget;
-  const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, swimCssSec = 105, lthr = 165, isQuality = false } = opts;
+  const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, swimCssSec = 105, isQuality = false } = opts;
 
   // 1. Ciclismo: 100% vatios FTP
   if (discipline === "Ciclismo") {
     if (!bikeFtp || bikeFtp <= 0) return rawTarget;
     return rawTarget
-      .replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*FTP|(\d+)\s*-\s*(\d+)\s*%\s*FTP)/gi, (_, a1, a2, r1, r2) => {
+      .replace(/(?:(\d+)\s*%\s*a\s*(\\d+)\s*%\s*FTP|(\d+)\s*-\s*(\d+)\s*%\s*FTP)/gi, (_, a1, a2, r1, r2) => {
         const p1 = parseInt(a1 || r1, 10);
         const p2 = parseInt(a2 || r2, 10);
         return `${Math.round(bikeFtp * (p1 / 100))}-${Math.round(bikeFtp * (p2 / 100))}W (${p1}-${p2}% FTP)`;
@@ -254,7 +255,7 @@ export function interpolateWorkoutTarget(
 
   if (discipline !== "Carrera") return rawTarget;
 
-  // 2. Carrera en Modo Potencia: 100% vatios Stryd (% CP)
+  // 3. Carrera en Modo Potencia: 100% vatios Stryd (% CP) (BLINDADO - CERO CAMBIOS)
   if (mode === "POWER") {
     if (!runFtp || runFtp <= 0) return rawTarget;
     return rawTarget
@@ -266,11 +267,12 @@ export function interpolateWorkoutTarget(
       .replace(/(?<![(-])\b(\d+)\s*%\s*CP/gi, (_, p) => `${Math.round(runFtp * (parseInt(p, 10) / 100))}W (${p}% CP)`);
   }
 
-  // 3. Carrera en Modo Híbrido:
-  // Si es calidad -> Recalibra en Ritmo (min/km)
-  if (isQuality) {
-    const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
-    return rawTarget.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|Pace)|(\d+)\s*%\s*(?:CP|FTP|Pace))/gi, (_, r1, r2, s1) => {
+  // 4. Carrera en Modo Ritmo (PACE): 100% min/km y % Pace (CERO VATIOS)
+  const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
+  return rawTarget
+    .replace(/\s*\(\d+\s*W\)/gi, "")
+    .replace(/\b\d+\s*W\b\s*/gi, "")
+    .replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR)|(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR))/gi, (_, r1, r2, s1) => {
       if (r1 && r2) {
         const p1 = parseInt(r1, 10);
         const p2 = parseInt(r2, 10);
@@ -282,27 +284,11 @@ export function interpolateWorkoutTarget(
       const sec = Math.round(tp / (p / 100));
       return `${formatPace(sec)}/km (${p}% Pace)`;
     });
-  }
-
-  // Si es suave o fondo largo -> Recalibra en Frecuencia Cardíaca (bpm)
-  const hr = lthr > 0 ? lthr : 165;
-  return rawTarget.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|LTHR)|(\d+)\s*%\s*(?:CP|FTP|LTHR))/gi, (_, r1, r2, s1) => {
-    if (r1 && r2) {
-      const p1 = parseInt(r1, 10);
-      const p2 = parseInt(r2, 10);
-      const bpm1 = Math.round(hr * (p1 / 100));
-      const bpm2 = Math.round(hr * (p2 / 100));
-      return `${bpm1}-${bpm2} bpm (${p1}-${p2}% LTHR)`;
-    }
-    const p = parseInt(s1, 10);
-    const bpm = Math.round(hr * (p / 100));
-    return `${bpm} bpm (${p}% LTHR)`;
-  });
 }
 
 /**
- * Adapta un PlanItem completo de carrera si el atleta entrena en Modo Híbrido.
- * Si el atleta entrena con Stryd (POWER), retorna el PlanItem intacto sin mutaciones.
+ * Adapta un PlanItem completo de carrera si el atleta entrena en Modo Ritmo.
+ * Si el atleta entrena con Stryd (POWER), retorna el PlanItem intacto sin mutaciones (INVARIANZA 100%).
  */
 export function adaptRunningPlanItem<T extends { discipline?: string; workoutName?: string; workoutDoc?: string; powerTarget?: string; day?: string; isRestDay?: boolean }>(
   item: T,
@@ -314,14 +300,14 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
 ): T {
   if (item.discipline !== "Carrera" || item.isRestDay) return item;
   const mode = opts.mode || "POWER";
-  if (mode === "POWER") return item;
+  if (mode === "POWER") return item; // BLINDAJE INVIOLABLE: Atletas Stryd quedan 100% intactos
 
   const isQuality = isQualityRunningWorkout(item.workoutName || "", item.workoutDoc, item.day);
   const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode) : item.workoutDoc;
   const adaptedTarget = item.powerTarget
     ? interpolateWorkoutTarget(item.powerTarget, {
         discipline: "Carrera",
-        mode: "HYBRID",
+        mode: "PACE",
         thresholdPaceSec: opts.thresholdPaceSec,
         lthr: opts.lthr,
         isQuality,
@@ -330,10 +316,11 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
 
   let adaptedName = item.workoutName;
   if (adaptedName) {
-    const nameDirective = isQuality ? "% Pace" : "% LTHR";
     adaptedName = adaptedName
-      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, nameDirective)
-      .replace(/\bStryd\s*CP\b/gi, isQuality ? "Pace" : "FC");
+      .replace(/\s*\(\d+W\)/gi, "")
+      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\b/gi, "Ritmo");
   }
 
   return {

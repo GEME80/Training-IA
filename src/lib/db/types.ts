@@ -20,7 +20,7 @@ export const DEFAULT_WEEKLY_AVAILABILITY: WeeklyAvailabilityMap = {
   Domingo: ["Carrera"],
 };
 
-export type RunningTrainingMode = "POWER" | "HYBRID";
+export type RunningTrainingMode = "POWER" | "PACE" | "HYBRID";
 
 export interface UserProfileData {
   uid: string;

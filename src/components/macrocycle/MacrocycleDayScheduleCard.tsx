@@ -174,7 +174,7 @@ export const MacrocycleDayScheduleCard: React.FC<MacrocycleDayScheduleCardProps>
               )}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-rose-600 dark:text-rose-400 font-medium">
-              <span>⚡ {item.discipline === "Ciclismo" ? `${bikeFtp} W` : `${runFtp} W`}</span>
+              <span>{item.discipline === "Ciclismo" ? `⚡ ${bikeFtp} W` : runFtp && runFtp > 0 ? `⚡ ${runFtp} W` : "⏱️ Ritmo"}</span>
               <span className="text-[9px] font-bold uppercase">Omitida</span>
             </div>
           </div>
@@ -192,9 +192,9 @@ export const MacrocycleDayScheduleCard: React.FC<MacrocycleDayScheduleCardProps>
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
               <span className="font-semibold text-slate-700 dark:text-slate-300">
-                ⚡ {item.discipline === "Ciclismo" ? `${bikeFtp} W` : item.discipline === "Carrera" ? `${runFtp} W` : "Fuerza"}
+                {item.discipline === "Ciclismo" ? `⚡ ${bikeFtp} W` : item.discipline === "Carrera" ? (runFtp && runFtp > 0 ? `⚡ ${runFtp} W` : "⏱️ Ritmo") : "Fuerza"}
               </span>
-              <span>❤️ Z1-Z2</span>
+              <span>{item.discipline === "Carrera" && (!runFtp || runFtp <= 0) ? "Z1-Z2" : "❤️ Z1-Z2"}</span>
             </div>
           </div>
         )}

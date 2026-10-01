@@ -40,7 +40,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [lthr, setLthr] = useState<number | undefined>(initialLthr);
   const [maxHR, setMaxHR] = useState<number | undefined>(initialMaxHR);
   const [hasRunningPowerMeter, setHasRunningPowerMeter] = useState<boolean>(initialHasPower ?? (initialRunFtp > 0));
-  const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>(initialRunningMode || (initialRunFtp > 0 ? "POWER" : "HYBRID"));
+  const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>(initialRunningMode || (initialRunFtp > 0 ? "POWER" : "PACE"));
   const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>(initialThresholdPaceStr || "4:45");
   const [runThresholdPaceSecPerKm, setRunThresholdPaceSecPerKm] = useState<number>(initialThresholdPaceSec || 285);
   const [swimCssStr, setSwimCssStr] = useState<string>(initialSwimCssStr || "1:45");
@@ -150,7 +150,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       runFtp, bikeFtp, weightKg, heightCm, birthDate, gender, lthr, restingHR, maxHR,
       runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m, displayName: athleteName, weeklyAvailability,
     });
-    showNotification(`Modo cambiado a: ${newMode === "POWER" ? "Potencia Carrera" : "Híbrido (Ritmo + FC)"}`);
+    showNotification(`Modo cambiado a: ${newMode === "POWER" ? "Potencia Carrera" : "Ritmo (Pace)"}`);
   };
 
   const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => {

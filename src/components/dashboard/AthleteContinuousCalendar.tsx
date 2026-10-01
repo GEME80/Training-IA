@@ -20,7 +20,7 @@ interface AthleteContinuousCalendarProps {
   blueprint: MacrocycleBlueprint; selectedMacroWeekIdx: number; onSelectWeek: (idx: number) => void;
   runFtp?: number; bikeFtp?: number; weeklyAvailability?: WeeklyAvailabilityMap;
   weeklyExecutedTss?: number; dailyExecutedActivities?: DailyExecutedMap; calendarEvents?: CalendarEvent[];
-  runningOpts?: { mode?: "POWER" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
   onOpenAICoach: (weekIdx?: number) => void; onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>; onSelectWorkoutModal: (item: PlanItem) => void;
   dashboardHeaderSlot?: React.ReactNode; stickyTopSlot?: React.ReactNode;

@@ -2,6 +2,7 @@ import { IntervalsClient } from "@/lib/intervals/client";
 import { CalendarEvent, ActivityType } from "@/lib/intervals/types";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 import { SyncIntervalsRequest } from "@/lib/validation/schemas";
 
 export interface IntervalsSyncResult {
@@ -109,12 +110,18 @@ export class IntervalsSyncService {
         workoutText = `Warmup\n- 10m 55% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 60) - 20)}m 68% FTP\n\nCooldown\n- 10m 50% FTP`;
       }
 
+      const isRunPaceOnly = item.discipline === "Carrera" && (!item.powerTarget || !/\b\d+\s*W\b/i.test(item.powerTarget));
+      const canonicalDescription = sanitizeWorkoutDoc(workoutText, {
+        discipline: item.discipline,
+        isRunPaceOnly,
+      });
+
       const eventPayload: CalendarEvent = {
         start_date_local: `${item.date}T07:00:00`,
         category,
         type,
         name: `[PULSE AI] ${item.workoutName || `${item.discipline} - ${item.day || "Sesión"}`}`,
-        description: workoutText,
+        description: canonicalDescription,
         moving_time: (item.durationMinutes || 45) * 60,
         icu_training_load: item.targetTss || item.tss || 45,
       };

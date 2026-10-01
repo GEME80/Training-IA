@@ -121,13 +121,13 @@ export const TRAIL_ULTRA_MODEL: CuratedTrainingModel = {
           name: "Intervalos de Umbral en Subida Continua (3x8m @ 98% CP)",
           powerTarget: "98% CP",
           justification: "Capacidad glucolítica y potencia sostenible en desniveles prolongados.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n3x (Cuesta Continua)\n- 8m 98% FTP\n- 3m 50% FTP (Trote regreso)\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Cuesta Continua)\n3x\n- 8m 98% CP\n- 3m 50% CP \"Trote regreso\"\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Series de Cuestas Largas de Umbral (4x 5m @ 96% CP)",
           powerTarget: "96% CP en cuesta",
           justification: "Sostenimiento metabólico en ascensiones prolongadas de media montaña.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n4x\n- 5m 96% FTP (Subida)\n- 3m 50% FTP (Descenso)\n\nCooldown\n- 10m 55% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n4x\n- 5m 96% CP \"Subida\"\n- 3m 50% CP \"Descenso\"\n\nCooldown\n- 10m 55% CP",
         },
         {
           name: "Transiciones Subida-Bajada Técnica (4x 3m Up + 2m Down ágil)",

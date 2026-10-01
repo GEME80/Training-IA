@@ -112,7 +112,7 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
           name: "Over-Unders en Subida para Cambio de Pendiente (4x 9m)",
           powerTarget: "95% / 105% FTP alternado",
           justification: "Aumenta la tolerancia cuando la pendiente se empina bruscamente.",
-          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nBloques Over-Under\n4x (9m)\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 4m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
+          workoutDoc: "Calentamiento\n- 15m 55% FTP\n\nBloques Over-Under (9m)\n4x\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 4m 50% FTP\n\nEnfriamiento\n- 10m 50% FTP",
         },
       ],
       taper: [

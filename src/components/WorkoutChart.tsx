@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Dumbbell } from "lucide-react";
+import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 
 export interface IntervalSegment {
   durationMins: number;
@@ -98,7 +99,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     };
   }
 
-  const lines = doc.split("\n").map((l) => l.trim()).filter(Boolean);
+  const sanitizedDoc = sanitizeWorkoutDoc(doc);
+  const lines = sanitizedDoc.split("\n").map((l) => l.trim()).filter(Boolean);
   const segments: IntervalSegment[] = [];
 
   let repeatCount = 1;
@@ -108,9 +110,11 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
 
   const parseDuration = (raw: string): number => {
     const isSwim = /nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw);
-    const minsMatch = raw.match(/(\d+)\s*m(?:in)?/i);
-    const secsMatch = raw.match(/(\d+)\s*s/i);
-    const hoursMatch = raw.match(/(\d+)\s*h/i);
+    // Limpiar notas entre paréntesis o comillas antes de parsear duración para evitar capturas erróneas (ej: "(200m)")
+    const clean = raw.replace(/\s*\(.*?\)/g, "").replace(/\s*".*?"/g, "").trim();
+    const minsMatch = clean.match(/(\d+)\s*m(?:in)?/i);
+    const secsMatch = clean.match(/(\d+)\s*s/i);
+    const hoursMatch = clean.match(/(\d+)\s*h/i);
 
     let total = 0;
     if (hoursMatch) total += parseInt(hoursMatch[1], 10) * 60;
@@ -130,10 +134,10 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
 
   const parseIntensity = (raw: string): number => {
     if (/recovery|descanso|rest|pausa/i.test(raw)) return 50;
-    const pctMatch = raw.match(/(\d+)\s*%/);
-    if (pctMatch) return parseInt(pctMatch[1], 10);
     const rangeMatch = raw.match(/(\d+)\s*-\s*(\d+)\s*%/);
     if (rangeMatch) return (parseInt(rangeMatch[1], 10) + parseInt(rangeMatch[2], 10)) / 2;
+    const pctMatch = raw.match(/(\d+)\s*%/);
+    if (pctMatch) return parseInt(pctMatch[1], 10);
     if (/z1|recup|f[aá]cil/i.test(raw)) return 60;
     if (/z2|aer[oó]b|base/i.test(raw)) return 72;
     if (/z3|tempo|sweetspot/i.test(raw)) return 85;
@@ -153,7 +157,9 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     if (inIgnoredSection) {
       continue;
     }
-    const repeatMatch = line.match(/^(\d+)x\s*$/i);
+
+    // Detección flexible de multiplicadores de repetición (ej: "6x", "6x Fartlek", "Fartlek 6x")
+    const repeatMatch = line.match(/^(\d+)\s*x(?:\s*\(.*?\)|:|\s+.*)?$/i) || line.match(/^(?:.*?\s+)?(\d+)\s*x\s*$/i);
     if (repeatMatch) {
       if (inRepeatBlock && repeatBuffer.length > 0) {
         for (let r = 0; r < repeatCount; r++) {
@@ -181,6 +187,13 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
       } else {
         segments.push(seg);
       }
+    } else if (!line.startsWith("-") && inRepeatBlock && repeatBuffer.length > 0) {
+      // Si se cambia de bloque (ej. Cooldown), vaciamos el repeatBuffer acumulado
+      for (let r = 0; r < repeatCount; r++) {
+        segments.push(...repeatBuffer);
+      }
+      repeatBuffer = [];
+      inRepeatBlock = false;
     }
   }
 
@@ -278,18 +291,12 @@ export const WorkoutChart: React.FC<WorkoutChartProps> = ({
   }
 
   const getSegmentColor = (intensity: number) => {
-    // Escala Oficial Stryd (CP):
-    // Z1 Fácil / Recuperación (65-80% CP): Verde Esmeralda
-    // Z2 Moderado / Aeróbico (80-90% CP): Amarillo / Dorado
-    // Z3 Umbral (90-100% CP): Naranja
-    // Z4 Intervalo / VO2max (100-115% CP): Rojo
-    // Z5 Repetición / Anaeróbico (>115% CP): Púrpura
-    if (intensity <= 65) return "#34d399"; // Verde suave recuperación activa (<65%)
-    if (intensity <= 80) return "#10b981"; // Stryd Zona 1: Fácil (65 - 80% CP)
-    if (intensity <= 90) return "#facc15"; // Stryd Zona 2: Moderado (80 - 90% CP)
-    if (intensity <= 100) return "#fb923c"; // Stryd Zona 3: Umbral (90 - 100% CP)
-    if (intensity <= 115) return "#ef4444"; // Stryd Zona 4: Intervalo (100 - 115% CP)
-    return "#a855f7"; // Stryd Zona 5: Repetición (>115% CP)
+    if (intensity <= 65) return "#34d399"; // Recuperación (<65%)
+    if (intensity <= 80) return "#10b981"; // Fácil / Z1 (65-80%)
+    if (intensity <= 90) return "#facc15"; // Moderado / Z2 (80-90%)
+    if (intensity <= 100) return "#fb923c"; // Umbral / Z3 (90-100%)
+    if (intensity <= 115) return "#ef4444"; // Intervalo / Z4 (100-115%)
+    return "#a855f7"; // Repetición / Z5 (>115%)
   };
 
   const maxIntensity = Math.max(...segments.map((s) => s.intensityPercent), 115);

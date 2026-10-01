@@ -62,7 +62,7 @@ export function generateDeterministicAnalysis(
           tss: totalTss,
           powerTarget: runFtp > 0 ? `${Math.round(runFtp * 0.72)}W (72% CP) + Fuerza Funcional` : `72% Pace + Fuerza Funcional`,
           justification: "Doble estímulo coordinado: volumen aeróbico de carrera en Z2 más trabajo de fuerza y pliometría para protección de sóleo/Aquiles.",
-          workoutDoc: `Bloque 1: Carrera ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nWarmup\n- 10m ${runFtp > 0 ? "65% FTP" : "65% Pace"}\n\nMain\n- ${runDur - 15}m ${runFtp > 0 ? "72% FTP" : "72% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% FTP" : "60% Pace"}\n\nBloque 2: Fuerza Sóleo & Pliometría (WeightTraining)\nWarmup\n- 5m Mobility\n\nMain\n- 15m Pliometría Sóleo, Gemelo & Core`,
+          workoutDoc: `Bloque 1: Carrera ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nWarmup\n- 10m ${runFtp > 0 ? "65% CP" : "65% Pace"}\n\nMain\n- ${runDur - 15}m ${runFtp > 0 ? "72% CP" : "72% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% CP" : "60% Pace"}\n\nBloque 2: Fuerza Sóleo & Pliometría (WeightTraining)\nWarmup\n- 5m Mobility\n\nMain\n- 15m Pliometría Sóleo, Gemelo & Core`,
           isRestDay: false,
         };
       }
@@ -85,7 +85,7 @@ export function generateDeterministicAnalysis(
           tss: totalTss,
           powerTarget: `Bici: ${Math.round(bikeFtp * 0.68)}W (68% FTP) • Carrera: ${runFtp > 0 ? `${Math.round(runFtp * 0.78)}W (78% CP)` : "78% Pace"}`,
           justification: "Entrenamiento de transición brick para adaptación neuromuscular a la carrera con pre-fatiga de pedaleo.",
-          workoutDoc: `Bloque 1: Ciclismo Z2 (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m 68% FTP\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nMain\n- ${runDur - 5}m ${runFtp > 0 ? "78% FTP" : "78% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% FTP" : "60% Pace"}`,
+          workoutDoc: `Bloque 1: Ciclismo Z2 (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m 68% FTP\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nMain\n- ${runDur - 5}m ${runFtp > 0 ? "78% CP" : "78% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% CP" : "60% Pace"}`,
           isRestDay: false,
         };
       }

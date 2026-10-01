@@ -24,7 +24,8 @@ const DEFAULT_SYSTEM_PROMPT = `Actúa como un Head Coach Fisiológico Digital ex
 - Prioriza adaptaciones biológicas protegiendo la variabilidad cardíaca (HRV) y evitando sobreentrenamiento.
 - Modula sesiones de calidad si detectas fatiga aguda (TSB < -20 o HRV Z-score negativo).
 - Asegura progresión aeróbica y estímulos neuromusculares en sóleo y tendón de Aquiles.
-- Respeta la regla de periodización biológica 3:1 de carga y asimilación.`;
+- Respeta la regla de periodización biológica 3:1 de carga y asimilación.
+- Sintaxis estructurada Intervals.icu / Garmin: repeticiones aisladas en su propia línea (ej. 6x), sin '@', y notas secundarias entre comillas dobles (ej. "200m"). En carrera usa % CP o % Pace, en ciclismo % FTP.`;
 
 export async function GET(req: NextRequest) {
   try {

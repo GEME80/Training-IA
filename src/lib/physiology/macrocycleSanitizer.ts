@@ -89,12 +89,12 @@ export function sanitizeMacrocycleBlueprint(blueprint: MacrocycleBlueprint): Mac
           return {
             ...item,
             discipline: "Carrera",
-            workoutName: "Series de Potencia Crítica en Carrera (5x 3m @ 90% CP)",
+            workoutName: "Series de Potencia Crítica en Carrera (5x 3m 90% CP)",
             durationMinutes: 50,
             tss: 52,
             powerTarget: `${Math.round(runFtp * 0.9)}W (90% CP)`,
             justification: "Sesión específica de calidad en carrera a pie para desarrollo de potencia aeróbica y economía de zancada.",
-            workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
+            workoutDoc: "Warmup\n- 12m 65% CP\n\n5x\n- 3m 90% CP\n- 2m 60% CP\n\nCooldown\n- 8m 60% CP",
           };
         }
       }

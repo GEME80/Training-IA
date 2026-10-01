@@ -6,6 +6,7 @@ import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
 import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
+import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
 
@@ -226,20 +227,17 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           </div>
         )}
 
-        {workout.workoutDoc && (
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              {workout.discipline === "Fuerza" ? "Estructura del Circuito de Fuerza:" : "Perfil de Intervalos y Zonas:"}
-            </span>
-            <WorkoutChart workoutDoc={workout.workoutDoc} discipline={workout.discipline} athleteFtp={workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined} />
-          </div>
-        )}
-
         {workout.workoutDoc && (() => {
           const isRunPower = workout.discipline === "Carrera" && effRunFtp > 0;
           const isBike = workout.discipline === "Ciclismo";
           const isStrength = workout.discipline === "Fuerza";
           const isSwim = workout.discipline === "Natacion";
+          const isRunPaceOnly = workout.discipline === "Carrera" && effRunFtp === 0;
+
+          const cleanDoc = sanitizeWorkoutDoc(workout.workoutDoc, {
+            discipline: workout.discipline,
+            isRunPaceOnly,
+          });
 
           const sectionTitle = isStrength
             ? "Prescripción de la Sesión de Fuerza:"
@@ -257,51 +255,53 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           const effectiveFtp = isRunPower ? effRunFtp : isBike ? effBikeFtp : 0;
           const ftpLabel = isRunPower ? "Stryd CP" : "FTP";
 
-          const enrichedWorkoutDoc = workout.workoutDoc.split("\n").map((line) => {
-            if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
-              return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\([^)]*[wW]\))?/gi, (_, p1, p2) => {
-                const n1 = parseInt(p1, 10);
-                const w1 = Math.round((effectiveFtp * n1) / 100);
-                if (p2) {
-                  const n2 = parseInt(p2, 10);
-                  const w2 = Math.round((effectiveFtp * n2) / 100);
-                  return `${n1}-${n2}% ${ftpLabel} (${w1}-${w2}W)`;
-                }
-                return `${n1}% ${ftpLabel} (${w1}W)`;
-              });
-            }
-            if (!isRunPower && workout.discipline === "Carrera") {
-              return line
-                .replace(/\s*\(\d+\s*W\)/gi, "")
-                .replace(/\b\d+\s*W\b\s*/gi, "")
-                .replace(/%\s*(?:stryd\s*)?(?:ftp|cp)/gi, "% Pace")
-                .replace(/@\s*(\d+(?:-\d+)?)\s*%\s*(?:ftp|cp)/gi, "@ $1% Pace")
-                .replace(/\bStryd\s*CP\b/gi, "Pace")
-                .replace(/\bStryd\b/gi, "Ritmo");
-            }
-            if (isRunPower && workout.discipline === "Carrera") {
-              return line.replace(/%\s*FTP\b/gi, "% CP");
-            }
-            return line;
-          }).join("\n");
-
           return (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <Code2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  {sectionTitle}
+            <>
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  {workout.discipline === "Fuerza" ? "Estructura del Circuito de Fuerza:" : "Perfil de Intervalos y Zonas:"}
                 </span>
-                {showWattBadge && (
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
-                    ⚡ {isRunPower ? `Stryd CP Atleta: ${effRunFtp}W` : `FTP Atleta: ${effBikeFtp}W`}
-                  </span>
-                )}
+                <WorkoutChart workoutDoc={cleanDoc} discipline={workout.discipline} athleteFtp={workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined} />
               </div>
-              <pre className="max-h-48 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-950 p-3 text-[11px] font-mono text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner">
-                {enrichedWorkoutDoc}
-              </pre>
-            </div>
+
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Code2 className="h-3.5 w-3.5 text-sky-500" />
+                    {sectionTitle}
+                  </span>
+                  {showWattBadge && (
+                    <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
+                      ⚡ Calculado a tu {ftpLabel} ({effectiveFtp}W)
+                    </span>
+                  )}
+                </div>
+
+                <pre className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-pre-wrap">
+                  {cleanDoc.split("\n").map((line) => {
+                    if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
+                      return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\([^)]*[wW]\))?/gi, (_, p1, p2) => {
+                        const n1 = parseInt(p1, 10);
+                        const w1 = Math.round((effectiveFtp * n1) / 100);
+                        if (p2) {
+                          const n2 = parseInt(p2, 10);
+                          const w2 = Math.round((effectiveFtp * n2) / 100);
+                          return `${n1}-${n2}% ${ftpLabel} (${w1}-${w2}W)`;
+                        }
+                        return `${n1}% ${ftpLabel} (${w1}W)`;
+                      });
+                    }
+                    if (!isRunPower && workout.discipline === "Carrera") {
+                      return line
+                        .replace(/\s*\(\d+\s*w\)/gi, "")
+                        .replace(/\b\d+\s*w\b/gi, "")
+                        .replace(/%\s*(?:stryd\s*)?(?:cp|ftp)/gi, "% Pace");
+                    }
+                    return line;
+                  }).join("\n")}
+                </pre>
+              </div>
+            </>
           );
         })()}
 

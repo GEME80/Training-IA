@@ -13,6 +13,7 @@ import {
   getDayDisciplines,
 } from "./types";
 import { generateDeterministicAnalysis } from "./deterministicPlanGenerator";
+import { sanitizeWorkoutDoc } from "../physiology/workoutSyntaxSanitizer";
 
 export * from "./types";
 export { generateDeterministicAnalysis };
@@ -179,18 +180,25 @@ Responde ÚNICAMENTE en formato JSON con la estructura:
             date: dateInfo.date,
             formattedDate: dateInfo.formattedDate,
             isRestDay: isRest,
-            workoutDoc:
-              item.workoutDoc ||
-              (isRest
-                ? undefined
-                : disc === "Natacion"
-                ? "Warmup\n- 200m 70% Pace\n\nMain\n- 1200m 85% Pace\n\nCooldown\n- 200m 60% Pace"
-                : PhysiologicalEngine.generateWorkoutSyntax(
-                    disc === "Ciclismo" ? "Ride" : disc === "Fuerza" ? "WeightTraining" : "Run",
-                    item.workoutName || item.title || "Entrenamiento",
-                    100,
-                    macroInfo?.phase
-                  )),
+            workoutDoc: (() => {
+              const rawDoc =
+                item.workoutDoc ||
+                (isRest
+                  ? undefined
+                  : disc === "Natacion"
+                  ? "Warmup\n- 200m 70% Pace\n\nMain\n- 1200m 85% Pace\n\nCooldown\n- 200m 60% Pace"
+                  : PhysiologicalEngine.generateWorkoutSyntax(
+                      disc === "Ciclismo" ? "Ride" : disc === "Fuerza" ? "WeightTraining" : "Run",
+                      item.workoutName || item.title || "Entrenamiento",
+                      100,
+                      macroInfo?.phase
+                    ));
+              if (!rawDoc) return undefined;
+              return sanitizeWorkoutDoc(rawDoc, {
+                discipline: disc,
+                isRunPaceOnly: disc === "Carrera" && !profile.run_ftp,
+              });
+            })(),
           };
         });
 

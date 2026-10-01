@@ -258,13 +258,13 @@ export function resolveWeekendRide(params: {
       rideTitle = `Fondo Ciclismo con Variaciones de Cadencia (${rideMins}m)`;
       rideJust = "Fuerza y eficiencia neuromuscular alternando 60 y 100 rpm.";
       rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.68)}W (68% FTP)` : "68% FTP";
-      workoutDoc = `Warmup\n- 15m 55% FTP\n\n4x (Cadencia Dinámica)\n- 6m 72% FTP (60 rpm)\n- 4m 65% FTP (100 rpm)\n\nMain\n- ${Math.max(15, rideMins - 65)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
+      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain (Cadencia Dinámica)\n4x\n- 6m 72% FTP "60 rpm"\n- 4m 65% FTP "100 rpm"\n\n- ${Math.max(15, rideMins - 65)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
     } else if (style === 1) {
       rideMins = [85, 95, 90][(weekNumber - 1) % 3];
       rideTitle = `Fondo Ciclismo con Bloques Sweetspot (${rideMins}m)`;
       rideJust = "Estímulo aeróbico profundo sin impacto sobre tendón de Aquiles.";
       rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.72)}W` : "Z2 con 2x10m Sweetspot";
-      workoutDoc = `Warmup\n- 15m 55% FTP\n\n2x (Sweetspot)\n- 10m 85% FTP\n- 5m 55% FTP\n\nMain (Z2)\n- ${Math.max(15, rideMins - 55)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
+      workoutDoc = `Warmup\n- 15m 55% FTP\n\nMain (Sweetspot)\n2x\n- 10m 85% FTP\n- 5m 55% FTP\n\n- ${Math.max(15, rideMins - 55)}m 66% FTP\n\nCooldown\n- 10m 50% FTP`;
     } else {
       rideMins = [85, 95, 90, 100][(weekNumber - 1) % 4];
       rideTitle = `Fondo Resistencia Continua Z2 (${rideMins}m)`;
@@ -319,7 +319,7 @@ export function resolveFridayFartlek(runFtp?: number) {
     powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.72)}-${Math.round(runFtp * 0.88)}W (Z2-Z4)` : "72-88% Pace",
     justification: "Cambios de ritmo alegres y controlados para activar reactividad neuromuscular sin agotar las piernas antes de la tirada larga.",
     workoutDoc: runFtp && runFtp > 0
-      ? "Warmup\n- 15m @ 70% CP\n\n6x Fartlek Ágil\n- 1m @ 88-92% CP\n- 2m @ 68% CP\n\nCooldown\n- 12m @ 65% CP"
-      : "Warmup\n- 15m @ 70% Pace\n\n6x Fartlek Ágil\n- 1m @ 88-92% Pace\n- 2m @ 68% Pace\n\nCooldown\n- 12m @ 65% Pace",
+      ? "Warmup\n- 15m 70% CP\n\nMain (Fartlek Ágil)\n6x\n- 1m 88-92% CP\n- 2m 68% CP\n\nCooldown\n- 12m 65% CP"
+      : "Warmup\n- 15m 70% Pace\n\nMain (Fartlek Ágil)\n6x\n- 1m 88-92% Pace\n- 2m 68% Pace\n\nCooldown\n- 12m 65% Pace",
   };
 }

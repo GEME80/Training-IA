@@ -120,13 +120,13 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
           name: "Escalera Incremental de Potencia Aeróbica (200m -> 400m -> 600m -> 800m)",
           powerTarget: "100-112% CP",
           justification: "Reclutamiento progresivo de unidades motoras rápidas y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\nMain (Escalera Progresiva)\n- 40s 112% FTP (200m)\n- 1m 55% FTP\n- 1m25s 108% FTP (400m)\n- 1m30s 55% FTP\n- 2m15s 104% FTP (600m)\n- 2m 55% FTP\n- 3m 100% FTP (800m)\n- 2m30s 55% FTP\n- 2m15s 104% FTP (600m)\n- 1m30s 55% FTP\n- 1m25s 108% FTP (400m)\n- 1m 55% FTP\n- 40s 112% FTP (200m)\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\nMain (Escalera Progresiva)\n- 40s 112% CP \"200m\"\n- 1m 55% CP\n- 1m25s 108% CP \"400m\"\n- 1m30s 55% CP\n- 2m15s 104% CP \"600m\"\n- 2m 55% CP\n- 3m 100% CP \"800m\"\n- 2m30s 55% CP\n- 2m15s 104% CP \"600m\"\n- 1m30s 55% CP\n- 1m25s 108% CP \"400m\"\n- 1m 55% CP\n- 40s 112% CP \"200m\"\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Series Umbral Stryd Z4 (4x8m @ 100% CP)",
           powerTarget: "100% CP",
           justification: "Elevación de la potencia crítica y tolerancia al lactato.",
-          workoutDoc: "Warmup\n- 15m 68% FTP\n\n4x\n- 8m 100% FTP\n- 2m30s 60% FTP\n\nCooldown\n- 10m 60% FTP",
+          workoutDoc: "Warmup\n- 15m 68% CP\n\n4x\n- 8m 100% CP\n- 2m30s 60% CP\n\nCooldown\n- 10m 60% CP",
         },
         {
           name: "Bloques Largos de Umbral en Pista/Ruta (3x 2.000m @ 98% CP)",

@@ -159,7 +159,7 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
           name: "Over-Unders de Tolerancia Láctica (4x9m @ 95%/105% FTP)",
           powerTarget: "95-105% FTP",
           justification: "Capacidad de aclaramiento de lactato bajo tensión de carrera.",
-          workoutDoc: "Warmup\n- 15m 55% FTP\n\n4x (9m Over-Under)\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 3m 50% FTP\n\nCooldown\n- 10m 50% FTP",
+          workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain (Over-Under 9m)\n4x\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 2m 95% FTP\n- 1m 105% FTP\n- 3m 50% FTP\n\nCooldown\n- 10m 50% FTP",
         },
         {
           name: "Simulación de Ritmo de Gran Fondo (1h20m con 3x12m @ 88% FTP)",

@@ -4969,3 +4969,45 @@ flowchart TD
   * `src/components/PhysiologicalCards.tsx`: 220 LOC
   * `src/components/dashboard/AthleteDashboardOverview.tsx`: 224 LOC
   * `src/components/profile/ProfilePhysiologyTab.tsx`: 339 LOC
+
+---
+
+## [2026-10-01] - Versión 3.91: Estandarización Universal de Sintaxis Canónica de Workouts (Intervals.icu & Garmin Connect) y Normalización de Gráficas
+
+### 60.1. Resumen de Mejoras y Causa Raíz Resuelta
+1. **Causa Raíz de Desalineación Gráfica y Garmin FIT:**
+   - **Bucle de Repeticiones Invalidados:** Al escribir `6x Fartlek Ágil` o `4x Over-Under`, Intervals.icu y el convertidor a binario Garmin `.FIT` descartaban el número multiplicador de repeticiones y creaban una sola serie (1 repetición de 1m y 2m en lugar de 6).
+   - **Distorsión de Tiempos por Distancias Secundarias:** En pasos como `- 40s 110% Pace (200m)`, el parser anterior de Pulse capturaba `200m` como 200 minutos y se lo sumaba al tiempo real, deformando los anchos de columna en `WorkoutChart`.
+   - **Contaminación de Símbolos y Unidades:** Uso de `@` y `% FTP` en sesiones de carrera en lugar de `% CP` o `% Pace`.
+2. **Creación del Sanitizador Universal (`src/lib/physiology/workoutSyntaxSanitizer.ts`):**
+   - Módulo atómico puro (77 LOC) que transforma cualquier workoutDoc en sintaxis 100% compliant con la API de Intervals y Garmin Connect:
+     * Aísla repeticiones en su propia línea (`Main (Fartlek Ágil)\n6x\n- ...`).
+     * Erradica caracteres incompatibles (`@`).
+     * Convierte notas de distancia secundaria `(200m)` a comillas dobles `"200m"` para evitar colisiones con el parser de duración.
+     * Mapea unidades de carrera de `% FTP` a `% CP` (o `% Pace` en atletas sin Stryd).
+3. **Inyección en Puntos Clave de Renderizado y Sincronización:**
+   - **`src/components/WorkoutChart.tsx`:** Aplica `sanitizeWorkoutDoc`, limpia notas antes del cálculo de minutos y segundos, e introduce soporte robusto de detección de bloques `Nx`.
+   - **`src/lib/services/intervalsSyncService.ts`:** Sanitiza el `workoutText` al vuelo antes de subir el `eventPayload` a la API de Intervals.icu, garantizando que el entrenamiento enviado al reloj Garmin contenga las repeticiones exactas y nombres limpios.
+   - **`src/components/macrocycle/WorkoutDetailModal.tsx`:** Sanitiza en tiempo real tanto la visualización interactiva de `WorkoutChart` como la pestaña de código estructurado.
+   - **`src/lib/gemini/engine.ts` & `src/app/api/admin/config/route.ts`:** Inyecta las directrices canónicas en los prompts de IA y sanitiza automáticamente cualquier respuesta generada por Gemini.
+4. **Actualización de Modelos Metodológicos de Conocimiento:**
+   - Normalizados a sintaxis canónica: `macrocycleTemplateHelpers.ts`, `triathlonModel.ts`, `triathlon1406Model.ts`, `triathlonShortModel.ts`, `marathonModel.ts`, `cyclingModel.ts`, `cyclingSpecialtyModels.ts`, `trailModel.ts`, `longRunPeriodization.ts`, `macrocycleSanitizer.ts` y `deterministicPlanGenerator.ts`.
+
+### 60.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/lib/physiology/workoutSyntaxSanitizer.ts`: 77 LOC
+  * `src/components/WorkoutChart.tsx`: 347 LOC
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 333 LOC
+  * `src/lib/services/intervalsSyncService.ts`: 144 LOC
+  * `src/lib/ai/knowledge/cyclingModel.ts`: 307 LOC
+  * `src/lib/ai/knowledge/cyclingSpecialtyModels.ts`: 327 LOC
+  * `src/lib/ai/knowledge/triathlon1406Model.ts`: 334 LOC
+  * `src/lib/ai/knowledge/triathlonModel.ts`: 343 LOC
+  * `src/lib/ai/knowledge/triathlonShortModel.ts`: 326 LOC
+  * `src/lib/ai/knowledge/marathonModel.ts`: 336 LOC
+  * `src/lib/ai/knowledge/trailModel.ts`: 302 LOC
+  * `src/lib/gemini/deterministicPlanGenerator.ts`: 337 LOC
+  * `src/lib/gemini/engine.ts`: 213 LOC
+

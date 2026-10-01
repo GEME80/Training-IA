@@ -24,8 +24,6 @@ interface AthleteProfileHeroCardProps {
   runThresholdPaceStr?: string;
   swimCssSecPer100m?: number;
   swimCssStr?: string;
-  onOpenEditModal?: () => void;
-  onNavigateToProfile?: () => void;
   onToggleMode?: (newMode: RunningTrainingMode) => void;
   onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS") => void;
 }
@@ -49,8 +47,6 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
   runThresholdPaceStr,
   swimCssSecPer100m,
   swimCssStr,
-  onOpenEditModal,
-  onNavigateToProfile,
   onToggleMode,
   onEditThreshold,
 }) => {
@@ -114,7 +110,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           </div>
         </div>
 
-        {/* Acciones: Selector Rápido de Modelo + Botón Editar */}
+        {/* Acciones: Selector Rápido de Modelo */}
         <div className="flex flex-wrap items-center gap-2">
           {onToggleMode && (
             <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold">

@@ -89,7 +89,6 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         runThresholdPaceSecPerKm={runThresholdPaceSecPerKm}
         swimCssSecPer100m={swimCssSecPer100m}
         swimCssStr={swimCssStr}
-        onNavigateToProfile={onNavigateToProfile}
         onToggleMode={onToggleMode}
         onEditThreshold={onEditThreshold}
       />

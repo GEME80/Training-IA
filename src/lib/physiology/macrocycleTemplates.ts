@@ -116,7 +116,7 @@ export function generateWeekTemplate(
             day, date: dateStr, formattedDate, discipline: "Carrera",
             workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
             durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16, powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave",
-            justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 10m 70% FTP\n3x\n- 20s 85% FTP\n- 40s 55% FTP\n\nCooldown\n- 5m 60% FTP", isRestDay: false,
+            justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 10m 70% CP\n3x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP", isRestDay: false,
           });
           continue;
         }
@@ -193,12 +193,12 @@ export function generateWeekTemplate(
               : (distanceType === "triathlon_1406" ? 20 : 15);
 
             const t2Pct = isTaper ? 75 : isBuildOrPeak ? 85 : 72;
-            const t2Pwr = runFtp ? `${Math.round(runFtp * (t2Pct / 100))}W (${t2Pct}% CP)` : `${t2Pct}% Stryd CP`;
+            const t2Pwr = runFtp ? `${Math.round(runFtp * (t2Pct / 100))}W (${t2Pct}% CP)` : `${t2Pct}% Pace`;
             const t2Title = isTaper
-              ? `Mini-Transición T2 de Activación (${t2M}m @ ${t2Pct}% CP)`
+              ? `Mini-Transición T2 de Activación (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`
               : isBuildOrPeak
-              ? `Transición T2 Post-Ciclismo (${t2M}m @ ${t2Pct}% CP)`
-              : `Transición T2 Técnica & Adaptación (${t2M}m @ ${t2Pct}% CP)`;
+              ? `Transición T2 Post-Ciclismo (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`
+              : `Transición T2 Técnica & Adaptación (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`;
 
             result.push({
               day, date: dateStr, formattedDate, discipline: "Carrera", activityType: "Brick",
@@ -208,7 +208,7 @@ export function generateWeekTemplate(
                 : isTaper
                 ? "Mini-transición rápida para mantener la agilidad de zancada post-pedaleo y la memoria muscular."
                 : "Transición suave T2 para acostumbrar al sistema cardiovascular y neuromuscular a la redistribución del flujo sanguíneo.",
-              workoutDoc: `Warmup\n- 3m 65% FTP Adaptación\n\nMain (Ritmo de Carrera en Fatiga)\n- ${t2M - 5}m ${t2Pct}% FTP (180 spm)\n\nCooldown\n- 2m 55% FTP`,
+              workoutDoc: `Warmup\n- 3m 65% CP Adaptación\n\nMain (Ritmo de Carrera en Fatiga)\n- ${t2M - 5}m ${t2Pct}% CP (180 spm)\n\nCooldown\n- 2m 55% CP`,
               isRestDay: false,
             });
           }

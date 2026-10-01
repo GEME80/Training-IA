@@ -125,7 +125,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           Zonas de Entrenamiento Fisiológicas (Intervals.icu)
         </h4>
         <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-          {isPowerActive ? "⚡ Modo Activo: Potencia Carrera" : "⏱️❤️ Modo Activo: Híbrido (Ritmo + FC)"}
+          {isPowerActive ? "⚡ Modo Activo: Potencia Carrera" : "⏱️ Modo Activo: Ritmo (Pace)"}
         </span>
       </div>
 

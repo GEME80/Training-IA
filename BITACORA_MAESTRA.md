@@ -4870,6 +4870,38 @@ flowchart TD
   * `src/lib/physiology/runningWorkoutAdapter.ts`: 333 LOC
   * `src/lib/services/intervalsSyncService.ts`: 137 LOC
 
+---
+
+## 57. Versión 3.88: Normalización Métrica Universal (FTP en Ciclismo, CP en Carrera con Potencia, Pace en Carrera por Ritmo) & Limpieza de UI
+
+### 57.1. Objetivos del Release
+1. **Regla Fisiológica Universal SGEA (FTP vs CP vs Pace):**
+   - **🚴 Ciclismo:** Se prescribe exclusivamente con **`FTP`** (ej. `@ 68% FTP`, `146W`).
+   - **🏃 Carrera con Stryd (`POWER`):** Se prescribe exclusivamente con **`CP`** (ej. `@ 85% CP`, `286W`). Erradicada cualquier mención residual de `% FTP` en sesiones de carrera en las bases de conocimiento fisiológico (`triathlonModel.ts`, `engine.ts`, `macrocycleTemplates.ts`, `calendarHydration.ts`).
+   - **🏃 Carrera sin Stryd (`PACE`):** Se prescribe exclusivamente con **`Pace`** en `min/km` y `% Pace`. Erradicado completamente cualquier `% FTP`, `% CP`, vatios `(XX W)` e iconos de rayo `⚡` en corredores por ritmo.
+2. **Limpieza de Cabecera del Perfil de Atleta (`AthleteProfileHeroCard.tsx`):**
+   - Eliminado el botón redundante **"Editar Perfil"** en la tarjeta heroica de perfil.
+   - Normalizadas las etiquetas de modo a `"⏱️ Modo Activo: Ritmo (Pace)"` en `AthleteZonesViewer.tsx` y `ProfilePhysiologyTab.tsx`.
+3. **Sanitización Dinámica Retroactiva en el Modal de Entrenamiento (`WorkoutDetailModal.tsx`):**
+   - **Título Adaptativo:** Si el atleta entrena por ritmo (`effRunFtp === 0`), `@ XX% CP` se traduce automáticamente a `@ XX% Pace`.
+   - **Subtítulo "Objetivo":** Reemplazado el rayo `⚡` por el cronómetro `⏱️` (`Timer`) para corredores por ritmo, con estilos esmeralda y purgando sufijos residuales de `Stryd CP`.
+   - **Prescripción Estructurada (`enrichedWorkoutDoc`):** Corrección al vuelo de cualquier residuo histórico de `% FTP` o `% CP` a `% Pace` para corredores sin potencia, y conversión a `Stryd CP (XX W)` para corredores con Stryd.
+4. **Preservación Inviolable de Corredores con Potencia (`POWER`):**
+   - Los entrenamientos de corredores con Stryd (ej. Germán Morales con 336W CP, Juan Pablo Vásquez con 275W CP) y ciclistas con FTP (ej. Georg Schmitt con 214W FTP) se mantienen **100% intactos**, sin modificaciones en sus vatios calculados ni en su estructura.
+
+### 57.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (Código de Salida 0)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Regla Estricta de Modularidad ($\le 350$ LOC):**
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 333 LOC
+  * `src/components/profile/AthleteProfileHeroCard.tsx`: 335 LOC
+  * `src/components/profile/AthleteZonesViewer.tsx`: 277 LOC
+  * `src/components/profile/ProfilePhysiologyTab.tsx`: 332 LOC
+  * `src/lib/ai/knowledge/triathlonModel.ts`: 343 LOC
+  * `src/lib/intervals/calendarHydration.ts`: 206 LOC
+  * `src/lib/physiology/engine.ts`: 261 LOC
+  * `src/lib/physiology/macrocycleTemplates.ts`: 347 LOC
+
 
 
 

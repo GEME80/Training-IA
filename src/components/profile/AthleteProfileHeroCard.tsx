@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Footprints, Bike, HeartPulse, Moon, Edit3, Timer, Zap, Waves } from "lucide-react";
+import { Footprints, Bike, HeartPulse, Moon, Timer, Zap, Waves, Edit3 } from "lucide-react";
 import { RunningTrainingMode } from "@/lib/db/types";
 import { resolveRunningMode, formatPace, parsePaceToSeconds, formatSwimPace, parseSwimPaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
@@ -143,17 +143,6 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
                 <span>Ritmo (Pace)</span>
               </button>
             </div>
-          )}
-
-          {(onNavigateToProfile || onOpenEditModal) && (
-            <button
-              type="button"
-              onClick={onNavigateToProfile || onOpenEditModal}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-xs"
-            >
-              <Edit3 className="h-3.5 w-3.5" />
-              <span>Editar Perfil</span>
-            </button>
           )}
         </div>
       </div>

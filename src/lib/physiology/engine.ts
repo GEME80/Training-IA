@@ -204,58 +204,58 @@ export class PhysiologicalEngine {
       return `Warmup\n- 15m 55% FTP\n\nMain\n- 40m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
     }
 
-    // Carrera por Potencia Stryd (% FTP / CP)
+    // Carrera por Potencia Stryd (% CP)
     const typeLower = workoutType.toLowerCase();
 
     // 1. Carrera Continua con Strides / Progresiones reactivas
     if (typeLower.includes("stride") || typeLower.includes("recta") || typeLower.includes("progresion")) {
-      return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\n5x\n- 20s 115% FTP\n- 40s 60% FTP\n\nCooldown\n- 5m 62% FTP`;
+      return `Warmup\n- 10m 65% CP\n\nMain\n- 25m 72% CP\n\n5x\n- 20s 115% CP\n- 40s 60% CP\n\nCooldown\n- 5m 62% CP`;
     }
 
     // 2. Cuestas Cortas / Neuro-fuerza
     if (typeLower.includes("cuesta") || typeLower.includes("hill") || typeLower.includes("fartlek")) {
-      return `Warmup\n- 15m 68% FTP\n\n6x\n- 45s 96% FTP\n- 1m15s 60% FTP\n\nCooldown\n- 10m 62% FTP`;
+      return `Warmup\n- 15m 68% CP\n\n6x\n- 45s 96% CP\n- 1m15s 60% CP\n\nCooldown\n- 10m 62% CP`;
     }
 
     // 3. Tempo Aeróbico Z3 / Sweetspot
     if (typeLower.includes("tempo") || typeLower.includes("z3") || typeLower.includes("sweetspot")) {
-      return `Warmup\n- 15m 70% FTP\n\n3x\n- 8m 88% FTP\n- 2m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
+      return `Warmup\n- 15m 70% CP\n\n3x\n- 8m 88% CP\n- 2m 65% CP\n\nCooldown\n- 10m 62% CP`;
     }
 
     // 4. Series de Umbral / Intervalos Stryd
     if (typeLower.includes("series") || typeLower.includes("umbral") || typeLower.includes("threshold")) {
-      return `Warmup\n- 15m 70% FTP\n\n4x\n- 6m ${targetPowerPercentage}% FTP\n- 3m 65% FTP\n\nCooldown\n- 10m 62% FTP`;
+      return `Warmup\n- 15m 70% CP\n\n4x\n- 6m ${targetPowerPercentage}% CP\n- 3m 65% CP\n\nCooldown\n- 10m 62% CP`;
     }
 
     // 5. VO2 Max
     if (typeLower.includes("vo2")) {
-      return `Warmup\n- 15m 70% FTP\n\n5x\n- 3m 106% FTP\n- 3m 60% FTP\n\nCooldown\n- 10m 60% FTP`;
+      return `Warmup\n- 15m 70% CP\n\n5x\n- 3m 106% CP\n- 3m 60% CP\n\nCooldown\n- 10m 60% CP`;
     }
 
     // 6. Tirada Larga Dominical (Long Run)
     if (typeLower.includes("larga") || typeLower.includes("long")) {
       if (phase === "MAINTENANCE" || !phase) {
-        return `Warmup\n- 10m 68% FTP\n\nMain\n- 35m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
+        return `Warmup\n- 10m 68% CP\n\nMain\n- 35m 74% CP\n\nCooldown\n- 10m 65% CP`;
       }
       if (phase === "TAPER" || phase === "RACE_WEEK") {
-        return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\nCooldown\n- 10m 60% FTP`;
+        return `Warmup\n- 10m 65% CP\n\nMain\n- 25m 72% CP\n\nCooldown\n- 10m 60% CP`;
       }
       if (phase === "BASE_1" || phase === "BASE_2") {
-        return `Warmup\n- 15m 68% FTP\n\nMain\n- 35m 74% FTP\n- 15m 82% FTP\n\nCooldown\n- 5m 65% FTP`;
+        return `Warmup\n- 15m 68% CP\n\nMain\n- 35m 74% CP\n- 15m 82% CP\n\nCooldown\n- 5m 65% CP`;
       }
       if (phase === "BUILD") {
-        return `Warmup\n- 15m 70% FTP\n\nMain\n- 55m 76% FTP\n- 15m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
+        return `Warmup\n- 15m 70% CP\n\nMain\n- 55m 76% CP\n- 15m ${targetPowerPercentage}% CP\n\nCooldown\n- 10m 65% CP`;
       }
       // PEAK / ESPECÍFICO DE MARATÓN
-      return `Warmup\n- 15m 72% FTP\n\nMain\n- 1h15m 78% FTP\n- 20m ${targetPowerPercentage}% FTP\n\nCooldown\n- 10m 65% FTP`;
+      return `Warmup\n- 15m 72% CP\n\nMain\n- 1h15m 78% CP\n- 20m ${targetPowerPercentage}% CP\n\nCooldown\n- 10m 65% CP`;
     }
 
     // 7. Trote Regenerativo
     if (typeLower.includes("regenerativ") || typeLower.includes("suave") || typeLower.includes("recovery")) {
-      return `Warmup\n- 10m 65% FTP\n\nMain\n- 25m 70% FTP\n\nCooldown\n- 10m 60% FTP`;
+      return `Warmup\n- 10m 65% CP\n\nMain\n- 25m 70% CP\n\nCooldown\n- 10m 60% CP`;
     }
 
     // Carrera Continua Base Progresiva por defecto
-    return `Warmup\n- 10m 68% FTP\n\nMain\n- 25m 74% FTP\n\nCooldown\n- 10m 65% FTP`;
+    return `Warmup\n- 10m 68% CP\n\nMain\n- 25m 74% CP\n\nCooldown\n- 10m 65% CP`;
   }
 }

@@ -36,7 +36,7 @@ function buildEvePlanItem(p: PlanItem): PlanItem {
       tss: 9,
       powerTarget: "Z1 Trote Suave",
       justification: "Soltura neuromuscular con mínimo impacto articular pre-carrera.",
-      workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 5m 70% FTP con 3x20s 85% FTP\n\nCooldown\n- 5m 60% FTP",
+      workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 5m 70% CP con 3x20s 85% CP\n\nCooldown\n- 5m 60% CP",
     };
   }
   if (p.discipline === "Fuerza") {

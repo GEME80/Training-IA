@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Code2, Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap } from "lucide-react";
+import { Code2, Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap, Timer } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
@@ -87,6 +87,33 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
   };
 
+  const isRunPower = workout.discipline === "Carrera" && effRunFtp > 0;
+  const isRunPace = workout.discipline === "Carrera" && !isRunPower;
+  const isBike = workout.discipline === "Ciclismo";
+
+  let displayTitle = workout.workoutName.replace(/\[.*?\]\s*/g, "");
+  if (isRunPace) {
+    displayTitle = displayTitle
+      .replace(/\s*@\s*(\d+(?:-\d+)?)\s*%\s*(?:CP|FTP)/gi, " @ $1% Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\b/gi, "Ritmo");
+  } else if (isRunPower) {
+    displayTitle = displayTitle.replace(/%\s*FTP\b/gi, "% CP");
+  }
+
+  let displayTarget = workout.powerTarget;
+  if (isRunPace && displayTarget) {
+    displayTarget = displayTarget
+      .replace(/\s*\(\d+\s*W\)/gi, "")
+      .replace(/\b\d+\s*W\b\s*/gi, "")
+      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\b/gi, "Ritmo")
+      .trim();
+  } else if (isRunPower && displayTarget) {
+    displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -111,13 +138,19 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                 </span>
               </div>
               <h4 className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
-                {workout.workoutName.replace(/\[.*?\]\s*/g, "")}
+                {displayTitle}
               </h4>
-              {workout.powerTarget && (
+              {displayTarget && (
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/60">
-                    <Zap className="h-3 w-3 text-amber-500" />
-                    Objetivo: {workout.powerTarget}
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                    isRunPace
+                      ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60"
+                      : isBike
+                      ? "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60"
+                      : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60"
+                  }`}>
+                    {isRunPace ? <Timer className="h-3 w-3 text-emerald-500" /> : <Zap className={`h-3 w-3 ${isBike ? "text-sky-500" : "text-amber-500"}`} />}
+                    Objetivo: {displayTarget}
                   </span>
                 </div>
               )}
@@ -238,7 +271,16 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               });
             }
             if (!isRunPower && workout.discipline === "Carrera") {
-              return line.replace(/\s*\(\d+W\)/gi, "").replace(/%\s*(?:stryd\s*)?(?:ftp|cp)/gi, "% Pace").replace(/\bStryd\s*CP\b/gi, "Pace");
+              return line
+                .replace(/\s*\(\d+\s*W\)/gi, "")
+                .replace(/\b\d+\s*W\b\s*/gi, "")
+                .replace(/%\s*(?:stryd\s*)?(?:ftp|cp)/gi, "% Pace")
+                .replace(/@\s*(\d+(?:-\d+)?)\s*%\s*(?:ftp|cp)/gi, "@ $1% Pace")
+                .replace(/\bStryd\s*CP\b/gi, "Pace")
+                .replace(/\bStryd\b/gi, "Ritmo");
+            }
+            if (isRunPower && workout.discipline === "Carrera") {
+              return line.replace(/%\s*FTP\b/gi, "% CP");
             }
             return line;
           }).join("\n");

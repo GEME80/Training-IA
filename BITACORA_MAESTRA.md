@@ -5287,5 +5287,66 @@ flowchart TD
 - **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
   * `src/components/macrocycle/WorkoutDetailModal.tsx`: **345 LOC**.
 
+---
+
+## [2026-10-02] - Versión 4.00: Curvas de Rendimiento Multi-Disciplina, Mejores Esfuerzos de Ritmo hasta 42K (Maratón), Armonización de Umbrales Fisiológicos, Purga Universal de Competiciones y Ergonomía Móvil Extrema (Grid 3x2)
+
+### 69.1. Resumen de Mejoras y Ajustes de Arquitectura
+
+1. **Curvas de Rendimiento Multi-Disciplina e Ingesta Real desde Intervals.icu (`AthletePhysiologyView.tsx` & `/api/athlete-curves`):**
+   - **Eliminación de Pestaña "Todos los Deportes":** Se suprimió la pestaña genérica unificada que provocaba colisiones métricas entre vatios, ritmos y brazadas.
+   - **Especialización por Deporte:**
+     * **Ciclismo:** Curva de Potencia Crítica (Mean Maximal Power - MMP) expresada en vatios absolutos ($W$) y potencia relativa ($W/\text{kg}$).
+     * **Carrera:** Doble modalidad conmutativa: Curva de Potencia de Carrera Stryd ($W$ y $W/\text{kg}$) para atletas con footpod, y Curva de Ritmo / Pace ($\text{min/km}$) para corredores bajo metodología Daniels.
+     * **Natación:** Zonas y ritmos normalizados por $100\text{m}$ derivados del CSS.
+   - **Ingesta Real de Telemetría:** Conexión directa a los endpoints de Intervals.icu (`/athlete/{id}/power-curves`, `activities`) garantizando que las curvas reflejen los mejores esfuerzos históricos y de temporada reales del atleta en lugar de datasets vacíos o genéricos.
+
+2. **Tabla Especializada de Mejores Esfuerzos por Ritmo (`PaceBestEffortsTable.tsx`) y Extensión hasta 42K (Maratón):**
+   - **Desacoplamiento Métrico:** Anteriormente, al alternar a la curva de ritmo en carrera, la tabla inferior continuaba proyectando esfuerzos en potencia ($W$). Se diseñó e implementó el componente dedicado `PaceBestEffortsTable.tsx`, calculando de forma fidedigna los tiempos netos (`hh:mm:ss` / `mm:ss`) y el ritmo promedio en `min/km` para cada hito de carrera.
+   - **Extensión Completa de Hitos hasta 42.2K:** Cobertura exhaustiva de distancias estándar: $400\text{m}$, $1\text{km}$, $1\text{ mi}$, $3\text{km}$, $5\text{km}$, $10\text{km}$, $15\text{km}$, $21.1\text{km}$ (Media Maratón) y **$42.2\text{km}$ (Maratón)**.
+   - **Diseño Responsivo Fluido:** Adaptación de las gráficas SVG de curvas y de las tablas de mejores esfuerzos con espaciados y tipografía responsiva (`text-xs sm:text-sm`), garantizando visualización sin desbordamiento horizontal en smartphones.
+
+3. **Persistencia Fisiológica Integral y Armonización de Umbrales (`AthleteProfileHeroCard.tsx`, `/api/profile`, Firestore):**
+   - **Persistencia del CSS de Natación:** Detección y corrección de la anomalía donde el CSS de nado permanecía fijado en $1:45\text{/100m}$. Se aseguró el ciclo completo de lectura/escritura bidireccional entre la interfaz visual, `/api/profile` y Firestore, garantizando que el ritmo configurado por el atleta persista y se recupere fielmente.
+   - **Armonización de FTP de Ciclismo:** Eliminación definitiva de incongruencias numéricas en el perfil de Germán Morales (donde coexistían valores de $226\text{W}$, $228\text{W}$ y $240\text{W}$). Se consolidó **$228\text{W}$** como la Fuente Única de Verdad (SSOT) en tarjetas visuales, temporadas y parámetros biométricos.
+
+4. **Depuración de Calendario de Competiciones & Purga Universal de Entrenamientos Camuflados (`SeasonCurveChart.tsx`, `seasonPlanHelpers.ts`, `SeasonRacesTab.tsx`):**
+   - **Gráfica de Temporada ("Mi Temporada"):** Supresión del círculo flotante animado (`animate-ping`) en `SeasonCurveChart.tsx` que aparecía desplazado del trazado de la curva.
+   - **Deduplicación Fonético-Textual de Carreras:** Implementación de `isSameRace` y `normalizeRaceText` en `seasonPlanHelpers.ts` y `SeasonRacesTab.tsx`, erradicando la duplicación donde la carrera objetivo primaria (ej. Maratón de Tokio) se mostraba adicionalmente en el listado de carreras secundarias o de preparación.
+   - **Filtrado Temporal de Competiciones Pasadas:** Filtro dinámico (`date < todayStr`) que excluye competiciones ya disputadas del carrusel activo de objetivos futuros, eliminando badges anacrónicos como "¡Hoy!".
+   - **Purga Universal de Entrenamientos Camuflados (`isWorkoutSession`):** Heurística fisiológica universal que inspecciona y purga sesiones de entrenamiento que se filtraban al listado de competiciones (caso observado en el atleta George Schmitt, beneficiando a todos los atletas del sistema). Detecta y descarta eventos clasificados con `category: "WORKOUT"`, prefijos de microciclo (`S\d+:`, `W\d+:`), términos de rutina (`movilidad`, `descarga`, `activación`) y marcas de duración en el título (`(20m)`).
+
+5. **Reingeniería de Ergonomía Móvil Extrema (Reducción de Altura > 60%):**
+   - **Pestañas del Dashboard (`AthleteDashboardOverview.tsx`):** Compactación del selector de vistas ("Resumen & Calendario" y "Estado de Forma & Evolución"), transformándolo en una cuadrícula responsiva de 2 columnas (`grid grid-cols-2 sm:inline-flex`) con tipografía densa (`text-xs`) y padding reducido.
+   - **Head Coach Fisiológico:**
+     * `HeadCoachHeader.tsx`: Supresión de badges fisiológicos redundantes (`CTL`, `ATL`, `TSB`), maximizando el espacio vertical disponible en smartphones sin restar contexto, ya que estas métricas se aprecian en el Dashboard.
+     * `HeadCoachWeekSelector.tsx`: Compactación de botones de navegación de microciclo ("Semana en Curso", "Próxima Semana") a tamaño de botón táctil denso (`py-1 px-2 text-[11px]`).
+     * `HeadCoachMessageItem.tsx`: Reducción del padding de burbujas de diálogo (`p-3 sm:p-4`) y conversión de respuestas rápidas a chips compactos.
+   - **Hero Card del Perfil del Atleta (`AthleteProfileHeroCard.tsx`):**
+     * **Arquitectura Ultra-Densa Grid 3x2:** Sustitución del diseño anterior de 2 columnas x 3 filas (que superaba los $400\text{px}$ de altura en móvil) por un sistema optimizado de **3 columnas x 2 filas** (`grid-cols-3`).
+     * **Cabecera Bio de Una Sola Línea:** Fusión de avatar, nombre, biotipo (peso/altura) y selector de modalidad de carrera (`⚡ Potencia | ⏱️ Ritmo`) en un solo renglón compacto.
+     * **Tarjetas "Tap-to-Edit" con Indicador Sutil `✎`:** Visualización de métricas fisiológicas con tipografía limpia (`text-base sm:text-lg font-bold`), reduciendo la altura vertical total a $\approx 155\text{px}$ (ahorro de más del $60\%$ de viewport en dispositivos móviles).
+   - **Zonas y Fisiología (`AthletePhysiologyView.tsx` & `AthleteZonesTab.tsx`):**
+     * Compactación de pastillas de sub-pestañas y reducción de espaciado vertical (`space-y-3 sm:space-y-6`), posicionando las tablas de zonas fisiológicas directamente en el área visible inicial en pantallas de smartphones.
+
+### 69.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (0 errores)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Invarianza Incondicional Tokio 2027 (Germán Morales):** Preservación estricta de las 25 semanas de macrociclo, 336W Stryd CP ($\Delta\text{TSS} = 0, \Delta\text{Km} = 0$).
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/components/profile/AthleteProfileHeroCard.tsx`: **295 LOC**
+  * `src/components/profile/PaceBestEffortsTable.tsx`: **186 LOC**
+  * `src/components/profile/AthleteZonesTab.tsx`: **132 LOC**
+  * `src/components/dashboard/AthletePhysiologyView.tsx`: **339 LOC**
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: **241 LOC**
+  * `src/components/dashboard/pmc/AthletePMCKpiCards.tsx`: **93 LOC**
+  * `src/components/dashboard/headcoach/HeadCoachHeader.tsx`: **37 LOC**
+  * `src/components/dashboard/headcoach/HeadCoachWeekSelector.tsx`: **100 LOC**
+  * `src/components/dashboard/headcoach/HeadCoachMessageItem.tsx`: **328 LOC**
+  * `src/components/season/wizard/SeasonCurveChart.tsx`: **290 LOC**
+  * `src/components/season/SeasonRacesTab.tsx`: **343 LOC**
+  * `src/components/season/SeasonPrimaryRaceCard.tsx`: **72 LOC**
+  * `src/lib/physiology/seasonPlanHelpers.ts`: **201 LOC**
+
 
 

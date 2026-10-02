@@ -1,9 +1,27 @@
-# ⚡ SGEA Pro (v3.99) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.00) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 📱 **Ergonomía Móvil Extrema & Sistema Ultra-Denso de Umbrales (Grid 3x2) (v4.00):**
+  - **Reducción de Altura > 60% en Perfil Fisiológico (`AthleteProfileHeroCard`):** Sustitución del antiguo layout vertical (que requería > 400px en smartphones) por una matriz compacta de **3 columnas x 2 filas** (`grid-cols-3`). Fusión de biotipo y selector de modalidad (`⚡ Potencia | ⏱️ Ritmo`) en una sola línea de cabecera y tarjetas táctiles *tap-to-edit* con indicador sutil `✎` (~155px de altura total).
+  - **Optimización de Pestañas del Dashboard (`AthleteDashboardOverview`):** Compactación de las vistas "Resumen & Calendario" y "Estado de Forma & Evolución" a un selector responsivo en cuadrícula móvil (`grid grid-cols-2 sm:inline-flex`), minimizando padding y escala tipográfica.
+  - **Depuración Vertical en Head Coach (`HeadCoachHeader` & `HeadCoachWeekSelector`):** Supresión de badges fisiológicos redundantes (`CTL`, `ATL`, `TSB`), compactación de botones de navegación temporal ("Semana en Curso", "Próxima Semana") y chips táctiles de respuesta rápida.
+  - **Visualización Inmediata de Zonas Fisiológicas (`AthleteZonesTab`):** Compactación de pastillas y márgenes verticales (`space-y-3 sm:space-y-6`) para que las tablas de zonas se sitúen en el viewport visible inicial sin desplazamiento forzado en móviles.
+
+- 📊 **Curvas de Rendimiento Multi-Disciplina & Mejores Esfuerzos de Ritmo hasta 42K (v4.00):**
+  - **Erradicación de "Todos los Deportes" & Especialización por Disciplina:** Vistas independientes y limpias para Ciclismo (Curva de Potencia MMP en W y W/kg), Carrera (Curva de Potencia Stryd y Curva de Ritmo Daniels) y Natación (Zonas CSS). Ingesta real directa desde la API de Intervals.icu (`/athlete/{id}/power-curves`).
+  - **Tabla Especializada de Mejores Esfuerzos de Ritmo (`PaceBestEffortsTable`):** Desacoplamiento métrico para que los corredores por ritmo visualicen sus mejores esfuerzos en tiempo neto (`hh:mm:ss`) y ritmo medio (`min/km`) en lugar de vatios.
+  - **Extensión Exhaustiva hasta Maratón (42.2K):** Inclusión de distancias canónicas completas: 400m, 1km, 1 mi, 3km, 5km, 10km, 15km, 21.1K (Media Maratón) y **42.2K (Maratón)** con renderizado SVG y tabular 100% responsivo.
+
+- 🛡️ **Armonización Fisiológica & Purga Universal de Competiciones (v4.00):**
+  - **Persistencia Fidedigna de Natación CSS:** Corrección del ciclo de persistencia en Firestore, `/api/profile` y la interfaz de usuario, erradicando el valor estático de 1:45/100m para guardar y recuperar el ritmo de CSS real configurado por el atleta.
+  - **Unificación Canónica de FTP de Ciclismo:** Eliminación de inconsistencias numéricas cruzadas, fijando **228W** como la Fuente Única de Verdad (SSOT) en tarjetas, macrociclo y telemetría de Germán Morales.
+  - **Deduplicación Fonético-Textual de Carreras (`seasonPlanHelpers.ts`):** Prevención de duplicados de la carrera objetivo primaria (ej. Maratón de Tokio) en el carrusel de carreras secundarias mediante `isSameRace` y `normalizeRaceText`.
+  - **Exclusión de Competiciones Pasadas:** Filtro temporal reactivo (`date < todayStr`) que elimina carreras ya disputadas del carrusel de objetivos futuros.
+  - **Purga Fisiológica Universal de Entrenamientos Camuflados (`isWorkoutSession`):** Detección y descarte automático de sesiones de entrenamiento en el panel de competiciones para todos los atletas (ej. George Schmitt), filtrando prefijos de microciclo (`S\d+:`, `W\d+:`), rutinas de movilidad y duraciones en el título.
 
 - ⏱️ **Universalidad Fisiológica Multi-Atleta & Conmutación Dinámica de Modalidades (v3.99):**
   - **Arquitectura Reactiva Multi-Modalidad:** Erradicación de ataduras estáticas o hardcoded. Cada deportista conmuta dinámicamente entre Carrera por Potencia Stryd (`POWER`), Carrera por Ritmo Jack Daniels (`PACE`), Ciclismo por FTP (`BIKE`) y Natación por CSS (`SWIM`) según su perfil biométrico en Firestore (`runningTrainingMode`, `hasRunningPowerMeter`, `runFtp`, `runThresholdPaceStr`, `bikeFtp`, `swimCssStr`).

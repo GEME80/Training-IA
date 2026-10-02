@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.99)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.00)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.99).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.00).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.00: Curvas de Rendimiento Multi-Disciplina, Mejores Esfuerzos de Ritmo hasta 42K (Maratón), Armonización Fisiológica, Purga Universal de Competiciones y Ergonomía Móvil Extrema (Grid 3x2):
+  * Ergonomía Móvil Extrema (Ahorro > 60% viewport): Grid 3x2 ultra-compacto en AthleteProfileHeroCard (~155px), bio en una línea con switch de modalidad, tabs responsivas en AthleteDashboardOverview (grid-cols-2), eliminación de badges redundantes en HeadCoachHeader y botones compactos en HeadCoachWeekSelector.
+  * Curvas de Rendimiento Multi-Disciplina e Ingesta Real: Pestaña "Todos los Deportes" eliminada. Especialización limpia para Ciclismo (MMP W y W/kg), Carrera (Potencia Stryd y Ritmo Daniels) y Natación (CSS). Ingesta real desde API Intervals.icu.
+  * Tabla de Mejores Esfuerzos por Ritmo (`PaceBestEffortsTable`) & Extensión 42.2K: Tiempos netos y min/km desacoplados de potencia, cubriendo desde 400m hasta Maratón completo (42.2K) con diseño responsivo.
+  * Persistencia & Armonización de Umbrales: Persistencia reactiva del CSS de Natación en Firestore/API/UI (erradicado 1:45 fijo) y FTP de Ciclismo consolidado en 228W como SSOT para Germán Morales.
+  * Purga Universal de Competiciones (`isWorkoutSession`): Eliminación del círculo flotante en SeasonCurveChart, deduplicación de carreras primarias (`isSameRace`) y filtrado estricto de sesiones de entrenamiento camufladas en carreras para todos los atletas (ej. George Schmitt).
 - Versión 3.99: Universalidad Fisiológica Multi-Atleta, Rigor Matemático Inverso en % Pace y Renderizado de Ritmos Dinámicos en Detalle de Sesión:
   * Universalidad y Reactividad Total: Sistema multi-atleta dinámico sin ataduras estáticas; conmuta automáticamente entre Carrera por Potencia Stryd (POWER), Carrera por Ritmo Jack Daniels (PACE), Ciclismo por FTP (BIKE) y Natación por CSS (SWIM) según el perfil de Firestore.
   * Insignias Vivas en Zonas y Perfil: Activación de 'ACTIVA RITMO' en verde esmeralda y atenuación de potencia (CP/FTP) para corredores de ritmo. Preservación estricta de 'ACTIVA RUN' y cálculo de vatios en tiempo real para corredores con Stryd (ej. Germán Morales, 336W).

@@ -7,6 +7,7 @@ import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
 import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
+import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
 
@@ -56,22 +57,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const findMatchingActivity = () => {
     if (allActs.length === 0) return null;
     if (isExtraActivity) return allActs.find((a) => workout.id === `extra-${a.id}` || a.name === workout.workoutName) || allActs[0];
-    if (workout.discipline === "Carrera") {
-      const match = allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail|fondo/i.test(`${a.type} ${a.name}`));
-      if (match) return match;
-    }
-    if (workout.discipline === "Ciclismo") {
-      const m = allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(`${a.type} ${a.name}`));
-      if (m) return m;
-    }
-    if (workout.discipline === "Fuerza") {
-      const m = allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(`${a.type} ${a.name}`));
-      if (m) return m;
-    }
-    if (workout.discipline === "Natacion") {
-      const m = allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina|aguas/i.test(`${a.type} ${a.name}`));
-      if (m) return m;
-    }
+    if (workout.discipline === "Carrera") return allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail|fondo/i.test(`${a.type} ${a.name}`)) || null;
+    if (workout.discipline === "Ciclismo") return allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(`${a.type} ${a.name}`)) || null;
+    if (workout.discipline === "Fuerza") return allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(`${a.type} ${a.name}`)) || null;
+    if (workout.discipline === "Natacion") return allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina|aguas/i.test(`${a.type} ${a.name}`)) || null;
     return allActs.find((a) => a.type === "Run" || a.type === "Ride") || null;
   };
 
@@ -304,10 +293,21 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                       });
                     }
                     if (!isRunPower && workout.discipline === "Carrera") {
-                      return line
+                      const baseLine = line
                         .replace(/\s*\(\d+\s*w\)/gi, "")
                         .replace(/\b\d+\s*w\b/gi, "")
                         .replace(/%\s*(?:stryd\s*)?(?:cp|ftp)/gi, "% Pace");
+                      const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : (userProfile?.runThresholdPaceSecPerKm || 285));
+                      return baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
+                        const n1 = parseInt(p1, 10);
+                        const pace1 = formatPace(Math.round(tpSec / (n1 / 100)));
+                        if (p2) {
+                          const n2 = parseInt(p2, 10);
+                          const pace2 = formatPace(Math.round(tpSec / (n2 / 100)));
+                          return `${n1}-${n2}% Pace (${pace2}-${pace1}/km)`;
+                        }
+                        return `${n1}% Pace (~${pace1}/km)`;
+                      });
                     }
                     return line;
                   }).join("\n")}

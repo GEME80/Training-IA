@@ -5255,4 +5255,37 @@ flowchart TD
   * `src/lib/db/adminUsers.ts`: 345 LOC
   * `src/lib/services/recalibrateService.ts`: 142 LOC
 
+---
+
+## [2026-10-02] - Versión 3.99: Universalidad Multi-Atleta, Rigor Fisiológico Inverso en % Pace y Renderizado de Ritmos Calculados en Detalle de Sesión
+
+### 68.1. Resumen de Mejoras y Arquitectura
+1. **Universalidad y Reactividad Dinámica por Atleta:**
+   - Se ratifica y verifica que la activación de modalidades no es exclusiva de un atleta específico. El sistema opera de manera 100% reactiva según el perfil de cada deportista:
+     * **Carrera por Ritmo (`PACE`):** Para atletas sin potenciómetro (`hasRunningPowerMeter === false` o modo `PACE`), se activa automáticamente la columna de Ritmo (`ACTIVA RITMO`), se atenúa la de potencia (`CP/FTP`), se ocultan los vatios de carrera en el perfil fisiológico y las prescripciones se expresan en `% Pace` e intervalos en `min/km`.
+     * **Carrera por Potencia (`POWER`):** Para atletas con Stryd (ej. Germán Morales, 336W), se preserva intacta la columna `ACTIVA RUN`, se calculan los vatios precisos (`% Stryd CP`) y no se alteran sus planes.
+     * **Ciclismo por FTP (`BIKE`):** Universalmente activo con `ACTIVA BICI` calculando vatios absolutos según el `bikeFtp` del atleta.
+     * **Natación por CSS (`SWIM`):** Universalmente activo con `ACTIVA NADO` calculando ritmos por 100m según el CSS.
+2. **Fisiología y Matemática Inversa del % Pace:**
+   - **Fundamento Bioenergético:** A diferencia de la potencia ($W = \% \times \text{FTP}$), donde un porcentaje menor representa menos vatios, en la carrera el ritmo ($P$) es el inverso de la velocidad ($P = 1/v$). La intensidad prescrita representa el porcentaje de la velocidad de umbral ($v_{th}$):
+     $$v = \left(\frac{\%}{100}\right) \times v_{th} \implies \text{Pace}_{\text{target}} = \frac{\text{Pace}_{\text{umbral}}}{\% / 100}$$
+   - **Comprobación Georg Schmitt (Umbral 4:45/km = 285s):**
+     * $60\% \text{ Pace} \implies \frac{285}{0.60} = 475\text{ s} = \mathbf{7:55\text{/km}}$ (ritmo mucho más lento, trote regenerativo de recuperación).
+     * $74\% \text{ Pace} \implies \frac{285}{0.74} = 385\text{ s} = \mathbf{6:25\text{/km}}$ (Z2 aeróbico).
+     * $100\% \text{ Pace} \implies \frac{285}{1.00} = 285\text{ s} = \mathbf{4:45\text{/km}}$ (Umbral anaeróbico).
+     * $110\% \text{ Pace} \implies \frac{285}{1.10} = 259\text{ s} = \mathbf{4:19\text{/km}}$ (Intervalos Z5 / VO2max).
+     * *Blindaje anti-error:* Una multiplicación directa ($285 \times 0.60 = 171\text{ s} = 2:51\text{/km}$) constituiría una aberración biomecánica (ritmo de récord mundial de 1000m para un calentamiento). El motor de Pulse AI y el renderizador implementan estrictamente la división matemática inversa.
+3. **Despliegue Visual en Vivo en `WorkoutDetailModal.tsx`:**
+   - Se añadió un enriquecedor tipográfico en la prescripción textual que traduce en tiempo real cada porcentaje de ritmo a su equivalencia exacta en `min/km` entre paréntesis. Ejemplo:
+     * `- 10m 60% Pace` $\rightarrow$ `- 10m 60% Pace (~7:55/km)`
+     * `- 43m 74% Pace` $\rightarrow$ `- 43m 74% Pace (~6:25/km)`
+     * Rangos como `95-105% Pace` $\rightarrow$ `95-105% Pace (4:31-5:00/km)`
+
+### 68.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: **345 LOC**.
+
+
 

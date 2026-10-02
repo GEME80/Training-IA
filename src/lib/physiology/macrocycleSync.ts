@@ -110,14 +110,30 @@ export function syncAndCalibrateBlueprint(
     options.primaryRace?.distance === "42k";
 
   // Detección de fondos obsoletos o violaciones a límites fisiológicos:
-  // 1. Cualquier fondo de entrenamiento en running > 165 min (incompatible con Canova/Daniels/Pfitzinger)
-  // 2. Semana de carrera con 210 min o rotulada como "Tirada dominical"
-  // 3. Fondo cumbre en maratón > 155 min para atleta intermedio/máster
+  // 1. Detección de maratón en atletas no-maratonistas (ej. Canova o >65m en triatlón corto)
+  // 2. Cualquier fondo de entrenamiento en running > 165 min (incompatible con Canova/Daniels/Pfitzinger)
+  // 3. Semana de carrera con 210 min o rotulada como "Tirada dominical"
   const hasOutdatedLongRuns = weeks.some((w) => {
     const isRaceWeek = w.microcycleType === "COMPETICION" || w.phase === "RACE_WEEK" || w.countdownWeeks === 1;
+    const workoutText = ((w as any).keyWorkout || w.focusDescription || "").toLowerCase();
+
+    if (!isMarathonOrRunning) {
+      if (
+        workoutText.includes("canova") ||
+        workoutText.includes("pfitzinger") ||
+        workoutText.includes("maratón") ||
+        workoutText.includes("maraton")
+      ) {
+        return true;
+      }
+      const isShortTri =
+        syncedBp.primaryRace?.distance === "triathlon_short" ||
+        options.goalType === "TRIATLON_CORTO";
+      if (isShortTri && w.maxLongRunMinutes > 65) return true;
+    }
+
     if (isRaceWeek) {
-      const workoutText = (w as any).keyWorkout || w.focusDescription || "";
-      return w.maxLongRunMinutes === 210 || workoutText.includes("Tirada dominical");
+      return w.maxLongRunMinutes === 210 || workoutText.includes("tirada dominical");
     }
     return isMarathonOrRunning && w.maxLongRunMinutes > 165;
   });
@@ -130,9 +146,10 @@ export function syncAndCalibrateBlueprint(
   // 1. El atleta tiene historial de alto rendimiento (peakCtl >= 60) pero su plan actual no alcanza el TSS cumbre esperado
   // 2. El blueprint carece de targetPeakCtl (generado con versión previa del motor)
   // 3. El blueprint quedó guardado con periodización 2:1 o sin especificar cuando corresponde 3:1 estándar
-  const needsCtlUpgrade = !!(
+  const needsCtlUpgrade = !syncedBp.targetPeakCtl || (
+    !isMarathonOrRunning && weeks.some((w) => ((w as any).keyWorkout || "").toLowerCase().includes("canova"))
+  ) || !!(
     (hist?.peakCtlLastYear && hist.peakCtlLastYear >= 60 && currentMaxTss < expectedMinPeakTss) ||
-    !syncedBp.targetPeakCtl ||
     syncedBp.periodization === "2:1" ||
     !syncedBp.periodization
   );
@@ -143,7 +160,13 @@ export function syncAndCalibrateBlueprint(
       const distanceType =
         syncedBp.primaryRace?.distance ||
         options.primaryRace?.distance ||
-        (options.goalType === "TRIATLON_703" ? "triathlon_703" : "42k");
+        (options.goalType === "TRIATLON_703"
+          ? "triathlon_703"
+          : options.goalType === "TRIATLON_CORTO"
+          ? "triathlon_short"
+          : isMarathonOrRunning
+          ? "42k"
+          : "10k");
 
       const resolvedPeriodization =
         syncedBp.periodization === "2:1" || !syncedBp.periodization

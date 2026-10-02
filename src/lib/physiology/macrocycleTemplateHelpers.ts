@@ -312,3 +312,27 @@ export function resolveFridayFartlek(runFtp?: number) {
       : "Warmup\n- 15m 70% Pace\n\nMain (Fartlek Ágil)\n6x\n- 1m 88-92% Pace\n- 2m 68% Pace\n\nCooldown\n- 12m 65% Pace",
   };
 }
+
+export function resolveCuratedModelForWeek(
+  distanceType: MacrocycleDistanceType | undefined,
+  weekFocus: string | undefined,
+  safeAvailability: WeeklyAvailabilityMap
+) {
+  let resolved = distanceType;
+  if (!resolved) {
+    const focusStr = (weekFocus || "").toLowerCase();
+    const hasSwim = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /natacion|swim/i.test(d)));
+    const hasRide = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
+    const hasRun = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /carrera|run/i.test(d)));
+
+    if (/70\.3|703|medio iron/i.test(focusStr)) resolved = "triathlon_703";
+    else if (/ironman|140\.6|1406/i.test(focusStr)) resolved = "triathlon_1406";
+    else if (hasSwim && hasRide) resolved = "triathlon_short";
+    else if (hasRide && !hasRun) resolved = "cycling_fondo";
+    else if (/marat|marath|42k|tokio|boston|valencia/i.test(focusStr)) resolved = "42k";
+    else if (/media|half|21k/i.test(focusStr)) resolved = "21k";
+    else resolved = "10k";
+  }
+  return resolveTrainingModel({ targetDistance: resolved, raceDistance: resolved, customGoal: weekFocus });
+}
+

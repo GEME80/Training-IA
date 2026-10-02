@@ -6,8 +6,13 @@ export async function executeRecalibrateBoth() {
 
   // 1. GERMÁN MORALES (Maratón de Tokio 2027)
   const germanMatrix = {
-    Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Ciclismo"],
-    Jueves: ["Fuerza"], Viernes: ["Carrera"], Sábado: ["Ciclismo"], Domingo: ["Carrera"],
+    Lunes: ["Descanso"],
+    Martes: ["Ciclismo"],
+    Miércoles: ["Carrera", "Fuerza"],
+    Jueves: ["Ciclismo", "Fuerza"],
+    Viernes: ["Carrera", "Fuerza"],
+    Sábado: ["Ciclismo"],
+    Domingo: ["Carrera"],
   };
 
   const germanBlueprint = generateCustomMacrocycleBlueprint({
@@ -71,8 +76,9 @@ export async function executeRecalibrateBoth() {
   });
 
   const juanMacroId = await saveMacrocycleToFirestore("juan.vasquez.1983@gmail.com", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
+  await saveMacrocycleToFirestore("i444697", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
   results.push({
-    athlete: "Juan Pablo Vásquez", athleteId: "juan.vasquez.1983@gmail.com", macrocycleId: juanMacroId,
+    athlete: "Juan Pablo Vásquez", athleteId: "i444697", macrocycleId: juanMacroId,
     weeks: juanBlueprint.totalWeeks, primaryRace: juanBlueprint.primaryRace?.name,
   });
 

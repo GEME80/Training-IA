@@ -313,12 +313,15 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                       onChange={(e) => setRaceDistance(e.target.value)}
                       className="mt-1 w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
                     >
+                      <option value="triathlon_short">Triatlón Sprint / Olímpico</option>
+                      <option value="triathlon_703">Triatlón Media Distancia (70.3)</option>
+                      <option value="triathlon_1406">Triatlón Larga Distancia (140.6 Full)</option>
+                      <option value="cycling_fondo">Gran Fondo Ciclismo</option>
                       <option value="42k">Maratón (42.195 km)</option>
                       <option value="21k">Media Maratón (21.097 km)</option>
                       <option value="10k">10K Ruta / Pista</option>
                       <option value="5k">5K Velocidad</option>
-                      <option value="cycling_fondo">Gran Fondo Ciclismo</option>
-                      <option value="triathlon_703">Triatlón Media Distancia (70.3)</option>
+                      <option value="trail_50k">Trail & Montaña</option>
                     </select>
                   </div>
 

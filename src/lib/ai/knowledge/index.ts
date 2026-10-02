@@ -28,23 +28,11 @@ export * from "./strengthAndCrossModels";
 export * from "./workoutPools";
 
 export const ALL_CURATED_TRAINING_MODELS: Record<SportDisciplineGoal, CuratedTrainingModel> = {
-  MARATHON_42K: MARATHON_42K_MODEL,
-  HALF_MARATHON_21K: HALF_MARATHON_21K_MODEL,
-  TEN_K_ROAD: TEN_K_ROAD_MODEL,
-  FIVE_K_SPEED: FIVE_K_SPEED_MODEL,
-  CYCLING_GRAN_FONDO: CYCLING_GRAN_FONDO_MODEL,
-  CYCLING_CLIMBING: CYCLING_CLIMBING_MODEL,
-  CYCLING_CRITERIUM: CYCLING_CRITERIUM_MODEL,
-  TRIATHLON_70_3: TRIATHLON_70_3_MODEL,
-  TRIATHLON_SHORT: TRIATHLON_SHORT_MODEL,
-  TRIATHLON_140_6: TRIATHLON_140_6_MODEL,
-  TRAIL_ULTRA: TRAIL_ULTRA_MODEL,
-  BASE_GPP: BASE_GPP_MODEL,
-  GENERAL_BUILD: GENERAL_BUILD_MODEL,
-  SPEED_BLOCK: SPEED_BLOCK_MODEL,
-  POST_RACE_DELOAD: POST_RACE_DELOAD_MODEL,
-  INJURY_REHAB: INJURY_REHAB_MODEL,
-  BASE_LONGEVITY: BASE_LONGEVITY_MODEL,
+  MARATHON_42K: MARATHON_42K_MODEL, HALF_MARATHON_21K: HALF_MARATHON_21K_MODEL, TEN_K_ROAD: TEN_K_ROAD_MODEL, FIVE_K_SPEED: FIVE_K_SPEED_MODEL,
+  CYCLING_GRAN_FONDO: CYCLING_GRAN_FONDO_MODEL, CYCLING_CLIMBING: CYCLING_CLIMBING_MODEL, CYCLING_CRITERIUM: CYCLING_CRITERIUM_MODEL,
+  TRIATHLON_70_3: TRIATHLON_70_3_MODEL, TRIATHLON_SHORT: TRIATHLON_SHORT_MODEL, TRIATHLON_140_6: TRIATHLON_140_6_MODEL,
+  TRAIL_ULTRA: TRAIL_ULTRA_MODEL, BASE_GPP: BASE_GPP_MODEL, GENERAL_BUILD: GENERAL_BUILD_MODEL, SPEED_BLOCK: SPEED_BLOCK_MODEL,
+  POST_RACE_DELOAD: POST_RACE_DELOAD_MODEL, INJURY_REHAB: INJURY_REHAB_MODEL, BASE_LONGEVITY: BASE_LONGEVITY_MODEL,
 };
 
 /**
@@ -59,28 +47,32 @@ export function resolveTrainingModel(params: {
   customGoal?: string;
 }): CuratedTrainingModel {
   const dist = (params.targetDistance || params.raceDistance || "").toLowerCase();
+  if (dist === "42k") return MARATHON_42K_MODEL;
+  if (dist === "21k") return HALF_MARATHON_21K_MODEL;
+  if (dist === "10k") return TEN_K_ROAD_MODEL;
+  if (dist === "5k") return FIVE_K_SPEED_MODEL;
+  if (dist === "triathlon_short") return TRIATHLON_SHORT_MODEL;
+  if (dist === "triathlon_703") return TRIATHLON_70_3_MODEL;
+  if (dist === "triathlon_1406") return TRIATHLON_140_6_MODEL;
+  if (dist === "cycling_fondo") return CYCLING_GRAN_FONDO_MODEL;
+  if (dist === "cycling_climbing") return CYCLING_CLIMBING_MODEL;
+  if (dist === "cycling_criterium") return CYCLING_CRITERIUM_MODEL;
+  if (dist === "trail_50k") return TRAIL_ULTRA_MODEL;
+  if (dist === "general_build") return GENERAL_BUILD_MODEL;
+  if (dist === "base_building") return BASE_GPP_MODEL;
+  if (dist === "speed_block") return SPEED_BLOCK_MODEL;
+
   const moment = (params.athleteMoment || "").toLowerCase();
   const approach = (params.trainingApproach || "").toLowerCase();
   const name = (params.raceName || params.customGoal || "").toLowerCase();
-
   const combined = `${dist} ${moment} ${approach} ${name}`;
 
   // 1. Momentos del Atleta / Fuera de Competición
-  if (combined.includes("rehab") || combined.includes("lesion") || combined.includes("caco") || combined.includes("injury") || combined.includes("reacondicionamiento")) {
-    return INJURY_REHAB_MODEL;
-  }
-  if (combined.includes("post_race") || combined.includes("post-race") || combined.includes("recupera") || combined.includes("descarga") || combined.includes("deload")) {
-    return POST_RACE_DELOAD_MODEL;
-  }
-  if (combined.includes("speed_block") || combined.includes("velocidad_pura") || combined.includes("zancada") || combined.includes("biomecanica")) {
-    return SPEED_BLOCK_MODEL;
-  }
-  if (combined.includes("general_build") || combined.includes("build_sin_carrera") || combined.includes("fuerza_potencia") || combined.includes("construccion_general")) {
-    return GENERAL_BUILD_MODEL;
-  }
-  if (combined.includes("base_gpp") || combined.includes("base_building") || combined.includes("pretemporada") || combined.includes("pre-ciclo") || combined.includes("gpp")) {
-    return BASE_GPP_MODEL;
-  }
+  if (/rehab|lesion|caco|injury/i.test(combined)) return INJURY_REHAB_MODEL;
+  if (/post_race|post-race|recupera|descarga|deload/i.test(combined)) return POST_RACE_DELOAD_MODEL;
+  if (/speed_block|velocidad_pura|zancada/i.test(combined)) return SPEED_BLOCK_MODEL;
+  if (/general_build|build_sin_carrera|fuerza_potencia/i.test(combined)) return GENERAL_BUILD_MODEL;
+  if (/base_gpp|base_building|pretemporada|gpp/i.test(combined)) return BASE_GPP_MODEL;
 
   // 2. Triatlón (Detección robusta multilingüe: Triseries, Tri-Series, Triathlon, Triatlón, Ironman)
   const isTriathlon = /triat|triath|triseries|tri-series|ironman|70\.3|703|140\.6|1406/i.test(combined);
@@ -99,11 +91,11 @@ export function resolveTrainingModel(params: {
   }
 
   // 4. Running
-  if (/\b42(\.2)?\s*k(m)?\b|marat|marath|boston|berlin|chicago|valencia|nueva york/i.test(combined)) {
-    return MARATHON_42K_MODEL;
-  }
   if (/\b21(\.1)?\s*k(m)?\b|media|half|medio marat/i.test(combined)) {
     return HALF_MARATHON_21K_MODEL;
+  }
+  if (/\b42(\.2)?\s*k(m)?\b|marat|marath|boston|berlin|chicago|valencia|nueva york/i.test(combined)) {
+    return MARATHON_42K_MODEL;
   }
   if (/\b10\s*k(m)?\b|ten_k|diez k/i.test(combined)) {
     return TEN_K_ROAD_MODEL;
@@ -128,7 +120,8 @@ export function resolveTrainingModel(params: {
     return BASE_LONGEVITY_MODEL;
   }
 
-  return MARATHON_42K_MODEL;
+  // 7. Fallback seguro: Si no hay distancia o carrera especificada, base 10K en ruta
+  return TEN_K_ROAD_MODEL;
 }
 
 /**
@@ -185,8 +178,13 @@ export function calculateProgressiveLongRun(
 
   // 1. Fase de Competición Oficial
   if (phase === "RACE_WEEK" || countdown === 1) {
-    const raceDist = model.targetDistanceKm || 42.2;
-    const raceMins = raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22;
+    const isTri = model.sportCategory === "Triathlon";
+    const raceDist = isTri
+      ? (model.modelId === "TRIATHLON_SHORT" ? 10 : model.modelId === "TRIATHLON_70_3" ? 21.1 : 42.2)
+      : (model.targetDistanceKm || 42.2);
+    const raceMins = isTri
+      ? (model.modelId === "TRIATHLON_SHORT" ? 50 : model.modelId === "TRIATHLON_70_3" ? 95 : 210)
+      : model.sportCategory === "Cycling" ? (model.longRunRules.peakMinutes || 240) : (raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22);
     const racePower = runFtp && runFtp > 0
       ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
       : rules.targetIntensityPercentCpOrFtp;
@@ -264,6 +262,9 @@ export function calculateProgressiveLongRun(
     countdown,
     isPeak,
     runFtp,
+    modelId: model.modelId,
+    sportCategory: model.sportCategory,
+    targetDistanceKm: model.targetDistanceKm,
   });
 
   return {

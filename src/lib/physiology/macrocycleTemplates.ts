@@ -10,6 +10,7 @@ import { resolveWorkoutAddons } from "./workoutEnhancers";
 import {
   getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
   resolveRaceWorkout, resolveWeekendRide, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
+  resolveCuratedModelForWeek,
 } from "./macrocycleTemplateHelpers";
 import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
@@ -39,7 +40,7 @@ export function generateWeekTemplate(
   const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
   const isRaceWeek = phase === "RACE_WEEK" || countdown === 1 || microcycleType === "COMPETICION";
 
-  const curatedModel = resolveTrainingModel({ targetDistance: distanceType || "42k", raceDistance: distanceType });
+  const curatedModel = resolveCuratedModelForWeek(distanceType, week.focusDescription, safeAvailability);
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
   const scheduledTests = [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
   const hasCycling = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
@@ -88,36 +89,19 @@ export function generateWeekTemplate(
       for (const disc of discList) {
         if (disc === "Descanso") continue;
         if (disc === "Natacion") {
-          result.push({
-            day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)",
-            action: "MANTENER", durationMinutes: 25, tss: 18, powerTarget: "Sensibilidad Acuática", justification: "Contacto suave y soltura pre-carrera.",
-            workoutDoc: "Warmup\n- 200m 70% Pace\n\nMain\n4x\n- 25m 95% Pace\n- 25m 60% Pace\n\nCooldown\n- 100m 60% Pace", isRestDay: false,
-          });
+          result.push({ day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18, powerTarget: "Sensibilidad Acuática", justification: "Contacto suave y soltura pre-carrera.", workoutDoc: "Warmup\n- 200m 70% Pace\n\nMain\n4x\n- 25m 95% Pace\n- 25m 60% Pace\n\nCooldown\n- 100m 60% Pace", isRestDay: false });
           continue;
         }
         if (disc === "Ciclismo") {
-          result.push({
-            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: "Pedaleo Ciclista de Soltura & Ajuste Mecánico (30m Z1)",
-            action: "MANTENER", durationMinutes: 30, tss: 18, powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.55)}W (55% FTP)` : "55% FTP",
-            justification: "Verificación de cambios, presión de ruedas y soltura de piernas.", workoutDoc: "Warmup\n- 10m 50% FTP\n\nMain\n- 15m 55% FTP con 2x30s 80% FTP\n\nCooldown\n- 5m 45% FTP", isRestDay: false,
-          });
+          result.push({ day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: "Pedaleo Ciclista de Soltura & Ajuste Mecánico (30m Z1)", action: "MANTENER", durationMinutes: 30, tss: 18, powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.55)}W (55% FTP)` : "55% FTP", justification: "Verificación de cambios, presión de ruedas y soltura de piernas.", workoutDoc: "Warmup\n- 10m 50% FTP\n\nMain\n- 15m 55% FTP con 2x30s 80% FTP\n\nCooldown\n- 5m 45% FTP", isRestDay: false });
           continue;
         }
         if (disc === "Fuerza") {
-          result.push({
-            day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: "Movilidad Articular & Activación Ligera (15m)",
-            action: "MANTENER", durationMinutes: 15, tss: 8, powerTarget: "Movilidad Articular", justification: "Descompresión articular y activación refleja sin carga externa.",
-            workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Hombros y Columna Torácica\n- 5m Respiración y Relajación", isRestDay: false,
-          });
+          result.push({ day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: "Movilidad Articular & Activación Ligera (15m)", action: "MANTENER", durationMinutes: 15, tss: 8, powerTarget: "Movilidad Articular", justification: "Descompresión articular y activación refleja sin carga externa.", workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Hombros y Columna Torácica\n- 5m Respiración y Relajación", isRestDay: false });
           continue;
         }
         if (disc === "Carrera") {
-          result.push({
-            day, date: dateStr, formattedDate, discipline: "Carrera",
-            workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER",
-            durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16, powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave",
-            justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 10m 70% CP\n3x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP", isRestDay: false,
-          });
+          result.push({ day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER", durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16, powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave", justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 10m 70% CP\n3x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP", isRestDay: false });
           continue;
         }
         result.push(buildRestDay(day, dateStr, formattedDate));
@@ -151,6 +135,18 @@ export function generateWeekTemplate(
 
       if (disc === "Fuerza") {
         strengthCount++;
+        const prevHadStrength = curatedModel.sportCategory !== "Running" && idx > 0 && getDayDisciplines(safeAvailability, days[idx - 1]).includes("Fuerza");
+        if (prevHadStrength) {
+          result.push({
+            day, date: dateStr, formattedDate, discipline: "Fuerza",
+            workoutName: "Movilidad Articular Dinámica & Descarga Muscular (20m)", action: "MANTENER",
+            durationMinutes: 20, tss: 10, powerTarget: "Movilidad Articular",
+            justification: "Descompresión y soltura fascial para permitir supercompensación del SNC.",
+            workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Columna Torácica y Hombros\n- 5m Estiramientos Dinámicos\n- 5m Respiración Diafragmática",
+            isRestDay: false,
+          });
+          continue;
+        }
         const st = resolveSpecializedStrengthWorkout({ sportCategory: curatedModel.sportCategory, phase, weekNumber, isRecovery, sessionIndex: strengthCount });
         result.push({ day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: st.name, action: "MANTENER", durationMinutes: st.durationMin, tss: st.tss, powerTarget: st.focus, justification: st.justification, workoutDoc: st.workoutDoc, isRestDay: false });
         continue;
@@ -269,13 +265,18 @@ export function generateWeekTemplate(
         }
 
         if (day === longRunDay) {
-          usedRunWorkoutNames.add(longRun.workoutName);
-          const addons = resolveWorkoutAddons({ durationMinutes: longRun.minutes, sport: "Carrera", isQualityOrLong: true });
+          const prevDayTest = idx > 0 && result.filter((r) => r.day === days[idx - 1]).some((r) => r.workoutName.includes("TEST"));
+          const effM = prevDayTest ? Math.min(45, longRun.minutes) : longRun.minutes;
+          const effKm = prevDayTest ? Math.min(8, longRun.km) : longRun.km;
+          const effName = prevDayTest ? `Rodaje Aeróbico de Asimilación Post-Test (${effM}m Z2)` : longRun.workoutName;
+          const effDoc = prevDayTest ? `Warmup\n- 10m 65% CP\n\nMain\n- ${effM - 15}m 72% CP\n\nCooldown\n- 5m 60% CP` : longRun.workoutDoc;
+          usedRunWorkoutNames.add(effName);
+          const addons = resolveWorkoutAddons({ durationMinutes: effM, sport: "Carrera", isQualityOrLong: true });
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: longRun.workoutName, action: "MANTENER",
-            durationMinutes: longRun.minutes, tss: Math.round(longRun.minutes * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
-            justification: `Tirada progresiva de ${longRun.km} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
-            workoutDoc: longRun.workoutDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
+            day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: effName, action: "MANTENER",
+            durationMinutes: effM, tss: Math.round(effM * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
+            justification: `Tirada de ${effKm} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
+            workoutDoc: effDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
           continue;
         }

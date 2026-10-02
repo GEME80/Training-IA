@@ -184,13 +184,16 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
     const distanceMap: Record<GoalTemplateType, MacrocycleDistanceType> = {
       MARATON_42K: "42k",
       MEDIA_MARATON_21K: "21k",
+      TRIATLON_CORTO: "triathlon_short",
       TRIATLON_703: "triathlon_703",
+      CYCLING_FONDO: "cycling_fondo",
+      DIEZ_K: "10k",
       BASE_BUILD: "base_building",
       MANTENIMIENTO: "maintenance",
     };
 
     const generated = generateCustomMacrocycleBlueprint({
-      distanceType: distanceMap[selectedGoalTemplate] || "42k",
+      distanceType: distanceMap[selectedGoalTemplate] || "10k",
       startDate,
       endDate,
       periodization: progressionRate === "CONSERVADOR" ? "2:1" : "3:1",

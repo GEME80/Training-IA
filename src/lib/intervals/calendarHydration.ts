@@ -177,6 +177,24 @@ export function hydrateWeekPlanFromEvents(
         return;
       }
 
+      // Blindaje Anti-Maratón & Descarga de Fuerza:
+      // Si el evento de Intervals es un residuo previo de maratón (Canova/Pfitzinger) pero el plan actual
+      // tiene un rodaje adaptado, o si es una fuerza consecutiva convertida en movilidad articular:
+      const isObsoleteMarathonEvt = isPulseGenerated && /canova|pfitzinger 42k|fondo cumbre/i.test(cleanName) && !matchingFallback?.workoutName.toLowerCase().includes("canova");
+      const isObsoleteStrengthEvt = isPulseGenerated && disc === "Fuerza" && matchingFallback?.workoutName.includes("Movilidad") && !cleanName.includes("Movilidad");
+
+      if ((isObsoleteMarathonEvt || isObsoleteStrengthEvt) && matchingFallback) {
+        hydratedItems.push({
+          ...matchingFallback,
+          id: evt.id ? String(evt.id) : undefined,
+          date: dateStr,
+          formattedDate,
+          day,
+          justification: isObsoleteMarathonEvt ? "Adaptado: Rodaje de asimilación post-test" : matchingFallback.justification,
+        });
+        return;
+      }
+
       const maxLimit = disc === "Ciclismo" ? 360 : 180;
       let rawMins = Math.round((evt.moving_time || 0) / 60);
       let mins = (rawMins > 0 && rawMins <= maxLimit) ? rawMins : 0;

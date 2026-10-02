@@ -1,6 +1,9 @@
 /**
- * Generador de workouts de Tirada Larga Periodizada (Canova, Pfitzinger & Daniels)
- * Varía los estímulos dominicales evitando la monotonía de solo volumen Z2.
+ * Generador de workouts de Tirada Larga Periodizada por Disciplina Deportiva.
+ * - Maratón (42K): Métodos Canova, Pfitzinger Fast-Finish y Progresivos de 30-34 km.
+ * - Triatlón Olímpico / Sprint: Capping estricto (50-65m), ritmo 10K y transiciones T2. Cero Canova.
+ * - Triatlón 70.3: Capping (70-85m) y ritmo específico de media distancia.
+ * - 5K / 10K Ruta: Capping (45-55m) y soltura neuromuscular con rectas.
  */
 
 export interface LongRunStructureResult {
@@ -17,8 +20,22 @@ export function buildDynamicLongRunStructure(params: {
   countdown: number;
   isPeak: boolean;
   runFtp?: number;
+  modelId?: string;
+  sportCategory?: string;
+  targetDistanceKm?: number;
 }): LongRunStructureResult {
-  const { baseKm, baseMins, phase, weekNumber, countdown, isPeak, runFtp } = params;
+  const {
+    baseKm: rawKm,
+    baseMins: rawMins,
+    phase,
+    weekNumber,
+    countdown,
+    isPeak,
+    runFtp,
+    modelId,
+    sportCategory,
+    targetDistanceKm,
+  } = params;
 
   const fmtPwr = (pctA: number, pctB?: number, note?: string) => {
     if (runFtp && runFtp > 0) {
@@ -35,6 +52,103 @@ export function buildDynamicLongRunStructure(params: {
     }
     return `${pctA}% Pace${note ? ` (${note})` : ""}`;
   };
+
+  const isTriShort =
+    modelId === "TRIATHLON_SHORT" ||
+    (sportCategory === "Triathlon" && targetDistanceKm !== undefined && targetDistanceKm <= 60);
+
+  const isTri703 =
+    modelId === "TRIATHLON_70_3" ||
+    (sportCategory === "Triathlon" && targetDistanceKm !== undefined && targetDistanceKm > 60 && targetDistanceKm <= 120);
+
+  const isRoadSpeed =
+    sportCategory === "Running" &&
+    targetDistanceKm !== undefined &&
+    targetDistanceKm <= 10;
+
+  // ══════════════════════════════════════════════════════════════
+  // 1. TRIATLÓN OLÍMPICO / SPRINT (Cero Maratón, Cero Canova)
+  // ══════════════════════════════════════════════════════════════
+  if (isTriShort) {
+    const cappedMins = Math.min(65, Math.max(35, rawMins));
+    const cappedKm = Math.min(13, Math.max(7, rawKm));
+
+    if (isPeak) {
+      return {
+        workoutName: `Simulación de Carrera a Pie Triatlón Olímpico (${cappedKm} km / ${cappedMins}m @ Ritmo 10K)`,
+        powerTarget: fmtPwr(88, 92, "Ritmo 10K Triatlón"),
+        workoutDoc: `Warmup\n- 15m 72% CP Activación\n\nMain (Ritmo Específico 10K)\n2x\n- 12m 90% CP\n- 3m 65% CP\n\nCooldown\n- 10m 60% CP`,
+      };
+    }
+    if (phase === "BUILD") {
+      return {
+        workoutName: `Tirada Progresiva Triatlón con Zancada Viva (${cappedKm} km / ${cappedMins}m)`,
+        powerTarget: fmtPwr(78, 86, "Progresión Z2->Z3"),
+        workoutDoc: `Warmup\n- 12m 70% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(10, cappedMins - 32)}m 78% CP\n\nFinal Vivo (Ritmo Carrera)\n- 10m 86% CP\n\nCooldown\n- 10m 60% CP`,
+      };
+    }
+    if (phase === "TAPER") {
+      const taperM = Math.min(40, cappedMins);
+      return {
+        workoutName: `Rodaje Suave Pre-Triatlón con Strides (${Math.min(8, cappedKm)} km / ${taperM}m)`,
+        powerTarget: fmtPwr(70, 85, "Z1-Z2 + Strides"),
+        workoutDoc: `Warmup\n- 10m 65% CP\n\nMain\n- 15m 72% CP\n4x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP`,
+      };
+    }
+    // BASE
+    return {
+      workoutName: `Rodaje Aeróbico de Asimilación & Cadencia (${cappedKm} km / ${cappedMins}m Z2)`,
+      powerTarget: fmtPwr(72, 78, "Z2 Base"),
+      workoutDoc: `Warmup\n- 10m 65% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(10, cappedMins - 20)}m 75% CP (180 spm)\n\nCooldown\n- 10m 60% CP`,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 2. TRIATLÓN 70.3 (MEDIA DISTANCIA)
+  // ══════════════════════════════════════════════════════════════
+  if (isTri703) {
+    const cappedMins = Math.min(85, Math.max(45, rawMins));
+    const cappedKm = Math.min(18, Math.max(10, rawKm));
+
+    if (isPeak) {
+      return {
+        workoutName: `Tirada Específica Ritmo 70.3 con Flotaciones (${cappedKm} km / ${cappedMins}m)`,
+        powerTarget: fmtPwr(82, 86, "Ritmo 70.3"),
+        workoutDoc: `Warmup\n- 15m 72% CP\n\nMain (Ritmo 70.3)\n3x\n- 15m 84% CP\n- 3m 70% CP\n\nCooldown\n- 10m 60% CP`,
+      };
+    }
+    if (phase === "BUILD") {
+      return {
+        workoutName: `Tirada Aeróbica Multideporte con Final Progresivo (${cappedKm} km / ${cappedMins}m)`,
+        powerTarget: fmtPwr(75, 82, "Z2 -> Ritmo 70.3"),
+        workoutDoc: `Warmup\n- 15m 70% CP\n\nMain (Z2)\n- ${Math.max(15, cappedMins - 40)}m 76% CP\n\nFinal Ágil\n- 15m 82% CP\n\nCooldown\n- 10m 60% CP`,
+      };
+    }
+    return {
+      workoutName: `Rodaje Aeróbico Continuo 70.3 (${cappedKm} km / ${cappedMins}m Z2)`,
+      powerTarget: fmtPwr(72, 77, "Z2 Base"),
+      workoutDoc: `Warmup\n- 15m 68% CP\n\nMain (Z2)\n- ${Math.max(15, cappedMins - 25)}m 74% CP\n\nCooldown\n- 10m 60% CP`,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 3. 5K / 10K RUTA (Cero Canova 42K)
+  // ══════════════════════════════════════════════════════════════
+  if (isRoadSpeed) {
+    const cappedMins = Math.min(55, Math.max(35, rawMins));
+    const cappedKm = Math.min(11, Math.max(6, rawKm));
+    return {
+      workoutName: `Rodaje Aeróbico Z2 + Rectas de Frecuencia (${cappedKm} km / ${cappedMins}m)`,
+      powerTarget: fmtPwr(72, 88, "Z2 + Rectas"),
+      workoutDoc: `Warmup\n- 10m 65% CP\n\nMain (Z2)\n- ${Math.max(15, cappedMins - 25)}m 75% CP\n\nRectas Finales\n5x\n- 20s 95% CP\n- 40s 50% CP\n\nCooldown\n- 5m 60% CP`,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 4. MARATÓN 42.195 KM (100% INTACTO E INALTERADO)
+  // ══════════════════════════════════════════════════════════════
+  const baseKm = rawKm;
+  const baseMins = rawMins;
 
   if (isPeak) {
     if (countdown <= 3 && countdown > 1) {
@@ -68,7 +182,7 @@ export function buildDynamicLongRunStructure(params: {
       };
     }
     if (styleIdx === 1) {
-      // Bloques de Ritmo Maratón / Medio Maratón Intercalados
+      // Bloques de Ritmo Maratón Intercalados
       const blockMins = Math.min(20, Math.max(12, Math.round(baseMins * 0.16)));
       const baseSub = baseMins - (blockMins * 2 + 5) - 25;
       return {

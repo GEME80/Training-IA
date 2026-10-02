@@ -35,15 +35,16 @@ export async function persistProfileField(uid: string, email: string, fields: Re
 
 function inferRaceDistance(name: string, type?: string): TargetRace["distance"] {
   const n = (name + " " + (type || "")).toLowerCase();
-  if (n.includes("70.3") || n.includes("medio iron")) return "triathlon_703";
-  if (n.includes("140.6") || n.includes("ironman")) return "triathlon_1406" as any;
-  if (n.includes("sprint") || n.includes("olimp")) return "triathlon_short" as any;
-  if (n.includes("giro") || n.includes("fondo") || n.includes("ride") || n.includes("bike")) return "cycling_fondo" as any;
-  if (n.includes("21k") || n.includes("media marat")) return "21k";
-  if (n.includes("10k")) return "10k";
-  if (n.includes("5k")) return "5k";
-  if (n.includes("ultra") || n.includes("trail")) return "ultra" as any;
-  return "42k";
+  if (n.includes("70.3") || n.includes("medio iron") || n.includes("half iron")) return "triathlon_703";
+  if (n.includes("140.6") || n.includes("ironman") || n.includes("full iron")) return "triathlon_1406" as any;
+  if (n.includes("sprint") || n.includes("olimp") || n.includes("triat") || n.includes("triath") || n.includes("triseries")) return "triathlon_short" as any;
+  if (n.includes("giro") || n.includes("gran fondo") || n.includes("fondo") || n.includes("ride") || n.includes("bike") || n.includes("cicli")) return "cycling_fondo" as any;
+  if (n.includes("21k") || n.includes("media marat") || n.includes("half marat")) return "21k";
+  if (n.includes("10k") || n.includes("diez k")) return "10k";
+  if (n.includes("5k") || n.includes("cinco k")) return "5k";
+  if (n.includes("ultra") || n.includes("trail") || n.includes("montaña")) return "ultra" as any;
+  if (n.includes("marat") || n.includes("42k") || n.includes("marathon") || n.includes("tokio") || n.includes("valencia") || n.includes("boston") || n.includes("berlin") || n.includes("chicago")) return "42k";
+  return "10k";
 }
 
 /**

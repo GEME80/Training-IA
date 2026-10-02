@@ -19,7 +19,10 @@ import {
 export type GoalTemplateType =
   | "MARATON_42K"
   | "MEDIA_MARATON_21K"
+  | "TRIATLON_CORTO"
   | "TRIATLON_703"
+  | "CYCLING_FONDO"
+  | "DIEZ_K"
   | "BASE_BUILD"
   | "MANTENIMIENTO";
 
@@ -160,12 +163,36 @@ export const SeasonPlanGeneratorTab: React.FC<SeasonPlanGeneratorTabProps> = ({
                 badge: "Media Maratón",
               },
               {
+                id: "TRIATLON_CORTO",
+                name: "PULSE Triatlón Sprint & Olímpico",
+                weeks: 12,
+                icon: "🏊🚴🏃",
+                desc: "Equilibrio natación, ciclismo vivo y transiciones rápidas brick con carrera a ritmo 10K.",
+                badge: "Sprint & Olímpico",
+              },
+              {
                 id: "TRIATLON_703",
                 name: "PULSE 70.3 Middle Distance",
                 weeks: 16,
                 icon: "🏊🚴🏃",
                 desc: "Estructura multideporte coordinada (Swim + Bike FTP + Run CP) sin interferencias.",
                 badge: "Triatlón 70.3",
+              },
+              {
+                id: "CYCLING_FONDO",
+                name: "PULSE Ciclismo Gran Fondo",
+                weeks: 12,
+                icon: "🚴",
+                desc: "Potencia en umbral FTP, fondo de fin de semana y eficiencia de pedaleo.",
+                badge: "Gran Fondo",
+              },
+              {
+                id: "DIEZ_K",
+                name: "PULSE 10K Road Speed",
+                weeks: 10,
+                icon: "🔥",
+                desc: "Series de 1.000m y 2.000m, bloques de umbral y ritmo específico de carrera 10K.",
+                badge: "10K Ruta",
               },
               {
                 id: "BASE_BUILD",

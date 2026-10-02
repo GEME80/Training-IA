@@ -26,13 +26,14 @@ interface SeasonWizardStep1TargetProps {
 }
 
 const DISTANCE_OPTIONS = [
-  { value: "5k", label: "5K", emoji: "🏃", color: "border-green-400 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300" },
-  { value: "10k", label: "10K", emoji: "🏃", color: "border-lime-400 bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300" },
-  { value: "21k", label: "21K Media", emoji: "🏅", color: "border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" },
-  { value: "42k", label: "42K Maratón", emoji: "🏆", color: "border-orange-400 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300" },
+  { value: "triathlon_short", label: "Sprint / Olímpico", emoji: "🏊🚴🏃", color: "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300" },
   { value: "triathlon_703", label: "70.3 Triatlón", emoji: "🏊", color: "border-sky-400 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300" },
   { value: "triathlon_1406", label: "140.6 IRONMAN", emoji: "⚡", color: "border-purple-400 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300" },
-  { value: "cycling_fondo", label: "Gran Fondo", emoji: "🚴", color: "border-blue-400 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300" },
+  { value: "cycling_fondo", label: "Gran Fondo Ciclismo", emoji: "🚴", color: "border-blue-400 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300" },
+  { value: "42k", label: "42K Maratón", emoji: "🏆", color: "border-orange-400 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300" },
+  { value: "21k", label: "21K Media", emoji: "🏅", color: "border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" },
+  { value: "10k", label: "10K", emoji: "🏃", color: "border-lime-400 bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300" },
+  { value: "5k", label: "5K", emoji: "🏃", color: "border-green-400 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300" },
   { value: "trail", label: "Trail/Ultra", emoji: "⛰️", color: "border-stone-400 bg-stone-50 dark:bg-stone-950/30 text-stone-700 dark:text-stone-300" },
 ];
 
@@ -53,7 +54,9 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
   const [isCreatingRace, setIsCreatingRace] = useState(false);
   const [inlineName, setInlineName] = useState("");
   const [inlineDate, setInlineDate] = useState("");
-  const [inlineDistance, setInlineDistance] = useState<TargetRace["distance"]>("42k");
+  const [inlineDistance, setInlineDistance] = useState<TargetRace["distance"]>(
+    (targetDistance as any) || "10k"
+  );
   const [inlineGoal, setInlineGoal] = useState("");
 
   const weeksUntilRace = useMemo(() => {
@@ -75,16 +78,16 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
     const diffWeeks = Math.max(4, Math.ceil((new Date(inlineDate + "T00:00:00").getTime() - Date.now()) / (7 * 86400000)));
     onChangeWeeksCount(Math.min(36, diffWeeks));
     onChangePlanTitle(`Macrociclo para ${newRace.name}`);
-    onChangeDistance(newRace.distance || "42k");
+    onChangeDistance(newRace.distance || "10k");
     setIsCreatingRace(false); setInlineName(""); setInlineDate(""); setInlineGoal("");
   };
 
   const handleChooseNoRace = (preset: "base" | "threshold") => {
     if (onSelectPrimaryRace) onSelectPrimaryRace(null);
     if (preset === "base") {
-      onChangePlanTitle("Construcción de Base Aeróbica"); onChangeDistance("42k"); onChangeWeeksCount(12);
+      onChangePlanTitle("Construcción de Base Aeróbica"); onChangeDistance("base_building"); onChangeWeeksCount(12);
     } else {
-      onChangePlanTitle("Bloque de Umbral & Potencia"); onChangeDistance("21k"); onChangeWeeksCount(8);
+      onChangePlanTitle("Bloque de Umbral & Potencia"); onChangeDistance("general_build"); onChangeWeeksCount(8);
     }
     setPathChoice("norace");
   };

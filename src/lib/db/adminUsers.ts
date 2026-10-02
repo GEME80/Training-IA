@@ -64,6 +64,13 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         runThresholdPaceStr: data.runThresholdPaceStr || (isPace ? "4:45" : undefined),
         runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm || (isPace ? 285 : undefined),
         weightKg: data.weightKg, restingHR: data.restingHR, maxHR: data.maxHR, lthr: data.lthr,
+        planPrice: typeof data.planPrice === "number" ? data.planPrice : (isSuper ? 0 : 80),
+        planCurrency: data.planCurrency || "USD",
+        billingStatus: data.billingStatus || (data.intervalsAthleteId === "i729730" ? "PAID" : (isSuper ? "PAID" : "PENDING")),
+        billingCycleDay: data.billingCycleDay || 5,
+        lastPaymentDate: data.lastPaymentDate || (data.intervalsAthleteId === "i729730" ? "2026-10-01" : undefined),
+        paymentMethod: data.paymentMethod || "TRANSFER",
+        primaryGoalRace: data.primaryGoalRace, primaryGoalDate: data.primaryGoalDate,
         createdAt: data.createdAt || new Date().toISOString(), lastLoginAt: data.lastLoginAt || new Date().toISOString(),
       };
 
@@ -263,19 +270,13 @@ export async function preauthorizeUser(
 
   const preauthRef = adminDb.collection("users").doc(sanitizedDocId);
   const data: Record<string, any> = {
-    uid: sanitizedDocId,
-    email: cleanEmail,
-    displayName: params.displayName?.trim() || "Atleta Invitado",
-    role: params.role || "athlete",
-    status: params.status || "pending",
+    uid: sanitizedDocId, email: cleanEmail, displayName: params.displayName?.trim() || "Atleta Invitado",
+    role: params.role || "athlete", status: params.status || "pending",
     intervalsAthleteId: params.intervalsAthleteId?.trim() || undefined,
     encryptedApiKey: params.rawApiKey?.trim() ? encryptSensitiveData(params.rawApiKey.trim()) : undefined,
     runFtp: params.runFtp ? Number(params.runFtp) : undefined,
     bikeFtp: params.bikeFtp ? Number(params.bikeFtp) : undefined,
-    isPreAuthorized: true,
-    createdAt: now,
-    updatedAt: now,
-    lastLoginAt: now,
+    isPreAuthorized: true, createdAt: now, updatedAt: now, lastLoginAt: now,
   };
 
   const cleanData = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
@@ -299,21 +300,15 @@ export async function preauthorizeUser(
 }
 
 export interface UpdateUserDetailsParams {
-  displayName?: string;
-  role?: UserRole;
-  status?: UserStatus;
-  intervalsAthleteId?: string;
-  runFtp?: number;
-  bikeFtp?: number;
-  rawApiKey?: string;
-  weightKg?: number;
-  restingHR?: number;
-  maxHR?: number;
-  lthr?: number;
+  displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
+  runFtp?: number; bikeFtp?: number; rawApiKey?: string; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
+  planPrice?: number; planCurrency?: "USD" | "COP" | "EUR"; billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  billingCycleDay?: number; lastPaymentDate?: string; paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  primaryGoalRace?: string; primaryGoalDate?: string;
 }
 
 /**
- * Actualiza los campos principales de un usuario desde el panel de administración.
+ * Actualiza los campos principales y comerciales de un usuario desde el panel de administración.
  */
 export async function updateUserDetails(
   targetUid: string,
@@ -338,6 +333,14 @@ export async function updateUserDetails(
     ...(updates.maxHR !== undefined && { maxHR: Number(updates.maxHR) || undefined }),
     ...(updates.lthr !== undefined && { lthr: Number(updates.lthr) || undefined }),
     ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),
+    ...(updates.planPrice !== undefined && { planPrice: Number(updates.planPrice) }),
+    ...(updates.planCurrency !== undefined && { planCurrency: updates.planCurrency }),
+    ...(updates.billingStatus !== undefined && { billingStatus: updates.billingStatus }),
+    ...(updates.billingCycleDay !== undefined && { billingCycleDay: Number(updates.billingCycleDay) }),
+    ...(updates.lastPaymentDate !== undefined && { lastPaymentDate: updates.lastPaymentDate }),
+    ...(updates.paymentMethod !== undefined && { paymentMethod: updates.paymentMethod }),
+    ...(updates.primaryGoalRace !== undefined && { primaryGoalRace: updates.primaryGoalRace.trim() }),
+    ...(updates.primaryGoalDate !== undefined && { primaryGoalDate: updates.primaryGoalDate.trim() }),
   };
 
   await userRef.update(cleanUpdates);

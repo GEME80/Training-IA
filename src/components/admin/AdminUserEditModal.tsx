@@ -1,18 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  SlidersHorizontal,
-  CheckCircle2,
-  Copy,
-  Check,
-} from "lucide-react";
+import { X, SlidersHorizontal, CheckCircle2, Copy, Check } from "lucide-react";
 import { AdminUserListItem, UserRole, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
 import { useAuth } from "@/context/AuthContext";
 import { AdminUserEditIntervalsSection } from "./AdminUserEditIntervalsSection";
 import { AdminUserEditBiometricsSection } from "./AdminUserEditBiometricsSection";
+import { AdminUserEditBillingSection } from "./AdminUserEditBillingSection";
 
 interface AdminUserEditModalProps {
   user: AdminUserListItem | null;
@@ -45,6 +40,14 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [role, setRole] = useState<UserRole>("athlete");
   const [status, setStatus] = useState<UserStatus>("pending");
 
+  const [planPrice, setPlanPrice] = useState<number | "">(80);
+  const [planCurrency, setPlanCurrency] = useState<"USD" | "COP" | "EUR">("USD");
+  const [billingStatus, setBillingStatus] = useState<"PAID" | "PENDING" | "OVERDUE">("PENDING");
+  const [billingCycleDay, setBillingCycleDay] = useState<number | "">(1);
+  const [paymentMethod, setPaymentMethod] = useState<"TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER">("TRANSFER");
+  const [primaryGoalRace, setPrimaryGoalRace] = useState<string>("");
+  const [primaryGoalDate, setPrimaryGoalDate] = useState<string>("");
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; athleteName?: string } | null>(null);
@@ -63,6 +66,13 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
       setRestingHR(user.restingHR ?? "");
       setRole(user.role);
       setStatus(user.status);
+      setPlanPrice(user.planPrice ?? (user.role === "admin" ? 0 : 80));
+      setPlanCurrency(user.planCurrency || "USD");
+      setBillingStatus(user.billingStatus || (user.role === "admin" ? "PAID" : "PENDING"));
+      setBillingCycleDay(user.billingCycleDay ?? 1);
+      setPaymentMethod(user.paymentMethod || "TRANSFER");
+      setPrimaryGoalRace(user.primaryGoalRace || "");
+      setPrimaryGoalDate(user.primaryGoalDate || "");
       setTestResult(null);
     }
   }, [user]);
@@ -73,37 +83,21 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
 
   const handleTestConnection = async () => {
     if (!intervalsId.trim()) {
-      setTestResult({
-        success: false,
-        message: "Ingresa el Athlete ID de Intervals.icu para poder verificar la conexión.",
-      });
+      setTestResult({ success: false, message: "Ingresa el Athlete ID de Intervals.icu para verificar conexión." });
       return;
     }
-
     setIsTesting(true);
     setTestResult(null);
-
     try {
       const res = await fetch("/api/test-connection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          athleteId: intervalsId.trim(),
-          apiKey: rawApiKey.trim() || undefined,
-          uid: user.uid,
-          email: user.email,
-        }),
+        body: JSON.stringify({ athleteId: intervalsId.trim(), apiKey: rawApiKey.trim() || undefined, uid: user.uid, email: user.email }),
       });
-
       const data = await res.json();
       if (res.ok && data.success) {
         const detectedName = data.athleteName || data.athlete?.name || "Atleta";
-        setTestResult({
-          success: true,
-          message: `Conexión verificada exitosamente con Intervals.icu para "${detectedName}".`,
-          athleteName: detectedName,
-        });
-
+        setTestResult({ success: true, message: `Conexión verificada exitosamente para "${detectedName}".`, athleteName: detectedName });
         if (data.runFtp && (!runFtp || runFtp === 300)) setRunFtp(Number(data.runFtp));
         if (data.bikeFtp && (!bikeFtp || bikeFtp === 250)) setBikeFtp(Number(data.bikeFtp));
         if (data.weight && !weightKg) setWeightKg(Number(data.weight));
@@ -111,16 +105,10 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
         if (data.maxHR && !maxHR) setMaxHR(Number(data.maxHR));
         if (data.restingHR && !restingHR) setRestingHR(Number(data.restingHR));
       } else {
-        setTestResult({
-          success: false,
-          message: data.error || "No se pudo conectar con Intervals.icu. Verifica el ID o la Clave API.",
-        });
+        setTestResult({ success: false, message: data.error || "No se pudo conectar con Intervals.icu." });
       }
     } catch (err: unknown) {
-      setTestResult({
-        success: false,
-        message: err instanceof Error ? err.message : "Error de red al probar conexión.",
-      });
+      setTestResult({ success: false, message: err instanceof Error ? err.message : "Error de red al probar conexión." });
     } finally {
       setIsTesting(false);
     }
@@ -152,6 +140,13 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           restingHR: restingHR === "" ? undefined : Number(restingHR),
           role,
           status: finalStatus,
+          planPrice: planPrice === "" ? undefined : Number(planPrice),
+          planCurrency,
+          billingStatus,
+          billingCycleDay: billingCycleDay === "" ? undefined : Number(billingCycleDay),
+          paymentMethod,
+          primaryGoalRace: primaryGoalRace.trim() || undefined,
+          primaryGoalDate: primaryGoalDate.trim() || undefined,
           requesterEmail,
           requesterUid,
         }),
@@ -172,8 +167,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const handleCopyAccessLink = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
     const athleteName = name.trim() || "Atleta";
-    const text = `¡Hola ${athleteName}! Tu cuenta en PULSE AI está lista. Puedes iniciar sesión directamente con tu cuenta de Google aquí: ${origin}`;
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(`¡Hola ${athleteName}! Tu cuenta en PULSE AI está lista. Puedes iniciar sesión aquí: ${origin}`);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
@@ -181,7 +175,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
       <div className="w-full max-w-xl bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
-        {/* Encabezado */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-2xl bg-cyan-50 text-cyan-700 border border-cyan-200/80 flex items-center justify-center">
@@ -215,7 +208,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             />
           </div>
 
-          {/* 1. Bloque: Soporte de Conexión Intervals.icu */}
           <AdminUserEditIntervalsSection
             intervalsId={intervalsId}
             setIntervalsId={setIntervalsId}
@@ -227,7 +219,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             onTestConnection={handleTestConnection}
           />
 
-          {/* 2. Bloque: Calibración Fisiológica & Biometría */}
           <AdminUserEditBiometricsSection
             runFtp={runFtp}
             setRunFtp={setRunFtp}
@@ -243,7 +234,23 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             setRestingHR={setRestingHR}
           />
 
-          {/* 3. Bloque: Rol & Estado de Acceso */}
+          <AdminUserEditBillingSection
+            planPrice={planPrice}
+            setPlanPrice={setPlanPrice}
+            planCurrency={planCurrency}
+            setPlanCurrency={setPlanCurrency}
+            billingStatus={billingStatus}
+            setBillingStatus={setBillingStatus}
+            billingCycleDay={billingCycleDay}
+            setBillingCycleDay={setBillingCycleDay}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            primaryGoalRace={primaryGoalRace}
+            setPrimaryGoalRace={setPrimaryGoalRace}
+            primaryGoalDate={primaryGoalDate}
+            setPrimaryGoalDate={setPrimaryGoalDate}
+          />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Rol</label>
@@ -273,7 +280,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             </div>
           </div>
 
-          {/* Botonera de Acciones y Guardado */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
             <button
               type="button"

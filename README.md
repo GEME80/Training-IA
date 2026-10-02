@@ -1,9 +1,16 @@
-# ⚡ SGEA Pro (v4.01) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.02) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 💳 **Módulo de Facturación & Cobro a Atletas (MRR) y Radar Fisiológico del Escuadrón (v4.02):**
+  - **Foco Comercial Real:** Reemplazo de métricas decorativas de tokens IA por un sistema financiero y comercial directo para el Head Coach: seguimiento de ingresos recurrentes mensuales (MRR), total recaudado, saldo pendiente de cobro y porcentaje de recaudación en tiempo real.
+  - **Control de Cobros 1-Clic (`AdminBillingTable`):** Registro instantáneo de pagos con un solo botón (`[ Marcar Pagado ]` / `[ Al día ]`), selector de moneda (USD, COP, EUR) y métodos de pago (Transferencia Bancaria, Stripe, Wompi, Efectivo).
+  - **Radar Fisiológico y de Competencias del Escuadrón (`AdminSquadAthleticRadar`):** Supervisión simultánea del equipo completo: desglose de deportistas por potencia Stryd vs. ritmo Daniels, promedios de CP y FTP, y radar de carreras clave con cuenta regresiva en semanas (`W-X`).
+  - **Edición Comercial en Ficha del Atleta (`AdminUserEditBillingSection`):** Configuración granular de precio mensual, moneda, día de corte y objetivos competitivos dentro del modal de administración.
+  - **FinOps Discreto:** Degradación de las estadísticas de Gemini AI a una barra de estado inferior compacta para auditoría técnica de infraestructura sin desviar la atención operativa.
 
 - 🖥️ **Consola de Administración Widescreen & Gestión Espaciosa de Atletas (v4.01):**
   - **Ampliación de Canvas a Pantallas Anchas (`max-w-[1720px]`):** Eliminación del contenedor restrictivo `max-w-7xl` ($1280\text{px}$) que dejaba 40-50% del monitor desaprovechado en monitores de escritorio. Ahora el Header, la consola de administración y el pie de página se expanden fluidamente con generoso padding interior (`p-6` a `p-10`).

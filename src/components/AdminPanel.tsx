@@ -182,6 +182,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
             tokenTelemetry={data.tokenTelemetry}
             stats={data.stats}
             firestoreStats={data.firestoreStats}
+            users={data.users}
+            onRefreshUsers={data.fetchUsersAndStats}
+            showMessage={data.showMessage}
+            onEditAthlete={() => setActiveTab("users")}
           />
         )}
 

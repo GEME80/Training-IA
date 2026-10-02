@@ -1,0 +1,243 @@
+"use client";
+
+import React, { useState } from "react";
+import { CheckCircle2, Clock, AlertCircle, RefreshCw, DollarSign, Calendar, Edit3 } from "lucide-react";
+import { AdminUserListItem } from "@/lib/db/types";
+import { formatMoney } from "@/lib/services/adminBillingService";
+
+interface AdminBillingTableProps {
+  users: AdminUserListItem[];
+  onRefresh: () => void;
+  showMessage: (text: string, type: "success" | "error") => void;
+  onEditAthlete?: (user: AdminUserListItem) => void;
+}
+
+export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
+  users,
+  onRefresh,
+  showMessage,
+  onEditAthlete,
+}) => {
+  const [updatingUid, setUpdatingUid] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING">("ALL");
+
+  const athletes = users.filter((u) => u.role === "athlete" && u.status === "active");
+
+  const filteredAthletes = athletes.filter((athlete) => {
+    const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+    if (filter === "PAID") return status === "PAID";
+    if (filter === "PENDING") return status === "PENDING" || status === "OVERDUE";
+    return true;
+  });
+
+  const handleTogglePaymentStatus = async (athlete: AdminUserListItem) => {
+    const currentStatus = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+    const newStatus = currentStatus === "PAID" ? "PENDING" : "PAID";
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    setUpdatingUid(athlete.uid);
+    try {
+      const res = await fetch("/api/admin/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUid: athlete.uid,
+          billingStatus: newStatus,
+          lastPaymentDate: newStatus === "PAID" ? todayStr : athlete.lastPaymentDate,
+          planPrice: typeof athlete.planPrice === "number" ? athlete.planPrice : 80,
+          planCurrency: athlete.planCurrency || "USD",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al actualizar estado de pago");
+
+      showMessage(
+        newStatus === "PAID"
+          ? `Pago registrado para ${athlete.displayName || athlete.email}.`
+          : `Estado de ${athlete.displayName || athlete.email} cambiado a Pendiente.`,
+        "success"
+      );
+      onRefresh();
+    } catch (err: unknown) {
+      showMessage(err instanceof Error ? err.message : "Error al procesar cobro", "error");
+    } finally {
+      setUpdatingUid(null);
+    }
+  };
+
+  return (
+    <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
+      {/* Encabezado y Filtros Rápidos */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Control de Cobros a Atletas</span>
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+              Mes Actual
+            </span>
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Registro mensual de suscripciones, fechas de corte y estado de recaudación.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setFilter("ALL")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+              filter === "ALL" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Todos ({athletes.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("PAID")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+              filter === "PAID" ? "bg-white text-emerald-800 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Al Día
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("PENDING")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+              filter === "PENDING" ? "bg-white text-amber-800 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Pendientes
+          </button>
+        </div>
+      </div>
+
+      {/* Tabla Panorámica de Pagos */}
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[10px] font-mono font-bold uppercase text-slate-500 tracking-wider">
+            <tr>
+              <th className="py-3 px-4">Atleta</th>
+              <th className="py-3 px-4">Tarifa Mensual</th>
+              <th className="py-3 px-4">Día de Corte</th>
+              <th className="py-3 px-4">Estado del Mes</th>
+              <th className="py-3 px-4">Último Pago</th>
+              <th className="py-3 px-4 text-right">Gestión de Cobro</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredAthletes.map((athlete) => {
+              const price = typeof athlete.planPrice === "number" ? athlete.planPrice : 80;
+              const currency = athlete.planCurrency || "USD";
+              const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+              const isUpdating = updatingUid === athlete.uid;
+
+              return (
+                <tr key={athlete.uid} className="hover:bg-slate-50/70 transition-colors">
+                  {/* Atleta */}
+                  <td className="py-3 px-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200/80 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0 shadow-2xs">
+                        {athlete.displayName ? athlete.displayName.charAt(0).toUpperCase() : athlete.email.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-xs truncate">
+                          {athlete.displayName || "Sin nombre"}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono truncate">{athlete.email}</div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Tarifa */}
+                  <td className="py-3 px-4 font-mono font-bold text-slate-900">
+                    <div className="flex items-center gap-1.5">
+                      <DollarSign className="h-3.5 w-3.5 text-cyan-600 shrink-0" />
+                      <span>{formatMoney(price, currency)}</span>
+                    </div>
+                  </td>
+
+                  {/* Día de Corte */}
+                  <td className="py-3 px-4 text-slate-600 font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                      <span>Día {athlete.billingCycleDay || 5} de cada mes</span>
+                    </div>
+                  </td>
+
+                  {/* Estado del Mes */}
+                  <td className="py-3 px-4">
+                    {status === "PAID" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <span>PAGADO</span>
+                      </span>
+                    ) : status === "OVERDUE" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                        <AlertCircle className="h-3 w-3 text-rose-600" />
+                        <span>EN MORA</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        <Clock className="h-3 w-3 text-amber-600" />
+                        <span>PENDIENTE</span>
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Último Pago */}
+                  <td className="py-3 px-4 text-xs font-mono text-slate-500">
+                    {athlete.lastPaymentDate ? athlete.lastPaymentDate : "Sin registro"}
+                  </td>
+
+                  {/* Botonera de Cobro */}
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePaymentStatus(athlete)}
+                        disabled={isUpdating}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs shadow-2xs transition cursor-pointer disabled:opacity-50 ${
+                          status === "PAID"
+                            ? "bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-600 border border-slate-200"
+                            : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs"
+                        }`}
+                        title={status === "PAID" ? "Revertir a pendiente" : "Registrar cobro de este mes"}
+                      >
+                        {isUpdating ? (
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        ) : status === "PAID" ? (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Al día</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>Marcar Pagado</span>
+                          </>
+                        )}
+                      </button>
+
+                      {onEditAthlete && (
+                        <button
+                          type="button"
+                          onClick={() => onEditAthlete(athlete)}
+                          title="Modificar tarifa o condiciones comerciales"
+                          className="p-1.5 rounded-xl bg-slate-100 hover:bg-cyan-50 hover:text-cyan-700 text-slate-500 transition cursor-pointer"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};

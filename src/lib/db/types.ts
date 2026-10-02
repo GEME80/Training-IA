@@ -49,6 +49,14 @@ export interface UserProfileData {
   gender?: "M" | "F" | "OTHER";
   targetEventDate?: string;
   trainingFocus?: "MAINTENANCE" | "BUILD" | "MARATHON" | "TRIATHLON";
+  planPrice?: number;
+  planCurrency?: "USD" | "COP" | "EUR";
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  billingCycleDay?: number;
+  lastPaymentDate?: string;
+  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  primaryGoalRace?: string;
+  primaryGoalDate?: string;
   weeklyAvailability?: WeeklyAvailabilityMap;
   visibleMetrics?: string[];
   targetRaces?: any[];
@@ -80,8 +88,27 @@ export interface AdminUserListItem {
   restingHR?: number;
   maxHR?: number;
   lthr?: number;
+  planPrice?: number;
+  planCurrency?: "USD" | "COP" | "EUR";
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  billingCycleDay?: number;
+  lastPaymentDate?: string;
+  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  primaryGoalRace?: string;
+  primaryGoalDate?: string;
   createdAt: string;
   lastLoginAt: string;
+}
+
+export interface AdminBillingStats {
+  totalExpectedRevenue: number;
+  totalCollectedMonth: number;
+  totalPendingMonth: number;
+  collectionRatePercent: number;
+  paidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  currency: string;
 }
 
 export interface AdminStats {

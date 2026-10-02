@@ -93,6 +93,14 @@ export async function PATCH(req: NextRequest) {
       restingHR,
       maxHR,
       lthr,
+      planPrice,
+      planCurrency,
+      billingStatus,
+      billingCycleDay,
+      lastPaymentDate,
+      paymentMethod,
+      primaryGoalRace,
+      primaryGoalDate,
       requesterEmail,
       requesterUid,
     } = body;
@@ -140,6 +148,14 @@ export async function PATCH(req: NextRequest) {
       restingHR,
       maxHR,
       lthr,
+      planPrice,
+      planCurrency,
+      billingStatus,
+      billingCycleDay,
+      lastPaymentDate,
+      paymentMethod,
+      primaryGoalRace,
+      primaryGoalDate,
     });
 
     return NextResponse.json(result);

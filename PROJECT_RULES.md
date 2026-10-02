@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.01)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.02)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.01).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.02).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.02: Módulo Financiero de Cobro & Facturación a Atletas (MRR), Control de Pagos 1-Clic, Radar Fisiológico del Escuadrón y FinOps:
+  * Control Comercial y Cobro Mensual: Seguimiento en tiempo real de MRR proyectado, total recaudado en el mes, saldo pendiente/en mora y tasa de cobro %.
+  * Tabla Interactiva de Pagos (`AdminBillingTable`): Registro de pago en 1 clic ([ Marcar Pagado ] / [ Al día ]), filtros por estado (Todos, Al Día, Pendientes) y soporte multi-moneda (USD, COP, EUR).
+  * Radar Fisiológico y Competencias del Escuadrón (`AdminSquadAthleticRadar`): Desglose del equipo por modalidad (Stryd Power vs Daniels Pace vs Bike FTP), promedios de CP y FTP, y radar de carreras con cuenta regresiva en semanas (W-X).
+  * Edición Comercial en Modal (`AdminUserEditBillingSection`): Configuración de precio mensual, moneda, día de corte, método de pago y objetivo deportivo en la ficha del atleta.
+  * FinOps Discreto: Métricas de tokens Gemini degradadas a barra inferior compacta para auditoría técnica de infraestructura.
 - Versión 4.01: Consola de Administración Widescreen, Despliegue Espacioso de Atletas, Tarjetas KPI y Erradicación de Recortes en Tabla:
   * Widescreen Canvas (max-w-[1720px]): Eliminación del contenedor restrictivo max-w-7xl (1280px); canvas fluido con generoso padding interior (p-6 a p-10) en desktop.
   * Tarjetas KPI de Resumen Ejecutivo: 4 tarjetas superiores en Gestión de Atletas (Total, Activos con %, Pendientes con alerta en ámbar, y Conectados a Intervals.icu).

@@ -5399,3 +5399,65 @@ flowchart TD
 
 
 
+
+---
+
+## [2026-10-02] - Versión 4.02: Transformación del Dashboard General de Administración — Módulo Financiero de Cobro & Facturación a Atletas, Radar Fisiológico del Escuadrón y FinOps
+
+### 71.1. Contexto y Requerimiento Estratégico
+- **Problema en Métricas AI:** Las métricas de consumo de tokens Gemini estaban en 0 o desconectadas, y además no representaban el foco primordial del negocio de coaching deportivo.
+- **Objetivo Comercial:** La prioridad operativa del Head Coach y Administrador es el cobro mensual a los atletas, saber quién ha pagado en el mes, quién está pendiente o en mora, el MRR (Monthly Recurring Revenue) esperado vs. recaudado, y poder registrar pagos con 1 solo clic.
+- **Objetivo Deportivo Consolidado:** Monitorear el estado fisiológico de todo el escuadrón (distribución Stryd vs. Ritmo, FTPs promedio de carrera y ciclismo, y radar de competencias principales del equipo con cuenta regresiva de semanas).
+
+### 71.2. Arquitectura y Componentes Implementados
+1. **Modelado de Datos Comercial y Deportivo (`src/lib/db/types.ts`):**
+   - Incorporación a `UserProfileData` y `AdminUserListItem` de:
+     * `planPrice`: Tarifa mensual del plan del atleta (por defecto $80 USD para atletas activos, $0 para Superadmin).
+     * `planCurrency`: Moneda del plan (`USD`, `COP`, `EUR`).
+     * `billingStatus`: Estado de cobro mensual (`PAID` | `PENDING` | `OVERDUE`).
+     * `billingCycleDay`: Día de corte o cobro del mes (1-31).
+     * `lastPaymentDate`: Timestamp ISO de la última transacción registrada.
+     * `paymentMethod`: Método de pago (`TRANSFER` | `STRIPE` | `WOMPI` | `CASH` | `OTHER`).
+     * `primaryGoalRace` & `primaryGoalDate`: Evento/carrera principal y fecha objetivo del atleta.
+   - Definición de la interfaz `AdminBillingStats`.
+2. **Servicio Isomórfico de Facturación y Estadísticas del Escuadrón (`src/lib/services/adminBillingService.ts`):**
+   - `calculateBillingStats()`: Agrega el MRR proyectado, total recaudado en el mes, saldo pendiente por cobrar y porcentaje de recaudación de forma reactiva.
+   - `formatMoney()`: Formateador multi-moneda (USD, COP, EUR) con localización estándar.
+   - `calculateSquadAthleticStats()`: Consolida la distribución de atletas por potencia vs ritmo, promedios de CP/FTP, y construye el radar de competencias del equipo ordenadas por proximidad en semanas (`W-X`).
+3. **Endpoint de Facturación Rápida (`src/app/api/admin/billing/route.ts`):**
+   - Manejador `POST` con verificación de autorización de administrador para actualizar cobros, estados y condiciones comerciales al instante, delegando en `updateUserDetails`.
+4. **Tarjetas Ejecutivas de KPI Financiero (`src/components/admin/AdminBillingKpis.tsx`):**
+   - 4 tarjetas widescreen:
+     * **Facturación Mensual (MRR):** Proyección mensual de ingresos del escuadrón.
+     * **Recaudado este Mes:** Monto cobrado con badge del número de atletas al día.
+     * **Por Cobrar / Pendiente:** Cartera pendiente y en mora con alerta visual.
+     * **Tasa de Recaudación:** Porcentaje de efectividad del cobro con barra de progreso esmeralda.
+5. **Radar Fisiológico y Competencias del Escuadrón (`src/components/admin/AdminSquadAthleticRadar.tsx`):**
+   - Desglose del equipo: atletas por potencia Stryd, atletas por ritmo Daniels, ciclistas con potenciómetro.
+   - Promedios de potencia del equipo (`Stryd CP Promedio`, `Bike FTP Promedio`).
+   - Radar de competencias del escuadrón con cuenta regresiva en semanas (ej. Tokyo Marathon 2027 en W-22, Ironman 70.3 Cartagena en W-9, Media Maratón Medellín en W-6).
+6. **Tabla de Control de Pagos y Facturación (`src/components/admin/AdminBillingTable.tsx`):**
+   - Vista detallada de cobro por atleta con avatares, valor de plan, día de corte y medio de pago.
+   - Pestañas de filtrado rápido (`Todos`, `Al Día`, `Pendientes`).
+   - Botón interactivo de 1 clic: `[ Marcar Pagado ]` / `[ Al día ]` que sincroniza el backend y refresca la interfaz automáticamente.
+   - Enlace directo a `Configurar` atleta para editar planes o condiciones comerciales.
+7. **Sección de Facturación en Modal de Edición (`src/components/admin/AdminUserEditBillingSection.tsx` & `AdminUserEditModal.tsx`):**
+   - Submódulo atómico que permite al administrador ajustar el precio del plan, moneda, día de corte, estado de pago, medio de pago y carrera objetivo directamente desde la ficha del atleta.
+8. **Dashboard General Rediseñado (`src/components/admin/AdminDashboardTab.tsx`):**
+   - Disposición visual en pantalla ancha con foco comercial y deportivo superior.
+   - Métricas de IA degradadas a una barra compacta inferior de auditoría FinOps (Gemini Health & Costos).
+
+### 71.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Límite Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/components/admin/AdminBillingKpis.tsx`: **104 LOC**
+  * `src/components/admin/AdminSquadAthleticRadar.tsx`: **143 LOC**
+  * `src/components/admin/AdminBillingTable.tsx`: **186 LOC**
+  * `src/components/admin/AdminUserEditBillingSection.tsx`: **123 LOC**
+  * `src/lib/services/adminBillingService.ts`: **165 LOC**
+  * `src/app/api/admin/billing/route.ts`: **69 LOC**
+  * `src/components/admin/AdminDashboardTab.tsx`: **230 LOC**
+  * `src/components/admin/AdminUserEditModal.tsx`: **337 LOC**
+  * `src/lib/db/adminUsers.ts`: **350 LOC**
+  * `src/lib/db/types.ts`: **149 LOC**

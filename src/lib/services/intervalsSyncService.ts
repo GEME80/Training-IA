@@ -167,9 +167,12 @@ export class IntervalsSyncService {
 
     try {
       const existingEvents = await client.getEvents(startStr, endStr);
-      const workoutsToDelete = existingEvents.filter(
-        (e) => e.id && (e.category === "WORKOUT" || (e.name && (/\[PULSE/i.test(e.name) || /\[SGEA/i.test(e.name))))
-      );
+      const workoutsToDelete = existingEvents.filter((e) => {
+        if (!e.id) return false;
+        // BLINDAJE INCONDICIONAL: Jamás tocar notas ni eventos de competición oficial
+        if (e.category === "TARGET" || e.category === "RACE" || e.category === "NOTE" || (e.type as string) === "Race") return false;
+        return e.category === "WORKOUT" || (e.name && (/\[PULSE/i.test(e.name) || /\[SGEA/i.test(e.name)));
+      });
 
       let deletedCount = 0;
       for (const evt of workoutsToDelete) {

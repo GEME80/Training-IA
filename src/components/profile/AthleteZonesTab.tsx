@@ -72,7 +72,7 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
   onDismissSuggestion,
 }) => {
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-3 sm:space-y-6 animate-fadeIn">
       {/* Tarjeta Hero Principal con métricas y botones interactivos [ ✎ Ajustar ] */}
       <AthleteProfileHeroCard
         athleteName={athleteName}

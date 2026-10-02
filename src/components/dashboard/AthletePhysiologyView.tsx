@@ -194,15 +194,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-8">
+    <div className="space-y-3 sm:space-y-5 animate-fadeIn pb-8">
       {/* 1. Header Principal */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 dark:border-slate-800 pb-2 sm:pb-3">
         <div>
-          <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <User className="h-4 w-4 text-sky-500" />
+          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
             Perfil del Atleta & Fisiología
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none">
             Control de umbrales, biometría, matriz de disponibilidad y sincronización Intervals.icu.
           </p>
         </div>

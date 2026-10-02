@@ -20,6 +20,7 @@ import {
   BIKE_TEST_20M_FTP,
 } from "../ai/knowledge";
 import { PMCHistoricalSummary } from "./pmcEngine";
+import { calculateTargetPeakCtlPotential } from "./ctlPotentialEngine";
 
 export interface CustomMacrocycleConfig {
   definitionId?: string;
@@ -81,33 +82,23 @@ export interface PeakCtlCalculationInput {
   historicalMetrics?: PMCHistoricalSummary;
   sportCategory?: string;
   targetDistanceKm?: number;
+  distanceType?: string;
+  age?: number;
 }
 
 export function calculateTargetPeakCtl(input: PeakCtlCalculationInput): {
-  targetPeakCtl: number; targetPeakWeeklyTss: number; startWeeklyTss: number; weeklyRampRate: number;
+  targetPeakCtl: number; targetPeakWeeklyTss: number; startWeeklyTss: number; weeklyRampRate: number; isExpansion?: boolean;
 } {
-  const currentCtl = Math.max(12, input.currentCtl || 30);
-  const histPeak = input.peakCtlLastYear || input.historicalMetrics?.peakCtlLastYear;
-  const buildWeeks = Math.max(2, (input.totalWeeks || input.weeksCount || 12) - 2);
-  const hasStrongEngine = (histPeak || currentCtl) >= 65 && currentCtl < (histPeak || 70) * 0.85;
-  const safeRampRate = hasStrongEngine ? (buildWeeks <= 8 ? 3.8 : 3.2) : 2.2;
-  const attainableCtl = currentCtl + buildWeeks * safeRampRate;
-
-  // Si el atleta demostró un max CTL histórico superior, el plan se configura hacia ese valor real exacto
-  let targetPeakCtl: number;
-  if (histPeak && histPeak > currentCtl) {
-    targetPeakCtl = Math.round(Math.min(histPeak, attainableCtl) * 10) / 10;
-  } else {
-    let optimal = 65;
-    if (input.targetDistanceKm && input.targetDistanceKm > 100) optimal = 80;
-    targetPeakCtl = Math.round(Math.min(optimal + 10, Math.max(45, attainableCtl)) * 10) / 10;
-  }
-
-  const targetPeakWeeklyTss = Math.round(Math.max(7 * targetPeakCtl + 45 * 1.5, (targetPeakCtl * 7) / 0.84));
-  const startWeeklyTss = Math.round(7 * currentCtl + 45 * (hasStrongEngine ? 2.2 : 1.8));
-  const weeklyRampRate = Math.round(((targetPeakCtl - currentCtl) / buildWeeks) * 10) / 10;
-
-  return { targetPeakCtl, targetPeakWeeklyTss, startWeeklyTss, weeklyRampRate };
+  return calculateTargetPeakCtlPotential({
+    currentCtl: input.currentCtl,
+    histPeak: input.peakCtlLastYear,
+    totalWeeks: input.totalWeeks || input.weeksCount,
+    historicalMetrics: input.historicalMetrics,
+    sportCategory: input.sportCategory,
+    targetDistanceKm: input.targetDistanceKm,
+    distanceType: input.distanceType,
+    age: input.age,
+  });
 }
 
 /**
@@ -174,6 +165,8 @@ export function generateCustomMacrocycleBlueprint(
     totalWeeks,
     sportCategory: curatedModel.sportCategory,
     targetDistanceKm: curatedModel.targetDistanceKm,
+    distanceType: config.distanceType,
+    age: config.athleteMetrics?.age,
   });
 
   // Factor de escala de volumen por CTL real del atleta (anti-lesión)

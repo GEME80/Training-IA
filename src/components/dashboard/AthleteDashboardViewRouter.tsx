@@ -7,6 +7,7 @@ import { AthleteHeadCoachView } from "./AthleteHeadCoachView";
 import { AthletePhysiologyView } from "./AthletePhysiologyView";
 import { AthleteSidebarNavSection } from "./AthleteSidebar";
 import { PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { useMacrocycleUpgrade } from "@/hooks/useMacrocycleUpgrade";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
 
@@ -43,6 +44,15 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   userStorage,
   isReadOnly = false,
 }) => {
+  const upgrade = useMacrocycleUpgrade({
+    athleteId: telemetry.profile?.id || userProfile?.intervalsAthleteId || user?.uid || "",
+    blueprint: season.blueprint,
+    userStorage,
+    onApplyUpdatedBlueprint: season.handleApplyMacrocycle,
+    setSyncNotification: sync.setSyncNotification,
+    isReadOnly,
+  });
+
   if (activeNavSection === "dashboard") {
     return (
       <AthleteDashboardOverview
@@ -59,6 +69,9 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         weeklyExecutedTss={telemetry.weeklyExecutedTss}
         dailyExecutedActivities={telemetry.dailyExecutedActivities}
         calendarEvents={telemetry.calendarEvents}
+        upgradeProposal={upgrade.proposal}
+        onAcceptUpgrade={upgrade.handleAcceptUpgrade}
+        onDismissUpgrade={upgrade.handleDismissUpgrade}
         onOpenAICoach={(idx) => {
           if (typeof idx === "number") season.setSelectedMacroWeekIdx(idx);
           onNavigateTo("head_coach");

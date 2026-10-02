@@ -11,6 +11,8 @@ import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { buildHistoricalBlueprint } from "@/lib/physiology/historicalCalendarWeeks";
 import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { MacrocycleUpgradeCard } from "./MacrocycleUpgradeCard";
+import { MacrocycleUpgradeProposal } from "@/lib/physiology/ctlPotentialEngine";
 
 interface AthleteDashboardOverviewProps {
   physioStatus: PhysiologicalStatus | null;
@@ -33,6 +35,9 @@ interface AthleteDashboardOverviewProps {
   onOpenSeasonStudio: () => void;
   onRefreshTelemetry?: () => Promise<void>;
   isRefreshingTelemetry?: boolean;
+  upgradeProposal?: MacrocycleUpgradeProposal | null;
+  onAcceptUpgrade?: (proposal: MacrocycleUpgradeProposal) => Promise<void> | void;
+  onDismissUpgrade?: () => void;
 }
 
 export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> = ({
@@ -56,6 +61,9 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   onOpenSeasonStudio,
   onRefreshTelemetry,
   isRefreshingTelemetry,
+  upgradeProposal,
+  onAcceptUpgrade,
+  onDismissUpgrade,
 }) => {
   const [activeTab, setActiveTab] = useState<"overview" | "pmc">("overview");
 
@@ -118,6 +126,15 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
       {/* CONTENIDO DE PESTAÑA 1: RESUMEN ACTUAL Y CALENDARIO */}
       {activeTab === "overview" && (
         <div className="space-y-3 animate-fadeIn">
+          {/* Tarjeta de Oportunidad de Upgrade Fisiológico con Elección Soberana */}
+          {upgradeProposal && onAcceptUpgrade && (
+            <MacrocycleUpgradeCard
+              proposal={upgradeProposal}
+              onAcceptUpgrade={onAcceptUpgrade}
+              onDismissUpgrade={onDismissUpgrade || (() => {})}
+            />
+          )}
+
           {/* CALENDARIO CONTINUO — Header y Métricas viajan dentro del contenedor Sticky Maestro */}
           {effectiveBlueprint ? (
             <div className="space-y-3">

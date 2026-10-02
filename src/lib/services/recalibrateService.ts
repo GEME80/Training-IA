@@ -1,5 +1,14 @@
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
 import { saveMacrocycleToFirestore } from "@/lib/db/macrocycles";
+import { calculateTargetPeakCtlPotential, isFreezeWindowActive } from "@/lib/physiology/ctlPotentialEngine";
+import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
+
+export {
+  type UpgradeDiffItem,
+  type MacrocycleUpgradeProposal,
+  type TestEvaluationResult,
+  evaluateTestForUpgrade,
+} from "@/lib/physiology/ctlPotentialEngine";
 
 export async function executeRecalibrateBoth() {
   const results: any[] = [];

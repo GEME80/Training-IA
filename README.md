@@ -1,10 +1,15 @@
-# ⚡ SGEA Pro (v3.95) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.99) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- ⏱️ **Universalidad Fisiológica Multi-Atleta & Conmutación Dinámica de Modalidades (v3.99):**
+  - **Arquitectura Reactiva Multi-Modalidad:** Erradicación de ataduras estáticas o hardcoded. Cada deportista conmuta dinámicamente entre Carrera por Potencia Stryd (`POWER`), Carrera por Ritmo Jack Daniels (`PACE`), Ciclismo por FTP (`BIKE`) y Natación por CSS (`SWIM`) según su perfil biométrico en Firestore (`runningTrainingMode`, `hasRunningPowerMeter`, `runFtp`, `runThresholdPaceStr`, `bikeFtp`, `swimCssStr`).
+  - **Insignias Vivas en Zonas y Hero Card (`AthleteZonesViewer` & `AthleteProfileHeroCard`):** Activación visual en verde esmeralda de `ACTIVA RITMO` y atenuación de potencia (`CP/FTP`) para corredores de ritmo. Para corredores de Stryd (ej. Germán Morales, 336W), se preserva la insignia `ACTIVA RUN` y el cálculo de vatios en tiempo real.
+  - **Rigor Bioenergético y Fisiología Inversa en % Pace:** Dado que el ritmo ($P$) es el inverso de la velocidad ($P = 1/v$), la intensidad en carrera se calcula rigurosamente como $\text{Pace}_{\text{target}} = \frac{\text{Pace}_{\text{umbral}}}{\% / 100}$. Se garantiza que un menor porcentaje represente ritmos sustancialmente más lentos y de recuperación (ej. con umbral 4:45/km, $60\% \implies 7:55\text{/km}$; $74\% \implies 6:25\text{/km}$; $110\% \implies 4:19\text{/km}$), erradicando multiplicaciones lineales destructivas.
+  - **Renderizado Dinámico de Ritmos en Vivo (`WorkoutDetailModal`):** Traducción textual automática en el modal de detalle de entrenamiento que calcula y despliega el ritmo equivalente en `min/km` entre paréntesis en cada paso (ej. `- 10m 60% Pace (~7:55/km)` o `- 43m 74% Pace (~6:25/km)`), manteniendo el título y badge adaptados a la modalidad (`Prescripción Estructurada (Ritmo)`).
 - 🚀 **Motor de Potencial Fisiológico Bietápico & Gobernanza de Upgrades con Soberanía del Atleta (v3.95):**
   - **Erradicación del Techo Rígido de CTL:** Reemplazo de la limitación restrictiva `Math.min(histPeak, attainableCtl)` por el motor modular `ctlPotentialEngine.ts`. Los atletas con historial previo reconquistan su memoria biológica a ritmo acelerado ($+3.2$ a $+3.8\text{ CTL/sem}$) y expanden hacia nuevos récords personales a tasa adaptativa segura ($+1.8\text{ CTL/sem}$) con un margen anual calibrado ($+15\%$ en general, $+10\%$ en máster $\ge 45$ años).
   - **Principio de No-Degradación Fisiológica (Anti-Neurosis Algorítmica):** Las semanas de descarga planificada (asimilación 3:1 o 2:1) o con menor TSS nunca deprimen la meta cumbre ni recortan el macrociclo. Cero alarmas de penalización tras semanas de menor carga.

@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.95)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.99)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.95).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.99).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 3.99: Universalidad Fisiológica Multi-Atleta, Rigor Matemático Inverso en % Pace y Renderizado de Ritmos Dinámicos en Detalle de Sesión:
+  * Universalidad y Reactividad Total: Sistema multi-atleta dinámico sin ataduras estáticas; conmuta automáticamente entre Carrera por Potencia Stryd (POWER), Carrera por Ritmo Jack Daniels (PACE), Ciclismo por FTP (BIKE) y Natación por CSS (SWIM) según el perfil de Firestore.
+  * Insignias Vivas en Zonas y Perfil: Activación de 'ACTIVA RITMO' en verde esmeralda y atenuación de potencia (CP/FTP) para corredores de ritmo. Preservación estricta de 'ACTIVA RUN' y cálculo de vatios en tiempo real para corredores con Stryd (ej. Germán Morales, 336W).
+  * Fisiología y Matemática Inversa en % Pace: El ritmo (P) es el inverso de la velocidad (P = 1/v). La intensidad en carrera se calcula rigurosamente como Pace_target = Pace_umbral / (% / 100). Un menor porcentaje representa ritmos más lentos y de recuperación (ej. con umbral 4:45/km: 60% = 7:55/km, 74% = 6:25/km, 110% = 4:19/km). Cero multiplicaciones lineales destructivas.
+  * Visualización en Vivo en WorkoutDetailModal: Traducción textual en vivo que calcula y muestra el ritmo equivalente en min/km entre paréntesis en cada paso (ej. '- 10m 60% Pace (~7:55/km)'), adaptando título y badges ('Prescripción Estructurada (Ritmo)' y 'Calculado a tu Ritmo Umbral').
 - Versión 3.95: Motor de Potencial Fisiológico Bietápico (CTL Potential Engine) & Gobernanza de Upgrades con Soberanía del Atleta:
   * Motor Bietápico (`ctlPotentialEngine.ts`): Reconquista rápida de memoria biológica (+3.2 a +3.8 CTL/sem) + Expansión segura hacia nuevo récord personal (+1.8 CTL/sem), eliminando el techo artificial Math.min(histPeak, attainableCtl).
   * Principio de No-Degradación Fisiológica: Semanas de descarga (deload 3:1 o 2:1) o baches de bajo TSS nunca reducen la meta cumbre de CTL ni degradan el macrociclo. Cero alarmas de penalización tras semanas de asimilación.

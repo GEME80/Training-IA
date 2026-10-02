@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Activity, Timer, Zap, Bike, Footprints, Waves, Layers } from "lucide-react";
+import { Activity, Timer, Zap, Bike, Footprints, Waves } from "lucide-react";
 import {
   calculatePaceZones,
   parsePaceToSeconds,
@@ -24,11 +24,12 @@ import { PaceDurationChart } from "./PaceDurationChart";
 import { SportBestEffortsTable } from "./SportBestEffortsTable";
 import { useAthleteCurves } from "@/hooks/useAthleteCurves";
 
-export type SportViewTab = "RUN" | "BIKE" | "SWIM" | "ALL";
+export type SportViewTab = "RUN" | "BIKE" | "SWIM";
 
 export interface AthleteZonesViewerProps {
   athleteId?: string;
   apiKey?: string;
+  email?: string;
   weightKg?: number;
   runFtp: number;
   bikeFtp: number;
@@ -53,6 +54,7 @@ export interface AthleteZonesViewerProps {
 export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
   athleteId,
   apiKey,
+  email,
   weightKg = 82,
   runFtp = 0,
   bikeFtp = 0,
@@ -115,7 +117,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
     { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: lthr > 0 ? `${Math.round(lthr * 1.04)} - ${maxHR > 0 ? `${maxHR} bpm` : "Máx"}` : "—" },
   ], [lthr, maxHR]);
 
-  const { rideCurves, runCurves } = useAthleteCurves({ athleteId, apiKey, weightKg });
+  const { rideCurves, runCurves } = useAthleteCurves({ athleteId, apiKey, email, weightKg });
 
   return (
     <div className="space-y-4">
@@ -143,12 +145,12 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
         )}
       </div>
 
-      {/* 2. Selector de Deportes Ergonómico */}
+      {/* 2. Selector de Deportes (Carrera, Ciclismo, Natación) */}
       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 overflow-x-auto">
         <button
           type="button"
           onClick={() => setSelectedSport("RUN")}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
             selectedSport === "RUN"
               ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs border border-emerald-500/30"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -161,7 +163,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
         <button
           type="button"
           onClick={() => setSelectedSport("BIKE")}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
             selectedSport === "BIKE"
               ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs border border-sky-500/30"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -174,7 +176,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
         <button
           type="button"
           onClick={() => setSelectedSport("SWIM")}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
             selectedSport === "SWIM"
               ? "bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 shadow-xs border border-cyan-500/30"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -182,19 +184,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
         >
           <Waves className="h-3.5 w-3.5" />
           <span>Natación</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSelectedSport("ALL")}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition cursor-pointer shrink-0 ${
-            selectedSport === "ALL"
-              ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-300 dark:border-slate-600"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          <Layers className="h-3.5 w-3.5" />
-          <span>Todos los Deportes</span>
         </button>
       </div>
 
@@ -212,14 +201,14 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
               <button
                 type="button"
                 onClick={() => setRunTelemetryMode("POWER")}
-                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "POWER" ? "bg-amber-500 text-slate-950 font-black" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "POWER" ? "bg-amber-500 text-slate-950 font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
               >
                 Curva Potencia Stryd (CP)
               </button>
               <button
                 type="button"
                 onClick={() => setRunTelemetryMode("PACE")}
-                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "PACE" ? "bg-emerald-500 text-white font-black" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "PACE" ? "bg-emerald-500 text-white font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
               >
                 Curva de Ritmo (Pace)
               </button>
@@ -266,41 +255,6 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <SwimmingCssZoneCard swimZones={swimZones} suggestedSwimCss={suggestedSwimCss} onApplySuggestion={onApplySuggestion} onDismissSuggestion={onDismissSuggestion} />
             <SwimPaceMilestonesCard swimCssSec={liveSwimCssSec} swimCssStr={swimCssStr || "1:45"} />
-          </div>
-        </div>
-      )}
-
-      {/* 6. VISTA TODOS LOS DEPORTES */}
-      {selectedSport === "ALL" && (
-        <div className="space-y-6 animate-fadeIn">
-          <div className="space-y-2">
-            <h5 className="text-[11px] font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <Footprints className="h-3.5 w-3.5" /> Carrera
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <RunningPaceZoneCard isPaceActive={isPaceActive} isHybridActive={isHybridActive} paceZones={paceZones} suggestedRunPace={suggestedRunPace} onApplySuggestion={onApplySuggestion} onDismissSuggestion={onDismissSuggestion} />
-              <RunningPowerZoneCard isPowerActive={isPowerActive} strydZones={strydZones} suggestedRunFtp={suggestedRunFtp} onApplySuggestion={onApplySuggestion} onDismissSuggestion={onDismissSuggestion} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h5 className="text-[11px] font-mono font-bold uppercase text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
-              <Bike className="h-3.5 w-3.5" /> Ciclismo
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CyclingPowerZoneCard cyclingZones={cyclingZones} suggestedBikeFtp={suggestedBikeFtp} onApplySuggestion={onApplySuggestion} onDismissSuggestion={onDismissSuggestion} />
-              <HeartRateZoneCard isHybridActive={isHybridActive} hrZones={hrZones} sportContext="General" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h5 className="text-[11px] font-mono font-bold uppercase text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
-              <Waves className="h-3.5 w-3.5" /> Natación
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SwimmingCssZoneCard swimZones={swimZones} suggestedSwimCss={suggestedSwimCss} onApplySuggestion={onApplySuggestion} onDismissSuggestion={onDismissSuggestion} />
-              <SwimPaceMilestonesCard swimCssSec={liveSwimCssSec} swimCssStr={swimCssStr || "1:45"} />
-            </div>
           </div>
         </div>
       )}

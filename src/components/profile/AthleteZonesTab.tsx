@@ -101,6 +101,7 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
       <AthleteZonesViewer
         athleteId={athleteId}
         apiKey={apiKey}
+        email={email}
         weightKg={weightKg}
         runFtp={runFtp}
         bikeFtp={bikeFtp}

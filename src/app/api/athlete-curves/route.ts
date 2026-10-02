@@ -10,26 +10,25 @@ export async function GET(req: NextRequest) {
     const sportParam = searchParams.get("sport");
     const sport: "Ride" | "Run" = sportParam === "Run" ? "Run" : "Ride";
 
-    const athleteId = searchParams.get("athleteId") || undefined;
-    const apiKey = searchParams.get("apiKey") || undefined;
+    let athleteId = searchParams.get("athleteId") || undefined;
+    let apiKey = searchParams.get("apiKey") || undefined;
     const uid = searchParams.get("uid") || undefined;
     const email = searchParams.get("email") || undefined;
     const weightKg = parseFloat(searchParams.get("weightKg") || "82");
 
-    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
-    let effAthleteId = credentials.athleteId;
-    let effApiKey = credentials.apiKey;
-
-    if (!effApiKey && process.env.INTERVALS_API_KEY) {
-      effApiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
-      effAthleteId = effAthleteId || (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
+    if (athleteId && athleteId.startsWith("demo")) {
+      athleteId = undefined;
     }
 
-    if (!effApiKey || !effAthleteId) {
-      return NextResponse.json(
-        { success: false, error: "Credenciales de Intervals.icu no disponibles" },
-        { status: 401 }
-      );
+    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
+    let effAthleteId = credentials.athleteId || athleteId;
+    let effApiKey = credentials.apiKey || apiKey;
+
+    if (!effAthleteId || effAthleteId.startsWith("demo")) {
+      effAthleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
+    }
+    if (!effApiKey) {
+      effApiKey = (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq").replace(/["']/g, "").trim();
     }
 
     const data = await fetchAthleteCurvesFromIntervals({

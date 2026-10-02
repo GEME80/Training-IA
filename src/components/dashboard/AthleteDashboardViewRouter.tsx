@@ -236,7 +236,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
 
     return (
       <AthletePhysiologyView
-        athleteId={telemetry.profile.id}
+        athleteId={userProfile?.intervalsAthleteId || (telemetry.profile.id && !telemetry.profile.id.startsWith("demo") ? telemetry.profile.id : "")}
         athleteName={displayName}
         email={user?.email || userProfile?.email || ""}
         runFtp={telemetry.profile.run_ftp || 0}
@@ -252,7 +252,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         runningTrainingMode={telemetry.profile.runningTrainingMode}
         runThresholdPaceStr={telemetry.profile.runThresholdPaceStr}
         runThresholdPaceSecPerKm={telemetry.profile.runThresholdPaceSecPerKm}
-        apiKey={telemetry.apiKeyCache}
+        apiKey={telemetry.apiKeyCache || userProfile?.intervalsApiKey || ""}
         ctl={telemetry.physioStatus?.ctl || telemetry.profile.ctl || 0}
         atl={telemetry.physioStatus?.atl || telemetry.profile.atl || 0}
         tsb={telemetry.physioStatus?.tsb || telemetry.profile.tsb || 0}

@@ -1,9 +1,15 @@
-# ⚡ SGEA Pro (v4.00) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.01) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🖥️ **Consola de Administración Widescreen & Gestión Espaciosa de Atletas (v4.01):**
+  - **Ampliación de Canvas a Pantallas Anchas (`max-w-[1720px]`):** Eliminación del contenedor restrictivo `max-w-7xl` ($1280\text{px}$) que dejaba 40-50% del monitor desaprovechado en monitores de escritorio. Ahora el Header, la consola de administración y el pie de página se expanden fluidamente con generoso padding interior (`p-6` a `p-10`).
+  - **Fila Superior de KPIs Ejecutivos (`AdminUsersTab`):** 4 tarjetas métricas en la cabecera de Atletas (Total Usuarios, Activos con ratio %, Solicitudes Pendientes con alerta en ámbar, y Atletas vinculados con Intervals.icu) brindando control operativo instantáneo sin tener que contar filas.
+  - **Barra de Búsqueda y Filtros de Alta Capacidad:** Buscador espacioso con botón interactivo de limpieza (`✕`), selector de rol, filtro de conexión con Intervals.icu y botón de refresco en vivo (`🔄 Refrescar`).
+  - **Tabla de Gestión Espaciosa & Erradicación de Recortes (`AdminUsersTable`):** Filas con padding amplio (`py-4 px-6`), avatares grandes (`h-11 w-11`) con estado en vivo, chips fisiológicos diferenciados (`⏱️ Ritmo: 4:45/km` para corredores Daniels vs `⚡ Run CP: 336W` para Stryd y `🚴 Bike FTP: 228W`), y columna de acciones (`min-w-[340px]`) que garantiza que los botones `Ver como atleta`, `Configurar` y accesos rápidos NUNCA se corten en el borde de la pantalla.
 
 - 📱 **Ergonomía Móvil Extrema & Sistema Ultra-Denso de Umbrales (Grid 3x2) (v4.00):**
   - **Reducción de Altura > 60% en Perfil Fisiológico (`AthleteProfileHeroCard`):** Sustitución del antiguo layout vertical (que requería > 400px en smartphones) por una matriz compacta de **3 columnas x 2 filas** (`grid-cols-3`). Fusión de biotipo y selector de modalidad (`⚡ Potencia | ⏱️ Ritmo`) en una sola línea de cabecera y tarjetas táctiles *tap-to-edit* con indicador sutil `✎` (~155px de altura total).

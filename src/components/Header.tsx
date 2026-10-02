@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full transition-colors backdrop-blur-xl border-b border-slate-200/80 bg-white/90 text-slate-900 shadow-xs">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6">
+      <div className={`mx-auto flex items-center justify-between px-4 py-2.5 sm:px-6 ${activeView === "admin" ? "w-full max-w-[1720px] 2xl:max-w-[1840px]" : "max-w-7xl"}`}>
         {/* 1. Izquierda: Brand & Logo (Visible en Landing o Móvil; en Desktop Dashboard el Sidebar ya contiene el Logo) */}
         <div className="flex items-center shrink-0">
           {isLanding ? (

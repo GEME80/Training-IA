@@ -132,7 +132,7 @@ export default function HomePage() {
               isIntervalsConnected={isIntervalsConnected}
               isGeminiConnected={isGeminiConnected}
             />
-            <main className="py-2.5 sm:py-6 max-w-7xl mx-auto px-2.5 sm:px-6">
+            <main className="py-3 sm:py-6 w-full max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-2.5 sm:px-6 lg:px-8">
               <AdminPanel
                 onGoBackToDashboard={() => {
                   setPreviewAthlete(null);
@@ -146,7 +146,7 @@ export default function HomePage() {
             </main>
           </div>
           <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-center text-xs text-slate-500">
-            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <div className="w-full max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
               <p>PULSE AI PRO © 2026 • Admin Console</p>
               <button
                 type="button"

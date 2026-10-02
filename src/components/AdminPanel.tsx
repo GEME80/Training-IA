@@ -146,7 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
       </div>
 
       {/* 3. CONTENIDO PRINCIPAL */}
-      <main className="flex-1 min-w-0 p-3.5 sm:p-6 md:p-8 overflow-y-auto space-y-4 sm:space-y-6">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 lg:p-9 xl:p-10 overflow-y-auto space-y-5 sm:space-y-7">
         {/* Toast Notificación */}
         {data.actionMessage && (
           <div

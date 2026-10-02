@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.00)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.01)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.00).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.01).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.01: Consola de Administración Widescreen, Despliegue Espacioso de Atletas, Tarjetas KPI y Erradicación de Recortes en Tabla:
+  * Widescreen Canvas (max-w-[1720px]): Eliminación del contenedor restrictivo max-w-7xl (1280px); canvas fluido con generoso padding interior (p-6 a p-10) en desktop.
+  * Tarjetas KPI de Resumen Ejecutivo: 4 tarjetas superiores en Gestión de Atletas (Total, Activos con %, Pendientes con alerta en ámbar, y Conectados a Intervals.icu).
+  * Filtros y Búsqueda Espaciosa: Buscador con botón de limpieza (✕), selector de rol, filtro de conexión con Intervals.icu y botón de refresco live (🔄).
+  * Tabla de Gestión Panorámica sin Recortes: Filas con padding amplio (py-4 px-6), avatares grandes (h-11 w-11), chips fisiológicos precisos (⏱️ 4:45/km para Daniels, ⚡ 336W para Stryd, 🚴 228W para bici) y columna de acciones (min-w-[340px]) garantizando cero recortes de botones.
 - Versión 4.00: Curvas de Rendimiento Multi-Disciplina, Mejores Esfuerzos de Ritmo hasta 42K (Maratón), Armonización Fisiológica, Purga Universal de Competiciones y Ergonomía Móvil Extrema (Grid 3x2):
   * Ergonomía Móvil Extrema (Ahorro > 60% viewport): Grid 3x2 ultra-compacto en AthleteProfileHeroCard (~155px), bio en una línea con switch de modalidad, tabs responsivas en AthleteDashboardOverview (grid-cols-2), eliminación de badges redundantes en HeadCoachHeader y botones compactos en HeadCoachWeekSelector.
   * Curvas de Rendimiento Multi-Disciplina e Ingesta Real: Pestaña "Todos los Deportes" eliminada. Especialización limpia para Ciclismo (MMP W y W/kg), Carrera (Potencia Stryd y Ritmo Daniels) y Natación (CSS). Ingesta real desde API Intervals.icu.

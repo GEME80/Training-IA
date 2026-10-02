@@ -135,16 +135,24 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
         </div>
       </div>
 
-      {/* 3. Fila de Potencias Fisiológicas */}
+      {/* 3. Fila de Parámetros Fisiológicos */}
       <div className="grid grid-cols-2 gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-mono">
-        <div className="flex items-center gap-1 text-amber-800">
-          <Zap className="h-3 w-3 text-amber-600 shrink-0" />
-          <span>Stryd CP:</span>
-          <strong className="font-bold ml-auto">{u.runFtp || 0} W</strong>
-        </div>
+        {u.runningTrainingMode === "PACE" || !u.hasRunningPowerMeter ? (
+          <div className="flex items-center gap-1 text-emerald-800">
+            <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
+            <span className="text-[10px] text-slate-500 font-sans">Ritmo:</span>
+            <strong className="font-bold ml-auto">{u.runThresholdPaceStr || "4:45"}/km</strong>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-amber-800">
+            <Zap className="h-3 w-3 text-amber-600 shrink-0" />
+            <span className="text-[10px] text-slate-500 font-sans">Run CP:</span>
+            <strong className="font-bold ml-auto">{u.runFtp || 0} W</strong>
+          </div>
+        )}
         <div className="flex items-center gap-1 text-cyan-800">
           <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
-          <span>Bike FTP:</span>
+          <span className="text-[10px] text-slate-500 font-sans">Bike FTP:</span>
           <strong className="font-bold ml-auto">{u.bikeFtp || 0} W</strong>
         </div>
       </div>

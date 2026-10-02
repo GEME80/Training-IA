@@ -5348,5 +5348,54 @@ flowchart TD
   * `src/components/season/SeasonPrimaryRaceCard.tsx`: **72 LOC**
   * `src/lib/physiology/seasonPlanHelpers.ts`: **201 LOC**
 
+---
+
+## [2026-10-02] - Versión 4.01: Rediseño Widescreen de la Consola de Administración, Despliegue Espacioso de Atletas, Tarjetas KPI y Erradicación de Recortes en Tabla de Gestión
+
+### 70.1. Diagnóstico UX/UI del Espacio de Administración
+- **Restricción Artificial de Ancho:** En `page.tsx`, `Header.tsx` y `footer`, la vista de administración estaba confinada dentro de un contenedor rígido `max-w-7xl` ($1280\text{px}$). En pantallas de escritorio modernas (1080p, 1440p o Retina de 1728px), más del $35\text{--}50\%$ del monitor quedaba desaprovechado en márgenes blancos vacíos.
+- **Compresión de la Tabla y Recorte de Acciones:** Al restar el ancho de la barra lateral (~256px) y los márgenes, el área de contenido quedaba reducida a ~900px, provocando que las columnas de la tabla de atletas se apretujaran. En particular, la columna de acciones en el extremo derecho desbordaba y truncaba botones esenciales como `Ver como atleta`, impidiendo ver u operar las opciones de gestión en atletas situados al final de la lista.
+- **Incongruencias Fisiológicas en la Vista de Administrador:** Atletas en modo ritmo (ej. Georg Schmitt) mostraban falsamente `Run CP: 0W`, y el FTP de ciclismo de Germán Morales conservaba un valor residual de $226\text{W}$ en lugar de su estándar armonizado de $228\text{W}$.
+
+### 70.2. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Expansión Widescreen Adaptativa (`page.tsx`, `Header.tsx`, `AdminPanel.tsx`):**
+   - Transición de `max-w-7xl` a un canvas fluido y generoso: `w-full max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-2.5 sm:px-6 lg:px-8` para el encabezado maestro, el contenedor principal de administración y el pie de página.
+   - Incremento del ancho del sidebar en escritorio a `md:w-64 lg:w-72` y ampliación del padding del contenedor principal a `p-4 sm:p-6 md:p-8 lg:p-9 xl:p-10`, otorgando holgura visual a todas las secciones.
+2. **Fila de Tarjetas KPI de Resumen Ejecutivo (`AdminUsersTab.tsx`):**
+   - Incorporación de 4 tarjetas superiores de supervisión instantánea:
+     * **Total Atletas:** Conteo total en plataforma.
+     * **Atletas Activos:** Ratio de activación y porcentaje con acceso habilitado.
+     * **Solicitudes Pendientes:** Alerta visual en ámbar con pulso activo si hay solicitudes que requieren aprobación.
+     * **Conexión Intervals.icu:** Total y porcentaje de deportistas con telemetría vinculada.
+3. **Barra de Herramientas, Búsqueda y Filtros de Alta Capacidad (`AdminUsersTab.tsx`):**
+   - Buscador espacioso con botón interactivo de limpieza (`✕`).
+   - Selector de filtrado multidimensional: por Estado (`Todos`, `Activos`, `Pendientes`, `Invitados`), por Rol (`Todos`, `Admin`, `Atleta`) y por Conexión (`Todos`, `Conectados`, `Sin vincular`).
+   - Botón directo de refresco live (`🔄 Refrescar`) con animación de giro para re-sincronizar el estado sin recargar la página.
+4. **Rediseño Integral de la Tabla de Atletas (`AdminUsersTable.tsx`):**
+   - Filas con padding generoso (`py-4 px-5 sm:px-6`) y avatares grandes (`h-11 w-11`) con gradientes y punto de estado en vivo.
+   - **Chips Fisiológicos Precisos:** Detección de modalidad para corredores por ritmo (`⏱️ Ritmo: 4:45/km` en chip esmeralda) vs corredores Stryd (`⚡ Run CP: 336W` en chip ámbar) y ciclismo (`🚴 Bike FTP: 228W` en chip cian). Erradicación de `Run CP: 0W`.
+   - **Columna de Acciones sin Recortes:** Contenedor espacioso con ancho mínimo garantizado (`min-w-[340px]`) que aloja cómodamente:
+     * Botón `[ 👁️ Ver como atleta ]` en púrpura de alta visibilidad.
+     * Botón `[ ✎ Configurar ]` para calibración y soporte.
+     * Botón `[ ✓ Aprobar ]` en verde esmeralda para solicitudes pendientes.
+     * Acciones rápidas de suspensión y eliminación con tooltips claros.
+5. **Armonización Fisiológica en Backend (`adminUsers.ts` & `types.ts`):**
+   - `AdminUserListItem` enriquecido con `swimCssStr`.
+   - Normalización del `bikeFtp` de superadmin a **$228\text{W}$** y soporte nativo para `runThresholdPaceStr` y `runThresholdPaceSecPerKm`.
+
+### 70.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores en 3.0s)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/app/page.tsx`: **205 LOC**
+  * `src/components/AdminPanel.tsx`: **237 LOC**
+  * `src/components/Header.tsx`: **251 LOC**
+  * `src/components/admin/AdminSidebar.tsx`: **196 LOC**
+  * `src/components/admin/AdminUserCardMobile.tsx`: **229 LOC**
+  * `src/components/admin/AdminUsersTab.tsx`: **328 LOC**
+  * `src/components/admin/AdminUsersTable.tsx`: **294 LOC**
+  * `src/lib/db/adminUsers.ts`: **346 LOC**
+  * `src/lib/db/types.ts`: **121 LOC**
+
 
 

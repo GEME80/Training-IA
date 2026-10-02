@@ -184,14 +184,6 @@ export const SeasonCurveChart: React.FC<SeasonCurveChartProps> = ({
                 strokeDasharray="2 2"
                 opacity="0.9"
               />
-              <circle
-                cx={currentPoint.x}
-                cy={currentPoint.y}
-                r="7"
-                fill="#0284c7"
-                opacity="0.2"
-                className="animate-ping"
-              />
             </g>
           )}
 

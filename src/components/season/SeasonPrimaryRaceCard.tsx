@@ -26,7 +26,7 @@ export const SeasonPrimaryRaceCard: React.FC<SeasonPrimaryRaceCardProps> = ({
         {weeksLeft !== null && (
           <span className="flex items-center gap-1 text-[11px] font-mono font-bold text-amber-800 dark:text-amber-300">
             <Clock className="h-3 w-3 text-amber-500" />
-            Faltan {weeksLeft} sem.
+            {weeksLeft === 0 ? "¡Hoy es el día!" : `Faltan ${weeksLeft} sem.`}
           </span>
         )}
       </div>

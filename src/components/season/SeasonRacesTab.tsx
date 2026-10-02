@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Flag, Trophy, Plus, Trash2, Calendar, ChevronDown, ChevronUp, Sparkles, Clock, Target } from "lucide-react";
+import { Flag, Trophy, Plus, Trash2, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { TargetRace } from "@/lib/physiology/macrocycle";
 import { SeasonPrimaryRaceCard } from "./SeasonPrimaryRaceCard";
+import { getTodayDateStr, isSameRace } from "@/lib/physiology/seasonPlanHelpers";
 
 interface SeasonRacesTabProps {
   targetRaces: TargetRace[];
@@ -20,6 +21,18 @@ interface SeasonRacesTabProps {
   onAddRace: (e: React.FormEvent) => void;
   onDeleteRace: (id: string) => void;
 }
+
+const DISTANCE_PILLS: { label: string; value: TargetRace["distance"] }[] = [
+  { label: "42K", value: "42k" }, { label: "21K", value: "21k" }, { label: "10K", value: "10k" }, { label: "5K", value: "5k" },
+  { label: "Gran Fondo", value: "cycling_fondo" as any }, { label: "Sprint / Olímpico", value: "triathlon_short" as any },
+  { label: "70.3 Triatlón", value: "triathlon_703" }, { label: "Full 140.6", value: "triathlon_1406" as any }, { label: "Ultra Trail", value: "ultra" as any },
+];
+
+const PRIORITY_PILLS: { label: string; value: "A" | "B" | "C" }[] = [
+  { label: "🥇 Tipo A (Principal)", value: "A" },
+  { label: "🥈 Tipo B (Test)", value: "B" },
+  { label: "🥉 Tipo C (Entrenamiento)", value: "C" },
+];
 
 export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
   targetRaces,
@@ -41,34 +54,25 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
   const [isCustomDistance, setIsCustomDistance] = useState<boolean>(false);
   const [customDistanceText, setCustomDistanceText] = useState<string>("");
 
-  const distancePills: { label: string; value: TargetRace["distance"] }[] = [
-    { label: "42K", value: "42k" },
-    { label: "21K", value: "21k" },
-    { label: "10K", value: "10k" },
-    { label: "5K", value: "5k" },
-    { label: "Gran Fondo", value: "cycling_fondo" as any },
-    { label: "Sprint / Olímpico", value: "triathlon_short" as any },
-    { label: "70.3 Triatlón", value: "triathlon_703" },
-    { label: "Full 140.6", value: "triathlon_1406" as any },
-    { label: "Ultra Trail", value: "ultra" as any },
-  ];
-
-  const priorityPills: { label: string; value: "A" | "B" | "C" }[] = [
-    { label: "🥇 Tipo A (Principal)", value: "A" },
-    { label: "🥈 Tipo B (Test)", value: "B" },
-    { label: "🥉 Tipo C (Entrenamiento)", value: "C" },
-  ];
-
   const getWeeksLeft = (dateStr: string): number | null => {
     if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const raceDate = new Date(dateStr + "T00:00:00");
-    const diff = raceDate.getTime() - new Date().getTime();
-    if (diff <= 0) return 0;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24 * 7));
+    const diffDays = Math.round((raceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return null;
+    if (diffDays === 0) return 0;
+    return Math.ceil(diffDays / 7);
   };
 
-  const primaryRace = targetRaces.find((r) => r.priority === "A") || (targetRaces.length > 0 ? targetRaces[0] : null);
-  const secondaryRaces = targetRaces.filter((r) => r.id !== primaryRace?.id);
+  const todayStr = getTodayDateStr();
+  const activeRaces = targetRaces.filter((r) => !r.date || r.date >= todayStr);
+  const primaryRace = activeRaces.find((r) => r.priority === "A") || (activeRaces.length > 0 ? activeRaces[0] : null);
+  const secondaryRaces = activeRaces.filter((r) => {
+    if (r.id === primaryRace?.id) return false;
+    if (primaryRace && isSameRace(r, primaryRace)) return false;
+    return true;
+  });
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,9 +95,9 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
           <Trophy className="h-4 w-4 text-amber-500" />
           <h4 className="text-sm font-black text-slate-900 dark:text-white">
             Mis Competiciones & Objetivos
-            {targetRaces.length > 0 && (
+            {activeRaces.length > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] font-mono">
-                {targetRaces.length}
+                {activeRaces.length}
               </span>
             )}
           </h4>
@@ -158,7 +162,7 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
                 Distancia / Disciplina
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {distancePills.map((dp) => {
+                {DISTANCE_PILLS.map((dp) => {
                   const isSelected = !isCustomDistance && newRaceDistance === dp.value;
                   return (
                     <button
@@ -215,7 +219,7 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
                 Prioridad Atlética
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {priorityPills.map((pp) => {
+                {PRIORITY_PILLS.map((pp) => {
                   const isSelected = newRacePriority === pp.value;
                   return (
                     <button
@@ -321,7 +325,7 @@ export const SeasonRacesTab: React.FC<SeasonRacesTabProps> = ({
           </div>
         )}
 
-        {targetRaces.length === 0 && !isFormOpen && (
+        {activeRaces.length === 0 && !isFormOpen && (
           <div className="py-6 text-center space-y-2">
             <Flag className="h-6 w-6 text-slate-400 mx-auto" />
             <div className="text-xs font-bold text-slate-600 dark:text-slate-400">

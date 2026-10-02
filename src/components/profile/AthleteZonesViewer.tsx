@@ -22,6 +22,7 @@ import {
 import { PowerDurationChart } from "./PowerDurationChart";
 import { PaceDurationChart } from "./PaceDurationChart";
 import { SportBestEffortsTable } from "./SportBestEffortsTable";
+import { PaceBestEffortsTable } from "./PaceBestEffortsTable";
 import { useAthleteCurves } from "@/hooks/useAthleteCurves";
 
 export type SportViewTab = "RUN" | "BIKE" | "SWIM";
@@ -224,7 +225,11 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
               )}
             </div>
             <div className="lg:col-span-1">
-              <SportBestEffortsTable bestEfforts={runCurves?.bestEfforts} recent42d={runCurves?.powerCurves?.recent42d} season={runCurves?.powerCurves?.season} weightKg={weightKg} sportTitle="Carrera" />
+              {runTelemetryMode === "POWER" ? (
+                <SportBestEffortsTable bestEfforts={runCurves?.bestEfforts} recent42d={runCurves?.powerCurves?.recent42d} season={runCurves?.powerCurves?.season} weightKg={weightKg} sportTitle="Carrera" />
+              ) : (
+                <PaceBestEffortsTable recent42d={runCurves?.paceCurves?.recent42d} season={runCurves?.paceCurves?.season} thresholdPaceSec={livePaceSec} thresholdPaceStr={runThresholdPaceStr || "4:45/km"} />
+              )}
             </div>
           </div>
         </div>

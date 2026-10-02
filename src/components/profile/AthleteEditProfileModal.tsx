@@ -71,6 +71,8 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
         runningTrainingMode: initialData.runningTrainingMode || (hasPwr ? "POWER" : "PACE"),
         runThresholdPaceStr: initialData.runThresholdPaceStr || "4:45",
         runThresholdPaceSecPerKm: initialData.runThresholdPaceSecPerKm || 285,
+        swimCssStr: initialData.swimCssStr || "1:45",
+        swimCssSecPer100m: initialData.swimCssSecPer100m || 105,
         intervalsAthleteId: initialData.intervalsAthleteId || "",
         apiKey: initialData.apiKey || "",
       });

@@ -30,8 +30,7 @@ export function useAthleteTelemetry({
   const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
-  const [apiKeyCache, setApiKeyCache] = useState<string>("");
-  const [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
+  const [apiKeyCache, setApiKeyCache] = useState<string>(""), [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
   const [visibleMetrics, setVisibleMetrics] = useState<string[]>(userProfile?.visibleMetrics || DEFAULT_VISIBLE_METRICS);
   const [wellnessHistory, setWellnessHistory] = useState<AthleteWellness[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
@@ -131,7 +130,8 @@ export function useAthleteTelemetry({
 
           const syncFields: Array<[string, any]> = [
             ["bike_ftp", p.bike_ftp], ["run_ftp", p.run_ftp], ["lthr", p.lthr], ["resting_hr", p.restingHR],
-            ["max_hr", p.maxHR], ["weight_kg", p.weight], ["height_cm", p.heightCm], ["gender", p.gender]
+            ["max_hr", p.maxHR], ["weight_kg", p.weight], ["height_cm", p.heightCm], ["gender", p.gender],
+            ["swim_css_str", p.swimCssStr], ["swim_css_sec", p.swimCssSecPer100m],
           ];
           syncFields.forEach(([k, v]) => { if (v) userStorage.setItem(k, String(v)); });
 
@@ -141,6 +141,10 @@ export function useAthleteTelemetry({
             lthr: resLthr ?? prev.lthr, restingHR: resRhr ?? prev.restingHR, maxHR: resMax ?? prev.maxHR,
             name: p.name && p.name !== "Atleta" ? p.name : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "Atleta"),
             run_ftp: resRun, bike_ftp: resBike,
+            swimCssStr: p.swimCssStr || userStorage.getItem("swim_css_str") || prev.swimCssStr,
+            swimCssSecPer100m: p.swimCssSecPer100m || Number(userStorage.getItem("swim_css_sec")) || prev.swimCssSecPer100m,
+            runThresholdPaceStr: p.runThresholdPaceStr || userStorage.getItem("run_threshold_pace_str") || prev.runThresholdPaceStr,
+            runThresholdPaceSecPerKm: p.runThresholdPaceSecPerKm || Number(userStorage.getItem("run_threshold_pace_sec")) || prev.runThresholdPaceSecPerKm,
           }));
 
           setPhysioStatus(data.physioStatus);
@@ -177,8 +181,7 @@ export function useAthleteTelemetry({
       runningTrainingMode: data.runningTrainingMode || prev.runningTrainingMode,
       runThresholdPaceStr: data.runThresholdPaceStr || prev.runThresholdPaceStr,
       runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? prev.runThresholdPaceSecPerKm,
-      swimCssStr: data.swimCssStr || prev.swimCssStr,
-      swimCssSecPer100m: data.swimCssSecPer100m ?? prev.swimCssSecPer100m,
+      swimCssStr: data.swimCssStr || prev.swimCssStr, swimCssSecPer100m: data.swimCssSecPer100m ?? prev.swimCssSecPer100m,
     }));
 
     if (data.apiKey) { setApiKeyCache(data.apiKey); userStorage.setItem("intervals_api_key", data.apiKey); }
@@ -193,14 +196,10 @@ export function useAthleteTelemetry({
       uid: user?.uid || "", email: user?.email || userProfile?.email || "",
       displayName: data.displayName || profile.name || user?.displayName || userProfile?.displayName,
       intervalsAthleteId: athleteIdToUse || profile.id, rawApiKey: targetApiKey,
-      runFtp: effRunFtp, bikeFtp: effBikeFtp,
-      lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
-      hasRunningPowerMeter: data.hasRunningPowerMeter ?? profile.hasRunningPowerMeter,
-      runningTrainingMode: data.runningTrainingMode || profile.runningTrainingMode,
-      runThresholdPaceStr: data.runThresholdPaceStr || profile.runThresholdPaceStr,
-      runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? profile.runThresholdPaceSecPerKm,
-      swimCssStr: data.swimCssStr || profile.swimCssStr,
-      swimCssSecPer100m: data.swimCssSecPer100m ?? profile.swimCssSecPer100m,
+      runFtp: effRunFtp, bikeFtp: effBikeFtp, lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
+      hasRunningPowerMeter: data.hasRunningPowerMeter ?? profile.hasRunningPowerMeter, runningTrainingMode: data.runningTrainingMode || profile.runningTrainingMode,
+      runThresholdPaceStr: data.runThresholdPaceStr || profile.runThresholdPaceStr, runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? profile.runThresholdPaceSecPerKm,
+      swimCssStr: data.swimCssStr || profile.swimCssStr, swimCssSecPer100m: data.swimCssSecPer100m ?? profile.swimCssSecPer100m,
       weightKg: effWeight, heightCm: effHeight, birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
       weeklyAvailability: data.weeklyAvailability, visibleMetrics: data.visibleMetrics || visibleMetrics,
     });

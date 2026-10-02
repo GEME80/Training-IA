@@ -184,14 +184,11 @@ export async function syncUserFromGoogleAuth(userData: {
     if (existing.role !== "admin") updates.role = "admin";
     if (existing.status !== "active") updates.status = "active";
     if (!existing.intervalsAthleteId) updates.intervalsAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
-  } else {
-    // BLINDAJE: Purgar inmediatamente si el usuario regular tenía i442091 o credenciales ajenas
-    if (existing.intervalsAthleteId === "i442091") {
-      updates.intervalsAthleteId = undefined;
-      updates.encryptedApiKey = undefined;
-      if (existing.runFtp === 327) updates.runFtp = undefined;
-      if (existing.bikeFtp === 240) updates.bikeFtp = undefined;
-    }
+  } else if (existing.intervalsAthleteId === "i442091") {
+    updates.intervalsAthleteId = undefined;
+    updates.encryptedApiKey = undefined;
+    if (existing.runFtp === 327) updates.runFtp = undefined;
+    if (existing.bikeFtp === 240) updates.bikeFtp = undefined;
   }
 
   await userRef.set(stripUndefined(updates), { merge: true });
@@ -217,6 +214,8 @@ export async function saveUserProfile(
     runningTrainingMode?: RunningTrainingMode;
     runThresholdPaceSecPerKm?: number;
     runThresholdPaceStr?: string;
+    swimCssSecPer100m?: number;
+    swimCssStr?: string;
     restingHR?: number;
     maxHR?: number;
     lthr?: number;
@@ -232,9 +231,7 @@ export async function saveUserProfile(
     seasonPlans?: any[];
   }
 ): Promise<void> {
-  if (!adminDb) {
-    return;
-  }
+  if (!adminDb) return;
 
   try {
     const userRef = adminDb.collection("users").doc(uid);
@@ -255,6 +252,8 @@ export async function saveUserProfile(
       bikeFtp: data.bikeFtp ?? existingData?.bikeFtp,
       runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? existingData?.runThresholdPaceSecPerKm,
       runThresholdPaceStr: data.runThresholdPaceStr ?? existingData?.runThresholdPaceStr,
+      swimCssSecPer100m: data.swimCssSecPer100m ?? existingData?.swimCssSecPer100m,
+      swimCssStr: data.swimCssStr ?? existingData?.swimCssStr,
       restingHR: data.restingHR ?? existingData?.restingHR,
       maxHR: data.maxHR ?? existingData?.maxHR,
       lthr: data.lthr ?? existingData?.lthr,

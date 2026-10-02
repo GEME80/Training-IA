@@ -85,6 +85,8 @@ export async function POST(req: NextRequest) {
       runningTrainingMode,
       runThresholdPaceStr,
       runThresholdPaceSecPerKm,
+      swimCssStr,
+      swimCssSecPer100m,
       trainingFocus,
       weeklyAvailability,
       visibleMetrics,
@@ -104,6 +106,8 @@ export async function POST(req: NextRequest) {
         runningTrainingMode: runningTrainingMode ?? undefined,
         runThresholdPaceStr: runThresholdPaceStr ?? undefined,
         runThresholdPaceSecPerKm: runThresholdPaceSecPerKm !== undefined && runThresholdPaceSecPerKm !== null ? Number(runThresholdPaceSecPerKm) : undefined,
+        swimCssStr: swimCssStr ?? undefined,
+        swimCssSecPer100m: swimCssSecPer100m !== undefined && swimCssSecPer100m !== null ? Number(swimCssSecPer100m) : undefined,
         restingHR: restingHR !== undefined && restingHR !== null ? Number(restingHR) : undefined,
         maxHR: maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined,
         lthr: lthr !== undefined && lthr !== null ? Number(lthr) : undefined,
@@ -121,7 +125,7 @@ export async function POST(req: NextRequest) {
       console.warn("Aviso: Guardado en Firestore omitido en modo local:", dbErr);
     }
 
-    // Sincronización hacia Intervals.icu (Push de Potencia de Ciclismo, Potencia Stryd y Ritmo)
+    // Sincronización hacia Intervals.icu (Push de Potencia Ciclismo, Potencia Stryd, Ritmo Carrera y CSS Natación)
     try {
       const { resolveIntervalsCredentials } = await import("@/lib/intervals/credentials");
       const { IntervalsClient } = await import("@/lib/intervals/client");
@@ -170,6 +174,18 @@ export async function POST(req: NextRequest) {
           if (runSport?.id) {
             const speedMps = Number((1000 / effectiveSec).toFixed(3));
             await client.updateSportSettings(runSport.id, { pace: speedMps }).catch(() => null);
+          }
+        }
+
+        // 4. Ritmo Umbral Natación (CSS)
+        const effectiveSwimSec = swimCssSecPer100m || (swimCssStr ? (await import("@/lib/physiology/runningWorkoutAdapter")).parseSwimPaceToSeconds(swimCssStr) : 0);
+        if (effectiveSwimSec > 0) {
+          const swimSport = (sports || []).find((s: any) =>
+            s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id))
+          );
+          if (swimSport?.id) {
+            const thresholdPace = Number((100 / effectiveSwimSec).toFixed(4));
+            await client.updateSportSettings(swimSport.id, { threshold_pace: thresholdPace }).catch(() => null);
           }
         }
       }

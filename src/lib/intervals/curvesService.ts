@@ -155,8 +155,8 @@ function getModeledPowerCurves(sport: "Ride" | "Run", weightKg: number) {
     recent42d: {
       id: "42d",
       label: "42 días",
-      points: buildPts(Math.round(baseCp * 0.94), Math.round(baseWPrime * 1.1)),
-      eftp: Math.round(baseCp * 0.94),
+      points: buildPts(Math.round(baseCp * 0.95), Math.round(baseWPrime * 1.1)),
+      eftp: Math.round(baseCp * 0.95),
       wPrime: Math.round(baseWPrime * 1.1),
       vo2max: sport === "Run" ? 53.4 : 44.9,
       cs5m: sport === "Run" ? 1410 : 837,

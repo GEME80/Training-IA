@@ -75,9 +75,12 @@ export const SportBestEffortsTable: React.FC<SportBestEffortsTableProps> = ({
 
             {/* Métricas modeladas de curva (eFTP, W', VO2max, CS5m) */}
             <tr className="bg-slate-50/70 dark:bg-slate-800/40">
-              <td className="py-1.5 font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <Zap className="h-3 w-3 text-amber-500" />
-                <span>eFTP</span>
+              <td className="py-1.5 font-bold text-slate-800 dark:text-slate-200">
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-amber-500 shrink-0" />
+                  <span>eFTP</span>
+                  <span className="text-[9px] font-mono text-slate-400 font-normal hidden xl:inline">(Estimado)</span>
+                </div>
               </td>
               <td className="py-1.5 text-right font-black text-indigo-700 dark:text-indigo-300">
                 {recent42d?.eftp ? `${recent42d.eftp} W` : "—"}

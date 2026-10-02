@@ -212,10 +212,13 @@ export class TelemetryService {
             events = calendarEvents;
 
             const runSport = (sportSettingsData || []).find((s: any) =>
-              s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) || /run/i.test(String(s.id))
+              s.types?.some((t: string) => /run/i.test(t)) || /run/i.test(String(s.id))
             );
             const rideSport = (sportSettingsData || []).find((s: any) =>
-              s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id))
+              s.types?.some((t: string) => /ride|bike/i.test(t)) || /ride|bike/i.test(String(s.id))
+            );
+            const swimSport = (sportSettingsData || []).find((s: any) =>
+              s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id))
             );
 
             const anyAthlete = athleteData as any;
@@ -235,7 +238,6 @@ export class TelemetryService {
             const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
             const normHeight = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
             const resolvedHeight = storedUser?.profile.heightCm || normHeight;
-
             const latestWellness = wellness.length > 0 ? wellness[wellness.length - 1] : undefined;
 
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
@@ -246,19 +248,21 @@ export class TelemetryService {
             const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
             const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
 
+            const swimSpeed = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number);
+            let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m;
+            let resSwimStr: string | undefined = storedUser?.profile.swimCssStr;
+            if (!resSwimSec && typeof swimSpeed === "number" && swimSpeed > 0) {
+              resSwimSec = Math.round(100 / swimSpeed);
+              resSwimStr = `${Math.floor(resSwimSec / 60)}:${String(Math.round(resSwimSec % 60)).padStart(2, "0")}`;
+            }
+
             // Detección unificada de Breakthroughs (Ciclismo, Ritmo y Potencia de Carrera)
             try {
               const breakthroughs = await BreakthroughDetectionService.evaluateAll({
-                activities: activitiesData || [],
-                athleteId: effectiveAthleteId,
-                apiKey: effectiveApiKey,
-                uid,
-                currentBikeFtp: initialBikeFtp,
-                currentRunFtp: initialRunFtp,
-                currentPaceSec: storedUser?.profile.runThresholdPaceSecPerKm || 285,
-                currentPaceStr: storedUser?.profile.runThresholdPaceStr || "4:45",
-                lthr: intervalsLthr,
-                maxHR: intervalsMaxHR,
+                activities: activitiesData || [], athleteId: effectiveAthleteId, apiKey: effectiveApiKey, uid,
+                currentBikeFtp: initialBikeFtp, currentRunFtp: initialRunFtp,
+                currentPaceSec: storedUser?.profile.runThresholdPaceSecPerKm || 285, currentPaceStr: storedUser?.profile.runThresholdPaceStr || "4:45",
+                lthr: intervalsLthr, maxHR: intervalsMaxHR,
               });
               recentFtpCalibration = breakthroughs.recentFtpCalibration;
               recentPaceCalibration = breakthroughs.recentPaceCalibration;
@@ -283,6 +287,12 @@ export class TelemetryService {
               lthr: intervalsLthr ? Number(intervalsLthr) : undefined,
               run_ftp: resolvedRunFtp,
               bike_ftp: initialBikeFtp,
+              hasRunningPowerMeter: storedUser?.profile.hasRunningPowerMeter,
+              runningTrainingMode: storedUser?.profile.runningTrainingMode,
+              runThresholdPaceStr: storedUser?.profile.runThresholdPaceStr,
+              runThresholdPaceSecPerKm: storedUser?.profile.runThresholdPaceSecPerKm,
+              swimCssStr: resSwimStr,
+              swimCssSecPer100m: resSwimSec,
             };
           }
         } catch (clientErr) {

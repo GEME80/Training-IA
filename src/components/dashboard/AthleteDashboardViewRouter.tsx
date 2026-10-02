@@ -252,6 +252,8 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         runningTrainingMode={telemetry.profile.runningTrainingMode}
         runThresholdPaceStr={telemetry.profile.runThresholdPaceStr}
         runThresholdPaceSecPerKm={telemetry.profile.runThresholdPaceSecPerKm}
+        swimCssStr={telemetry.profile.swimCssStr}
+        swimCssSecPer100m={telemetry.profile.swimCssSecPer100m}
         apiKey={telemetry.apiKeyCache || userProfile?.intervalsApiKey || ""}
         ctl={telemetry.physioStatus?.ctl || telemetry.profile.ctl || 0}
         atl={telemetry.physioStatus?.atl || telemetry.profile.atl || 0}

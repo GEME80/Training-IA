@@ -7,6 +7,8 @@ import { RunningTrainingMode } from "@/lib/db/types";
 import { ThresholdSuggestionItem } from "./SuggestedThresholdBanner";
 
 interface AthleteZonesTabProps {
+  athleteId?: string;
+  apiKey?: string;
   athleteName: string;
   email?: string;
   calculatedAge?: number;
@@ -38,6 +40,8 @@ interface AthleteZonesTabProps {
 }
 
 export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
+  athleteId,
+  apiKey,
   athleteName,
   email,
   calculatedAge,
@@ -93,8 +97,11 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         onEditThreshold={onEditThreshold}
       />
 
-      {/* Visor de las 5 tablas de zonas de entrenamiento fisiológicas */}
+      {/* Visor de las tablas de zonas de entrenamiento fisiológicas & curvas por deporte */}
       <AthleteZonesViewer
+        athleteId={athleteId}
+        apiKey={apiKey}
+        weightKg={weightKg}
         runFtp={runFtp}
         bikeFtp={bikeFtp}
         lthr={lthr || 0}

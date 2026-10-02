@@ -277,6 +277,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       {/* 3. Contenido de Pestaña */}
       {activeTab === "zones" && (
         <AthleteZonesTab
+          athleteId={athleteId} apiKey={apiKey}
           athleteName={athleteName} email={email} calculatedAge={calculatedAge} birthDate={birthDate}
           gender={gender} weightKg={weightKg} heightCm={heightCm} runFtp={runFtp} bikeFtp={bikeFtp}
           lthr={lthr} restingHR={restingHR} maxHR={maxHR} hasRunningPowerMeter={hasRunningPowerMeter}

@@ -53,6 +53,13 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
     isReadOnly,
   });
 
+  const runningOpts = {
+    mode: (telemetry.profile.hasRunningPowerMeter === false || telemetry.profile.runningTrainingMode === "PACE" || telemetry.profile.runningTrainingMode === "HYBRID" || !telemetry.profile.run_ftp) ? "PACE" as const : "POWER" as const,
+    thresholdPaceSec: telemetry.profile.runThresholdPaceSecPerKm,
+    thresholdPaceStr: telemetry.profile.runThresholdPaceStr,
+    lthr: telemetry.profile.lthr,
+  };
+
   if (activeNavSection === "dashboard") {
     return (
       <AthleteDashboardOverview
@@ -176,9 +183,12 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
                   telemetry.profile.bike_ftp,
                   resolveEffectiveAvailability((season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability),
                   (season.macrocyclePhase?.blueprint?.distanceType || season.primaryRace?.distance) as any,
-                  telemetry.profile.ctl
+                  telemetry.profile.ctl,
+                  undefined,
+                  runningOpts
                 ),
-                telemetry.calendarEvents
+                telemetry.calendarEvents,
+                runningOpts
               )
             : []
         }

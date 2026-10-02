@@ -20,6 +20,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (parseResult.data.action === "delete_future") {
+      const delResult = await IntervalsSyncService.deleteFutureWorkouts({
+        athleteId: parseResult.data.athleteId,
+        apiKey: parseResult.data.apiKey,
+        uid: parseResult.data.uid,
+        email: parseResult.data.email,
+        fromDate: parseResult.data.fromDate,
+        toDate: parseResult.data.toDate,
+      });
+      const status = delResult.isAuthError ? 401 : delResult.success ? 200 : 500;
+      return NextResponse.json(delResult, { status });
+    }
+
     const result = await IntervalsSyncService.syncPlan(parseResult.data);
     const status = result.isAuthError ? 401 : result.success ? 200 : 500;
     return NextResponse.json(result, { status });

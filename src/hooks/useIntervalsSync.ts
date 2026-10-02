@@ -19,6 +19,7 @@ interface UseIntervalsSyncProps {
   userStorage: UserStorage;
   onOpenSettings?: (tab: "intervals") => void;
   isReadOnly?: boolean;
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number };
 }
 
 export function useIntervalsSync({
@@ -32,6 +33,7 @@ export function useIntervalsSync({
   userStorage,
   onOpenSettings,
   isReadOnly = false,
+  runningOpts,
 }: UseIntervalsSyncProps) {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncNotification, setSyncNotification] = useState<SyncNotificationData | null>(null);
@@ -116,12 +118,9 @@ export function useIntervalsSync({
     const fullCyclePlan: PlanItem[] = [];
     blueprint.weeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
-        week,
-        runFtp,
-        bikeFtp,
+        week, runFtp, bikeFtp,
         resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
-        (blueprint.distanceType || primaryRace?.distance) as any,
-        ctl
+        (blueprint.distanceType || primaryRace?.distance) as any, ctl, undefined, runningOpts
       );
       fullCyclePlan.push(...weekPlan);
     });
@@ -162,7 +161,9 @@ export function useIntervalsSync({
       setSyncNotification({
         title: "¡Macrociclo Sincronizado con Éxito!",
         message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos estructurados en tu calendario de Intervals.icu (${blueprint.weeks.length} semanas).`,
-        details: `Cada día refleja exactamente tu disponibilidad semanal de deportes, días de descanso (0 TSS) y zonas de potencia (Stryd CP: ${runFtp}W, Bike FTP: ${bikeFtp}W).`,
+        details: runningOpts?.mode === "PACE"
+          ? `Cada día refleja exactamente tu disponibilidad semanal de deportes, días de descanso (0 TSS) y zonas de ritmo (Pace: ${runningOpts.thresholdPaceStr || "4:45"}/km, Bike FTP: ${bikeFtp}W).`
+          : `Cada día refleja exactamente tu disponibilidad semanal de deportes, días de descanso (0 TSS) y zonas de potencia (Stryd CP: ${runFtp}W, Bike FTP: ${bikeFtp}W).`,
         type: "success",
       });
     } catch (err: any) {
@@ -215,12 +216,9 @@ export function useIntervalsSync({
     const triweeklyPlan: PlanItem[] = [];
     targetWeeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
-        week,
-        runFtp,
-        bikeFtp,
+        week, runFtp, bikeFtp,
         resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
-        (blueprint.distanceType || primaryRace?.distance) as any,
-        ctl
+        (blueprint.distanceType || primaryRace?.distance) as any, ctl, undefined, runningOpts
       );
       triweeklyPlan.push(...weekPlan);
     });
@@ -252,7 +250,9 @@ export function useIntervalsSync({
       setSyncNotification({
         title: `¡Bloque de 3 Semanas Sincronizado! (Sem. ${weekNumbers})`,
         message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos en Intervals.icu y Garmin Connect (${targetWeeks[0].formattedRange} al ${targetWeeks[targetWeeks.length - 1].formattedRange}).`,
-        details: "Estrategia 2:1 activa: Al término de este bloque de 3 semanas, el sistema recalibrará automáticamente tus zonas Stryd CP, Bike FTP y TSS según tu adherencia viva y evolución de CTL/TSB.",
+        details: runningOpts?.mode === "PACE"
+          ? `Zonas calibradas por Pace (${runningOpts.thresholdPaceStr || "4:45"}/km) y Ciclismo FTP (${bikeFtp}W).`
+          : "Al término de este bloque, el sistema recalibrará automáticamente tus zonas según tu adherencia y CTL/TSB.",
         type: "success",
       });
     } catch (err: any) {
@@ -267,6 +267,48 @@ export function useIntervalsSync({
     }
   };
 
+  const handleDeleteFutureWorkouts = async (fromDateStr: string = "2026-10-03") => {
+    if (isReadOnly) {
+      setSyncNotification({
+        title: "Modo Auditoría (Solo Lectura)",
+        message: "Las modificaciones a Intervals.icu están deshabilitadas en modo auditoría.",
+        type: "error",
+      });
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
+      const res = await fetch("/api/sync-intervals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_future",
+          athleteId,
+          apiKey: activeApiKey,
+          uid: user?.uid,
+          email: user?.email || userProfile?.email || "",
+          fromDate: fromDateStr,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Error al eliminar sesiones en Intervals.icu");
+      setSyncNotification({
+        title: "Limpieza Completada en Intervals.icu",
+        message: `Se eliminaron ${data.deletedCount || 0} sesiones planificadas a partir del ${fromDateStr}. Listo para sincronizar el macrociclo purificado.`,
+        type: "success",
+      });
+    } catch (err: any) {
+      setSyncNotification({
+        title: "Error de Limpieza",
+        message: err.message || "No se pudieron eliminar los entrenamientos futuros.",
+        type: "error",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return {
     isSyncing,
     syncNotification,
@@ -274,5 +316,6 @@ export function useIntervalsSync({
     handleSyncToIntervals,
     handleSyncFullMacrocycleToIntervals,
     handleSyncTriweeklyBlockToIntervals,
+    handleDeleteFutureWorkouts,
   };
 }

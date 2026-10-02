@@ -144,7 +144,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       )
     : [];
   const activeWeekPlan = activeWeekForAgenda
-    ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents)
+    ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents, runningOpts)
     : [];
 
   return (

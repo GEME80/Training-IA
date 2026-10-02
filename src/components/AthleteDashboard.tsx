@@ -135,6 +135,12 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     userStorage,
     onOpenSettings: (tab) => { setSettingsTab(tab); setIsSettingsOpen(true); },
     isReadOnly: effectiveReadOnly,
+    runningOpts: {
+      mode: (telemetry.profile.hasRunningPowerMeter === false || telemetry.profile.runningTrainingMode === "PACE" || telemetry.profile.runningTrainingMode === "HYBRID" || !telemetry.profile.run_ftp) ? "PACE" : "POWER",
+      thresholdPaceSec: telemetry.profile.runThresholdPaceSecPerKm,
+      thresholdPaceStr: telemetry.profile.runThresholdPaceStr,
+      lthr: telemetry.profile.lthr,
+    },
   });
 
   const season = useSeasonPlans({

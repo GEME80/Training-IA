@@ -33,7 +33,7 @@ export const ProfileUpdateRequestSchema = z.object({
   runFtp: z.number().nullable().optional(),
   bikeFtp: z.number().nullable().optional(),
   hasRunningPowerMeter: z.boolean().nullable().optional(),
-  runningTrainingMode: z.enum(["POWER", "HYBRID"]).nullable().optional(),
+  runningTrainingMode: z.enum(["POWER", "PACE", "HYBRID"]).nullable().optional(),
   runThresholdPaceSecPerKm: z.number().nullable().optional(),
   runThresholdPaceStr: z.string().nullable().optional(),
   swimCssSecPer100m: z.number().nullable().optional(),
@@ -92,7 +92,10 @@ export const SyncIntervalsRequestSchema = z.object({
   apiKey: z.string().optional(),
   uid: z.string().optional(),
   email: z.string().optional(),
-  plan: z.array(PlanItemSchema).min(1, "Estructura del microciclo inválida o vacía."),
+  plan: z.array(PlanItemSchema).optional().default([]),
+  action: z.enum(["sync", "delete_future", "clean_and_sync"]).optional(),
+  fromDate: z.string().optional(),
+  toDate: z.string().optional(),
 });
 
 export type SyncIntervalsRequest = z.infer<typeof SyncIntervalsRequestSchema>;

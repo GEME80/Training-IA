@@ -70,6 +70,10 @@ export interface AdminUserListItem {
   isPreAuthorized?: boolean;
   runFtp?: number;
   bikeFtp?: number;
+  hasRunningPowerMeter?: boolean;
+  runningTrainingMode?: RunningTrainingMode;
+  runThresholdPaceStr?: string;
+  runThresholdPaceSecPerKm?: number;
   weightKg?: number;
   heightCm?: number;
   restingHR?: number;

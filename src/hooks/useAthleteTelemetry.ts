@@ -74,7 +74,7 @@ export function useAthleteTelemetry({
       lthr: userProfile?.lthr ?? (Number(userStorage.getItem("lthr")) || undefined),
       maxHR: userProfile?.maxHR ?? (Number(userStorage.getItem("max_hr")) || undefined),
       run_ftp: userProfile?.runFtp || 0, bike_ftp: userProfile?.bikeFtp || 0,
-      hasRunningPowerMeter: hasPwr, runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+      hasRunningPowerMeter: hasPwr, runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "PACE"),
       runThresholdPaceStr: userProfile?.runThresholdPaceStr || userStorage.getItem("run_threshold_pace_str") || "4:45",
       runThresholdPaceSecPerKm: userProfile?.runThresholdPaceSecPerKm || Number(userStorage.getItem("run_threshold_pace_sec")) || 285,
       swimCssStr: userProfile?.swimCssStr || userStorage.getItem("swim_css_str") || "1:45",
@@ -299,7 +299,7 @@ export function useAthleteTelemetry({
 
       setProfile((prev) => ({
         ...prev, id: storedAthleteId, run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp, hasRunningPowerMeter: hasPwr,
-        runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "HYBRID"),
+        runningTrainingMode: userProfile?.runningTrainingMode || (hasPwr ? "POWER" : "PACE"),
         runThresholdPaceStr: userProfile?.runThresholdPaceStr || userStorage.getItem("run_threshold_pace_str") || prev.runThresholdPaceStr || "4:45",
         runThresholdPaceSecPerKm: userProfile?.runThresholdPaceSecPerKm || Number(userStorage.getItem("run_threshold_pace_sec")) || prev.runThresholdPaceSecPerKm || 285,
         swimCssStr: userProfile?.swimCssStr || userStorage.getItem("swim_css_str") || prev.swimCssStr || "1:45",

@@ -190,18 +190,21 @@ export function isQualityRunningWorkout(workoutName?: string, doc?: string, day?
  * En modo PACE sustituye invariablemente por % Pace (calidad y fondos) sin vatios.
  */
 export function adaptRunningWorkoutDoc(
-  workoutDoc: string,
-  discipline: string,
-  isQuality: boolean,
-  mode: RunningTrainingMode = "POWER"
+  workoutDoc: string, discipline: string, isQuality: boolean, mode: RunningTrainingMode = "POWER"
 ): string {
-  if (!workoutDoc || discipline !== "Carrera" || mode === "POWER") {
-    return workoutDoc;
-  }
-  return workoutDoc
-    .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-    .replace(/\bStryd\s*CP\b/gi, "Pace")
-    .replace(/\s*\(\d+W\)/gi, "");
+  if (!workoutDoc || discipline !== "Carrera" || mode === "POWER") return workoutDoc;
+  let inCyclingBlock = false;
+  return workoutDoc.split("\n").map((line) => {
+    if (/ciclismo|bici\b|bike|sector\s*2/i.test(line)) inCyclingBlock = true;
+    else if (/carrera|run\b|trote|sector\s*3|transici[oó]n\s*t2|bloque\s*2/i.test(line)) inCyclingBlock = false;
+    if (inCyclingBlock) return line;
+    return line
+      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\b/gi, "Ritmo")
+      .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral")
+      .replace(/\s*\(\d+W\)/gi, "");
+  }).join("\n");
 }
 
 /**
@@ -269,7 +272,12 @@ export function interpolateWorkoutTarget(
 
   // 4. Carrera en Modo Ritmo (PACE): 100% min/km y % Pace (CERO VATIOS)
   const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
-  return rawTarget
+  const sanitized = rawTarget
+    .replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)")
+    .replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)")
+    .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral")
+    .replace(/\bStryd\b/gi, "Ritmo");
+  return sanitized
     .replace(/\s*\(\d+\s*W\)/gi, "")
     .replace(/\b\d+\s*W\b\s*/gi, "")
     .replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR)|(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR))/gi, (_, r1, r2, s1) => {
@@ -304,24 +312,23 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
 
   const isQuality = isQualityRunningWorkout(item.workoutName || "", item.workoutDoc, item.day);
   const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode) : item.workoutDoc;
-  const adaptedTarget = item.powerTarget
-    ? interpolateWorkoutTarget(item.powerTarget, {
-        discipline: "Carrera",
-        mode: "PACE",
-        thresholdPaceSec: opts.thresholdPaceSec,
-        lthr: opts.lthr,
-        isQuality,
-      })
+  const rawTarget = item.powerTarget
+    ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "PACE", thresholdPaceSec: opts.thresholdPaceSec, lthr: opts.lthr, isQuality })
     : item.powerTarget;
+  const adaptedTarget = rawTarget
+    ?.replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)")
+    .replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)")
+    .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
 
-  let adaptedName = item.workoutName;
-  if (adaptedName) {
-    adaptedName = adaptedName
-      .replace(/\s*\(\d+W\)/gi, "")
-      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-      .replace(/\bStryd\s*CP\b/gi, "Pace")
-      .replace(/\bStryd\b/gi, "Ritmo");
-  }
+  const adaptedName = item.workoutName
+    ? item.workoutName
+        .replace(/\s*\(\d+W\)/gi, "")
+        .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+        .replace(/\bStryd\s*CP\b/gi, "Pace")
+        .replace(/\bStryd\b/gi, "Ritmo")
+        .replace(/Potencia\s*Cr[íi]tica|Critical\s*Power/gi, "Ritmo Umbral")
+        .replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)")
+    : item.workoutName;
 
   return {
     ...item,

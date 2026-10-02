@@ -113,6 +113,7 @@ export async function executeRecalibrateBoth() {
     },
     athleteMetrics: {
       ctl: 38.0, atl: 40.0, tsb: -2.0, runFtp: 0, bikeFtp: 214,
+      runningTrainingMode: "PACE", hasRunningPowerMeter: false,
       weightKg: 78, heightCm: 180, restingHR: 50, maxHR: 180, lthr: 162, age: 40, gender: "M",
       weeklyAvailability: georgMatrix as any,
       historicalMetrics: {

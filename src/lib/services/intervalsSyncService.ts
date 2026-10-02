@@ -142,4 +142,50 @@ export class IntervalsSyncService {
       errors: errors.length > 0 ? errors : undefined,
     };
   }
+
+  /**
+   * Elimina entrenamientos planificados en Intervals.icu a partir de una fecha objetivo (ej. mañana 2026-10-03).
+   * Solo afecta eventos con categoría "WORKOUT", protegiendo actividades ya ejecutadas y eventos RACE.
+   */
+  static async deleteFutureWorkouts(params: {
+    athleteId?: string;
+    apiKey?: string;
+    uid?: string;
+    email?: string;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<{ success: boolean; deletedCount: number; error?: string; isAuthError?: boolean }> {
+    const { athleteId, apiKey, uid, email, fromDate, toDate } = params;
+    const { athleteId: effAthleteId, apiKey: effApiKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
+    if (!effApiKey) {
+      return { success: false, deletedCount: 0, error: "API Key de Intervals.icu no configurada.", isAuthError: true };
+    }
+
+    const client = new IntervalsClient(effAthleteId, effApiKey);
+    const startStr = fromDate || "2026-10-03";
+    const endStr = toDate || "2026-12-31";
+
+    try {
+      const existingEvents = await client.getEvents(startStr, endStr);
+      const workoutsToDelete = existingEvents.filter(
+        (e) => e.id && (e.category === "WORKOUT" || (e.name && (/\[PULSE/i.test(e.name) || /\[SGEA/i.test(e.name))))
+      );
+
+      let deletedCount = 0;
+      for (const evt of workoutsToDelete) {
+        if (!evt.id) continue;
+        try {
+          await client.deleteEvent(evt.id);
+          deletedCount++;
+        } catch (delErr) {
+          console.warn(`Error eliminando evento ${evt.id}:`, delErr);
+        }
+      }
+
+      return { success: true, deletedCount };
+    } catch (err: any) {
+      console.error("Error al consultar/eliminar eventos futuros en Intervals:", err);
+      return { success: false, deletedCount: 0, error: err?.message || "Error al eliminar eventos en Intervals" };
+    }
+  }
 }

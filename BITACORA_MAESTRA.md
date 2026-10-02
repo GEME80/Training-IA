@@ -5146,3 +5146,48 @@ flowchart TD
   * `src/lib/services/recalibrateService.ts`: 131 LOC
   * `src/components/dashboard/AthleteDashboardOverview.tsx`: 241 LOC
   * `src/components/dashboard/AthleteDashboardViewRouter.tsx`: 310 LOC
+
+---
+
+## [2026-10-02] - Versión 3.96: Purificación 100% por Pace de Georg Schmitt (Ironman 70.3 Cartagena), Erradicación de Residuos de Potencia & Protocolo de Borrado Futuro en Intervals.icu
+
+### 65.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Diagnóstico y Erradicación del Revuelto de Metodologías (Stryd Power vs Pace):**
+   - **Causa Raíz de Primeras Semanas en Potencia:** Detección de que `hydrateWeekPlanFromEvents` en `calendarHydration.ts` insertaba eventos previos de Intervals.icu sin pasar por `adaptRunningPlanItem`. Al sincronizarse inicialmente en modo por defecto (vatios), las semanas pasadas y presentes conservaban descripciones en potencia mientras que las futuras se adaptaban al vuelo.
+   - **Causa Raíz de Términos de Potencia Persistentes:**
+     * Título `Series de Potencia Crítica en Carrera` en Semana 7: el adaptador sanitizaba `Stryd CP` y `Stryd`, pero omitía `Potencia Crítica`.
+     * Focus de Semana 6 en el blueprint: inyectaba el nombre del test `RUN_TEST_STRYD_3_9` de forma estática sin verificar si el atleta entrenaba en Pace.
+     * Contaminación del Ciclismo en W9: `adaptRunningWorkoutDoc` convertía globalmente `% FTP` a `% Pace`, degradando el sector ciclista de 90 km del Ironman 70.3.
+     * Bloqueo del modo `"PACE"` en el Esquema Zod: `schemas.ts` solo permitía `z.enum(["POWER", "HYBRID"])`, impidiendo guardar la modalidad `"PACE"` pura.
+2. **Sanitización Fisiológica Profunda (`runningWorkoutAdapter.ts` & `macrocycleGenerator.ts`):**
+   - **Blindaje del Ciclismo en Triatlón/Multideporte:** En `adaptRunningWorkoutDoc`, se implementó detección de contexto por bloques (`inCyclingBlock`). Los sectores de Ciclismo conservan estrictamente su prescripción por `% FTP` y vatios Coggan, mientras que los bloques de Carrera se adaptan a `% Pace` y min/km.
+   - **Sustitución Terminológica Integral:** `Potencia Crítica` y `Critical Power` se traducen automáticamente a `Ritmo Umbral`. `Stryd Critical Power (CP)` y `Stryd CP` en `powerTarget` se convierten a `Ritmo Umbral (Pace)`.
+   - **Sanitización de Tests en Macrociclo:** En `macrocycleGenerator.ts`, si el atleta es de modalidad Pace (`runFtp === 0` o `runningTrainingMode === "PACE"` o `hasRunningPowerMeter === false`), el test de W6 se titula como `🧪 Test Oficial Ritmo Umbral (Pace) 3/9 Minutos (Paladino)`.
+3. **Hidratación Limpia del Calendario (`calendarHydration.ts`):**
+   - `hydrateWeekPlanFromEvents` ahora recibe `runningOpts` y adapta automáticamente los entrenamientos sincronizados desde Intervals.icu cuando el atleta entrena en Pace (`adaptRunningPlanItem`).
+   - Sincronizados los componentes visuales `AthleteCalendarWeekRow.tsx`, `AthleteContinuousCalendar.tsx` y `AthleteDashboardViewRouter.tsx` para suministrar siempre `runningOpts`.
+4. **Protocolo de Borrado y Sincronización Futura en Intervals.icu (`intervalsSyncService.ts` & `useIntervalsSync.ts`):**
+   - **Nuevo Método `IntervalsSyncService.deleteFutureWorkouts`:** Permite eliminar en lote los entrenamientos planificados (`category === "WORKOUT"`) a partir de una fecha específica (por defecto, a partir de mañana `2026-10-03`), protegiendo el historial pasado ya ejecutado y las competiciones `TARGET/RACE`.
+   - **Soporte de API Endpoint `/api/sync-intervals`:** Manejo de la acción `action: "delete_future"` con parámetros `fromDate` y `toDate`.
+   - **Actualización del Hook `useIntervalsSync`:** Expone `handleDeleteFutureWorkouts`, propaga `runningOpts` al generar plantillas de macrociclo completo y bloques de 3 semanas, y actualiza los mensajes informativos reflejando zonas de Pace (`min/km`).
+5. **Configuración Fisiológica de Georg Schmitt (`recalibrateService.ts` & `AdminImpersonationBanner.tsx`):**
+   - Georg Schmitt (`i729730`) registrado formalmente con `runningTrainingMode: "PACE"`, `hasRunningPowerMeter: false`, `runFtp: 0`, `bikeFtp: 214`, `runThresholdPaceSecPerKm: 285` (4:45/km).
+   - `AdminImpersonationBanner.tsx` actualizado para mostrar `Run Pace: 4:45/km` en lugar de `Run CP: 0W`.
+
+### 65.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas generadas con éxito (0 errores)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Invarianza Incondicional Tokio 2027 (Germán Morales):** 25 semanas idénticas, 336W Stryd CP, W2 test Stryd CP 3/9 intacto ($\Delta\text{TSS} = 0, \Delta\text{Km} = 0$).
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/lib/validation/schemas.ts`: 126 LOC
+  * `src/lib/db/types.ts`: 120 LOC
+  * `src/lib/services/recalibrateService.ts`: 132 LOC
+  * `src/lib/services/intervalsSyncService.ts`: 191 LOC
+  * `src/lib/intervals/calendarHydration.ts`: 236 LOC
+  * `src/hooks/useIntervalsSync.ts`: 321 LOC
+  * `src/lib/physiology/runningWorkoutAdapter.ts`: 340 LOC
+  * `src/lib/physiology/macrocycleGenerator.ts`: 345 LOC
+  * `src/components/dashboard/AthleteCalendarWeekRow.tsx`: 344 LOC
+  * `src/components/dashboard/AthleteContinuousCalendar.tsx`: 335 LOC
+  * `src/components/dashboard/AthleteDashboardViewRouter.tsx`: 320 LOC
+  * `src/hooks/useAthleteTelemetry.ts`: 349 LOC

@@ -2,6 +2,7 @@ import { PlanItem, DisciplineType } from "../gemini/types";
 import { MacrocycleWeek } from "../physiology/macrocycle";
 import { CalendarEvent } from "./types";
 import { formatLocalDateToYMD } from "../dateUtils";
+import { adaptRunningPlanItem } from "../physiology/runningWorkoutAdapter";
 
 const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -67,7 +68,8 @@ function filterEveWorkouts(items: PlanItem[]): PlanItem[] {
 export function hydrateWeekPlanFromEvents(
   week: MacrocycleWeek,
   fallbackPlan: PlanItem[],
-  calendarEvents?: CalendarEvent[]
+  calendarEvents?: CalendarEvent[],
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; lthr?: number }
 ): PlanItem[] {
   if (!calendarEvents || calendarEvents.length === 0 || !week?.startDate) {
     return fallbackPlan;
@@ -218,6 +220,16 @@ export function hydrateWeekPlanFromEvents(
         isRestDay: false, mobilityWarmup: matchingFallback?.mobilityWarmup, fuelingStrategy: matchingFallback?.fuelingStrategy,
       });
     });
+  }
+
+  if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
+    return hydratedItems.map((item) =>
+      adaptRunningPlanItem(item, {
+        mode: "PACE",
+        thresholdPaceSec: runningOpts.thresholdPaceSec,
+        lthr: runningOpts.lthr,
+      })
+    );
   }
 
   return hydratedItems;

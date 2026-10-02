@@ -38,6 +38,8 @@ export interface CustomMacrocycleConfig {
     tsb?: number;
     runFtp?: number;
     bikeFtp?: number;
+    runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
+    hasRunningPowerMeter?: boolean;
     weightKg?: number;
     heightCm?: number;
     restingHR?: number;
@@ -258,9 +260,7 @@ export function generateCustomMacrocycleBlueprint(
       Object.values(config.athleteMetrics?.weeklyAvailability || {}).some((d: any) => Array.isArray(d) && d.some((s: string) => /ciclismo|bike|ride/i.test(s)));
     const isFtpTestWk = hasCycling && weekNumber === 7 && totalWeeks >= 9 && countdown > 1;
     const rawTests = [...curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber)];
-    if (isFtpTestWk && !rawTests.some(t => t.sport === "Ride")) {
-      rawTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
-    }
+    if (isFtpTestWk && !rawTests.some(t => t.sport === "Ride")) rawTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
     const scheduledTests = countdown > 1 ? rawTests.slice(0, 1) : [];
     if (scheduledTests.length > 0 && !isRecoveryWeek) {
       microType = "TEST_CONTROL";
@@ -268,11 +268,14 @@ export function generateCustomMacrocycleBlueprint(
       badgeColor = "bg-purple-500/20 text-purple-300 border-purple-500/40";
     }
 
-    const testBadge = scheduledTests.length > 0 ? `🧪 ${scheduledTests[0].testName} • ` : "";
+    const isPaceAthlete = config.athleteMetrics?.runningTrainingMode === "PACE" || config.athleteMetrics?.hasRunningPowerMeter === false || (config.athleteMetrics?.runFtp === 0);
+    const resolvedTestName = (isPaceAthlete && scheduledTests[0]?.sport === "Run")
+      ? scheduledTests[0].testName.replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)").replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)").replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral").replace(/\bStryd\b/gi, "Ritmo")
+      : (scheduledTests[0]?.testName || "");
+    const testBadge = scheduledTests.length > 0 ? `🧪 ${resolvedTestName} • ` : "";
     const isTri = curatedModel.sportCategory === "Triathlon";
-    const isRaceWeekNow = countdown === 1;
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
-    const raceNote = isRaceWeekNow
+    const raceNote = countdown === 1
       ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
       : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? "Fondo dominical" : "Tirada dominical"} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;

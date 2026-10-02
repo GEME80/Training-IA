@@ -68,7 +68,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
     undefined, runningOpts
   );
-  const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents);
+  const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents, runningOpts);
 
   const [isSyncingTriweekly, setIsSyncingTriweekly] = useState(false);
   const [isSyncingCurrentWeek, setIsSyncingCurrentWeek] = useState(false);

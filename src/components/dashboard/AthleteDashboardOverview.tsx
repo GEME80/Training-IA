@@ -73,42 +73,42 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   }, [blueprint, dailyExecutedActivities, profile]);
 
   const dashboardHeader = (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
       <div>
-        <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-          <LayoutDashboard className="h-4 w-4 text-sky-500" />
+        <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
+          <LayoutDashboard className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
           Mi Dashboard
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none">
           Métricas de tu condición física en vivo, estado de forma y calendario de entrenamientos.
         </p>
       </div>
 
       {/* SELECTOR DE PESTAÑAS: RESUMEN ACTUAL VS GRÁFICAS PMC */}
-      <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800/80 p-1 border border-slate-200 dark:border-slate-700/60 self-start sm:self-auto shadow-xs">
+      <div className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800/80 p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700/60 shadow-xs">
         <button
           type="button"
           onClick={() => setActiveTab("overview")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
+          className={`flex items-center justify-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold sm:font-black transition cursor-pointer ${
             activeTab === "overview"
               ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
-          <CalendarDays className="h-3.5 w-3.5" />
-          <span>Resumen & Calendario</span>
+          <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          <span className="truncate">Resumen & Calendario</span>
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("pmc")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
+          className={`flex items-center justify-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold sm:font-black transition cursor-pointer ${
             activeTab === "pmc"
               ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
               : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
-          <TrendingUp className="h-3.5 w-3.5" />
-          <span>Estado de Forma & Evolución</span>
+          <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          <span className="truncate">Estado de Forma & Evolución</span>
         </button>
       </div>
     </div>

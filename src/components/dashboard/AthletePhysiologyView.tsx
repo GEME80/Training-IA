@@ -215,61 +215,61 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       </div>
 
       {/* 2. Barra de Pestañas */}
-      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab("zones")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "zones"
               ? "bg-amber-500 text-slate-950 font-black shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <Zap className="h-4 w-4" />
+          <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span>Zonas & Umbrales</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("profile")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "profile"
               ? "bg-sky-500 text-white font-black shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <User className="h-4 w-4" />
+          <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span>Perfil & Biometría</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("availability")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "availability"
               ? "bg-emerald-500 text-white font-black shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <CalendarDays className="h-4 w-4" />
+          <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span>Disponibilidad</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("intervals")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "intervals"
               ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <Radio className="h-4 w-4 text-sky-500" />
+          <Radio className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
           <span>Conexión Intervals</span>
           {isLiveConnected || !!apiKey ? (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 inline-block" />
           ) : (
-            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-rose-500 inline-block" />
           )}
         </button>
       </div>

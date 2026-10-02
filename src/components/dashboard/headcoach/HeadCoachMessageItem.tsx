@@ -236,7 +236,7 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
       {/* Cuerpo del Mensaje */}
       <div
-        className={`rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
+        className={`rounded-2xl p-3 sm:p-4 lg:p-5 shadow-xs transition-all ${
           isAssistant
             ? "w-full max-w-full lg:max-w-[96%] xl:max-w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200"
             : "max-w-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-medium ml-auto"
@@ -269,7 +269,7 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
         {/* Acciones Tácticas Dinámicas (Smart Replies con Iconos Lucide & Jerarquía) */}
         {isAssistant && actionsList.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 items-center">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800 items-center">
             {actionsList.map((action, idx) => {
               const rawLabel = typeof action === "string" ? action : action.label;
               const label = rawLabel.replace(/^[📊✈️📉📈]\s*/, "");
@@ -283,8 +283,8 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
                     if (onSelectSmartAction) onSelectSmartAction(action);
                     else if (onSelectQuickReply) onSelectQuickReply(label);
                   }}
-                  className={`inline-flex items-center gap-1.5 transition cursor-pointer ${
-                    isTertiary ? "px-1 py-0.5" : "px-3 py-1.5 rounded-xl text-xs"
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 transition cursor-pointer ${
+                    isTertiary ? "px-1 py-0.5 text-[10px]" : "px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs"
                   } ${getActionVariantClasses(variant, label)}`}
                 >
                   {renderActionIcon(action)}

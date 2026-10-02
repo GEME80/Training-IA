@@ -2,6 +2,7 @@ import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGe
 import { saveMacrocycleToFirestore } from "@/lib/db/macrocycles";
 import { calculateTargetPeakCtlPotential, isFreezeWindowActive } from "@/lib/physiology/ctlPotentialEngine";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
+import { adminDb } from "@/lib/firebase/admin";
 
 export {
   type UpgradeDiffItem,
@@ -123,6 +124,15 @@ export async function executeRecalibrateBoth() {
   });
 
   const georgMacroId = await saveMacrocycleToFirestore("i729730", georgBlueprint, georgBlueprint.primaryRace, "WIZARD_CUSTOM");
+  if (adminDb) {
+    const db = adminDb;
+    try {
+      const snap = await db.collection("users").where("intervalsAthleteId", "==", "i729730").get();
+      for (const d of snap.docs) {
+        await d.ref.update({ runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 214, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45" });
+      }
+    } catch {}
+  }
   results.push({
     athlete: "Georg Schmitt", athleteId: "i729730", macrocycleId: georgMacroId,
     weeks: georgBlueprint.totalWeeks, primaryRace: georgBlueprint.primaryRace?.name,

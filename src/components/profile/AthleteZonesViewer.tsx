@@ -118,6 +118,7 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
 
   const isPowerActive = activeMode === "POWER";
   const isHybridActive = activeMode === "HYBRID";
+  const isPaceActive = activeMode === "PACE";
 
   return (
     <div className="space-y-3.5">
@@ -174,14 +175,28 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-start">
         {/* COLUMNA 1: ZONAS POR RITMO */}
-        <div className={`rounded-2xl border ${isHybridActive ? "border-2 border-emerald-500/80 dark:border-emerald-500/60 ring-2 ring-emerald-500/10" : "border-slate-200 dark:border-slate-800"} bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}>
+        <div className={`rounded-2xl border ${isPaceActive || isHybridActive ? "border-2 border-emerald-500/80 dark:border-emerald-500/60 ring-2 ring-emerald-500/10" : "border-slate-200 dark:border-slate-800 opacity-80"} bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs`}>
           <EditableZoneCardHeader
             icon={Timer}
-            iconBgColor={isHybridActive ? "bg-emerald-500/10" : "bg-slate-100 dark:bg-slate-800"}
-            iconColor={isHybridActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}
+            iconBgColor={isPaceActive || isHybridActive ? "bg-emerald-500/10" : "bg-slate-100 dark:bg-slate-800"}
+            iconColor={isPaceActive || isHybridActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}
             title="Ritmo Carrera"
             subtitle="Min/km por Zona"
-            modeBadge={isHybridActive ? <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">ACTIVA SERIES</span> : <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">DANIELS</span>}
+            modeBadge={
+              isPaceActive ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">
+                  ACTIVA RITMO
+                </span>
+              ) : isHybridActive ? (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-white leading-none">
+                  ACTIVA SERIES
+                </span>
+              ) : (
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 leading-none">
+                  DANIELS
+                </span>
+              )
+            }
           />
           {suggestedRunPace && onApplySuggestion && onDismissSuggestion && (
             <SuggestedThresholdBanner suggestion={suggestedRunPace} onApply={onApplySuggestion} onDismiss={onDismissSuggestion} />

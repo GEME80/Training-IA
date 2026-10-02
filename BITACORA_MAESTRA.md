@@ -5218,3 +5218,41 @@ flowchart TD
   * `src/hooks/useAutoIntervalsSync.ts`: 169 LOC
   * `src/components/AthleteDashboard.tsx`: 266 LOC
 
+---
+
+## [2026-10-02] - Versión 3.98: Activación Visual de Insignia 'ACTIVA RITMO' en Zonas Fisiológicas, Desactivación de Potencia Stryd y Calibración por Ritmo Umbral en Modal de Entrenamiento
+
+### 67.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Insignia y Estilos Activos en Zonas por Ritmo (`AthleteZonesViewer.tsx`):**
+   - **Causa Raíz:** En la columna 1 (*Ritmo Carrera*), la cabecera solo evaluaba `isHybridActive` para mostrar la insignia verde, dejando `DANIELS` en modo texto plano cuando el atleta estaba en modo `"PACE"` puro.
+   - **Corrección:** Se incorporó `isPaceActive = activeMode === "PACE"`. Cuando el atleta entrena en Pace, la columna 1 se destaca con borde y anillo esmeralda (`border-emerald-500/80 ring-emerald-500/10`) y la insignia oficial `ACTIVA RITMO` en verde (armonizando con `ACTIVA BICI` en azul y `ACTIVA NADO` en verde azulado).
+   - La columna de *Potencia Carrera* pasa a estado atenuado (`opacity-60`) y etiqueta `CP/FTP` cuando la modalidad activa es ritmo.
+2. **Hero Card del Perfil Fisiológico (`AthleteProfileHeroCard.tsx`):**
+   - La tarjeta de *Ritmo Umbral* ahora activa su borde esmeralda y etiqueta `Activo` cuando `activeMode === "PACE"`.
+   - La tarjeta de *Potencia Run* pasa a `Inactivo` (`— W`, `opacity-60`) para corredores de ritmo, evitando mostrar métricas fantasma de potencia Stryd.
+3. **Banner de Auditoría y Mapeo de Atleta en Admin (`AdminImpersonationBanner.tsx` & `adminUsers.ts`):**
+   - En `adminUsers.ts` (`getAllUsersForAdmin`), se agregaron los campos `runningTrainingMode`, `hasRunningPowerMeter`, `runThresholdPaceStr` y `runThresholdPaceSecPerKm`.
+   - `AdminImpersonationBanner` ahora detecta atletas en Pace y muestra `Run Pace: 4:45/km` en lugar de `Run CP: 400W`.
+4. **Purificación de Prescripción y Objetivos en Modal de Entrenamiento (`WorkoutDetailModal.tsx`):**
+   - **Detección Fisiológica:** `WorkoutDetailModal` ahora recibe `runningTrainingMode`, `hasRunningPowerMeter`, `thresholdPaceStr` y `thresholdPaceSec`.
+   - **Insignia y Título:** En carrera por ritmo, el título se establece como `Prescripción Estructurada (Ritmo):` y la insignia superior muestra `⏱️ Calculado a tu Ritmo Umbral (4:45/km)` en lugar de `⚡ Calculado a tu Stryd CP (400W)`.
+   - **Limpieza de Residuos Numéricos en Objetivos:** Corrección de la expresión regular en `displayTarget` para eliminar rangos de vatios completos (`\b\d+-\d+W\b`) y prefijos numéricos huérfanos (`^\d+-`), erradicando anomalías como `288-(6:36-6:10/km...)`.
+   - En `WorkoutChart`, para sesiones de carrera en ritmo se pasa `athleteFtp = undefined`, garantizando renderizado por ritmo.
+5. **Propagación en Tableros (`AthleteDashboard.tsx` & `MacrocyclePreviewTimeline.tsx`):**
+   - Ambos componentes actualizados para propagar las opciones y métricas de ritmo hacia `WorkoutDetailModal`.
+   - `recalibrateService.ts` sincroniza el documento de usuario en Firestore para Georg Schmitt (`i729730`) fijando `runningTrainingMode: "PACE"`, `hasRunningPowerMeter: false`, `runFtp: 0`.
+
+### 67.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (0 errores en 2.1s)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/components/AthleteDashboard.tsx`: 270 LOC
+  * `src/components/MacrocyclePreviewTimeline.tsx`: 126 LOC
+  * `src/components/admin/AdminImpersonationBanner.tsx`: 89 LOC
+  * `src/components/macrocycle/WorkoutDetailModal.tsx`: 345 LOC
+  * `src/components/profile/AthleteProfileHeroCard.tsx`: 331 LOC
+  * `src/components/profile/AthleteZonesViewer.tsx`: 335 LOC
+  * `src/lib/db/adminUsers.ts`: 345 LOC
+  * `src/lib/services/recalibrateService.ts`: 142 LOC
+
+

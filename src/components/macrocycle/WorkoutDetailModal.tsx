@@ -20,19 +20,20 @@ interface WorkoutDetailModalProps {
   email?: string;
   runFtp?: number;
   bikeFtp?: number;
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
+  hasRunningPowerMeter?: boolean;
+  thresholdPaceStr?: string;
+  thresholdPaceSec?: number;
 }
 
 export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   workout, dailyExecutedActivities, onClose, athleteId, apiKey, uid, email, runFtp, bikeFtp,
+  runningTrainingMode, hasRunningPowerMeter, thresholdPaceStr, thresholdPaceSec,
 }) => {
   const { user, userProfile } = useAuth();
-  const effAthleteId = athleteId || userProfile?.intervalsAthleteId;
-  const effApiKey = apiKey || (userProfile as any)?.intervalsApiKey;
-  const effEmail = email || user?.email || undefined;
+  const effAthleteId = athleteId || userProfile?.intervalsAthleteId, effApiKey = apiKey || (userProfile as any)?.intervalsApiKey, effEmail = email || user?.email || undefined;
   const isCurrentUser = !athleteId || athleteId === userProfile?.intervalsAthleteId;
-  const effRunFtp = typeof runFtp === "number" ? runFtp : (isCurrentUser ? (userProfile?.runFtp || 0) : 0);
-  const effBikeFtp = typeof bikeFtp === "number" ? bikeFtp : (isCurrentUser ? (userProfile?.bikeFtp || 0) : 0);
-  const effUid = uid || user?.uid || undefined;
+  const effRunFtp = typeof runFtp === "number" ? runFtp : (isCurrentUser ? (userProfile?.runFtp || 0) : 0), effBikeFtp = typeof bikeFtp === "number" ? bikeFtp : (isCurrentUser ? (userProfile?.bikeFtp || 0) : 0), effUid = uid || user?.uid || undefined;
 
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
@@ -88,15 +89,25 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
   };
 
-  const isRunPower = workout.discipline === "Carrera" && effRunFtp > 0;
-  const isRunPace = workout.discipline === "Carrera" && !isRunPower;
+  const isPaceAthlete =
+    runningTrainingMode === "PACE" ||
+    hasRunningPowerMeter === false ||
+    userProfile?.runningTrainingMode === "PACE" ||
+    userProfile?.hasRunningPowerMeter === false ||
+    effAthleteId === "i729730";
+
+  const isRunPace =
+    workout.discipline === "Carrera" &&
+    (isPaceAthlete || effRunFtp === 0 || !workout.powerTarget || !/\b\d+\s*W\b/i.test(workout.powerTarget) || /%\s*Pace\b/i.test(workout.workoutDoc || ""));
+
+  const isRunPower = workout.discipline === "Carrera" && !isRunPace && effRunFtp > 0;
   const isBike = workout.discipline === "Ciclismo";
 
   let displayTitle = workout.workoutName.replace(/\[.*?\]\s*/g, "");
   if (isRunPace) {
     displayTitle = displayTitle
       .replace(/\s*@\s*(\d+(?:-\d+)?)\s*%\s*(?:CP|FTP)/gi, " @ $1% Pace")
-      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Ritmo Umbral")
       .replace(/\bStryd\b/gi, "Ritmo");
   } else if (isRunPower) {
     displayTitle = displayTitle.replace(/%\s*FTP\b/gi, "% CP");
@@ -105,10 +116,12 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   let displayTarget = workout.powerTarget;
   if (isRunPace && displayTarget) {
     displayTarget = displayTarget
-      .replace(/\s*\(\d+\s*W\)/gi, "")
+      .replace(/\b\d+\s*-\s*\d+\s*W\b\s*/gi, "")
       .replace(/\b\d+\s*W\b\s*/gi, "")
+      .replace(/\s*\(\d+\s*W\)/gi, "")
+      .replace(/^\s*\d+\s*-\s*/, "")
       .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-      .replace(/\bStryd\s*CP\b/gi, "Pace")
+      .replace(/\bStryd\s*CP\b/gi, "Ritmo Umbral")
       .replace(/\bStryd\b/gi, "Ritmo")
       .trim();
   } else if (isRunPower && displayTarget) {
@@ -228,23 +241,16 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         )}
 
         {workout.workoutDoc && (() => {
-          const isRunPower = workout.discipline === "Carrera" && effRunFtp > 0;
-          const isBike = workout.discipline === "Ciclismo";
           const isStrength = workout.discipline === "Fuerza";
           const isSwim = workout.discipline === "Natacion";
-          const isRunPaceOnly = workout.discipline === "Carrera" && effRunFtp === 0;
-
-          const cleanDoc = sanitizeWorkoutDoc(workout.workoutDoc, {
-            discipline: workout.discipline,
-            isRunPaceOnly,
-          });
+          const cleanDoc = sanitizeWorkoutDoc(workout.workoutDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace });
 
           const sectionTitle = isStrength
             ? "Prescripción de la Sesión de Fuerza:"
+            : isRunPace
+            ? "Prescripción Estructurada (Ritmo):"
             : isRunPower
             ? "Prescripción Estructurada (Stryd CP):"
-            : workout.discipline === "Carrera"
-            ? "Prescripción Estructurada (Ritmo):"
             : isBike
             ? "Prescripción Estructurada (Bici FTP):"
             : isSwim
@@ -254,6 +260,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           const showWattBadge = (isRunPower && effRunFtp > 0) || (isBike && effBikeFtp > 0);
           const effectiveFtp = isRunPower ? effRunFtp : isBike ? effBikeFtp : 0;
           const ftpLabel = isRunPower ? "Stryd CP" : "FTP";
+          const effPaceStr = thresholdPaceStr || userProfile?.runThresholdPaceStr || (thresholdPaceSec ? `${Math.floor(thresholdPaceSec / 60)}:${String(Math.round(thresholdPaceSec % 60)).padStart(2, "0")}` : "4:45");
 
           return (
             <>
@@ -261,7 +268,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                   {workout.discipline === "Fuerza" ? "Estructura del Circuito de Fuerza:" : "Perfil de Intervalos y Zonas:"}
                 </span>
-                <WorkoutChart workoutDoc={cleanDoc} discipline={workout.discipline} athleteFtp={workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined} />
+                <WorkoutChart workoutDoc={cleanDoc} discipline={workout.discipline} athleteFtp={isRunPace ? undefined : (workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined)} />
               </div>
 
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -270,11 +277,16 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                     <Code2 className="h-3.5 w-3.5 text-sky-500" />
                     {sectionTitle}
                   </span>
-                  {showWattBadge && (
+                  {isRunPace ? (
+                    <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
+                      <Timer className="h-3 w-3 text-emerald-500" />
+                      Calculado a tu Ritmo Umbral ({effPaceStr}/km)
+                    </span>
+                  ) : showWattBadge ? (
                     <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
                       ⚡ Calculado a tu {ftpLabel} ({effectiveFtp}W)
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <pre className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-pre-wrap">

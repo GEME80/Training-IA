@@ -115,6 +115,10 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
         dailyExecutedActivities={dailyExecutedActivities}
         runFtp={effRunFtp}
         bikeFtp={effBikeFtp}
+        runningTrainingMode={(blueprint as any)?.athleteMetrics?.runningTrainingMode || (blueprint as any)?.runningTrainingMode}
+        hasRunningPowerMeter={(blueprint as any)?.athleteMetrics?.hasRunningPowerMeter}
+        thresholdPaceStr={(blueprint as any)?.athleteMetrics?.runThresholdPaceStr}
+        thresholdPaceSec={(blueprint as any)?.athleteMetrics?.runThresholdPaceSecPerKm}
         onClose={() => setSelectedWorkoutModal(null)}
       />
     </div>

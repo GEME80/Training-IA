@@ -154,7 +154,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           className={`rounded-xl border ${
             activeMode === "POWER"
               ? "border-2 border-amber-500/40 bg-amber-500/5 dark:bg-amber-950/20"
-              : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
+              : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 opacity-60"
           } p-3 flex flex-col justify-between cursor-pointer group hover:border-amber-400 hover:ring-2 hover:ring-amber-400/20 hover:scale-[1.01] transition-all select-none`}
         >
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
@@ -162,11 +162,11 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               <Footprints className="h-3.5 w-3.5 text-amber-500" />
               Potencia Run
             </span>
-            <span className="text-[10px] font-mono text-amber-600 font-bold">⚡ {relativeRunPower} W/kg</span>
+            <span className="text-[10px] font-mono text-amber-600 font-bold">{activeMode === "POWER" ? `⚡ ${relativeRunPower} W/kg` : "Inactivo"}</span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-base font-black font-mono text-slate-900 dark:text-white">
-              {runFtp && runFtp > 0 ? (
+              {activeMode === "POWER" && runFtp && runFtp > 0 ? (
                 <>
                   {runFtp} <span className="text-xs text-slate-400 font-sans">W</span>
                 </>
@@ -188,7 +188,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
           tabIndex={0}
           title="Haz clic para ajustar el Ritmo Umbral de Carrera"
           className={`rounded-xl border ${
-            activeMode === "HYBRID"
+            activeMode === "PACE" || activeMode === "HYBRID"
               ? "border-2 border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
               : "border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60"
           } p-3 flex flex-col justify-between cursor-pointer group hover:border-emerald-400 hover:ring-2 hover:ring-emerald-400/20 hover:scale-[1.01] transition-all select-none`}
@@ -199,7 +199,7 @@ export const AthleteProfileHeroCard: React.FC<AthleteProfileHeroCardProps> = ({
               Ritmo Umbral
             </span>
             <span className="text-[10px] font-mono text-emerald-600 font-bold">
-              {activeMode === "HYBRID" ? "Pace Run" : "Daniels"}
+              {activeMode === "PACE" ? "Activo" : activeMode === "HYBRID" ? "Pace Run" : "Daniels"}
             </span>
           </div>
           <div className="mt-1 flex items-baseline justify-between">

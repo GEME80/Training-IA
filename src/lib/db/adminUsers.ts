@@ -43,6 +43,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
 
       const isSuper = isMasterAdminEmail(emailKey);
       const masterAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
+      const isPace = data.runningTrainingMode === "PACE" || data.hasRunningPowerMeter === false || data.intervalsAthleteId === "i729730";
       const item: AdminUserListItem = {
         uid: data.uid || doc.id,
         email: emailKey,
@@ -55,14 +56,14 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
           : (data.intervalsAthleteId || (isSuper ? masterAthleteId : undefined)),
         hasIntervalsKey: Boolean(data.encryptedApiKey && (isSuper || data.intervalsAthleteId !== masterAthleteId)),
         isPreAuthorized: Boolean((data as unknown as { isPreAuthorized?: boolean }).isPreAuthorized || (data.uid || doc.id).startsWith("preauth_")),
-        runFtp: (!isSuper && data.runFtp === 327) ? undefined : data.runFtp,
+        runFtp: isPace ? 0 : ((!isSuper && data.runFtp === 327) ? undefined : data.runFtp),
         bikeFtp: (!isSuper && data.bikeFtp === 240) ? undefined : data.bikeFtp,
-        weightKg: data.weightKg,
-        restingHR: data.restingHR,
-        maxHR: data.maxHR,
-        lthr: data.lthr,
-        createdAt: data.createdAt || new Date().toISOString(),
-        lastLoginAt: data.lastLoginAt || new Date().toISOString(),
+        hasRunningPowerMeter: !isPace && (data.hasRunningPowerMeter ?? (data.runFtp ? data.runFtp > 0 : false)),
+        runningTrainingMode: isPace ? "PACE" : (data.runningTrainingMode || "POWER"),
+        runThresholdPaceStr: data.runThresholdPaceStr || "4:45",
+        runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm || 285,
+        weightKg: data.weightKg, restingHR: data.restingHR, maxHR: data.maxHR, lthr: data.lthr,
+        createdAt: data.createdAt || new Date().toISOString(), lastLoginAt: data.lastLoginAt || new Date().toISOString(),
       };
 
       if (!userMap.has(emailKey)) {
@@ -85,11 +86,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
     // Limpieza en Firestore de documentos duplicados o vacíos
     if (duplicateDocIdsToDelete.length > 0 && adminDb) {
       const db = adminDb;
-      Promise.all(
-        duplicateDocIdsToDelete.map((id) =>
-          db.collection("users").doc(id).delete().catch(() => {})
-        )
-      ).catch(() => {});
+      Promise.all(duplicateDocIdsToDelete.map((id) => db.collection("users").doc(id).delete().catch(() => {}))).catch(() => {});
     }
 
     const users = Array.from(userMap.values());

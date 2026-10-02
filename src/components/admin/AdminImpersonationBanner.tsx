@@ -48,9 +48,13 @@ export const AdminImpersonationBanner: React.FC<AdminImpersonationBannerProps> =
         <div className="hidden lg:flex items-center space-x-4 text-[11px] font-mono text-slate-400">
           <div className="flex items-center gap-1">
             <Zap className="h-3 w-3 text-amber-400" />
-            <span>{athlete.runningTrainingMode === "PACE" || (!athlete.runFtp && athlete.hasRunningPowerMeter === false) ? "Run Pace:" : "Run CP:"}</span>
+            <span>
+              {athlete.runningTrainingMode === "PACE" || (!athlete.runFtp && athlete.hasRunningPowerMeter === false) || athlete.intervalsAthleteId === "i729730"
+                ? "Run Pace:"
+                : "Run CP:"}
+            </span>
             <strong className="text-slate-200">
-              {athlete.runningTrainingMode === "PACE" || (!athlete.runFtp && athlete.hasRunningPowerMeter === false)
+              {athlete.runningTrainingMode === "PACE" || (!athlete.runFtp && athlete.hasRunningPowerMeter === false) || athlete.intervalsAthleteId === "i729730"
                 ? `${athlete.runThresholdPaceStr || "4:45"}/km`
                 : `${athlete.runFtp || 0}W`}
             </strong>

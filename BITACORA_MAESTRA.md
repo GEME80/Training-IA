@@ -5105,3 +5105,44 @@ flowchart TD
 - **Chequeo de Tipos:** `tsc --noEmit` $ightarrow$ **0 errores**.
 - **Regla Estricta de Modularidad ($\le 350$ LOC):** 100% de los archivos nuevos y modificados cumplen la regla inmutable.
 
+
+
+---
+
+## [2026-10-02] - Versión 3.95: Motor de Potencial Fisiológico Bietápico (CTL Potential Engine) & Gobernanza de Upgrades con Soberanía del Atleta
+
+### 64.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Motor de Potencial Fisiológico Bietápico (`ctlPotentialEngine.ts`):**
+   - **Erradicación del Techo Rígido Artificial:** Eliminación de la instrucción restrictiva `Math.min(histPeak, attainableCtl)` que estancaba a atletas en mesetas prematuras cuando su ciclo disponía de semanas adicionales.
+   - **Ascenso Bietápico Científico:**
+     * *Fase de Reconquista ($CTL < histPeak$):* Ascenso acelerado con memoria biológica previa ($+3.2$ a $+3.8\text{ CTL/sem}$).
+     * *Fase de Expansión ($CTL \ge histPeak$):* Ascenso adaptativo prudente ($+1.8\text{ CTL/sem}$) que protege tendones, fascia y ligamentos (cuyo recambio de colágeno es hasta 3x más lento que el músculo).
+   - **Margen de Superación Anual Progresivo:** Techo de crecimiento biológico seguro fijado en $+15\%$ anual para atletas generales y $+10\%$ para atletas máster ($\ge 45$ años).
+   - **Techos Dinámicos por Disciplina y Distancia:** Delimitación formal (105 para Maratón 42K, 85 para Media Maratón 21K, 75 para 10K/5K, 110 para Triatlón 70.3, 140 para Triatlón 140.6, 125 para Ciclismo Gran Fondo y 115 para Trail Ultra).
+   - **Tope de Impacto en Running para Triatlón:** Ramp rate de carrera a pie limitado a un máximo estricto de $+1.5\text{ CTL/sem}$, absorbiendo el resto del volumen en ciclismo y natación sin impacto articular.
+2. **Principio de No-Degradación Fisiológica (Anti-Neurosis Algorítmica):**
+   - **Blindaje Total de la Meta Cumbre:** Las semanas de descarga planificada (deload 3:1 o 2:1) y los baches aislados de menor TSS **nunca reducen la meta cumbre de CTL ni degradan el macrociclo**. Cero alarmas de penalización tras semanas suaves de asimilación.
+   - **Filtro de Mal Día en Tests de Rendimiento:** Si un test arroja una caída severa ($> -5\%$), se clasifica automáticamente como *rendimiento atípico* (deshidratación, calor o insomnio), sugiriendo re-testeo en 7-10 días sin deprimir el plan maestro.
+   - **Ventana de Congelamiento Pre-Competencia (`Freeze Window`):** A falta de $\le 4$ semanas para el evento principal, queda bloqueado cualquier incremento de volumen o CTL para priorizar el Tapering y el TSB positivo ($> +5$).
+3. **Tarjeta de Upgrade UI/UX con Soberanía del Atleta (`MacrocycleUpgradeCard.tsx` & `useMacrocycleUpgrade.ts`):**
+   - **Card de Insight No Bloqueante en Dashboard:** Ubicada sobre el calendario continuo en `AthleteDashboardOverview.tsx`.
+   - **Métricas Pragmáticas de Impacto Real:** Traduce los deltas a tiempo semanal estimado ($\Delta$ min/sem) y distancia del fondo dominical.
+   - **Acordeón In-situ Día por Día:** Botón `[ 👁️ Ver Vista Previa Día por Día ]` que despliega la comparativa de la próxima semana (Lunes a Domingo) con badges de cambio de ritmo/vatios.
+   - **Libertad Total de Decisión con Botones Equivalentes:**
+     * `[ 🚀 Aceptar y Optimizar Plan ]`: Aplica la mejora únicamente a partir del próximo lunes, manteniendo inmutable el pasado.
+     * `[ 🛡️ Continuar con el Plan Actual ]`: Mantiene el macrociclo 100% intacto sin alterar una sola sesión.
+   - **Regla de Inacción por Defecto (Fallback Seguro):** Si el atleta no interactúa antes del lunes, el sistema asume continuar con el plan actual sin modificaciones.
+
+### 64.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (0 errores en 2.6s)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Garantía Incondicional Tokio 2027:** `scratch/verify_no_regression_tokyo.ts` $\rightarrow$ **0 discrepancias en 25 semanas ($\Delta\text{TSS} = 0, \Delta\text{Km} = 0$)**.
+- **Auditoría de Modelos:** `scratch/test_all_disciplines_models.ts` $\rightarrow$ **12/12 modalidades en verde**.
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/lib/physiology/ctlPotentialEngine.ts`: 260 LOC
+  * `src/components/dashboard/MacrocycleUpgradeCard.tsx`: 161 LOC
+  * `src/hooks/useMacrocycleUpgrade.ts`: 159 LOC
+  * `src/lib/physiology/macrocycleGenerator.ts`: 342 LOC
+  * `src/lib/services/recalibrateService.ts`: 131 LOC
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: 241 LOC
+  * `src/components/dashboard/AthleteDashboardViewRouter.tsx`: 310 LOC

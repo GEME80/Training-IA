@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.82)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v3.95)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.82).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v3.95).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 3.95: Motor de Potencial Fisiológico Bietápico (CTL Potential Engine) & Gobernanza de Upgrades con Soberanía del Atleta:
+  * Motor Bietápico (`ctlPotentialEngine.ts`): Reconquista rápida de memoria biológica (+3.2 a +3.8 CTL/sem) + Expansión segura hacia nuevo récord personal (+1.8 CTL/sem), eliminando el techo artificial Math.min(histPeak, attainableCtl).
+  * Principio de No-Degradación Fisiológica: Semanas de descarga (deload 3:1 o 2:1) o baches de bajo TSS nunca reducen la meta cumbre de CTL ni degradan el macrociclo. Cero alarmas de penalización tras semanas de asimilación.
+  * Filtro de Mal Día & Freeze Window: Caídas de test > -5% catalogadas como atípicas (sin deprimir el plan maestro); a <= 4 semanas de la carrera, incremento de CTL/volumen congelado por Tapering.
+  * UI de Upgrade Soberano (`MacrocycleUpgradeCard.tsx`): Card en Dashboard con acordeón día por día de impacto real y botones equivalentes: [Aceptar y Optimizar Plan] vs [Continuar con el Plan Actual] (fallback por defecto).
 - Versión 3.82: Rediseño UX/UI de Mi Temporada & Planificación Estilo Stryd (Palladino) y Sincronización Bidireccional de Matriz Deportiva:
   * Gráfica Compacta con Fases Inferiores Integradas (`SeasonCurveChart` - 125px): Altura reducida y banda de fases (*Base*, *Construcción*, *Pico*, *Tapering*, *Competición*) ubicada directamente bajo el eje X temporal, eliminando cajas flotantes y botones innecesarios para desplegar la curva.
   * Tooltip Luminoso y Elegante: Tarjeta con fondo glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro, erradicando el cuadro negro anterior.

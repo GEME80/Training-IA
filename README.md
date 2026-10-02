@@ -1,10 +1,16 @@
-# ⚡ SGEA Pro (v3.93) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v3.95) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🚀 **Motor de Potencial Fisiológico Bietápico & Gobernanza de Upgrades con Soberanía del Atleta (v3.95):**
+  - **Erradicación del Techo Rígido de CTL:** Reemplazo de la limitación restrictiva `Math.min(histPeak, attainableCtl)` por el motor modular `ctlPotentialEngine.ts`. Los atletas con historial previo reconquistan su memoria biológica a ritmo acelerado ($+3.2$ a $+3.8\text{ CTL/sem}$) y expanden hacia nuevos récords personales a tasa adaptativa segura ($+1.8\text{ CTL/sem}$) con un margen anual calibrado ($+15\%$ en general, $+10\%$ en máster $\ge 45$ años).
+  - **Principio de No-Degradación Fisiológica (Anti-Neurosis Algorítmica):** Las semanas de descarga planificada (asimilación 3:1 o 2:1) o con menor TSS nunca deprimen la meta cumbre ni recortan el macrociclo. Cero alarmas de penalización tras semanas de menor carga.
+  - **Filtro de Mal Día & Freeze Window Pre-Competencia:** Caídas de test $> -5\%$ son clasificadas como *rendimiento atípico*, sugiriendo re-testeo en 7-10 días sin deprimir el plan maestro. A falta de $\le 4$ semanas para el evento, el sistema congela cualquier incremento de carga para garantizar el Tapering y frescura neuromuscular ($TSB > +5$).
+  - **Tarjeta de Upgrade con Vista Previa Día por Día (`MacrocycleUpgradeCard`):** Notificación no bloqueante en el Dashboard que traduce métricas a impacto real ($\Delta$ min semanales y km de fondo) con acordeón desplegable que compara la semana entrante.
+  - **Soberanía y Consentimiento Obligatorio:** Botones equivalentes `[ 🚀 Aceptar y Optimizar Plan ]` vs `[ 🛡️ Continuar con el Plan Actual ]`, con fallback seguro por inacción (mantener plan vigente intacto).
 - 🏃 **Sintaxis Canónica `mtr` para Intervalos de Pista/Ruta & Descansos por Tiempo en Intervals.icu y Garmin (v3.93):**
   - **Estandarización Oficial `mtr`:** En Intervals.icu, `m` denota exclusivamente minutos. Se adopta la sintaxis canónica oficial `mtr` para metros (`200mtr`, `400mtr`, `800mtr`, `1000mtr`, `2000mtr`) y `km` para kilómetros (`4km`), garantizando que la API de Intervals.icu genere pasos estructurados con `Target: Distance` exactos para relojes Garmin Connect (.FIT).
   - **Descansos Fisiológicos por Tiempo (`m`/`s`):** Las pausas de recuperación se mantienen en tiempo biológico (`1m`, `1m30s`, `2m`), asegurando la recuperación y asimilación metabólica programada sin desviaciones por ritmos de trote.

@@ -197,19 +197,19 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
             <HeartRateZoneCard isHybridActive={isHybridActive} hrZones={hrZones} sportContext="Carrera" />
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold max-w-full overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setRunTelemetryMode("POWER")}
-                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "POWER" ? "bg-amber-500 text-slate-950 font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+                className={`px-3 py-1 rounded-md transition whitespace-nowrap ${runTelemetryMode === "POWER" ? "bg-amber-500 text-slate-950 font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
               >
                 Curva Potencia Stryd (CP)
               </button>
               <button
                 type="button"
                 onClick={() => setRunTelemetryMode("PACE")}
-                className={`px-3 py-1 rounded-md transition ${runTelemetryMode === "PACE" ? "bg-emerald-500 text-white font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+                className={`px-3 py-1 rounded-md transition whitespace-nowrap ${runTelemetryMode === "PACE" ? "bg-emerald-500 text-white font-black shadow-2xs" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
               >
                 Curva de Ritmo (Pace)
               </button>

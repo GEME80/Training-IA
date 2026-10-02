@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Timer, Award, HelpCircle } from "lucide-react";
 import { PaceCurveDataSet, PaceRecordPoint } from "@/lib/intervals/curvesTypes";
 
@@ -17,7 +17,8 @@ const DISTANCES = [
   { meters: 2000, label: "2 km" },
   { meters: 5000, label: "5 km" },
   { meters: 10000, label: "10 km" },
-  { meters: 21097, label: "21.1 km" },
+  { meters: 21097, label: "21.1 km", milestone: "Media" },
+  { meters: 42195, label: "42.2 km", milestone: "Maratón" },
 ];
 
 export const PaceDurationChart: React.FC<PaceDurationChartProps> = ({
@@ -30,15 +31,27 @@ export const PaceDurationChart: React.FC<PaceDurationChartProps> = ({
 
   const W = 680;
   const H = 280;
-  const padL = 55;
-  const padR = 25;
-  const padT = 25;
-  const padB = 40;
+  const padL = 52;
+  const padR = 24;
+  const padT = 24;
+  const padB = 44;
 
-  // Escala Y para Ritmo (segundos por km): entre 180 (3:00/km) y 360 (6:00/km)
-  // Notar que en carrera, menor tiempo = mayor velocidad (arriba)
-  const minPaceY = 180; // 3:00/km (arriba)
-  const maxPaceY = 360; // 6:00/km (abajo)
+  const allPaces = useMemo(() => {
+    const list: number[] = [thresholdPaceSec];
+    recent42d?.records?.forEach((r) => { if (r.paceSecPerKm > 0) list.push(r.paceSecPerKm); });
+    season?.records?.forEach((r) => { if (r.paceSecPerKm > 0) list.push(r.paceSecPerKm); });
+    return list.filter((p) => p > 0 && isFinite(p));
+  }, [thresholdPaceSec, recent42d, season]);
+
+  const minPaceY = useMemo(() => {
+    const minVal = allPaces.length > 0 ? Math.min(...allPaces) : 180;
+    return Math.max(120, Math.floor((minVal - 15) / 30) * 30);
+  }, [allPaces]);
+
+  const maxPaceY = useMemo(() => {
+    const maxVal = allPaces.length > 0 ? Math.max(...allPaces) : 360;
+    return Math.max(minPaceY + 120, Math.ceil((maxVal + 20) / 30) * 30);
+  }, [allPaces, minPaceY]);
 
   const scaleX = (idx: number) => {
     return padL + (idx / (DISTANCES.length - 1)) * (W - padL - padR);
@@ -50,15 +63,16 @@ export const PaceDurationChart: React.FC<PaceDurationChartProps> = ({
     return padT + ((clamped - minPaceY) / (maxPaceY - minPaceY)) * (H - padT - padB);
   };
 
-  const yTicksPace = [
-    { sec: 180, label: "3:00" },
-    { sec: 210, label: "3:30" },
-    { sec: 240, label: "4:00" },
-    { sec: 270, label: "4:30" },
-    { sec: 300, label: "5:00" },
-    { sec: 330, label: "5:30" },
-    { sec: 360, label: "6:00" },
-  ];
+  const yTicksPace = useMemo(() => {
+    const ticks: { sec: number; label: string }[] = [];
+    const step = (maxPaceY - minPaceY) > 240 ? 60 : 30;
+    for (let s = minPaceY; s <= maxPaceY; s += step) {
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      ticks.push({ sec: s, label: `${mins}:${String(secs).padStart(2, "0")}` });
+    }
+    return ticks;
+  }, [minPaceY, maxPaceY]);
 
   const buildPacePath = (records: PaceRecordPoint[]) => {
     if (!records || records.length === 0) return "";
@@ -107,8 +121,8 @@ export const PaceDurationChart: React.FC<PaceDurationChartProps> = ({
         </div>
       </div>
 
-      <div className="relative w-full overflow-hidden select-none">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto text-slate-400">
+      <div className="relative w-full overflow-x-auto select-none">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[500px] sm:min-w-full h-auto text-slate-400">
           {/* Guías horizontales de Ritmo */}
           {yTicksPace.map((tick) => {
             const y = scaleYPace(tick.sec);
@@ -128,9 +142,14 @@ export const PaceDurationChart: React.FC<PaceDurationChartProps> = ({
             return (
               <g key={d.meters}>
                 <line x1={x} y1={padT} x2={x} y2={H - padB} stroke="currentColor" strokeDasharray="2 3" opacity={0.12} />
-                <text x={x} y={H - padB + 16} textAnchor="middle" fontSize="10" className="font-mono font-bold fill-slate-500">
+                <text x={x} y={H - padB + 14} textAnchor="middle" fontSize="10" className="font-mono font-bold fill-slate-500">
                   {d.label}
                 </text>
+                {d.milestone && (
+                  <text x={x} y={H - padB + 25} textAnchor="middle" fontSize="8" className="font-mono font-semibold fill-emerald-600 dark:fill-emerald-400">
+                    {d.milestone}
+                  </text>
+                )}
               </g>
             );
           })}

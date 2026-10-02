@@ -21,7 +21,7 @@ export const SportBestEffortsTable: React.FC<SportBestEffortsTableProps> = ({
 }) => {
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
         <div className="flex items-center space-x-2">
           <Award className="h-4 w-4 text-amber-500" />
           <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white font-mono">
@@ -40,8 +40,8 @@ export const SportBestEffortsTable: React.FC<SportBestEffortsTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs font-mono">
+      <div className="overflow-x-auto -mx-1 sm:mx-0">
+        <table className="w-full text-xs font-mono min-w-[280px]">
           <thead>
             <tr className="text-[10px] text-slate-400 uppercase border-b border-slate-100 dark:border-slate-800/80">
               <th className="text-left py-1 font-semibold">Duración</th>

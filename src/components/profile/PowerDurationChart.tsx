@@ -134,8 +134,8 @@ export const PowerDurationChart: React.FC<PowerDurationChartProps> = ({
         </div>
       </div>
 
-      <div className="relative w-full overflow-hidden select-none">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto text-slate-400">
+      <div className="relative w-full overflow-x-auto select-none">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[500px] sm:min-w-full h-auto text-slate-400">
           {/* Guías horizontales Y */}
           {yTicks.map((tick) => {
             const y = scaleY(tick);

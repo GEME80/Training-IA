@@ -17,7 +17,8 @@ const DISTANCES = [
   { meters: 2000, label: "2 km" },
   { meters: 5000, label: "5 km" },
   { meters: 10000, label: "10 km" },
-  { meters: 21097, label: "21.1 km" },
+  { meters: 21097, label: "21.1 km", milestone: "Media" },
+  { meters: 42195, label: "42.2 km", milestone: "Maratón" },
 ];
 
 export const PaceBestEffortsTable: React.FC<PaceBestEffortsTableProps> = ({
@@ -27,7 +28,7 @@ export const PaceBestEffortsTable: React.FC<PaceBestEffortsTableProps> = ({
 }) => {
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3 shadow-xs">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
         <div className="flex items-center space-x-2">
           <Timer className="h-4 w-4 text-emerald-500" />
           <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white font-mono">
@@ -46,8 +47,8 @@ export const PaceBestEffortsTable: React.FC<PaceBestEffortsTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs font-mono">
+      <div className="overflow-x-auto -mx-1 sm:mx-0">
+        <table className="w-full text-xs font-mono min-w-[280px]">
           <thead>
             <tr className="text-[10px] text-slate-400 uppercase border-b border-slate-100 dark:border-slate-800/80">
               <th className="text-left py-1 font-semibold">Distancia</th>
@@ -64,9 +65,16 @@ export const PaceBestEffortsTable: React.FC<PaceBestEffortsTableProps> = ({
 
               return (
                 <tr key={d.label} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                  <td className="py-1.5 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                    <Milestone className="h-3 w-3 text-slate-400" />
-                    <span>{d.label}</span>
+                  <td className="py-1.5 font-bold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-1.5">
+                      <Milestone className="h-3 w-3 text-slate-400 shrink-0" />
+                      <span>{d.label}</span>
+                      {d.milestone && (
+                        <span className="text-[9px] px-1 py-0.2 rounded font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          {d.milestone}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-1.5 text-right font-black text-indigo-700 dark:text-indigo-300">
                     {rec42 ? rec42.timeFormatted : "—"}

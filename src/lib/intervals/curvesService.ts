@@ -20,6 +20,7 @@ const STANDARD_DISTANCES = [
   { distanceMeters: 5000, label: "5 km" },
   { distanceMeters: 10000, label: "10 km" },
   { distanceMeters: 21097, label: "21.1 km" },
+  { distanceMeters: 42195, label: "42.2 km" },
 ];
 
 function formatTime(totalSec: number): string {
@@ -183,6 +184,7 @@ function getModeledPaceCurves() {
         { distanceMeters: 2000, label: "2 km", timeSec: 521, timeFormatted: "8:41", paceSecPerKm: 261, paceFormatted: "4:21/km" },
         { distanceMeters: 5000, label: "5 km", timeSec: 1470, timeFormatted: "24:30", paceSecPerKm: 294, paceFormatted: "4:54/km" },
         { distanceMeters: 10000, label: "10 km", timeSec: 3118, timeFormatted: "51:58", paceSecPerKm: 312, paceFormatted: "5:12/km" },
+        { distanceMeters: 21097, label: "21.1 km", timeSec: 6720, timeFormatted: "1:52:00", paceSecPerKm: 318, paceFormatted: "5:18/km" },
       ],
     },
     season: {
@@ -195,6 +197,7 @@ function getModeledPaceCurves() {
         { distanceMeters: 5000, label: "5 km", timeSec: 1341, timeFormatted: "22:21", paceSecPerKm: 268, paceFormatted: "4:28/km" },
         { distanceMeters: 10000, label: "10 km", timeSec: 2769, timeFormatted: "46:09", paceSecPerKm: 277, paceFormatted: "4:37/km" },
         { distanceMeters: 21097, label: "21.1 km", timeSec: 5907, timeFormatted: "1:38:27", paceSecPerKm: 280, paceFormatted: "4:40/km" },
+        { distanceMeters: 42195, label: "42.2 km", timeSec: 12525, timeFormatted: "3:28:45", paceSecPerKm: 297, paceFormatted: "4:57/km" },
       ],
     },
   };

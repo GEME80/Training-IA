@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (parseResult.data.action === "clean_and_sync") {
+      const cleanSyncResult = await IntervalsSyncService.cleanAndSync(parseResult.data);
+      const status = cleanSyncResult.isAuthError ? 401 : cleanSyncResult.success ? 200 : 500;
+      return NextResponse.json(cleanSyncResult, { status });
+    }
+
     if (parseResult.data.action === "delete_future") {
       const delResult = await IntervalsSyncService.deleteFutureWorkouts({
         athleteId: parseResult.data.athleteId,

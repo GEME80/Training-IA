@@ -5191,3 +5191,30 @@ flowchart TD
   * `src/components/dashboard/AthleteContinuousCalendar.tsx`: 335 LOC
   * `src/components/dashboard/AthleteDashboardViewRouter.tsx`: 320 LOC
   * `src/hooks/useAthleteTelemetry.ts`: 349 LOC
+
+---
+
+## [2026-10-02] - Versión 3.97: Sincronización y Purga Automática en Segundo Plano (0 Clics del Atleta) con Transacción Atómica `clean_and_sync`
+
+### 66.1. Resumen de Mejoras y Ajustes de Arquitectura
+1. **Transacción Atómica de Servidor `clean_and_sync` (`intervalsSyncService.ts` & `route.ts`):**
+   - Se implementó el método `IntervalsSyncService.cleanAndSync` que encapsula la purga de entrenamientos planificados futuros (`fromDate >= 2026-10-03`) y la sincronización inmediata del nuevo microciclo o macrociclo purificado en una única operación atómica.
+   - Ruta `/api/sync-intervals` actualizada para procesar `action: "clean_and_sync"` de forma directa, eliminando la necesidad de múltiples llamadas de red secuenciales.
+2. **Hook de Sincronización Automática Transparente (`src/hooks/useAutoIntervalsSync.ts`):**
+   - Diseñado e implementado el hook `useAutoIntervalsSync` para ejecutarse en segundo plano cuando el atleta ingresa a la aplicación web.
+   - **Cero Clics del Atleta:** No requiere que el atleta presione ningún botón, modal o confirmación. La detección y ejecución son 100% transparentes.
+   - **Idempotencia y Blindaje de Ciclos:** Utiliza claves compuestas (`auto_intervals_purge_sync_v1_20261003_${athleteId}`) en almacenamiento local y en el perfil de Firestore (`lastAutoPurgeSync`) junto a un bloqueo en memoria (`useRef`) para garantizar que la purga y re-sincronización se ejecute exactamente una sola vez.
+   - **Filtrado Exclusivo de Sesiones Futuras:** Genera la prescripción fisiológica completa adaptada a Pace (`% Pace` en carrera, `% FTP` en bici) pero despacha únicamente las sesiones a partir de mañana sábado `2026-10-03`.
+   - **Refresco Automático de Telemetría:** Una vez confirmada la sincronización exitosa, invoca silenciosamente `refreshTelemetry` para que el calendario del atleta renderice los nuevos entrenamientos en ritmo sin recargar la página.
+3. **Integración en el Tablero del Atleta (`AthleteDashboard.tsx`):**
+   - Conectado `useAutoIntervalsSync` en el ciclo de vida del dashboard principal, asegurando propagación de disponibilidad semanal, opciones de ritmo (`runningOpts`), FTPs y parámetros del atleta.
+
+### 66.2. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas con Éxito (0 errores en 2.6s)**.
+- **Chequeo de Tipos:** `tsc --noEmit` $\rightarrow$ **0 errores**.
+- **Presupuesto Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/app/api/sync-intervals/route.ts`: 49 LOC
+  * `src/lib/services/intervalsSyncService.ts`: 240 LOC
+  * `src/hooks/useAutoIntervalsSync.ts`: 169 LOC
+  * `src/components/AthleteDashboard.tsx`: 266 LOC
+

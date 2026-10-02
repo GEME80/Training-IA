@@ -18,6 +18,7 @@ import { getUserStorage, createReadOnlyMemoryStorage } from "@/lib/storage/userS
 import { useAthleteTelemetry } from "@/hooks/useAthleteTelemetry";
 import { useSeasonPlans } from "@/hooks/useSeasonPlans";
 import { useIntervalsSync } from "@/hooks/useIntervalsSync";
+import { useAutoIntervalsSync } from "@/hooks/useAutoIntervalsSync";
 import { AdminUserListItem } from "@/lib/db/types";
 
 interface AthleteDashboardProps {
@@ -157,6 +158,27 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     setSyncNotification: sync.setSyncNotification,
     isReadOnly: effectiveReadOnly,
     calendarEvents: telemetry.calendarEvents,
+  });
+
+  useAutoIntervalsSync({
+    athleteId: telemetry.profile.id,
+    apiKeyCache: telemetry.apiKeyCache,
+    user: effectiveUser,
+    userProfile: effectiveUserProfile,
+    userStorage,
+    blueprint: season.blueprint,
+    weeklyAvailability: season.weeklyAvailability,
+    runFtp: telemetry.profile.run_ftp,
+    bikeFtp: telemetry.profile.bike_ftp,
+    ctl: telemetry.profile.ctl,
+    runningOpts: {
+      mode: (telemetry.profile.hasRunningPowerMeter === false || telemetry.profile.runningTrainingMode === "PACE" || telemetry.profile.runningTrainingMode === "HYBRID" || !telemetry.profile.run_ftp) ? "PACE" : "POWER",
+      thresholdPaceSec: telemetry.profile.runThresholdPaceSecPerKm,
+      thresholdPaceStr: telemetry.profile.runThresholdPaceStr,
+      lthr: telemetry.profile.lthr,
+    },
+    refreshTelemetry: telemetry.refreshTelemetry,
+    isReadOnly: effectiveReadOnly,
   });
 
   useEffect(() => {

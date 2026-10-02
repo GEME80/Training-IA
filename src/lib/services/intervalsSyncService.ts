@@ -191,4 +191,50 @@ export class IntervalsSyncService {
       return { success: false, deletedCount: 0, error: err?.message || "Error al eliminar eventos en Intervals" };
     }
   }
+
+  /**
+   * Ejecuta en una sola transacción atómica de backend:
+   * 1. Limpieza de entrenamientos futuros en Intervals.icu desde `fromDate` (default 2026-10-03).
+   * 2. Sincronización transparente de los nuevos entrenamientos purificados.
+   */
+  static async cleanAndSync(input: SyncIntervalsRequest): Promise<{
+    success: boolean;
+    deletedCount: number;
+    createdCount: number;
+    errors?: string[];
+    isAuthError?: boolean;
+    error?: string;
+  }> {
+    const { athleteId, apiKey, uid, email, fromDate, toDate, plan } = input;
+    const startStr = fromDate || "2026-10-03";
+
+    const delResult = await this.deleteFutureWorkouts({
+      athleteId,
+      apiKey,
+      uid,
+      email,
+      fromDate: startStr,
+      toDate,
+    });
+
+    if (delResult.isAuthError) {
+      return { success: false, deletedCount: 0, createdCount: 0, isAuthError: true, error: delResult.error };
+    }
+
+    const futurePlan = plan ? plan.filter((item) => !item.date || item.date >= startStr) : [];
+    const syncResult = await this.syncPlan({
+      ...input,
+      plan: futurePlan,
+    });
+
+    return {
+      success: syncResult.success,
+      deletedCount: delResult.deletedCount,
+      createdCount: syncResult.createdCount || 0,
+      errors: syncResult.errors,
+      isAuthError: syncResult.isAuthError,
+      error: syncResult.error,
+    };
+  }
 }
+

@@ -5461,3 +5461,41 @@ flowchart TD
   * `src/components/admin/AdminUserEditModal.tsx`: **337 LOC**
   * `src/lib/db/adminUsers.ts`: **350 LOC**
   * `src/lib/db/types.ts`: **149 LOC**
+
+---
+
+## [2026-10-02] - Versión 4.03: Configuración de Plan Único SSOT, Pasarela de Pagos por Nequi (QR & Transferencia), Sincronización Dinámica con Homepage y Gestión de Cobro Reversible
+
+### 72.1. Diagnóstico y Necesidad Operativa
+- **Plan Único Centralizado:** La plataforma cuenta con una sola oferta comercial (Plan Élite Pro). El administrador necesitaba una sección propia donde definir nombre, características, tarifa mensual y fechas de pago sugeridas, sirviendo como Fuente Única de Verdad (SSOT) para toda la plataforma y para la página de inicio pública (Homepage).
+- **Mecanismo de Pago por Nequi / Bancolombia:** Evitar pasarelas con altas comisiones del 3-5% mediante un flujo nativo, confiable y directo donde el atleta escanea el código QR de Nequi del coach o copia el número de cuenta desde su portal y reporta su comprobante.
+- **Soberanía y Reversibilidad de Cobro en Consola:** La administración requería poder revertir en cualquier instante el estado de un atleta de "Al Día" a "Pendiente" (o viceversa) si un pago no fue efectivo o fue registrado por error, además de validar con 1 clic los pagos reportados por Nequi.
+
+### 72.2. Arquitectura y Componentes Implementados
+1. **Modelado y Persistencia del Plan Único (`src/lib/db/types.ts` & `/api/admin/subscription-plan`):**
+   - Interfaz `SubscriptionPlanConfig` con `DEFAULT_SUBSCRIPTION_PLAN` en Firestore (`system_config/subscription_plan`).
+   - Parámetros: `name`, `tagline`, `description`, `price`, `currency`, `billingCycleDaysText`, `features[]`, `nequiEnabled`, `nequiNumber`, `nequiAccountName`, `nequiDocumentId`, `nequiQrImageUrl`, `bankName`, `paymentInstructions`.
+   - Endpoint `GET` público para alimentar el Homepage y el modal del atleta sin fricción, y `POST` protegido para actualización por parte del administrador.
+2. **Pestaña Administrativa de Plan Único & Nequi (`src/components/admin/AdminPlansTab.tsx`):**
+   - Panel de 2 columnas para editar características del plan (agregar/eliminar beneficios con checkmarks), tarifa mensual, divisa (USD, COP, EUR), fechas de corte y datos bancarios de Nequi (número, titular, URL del QR).
+   - Acceso desde `AdminSidebar.tsx` ("Plan Único & Nequi") y barra táctil de `AdminPanel.tsx`.
+3. **Tarjeta de Precios Dinámica en el Homepage (`src/components/landing/LandingPricingSection.tsx` & `LandingHome.tsx`):**
+   - Lectura reactiva desde el backend que proyecta el valor y los beneficios actualizados en tiempo real antes de la sección de preguntas frecuentes (FAQ).
+   - Botón CTA directo hacia el modal de registro/autenticación con insignias de confianza (Nequi, Bancolombia).
+4. **Experiencia de Pago por Nequi en el Portal del Atleta (`AthleteBillingBanner.tsx` & `AthleteNequiPaymentModal.tsx`):**
+   - Banner de estado en `AthleteDashboardOverview.tsx`:
+     * Si está al día: Pill esmeralda de tranquilidad (`✓ Membresía Al Día`).
+     * Si está pendiente/mora: Tarjeta destacada con valor a transferir y botón `[ Pagar con Nequi ]`.
+     * Si reportó pago: Aviso en púrpura (`⏳ Pago Reportado: Ref #... · Pendiente de validación`).
+   - Modal interactivo con display de monto exacto, código QR oficial, botón `[ Copiar ]` con feedback de copiado, instrucciones y formulario de notificación con número de comprobante.
+   - Endpoint de recepción: `POST /api/billing/report-payment` que actualiza el estado a `PENDING_VERIFICATION` y archiva el reporte en la colección `payment_reports`.
+5. **Control de Cobro Reversible y Validación en Consola (`AdminBillingTable.tsx` & `AdminBillingKpis.tsx`):**
+   - **Reversibilidad Inmediata:** Si un atleta está en `PAID`, el botón cambia explícitamente a `[ ↺ Revertir a Pendiente ]` permitiendo deshacer el cobro con 1 clic sin abrir modales.
+   - **Validación de Nequi:** Los pagos reportados se destacan con badge púrpura y botón `[ ✓ Aprobar Pago ]` o `[ ✕ Rechazar ]`.
+   - **Filtros Actualizados:** Pestañas `Todos`, `Al Día`, `Pendientes` y `Por Validar ({N})`.
+   - **KPIs Reforzados:** Alerta en vivo si existen pagos pendientes de verificación en la cartera del mes.
+
+### 72.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores en 3.9s)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Límite Estricto de Modularidad ($\le 350$ LOC):** Todos los 16 archivos modificados o creados se mantienen estrictamente dentro de la cota legal de 350 líneas de código.

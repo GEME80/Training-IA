@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.02)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.03)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.02).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.03).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.03: Configuración de Plan Único SSOT, Pasarela de Pagos por Nequi (QR & Transferencia), Sincronización con Homepage y Gestión de Cobro Reversible:
+  * Pestaña Administrativa de Plan Único (`AdminPlansTab`): Configuración centralizada de características, tarifa mensual, divisa y días de corte.
+  * Homepage Dinámico (`LandingPricingSection`): La landing page pública lee y proyecta el valor y los beneficios del plan desde el backend sin código quemado.
+  * Flujo Nequi para Atletas (`AthleteNequiPaymentModal` & `AthleteBillingBanner`): Modal interactivo con código QR de Nequi, copiado de número de cuenta y formulario de reporte de comprobante.
+  * Gestión Reversible en Consola (`AdminBillingTable`): Botón [ ↺ Revertir a Pendiente ] para deshacer pagos erróneos de inmediato, y validación 1-clic de pagos reportados por Nequi.
 - Versión 4.02: Módulo Financiero de Cobro & Facturación a Atletas (MRR), Control de Pagos 1-Clic, Radar Fisiológico del Escuadrón y FinOps:
   * Control Comercial y Cobro Mensual: Seguimiento en tiempo real de MRR proyectado, total recaudado en el mes, saldo pendiente/en mora y tasa de cobro %.
   * Tabla Interactiva de Pagos (`AdminBillingTable`): Registro de pago en 1 clic ([ Marcar Pagado ] / [ Al día ]), filtros por estado (Todos, Al Día, Pendientes) y soporte multi-moneda (USD, COP, EUR).

@@ -1,9 +1,16 @@
-# ⚡ SGEA Pro (v4.02) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.03) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 📱 **Plan Único SSOT, Pasarela de Pagos por Nequi (QR & Transferencia) y Cobro Reversible (v4.03):**
+  - **Pestaña Administrativa de Plan Único (`AdminPlansTab`):** Centro de configuración para el único plan de entrenamiento de la plataforma: nombre, propuesta de valor, características editables, tarifa mensual, divisa y días de corte.
+  - **Sincronización Dinámica con Homepage (`LandingPricingSection`):** La página de inicio pública lee directamente esta configuración, proyectando en tiempo real el precio y beneficios fijados por el entrenador sin código quemado.
+  - **Flujo de Pago por Nequi para Atletas (`AthleteNequiPaymentModal` & `AthleteBillingBanner`):** Banner en el dashboard del atleta que alerta sobre pagos pendientes y abre un modal con el código QR oficial de Nequi, número de cuenta con 1-clic para copiar, instrucciones claras y formulario para notificar el comprobante de transferencia.
+  - **Gestión de Cobro Reversible en Consola (`AdminBillingTable`):** Botón `[ ↺ Revertir a Pendiente ]` que permite al administrador corregir o revertir el estado de cualquier atleta de inmediato, además de validar pagos reportados por Nequi (`[ ✓ Aprobar Pago ]` / `[ ✕ Rechazar ]`).
+  - **Auditoría de Pagos (`/api/billing/report-payment`):** Historial centralizado en Firestore (`payment_reports`) y alertas en tiempo real en los KPIs de recaudación.
 
 - 💳 **Módulo de Facturación & Cobro a Atletas (MRR) y Radar Fisiológico del Escuadrón (v4.02):**
   - **Foco Comercial Real:** Reemplazo de métricas decorativas de tokens IA por un sistema financiero y comercial directo para el Head Coach: seguimiento de ingresos recurrentes mensuales (MRR), total recaudado, saldo pendiente de cobro y porcentaje de recaudación en tiempo real.

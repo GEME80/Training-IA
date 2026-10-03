@@ -51,10 +51,12 @@ export interface UserProfileData {
   trainingFocus?: "MAINTENANCE" | "BUILD" | "MARATHON" | "TRIATHLON";
   planPrice?: number;
   planCurrency?: "USD" | "COP" | "EUR";
-  billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number;
   lastPaymentDate?: string;
   paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  paymentReference?: string;
+  paymentReportedAt?: string;
   primaryGoalRace?: string;
   primaryGoalDate?: string;
   weeklyAvailability?: WeeklyAvailabilityMap;
@@ -90,17 +92,71 @@ export interface AdminUserListItem {
   lthr?: number;
   planPrice?: number;
   planCurrency?: "USD" | "COP" | "EUR";
-  billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number;
   lastPaymentDate?: string;
   paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  paymentReference?: string;
+  paymentReportedAt?: string;
   primaryGoalRace?: string;
   primaryGoalDate?: string;
   createdAt: string;
   lastLoginAt: string;
 }
 
+export interface SubscriptionPlanConfig {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  price: number;
+  currency: "USD" | "COP" | "EUR";
+  billingPeriod: "monthly";
+  billingCycleDaysText: string;
+  features: string[];
+  nequiEnabled: boolean;
+  nequiNumber: string;
+  nequiAccountName: string;
+  nequiDocumentId?: string;
+  nequiQrImageUrl?: string;
+  bankName: string;
+  bankAccountType?: "Ahorros" | "Corriente" | "Nequi";
+  bankAccountNumber?: string;
+  paymentInstructions: string;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+export const DEFAULT_SUBSCRIPTION_PLAN: SubscriptionPlanConfig = {
+  id: "plan-elite-pro",
+  name: "Plan Élite Pro SGEA",
+  tagline: "Periodización Dinámica, Fisiología Stryd y Head Coach Digital",
+  description: "Acceso total a la plataforma de entrenamiento inteligente adaptativo con IA, prescripción en vatios/ritmo y analítica fisiológica de élite.",
+  price: 80,
+  currency: "USD",
+  billingPeriod: "monthly",
+  billingCycleDaysText: "Días 1 al 5 de cada mes",
+  features: [
+    "Prescripción adaptativa diaria con IA y motor de potencia Stryd",
+    "Ajuste dinámico continuo según HRV, calidad de sueño y fatiga (Banister)",
+    "Sincronización automática directa con Intervals.icu y relojes Garmin / Coros",
+    "Prevención activa de lesiones (Cap 3h y regla 3:1 de asimilación)",
+    "Chat interactivo 24/7 con tu Head Coach Digital",
+    "Curvas de potencia MMP, mejores esfuerzos y estimación Daniels VDOT hasta 42K",
+  ],
+  nequiEnabled: true,
+  nequiNumber: "310 123 4567",
+  nequiAccountName: "Germán Morales",
+  nequiDocumentId: "CC 1.234.567.890",
+  nequiQrImageUrl: "",
+  bankName: "Bancolombia / Nequi",
+  bankAccountType: "Ahorros",
+  bankAccountNumber: "310-1234567",
+  paymentInstructions: "Transfiere desde tu app de Nequi o Bancolombia escaneando el código QR o enviando al número indicado. Luego reporta tu comprobante aquí para validación inmediata.",
+};
+
 export interface AdminBillingStats {
+  totalAthletesMonth: number;
   totalExpectedRevenue: number;
   totalCollectedMonth: number;
   totalPendingMonth: number;
@@ -108,6 +164,7 @@ export interface AdminBillingStats {
   paidCount: number;
   pendingCount: number;
   overdueCount: number;
+  pendingVerificationCount: number;
   currency: string;
 }
 

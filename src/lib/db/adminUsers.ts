@@ -70,6 +70,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         billingCycleDay: data.billingCycleDay || 5,
         lastPaymentDate: data.lastPaymentDate || (data.intervalsAthleteId === "i729730" ? "2026-10-01" : undefined),
         paymentMethod: data.paymentMethod || "TRANSFER",
+        paymentReference: data.paymentReference, paymentReportedAt: data.paymentReportedAt,
         primaryGoalRace: data.primaryGoalRace, primaryGoalDate: data.primaryGoalDate,
         createdAt: data.createdAt || new Date().toISOString(), lastLoginAt: data.lastLoginAt || new Date().toISOString(),
       };
@@ -302,8 +303,10 @@ export async function preauthorizeUser(
 export interface UpdateUserDetailsParams {
   displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
   runFtp?: number; bikeFtp?: number; rawApiKey?: string; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
-  planPrice?: number; planCurrency?: "USD" | "COP" | "EUR"; billingStatus?: "PAID" | "PENDING" | "OVERDUE";
+  planPrice?: number; planCurrency?: "USD" | "COP" | "EUR";
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number; lastPaymentDate?: string; paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  paymentReference?: string; paymentReportedAt?: string;
   primaryGoalRace?: string; primaryGoalDate?: string;
 }
 
@@ -323,24 +326,17 @@ export async function updateUserDetails(
   const cleanUpdates: Record<string, any> = {
     updatedAt: new Date().toISOString(),
     ...(updates.displayName !== undefined && { displayName: updates.displayName.trim() }),
-    ...(updates.role !== undefined && { role: updates.role }),
-    ...(updates.status !== undefined && { status: updates.status }),
+    ...(updates.role !== undefined && { role: updates.role }), ...(updates.status !== undefined && { status: updates.status }),
     ...(updates.intervalsAthleteId !== undefined && { intervalsAthleteId: updates.intervalsAthleteId.trim() }),
-    ...(updates.runFtp !== undefined && { runFtp: Number(updates.runFtp) }),
-    ...(updates.bikeFtp !== undefined && { bikeFtp: Number(updates.bikeFtp) }),
-    ...(updates.weightKg !== undefined && { weightKg: Number(updates.weightKg) || undefined }),
-    ...(updates.restingHR !== undefined && { restingHR: Number(updates.restingHR) || undefined }),
-    ...(updates.maxHR !== undefined && { maxHR: Number(updates.maxHR) || undefined }),
-    ...(updates.lthr !== undefined && { lthr: Number(updates.lthr) || undefined }),
+    ...(updates.runFtp !== undefined && { runFtp: Number(updates.runFtp) }), ...(updates.bikeFtp !== undefined && { bikeFtp: Number(updates.bikeFtp) }),
+    ...(updates.weightKg !== undefined && { weightKg: Number(updates.weightKg) || undefined }), ...(updates.restingHR !== undefined && { restingHR: Number(updates.restingHR) || undefined }),
+    ...(updates.maxHR !== undefined && { maxHR: Number(updates.maxHR) || undefined }), ...(updates.lthr !== undefined && { lthr: Number(updates.lthr) || undefined }),
     ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),
-    ...(updates.planPrice !== undefined && { planPrice: Number(updates.planPrice) }),
-    ...(updates.planCurrency !== undefined && { planCurrency: updates.planCurrency }),
-    ...(updates.billingStatus !== undefined && { billingStatus: updates.billingStatus }),
-    ...(updates.billingCycleDay !== undefined && { billingCycleDay: Number(updates.billingCycleDay) }),
-    ...(updates.lastPaymentDate !== undefined && { lastPaymentDate: updates.lastPaymentDate }),
-    ...(updates.paymentMethod !== undefined && { paymentMethod: updates.paymentMethod }),
-    ...(updates.primaryGoalRace !== undefined && { primaryGoalRace: updates.primaryGoalRace.trim() }),
-    ...(updates.primaryGoalDate !== undefined && { primaryGoalDate: updates.primaryGoalDate.trim() }),
+    ...(updates.planPrice !== undefined && { planPrice: Number(updates.planPrice) }), ...(updates.planCurrency !== undefined && { planCurrency: updates.planCurrency }),
+    ...(updates.billingStatus !== undefined && { billingStatus: updates.billingStatus }), ...(updates.billingCycleDay !== undefined && { billingCycleDay: Number(updates.billingCycleDay) }),
+    ...(updates.lastPaymentDate !== undefined && { lastPaymentDate: updates.lastPaymentDate }), ...(updates.paymentMethod !== undefined && { paymentMethod: updates.paymentMethod }),
+    ...(updates.paymentReference !== undefined && { paymentReference: updates.paymentReference.trim() }), ...(updates.paymentReportedAt !== undefined && { paymentReportedAt: updates.paymentReportedAt }),
+    ...(updates.primaryGoalRace !== undefined && { primaryGoalRace: updates.primaryGoalRace.trim() }), ...(updates.primaryGoalDate !== undefined && { primaryGoalDate: updates.primaryGoalDate.trim() }),
   };
 
   await userRef.update(cleanUpdates);

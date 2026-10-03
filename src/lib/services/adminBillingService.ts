@@ -28,6 +28,7 @@ export function calculateBillingStats(users: AdminUserListItem[]): AdminBillingS
   let paidCount = 0;
   let pendingCount = 0;
   let overdueCount = 0;
+  let pendingVerificationCount = 0;
 
   athletes.forEach((athlete) => {
     // Si no tiene tarifa fijada, asignamos tarifa estándar base de 80 USD
@@ -42,6 +43,10 @@ export function calculateBillingStats(users: AdminUserListItem[]): AdminBillingS
     } else if (status === "OVERDUE") {
       totalPendingMonth += price;
       overdueCount++;
+    } else if (status === "PENDING_VERIFICATION") {
+      totalPendingMonth += price;
+      pendingVerificationCount++;
+      pendingCount++;
     } else {
       totalPendingMonth += price;
       pendingCount++;
@@ -54,6 +59,7 @@ export function calculateBillingStats(users: AdminUserListItem[]): AdminBillingS
       : 0;
 
   return {
+    totalAthletesMonth: athletes.length,
     totalExpectedRevenue,
     totalCollectedMonth,
     totalPendingMonth,
@@ -61,6 +67,7 @@ export function calculateBillingStats(users: AdminUserListItem[]): AdminBillingS
     paidCount,
     pendingCount,
     overdueCount,
+    pendingVerificationCount,
     currency,
   };
 }

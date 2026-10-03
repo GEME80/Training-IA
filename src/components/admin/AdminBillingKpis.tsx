@@ -70,9 +70,16 @@ export const AdminBillingKpis: React.FC<AdminBillingKpisProps> = ({ stats }) => 
           {formatMoney(stats.totalPendingMonth, stats.currency)}
         </div>
         <div className="text-xs text-slate-500 font-medium">
-          {stats.pendingCount + stats.overdueCount > 0
-            ? `${stats.pendingCount} pendientes • ${stats.overdueCount} en mora`
-            : "Toda la cartera al día"}
+          {stats.pendingVerificationCount > 0 ? (
+            <span className="text-purple-700 font-bold flex items-center gap-1">
+              <span>🔔</span>
+              <span>{stats.pendingVerificationCount} pago(s) por validar</span>
+            </span>
+          ) : stats.pendingCount + stats.overdueCount > 0 ? (
+            `${stats.pendingCount} pendientes • ${stats.overdueCount} en mora`
+          ) : (
+            "Toda la cartera al día"
+          )}
         </div>
       </div>
 

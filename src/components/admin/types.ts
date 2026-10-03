@@ -5,6 +5,7 @@ import { MacrocycleDefinition } from "@/lib/physiology/macrocycleLibrary";
 export type AdminSidebarTab =
   | "dashboard"
   | "users"
+  | "plans"
   | "ai_settings"
   | "methodology_programs"
   | "scientific_models"

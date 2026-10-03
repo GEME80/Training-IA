@@ -12,6 +12,7 @@ import {
   FlaskConical,
   Activity,
   CheckCircle2,
+  CreditCard,
 } from "lucide-react";
 import { AdminSidebarTab, LiveConnectionsData } from "./types";
 import { AdminStats } from "@/lib/db/types";
@@ -105,6 +106,22 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               ) : (
                 <ChevronRight className={`h-3.5 w-3.5 ${activeTab === "users" ? "text-cyan-400" : "text-slate-400"}`} />
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("plans")}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "plans"
+                  ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
+                  : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-950"
+              }`}
+            >
+              <div className="flex items-center space-x-2.5">
+                <CreditCard className={`h-4 w-4 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-500"}`} />
+                <span>Plan Único & Nequi</span>
+              </div>
+              <ChevronRight className={`h-3.5 w-3.5 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-400"}`} />
             </button>
           </div>
 

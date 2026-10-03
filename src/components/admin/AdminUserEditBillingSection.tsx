@@ -8,8 +8,8 @@ interface AdminUserEditBillingSectionProps {
   setPlanPrice: (v: number | "") => void;
   planCurrency: "USD" | "COP" | "EUR";
   setPlanCurrency: (v: "USD" | "COP" | "EUR") => void;
-  billingStatus: "PAID" | "PENDING" | "OVERDUE";
-  setBillingStatus: (v: "PAID" | "PENDING" | "OVERDUE") => void;
+  billingStatus: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  setBillingStatus: (v: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION") => void;
   billingCycleDay: number | "";
   setBillingCycleDay: (v: number | "") => void;
   paymentMethod: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
@@ -72,11 +72,12 @@ export const AdminUserEditBillingSection: React.FC<AdminUserEditBillingSectionPr
           <label className="block text-[11px] font-bold text-slate-700 mb-1">Estado de Pago</label>
           <select
             value={billingStatus}
-            onChange={(e) => setBillingStatus(e.target.value as "PAID" | "PENDING" | "OVERDUE")}
+            onChange={(e) => setBillingStatus(e.target.value as "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION")}
             className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
             <option value="PAID">Al Día (Pagado)</option>
             <option value="PENDING">Pendiente</option>
+            <option value="PENDING_VERIFICATION">🔔 Pago Reportado (Validar)</option>
             <option value="OVERDUE">Vencido / Mora</option>
           </select>
         </div>

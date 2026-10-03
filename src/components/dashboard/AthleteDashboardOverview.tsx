@@ -13,6 +13,7 @@ import { buildHistoricalBlueprint } from "@/lib/physiology/historicalCalendarWee
 import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 import { MacrocycleUpgradeCard } from "./MacrocycleUpgradeCard";
 import { MacrocycleUpgradeProposal } from "@/lib/physiology/ctlPotentialEngine";
+import { AthleteBillingBanner } from "./AthleteBillingBanner";
 
 interface AthleteDashboardOverviewProps {
   physioStatus: PhysiologicalStatus | null;
@@ -126,6 +127,17 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
       {/* CONTENIDO DE PESTAÑA 1: RESUMEN ACTUAL Y CALENDARIO */}
       {activeTab === "overview" && (
         <div className="space-y-3 animate-fadeIn">
+          {/* Banner de Membresía & Pagos Nequi */}
+          <AthleteBillingBanner
+            athleteUid={profile.id}
+            athleteEmail={profile.name}
+            billingStatus={profile.billingStatus}
+            planPrice={profile.planPrice}
+            planCurrency={profile.planCurrency}
+            billingCycleDay={profile.billingCycleDay}
+            paymentReference={profile.paymentReference}
+          />
+
           {/* Tarjeta de Oportunidad de Upgrade Fisiológico con Elección Soberana */}
           {upgradeProposal && onAcceptUpgrade && (
             <MacrocycleUpgradeCard

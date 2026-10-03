@@ -36,6 +36,11 @@ export interface AthleteProfile {
   icu_efficiency_factor?: number;
   timezone?: string;
   visibleMetrics?: string[];
+  planPrice?: number;
+  planCurrency?: string;
+  billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  billingCycleDay?: number;
+  paymentReference?: string;
 }
 
 export interface MetricIndicatorConfig {

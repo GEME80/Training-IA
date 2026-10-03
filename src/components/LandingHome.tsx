@@ -8,6 +8,7 @@ import { LandingProductMockup } from "./landing/LandingProductMockup";
 import { LandingFeaturesGrid } from "./landing/LandingFeaturesGrid";
 import { LandingDisciplineModels } from "./landing/LandingDisciplineModels";
 import { LandingHeadCoaches } from "./landing/LandingHeadCoaches";
+import { LandingPricingSection } from "./landing/LandingPricingSection";
 import { LandingFaq } from "./landing/LandingFaq";
 import { LandingFooter } from "./landing/LandingFooter";
 import { useAuth } from "@/context/AuthContext";
@@ -137,10 +138,13 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         {/* 7. Metodólogos de Autoridad (Fichas compactas de Head Coaches) */}
         <LandingHeadCoaches />
 
-        {/* 8. Preguntas Frecuentes Ultra-Compactas (2 columnas, acordeón limpio) */}
+        {/* 8. Plan Único de Suscripción Oficial (SSOT Dinámico) */}
+        <LandingPricingSection onOpenAuthModal={onOpenAuthModal} />
+
+        {/* 9. Preguntas Frecuentes Ultra-Compactas (2 columnas, acordeón limpio) */}
         <LandingFaq />
 
-        {/* 9. Footer Minimalista (Sin botones de registro redundantes) */}
+        {/* 10. Footer Minimalista (Sin botones de registro redundantes) */}
         <LandingFooter />
       </div>
     </div>

@@ -11,11 +11,13 @@ import {
   FlaskConical,
   ArrowLeft,
   RefreshCw,
+  CreditCard,
 } from "lucide-react";
 import { AdminSidebarTab } from "./admin/types";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminDashboardTab } from "./admin/AdminDashboardTab";
 import { AdminUsersTab } from "./admin/AdminUsersTab";
+import { AdminPlansTab } from "./admin/AdminPlansTab";
 import { AdminAISettingsTab } from "./admin/AdminAISettingsTab";
 import { AdminMethodologyTab } from "./admin/AdminMethodologyTab";
 import { useAdminPanelData } from "./admin/useAdminPanelData";
@@ -119,6 +121,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
 
           <button
             type="button"
+            onClick={() => setActiveTab("plans")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              activeTab === "plans"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <CreditCard className={`h-3.5 w-3.5 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-500"}`} />
+            <span>Plan & Nequi</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("ai_settings")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
               activeTab === "ai_settings"
@@ -197,6 +212,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
             showMessage={data.showMessage}
             onInspectAthlete={onInspectAthlete}
           />
+        )}
+
+        {/* TAB 2.5: PLAN ÚNICO & PAGOS NEQUI */}
+        {activeTab === "plans" && (
+          <AdminPlansTab showMessage={data.showMessage} />
         )}
 
         {/* TAB 3: MOTOR AI & PROMPTS */}

@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
       billingCycleDay,
       lastPaymentDate,
       paymentMethod,
+      paymentReference,
+      paymentReportedAt,
       primaryGoalRace,
       primaryGoalDate,
     } = body;
@@ -53,6 +55,8 @@ export async function POST(req: NextRequest) {
       billingCycleDay: typeof billingCycleDay === "number" ? billingCycleDay : undefined,
       lastPaymentDate,
       paymentMethod,
+      paymentReference,
+      paymentReportedAt,
       primaryGoalRace,
       primaryGoalDate,
     });

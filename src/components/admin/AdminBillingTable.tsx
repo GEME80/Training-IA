@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, Clock, AlertCircle, RefreshCw, DollarSign, Calendar, Edit3 } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  RefreshCw,
+  DollarSign,
+  Calendar,
+  Edit3,
+  RotateCcw,
+  Smartphone,
+  X,
+} from "lucide-react";
 import { AdminUserListItem } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
 
@@ -19,23 +30,29 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
   onEditAthlete,
 }) => {
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING">("ALL");
+  const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING" | "VERIFY">("ALL");
 
   const athletes = users.filter((u) => u.role === "athlete" && u.status === "active");
+
+  const paidCount = athletes.filter(
+    (a) => (a.billingStatus || (a.intervalsAthleteId === "i729730" ? "PAID" : "PENDING")) === "PAID"
+  ).length;
+
+  const verifyCount = athletes.filter((a) => a.billingStatus === "PENDING_VERIFICATION").length;
+  const pendingCount = athletes.length - paidCount;
 
   const filteredAthletes = athletes.filter((athlete) => {
     const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
     if (filter === "PAID") return status === "PAID";
-    if (filter === "PENDING") return status === "PENDING" || status === "OVERDUE";
+    if (filter === "VERIFY") return status === "PENDING_VERIFICATION";
+    if (filter === "PENDING") return status === "PENDING" || status === "OVERDUE" || status === "PENDING_VERIFICATION";
     return true;
   });
 
-  const handleTogglePaymentStatus = async (athlete: AdminUserListItem) => {
-    const currentStatus = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
-    const newStatus = currentStatus === "PAID" ? "PENDING" : "PAID";
+  const handleSetStatus = async (athlete: AdminUserListItem, newStatus: "PAID" | "PENDING" | "OVERDUE") => {
     const todayStr = new Date().toISOString().split("T")[0];
-
     setUpdatingUid(athlete.uid);
+
     try {
       const res = await fetch("/api/admin/billing", {
         method: "POST",
@@ -50,14 +67,10 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al actualizar estado de pago");
+      if (!res.ok) throw new Error(data.error || "Error al actualizar estado");
 
-      showMessage(
-        newStatus === "PAID"
-          ? `Pago registrado para ${athlete.displayName || athlete.email}.`
-          : `Estado de ${athlete.displayName || athlete.email} cambiado a Pendiente.`,
-        "success"
-      );
+      const label = newStatus === "PAID" ? "Al Día (Pagado)" : newStatus === "PENDING" ? "Pendiente" : "En Mora";
+      showMessage(`Estado de ${athlete.displayName || athlete.email} cambiado a "${label}".`, "success");
       onRefresh();
     } catch (err: unknown) {
       showMessage(err instanceof Error ? err.message : "Error al procesar cobro", "error");
@@ -74,15 +87,15 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
           <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <span>Control de Cobros a Atletas</span>
             <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-              Mes Actual
+              Mes en Curso
             </span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Registro mensual de suscripciones, fechas de corte y estado de recaudación.
+            Registro mensual de suscripciones, pagos por Nequi y modificación directa de estados.
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setFilter("ALL")}
@@ -99,7 +112,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
               filter === "PAID" ? "bg-white text-emerald-800 shadow-2xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Al Día
+            Al Día ({paidCount})
           </button>
           <button
             type="button"
@@ -108,8 +121,19 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
               filter === "PENDING" ? "bg-white text-amber-800 shadow-2xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Pendientes
+            Pendientes ({pendingCount})
           </button>
+          {verifyCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setFilter("VERIFY")}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                filter === "VERIFY" ? "bg-purple-600 text-white shadow-2xs" : "text-purple-700 bg-purple-100/60 hover:bg-purple-100"
+              }`}
+            >
+              <span>Por Validar ({verifyCount})</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -122,8 +146,8 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
               <th className="py-3 px-4">Tarifa Mensual</th>
               <th className="py-3 px-4">Día de Corte</th>
               <th className="py-3 px-4">Estado del Mes</th>
-              <th className="py-3 px-4">Último Pago</th>
-              <th className="py-3 px-4 text-right">Gestión de Cobro</th>
+              <th className="py-3 px-4">Último Pago / Ref</th>
+              <th className="py-3 px-4 text-right">Gestión de Cobro Reversible</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -173,6 +197,11 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                         <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                         <span>PAGADO</span>
                       </span>
+                    ) : status === "PENDING_VERIFICATION" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 animate-pulse">
+                        <Smartphone className="h-3 w-3 text-purple-600" />
+                        <span>PAGO REPORTADO</span>
+                      </span>
                     ) : status === "OVERDUE" ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
                         <AlertCircle className="h-3 w-3 text-rose-600" />
@@ -186,39 +215,75 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                     )}
                   </td>
 
-                  {/* Último Pago */}
+                  {/* Último Pago / Ref */}
                   <td className="py-3 px-4 text-xs font-mono text-slate-500">
-                    {athlete.lastPaymentDate ? athlete.lastPaymentDate : "Sin registro"}
+                    {status === "PENDING_VERIFICATION" && athlete.paymentReference ? (
+                      <div className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-block">
+                        Ref: {athlete.paymentReference}
+                      </div>
+                    ) : athlete.lastPaymentDate ? (
+                      athlete.lastPaymentDate
+                    ) : (
+                      "Sin registro"
+                    )}
                   </td>
 
-                  {/* Botonera de Cobro */}
+                  {/* Botonera de Cobro Reversible */}
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePaymentStatus(athlete)}
-                        disabled={isUpdating}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs shadow-2xs transition cursor-pointer disabled:opacity-50 ${
-                          status === "PAID"
-                            ? "bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-600 border border-slate-200"
-                            : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs"
-                        }`}
-                        title={status === "PAID" ? "Revertir a pendiente" : "Registrar cobro de este mes"}
-                      >
-                        {isUpdating ? (
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                        ) : status === "PAID" ? (
-                          <>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                            <span>Al día</span>
-                          </>
-                        ) : (
-                          <>
+                      {status === "PENDING_VERIFICATION" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleSetStatus(athlete, "PAID")}
+                            disabled={isUpdating}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition cursor-pointer disabled:opacity-50"
+                            title="Aprobar reporte y marcar al día"
+                          >
+                            {isUpdating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                            <span>Aprobar Pago</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetStatus(athlete, "PENDING")}
+                            disabled={isUpdating}
+                            className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 transition cursor-pointer"
+                            title="Rechazar reporte y dejar pendiente"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : status === "PAID" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSetStatus(athlete, "PENDING")}
+                          disabled={isUpdating}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 border border-slate-200 transition cursor-pointer disabled:opacity-50"
+                          title="Revertir estado a Pendiente de Pago"
+                        >
+                          {isUpdating ? (
+                            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                          )}
+                          <span>Revertir a Pendiente</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSetStatus(athlete, "PAID")}
+                          disabled={isUpdating}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition cursor-pointer disabled:opacity-50"
+                          title="Registrar cobro y marcar al día"
+                        >
+                          {isUpdating ? (
+                            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>Marcar Pagado</span>
-                          </>
-                        )}
-                      </button>
+                          )}
+                          <span>Marcar Pagado</span>
+                        </button>
+                      )}
 
                       {onEditAthlete && (
                         <button

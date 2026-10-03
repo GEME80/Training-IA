@@ -91,7 +91,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
             </span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Registro mensual de suscripciones, pagos por Nequi y modificación directa de estados.
+            Registro mensual de suscripciones, pagos por Bre-B (BBVA) y modificación directa de estados.
           </p>
         </div>
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Smartphone, CheckCircle2, Clock, AlertCircle } from "lucide-react";
-import { AthleteNequiPaymentModal } from "./AthleteNequiPaymentModal";
+import { Landmark, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { AthleteBreBPaymentModal } from "./AthleteBreBPaymentModal";
 import { formatMoney } from "@/lib/services/adminBillingService";
 
 interface AthleteBillingBannerProps {
@@ -51,13 +51,13 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
 
   if (localStatus === "PENDING_VERIFICATION") {
     return (
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-purple-50 border border-purple-200 text-xs shadow-2xs">
-        <div className="flex items-center gap-2 text-purple-950 font-bold">
-          <Clock className="h-4 w-4 text-purple-600 animate-pulse" />
-          <span>Pago Reportado por Nequi</span>
-          {localRef && <span className="font-mono text-[11px] text-purple-700 bg-white px-2 py-0.5 rounded-md border border-purple-200">Ref: {localRef}</span>}
+      <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs shadow-2xs">
+        <div className="flex items-center gap-2 text-blue-950 font-bold">
+          <Clock className="h-4 w-4 text-blue-600 animate-pulse" />
+          <span>Pago Reportado (Bre-B / BBVA)</span>
+          {localRef && <span className="font-mono text-[11px] text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200">Ref: {localRef}</span>}
         </div>
-        <span className="text-[11px] text-purple-700 font-medium">Validación en curso por tu entrenador</span>
+        <span className="text-[11px] text-blue-700 font-medium">Validación en curso por tu entrenador</span>
       </div>
     );
   }
@@ -71,12 +71,12 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 sm:px-4 sm:py-3 rounded-2xl border shadow-2xs transition-all ${
           isOverdue
             ? "bg-rose-50/90 border-rose-200 text-rose-950"
-            : "bg-gradient-to-r from-purple-50/80 via-white to-purple-50/50 border-purple-200/90 text-purple-950"
+            : "bg-gradient-to-r from-blue-50/80 via-white to-blue-50/50 border-blue-200/90 text-blue-950"
         }`}
       >
         <div className="flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl shrink-0 ${isOverdue ? "bg-rose-100 text-rose-700" : "bg-purple-100 text-purple-700"}`}>
-            {isOverdue ? <AlertCircle className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
+          <div className={`p-2 rounded-xl shrink-0 ${isOverdue ? "bg-rose-100 text-rose-700" : "bg-blue-100 text-blue-700"}`}>
+            {isOverdue ? <AlertCircle className="h-4 w-4" /> : <Landmark className="h-4 w-4" />}
           </div>
           <div>
             <div className="font-bold text-xs flex items-center gap-1.5">
@@ -92,14 +92,14 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
         >
-          <Smartphone className="h-3.5 w-3.5" />
-          <span>Pagar con Nequi</span>
+          <Landmark className="h-3.5 w-3.5" />
+          <span>Pagar con Bre-B / BBVA</span>
         </button>
       </div>
 
-      <AthleteNequiPaymentModal
+      <AthleteBreBPaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         athleteUid={athleteUid}

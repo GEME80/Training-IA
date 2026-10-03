@@ -119,7 +119,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             >
               <div className="flex items-center space-x-2.5">
                 <CreditCard className={`h-4 w-4 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-500"}`} />
-                <span>Plan Único & Nequi</span>
+                <span>Plan Único & Bre-B</span>
               </div>
               <ChevronRight className={`h-3.5 w-3.5 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-400"}`} />
             </button>

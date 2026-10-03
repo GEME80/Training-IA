@@ -129,7 +129,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
             }`}
           >
             <CreditCard className={`h-3.5 w-3.5 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-500"}`} />
-            <span>Plan & Nequi</span>
+            <span>Plan & Bre-B</span>
           </button>
 
           <button
@@ -214,7 +214,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onGoBackToDashboard, onI
           />
         )}
 
-        {/* TAB 2.5: PLAN ÚNICO & PAGOS NEQUI */}
+        {/* TAB 2.5: PLAN ÚNICO & PAGOS BRE-B (BBVA) */}
         {activeTab === "plans" && (
           <AdminPlansTab showMessage={data.showMessage} />
         )}

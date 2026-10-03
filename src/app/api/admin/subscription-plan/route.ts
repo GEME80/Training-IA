@@ -72,15 +72,24 @@ export async function POST(req: NextRequest) {
       name: plan.name?.trim() || DEFAULT_SUBSCRIPTION_PLAN.name,
       tagline: plan.tagline?.trim() || DEFAULT_SUBSCRIPTION_PLAN.tagline,
       description: plan.description?.trim() || DEFAULT_SUBSCRIPTION_PLAN.description,
+      billingCycleDaysText: plan.billingCycleDaysText?.trim() || DEFAULT_SUBSCRIPTION_PLAN.billingCycleDaysText,
       features: Array.isArray(plan.features) && plan.features.length > 0 ? plan.features : DEFAULT_SUBSCRIPTION_PLAN.features,
-      nequiEnabled: Boolean(plan.nequiEnabled),
-      nequiNumber: plan.nequiNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.nequiNumber,
-      nequiAccountName: plan.nequiAccountName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.nequiAccountName,
-      nequiDocumentId: plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.nequiDocumentId,
-      nequiQrImageUrl: plan.nequiQrImageUrl?.trim() || "",
-      bankName: plan.bankName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.bankName,
+      breBEnabled: plan.breBEnabled !== undefined ? Boolean(plan.breBEnabled) : (plan.nequiEnabled !== undefined ? Boolean(plan.nequiEnabled) : true),
+      breBKey: plan.breBKey?.trim() || plan.nequiNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.breBKey,
+      breBKeyType: plan.breBKeyType || "CELULAR",
+      accountHolderName: plan.accountHolderName?.trim() || plan.nequiAccountName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountHolderName,
+      accountDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId,
+      bankName: plan.bankName?.trim() || "BBVA Colombia",
+      bankAccountType: plan.bankAccountType || "Ahorros",
       bankAccountNumber: plan.bankAccountNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.bankAccountNumber,
+      qrImageUrl: plan.qrImageUrl?.trim() || plan.nequiQrImageUrl?.trim() || "",
       paymentInstructions: plan.paymentInstructions?.trim() || DEFAULT_SUBSCRIPTION_PLAN.paymentInstructions,
+      // Backward compatibility aliases
+      nequiEnabled: plan.breBEnabled !== undefined ? Boolean(plan.breBEnabled) : Boolean(plan.nequiEnabled),
+      nequiNumber: plan.breBKey?.trim() || plan.nequiNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.breBKey,
+      nequiAccountName: plan.accountHolderName?.trim() || plan.nequiAccountName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountHolderName,
+      nequiDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId,
+      nequiQrImageUrl: plan.qrImageUrl?.trim() || plan.nequiQrImageUrl?.trim() || "",
       updatedAt: new Date().toISOString(),
       updatedBy: requesterEmail || requesterUid || "admin",
     };
@@ -90,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Plan de suscripción y datos de Nequi guardados exitosamente.",
+      message: "Plan de suscripción y datos de Bre-B / BBVA guardados exitosamente.",
       plan: planToSave,
     });
   } catch (err: unknown) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Sparkles, ArrowRight, ShieldCheck, Smartphone } from "lucide-react";
+import { CheckCircle2, Sparkles, ArrowRight, ShieldCheck, Landmark } from "lucide-react";
 import { DEFAULT_SUBSCRIPTION_PLAN, SubscriptionPlanConfig } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
 
@@ -107,8 +107,8 @@ export const LandingPricingSection: React.FC<LandingPricingSectionProps> = ({
             {/* Insignias de Pago y Confianza */}
             <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500 pt-1">
               <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-purple-600 shrink-0" />
-                <span>Aceptamos <strong>Nequi</strong>, <strong>Bancolombia</strong> y transferencia directa</span>
+                <Landmark className="h-4 w-4 text-blue-600 shrink-0" />
+                <span>Aceptamos <strong>Bre-B (BBVA)</strong>, interoperable desde cualquier app o banco</span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-600">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />

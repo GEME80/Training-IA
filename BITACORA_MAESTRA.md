@@ -5499,3 +5499,58 @@ flowchart TD
 - **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores en 3.9s)**.
 - **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
 - **Límite Estricto de Modularidad ($\le 350$ LOC):** Todos los 16 archivos modificados o creados se mantienen estrictamente dentro de la cota legal de 350 líneas de código.
+
+---
+
+## [2026-10-02] - Versión 4.04: Integración del Estándar Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia
+
+### 73.1. Requerimiento y Contexto del Negocio
+- **Alineación con el Sistema Nacional Bre-B:** El coach y administrador opera su cuenta principal de recaudos con **BBVA Colombia**. Se requería migrar el canal de pagos de la plataforma hacia **Bre-B**, el nuevo estándar nacional de pagos inmediatos e interoperables del **Banco de la República de Colombia**, en conjunto con transferencias directas a la cuenta BBVA.
+- **Interoperabilidad Universal:** Mediante Bre-B, cualquier atleta puede pagar en segundos desde la aplicación de su propia entidad financiera o billetera (Bancolombia, Nequi, Daviplata, Scotiabank Colpatria, Banco de Bogotá, etc.) usando la **Llave Bre-B** del coach o escaneando el **Código QR Bre-B / BBVA**, sin costos de comisión ni intermediarios de pasarela.
+
+### 73.2. Implementación Arquitectónica y Cambios Realizados
+1. **Modelo de Datos y Tipado SSOT (`src/lib/db/types.ts`):**
+   - Incorporación de los campos interoperables de Bre-B en `SubscriptionPlanConfig`:
+     * `breBEnabled`: Conmutador maestro para habilitar/deshabilitar pagos por Bre-B.
+     * `breBKey`: Llave Bre-B configurada (ej. número de celular, documento, correo o llave alfanumérica).
+     * `breBKeyType`: Tipo de llave (`CELULAR` | `CEDULA` | `CORREO` | `ALFANUMERICA`).
+     * `accountHolderName`: Titular de la cuenta (`Germán Morales`).
+     * `accountDocumentId`: Cédula / NIT del titular (`CC 1.234.567.890`).
+     * `bankName`: Entidad bancaria receptora (`BBVA Colombia`).
+     * `bankAccountType`: Tipo de cuenta (`Ahorros` | `Corriente`).
+     * `bankAccountNumber`: Número de cuenta BBVA Colombia.
+     * `qrImageUrl`: URL de la imagen del código QR oficial de Bre-B / BBVA.
+     * `paymentInstructions`: Texto de guía claro para el atleta.
+   - Preservación de aliases de retrocompatibilidad (`nequiEnabled`, `nequiNumber`, etc.) con valores por defecto consistentes en `DEFAULT_SUBSCRIPTION_PLAN`.
+2. **Endpoint de Gestión del Plan (`src/app/api/admin/subscription-plan/route.ts`):**
+   - Normalización y sanitización de campos Bre-B y BBVA en `POST`, persistiendo en Firestore (`system_config/subscription_plan`) con fallback bidireccional seguro.
+3. **Consola Administrativa de Planes (`src/components/admin/AdminPlansTab.tsx`):**
+   - Rediseño de la Columna 2 hacia *"2. Cobro por BBVA (vía Bre-B)"* con selectores tipados de Llave Bre-B, datos de cuenta BBVA Colombia, URL de imagen QR e instrucciones.
+   - Optimización de código estricta a **280 LOC** ($\le 350$ LOC).
+4. **Modal de Pago Interoperable para Atletas (`AthleteBreBPaymentModal.tsx`):**
+   - Tarjeta digital con estética BBVA / Bre-B: despliegue del QR Bre-B, selector de Llave Bre-B con botón de copiado de 1 clic (`[ Copiar Llave ]` $\rightarrow$ `¡Copiada!`), información bancaria detallada y badge de interoperabilidad.
+   - Formulario de reporte de comprobante que persiste la referencia de pago y notifica al administrador.
+   - Enlace retrocompatible en `AthleteNequiPaymentModal.tsx` para garantizar cero rupturas en módulos dependientes.
+5. **Banner del Atleta y Homepage (`AthleteBillingBanner.tsx` & `LandingPricingSection.tsx`):**
+   - Botón interactivo `[ Pagar con Bre-B / BBVA ]` en el dashboard del atleta.
+   - Insignia de confianza en el homepage: *"Aceptamos Bre-B (BBVA), interoperable desde cualquier app o banco"*.
+6. **Navegación y Tablas de Control (`AdminSidebar.tsx`, `AdminPanel.tsx`, `AdminBillingTable.tsx`):**
+   - Pestaña de navegación renombrada a *"Plan Único & Bre-B"*.
+   - Subtítulos de gestión financiera adaptados a cobros Bre-B y BBVA.
+
+### 73.3. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Límite Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/lib/db/types.ts`: **217 LOC**
+  * `src/app/api/admin/subscription-plan/route.ts`: **112 LOC**
+  * `src/components/admin/AdminPlansTab.tsx`: **280 LOC**
+  * `src/components/dashboard/AthleteBreBPaymentModal.tsx`: **303 LOC**
+  * `src/components/dashboard/AthleteNequiPaymentModal.tsx`: **14 LOC**
+  * `src/components/dashboard/AthleteBillingBanner.tsx`: **113 LOC**
+  * `src/components/landing/LandingPricingSection.tsx`: **123 LOC**
+  * `src/components/admin/AdminBillingTable.tsx`: **308 LOC**
+  * `src/components/admin/AdminSidebar.tsx`: **213 LOC**
+  * `src/components/AdminPanel.tsx`: **261 LOC**
+  * `src/components/dashboard/AthleteDashboardOverview.tsx`: **253 LOC**
+

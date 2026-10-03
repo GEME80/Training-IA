@@ -114,15 +114,23 @@ export interface SubscriptionPlanConfig {
   billingPeriod: "monthly";
   billingCycleDaysText: string;
   features: string[];
-  nequiEnabled: boolean;
-  nequiNumber: string;
-  nequiAccountName: string;
+  // Bre-B (Interoperable Instant Payments) & BBVA Colombia
+  breBEnabled: boolean;
+  breBKey: string;
+  breBKeyType: "CELULAR" | "CEDULA" | "CORREO" | "ALFANUMERICA";
+  accountHolderName: string;
+  accountDocumentId?: string;
+  bankName: string;
+  bankAccountType?: "Ahorros" | "Corriente";
+  bankAccountNumber?: string;
+  qrImageUrl?: string;
+  paymentInstructions: string;
+  // Backward compatibility aliases
+  nequiEnabled?: boolean;
+  nequiNumber?: string;
+  nequiAccountName?: string;
   nequiDocumentId?: string;
   nequiQrImageUrl?: string;
-  bankName: string;
-  bankAccountType?: "Ahorros" | "Corriente" | "Nequi";
-  bankAccountNumber?: string;
-  paymentInstructions: string;
   updatedAt?: string;
   updatedBy?: string;
 }
@@ -144,15 +152,19 @@ export const DEFAULT_SUBSCRIPTION_PLAN: SubscriptionPlanConfig = {
     "Chat interactivo 24/7 con tu Head Coach Digital",
     "Curvas de potencia MMP, mejores esfuerzos y estimación Daniels VDOT hasta 42K",
   ],
+  breBEnabled: true,
+  breBKey: "310 123 4567",
+  breBKeyType: "CELULAR",
+  accountHolderName: "Germán Morales",
+  accountDocumentId: "CC 1.234.567.890",
+  bankName: "BBVA Colombia",
+  bankAccountType: "Ahorros",
+  bankAccountNumber: "0013-0000-0000000000",
+  qrImageUrl: "",
+  paymentInstructions: "Paga al instante desde cualquier app bancaria o billetera digital mediante Bre-B (escaneando el QR o digitando la Llave Bre-B) o transfiriendo a la cuenta BBVA Colombia. Luego reporta tu comprobante aquí para validación inmediata.",
   nequiEnabled: true,
   nequiNumber: "310 123 4567",
   nequiAccountName: "Germán Morales",
-  nequiDocumentId: "CC 1.234.567.890",
-  nequiQrImageUrl: "",
-  bankName: "Bancolombia / Nequi",
-  bankAccountType: "Ahorros",
-  bankAccountNumber: "310-1234567",
-  paymentInstructions: "Transfiere desde tu app de Nequi o Bancolombia escaneando el código QR o enviando al número indicado. Luego reporta tu comprobante aquí para validación inmediata.",
 };
 
 export interface AdminBillingStats {

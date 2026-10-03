@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase/config";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { adminDb } from "@/lib/firebase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -26,36 +25,34 @@ export async function POST(req: NextRequest) {
 
     const now = new Date().toISOString();
 
-    // 1. Actualizar estado del atleta en Firestore
-    const userRef = doc(db, "users", athleteUid);
-    await setDoc(
-      userRef,
-      {
-        billingStatus: "PENDING_VERIFICATION",
-        paymentReference: referenceNumber.trim(),
-        paymentReportedAt: now,
-        paymentMethod,
-        updatedAt: now,
-      },
-      { merge: true }
-    );
+    if (adminDb) {
+      try {
+        const userRef = adminDb.collection("users").doc(athleteUid);
+        await userRef.set(
+          {
+            billingStatus: "PENDING_VERIFICATION",
+            paymentReference: referenceNumber.trim(),
+            paymentReportedAt: now,
+            paymentMethod,
+            updatedAt: now,
+          },
+          { merge: true }
+        );
 
-    // 2. Registrar reporte en histórico de transacciones
-    try {
-      const reportsRef = collection(db, "payment_reports");
-      await addDoc(reportsRef, {
-        athleteUid,
-        athleteEmail: athleteEmail || "",
-        referenceNumber: referenceNumber.trim(),
-        amount: typeof amount === "number" ? amount : undefined,
-        currency: currency || "USD",
-        notes: notes?.trim() || "",
-        paymentMethod,
-        status: "PENDING_VERIFICATION",
-        reportedAt: now,
-      });
-    } catch (auditErr) {
-      console.warn("Aviso al crear reporte de pago en payment_reports:", auditErr);
+        await adminDb.collection("payment_reports").add({
+          athleteUid,
+          athleteEmail: athleteEmail || "",
+          referenceNumber: referenceNumber.trim(),
+          amount: typeof amount === "number" ? amount : 0,
+          currency: currency || "USD",
+          notes: notes?.trim() || "",
+          paymentMethod,
+          status: "PENDING_VERIFICATION",
+          reportedAt: now,
+        });
+      } catch (dbErr) {
+        console.warn("Aviso al registrar pago en Firestore (modo resiliente):", dbErr);
+      }
     }
 
     return NextResponse.json({

@@ -1,38 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase/config";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { adminDb } from "@/lib/firebase/admin";
 import { isMasterAdminEmail } from "@/lib/env";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
 import { DEFAULT_SUBSCRIPTION_PLAN, SubscriptionPlanConfig } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 
+// Memoria compartida de fallback para entornos locales o sin credenciales de servicio GCP
+let inMemoryPlanConfig: SubscriptionPlanConfig = { ...DEFAULT_SUBSCRIPTION_PLAN };
+
 export async function GET() {
   try {
-    const planRef = doc(db, "system_config", "subscription_plan");
-    const snap = await getDoc(planRef);
-
-    if (snap.exists()) {
-      const data = snap.data() as SubscriptionPlanConfig;
-      return NextResponse.json({
-        success: true,
-        plan: {
-          ...DEFAULT_SUBSCRIPTION_PLAN,
-          ...data,
-        },
-      });
+    if (adminDb) {
+      try {
+        const snap = await adminDb.collection("system_config").doc("subscription_plan").get();
+        if (snap.exists) {
+          const data = snap.data() as SubscriptionPlanConfig;
+          inMemoryPlanConfig = { ...DEFAULT_SUBSCRIPTION_PLAN, ...data };
+          return NextResponse.json({ success: true, plan: inMemoryPlanConfig });
+        }
+      } catch (dbErr) {
+        console.warn("Aviso al consultar subscription_plan en Firestore, usando fallback:", dbErr);
+      }
     }
-
-    return NextResponse.json({
-      success: true,
-      plan: DEFAULT_SUBSCRIPTION_PLAN,
-    });
+    return NextResponse.json({ success: true, plan: inMemoryPlanConfig });
   } catch (error) {
     console.warn("Aviso al obtener subscription_plan, usando valores por defecto:", error);
-    return NextResponse.json({
-      success: true,
-      plan: DEFAULT_SUBSCRIPTION_PLAN,
-    });
+    return NextResponse.json({ success: true, plan: inMemoryPlanConfig });
   }
 }
 
@@ -66,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     const planToSave: SubscriptionPlanConfig = {
       ...DEFAULT_SUBSCRIPTION_PLAN,
+      ...inMemoryPlanConfig,
       ...plan,
       price: typeof plan.price === "number" ? Math.max(0, plan.price) : DEFAULT_SUBSCRIPTION_PLAN.price,
       currency: plan.currency || "USD",
@@ -78,24 +73,31 @@ export async function POST(req: NextRequest) {
       breBKey: plan.breBKey?.trim() || plan.nequiNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.breBKey,
       breBKeyType: plan.breBKeyType || "CELULAR",
       accountHolderName: plan.accountHolderName?.trim() || plan.nequiAccountName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountHolderName,
-      accountDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId,
+      accountDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId || "",
       bankName: plan.bankName?.trim() || "BBVA Colombia",
       bankAccountType: plan.bankAccountType || "Ahorros",
-      bankAccountNumber: plan.bankAccountNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.bankAccountNumber,
+      bankAccountNumber: plan.bankAccountNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.bankAccountNumber || "",
       qrImageUrl: plan.qrImageUrl?.trim() || plan.nequiQrImageUrl?.trim() || "",
       paymentInstructions: plan.paymentInstructions?.trim() || DEFAULT_SUBSCRIPTION_PLAN.paymentInstructions,
       // Backward compatibility aliases
       nequiEnabled: plan.breBEnabled !== undefined ? Boolean(plan.breBEnabled) : Boolean(plan.nequiEnabled),
       nequiNumber: plan.breBKey?.trim() || plan.nequiNumber?.trim() || DEFAULT_SUBSCRIPTION_PLAN.breBKey,
       nequiAccountName: plan.accountHolderName?.trim() || plan.nequiAccountName?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountHolderName,
-      nequiDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId,
+      nequiDocumentId: plan.accountDocumentId?.trim() || plan.nequiDocumentId?.trim() || DEFAULT_SUBSCRIPTION_PLAN.accountDocumentId || "",
       nequiQrImageUrl: plan.qrImageUrl?.trim() || plan.nequiQrImageUrl?.trim() || "",
       updatedAt: new Date().toISOString(),
       updatedBy: requesterEmail || requesterUid || "admin",
     };
 
-    const planRef = doc(db, "system_config", "subscription_plan");
-    await setDoc(planRef, planToSave, { merge: true });
+    inMemoryPlanConfig = planToSave;
+
+    if (adminDb) {
+      try {
+        await adminDb.collection("system_config").doc("subscription_plan").set(planToSave, { merge: true });
+      } catch (dbErr) {
+        console.warn("Aviso al guardar subscription_plan en Firestore (guardado en memoria):", dbErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,

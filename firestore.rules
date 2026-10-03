@@ -36,6 +36,18 @@ service cloud.firestore {
       allow write: if false; // Solo accesible mediante Firebase Admin SDK en el servidor
     }
     
+    // Configuración del sistema pública (Plan Único SSOT, Bre-B, etc.)
+    match /system_config/{configDoc} {
+      allow read: if true; // Lectura pública para Homepage y portal del atleta
+      allow write: if false; // Solo modificable mediante Firebase Admin SDK en el servidor
+    }
+
+    // Histórico de reportes de pagos
+    match /payment_reports/{reportId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.athleteUid;
+      allow write: if false; // Solo modificable mediante Firebase Admin SDK en el servidor
+    }
+    
     // Bloqueo por defecto para cualquier otra ruta no autorizada
     match /{document=**} {
       allow read, write: if false;

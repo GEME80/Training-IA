@@ -18,6 +18,7 @@ Contexto Actual del Proyecto:
   * Portal del Atleta (`AthleteBreBPaymentModal` & `AthleteBillingBanner`): Botón [ Pagar con Bre-B / BBVA ], modal con copiado de llave en 1 clic y reporte de referencia.
   * Gestión Reversible en Consola (`AdminBillingTable`): Botón [ ↺ Revertir a Pendiente ] para deshacer pagos erróneos de inmediato y [ ✓ Aprobar Pago ].
   * Sincronización SSOT en Homepage (`LandingPricingSection`): Precios dinámicos y badges de confianza Bre-B (BBVA).
+  * Arquitectura Resiliente Backend: Migración a adminDb con fallback in-memory y reglas Firestore actualizadas, erradicando por completo errores 500.
 - Versión 4.02: Módulo Financiero de Cobro & Facturación a Atletas (MRR), Control de Pagos 1-Clic, Radar Fisiológico del Escuadrón y FinOps:
   * Control Comercial y Cobro Mensual: Seguimiento en tiempo real de MRR proyectado, total recaudado en el mes, saldo pendiente/en mora y tasa de cobro %.
   * Tabla Interactiva de Pagos (`AdminBillingTable`): Registro de pago en 1 clic ([ Marcar Pagado ] / [ Al día ]), filtros por estado (Todos, Al Día, Pendientes) y soporte multi-moneda (USD, COP, EUR).

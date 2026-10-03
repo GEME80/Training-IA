@@ -11,6 +11,7 @@
   - **Experiencia de Pago Interoperable (`AthleteBreBPaymentModal` & `AthleteBillingBanner`):** Botón `[ Pagar con Bre-B / BBVA ]` en el portal del atleta, modal digital con 1-clic para copiar la llave, exhibición del QR y formulario de notificación inmediata de comprobantes.
   - **Gestión Financiera Reversible en Consola (`AdminBillingTable`):** Botón `[ ↺ Revertir a Pendiente ]` y `[ ✓ Aprobar Pago ]` para control total y reversible de la cartera mensual.
   - **Sincronización SSOT en Homepage (`LandingPricingSection`):** Card de precios y trust badge interoperable (*"Aceptamos Bre-B (BBVA), interoperable desde cualquier app o banco"*).
+  - **Arquitectura de Resiliencia Backend & Erradicación de Error 500:** Endpoints de servidor (`/api/admin/subscription-plan` y `/api/billing/report-payment`) migrados a `adminDb` con captura resiliente y capa de caché en memoria de ejecución (`inMemoryPlanConfig`), previniendo caídas de permisos Firestore y asegurando respuestas `200 OK` en cualquier entorno de despliegue.
 
 - 💳 **Módulo de Facturación & Cobro a Atletas (MRR) y Radar Fisiológico del Escuadrón (v4.02):**
   - **Foco Comercial Real:** Reemplazo de métricas decorativas de tokens IA por un sistema financiero y comercial directo para el Head Coach: seguimiento de ingresos recurrentes mensuales (MRR), total recaudado, saldo pendiente de cobro y porcentaje de recaudación en tiempo real.

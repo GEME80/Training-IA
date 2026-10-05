@@ -1,0 +1,251 @@
+"use client";
+
+import React, { useState, useMemo } from "react";
+import { BarChart3, Activity, Zap, Timer } from "lucide-react";
+import { DailyExecutedActivity } from "@/lib/intervals/types";
+import { formatPaceSec } from "./telemetryChartHelpers";
+
+interface ActivityZoneDistributionProps {
+  activity?: DailyExecutedActivity | null;
+  streams?: Record<string, any> | null;
+  discipline: string;
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
+  hasRunningPowerMeter?: boolean;
+  runFtp?: number;
+  bikeFtp?: number;
+  thresholdPaceSec?: number;
+  thresholdPaceStr?: string;
+  maxHeartrate?: number;
+  lthr?: number;
+}
+
+interface ZoneItem {
+  id: string;
+  name: string;
+  color: string;
+  bgClass: string;
+  seconds: number;
+  percent: number;
+  rangeLabel: string;
+}
+
+function formatZoneTime(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  if (m === 0 && s === 0) return "0s";
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s > 0 ? `${s}s` : ""}`.trim();
+}
+
+export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> = ({
+  activity,
+  streams,
+  discipline,
+  runningTrainingMode,
+  hasRunningPowerMeter,
+  runFtp = 0,
+  bikeFtp = 0,
+  thresholdPaceSec = 285,
+  maxHeartrate = 185,
+  lthr = 165,
+}) => {
+  const isRun = discipline === "Carrera";
+  const isBike = discipline === "Ciclismo";
+  const isPaceMode = isRun && (runningTrainingMode === "PACE" || hasRunningPowerMeter === false || runFtp === 0);
+  const effFtp = isRun ? runFtp : isBike ? bikeFtp : 0;
+
+  // 1. Detección de streams o zonas precalculadas
+  const rawHrs = streams?.heartrate || streams?.raw_heartrate || [];
+  const rawWatts = streams?.watts || [];
+  const rawVels = streams?.velocity_smooth || [];
+
+  const hasHrData = (Array.isArray(rawHrs) && rawHrs.length > 10) || (Array.isArray(activity?.icu_hr_zones) && activity!.icu_hr_zones.length > 0);
+  const hasWattsData = (Array.isArray(rawWatts) && rawWatts.length > 10 && effFtp > 0) || (Array.isArray(activity?.icu_power_zones) && activity!.icu_power_zones.length > 0);
+  const hasPaceData = isRun && ((Array.isArray(rawVels) && rawVels.length > 10) || (Array.isArray(activity?.icu_pace_zones) && activity!.icu_pace_zones.length > 0));
+
+  // Selección por defecto del tipo de zona según el plan
+  const defaultMetric = isPaceMode && hasPaceData ? "PACE" : hasWattsData ? "WATTS" : hasPaceData ? "PACE" : "HR";
+  const [activeZoneType, setActiveZoneType] = useState<"PACE" | "WATTS" | "HR">(defaultMetric);
+
+  // 2. Cálculo de Zonas de Ritmo (Pace)
+  const paceZones = useMemo<ZoneItem[]>(() => {
+    if (!hasPaceData) return [];
+    const counts = [0, 0, 0, 0, 0];
+    const tp = thresholdPaceSec || 285;
+
+    if (Array.isArray(activity?.icu_pace_zones) && activity!.icu_pace_zones.length >= 5) {
+      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_pace_zones[i] || 0;
+    } else if (Array.isArray(rawVels)) {
+      rawVels.forEach((v: number) => {
+        if (typeof v !== "number" || isNaN(v) || v < 1.0) return;
+        const pSec = 1000 / v;
+        if (pSec > tp * 1.24) counts[0]++; // Z1: Recuperación (>124% TP)
+        else if (pSec >= tp * 1.12) counts[1]++; // Z2: Aeróbico (112-124% TP)
+        else if (pSec >= tp * 1.03) counts[2]++; // Z3: Tempo (103-111% TP)
+        else if (pSec >= tp * 0.95) counts[3]++; // Z4: Umbral (95-102% TP)
+        else counts[4]++; // Z5: VO2 Max (<95% TP)
+      });
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0) || 1;
+    return [
+      { id: "Z1", name: "Recuperación", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `> ${formatPaceSec(Math.round(tp * 1.24))}` },
+      { id: "Z2", name: "Base Aeróbica", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${formatPaceSec(Math.round(tp * 1.24))} - ${formatPaceSec(Math.round(tp * 1.12))}` },
+      { id: "Z3", name: "Tempo", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${formatPaceSec(Math.round(tp * 1.12))} - ${formatPaceSec(Math.round(tp * 1.03))}` },
+      { id: "Z4", name: "Umbral Lactato", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${formatPaceSec(Math.round(tp * 1.03))} - ${formatPaceSec(Math.round(tp * 0.95))}` },
+      { id: "Z5", name: "VO2 Máx / Sprint", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `< ${formatPaceSec(Math.round(tp * 0.95))}` },
+    ];
+  }, [hasPaceData, rawVels, activity?.icu_pace_zones, thresholdPaceSec]);
+
+  // 3. Cálculo de Zonas de Potencia (Watts)
+  const powerZones = useMemo<ZoneItem[]>(() => {
+    if (!hasWattsData) return [];
+    const counts = [0, 0, 0, 0, 0];
+    const ftp = effFtp || 250;
+
+    if (Array.isArray(activity?.icu_power_zones) && activity!.icu_power_zones.length >= 5) {
+      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_power_zones[i] || 0;
+    } else if (Array.isArray(rawWatts)) {
+      rawWatts.forEach((w: number) => {
+        if (typeof w !== "number" || isNaN(w) || w <= 0) return;
+        const pct = (w / ftp) * 100;
+        if (pct < 55) counts[0]++;
+        else if (pct < 75) counts[1]++;
+        else if (pct < 90) counts[2]++;
+        else if (pct < 105) counts[3]++;
+        else counts[4]++;
+      });
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0) || 1;
+    return [
+      { id: "Z1", name: "Recuperación Activa", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${Math.round(ftp * 0.55)}W` },
+      { id: "Z2", name: "Resistencia Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${Math.round(ftp * 0.55)}-${Math.round(ftp * 0.75)}W` },
+      { id: "Z3", name: "Tempo / Ritmo", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${Math.round(ftp * 0.75)}-${Math.round(ftp * 0.9)}W` },
+      { id: "Z4", name: "Umbral Funcional", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${Math.round(ftp * 0.9)}-${Math.round(ftp * 1.05)}W` },
+      { id: "Z5", name: "Anaeróbico / VO2", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${Math.round(ftp * 1.05)}W` },
+    ];
+  }, [hasWattsData, rawWatts, activity?.icu_power_zones, effFtp]);
+
+  // 4. Cálculo de Zonas de Frecuencia Cardíaca (HR)
+  const hrZones = useMemo<ZoneItem[]>(() => {
+    if (!hasHrData) return [];
+    const counts = [0, 0, 0, 0, 0];
+    const hrMax = maxHeartrate || 185;
+    const lthrVal = lthr || 165;
+
+    if (Array.isArray(activity?.icu_hr_zones) && activity!.icu_hr_zones.length >= 5) {
+      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_hr_zones[i] || 0;
+    } else if (Array.isArray(rawHrs)) {
+      rawHrs.forEach((hr: number) => {
+        if (typeof hr !== "number" || isNaN(hr) || hr < 40) return;
+        const pctLthr = (hr / lthrVal) * 100;
+        if (pctLthr < 68) counts[0]++;
+        else if (pctLthr < 84) counts[1]++;
+        else if (pctLthr < 95) counts[2]++;
+        else if (pctLthr < 105) counts[3]++;
+        else counts[4]++;
+      });
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0) || 1;
+    return [
+      { id: "Z1", name: "Recuperación", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${Math.round(lthrVal * 0.68)} bpm` },
+      { id: "Z2", name: "Aeróbico / Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.68)}-${Math.round(lthrVal * 0.83)} bpm` },
+      { id: "Z3", name: "Tempo Moderado", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.84)}-${Math.round(lthrVal * 0.94)} bpm` },
+      { id: "Z4", name: "Umbral Anaeróbico", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.95)}-${Math.round(lthrVal * 1.05)} bpm` },
+      { id: "Z5", name: "Máximo Cardíaco", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${Math.round(lthrVal * 1.05)} bpm` },
+    ];
+  }, [hasHrData, rawHrs, activity?.icu_hr_zones, lthr, maxHeartrate]);
+
+  const activeZones = activeZoneType === "PACE" ? paceZones : activeZoneType === "WATTS" ? powerZones : hrZones;
+  if (!activeZones || activeZones.length === 0) return null;
+
+  const totalTime = activeZones.reduce((a, b) => a + b.seconds, 0);
+  if (totalTime === 0) return null;
+
+  return (
+    <div className="rounded-2xl p-4 bg-slate-900 border border-slate-800 text-white space-y-3 shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-emerald-400" />
+          <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+            Distribución de Zonas del Entrenamiento
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {hasPaceData && (
+            <button
+              type="button"
+              onClick={() => setActiveZoneType("PACE")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                activeZoneType === "PACE" ? "bg-cyan-500 text-slate-950 font-black" : "bg-slate-800/80 text-slate-300 hover:text-white"
+              }`}
+            >
+              <Timer className="h-3 w-3" /> Ritmo
+            </button>
+          )}
+          {hasWattsData && (
+            <button
+              type="button"
+              onClick={() => setActiveZoneType("WATTS")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                activeZoneType === "WATTS" ? "bg-purple-500 text-white font-black" : "bg-slate-800/80 text-slate-300 hover:text-white"
+              }`}
+            >
+              <Zap className="h-3 w-3" /> Potencia
+            </button>
+          )}
+          {hasHrData && (
+            <button
+              type="button"
+              onClick={() => setActiveZoneType("HR")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                activeZoneType === "HR" ? "bg-rose-500 text-white font-black" : "bg-slate-800/80 text-slate-300 hover:text-white"
+              }`}
+            >
+              <Activity className="h-3 w-3" /> FC
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Barra Horizontal Apilada de Zonas */}
+      <div className="space-y-1.5">
+        <div className="w-full h-4.5 rounded-full overflow-hidden flex bg-slate-950/80 border border-slate-800 p-0.5 shadow-inner">
+          {activeZones.map((z) => {
+            if (z.percent <= 0) return null;
+            return (
+              <div
+                key={z.id}
+                style={{ width: `${z.percent}%` }}
+                className={`h-full ${z.bgClass} first:rounded-l-full last:rounded-r-full transition-all duration-500 hover:brightness-125`}
+                title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)}`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Desglose en tarjetas por Zona */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+          {activeZones.map((z) => (
+            <div key={z.id} className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col justify-between space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-black px-1.5 py-0.2 rounded text-slate-900" style={{ backgroundColor: z.color }}>
+                  {z.id}
+                </span>
+                <span className="text-xs font-mono font-bold text-slate-200">{z.percent}%</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-300 truncate block">{z.name}</span>
+                <span className="text-xs font-mono font-bold text-white block mt-0.5">{formatZoneTime(z.seconds)}</span>
+                <span className="text-[9px] font-mono text-slate-400 block truncate mt-0.5">{z.rangeLabel}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

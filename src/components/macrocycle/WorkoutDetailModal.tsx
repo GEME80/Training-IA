@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Code2, Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap, Timer } from "lucide-react";
+import { Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap, Timer } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
-import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
+import { parseWorkoutDoc } from "../WorkoutChart";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
-import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
+import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
+import { ActivityRouteMap } from "./ActivityRouteMap";
+import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
 
 interface WorkoutDetailModalProps {
@@ -39,6 +41,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
   const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
+  const [activityStreams, setActivityStreams] = useState<Record<string, Record<string, any>>>({});
 
   if (!workout) return null;
 
@@ -187,6 +190,8 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               {displayActivities.map((rawAct, aIdx) => {
                 const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
                 const metricItems = buildTelemetryMetricItems(act, workout.discipline);
+                const currentStreams = activityStreams[act.id];
+
                 return (
                   <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
                     <div className="flex items-center justify-between text-xs">
@@ -216,11 +221,35 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                     </div>
 
                     {act.id && (
-                      <ActivityTelemetryChart
-                        activityId={act.id} athleteId={effAthleteId} apiKey={effApiKey} email={effEmail} uid={effUid}
-                        summaryStats={{ heartrate: act.heartrate, maxHeartrate: act.maxHeartrate, watts: act.watts, weightedWatts: act.weightedWatts, distanceKm: act.distanceKm, movingTimeMin: act.movingTimeMin, paceStr: act.paceStr, elevationGainM: act.elevationGainM }}
-                        onMetricsDiscovered={(m) => { if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! })); }}
-                      />
+                      <div className="space-y-3 pt-1">
+                        <ActivityTelemetryChart
+                          activityId={act.id} athleteId={effAthleteId} apiKey={effApiKey} email={effEmail} uid={effUid}
+                          summaryStats={{ heartrate: act.heartrate, maxHeartrate: act.maxHeartrate, watts: act.watts, weightedWatts: act.weightedWatts, distanceKm: act.distanceKm, movingTimeMin: act.movingTimeMin, paceStr: act.paceStr, elevationGainM: act.elevationGainM }}
+                          onMetricsDiscovered={(m) => { if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! })); }}
+                          onStreamsLoaded={(st) => setActivityStreams((p) => ({ ...p, [act.id]: st }))}
+                        />
+
+                        <ActivityZoneDistribution
+                          activity={act}
+                          streams={currentStreams}
+                          discipline={workout.discipline}
+                          runningTrainingMode={runningTrainingMode}
+                          hasRunningPowerMeter={hasRunningPowerMeter}
+                          runFtp={effRunFtp}
+                          bikeFtp={effBikeFtp}
+                          thresholdPaceSec={thresholdPaceSec}
+                          thresholdPaceStr={thresholdPaceStr}
+                          maxHeartrate={act.maxHeartrate || userProfile?.maxHR}
+                          lthr={userProfile?.lthr}
+                        />
+
+                        <ActivityRouteMap
+                          latlng={currentStreams?.latlng}
+                          distanceKm={act.distanceKm}
+                          movingTimeMin={act.movingTimeMin}
+                          elevationGainM={act.elevationGainM}
+                        />
+                      </div>
                     )}
                   </div>
                 );
@@ -229,99 +258,26 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           </div>
         )}
 
-        {workout.workoutDoc && (() => {
-          const isStrength = workout.discipline === "Fuerza";
-          const isSwim = workout.discipline === "Natacion";
-          const cleanDoc = sanitizeWorkoutDoc(workout.workoutDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace });
+        {workout.workoutDoc && (
+          <PlannedWorkoutPrescription
+            cleanDoc={sanitizeWorkoutDoc(workout.workoutDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace })}
+            discipline={workout.discipline}
+            isRunPace={isRunPace}
+            isRunPower={isRunPower}
+            isBike={isBike}
+            effRunFtp={effRunFtp}
+            effBikeFtp={effBikeFtp}
+            thresholdPaceStr={thresholdPaceStr}
+            thresholdPaceSec={thresholdPaceSec}
+            isExecuted={isExecuted}
+          />
+        )}
 
-          const sectionTitle = isStrength
-            ? "Prescripción de la Sesión de Fuerza:"
-            : isRunPace
-            ? "Prescripción Estructurada (Ritmo):"
-            : isRunPower
-            ? "Prescripción Estructurada (Stryd CP):"
-            : isBike
-            ? "Prescripción Estructurada (Bici FTP):"
-            : isSwim
-            ? "Prescripción Estructurada (Ritmo CSS):"
-            : "Prescripción Estructurada:";
-
-          const showWattBadge = (isRunPower && effRunFtp > 0) || (isBike && effBikeFtp > 0);
-          const effectiveFtp = isRunPower ? effRunFtp : isBike ? effBikeFtp : 0;
-          const ftpLabel = isRunPower ? "Stryd CP" : "FTP";
-          const effPaceStr = thresholdPaceStr || userProfile?.runThresholdPaceStr || (thresholdPaceSec ? `${Math.floor(thresholdPaceSec / 60)}:${String(Math.round(thresholdPaceSec % 60)).padStart(2, "0")}` : "4:45");
-
-          return (
-            <>
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                  {workout.discipline === "Fuerza" ? "Estructura del Circuito de Fuerza:" : "Perfil de Intervalos y Zonas:"}
-                </span>
-                <WorkoutChart workoutDoc={cleanDoc} discipline={workout.discipline} athleteFtp={isRunPace ? undefined : (workout.discipline === "Carrera" ? effRunFtp : workout.discipline === "Ciclismo" ? effBikeFtp : undefined)} />
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Code2 className="h-3.5 w-3.5 text-sky-500" />
-                    {sectionTitle}
-                  </span>
-                  {isRunPace ? (
-                    <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
-                      <Timer className="h-3 w-3 text-emerald-500" />
-                      Calculado a tu Ritmo Umbral ({effPaceStr}/km)
-                    </span>
-                  ) : showWattBadge ? (
-                    <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
-                      ⚡ Calculado a tu {ftpLabel} ({effectiveFtp}W)
-                    </span>
-                  ) : null}
-                </div>
-
-                <pre className="rounded-xl bg-slate-50 dark:bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-pre-wrap">
-                  {cleanDoc.split("\n").map((line) => {
-                    if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
-                      return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\([^)]*[wW]\))?/gi, (_, p1, p2) => {
-                        const n1 = parseInt(p1, 10);
-                        const w1 = Math.round((effectiveFtp * n1) / 100);
-                        if (p2) {
-                          const n2 = parseInt(p2, 10);
-                          const w2 = Math.round((effectiveFtp * n2) / 100);
-                          return `${n1}-${n2}% ${ftpLabel} (${w1}-${w2}W)`;
-                        }
-                        return `${n1}% ${ftpLabel} (${w1}W)`;
-                      });
-                    }
-                    if (!isRunPower && workout.discipline === "Carrera") {
-                      const baseLine = line
-                        .replace(/\s*\(\d+\s*w\)/gi, "")
-                        .replace(/\b\d+\s*w\b/gi, "")
-                        .replace(/%\s*(?:stryd\s*)?(?:cp|ftp)/gi, "% Pace");
-                      const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : (userProfile?.runThresholdPaceSecPerKm || 285));
-                      return baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
-                        const n1 = parseInt(p1, 10);
-                        const pace1 = formatPace(Math.round(tpSec / (n1 / 100)));
-                        if (p2) {
-                          const n2 = parseInt(p2, 10);
-                          const pace2 = formatPace(Math.round(tpSec / (n2 / 100)));
-                          return `${n1}-${n2}% Pace (${pace2}-${pace1}/km)`;
-                        }
-                        return `${n1}% Pace (~${pace1}/km)`;
-                      });
-                    }
-                    return line;
-                  }).join("\n")}
-                </pre>
-              </div>
-            </>
-          );
-        })()}
-
-        {(workout.mobilityWarmup || workout.fuelingStrategy) && (
+        {((!isExecuted && workout.mobilityWarmup) || workout.fuelingStrategy) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            {workout.mobilityWarmup && (
+            {!isExecuted && workout.mobilityWarmup && (
               <div className="rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 p-2.5 space-y-1">
-                <span className="text-[10px] font-mono font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">🧘 Movilidad & Activación (Informativo)</span>
+                <span className="text-[10px] font-mono font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">🧘 Movilidad & Activación (Pre-Entreno)</span>
                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">{workout.mobilityWarmup}</p>
               </div>
             )}

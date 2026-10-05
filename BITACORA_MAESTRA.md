@@ -5502,6 +5502,64 @@ flowchart TD
 
 ---
 
+## [2026-10-03] - Versión 4.05: Regla Head Coach de Entrada Directa a Fase de Pico para Horizontes Cortos y Ajuste de Planes de Competición Próxima (Juan Pablo Vásquez & Georg Schmitt)
+
+### 74.1. Requerimiento y Contexto del Head Coach
+- **Atletas Próximos a Competencia con Planes Suaves:**
+  * **Juan Pablo Vásquez (`i444697` / `juan.vasquez.1983@gmail.com`):** Competencia objetivo **Triseries Paipa 2026 (Triatlón Olímpico)** el **01 de Noviembre de 2026** (a solo 4 semanas de la fecha actual). Reportaba que su plan estaba en mantenimiento y excesivamente suave para la inminencia de su evento.
+  * **Georg Schmitt (`i729730`):** Competencia objetivo **Ironman Cartagena 2026 70.3** el **29 de Noviembre de 2026** (a 8 semanas de la fecha actual). Reportaba la misma inconsistencia de suavidad y falta de estímulos específicos de competición.
+- **Directiva Fisiológica Head Coach para Nuevos Atletas:**
+  * Si un atleta entra a la plataforma y su competencia está próxima ($\le 8$ semanas), poseyendo buenas condiciones físicas de base (CTL $\ge 25$, historial atlético contrastado o nivel intermedio/avanzado), el motor **NUNCA debe asignarle fase de mantenimiento ni base aeróbica genérica**.
+  * Si el horizonte es ultra corto ($\le 4$ semanas), debe entrar **directamente en FASE DE PICO (PEAK)** con máximos estímulos específicos (fondos cumbre, transiciones brick T2 a ritmo de carrera y series umbral/VO2max) antes del Taper y la semana de carrera.
+
+### 74.2. Diagnóstico y Causa Raíz Detectada
+1. **Bug en Detección de Mantenimiento (`src/hooks/useSeasonPlans.ts`):**
+   * La línea `const isMaintenanceCycle = blueprint?.mode !== "MARATHON_SPECIFIC" || !blueprint?.primaryRace ...` forzaba a cualquier disciplina que no fuera maratón (Triatlón, Ciclismo, Trail, 10K, etc.) a ser catalogada como ciclo de mantenimiento.
+   * Esto provocaba que `primaryRace` fuera anulada a `null`, haciendo que el generador determinístico (`deterministicPlanGenerator.ts`) retrocediera por defecto a `phase = "MAINTENANCE"`, prescribiendo trotes suaves regenerativos de 45-55m y descartando las intensidades de umbral y fondos específicos.
+2. **Distribución Rígida de Fases en Macrociclos (`src/lib/physiology/macrocycleGenerator.ts`):**
+   * El generador dinámico calculaba `base2WeeksCount` con un mínimo obligatorio de 1 semana, obligando a planes cortos de 4-8 semanas a transcurrir semanas iniciales en base aeróbica blanda en lugar de saltar de inmediato al bloque de carga específica o pico.
+3. **Desconexión de Badges y Trazabilidad (`src/lib/physiology/seasonPlanHelpers.ts`):**
+   * `createPhaseInfoFromBlueprint` devolvía un badge genérico y no extraía dinámicamente la fase en curso del microciclo (`PEAK`, `BUILD`, `TAPER`, `RACE_WEEK`), provocando que la UI mostrara "Mantenimiento Adaptativo" aun cuando el macrociclo contenía semanas de impacto.
+
+### 74.3. Implementación Arquitectónica y Cambios Realizados
+1. **Blindaje de Detección de Ciclo en `useSeasonPlans.ts`:**
+   * Corrección de `isMaintenanceCycle`: ahora solo es verdadero si el modo es explícitamente `PRE_SEASON_MAINTENANCE` o `GENERAL_MAINTENANCE`, o si carece absolutamente de carrera objetivo (`primaryRace`) y metas de temporada.
+   * `primaryRace` preserva intacta la carrera de triatlón, ciclismo o running.
+   * Normalización del `goalType` recuperado de Firestore para que asuma la disciplina real (`TRIATHLON_SHORT`, `TRIATHLON_703`, `CYCLING`, etc.) en lugar de forzar `MARATON_42K`.
+2. **Nueva Regla Head Coach en `src/lib/physiology/macrocycleGenerator.ts`:**
+   * Evaluación de condición física: `hasGoodFitness = (athleteCtl >= 25) || (historicalMetrics?.peakCtlLastYear >= 30) || (fitnessLevel !== "beginner")`.
+   * Para horizontes cortos con buena condición (`isShortHorizon = isEventDriven && totalWeeks <= 8 && hasGoodFitness`):
+     - **Horizontes $\le 4$ semanas:** Cero base y cero construcción general. Asignación inmediata de **FASE DE PICO (PEAK)** para semanas 1 a $N-2$, semana $N-1$ en **TAPER** y semana $N$ en **RACE_WEEK**.
+     - **Horizontes de 5 a 8 semanas:** Cero semanas de base. Distribución en **CONSTRUCCIÓN ESPECÍFICA (BUILD)** $\rightarrow$ **FASE DE PICO (PEAK)** $\rightarrow$ **TAPER** $\rightarrow$ **RACE_WEEK**.
+     - Blindaje por cuenta regresiva: cualquier semana con `countdown <= 5` en atletas con buena condición física es asignada como **PEAK** incondicionalmente.
+   * Modo del blueprint enriquecido con `"TRIATHLON_SPECIFIC"` y `"CYCLING_SPECIFIC"`.
+3. **Calibración Dinámica de Información de Fase (`src/lib/physiology/seasonPlanHelpers.ts`):**
+   * `createPhaseInfoFromBlueprint` ahora computa con precisión:
+     - Fase activa (`PEAK`, `BUILD`, `TAPER`, `RACE_WEEK`).
+     - Badges de color temáticos (`🔥 CICLO ACTIVO: FASE DE PICO`, `⚡ CICLO ACTIVO: CONSTRUCCIÓN`, `🎯 CICLO ACTIVO: PUESTA A PUNTO`, `🏆 CICLO ACTIVO: COMPETICIÓN`).
+     - Cuenta regresiva precisa en semanas y días calendario a la carrera objetivo.
+4. **Prescripción de Alta Intensidad en Pico (`src/lib/gemini/deterministicPlanGenerator.ts`):**
+   * **Transiciones Brick T2:** En fase `PEAK`, la transición brick escala a ciclismo de 65m al 78% FTP + carrera de transición de 25m al 82% CP/Pace sobre fatiga previa.
+   * **Ciclismo Entre Semana:** En fase `PEAK`, los rodajes pasan de Z2 suave a 1h05m SweetSpot (88% FTP, TSS ~54).
+   * **Series de Carrera:** En fase `PEAK`, las sesiones de calidad integran series específicas a ritmo de competición (5x1000m @ 105% CP / Pace, TSS ~65).
+5. **Recalibración de Atletas en `src/lib/services/recalibrateService.ts`:**
+   * **Juan Pablo Vásquez:** Macrociclo actualizado a 7 semanas para Triseries Paipa 2026. Semana 3 (semana en curso) y semanas 4-5 fijadas en **FASE DE PICO** (`Pico de Forma Triatlón Olímpico`), con TSS cumbre de 479 a 508 y fondos clave.
+   * **Georg Schmitt:** Macrociclo actualizado a 9 semanas para Ironman Cartagena 70.3. Semana 1 (semana en curso) y semanas 2-4 en **BUILD**, transitando a **PEAK** en semanas 5-7 antes del Tapering.
+
+### 74.4. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Validación de Blueprints:**
+  * Juan Pablo Vásquez: Modo `TRIATHLON_SPECIFIC`, Semana en curso = **Semana 3 PEAK** (`Pico de Forma (PULSE Triatlón — Distancia Corta)`), Semanas 4-5 = **PEAK** (TSS 479-508).
+  * Georg Schmitt: Modo `TRIATHLON_SPECIFIC`, Semana en curso = **Semana 1 BUILD** (`Construcción Específica & Umbral`), Semanas 5-7 = **PEAK** (TSS 436-480).
+  * Atleta futuro con 4 semanas: Semana 1 y 2 = **PEAK**, Semana 3 = **TAPER**, Semana 4 = **RACE_WEEK**.
+- **Límite Estricto de Modularidad ($\le 350$ LOC):**
+  * `src/hooks/useSeasonPlans.ts`: **335 LOC** ($\le 350$)
+  * `src/lib/gemini/deterministicPlanGenerator.ts`: **331 LOC** ($\le 350$)
+  * `src/lib/physiology/macrocycleGenerator.ts`: **346 LOC** ($\le 350$)
+  * `src/lib/physiology/seasonPlanHelpers.ts`: **230 LOC** ($\le 350$)
+  * `src/lib/services/recalibrateService.ts`: **164 LOC** ($\le 350$)
+
 ## [2026-10-02] - Versión 4.04: Integración del Estándar Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia
 
 ### 73.1. Requerimiento y Contexto del Negocio
@@ -5574,3 +5632,44 @@ flowchart TD
   * `src/components/dashboard/AthleteDashboardOverview.tsx`: **253 LOC**
   * `firestore.rules`: **56 LOC**
 
+
+## 74. Suite de Telemetría Avanzada para Entrenamientos Ejecutados: Ritmo, Zonas, Mapa GPS y UX Compacta
+
+### 74.1. Objetivos del Requerimiento
+1. **Curva de Ritmo en Telemetría (`ActivityTelemetryChart.tsx`):**
+   - Integración del stream de velocidad suavizada (`velocity_smooth` de Intervals.icu) convertido a ritmo de carrera ($s/\text{km}$ y $\text{min/km}$).
+   - Escala fisiológica invertida para running (ritmos más veloces en la cúspide superior, ritmos lentos abajo).
+   - Selector dedicado `[Ritmo]` y soporte en el tooltip superior interactivo.
+2. **Corrección de Legibilidad y Contraste en Modo "Todas":**
+   - Resolución del problema de visualización en negro/opaco: el botón activo ahora resalta con `bg-cyan-500 text-slate-950 font-black` y halo cian.
+   - Micro-leyenda de alta fidelidad multi-serie (`● Ritmo (Cian)`, `● FC (Rosa)`, `● Potencia (Púrpura)`, `▲ Altitud (Slate)`).
+   - Relleno de altitud calibrado con opacidad reducida para no solapar los trazos de rendimiento.
+3. **Optimización de Pantalla en Entrenamientos Ejecutados:**
+   - La tarjeta de movilidad pre-entreno se oculta automáticamente una vez ejecutada la sesión (`!isExecuted && workout.mobilityWarmup`).
+   - La sintaxis de prescripción de Gemini/Intervals se colapsa de forma predeterminada mediante un acordeón modular (`PlannedWorkoutPrescription.tsx`), otorgando el protagonismo visual a los datos reales de rendimiento.
+4. **Diagrama de Barras de Distribución de Zonas (`ActivityZoneDistribution.tsx`):**
+   - Barra horizontal apilada interactiva del 100% del tiempo de la sesión más desglose en 5 tarjetas (Z1 a Z5).
+   - Adaptación dinámica según el perfil del atleta y su plan:
+     * **Atleta por Ritmo:** Zonas de Ritmo relativas al Umbral de Carrera (TP).
+     * **Atleta Stryd:** Zonas de Potencia relativas a la Potencia Crítica (CP).
+     * **Ciclismo:** Zonas de Potencia relativas al FTP de ciclismo.
+     * **Cardiovascular:** Zonas de Frecuencia Cardíaca relativas al LTHR o FC Máxima.
+5. **Mapa de Ruta GPS de Alta Velocidad (`ActivityRouteMap.tsx`):**
+   - Ingesta del stream `latlng` en el backend `/api/activities/[id]/streams`.
+   - Proyección geográfica corregida por latitud ($\cos(\phi)$) renderizada en vector SVG nativo sin dependencias de tokens externos (Google Maps / Mapbox).
+   - Trazado con gradiente neón esmeralda/cian, pin de inicio (verde pulsante), pin de meta (rojo/llegada) y resumen de distancia/desnivel.
+
+### 74.2. Auditoría de Archivos y Modularidad ($\le 350$ LOC)
+- `src/app/api/activities/[id]/streams/route.ts`: **86 LOC** ($\le 350$ LOC)
+- `src/lib/intervals/types.ts`: **220 LOC** ($\le 350$ LOC)
+- `src/lib/services/telemetryService.ts`: **348 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/telemetryChartHelpers.ts`: **137 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/ActivityTelemetryChart.tsx`: **283 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/ActivityZoneDistribution.tsx`: **236 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/ActivityRouteMap.tsx`: **147 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/PlannedWorkoutPrescription.tsx`: **146 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **279 LOC** ($\le 350$ LOC)
+
+### 74.3. Verificación de Compilación y Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Producción Next.js:** `npm run build` $\rightarrow$ **20/20 páginas generadas con éxito**.

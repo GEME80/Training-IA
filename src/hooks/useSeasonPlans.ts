@@ -83,12 +83,12 @@ export function useSeasonPlans({
     : (macrocyclePhase?.blueprint || null);
 
   const isMaintenanceCycle =
-    blueprint?.mode !== "MARATHON_SPECIFIC" ||
-    !blueprint?.primaryRace ||
-    blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento") ||
-    blueprint?.cycleTitle?.toLowerCase().includes("salud");
+    blueprint?.mode === "PRE_SEASON_MAINTENANCE" ||
+    blueprint?.mode === "GENERAL_MAINTENANCE" ||
+    (!blueprint?.primaryRace && !primaryARace) ||
+    (Boolean(blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento")) && !blueprint?.primaryRace && !primaryARace);
 
-  const primaryRace = isMaintenanceCycle ? null : (blueprint?.primaryRace || null);
+  const primaryRace = blueprint?.primaryRace || primaryARace || null;
   const weeks = blueprint?.weeks || [];
   const selectedWeek = weeks[selectedMacroWeekIdx] || weeks[0];
   const calculatedWeekNumber = selectedWeek?.weekNumber || (weekOffset >= 0 ? weekOffset + 1 : 1);
@@ -139,7 +139,7 @@ export function useSeasonPlans({
     setViewingPlanId(newPlanItem.id);
     userStorage.setJSON("season_plans", updatedPlans);
 
-    let phaseInfo = calculateMacrocyclePhase(updatedRaces) || createPhaseInfoFromBlueprint(syncedBlueprint, primaryTargetRace);
+    let phaseInfo = createPhaseInfoFromBlueprint(syncedBlueprint, primaryTargetRace || syncedBlueprint.primaryRace) || calculateMacrocyclePhase(updatedRaces);
     phaseInfo.blueprint = syncedBlueprint;
     setMacrocyclePhase(phaseInfo);
 
@@ -243,7 +243,7 @@ export function useSeasonPlans({
               const restoredPlan: SeasonPlanItem = {
                 id: macroData.macrocycle.id || "plan-active",
                 planName: bp.cycleTitle || "Macrociclo Activo",
-                goalType: "MARATON_42K",
+                goalType: bp.distanceType ? bp.distanceType.toUpperCase() : "CUSTOM_MACROCYCLE",
                 blueprint: bp,
                 startDate: bp.startDate || new Date().toISOString().split("T")[0],
                 endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0],

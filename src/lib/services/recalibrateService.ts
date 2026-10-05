@@ -87,6 +87,21 @@ export async function executeRecalibrateBoth() {
 
   const juanMacroId = await saveMacrocycleToFirestore("juan.vasquez.1983@gmail.com", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
   await saveMacrocycleToFirestore("i444697", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
+
+  if (adminDb) {
+    try {
+      const juanSnap = await adminDb.collection("users").where("email", "==", "juan.vasquez.1983@gmail.com").get();
+      const juanPlanItem = {
+        id: `plan-juan-${Date.now()}`, planName: juanBlueprint.cycleTitle, goalType: "TRIATHLON_SHORT",
+        blueprint: juanBlueprint, startDate: juanBlueprint.startDate, endDate: juanBlueprint.weeks[juanBlueprint.weeks.length - 1]?.endDate,
+        totalWeeks: juanBlueprint.totalWeeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(),
+      };
+      for (const d of juanSnap.docs) {
+        await d.ref.update({ seasonPlans: [juanPlanItem], targetRaces: [juanBlueprint.primaryRace] });
+      }
+    } catch (e) { console.warn("Aviso al persistir plan en doc de Juan Pablo:", e); }
+  }
+
   results.push({
     athlete: "Juan Pablo Vásquez", athleteId: "i444697", macrocycleId: juanMacroId,
     weeks: juanBlueprint.totalWeeks, primaryRace: juanBlueprint.primaryRace?.name,
@@ -125,11 +140,18 @@ export async function executeRecalibrateBoth() {
 
   const georgMacroId = await saveMacrocycleToFirestore("i729730", georgBlueprint, georgBlueprint.primaryRace, "WIZARD_CUSTOM");
   if (adminDb) {
-    const db = adminDb;
     try {
-      const snap = await db.collection("users").where("intervalsAthleteId", "==", "i729730").get();
+      const snap = await adminDb.collection("users").where("intervalsAthleteId", "==", "i729730").get();
+      const georgPlanItem = {
+        id: `plan-georg-${Date.now()}`, planName: georgBlueprint.cycleTitle, goalType: "TRIATHLON_703",
+        blueprint: georgBlueprint, startDate: georgBlueprint.startDate, endDate: georgBlueprint.weeks[georgBlueprint.weeks.length - 1]?.endDate,
+        totalWeeks: georgBlueprint.totalWeeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(),
+      };
       for (const d of snap.docs) {
-        await d.ref.update({ runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 214, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45" });
+        await d.ref.update({
+          seasonPlans: [georgPlanItem], targetRaces: [georgBlueprint.primaryRace],
+          runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 214, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45"
+        });
       }
     } catch {}
   }

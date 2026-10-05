@@ -47,9 +47,10 @@ export async function GET(
       "velocity_smooth",
       "cadence",
       "altitude",
+      "latlng",
     ]);
 
-    const streamsMap: Record<string, number[]> = {};
+    const streamsMap: Record<string, any> = {};
     if (Array.isArray(rawStreams)) {
       rawStreams.forEach((stream: any) => {
         if (stream.type && Array.isArray(stream.data)) {
@@ -61,10 +62,10 @@ export async function GET(
     // Fusión de FC en Bruto (RAW FC):
     // Si Intervals.icu aplicó un filtro automático por Max HR (ej: recortando lecturas > 166 bpm a null/0),
     // restaurar los valores reales desde el stream raw_heartrate o fixed_heartrate.
-    const rawHr = streamsMap.raw_heartrate || streamsMap.fixed_heartrate;
+    const rawHr = (streamsMap.raw_heartrate || streamsMap.fixed_heartrate) as number[] | undefined;
     if (Array.isArray(rawHr) && rawHr.length > 0) {
-      const processedHr = streamsMap.heartrate || [];
-      const mergedHr = (processedHr.length > 0 ? processedHr : rawHr).map((val, idx) => {
+      const processedHr = (streamsMap.heartrate || []) as number[];
+      const mergedHr = (processedHr.length > 0 ? processedHr : rawHr).map((val: number, idx: number) => {
         if (typeof val === "number" && !isNaN(val) && val >= 40) return val;
         const r = rawHr[idx];
         return typeof r === "number" && !isNaN(r) && r >= 40 ? r : val;

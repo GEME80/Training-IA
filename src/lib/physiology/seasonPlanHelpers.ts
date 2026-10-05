@@ -2,20 +2,49 @@ import { MacrocyclePhaseInfo, TargetRace, MacrocycleBlueprint } from "./macrocyc
 import { CalendarEvent } from "../intervals/types";
 
 export function createPhaseInfoFromBlueprint(bp: MacrocycleBlueprint, race?: TargetRace | null): MacrocyclePhaseInfo {
+  const currentW = bp.currentWeek || bp.weeks?.[bp.currentWeekIndex || 0] || bp.weeks?.[0];
+  const targetRace = race || bp.primaryRace || null;
+  const curPhase = currentW?.phase || (targetRace ? "PEAK" : "MAINTENANCE");
+
+  let cycleBadgeLabel = "🏃 CICLO ACTIVO";
+  let cycleBadgeColor = "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+
+  if (curPhase === "PEAK") {
+    cycleBadgeLabel = "🔥 CICLO ACTIVO: FASE DE PICO";
+    cycleBadgeColor = "bg-orange-500/20 text-orange-300 border-orange-500/40";
+  } else if (curPhase === "BUILD") {
+    cycleBadgeLabel = "⚡ CICLO ACTIVO: CONSTRUCCIÓN";
+    cycleBadgeColor = "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+  } else if (curPhase === "TAPER") {
+    cycleBadgeLabel = "🎯 CICLO ACTIVO: PUESTA A PUNTO";
+    cycleBadgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/30";
+  } else if (curPhase === "RACE_WEEK") {
+    cycleBadgeLabel = "🏆 CICLO ACTIVO: COMPETICIÓN";
+    cycleBadgeColor = "bg-amber-500/25 text-amber-300 border-amber-500/40";
+  } else if (bp.mode === "PRE_SEASON_MAINTENANCE") {
+    cycleBadgeLabel = "🔵 MANTENIMIENTO PRE-TEMPORADA";
+    cycleBadgeColor = "bg-blue-500/15 text-blue-300 border-blue-500/30";
+  }
+
+  const countdown = currentW?.countdownWeeks ?? bp.totalWeeks;
+  const daysRem = targetRace?.date
+    ? Math.max(0, Math.ceil((new Date(targetRace.date + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : (countdown ? countdown * 7 : null);
+
   return {
-    phase: bp.currentWeek?.phase || "MAINTENANCE",
-    phaseLabel: bp.cycleTitle || "Macrociclo Activo",
-    cycleBadgeLabel: bp.mode === "PRE_SEASON_MAINTENANCE" ? "🔵 MANTENIMIENTO PRE-TEMPORADA" : "🏃 CICLO ACTIVO",
-    cycleBadgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-    weeksRemaining: bp.totalWeeks,
-    daysRemaining: bp.totalWeeks ? bp.totalWeeks * 7 : null,
-    primaryRace: race || bp.primaryRace || null,
-    guideline: bp.currentWeek?.focusDescription || "",
-    suggestedFocus: "Macrociclo Activo",
-    badgeColor: "bg-amber-500/20 text-amber-300",
-    maxLongRunMinutes: bp.currentWeek?.maxLongRunMinutes || 60,
-    isSpecificMarathonPhase: bp.mode === "MARATHON_SPECIFIC",
-    weeklyTssTarget: `${bp.currentWeek?.targetTss || 350} TSS`,
+    phase: curPhase,
+    phaseLabel: currentW?.phaseLabel || bp.cycleTitle || "Macrociclo Activo",
+    cycleBadgeLabel,
+    cycleBadgeColor,
+    weeksRemaining: countdown,
+    daysRemaining: daysRem,
+    primaryRace: targetRace,
+    guideline: currentW?.focusDescription || "",
+    suggestedFocus: currentW?.focusDescription || `Semana ${currentW?.weekNumber || 1} de ${bp.totalWeeks} (${currentW?.microcycleLabel || ""})`,
+    badgeColor: currentW?.microcycleBadgeColor || "bg-amber-500/20 text-amber-300",
+    maxLongRunMinutes: currentW?.maxLongRunMinutes || 60,
+    isSpecificMarathonPhase: curPhase === "PEAK",
+    weeklyTssTarget: `${currentW?.targetTss || 350} TSS`,
     blueprint: bp,
   };
 }

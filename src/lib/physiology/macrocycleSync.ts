@@ -142,19 +142,21 @@ export function syncAndCalibrateBlueprint(
   const currentMaxTss = Math.max(...weeks.map((w) => w.targetTss || 0));
   const expectedMinPeakTss = hist?.peakCtlLastYear ? Math.round((hist.peakCtlLastYear * 7) / 0.95) : 600;
 
-  // Actualizar si:
-  // 1. El atleta tiene historial de alto rendimiento (peakCtl >= 60) pero su plan actual no alcanza el TSS cumbre esperado
-  // 2. El blueprint carece de targetPeakCtl (generado con versión previa del motor)
-  // 3. El blueprint quedó guardado con periodización 2:1 o sin especificar cuando corresponde 3:1 estándar
+  const athleteCtl = options.athleteMetrics?.ctl || hist?.lastKnownCtl || 0;
+  const hasGoodFitness = athleteCtl >= 25 || Boolean(hist?.peakCtlLastYear && hist.peakCtlLastYear >= 30);
+  const hasStaleBaseInPeakWindow = hasGoodFitness && weeks.some((w) => {
+    const isClose = (w.countdownWeeks && w.countdownWeeks <= 5) || (w.isCurrentWeek && weeks.length <= 8);
+    return isClose && (w.phase === "BASE_1" || w.phase === "BASE_2" || (w.phase as any) === "MAINTENANCE" || (w.phase as any) === "PRE_SEASON_MAINTENANCE");
+  });
+
   const needsCtlUpgrade = !syncedBp.targetPeakCtl || (
     !isMarathonOrRunning && weeks.some((w) => ((w as any).keyWorkout || "").toLowerCase().includes("canova"))
   ) || !!(
     (hist?.peakCtlLastYear && hist.peakCtlLastYear >= 60 && currentMaxTss < expectedMinPeakTss) ||
-    syncedBp.periodization === "2:1" ||
     !syncedBp.periodization
   );
 
-  if (hasOutdatedLongRuns || needsCtlUpgrade) {
+  if (hasOutdatedLongRuns || needsCtlUpgrade || hasStaleBaseInPeakWindow) {
     try {
       const { generateCustomMacrocycleBlueprint } = require("./macrocycleGenerator");
       const distanceType =

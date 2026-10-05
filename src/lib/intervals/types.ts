@@ -189,6 +189,9 @@ export interface DailyExecutedActivity {
   deviceName?: string; // e.g. "Garmin Forerunner 970"
   icu_ftp?: number; // FTP vigente en la actividad
   icu_pm_ftp?: number; // eFTP estimado por curva de potencia
+  icu_hr_zones?: number[]; // Segundos en cada zona FC [Z1, Z2, Z3, Z4, Z5]
+  icu_power_zones?: number[]; // Segundos en cada zona de Potencia
+  icu_pace_zones?: number[]; // Segundos en cada zona de Ritmo
 }
 
 export interface ActivityStreamPoint {

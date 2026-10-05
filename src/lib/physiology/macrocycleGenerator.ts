@@ -59,14 +59,11 @@ export function getMonday(d: Date): Date {
   date.setHours(0, 0, 0, 0);
   return date;
 }
-
 export function formatDate(d: Date): string { return d.toISOString().split("T")[0]; }
-
 export function formatRange(start: Date, end: Date): string {
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   return `${start.getDate()} ${months[start.getMonth()]} - ${end.getDate()} ${months[end.getMonth()]}`;
 }
-
 export function resolveVolumeScaleFactor(ctl?: number): number {
   if (!ctl || ctl <= 0) return 0.60;
   if (ctl <= 15) return 0.65;
@@ -174,21 +171,33 @@ export function generateCustomMacrocycleBlueprint(
   // Factor de escala de volumen por CTL real del atleta (anti-lesión)
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
 
-  // Distribución de fases según modelo curado y soporte de periodización encadenada GPP
+  // REGLA HEAD COACH: Si la carrera está próxima (<= 8 sem) y el atleta tiene buena condición física,
+  // NO debe entrar a fase de mantenimiento ni a base suave, sino entrar a FASE DE PICO o CONSTRUCCIÓN/PICO.
+  const hasGoodFitness = Boolean(
+    (athleteCtl && athleteCtl >= 25) ||
+    (historicalMetrics?.peakCtlLastYear && historicalMetrics.peakCtlLastYear >= 30) ||
+    config.fitnessLevel === "advanced" || config.fitnessLevel === "intermediate"
+  );
+  const isShortHorizon = isEventDriven && totalWeeks <= 8 && hasGoodFitness;
+
   const maxSpecificWeeks = 20;
-  const gppWeeksCount = Math.max(0, totalWeeks - maxSpecificWeeks);
+  const gppWeeksCount = isShortHorizon ? 0 : Math.max(0, totalWeeks - maxSpecificWeeks);
   const effectiveSpecificWeeks = totalWeeks - gppWeeksCount;
 
-  const rawTaper = curatedModel.taperingRules?.taperingWeeks
-    ? Math.round(curatedModel.taperingRules.taperingWeeks)
-    : Math.max(2, Math.round(effectiveSpecificWeeks * 0.15));
-  const taperWeeksCount = isEventDriven
-    ? Math.min(rawTaper, Math.max(1, Math.floor(effectiveSpecificWeeks * 0.25)))
-    : 0;
-  const peakWeeksCount = isEventDriven ? Math.max(2, Math.round(effectiveSpecificWeeks * (curatedModel.phaseDistributions.find(p => p.phaseKey === "PEAK")?.percentageDuration || 0.18))) : 0;
-  const specificBaseBuild = Math.max(2, effectiveSpecificWeeks - taperWeeksCount - peakWeeksCount);
-  const buildWeeksCount = Math.max(1, Math.round(specificBaseBuild * 0.50));
-  const base2WeeksCount = Math.max(1, specificBaseBuild - buildWeeksCount);
+  let taperWeeksCount = 0, peakWeeksCount = 0, buildWeeksCount = 0, base2WeeksCount = 0;
+  if (isShortHorizon) {
+    taperWeeksCount = totalWeeks <= 4 ? 1 : Math.min(2, Math.max(1, Math.round(effectiveSpecificWeeks * 0.2)));
+    peakWeeksCount = totalWeeks <= 4 ? Math.max(1, totalWeeks - taperWeeksCount - 1) : Math.min(3, Math.max(2, Math.round(effectiveSpecificWeeks * 0.35)));
+    buildWeeksCount = Math.max(0, effectiveSpecificWeeks - taperWeeksCount - peakWeeksCount - 1);
+    base2WeeksCount = 0;
+  } else {
+    const rawTaper = curatedModel.taperingRules?.taperingWeeks ? Math.round(curatedModel.taperingRules.taperingWeeks) : Math.max(2, Math.round(effectiveSpecificWeeks * 0.15));
+    taperWeeksCount = isEventDriven ? Math.min(rawTaper, Math.max(1, Math.floor(effectiveSpecificWeeks * 0.25))) : 0;
+    peakWeeksCount = isEventDriven ? Math.max(2, Math.round(effectiveSpecificWeeks * (curatedModel.phaseDistributions.find(p => p.phaseKey === "PEAK")?.percentageDuration || 0.18))) : 0;
+    const specificBaseBuild = Math.max(2, effectiveSpecificWeeks - taperWeeksCount - peakWeeksCount);
+    buildWeeksCount = Math.max(1, Math.round(specificBaseBuild * 0.50));
+    base2WeeksCount = Math.max(1, specificBaseBuild - buildWeeksCount);
+  }
 
   const gppEndWeek = gppWeeksCount;
   const baseEndWeek = gppEndWeek + base2WeeksCount;
@@ -220,19 +229,19 @@ export function generateCustomMacrocycleBlueprint(
       microType = "COMPETICION";
       microLabel = "🏆 Competición Oficial";
       badgeColor = "bg-amber-500/25 text-amber-300 border-amber-500/40";
-    } else if (isEventDriven && weekNumber > peakEndWeek) {
+    } else if (isEventDriven && (weekNumber > peakEndWeek || (countdown <= (taperWeeksCount || 1) + 1 && totalWeeks <= 8))) {
       phase = "TAPER";
       phaseLabel = "Tapering & Puesta a Punto";
       microType = "TAPER";
       microLabel = `Puesta a Punto (W-${countdown - 1})`;
       badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/30";
-    } else if (isEventDriven && weekNumber > buildEndWeek) {
+    } else if (isEventDriven && (weekNumber > buildEndWeek || (hasGoodFitness && countdown <= 5))) {
       phase = "PEAK";
       phaseLabel = `Pico de Forma (${curatedModel.displayName.split("(")[0].trim()})`;
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "IMPACTO_CHOQUE";
       microLabel = isRecoveryWeek ? `Asimilación (${isConservative ? "2:1" : "3:1"})` : "🔥 Fondo Cumbre Clave";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-orange-500/25 text-orange-300 border-orange-500/40";
-    } else if (weekNumber > baseEndWeek) {
+    } else if (weekNumber > baseEndWeek || (hasGoodFitness && countdown <= 9)) {
       phase = "BUILD";
       phaseLabel = "Construcción Específica & Umbral";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
@@ -310,36 +319,28 @@ export function generateCustomMacrocycleBlueprint(
   else if (currentMonday.getTime() > new Date(weeks[weeks.length - 1].startDate).getTime()) currentWeekIndex = weeks.length - 1;
 
   const isMaintenancePlan = !isEventDriven || def.distanceType === "maintenance" || def.distanceType === "base_building";
+  const primaryRace: TargetRace | null = isMaintenancePlan ? null : config.primaryRace || (isEventDriven ? {
+    id: `race-${Date.now()}`, name: config.customGoal || def.title,
+    date: weeks[weeks.length - 1]?.endDate || formatDate(now),
+    distance: def.distanceType as any, priority: "A", goalTarget: config.customGoal || "Completar con pico de forma",
+  } : null);
 
-  const primaryRace: TargetRace | null = isMaintenancePlan
-    ? null
-    : config.primaryRace || (isEventDriven ? {
-        id: `race-${Date.now()}`,
-        name: config.customGoal || def.title,
-        date: weeks[weeks.length - 1]?.endDate || formatDate(now),
-        distance: def.distanceType as any,
-        priority: "A",
-        goalTarget: config.customGoal || "Completar con pico de forma",
-      } : null);
+  const resolvedMode = isMaintenancePlan
+    ? "GENERAL_MAINTENANCE"
+    : def.sport === "triathlon" || curatedModel.sportCategory === "Triathlon"
+    ? "TRIATHLON_SPECIFIC"
+    : def.sport === "cycling" || curatedModel.sportCategory === "Cycling"
+    ? "CYCLING_SPECIFIC"
+    : "MARATHON_SPECIFIC";
 
   return {
-    mode: isMaintenancePlan ? "GENERAL_MAINTENANCE" : "MARATHON_SPECIFIC",
-    cycleTitle: config.customGoal || `${curatedModel.displayName} (${totalWeeks} semanas)`,
-    primaryRace,
-    startDate: weeks[0]?.startDate || formatDate(startMonday),
-    raceDate: primaryRace?.date || null,
-    weeksUntilKickoff: 0,
-    totalWeeks,
-    currentWeekIndex,
-    currentWeek: weeks[currentWeekIndex] || weeks[0],
-    weeks,
-    // Campos de trazabilidad
+    mode: resolvedMode, cycleTitle: config.customGoal || `${curatedModel.displayName} (${totalWeeks} semanas)`,
+    primaryRace, startDate: weeks[0]?.startDate || formatDate(startMonday),
+    raceDate: primaryRace?.date || null, weeksUntilKickoff: 0, totalWeeks, currentWeekIndex,
+    currentWeek: weeks[currentWeekIndex] || weeks[0], weeks,
     availabilitySnapshot: config.athleteMetrics?.weeklyAvailability as any,
-    distanceType: config.distanceType,
-    athleteCtlAtCreation: athleteCtl,
-    runFtpAtCreation: config.athleteMetrics?.runFtp,
-    bikeFtpAtCreation: config.athleteMetrics?.bikeFtp,
-    periodization: config.periodization || (isConservative ? "2:1" : "3:1"),
-    targetPeakCtl: peakPlanCalc.targetPeakCtl,
+    distanceType: config.distanceType, athleteCtlAtCreation: athleteCtl,
+    runFtpAtCreation: config.athleteMetrics?.runFtp, bikeFtpAtCreation: config.athleteMetrics?.bikeFtp,
+    periodization: config.periodization || (isConservative ? "2:1" : "3:1"), targetPeakCtl: peakPlanCalc.targetPeakCtl,
   };
 }

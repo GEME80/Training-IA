@@ -69,23 +69,23 @@ export function generateDeterministicAnalysis(
 
       // B. Ciclismo + Carrera (Transición Brick de Triatlón / Multideporte)
       if (hasCiclismo && hasCarrera) {
-        const bikeDur = isFatigued ? 40 : 50;
-        const runDur = 20;
+        const isPeak = phase === "PEAK";
+        const bikeDur = isFatigued ? 40 : (isPeak ? 65 : 50);
+        const runDur = isFatigued ? 15 : (isPeak ? 25 : 20);
         const totalDur = bikeDur + runDur;
-        const totalTss = Math.round(bikeDur * 0.65) + Math.round(runDur * 0.80);
+        const totalTss = Math.round(bikeDur * (isPeak ? 0.78 : 0.65)) + Math.round(runDur * 0.82);
 
         return {
-          day,
-          date: dateInfo.date,
-          formattedDate: dateInfo.formattedDate,
-          discipline: "Ciclismo",
-          workoutName: `Transición Brick: Ciclismo Z2 (${bikeDur}m) + Carrera a Pie (${runDur}m)`,
-          action: "MANTENER",
-          durationMinutes: totalDur,
-          tss: totalTss,
-          powerTarget: `Bici: ${Math.round(bikeFtp * 0.68)}W (68% FTP) • Carrera: ${runFtp > 0 ? `${Math.round(runFtp * 0.78)}W (78% CP)` : "78% Pace"}`,
-          justification: "Entrenamiento de transición brick para adaptación neuromuscular a la carrera con pre-fatiga de pedaleo.",
-          workoutDoc: `Bloque 1: Ciclismo Z2 (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m 68% FTP\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nMain\n- ${runDur - 5}m ${runFtp > 0 ? "78% CP" : "78% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% CP" : "60% Pace"}`,
+          day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Ciclismo",
+          workoutName: isPeak
+            ? `Transición Brick Cumbre: Ciclismo (${bikeDur}m) + Carrera a Pie (${runDur}m)`
+            : `Transición Brick: Ciclismo Z2 (${bikeDur}m) + Carrera a Pie (${runDur}m)`,
+          action: "MANTENER", durationMinutes: totalDur, tss: totalTss,
+          powerTarget: `Bici: ${Math.round(bikeFtp * (isPeak ? 0.78 : 0.68))}W (${isPeak ? "78% FTP" : "68% FTP"}) • Carrera: ${runFtp > 0 ? `${Math.round(runFtp * 0.82)}W (82% CP)` : "82% Pace"}`,
+          justification: isPeak
+            ? "Transición neuromuscular cumbre de competición para adaptar la zancada sobre fatiga previa de pedaleo exigente."
+            : "Entrenamiento de transición brick para adaptación neuromuscular a la carrera con pre-fatiga de pedaleo.",
+          workoutDoc: `Bloque 1: Ciclismo ${isPeak ? "Potencia Ritmo Carrera" : "Z2"} (% FTP)\nWarmup\n- 10m 55% FTP\n\nMain\n- ${bikeDur - 15}m ${isPeak ? "78% FTP" : "68% FTP"}\n\nCooldown\n- 5m 50% FTP\n\nBloque 2: Carrera de Transición ${runFtp > 0 ? "Stryd (% CP)" : "(% Pace)"}\nMain\n- ${runDur - 5}m ${runFtp > 0 ? "82% CP" : "78% Pace"}\n\nCooldown\n- 5m ${runFtp > 0 ? "60% CP" : "60% Pace"}`,
           isRestDay: false,
         };
       }
@@ -202,22 +202,18 @@ export function generateDeterministicAnalysis(
         };
       }
 
-      const rideDuration = isLong ? (isPeakBuild ? "1h45m" : "1h15m") : "55m";
-      const rideMins = isLong ? (isPeakBuild ? 105 : 75) : 55;
+      const isPeakRide = phase === "PEAK";
+      const rideDuration = isLong ? (isPeakBuild ? "1h45m" : "1h15m") : (isPeakRide ? "1h05m" : "55m");
+      const rideMins = isLong ? (isPeakBuild ? 105 : 75) : (isPeakRide ? 65 : 55);
       return {
-        day,
-        date: dateInfo.date,
-        formattedDate: dateInfo.formattedDate,
-        discipline: "Ciclismo",
+        day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Ciclismo",
         workoutName: isLong
           ? `Fondo Resistencia Ciclismo (${rideDuration} Z2)`
-          : "Ciclismo Z2 Base Aeróbica (55m)",
-        action: "MANTENER",
-        durationMinutes: rideMins,
-        tss: Math.round(rideMins * 0.68),
-        powerTarget: `${Math.round(bikeFtp * 0.65)}W (65% FTP)`,
-        justification: "Volumen aeróbico mitocondrial sin impacto osteoarticular.",
-        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Ride", isLong ? "LONG_RUN" : "Z2_BASE", 65, phase),
+          : (isPeakRide ? "Ciclismo Específico Ritmo de Competición (1h05m SweetSpot)" : "Ciclismo Z2 Base Aeróbica (55m)"),
+        action: "MANTENER", durationMinutes: rideMins, tss: Math.round(rideMins * (isPeakRide ? 0.82 : 0.68)),
+        powerTarget: isPeakRide && !isLong ? `${Math.round(bikeFtp * 0.88)}W (88% FTP SweetSpot)` : `${Math.round(bikeFtp * 0.65)}W (65% FTP)`,
+        justification: isPeakRide && !isLong ? "Estímulo de potencia submáxima específica y densidad mitocondrial para el sector ciclista." : "Volumen aeróbico mitocondrial sin impacto osteoarticular.",
+        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Ride", isLong ? "LONG_RUN" : (isPeakRide ? "TEMPO" : "Z2_BASE"), isPeakRide && !isLong ? 88 : 65, phase),
         isRestDay: false,
       };
     }
@@ -271,18 +267,16 @@ export function generateDeterministicAnalysis(
     }
 
     if (isQuality && !isFatigued) {
+      const isPeak = phase === "PEAK";
       return {
-        day,
-        date: dateInfo.date,
-        formattedDate: dateInfo.formattedDate,
-        discipline: "Carrera",
-        workoutName: runFtp > 0 ? "Series Umbral Stryd (4x6m @ 100% FTP)" : "Series Umbral (4x6m @ 100% Pace)",
-        action: "MANTENER",
-        durationMinutes: 55,
-        tss: 58,
-        powerTarget: runFtp > 0 ? `${runFtp}W (100% CP)` : "100% Pace",
-        justification: "Estímulo de potencia crítica y tolerancia al lactato.",
-        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", "THRESHOLD_INTERVALS", 100, phase),
+        day, date: dateInfo.date, formattedDate: dateInfo.formattedDate, discipline: "Carrera",
+        workoutName: isPeak
+          ? (runFtp > 0 ? "Series Específicas Ritmo de Competición (5x1000m @ 105% CP)" : "Series Específicas Ritmo de Competición (5x1000m @ 105% Pace)")
+          : (runFtp > 0 ? "Series Umbral Stryd (4x6m @ 100% FTP)" : "Series Umbral (4x6m @ 100% Pace)"),
+        action: "MANTENER", durationMinutes: isPeak ? 60 : 55, tss: isPeak ? 65 : 58,
+        powerTarget: runFtp > 0 ? `${isPeak ? Math.round(runFtp * 1.05) : runFtp}W (${isPeak ? "105% CP" : "100% CP"})` : (isPeak ? "105% Pace" : "100% Pace"),
+        justification: isPeak ? "Afilado de potencia crítica y economía de carrera al ritmo de competición." : "Estímulo de potencia crítica y tolerancia al lactato.",
+        workoutDoc: PhysiologicalEngine.generateWorkoutSyntax("Run", isPeak ? "VO2MAX" : "THRESHOLD_INTERVALS", isPeak ? 105 : 100, phase),
         isRestDay: false,
       };
     }

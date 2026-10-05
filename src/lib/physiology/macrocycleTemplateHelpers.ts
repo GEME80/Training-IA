@@ -171,10 +171,11 @@ export function resolveWeekendRide(params: {
   let workoutDoc: string | undefined = undefined;
 
   if (distanceType === "triathlon_1406") {
-    if (phase === "PEAK") rideMins = [270, 300, 240][(weekNumber - 1) % 3];
+    if (isRecovery) rideMins = 120;
+    else if (phase === "PEAK") rideMins = [270, 300, 240][(weekNumber - 1) % 3];
     else if (phase === "BUILD") rideMins = [240, 270, 210, 285][(weekNumber - 1) % 4];
     else if (phase.startsWith("BASE")) rideMins = [180, 210, 195, 240][(weekNumber - 1) % 4];
-    else rideMins = isRecovery ? 120 : (weekNumber % 2 === 0 ? 90 : 135);
+    else rideMins = weekNumber % 2 === 0 ? 90 : 135;
     rideTitle = `Fondo Ciclismo Ironman (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
   } else if (distanceType === "triathlon_703") {
     if (isRecovery) rideMins = 75;
@@ -185,27 +186,27 @@ export function resolveWeekendRide(params: {
     else rideMins = 60;
     rideTitle = `Fondo Ciclismo 70.3 (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
   } else if (distanceType === "triathlon_short") {
-    if (phase === "PEAK") rideMins = [80, 90, 85][(weekNumber - 1) % 3];
+    if (isRecovery) rideMins = 45;
+    else if (phase === "PEAK") rideMins = [80, 90, 85][(weekNumber - 1) % 3];
     else if (phase === "BUILD") rideMins = [75, 85, 80][(weekNumber - 1) % 3];
     else if (phase.startsWith("BASE")) rideMins = [65, 75, 70][(weekNumber - 1) % 3];
     else if (phase === "TAPER") rideMins = [45, 50][(weekNumber - 1) % 2];
     else rideMins = 50;
-    if (isRecovery) rideMins = Math.max(40, Math.round(rideMins * 0.75));
     rideTitle = `Fondo Ciclismo Olímpico (${rideMins}m Z2)`;
   } else if (distanceType === "cycling_climbing") {
-    if (phase === "PEAK") rideMins = [180, 210, 195][(weekNumber - 1) % 3];
+    if (isRecovery) rideMins = 75;
+    else if (phase === "PEAK") rideMins = [180, 210, 195][(weekNumber - 1) % 3];
     else if (phase === "BUILD") rideMins = [150, 180, 165, 195][(weekNumber - 1) % 4];
     else if (phase.startsWith("BASE")) rideMins = [120, 150, 135, 165][(weekNumber - 1) % 4];
-    else rideMins = isRecovery ? 90 : 75;
-    if (isRecovery) rideMins = Math.max(60, Math.round(rideMins * 0.75));
+    else rideMins = 75;
     rideTitle = `Fondo Ciclismo de Puertos & Escalada (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2-Z3)`;
     rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.70)}W (70% FTP)` : "70% FTP";
   } else if (distanceType === "cycling_fondo" || distanceType === "cycling_criterium") {
-    if (phase === "PEAK") rideMins = [180, 210, 190][(weekNumber - 1) % 3];
+    if (isRecovery) rideMins = 70;
+    else if (phase === "PEAK") rideMins = [180, 210, 190][(weekNumber - 1) % 3];
     else if (phase === "BUILD") rideMins = [150, 175, 160, 190][(weekNumber - 1) % 4];
     else if (phase.startsWith("BASE")) rideMins = [120, 140, 130, 155][(weekNumber - 1) % 4];
-    else rideMins = isRecovery ? 80 : 60;
-    if (isRecovery) rideMins = Math.max(60, Math.round(rideMins * 0.75));
+    else rideMins = 60;
     rideTitle = `Fondo Ciclismo Gran Fondo (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
   } else if (phase === "TAPER") {
     rideMins = weekNumber % 2 === 0 ? 45 : 55;

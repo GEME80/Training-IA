@@ -174,6 +174,7 @@ export default function HomePage() {
             />
           )}
           <AthleteDashboard
+            key={previewAthlete ? `audit-${previewAthlete.uid}` : "self-dashboard"}
             targetAthlete={previewAthlete}
             isReadOnly={Boolean(previewAthlete)}
             isSettingsOpen={isSettingsOpen}

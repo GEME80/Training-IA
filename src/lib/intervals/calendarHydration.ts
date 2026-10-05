@@ -210,7 +210,20 @@ export function hydrateWeekPlanFromEvents(
       }
       if (!mins || mins === 0) mins = matchingFallback?.durationMinutes || (disc === "Fuerza" ? 35 : 45);
 
-      const tss = evt.icu_training_load || undefined;
+      let tss = evt.icu_training_load || undefined;
+      const fallbackTss = matchingFallback?.tss;
+      // Blindaje de integridad fisiológica: si Intervals.icu calculó un TSS corrupto
+      // (ej. confusión de metros con minutos en natación dando 377 o 430 TSS para 45m),
+      // o si excede el límite biológico plausible (~1.6 TSS/min, máx 100 TSS para <=60m):
+      if (typeof tss === "number") {
+        const maxPlausibleTss = Math.max(100, Math.round(mins * 1.6));
+        if (tss > maxPlausibleTss) {
+          tss = fallbackTss || Math.round(mins * 0.8);
+        }
+      } else if (!tss && fallbackTss) {
+        tss = fallbackTss;
+      }
+
       const doc = typeof evt.description === "string" && evt.description.trim() ? evt.description : (typeof evt.workout_doc === "string" ? evt.workout_doc : undefined);
 
       hydratedItems.push({

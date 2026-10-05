@@ -5790,3 +5790,42 @@ flowchart TD
   - Auto-sanación de sesiones preexistentes: `- 100mtr 65% FTP` se parsea a 125m y 82 TSS.
   - Semana 4 de descarga: 254 TSS reales (-30% respecto a semanas de carga).
 
+---
+
+## 77. Resolución de Discrepancia Semanal (1177 TSS Atleta vs. 439 TSS Admin) y Blindaje Fisiológico de Natación
+
+### 77.1. Diagnóstico de Causa Raíz
+1. **La Discrepancia Observada:**
+   - En la vista de **Admin** (Auditoría), el resumen semanal indicaba **439 TSS OBJ** (9h20m).
+   - En la vista del **Atleta** (Georg Schmitt), el resumen indicaba **1177 TSS OBJ** (9h21m).
+2. **Localización Quirúrgica del Desfase:**
+   - La suma de Ciclismo (186 TSS vs 181 TSS), Carrera (135 TSS vs 136 TSS) y Gimnasio (49 TSS vs 49 TSS) era prácticamente idéntica (~370 TSS no-natación).
+   - El desfase residía en las dos sesiones de natación:
+     - Martes (45m Natación Fuerza): **377 TSS** en el atleta vs. **37 TSS** en admin.
+     - Domingo (45m Natación Técnica): **430 TSS** en el atleta vs. **36 TSS** en admin.
+     - Total Natación: **807 TSS** para 1h30m de agua en la cuenta del atleta vs. **73 TSS** en admin.
+3. **Mecanismo del Fallo:**
+   - **En Intervals.icu DSL:** En pasos estructurados, la unidad `m` por defecto denota **minutos** a menos que se especifique `mtr`. En `workoutSyntaxSanitizer.ts`, pasos como `- 100m 75% Pace` o `- 250m 60% Pace` no se convertían a `mtr`. Intervals.icu los interpretó como 100 y 250 minutos continuos (más de 23 horas acumuladas de ejercicio equivalente), inflando el `icu_training_load` en Intervals.icu a 377 y 430.
+   - **En el Cliente (`calendarHydration.ts`):** La hidratación desde eventos de Intervals.icu consumía `evt.icu_training_load` sin validación fisiológica, inyectando los 807 TSS de nado a la vista del atleta.
+4. **Veredicto Fisiológico:**
+   - **El dato correcto es 439 TSS.** 1h30m de natación jamás puede generar 807 TSS (1h a ritmo umbral máximo = 100 TSS; 90m de nado suave son 70–75 TSS). Para un atleta con CTL 38.0, 439 TSS semanales (~63 TSS/día) representa la carga biológica perfectamente asimilable.
+
+### 77.2. Implementaciones Arquitectónicas
+1. **Blindaje de Cordura Fisiológica en `calendarHydration.ts`:**
+   - Se estableció un umbral biológico máximo plausible de $\max(100, \text{mins} \times 1.6)$ TSS por sesión.
+   - Si Intervals.icu entrega un TSS corrupto superior al límite (ej. 377 o 430 para 45m), el sistema lo descarta y aplica el TSS fisiológico real de la plantilla canónica (`fallbackTss`: 37 y 36 TSS).
+2. **Normalización de Pasos de Natación en `workoutSyntaxSanitizer.ts`:**
+   - Detección explícita de natación (`isSwim`).
+   - Todos los pasos activos métricos de piscina (`- 50m`, `- 100m`, `- 250m`, etc.) se convierten a `- $1mtr` para que Intervals.icu los reconozca inequívocamente como metros de nado.
+   - Las pausas temporales (`- 20s recovery`, `- 2m recovery`) se preservan intactas en unidades de tiempo.
+
+### 77.3. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/lib/intervals/calendarHydration.ts`: **249 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/workoutSyntaxSanitizer.ts`: **128 LOC** ($\le 350$ LOC)
+
+### 77.4. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Simulación End-to-End Superada:** Eventos con 377 TSS y 430 TSS se auto-sanan a 37 TSS y 36 TSS, resultando en un total semanal armónico de **443 / 439 TSS** tanto en la vista del atleta como en la del administrador.
+
+

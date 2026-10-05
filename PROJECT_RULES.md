@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.04)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.05)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.04).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.05).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.05: Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata:
+  * Telemetría Rápida sin Mapas GPS: Carga ultra-ligera de telemetría multi-serie (Ritmo cian, Potencia púrpura, FC rosa, Altitud slate) en `ActivityTelemetryChart`, sin descargas de stream pesado de mapas.
+  * Prescripción Plegable & Ocultamiento de Movilidad: Prescripción estructurada replegada en acordeón modular compacto y calentamiento dinámico oculto en sesiones ya ejecutadas.
+  * Distribución de Zonas Fisiológicas SSOT (`ActivityZoneDistribution`): Mapeo 1:1 con `AthleteZonesViewer`: Stryd Running Power (5Z: Fácil, Moderado, Umbral, Intervalo, Repetición), LTHR (7Z: Recovery, Aerobic, Tempo, SubThreshold, SuperThreshold, Aerobic Capacity, Anaerobic), Jack Daniels (6Z) y Coggan Cycling (7Z), con ingesta directa de `icu_zone_times`, `icu_hr_zone_times`, `icu_hr_zones`, `icu_pace_zone_times` y barra apilada 100% calibrada.
+  * Regla Head Coach de Entrada Directa a Pico (Peak Canova): Para atletas próximos a competencia (<= 4 a 6 semanas) con base previa, el motor omite el mantenimiento y activa de inmediato la Fase de Pico con series a ritmo específico y posterior Tapering.
 - Versión 4.04: Integración Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia:
   * Sistema Bre-B Interoperable: Adopción del estándar de pagos inmediatos entre entidades bancarias de Colombia (Bancolombia, Nequi, Daviplata, Scotiabank, etc.) vía QR y Llave Bre-B.
   * Consola Administrativa (`AdminPlansTab`): Configuración de cuenta BBVA Colombia del coach Germán Morales, Llave Bre-B tipada, titular, número de cuenta y QR interactivo.

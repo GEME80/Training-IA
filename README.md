@@ -1,9 +1,19 @@
-# ⚡ SGEA Pro (v4.04) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.05) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 📈 **Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata (v4.05):**
+  - **Distribución de Zonas Fisiológicas SSOT (`ActivityZoneDistribution`):** Mapeo canónico 1:1 con las zonas del perfil del atleta (`AthleteZonesViewer`):
+    * **Carrera — Potencia (Stryd CP - 5 Zonas):** *Z1 Fácil (65-80% CP)*, *Z2 Moderado (80-90% CP)*, *Z3 Umbral (90-100% CP)*, *Z4 Intervalo (100-115% CP)*, *Z5 Repetición (115-300% CP)*, leyendo directamente `Z1` a `Z5` desde `icu_zone_times` de Intervals.icu.
+    * **Frecuencia Cardíaca (7 Zonas LTHR):** *Z1 Recovery (0-83% LTHR)*, *Z2 Aerobic (83-88%)*, *Z3 Tempo (88-92%)*, *Z4 SubThreshold (93-98%)*, *Z5 SuperThreshold (98-100%)*, *Z6 Aerobic Capacity (101-103%)*, *Z7 Anaerobic (104%+)*, ingiriendo `icu_hr_zone_times` e `icu_hr_zones` en bpm.
+    * **Carrera — Ritmo (Jack Daniels - 6 Zonas):** *Z1 Fácil (<75% Pace)*, *Z2 Moderado (75-85%)*, *Z3 Tempo (85-94%)*, *Z4 Umbral (95-104%)*, *Z5 Intervalo (105-115%)*, *Z6 Repetición (>115%)*, conectadas dinámicamente con `calculatePaceZones`.
+    * **Ciclismo — Potencia (Coggan Power FTP - 7 Zonas):** *Z1 Recuperación*, *Z2 Resistencia (Fondo)*, *Z3 Tempo*, *Z4 Umbral (FTP)*, *Z5 VO2max*, *Z6 Cap. Anaeróbica*, *Z7 Neuromuscular*.
+    * **Barra Apilada y Cuadrícula Adaptable:** Ancho proporcional al 100% real sin huecos ni desbordamientos, y grid responsivo inteligente (`grid-cols-5`, `lg:grid-cols-6`, `lg:grid-cols-7`).
+  - **Telemetría Instantánea & Ergonomía en Sesiones Ejecutadas:** Desacoplamiento de streams pesados de GPS para carga ultra-rápida de telemetría multi-serie (Ritmo, Potencia, FC, Altitud); colapso automático de la prescripción estructurada en acordeón compacto y ocultamiento de calentamiento de movilidad en entrenamientos ya completados.
+  - **Regla Head Coach de Entrada Directa a Fase de Pico (Peak Canova):** Para atletas con base fisiológica previa próximos a competir ($\le 4\text{ a }6\text{ semanas}$), el motor omite fases pasivas de mantenimiento y activa inmediatamente el bloque de Pico Específico con estímulos a ritmo objetivo, seguido de Tapering para maximizar la forma ($TSB > +5$).
 
 - 🏛️ **Integración Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia (v4.04):**
   - **Estándar Interoperable Nacional Bre-B:** Adopción del nuevo sistema de pagos inmediatos de Colombia que permite a los atletas transferir instantáneamente desde cualquier banco o billetera digital (Bancolombia, Nequi, Daviplata, Scotiabank, etc.) escaneando el código QR o digitando la Llave Bre-B.

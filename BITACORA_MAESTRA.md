@@ -5673,3 +5673,73 @@ flowchart TD
 ### 74.3. Verificación de Compilación y Calidad
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
 - **Producción Next.js:** `npm run build` $\rightarrow$ **20/20 páginas generadas con éxito**.
+
+---
+
+## 75. Suite de Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata (SGEA v4.05)
+
+### 75.1. Reajuste Periodizado Head Coach para Atletas Próximos a Competencia
+- **Análisis de Proximidad Competitiva (Juan Pablo Vásquez & George Smith):**
+  - **Diagnóstico:** Atletas próximos a su evento objetivo ($\le 4\text{ a }6\text{ semanas}$) presentaban planes con percepción excesivamente suave debido a una asignación inerte en fase de Mantenimiento / Base prolongada.
+  - **Regla Arquitectónica de Entrada Directa a Pico (Peak Canova):** Para futuros y actuales atletas con buena condición física/CTL inicial y competencia cercana, el sistema omite el mantenimiento y activa de inmediato la **Fase de Pico Competitivo (Específico Canova)** con series fraccionadas a ritmo/potencia objetivo, seguida del Tapering para asegurar frescura neuromuscular ($TSB > +5$).
+  - **Alineación de Juan Pablo Vásquez y George Smith:** Reajuste de sus microciclos y macrociclos para que las sesiones de calidad y fondos progresivos sintonicen con el momento real de su temporada deportiva.
+
+### 75.2. Telemetría de Alta Velocidad & Ergonomía en Sesiones Ejecutadas
+- **Carga Instantánea sin Mapas GPS:** Se eliminó la dependencia del stream de coordenadas geográficas (`latlng`) en el modal de sesión a solicitud del usuario, garantizando que el gráfico de telemetría cargue de forma ultra-rápida y ligera.
+- **Curvas de Rendimiento Multi-Serie:** Renderizado de Ritmo (Cian), Potencia (Púrpura), FC (Rosa) y Altitud (Slate) con escalas fisiológicas dedicadas y tooltip interactivo sincronizado en tiempo real.
+- **Acordeón de Prescripción (`PlannedWorkoutPrescription.tsx`):** La prescripción estructurada se repliega automáticamente en un bloque colapsable compacto, otorgando la prioridad visual a los datos reales ejecutados.
+- **Ocultamiento de Tarjeta de Movilidad:** La rutina de calentamiento dinámico pre-entreno se oculta automáticamente en sesiones completadas para evitar clutter en pantalla.
+
+### 75.3. Alineación Fisiológica Integral de la Distribución de Zonas (`ActivityZoneDistribution.tsx`)
+- **Problema Detectado:** El gráfico de zonas mostraba nombres genéricos, 5 zonas de ciclismo aplicadas erróneamente a sesiones de carrera y umbrales porcentuales desconectados del perfil del atleta y de Intervals.icu.
+- **Arquitectura Unificada con SSOT (`AthleteZonesViewer.tsx`):**
+  1. **Carrera — Potencia (Stryd CP - 5 Zonas Canónicas):**
+     * Z1: Fácil (65 – 80% CP)
+     * Z2: Moderado (80 – 90% CP)
+     * Z3: Umbral (90 – 100% CP)
+     * Z4: Intervalo (100 – 115% CP)
+     * Z5: Repetición (115 – 300% CP)
+     * Ingesta directa de `icu_zone_times` por IDs `Z1` a `Z5` (filtrando buckets superpuestos como `SS`).
+  2. **Frecuencia Cardíaca (LTHR - 7 Zonas Canónicas):**
+     * Z1: Recovery (0 – 83% LTHR)
+     * Z2: Aerobic (83 – 88% LTHR)
+     * Z3: Tempo (88 – 92% LTHR)
+     * Z4: SubThreshold (93 – 98% LTHR)
+     * Z5: SuperThreshold (98 – 100% LTHR)
+     * Z6: Aerobic Capacity (101 – 103% LTHR)
+     * Z7: Anaerobic (104%+ LTHR)
+     * Ingesta de `icu_hr_zone_times` (array de 7 valores) e `icu_hr_zones` (umbrales en bpm de Intervals.icu).
+  3. **Carrera — Ritmo (Jack Daniels - 6 Zonas Canónicas):**
+     * Z1: Fácil (< 75% Pace)
+     * Z2: Moderado (75 – 85% Pace)
+     * Z3: Tempo (85 – 94% Pace)
+     * Z4: Umbral (95 – 104% Pace)
+     * Z5: Intervalo (105 – 115% Pace)
+     * Z6: Repetición (> 115% Pace)
+     * Calculadas dinámicamente con `calculatePaceZones(thresholdPaceSec)`.
+  4. **Ciclismo — Potencia (Coggan Power FTP - 7 Zonas Canónicas):**
+     * Z1: Recuperación (< 55% FTP)
+     * Z2: Resistencia (Fondo) (56 – 75% FTP)
+     * Z3: Tempo (76 – 90% FTP)
+     * Z4: Umbral (FTP) (91 – 105% FTP)
+     * Z5: VO2max (106 – 120% FTP)
+     * Z6: Cap. Anaeróbica (121 – 150% FTP)
+     * Z7: Neuromuscular (> 150% FTP)
+- **Mejoras en Visualización:**
+  * Barra horizontal apilada calibrada con ancho relativo al 100% de la duración real sin desbordamientos ni huecos por redondeo.
+  * Cuadrícula de tarjetas responsiva (`grid-cols-5` para Stryd, `lg:grid-cols-6` para ritmo, `lg:grid-cols-7` para FC/ciclismo).
+  * Inyección de `lthr` y `maxHR` en `WorkoutDetailModal.tsx` desde `AthleteDashboard.tsx` y `MacrocyclePreviewTimeline.tsx`.
+  * Soporte de `icu_pace_zone_times` en `types.ts` y `telemetryService.ts`.
+
+### 75.4. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/components/macrocycle/ActivityZoneDistribution.tsx`: **302 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **293 LOC** ($\le 350$ LOC)
+- `src/components/AthleteDashboard.tsx`: **273 LOC** ($\le 350$ LOC)
+- `src/components/MacrocyclePreviewTimeline.tsx`: **129 LOC** ($\le 350$ LOC)
+- `src/lib/services/telemetryService.ts`: **346 LOC** ($\le 350$ LOC)
+- `src/lib/intervals/types.ts`: **224 LOC** ($\le 350$ LOC)
+
+### 75.5. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Control de Versiones:** Commits `cbd50aa`, `70ed380` y `a4dd682` sincronizados y subidos a `origin/main`.

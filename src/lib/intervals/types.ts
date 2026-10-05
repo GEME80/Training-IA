@@ -194,6 +194,7 @@ export interface DailyExecutedActivity {
   icu_hr_zones?: number[]; // Umbrales bpm de FC [139, 147, 155, 164, 168, 173, 185]
   icu_power_zones?: number[]; // Umbrales % de potencia [80, 90, 100, 115, 999]
   icu_pace_zones?: number[]; // Umbrales de ritmo
+  icu_pace_zone_times?: number[]; // Tiempos en segundos por zona de ritmo
 }
 
 export interface ActivityStreamPoint {

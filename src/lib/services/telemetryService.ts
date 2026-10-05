@@ -200,6 +200,7 @@ export class TelemetryService {
               icu_hr_zones: Array.isArray(act.icu_hr_zones) ? act.icu_hr_zones : undefined,
               icu_power_zones: Array.isArray(act.icu_power_zones) ? act.icu_power_zones : undefined,
               icu_pace_zones: Array.isArray(act.icu_pace_zones) ? act.icu_pace_zones : undefined,
+              icu_pace_zone_times: Array.isArray(act.icu_pace_zone_times) ? act.icu_pace_zone_times : Array.isArray(act.pace_zone_times) ? act.pace_zone_times : undefined,
             });
 
             if (dateKey >= thisMondayStr && dateKey <= newestStr) {
@@ -209,11 +210,7 @@ export class TelemetryService {
 
           if (athleteData) {
             isLive = true;
-            wellness = (wellnessData || []).map((w: any) => ({
-              ...w,
-              id: w.id || w.date,
-              date: w.date || w.id,
-            }));
+            wellness = (wellnessData || []).map((w: any) => ({ ...w, id: w.id || w.date, date: w.date || w.id }));
             events = calendarEvents;
 
             const runSport = (sportSettingsData || []).find((s: any) =>

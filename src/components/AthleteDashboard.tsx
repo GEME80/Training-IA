@@ -258,6 +258,8 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             hasRunningPowerMeter={telemetry.profile.hasRunningPowerMeter}
             thresholdPaceStr={telemetry.profile.runThresholdPaceStr}
             thresholdPaceSec={telemetry.profile.runThresholdPaceSecPerKm}
+            lthr={telemetry.profile.lthr}
+            maxHR={telemetry.profile.maxHR}
             onClose={() => setSelectedWorkoutModal(null)}
           />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />

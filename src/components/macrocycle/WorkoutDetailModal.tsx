@@ -26,16 +26,20 @@ interface WorkoutDetailModalProps {
   hasRunningPowerMeter?: boolean;
   thresholdPaceStr?: string;
   thresholdPaceSec?: number;
+  lthr?: number;
+  maxHR?: number;
 }
 
 export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   workout, dailyExecutedActivities, onClose, athleteId, apiKey, uid, email, runFtp, bikeFtp,
-  runningTrainingMode, hasRunningPowerMeter, thresholdPaceStr, thresholdPaceSec,
+  runningTrainingMode, hasRunningPowerMeter, thresholdPaceStr, thresholdPaceSec, lthr, maxHR,
 }) => {
   const { user, userProfile } = useAuth();
   const effAthleteId = athleteId || userProfile?.intervalsAthleteId, effApiKey = apiKey || (userProfile as any)?.intervalsApiKey, effEmail = email || user?.email || undefined;
   const isCurrentUser = !athleteId || athleteId === userProfile?.intervalsAthleteId;
   const effRunFtp = typeof runFtp === "number" ? runFtp : (isCurrentUser ? (userProfile?.runFtp || 0) : 0), effBikeFtp = typeof bikeFtp === "number" ? bikeFtp : (isCurrentUser ? (userProfile?.bikeFtp || 0) : 0), effUid = uid || user?.uid || undefined;
+  const effLthr = typeof lthr === "number" && lthr > 0 ? lthr : (userProfile?.lthr || 0);
+  const effMaxHR = typeof maxHR === "number" && maxHR > 0 ? maxHR : (userProfile?.maxHR || 0);
 
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
@@ -234,8 +238,8 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                           bikeFtp={effBikeFtp}
                           thresholdPaceSec={thresholdPaceSec}
                           thresholdPaceStr={thresholdPaceStr}
-                          maxHeartrate={act.maxHeartrate || userProfile?.maxHR}
-                          lthr={userProfile?.lthr}
+                          maxHeartrate={act.maxHeartrate || effMaxHR}
+                          lthr={effLthr}
                         />
                       </div>
                     )}

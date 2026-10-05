@@ -10,7 +10,7 @@ import { resolveWorkoutAddons } from "./workoutEnhancers";
 import {
   getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
   resolveRaceWorkout, resolveWeekendRide, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
-  resolveCuratedModelForWeek,
+  resolveCuratedModelForWeek, resolveMidweekRide,
 } from "./macrocycleTemplateHelpers";
 import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
@@ -30,7 +30,7 @@ export function generateWeekTemplate(
   if ((week as any).isHistorical || week.weekNumber <= 0) {
     return days.map((day, idx) => {
       const d = new Date(weekStart); d.setDate(weekStart.getDate() + idx);
-      return { day, date: d.toISOString().split("T")[0], formattedDate: `${d.getDate()} ${months[d.getMonth()]}`, discipline: "Descanso", workoutName: "Descanso", action: "MANTENER", justification: "Historial de entrenamiento ejecutado", isRestDay: true, workoutDoc: "" };
+      return { day, date: d.toISOString().split("T")[0], formattedDate: `${d.getDate()} ${months[d.getMonth()]}`, discipline: "Descanso", workoutName: "Descanso", action: "MANTENER", justification: "Historial ejecutado", isRestDay: true, workoutDoc: "" };
     });
   }
 
@@ -50,8 +50,7 @@ export function generateWeekTemplate(
   const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp);
   const longRunDay = resolveLongRunDay(safeAvailability), longRideDay = resolveLongRideDay(safeAvailability);
   const result: PlanItem[] = [];
-  let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false;
-  let runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
+  let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false, runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
   const usedRunWorkoutNames = new Set<string>(), usedBikeWorkoutNames = new Set<string>();
 
   for (let idx = 0; idx < days.length; idx++) {
@@ -241,12 +240,13 @@ export function generateWeekTemplate(
           const candidate = bikeVars[(bIdx + a) % bikeVars.length];
           if (!usedBikeWorkoutNames.has(candidate.name)) { selBike = candidate; break; }
         }
-        usedBikeWorkoutNames.add(selBike.name);
-        const bDur = isRecovery ? Math.min(45, selBike.durationMin || 45) : (selBike.durationMin || 50);
+        const isTriOrMulti = curatedModel.sportCategory === "Triathlon" || hasCycling;
+        const midRide = resolveMidweekRide({ phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike });
+        usedBikeWorkoutNames.add(midRide.workoutName);
         result.push({
-          day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: selBike.name, action: "MANTENER",
-          durationMinutes: bDur, tss: Math.round(bDur * 0.78), powerTarget: interpolatePowerTarget(selBike.powerTarget, undefined, bikeFtp),
-          justification: selBike.justification, workoutDoc: selBike.workoutDoc, isRestDay: false,
+          day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: midRide.workoutName, action: "MANTENER",
+          durationMinutes: midRide.durationMinutes, tss: midRide.tss, powerTarget: midRide.powerTarget,
+          justification: midRide.justification, workoutDoc: midRide.workoutDoc, isRestDay: false,
         });
         continue;
       }
@@ -283,7 +283,8 @@ export function generateWeekTemplate(
 
         const isEveFriday = day === "Viernes" && (longRunDay === "Domingo" || longRunDay === "Sábado");
         if (isEveFriday) {
-          const fri = resolveFridayFartlek(runFtp);
+          const isMulti = curatedModel.sportCategory === "Triathlon" || hasCycling;
+          const fri = resolveFridayFartlek(runFtp, isMulti);
           usedRunWorkoutNames.add(fri.workoutName);
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: fri.workoutName, action: "MANTENER",

@@ -54,13 +54,20 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       // a) Eliminar arroba "@" que confunde algunos dispositivos Garmin
       line = line.replace(/@\s*/g, "");
 
-      // b) Transformar pasos fraccionados con tiempo forzado y nota de distancia
+      const isCycling =
+        options?.discipline === "Ciclismo" ||
+        options?.discipline === "Ride" ||
+        options?.discipline === "Bike" ||
+        /%\s*FTP\b/i.test(line) ||
+        /\bFTP\b/i.test(doc || "");
+
+      // b) Transformar pasos fraccionados con tiempo forzado y nota de distancia (solo carrera)
       // Ej: "- 40s 110% Pace (200m)" o '- 40s 110% Pace "200m"' => '- 200mtr 110% Pace'
       // Preserva descansos por tiempo intactos: '- 1m 55% Pace', '- 1m30s 55% Pace'
       const legacyDistanceMatch = line.match(
         /^-\s*(?:\d+h)?(?:\d+m(?:in)?)?(?:\d+s)?\s+(.*?)\s+["\(](\d+\s*(?:m|km|mtr|metros?))(?:\s+[^"\)]*)?["\)]\s*$/i
       );
-      if (legacyDistanceMatch) {
+      if (legacyDistanceMatch && !isCycling) {
         const intensity = legacyDistanceMatch[1].trim();
         let rawDist = legacyDistanceMatch[2].trim().toLowerCase().replace(/\s*metros?/, "mtr").replace(/\s+/, "");
         if (rawDist.endsWith("m") && !rawDist.endsWith("km") && !rawDist.endsWith("mtr")) {
@@ -70,11 +77,16 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       }
 
       // c) Normalizar distancias métricas a la especificación oficial Intervals.icu ('mtr'):
-      // Pasos en carrera/pista con distancias fijas (ej: 100m, 200m, 400m, 600m, 800m, 1000m, 2000m)
-      // se convierten a 'mtr' para evitar que Intervals.icu los confunda con minutos.
-      line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1mtr");
-      line = line.replace(/^-\s*(50|60|100|150|200|300|400|500|600|800|1000|1200|1500|1600|2000|3000|5000)\s*m\b/i, "- $1mtr");
-      line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
+      // En Ciclismo jamás se usan 'mtr' (toda duración 'm' son minutos).
+      // En Carrera/Pista, las distancias fijas se convierten a 'mtr' para evitar confusión con minutos.
+      if (isCycling) {
+        line = line.replace(/^-\s*(\d+)\s*mtr\b/i, "- $1m");
+        line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1m");
+      } else {
+        line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1mtr");
+        line = line.replace(/^-\s*(200|300|400|600|800|1000|1200|1500|1600|2000|3000|5000)\s*m\b/i, "- $1mtr");
+        line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
+      }
 
       // d) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles
       line = line.replace(/\s*\(([^)]+)\)\s*$/, (_m, note) => ` "${note.trim()}"`);

@@ -5743,3 +5743,50 @@ flowchart TD
 - **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (0 errores)**.
 - **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
 - **Control de Versiones:** Commits `cbd50aa`, `70ed380` y `a4dd682` sincronizados y subidos a `origin/main`.
+
+---
+
+## 76. Erradicación del Bug `mtr` en Ciclismo, Polarización 70.3 y Recalibración Fisiológica de TSS (George Schmitt)
+
+### 76.1. Diagnóstico de Causa Raíz y Anomalías Detectadas
+1. **El Bug `100mtr` en Ciclismo (`workoutSyntaxSanitizer.ts` & `WorkoutChart.tsx`):**
+   - **Síntoma:** Sesiones de fin de semana como *"Fondo Ciclismo 70.3 (2h5m Z2)"* figuraban erróneamente en el gráfico y en el desglose de Intervals.icu como **25m y 12 TSS** en lugar de 125m y ~82 TSS.
+   - **Mecanismo del Bug:** La expresión regular en `workoutSyntaxSanitizer.ts` convertía indiscriminadamente `100m` a `100mtr` (diseñado para atletismo). En `WorkoutChart.tsx`, la función `parseDuration` interpretaba `mtr` como metros de carrera dividiéndolos por `225 m/min`, reduciendo un bloque de 100 minutos a 0.44 minutos (26 segundos).
+   - **Percepción del Atleta:** El colapso del volumen principal a 25m y 12 TSS explicaba directamente la queja de George Schmitt de que el entrenamiento resultaba *"muy fácil"*.
+2. **Evasión de la Semana de Descarga en Triatlón 70.3 (`resolveWeekendRide`):**
+   - En `macrocycleTemplateHelpers.ts`, la condición `else if (phase === "BUILD")` se evaluaba antes de `isRecovery` para `triathlon_703`, prescribiendo 2h45m (112 TSS) en la Semana 4 en lugar de descargar a 75m Z1-Z2 (~45 TSS).
+3. **Desajuste de TSS y Sobrecarga Aguda No Polarizada:**
+   - La suma real de entrenamientos generados alcanzaba entre 508 y 549 TSS/semana (+46% sobre el blueprint de 347–480 TSS), concentrando 6 días consecutivos de alta exigencia sin polarización (fartlek de carrera los viernes inmediatamente antes del fondo ciclista de sábado + brick run).
+
+### 76.2. Implementaciones Arquitectónicas y Fisiológicas
+1. **Blindaje Multidisciplinar en Sanitizador (`workoutSyntaxSanitizer.ts`):**
+   - Detección explícita de ciclismo (`discipline === "Ciclismo"` o `% FTP`).
+   - Inhibición total de la conversión `m` $\rightarrow$ `mtr` en ciclismo.
+   - Sanitización defensiva que auto-corrige cualquier `mtr` residual en ciclismo de vuelta a minutos (`- 100mtr` $\rightarrow$ `- 100m`).
+2. **Auto-Sanación en Telemetría y Modal (`WorkoutChart.tsx` & `WorkoutDetailModal.tsx`):**
+   - Propagación de `discipline` hacia `parseWorkoutDoc` y `WorkoutChart`.
+   - Lógica de auto-sanación en `parseDuration`: si la sesión es de ciclismo o la duración es $\ge 30$, se interpreta `mtr` como minutos, rescatando retroactivamente cualquier sesión histórica almacenada en base de datos de 25m/12 TSS a 125m/82 TSS.
+3. **Descarga Biológica y Escalado de Tapering (`macrocycleTemplateHelpers.ts`):**
+   - Prioridad máxima a `isRecovery` en `resolveWeekendRide`: la Semana 4 de descarga se acota a 75m Z1-Z2 (~45 TSS), reduciendo el TSS semanal global de 365 TSS a 254 TSS (-30% de descarga real).
+   - En Tapering se acota a 55–60m específicos.
+4. **Polarización de Ciclismo y Carrera Multisport:**
+   - Creación de `resolveMidweekRide`: polariza el ciclismo entre una sesión de calidad/umbral (martes) y una sesión aeróbica de cadencia Z2 los jueves (45m @ 65% FTP, 28 TSS), pasando a Z1 en descarga.
+   - Actualización de `resolveFridayFartlek` con soporte `isMultisport`: convierte el viernes de triatlón en un trote regenerativo Z1 de 35m (~22 TSS) para proteger la musculatura antes del fondo y brick de sábado.
+5. **Orquestación en Plantillas Semanales (`macrocycleTemplates.ts`):**
+   - Conexión de `resolveMidweekRide` y trote regenerativo de viernes en la matriz de triatlón 70.3.
+
+### 76.3. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/components/WorkoutChart.tsx`: **348 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **293 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **346 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplates.ts`: **349 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/workoutSyntaxSanitizer.ts`: **113 LOC** ($\le 350$ LOC)
+
+### 76.4. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas estáticas y dinámicas compiladas exitosamente (Código 0)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Simulación Fisiológica Superada:**
+  - Sesión Sábado 10 de Octubre (Fondo Ciclismo 70.3): 160m (2h40m) / 107 TSS sin `mtr`.
+  - Auto-sanación de sesiones preexistentes: `- 100mtr 65% FTP` se parsea a 125m y 82 TSS.
+  - Semana 4 de descarga: 254 TSS reales (-30% respecto a semanas de carga).
+

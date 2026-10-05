@@ -70,7 +70,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   };
 
   const matchedAct = findMatchingActivity();
-  const parsedDoc = parseWorkoutDoc(workout.workoutDoc);
+  const parsedDoc = parseWorkoutDoc(workout.workoutDoc, workout.discipline);
   const plannedTss = workout.tss || parsedDoc.estimatedTss || (workout.durationMinutes ? Math.round(workout.durationMinutes * 0.75) : 0);
   const executedTss = matchedAct ? matchedAct.tss : isExtraActivity ? (workout.tss || 0) : (modalExecuted?.totalTss || 0);
   const displayActivities = matchedAct ? [matchedAct] : (isExtraActivity && allActs.length > 0 ? [allActs[0]] : []);

@@ -88,7 +88,7 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     };
   }
 
-  const sanitizedDoc = sanitizeWorkoutDoc(doc);
+  const sanitizedDoc = sanitizeWorkoutDoc(doc, { discipline });
   const lines = sanitizedDoc.split("\n").map((l) => l.trim()).filter(Boolean);
   const segments: IntervalSegment[] = [];
 
@@ -98,7 +98,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
   let inIgnoredSection = false;
 
   const parseDuration = (raw: string): number => {
-    const isSwim = /nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw);
+    const isCycling = /ciclismo|bike|ride/i.test(discipline || "") || /ftp/i.test(raw) || /ftp/i.test(doc || "");
+    const isSwim = !isCycling && (/nataci|swim/i.test(discipline || "") || /nado|crol|espalda|braza/i.test(raw));
     // Limpiar notas entre paréntesis o comillas antes de parsear duración para evitar capturas erróneas (ej: "(200m)")
     const clean = raw.replace(/\s*\(.*?\)/g, "").replace(/\s*".*?"/g, "").trim();
     // 1. Distancia en Kilómetros (ej: 1km, 2.5km, 5km)
@@ -109,6 +110,7 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     const mtrMatch = clean.match(/(\d+)\s*(?:mtr|metros?)\b/i);
     if (mtrMatch) {
       const mVal = parseInt(mtrMatch[1], 10);
+      if (isCycling) return mVal; // En ciclismo jamás existen metros: tratar residuo como minutos
       if (isSwim) return Math.max(0.5, Math.round((mVal / 50) * 10) / 10);
       return Math.max(0.3, Math.round((mVal / 225) * 10) / 10);
     }

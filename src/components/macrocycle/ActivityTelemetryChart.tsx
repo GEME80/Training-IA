@@ -26,7 +26,6 @@ interface ActivityTelemetryChartProps {
     elevationGainM?: number;
   };
   onMetricsDiscovered?: (metrics: { avgWatts?: number }) => void;
-  onStreamsLoaded?: (streams: Record<string, any>) => void;
 }
 
 export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
@@ -37,7 +36,6 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   email,
   summaryStats,
   onMetricsDiscovered,
-  onStreamsLoaded,
 }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +63,6 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
         if (isMounted) {
           if (data.success && data.streams && Object.keys(data.streams).length > 0) {
             setStreams(data.streams);
-            if (onStreamsLoaded) onStreamsLoaded(data.streams);
           } else {
             setError("Esta actividad no tiene series de telemetría detalladas.");
           }
@@ -78,7 +75,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     }
     loadStreams();
     return () => { isMounted = false; };
-  }, [activityId, athleteId, apiKey, uid, email, onStreamsLoaded]);
+  }, [activityId, athleteId, apiKey, uid, email]);
 
   const timeArray = streams?.time || [];
   const hrArray = streams?.raw_heartrate || streams?.heartrate || [];
@@ -150,21 +147,21 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-        <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-        <span className="text-xs font-mono text-slate-400">Cargando series de telemetría desde Intervals.icu...</span>
+      <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2">
+        <Loader2 className="h-6 w-6 animate-spin text-cyan-500" />
+        <span className="text-xs font-mono text-slate-500 dark:text-slate-400">Cargando series de telemetría desde Intervals.icu...</span>
       </div>
     );
   }
 
   if (error || sampledData.length === 0) {
     return (
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-2">
-        <div className="inline-flex items-center gap-1 text-xs font-black text-slate-400">
+      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-center space-y-2">
+        <div className="inline-flex items-center gap-1 text-xs font-black text-slate-600 dark:text-slate-400">
           <Activity className="h-4 w-4 text-cyan-500" />
           <span>Resumen de la Sesión</span>
         </div>
-        <p className="text-[11px] text-slate-400">{error || "Gráfica detallada no disponible para esta sesión."}</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">{error || "Gráfica detallada no disponible para esta sesión."}</p>
       </div>
     );
   }
@@ -178,19 +175,19 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   ];
 
   return (
-    <div className="rounded-2xl p-4 bg-slate-900 border border-slate-800 text-white space-y-3 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+    <div className="rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-3 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-            Telemetría ({formatSec(timeArray[timeArray.length - 1] || 0)})
+          <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            Gráfica de la Sesión ({formatSec(timeArray[timeArray.length - 1] || 0)})
           </span>
           {activeMetric === "ALL" && (
-            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-400 pl-2 border-l border-slate-700">
-              {hasPace && <span className="text-cyan-400 flex items-center gap-0.5">● Ritmo</span>}
-              {hasHr && <span className="text-rose-400 flex items-center gap-0.5">● FC</span>}
-              {hasWatts && <span className="text-purple-400 flex items-center gap-0.5">● Watts</span>}
-              {hasAlt && <span className="text-slate-400 flex items-center gap-0.5">▲ Alt</span>}
+            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pl-2 border-l border-slate-200 dark:border-slate-700">
+              {hasPace && <span className="text-cyan-600 dark:text-cyan-400 flex items-center gap-0.5">● Ritmo</span>}
+              {hasHr && <span className="text-rose-600 dark:text-rose-400 flex items-center gap-0.5">● FC</span>}
+              {hasWatts && <span className="text-purple-600 dark:text-purple-400 flex items-center gap-0.5">● Watts</span>}
+              {hasAlt && <span className="text-slate-500 dark:text-slate-400 flex items-center gap-0.5">▲ Alt</span>}
             </div>
           )}
         </div>
@@ -203,8 +200,8 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
               onClick={() => setActiveMetric(t.id)}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
                 activeMetric === t.id
-                  ? "bg-cyan-500 text-slate-950 ring-1 ring-cyan-400 shadow-sm"
-                  : "bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700"
+                  ? "bg-slate-900 text-white dark:bg-cyan-500 dark:text-slate-950 shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:text-white"
               }`}
             >
               {t.label}
@@ -214,25 +211,25 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
       </div>
 
       {/* Tooltip Dinámico Superior */}
-      <div className="flex flex-wrap items-center gap-3.5 text-xs font-mono bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
-        <span className="text-slate-400 font-bold">⏱️ {hoveredData ? formatSec(hoveredData.timeSec) : "Pasa el cursor..."}</span>
+      <div className="flex flex-wrap items-center gap-3.5 text-xs font-mono bg-slate-50 dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+        <span className="text-slate-600 dark:text-slate-400 font-bold">⏱️ {hoveredData ? formatSec(hoveredData.timeSec) : "Pasa el cursor..."}</span>
         {hasPace && (
-          <span className="text-cyan-400 font-bold flex items-center gap-1">
+          <span className="text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
             <Timer className="h-3 w-3" />
             {hoveredData?.paceStr ? hoveredData.paceStr : summaryStats?.paceStr ? `Ritmo: ${summaryStats.paceStr}` : "—"}
           </span>
         )}
-        <span className="text-rose-400 font-bold flex items-center gap-1">
+        <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
           <Heart className="h-3 w-3" />
           {hoveredData ? (hoveredData.hr !== undefined ? `${hoveredData.hr} bpm` : "Sin señal") : (summaryStats?.heartrate ? `Media: ${summaryStats.heartrate} bpm` : "—")}
         </span>
         {hasWatts && (
-          <span className="text-purple-400 font-bold flex items-center gap-1">
+          <span className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
             <Zap className="h-3 w-3" />
             {hoveredData?.watts !== undefined ? `${hoveredData.watts} W` : summaryStats?.watts ? `Media: ${summaryStats.watts}W` : streamAvgWatts ? `Media: ${streamAvgWatts}W` : (summaryStats?.weightedWatts ? `NP: ${summaryStats.weightedWatts}W` : "—")}
           </span>
         )}
-        <span className="text-slate-400 flex items-center gap-1">
+        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
           <Mountain className="h-3 w-3" />
           {hoveredData?.alt !== undefined ? `${Math.round(hoveredData.alt)} m` : (summaryStats?.elevationGainM ? `+${summaryStats.elevationGainM}m` : "—")}
         </span>
@@ -243,23 +240,23 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
         <svg ref={svgRef} viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto cursor-crosshair select-none" onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIndex(null)}>
           <defs>
             <linearGradient id="hrGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.30" />
+              <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.02" />
             </linearGradient>
             <linearGradient id="altGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#64748b" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#64748b" stopOpacity="0.04" />
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.20" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.03" />
             </linearGradient>
           </defs>
 
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
-            <line key={i} x1={padding.left} y1={padding.top + pct * plotH} x2={chartWidth - padding.right} y2={padding.top + pct * plotH} stroke="#334155" strokeDasharray="3,3" strokeWidth="0.8" />
+            <line key={i} x1={padding.left} y1={padding.top + pct * plotH} x2={chartWidth - padding.right} y2={padding.top + pct * plotH} stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeDasharray="3,3" strokeWidth="0.8" />
           ))}
 
           {(activeMetric === "ALL" || activeMetric === "ALTITUDE") && altPoints.length > 0 && (
             <>
               {altArea && <path d={altArea} fill="url(#altGrad)" />}
-              <path d={altPath} fill="none" stroke="#64748b" strokeWidth="1.2" strokeOpacity="0.6" />
+              <path d={altPath} fill="none" stroke="#94a3b8" strokeWidth="1.2" strokeOpacity="0.7" />
             </>
           )}
 
@@ -304,7 +301,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
           {(activeMetric === "ALL" || activeMetric === "WATTS") &&
             wattsSegments.map((seg, sIdx) => {
               const pD = seg.map((pt, j) => `${j === 0 ? "M" : "L"} ${getX(pt.sampleIdx)} ${getWattsY(pt.val)}`).join(" ");
-              return <path key={`w-seg-${sIdx}`} d={pD} fill="none" stroke="#c084fc" strokeWidth="1.8" />;
+              return <path key={`w-seg-${sIdx}`} d={pD} fill="none" stroke="#a855f7" strokeWidth="1.8" />;
             })}
 
           {hoverIndex !== null && (
@@ -317,7 +314,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
                 <circle cx={getX(hoverIndex)} cy={getHrY(hoveredData.hr)} r="4" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
               )}
               {hoveredData?.watts !== undefined && (activeMetric === "ALL" || activeMetric === "WATTS") && (
-                <circle cx={getX(hoverIndex)} cy={getWattsY(hoveredData.watts)} r="4" fill="#c084fc" stroke="#ffffff" strokeWidth="1.5" />
+                <circle cx={getX(hoverIndex)} cy={getWattsY(hoveredData.watts)} r="4" fill="#a855f7" stroke="#ffffff" strokeWidth="1.5" />
               )}
             </>
           )}

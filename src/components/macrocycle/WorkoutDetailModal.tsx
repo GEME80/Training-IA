@@ -9,7 +9,6 @@ import { parseWorkoutDoc } from "../WorkoutChart";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
-import { ActivityRouteMap } from "./ActivityRouteMap";
 import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
 
@@ -41,7 +40,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
   const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
   const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
-  const [activityStreams, setActivityStreams] = useState<Record<string, Record<string, any>>>({});
 
   if (!workout) return null;
 
@@ -190,7 +188,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
               {displayActivities.map((rawAct, aIdx) => {
                 const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
                 const metricItems = buildTelemetryMetricItems(act, workout.discipline);
-                const currentStreams = activityStreams[act.id];
 
                 return (
                   <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
@@ -226,12 +223,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                           activityId={act.id} athleteId={effAthleteId} apiKey={effApiKey} email={effEmail} uid={effUid}
                           summaryStats={{ heartrate: act.heartrate, maxHeartrate: act.maxHeartrate, watts: act.watts, weightedWatts: act.weightedWatts, distanceKm: act.distanceKm, movingTimeMin: act.movingTimeMin, paceStr: act.paceStr, elevationGainM: act.elevationGainM }}
                           onMetricsDiscovered={(m) => { if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! })); }}
-                          onStreamsLoaded={(st) => setActivityStreams((p) => ({ ...p, [act.id]: st }))}
                         />
 
                         <ActivityZoneDistribution
                           activity={act}
-                          streams={currentStreams}
                           discipline={workout.discipline}
                           runningTrainingMode={runningTrainingMode}
                           hasRunningPowerMeter={hasRunningPowerMeter}
@@ -241,13 +236,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                           thresholdPaceStr={thresholdPaceStr}
                           maxHeartrate={act.maxHeartrate || userProfile?.maxHR}
                           lthr={userProfile?.lthr}
-                        />
-
-                        <ActivityRouteMap
-                          latlng={currentStreams?.latlng}
-                          distanceKm={act.distanceKm}
-                          movingTimeMin={act.movingTimeMin}
-                          elevationGainM={act.elevationGainM}
                         />
                       </div>
                     )}

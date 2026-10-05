@@ -47,7 +47,6 @@ export async function GET(
       "velocity_smooth",
       "cadence",
       "altitude",
-      "latlng",
     ]);
 
     const streamsMap: Record<string, any> = {};

@@ -195,6 +195,8 @@ export class TelemetryService {
               deviceName: act.device_name,
               icu_ftp: typeof act.icu_ftp === "number" ? act.icu_ftp : undefined,
               icu_pm_ftp: typeof act.icu_pm_ftp === "number" ? act.icu_pm_ftp : undefined,
+              icu_zone_times: Array.isArray(act.icu_zone_times) ? act.icu_zone_times : undefined,
+              icu_hr_zone_times: Array.isArray(act.icu_hr_zone_times) ? act.icu_hr_zone_times : undefined,
               icu_hr_zones: Array.isArray(act.icu_hr_zones) ? act.icu_hr_zones : undefined,
               icu_power_zones: Array.isArray(act.icu_power_zones) ? act.icu_power_zones : undefined,
               icu_pace_zones: Array.isArray(act.icu_pace_zones) ? act.icu_pace_zones : undefined,

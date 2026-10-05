@@ -54,28 +54,122 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
   const isPaceMode = isRun && (runningTrainingMode === "PACE" || hasRunningPowerMeter === false || runFtp === 0);
   const effFtp = isRun ? runFtp : isBike ? bikeFtp : 0;
 
-  // 1. Detección de streams o zonas precalculadas
   const rawHrs = streams?.heartrate || streams?.raw_heartrate || [];
   const rawWatts = streams?.watts || [];
   const rawVels = streams?.velocity_smooth || [];
 
-  const hasHrData = (Array.isArray(rawHrs) && rawHrs.length > 10) || (Array.isArray(activity?.icu_hr_zones) && activity!.icu_hr_zones.length > 0);
-  const hasWattsData = (Array.isArray(rawWatts) && rawWatts.length > 10 && effFtp > 0) || (Array.isArray(activity?.icu_power_zones) && activity!.icu_power_zones.length > 0);
-  const hasPaceData = isRun && ((Array.isArray(rawVels) && rawVels.length > 10) || (Array.isArray(activity?.icu_pace_zones) && activity!.icu_pace_zones.length > 0));
+  const hasWattsData =
+    (Array.isArray(activity?.icu_zone_times) && activity!.icu_zone_times.length > 0) ||
+    (Array.isArray(rawWatts) && rawWatts.length > 10 && effFtp > 0);
 
-  // Selección por defecto del tipo de zona según el plan
+  const hasHrData =
+    (Array.isArray(activity?.icu_hr_zone_times) && activity!.icu_hr_zone_times.length > 0) ||
+    (Array.isArray(rawHrs) && rawHrs.length > 10);
+
+  const hasPaceData =
+    isRun &&
+    ((Array.isArray(rawVels) && rawVels.length > 10) ||
+      (Array.isArray(activity?.icu_pace_zones) && activity!.icu_pace_zones.length > 0));
+
   const defaultMetric = isPaceMode && hasPaceData ? "PACE" : hasWattsData ? "WATTS" : hasPaceData ? "PACE" : "HR";
   const [activeZoneType, setActiveZoneType] = useState<"PACE" | "WATTS" | "HR">(defaultMetric);
 
-  // 2. Cálculo de Zonas de Ritmo (Pace)
+  // 1. Zonas de Potencia (Stryd CP / Bici FTP)
+  const powerZones = useMemo<ZoneItem[]>(() => {
+    if (!hasWattsData) return [];
+    const counts = [0, 0, 0, 0, 0];
+    const ftp = effFtp || 250;
+
+    // A. Lectura de tiempos reales en segundos desde Intervals.icu (icu_zone_times)
+    if (Array.isArray(activity?.icu_zone_times) && activity!.icu_zone_times.length > 0) {
+      activity!.icu_zone_times.forEach((item) => {
+        if (item.id === "Z1") counts[0] = item.secs || 0;
+        else if (item.id === "Z2") counts[1] = item.secs || 0;
+        else if (item.id === "Z3") counts[2] = item.secs || 0;
+        else if (item.id === "Z4") counts[3] = item.secs || 0;
+        else if (item.id === "Z5") counts[4] = item.secs || 0;
+      });
+    } else if (Array.isArray(rawWatts) && rawWatts.length > 0) {
+      // Fallback: conteo segundo a segundo de telemetría de potencia
+      const pcts = isRun ? [80, 90, 100, 115] : [55, 75, 90, 105];
+      rawWatts.forEach((w: number) => {
+        if (typeof w !== "number" || isNaN(w) || w <= 0) return;
+        const pct = (w / ftp) * 100;
+        if (pct < pcts[0]) counts[0]++;
+        else if (pct < pcts[1]) counts[1]++;
+        else if (pct < pcts[2]) counts[2]++;
+        else if (pct < pcts[3]) counts[3]++;
+        else counts[4]++;
+      });
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0) || 1;
+
+    // Rangos de vatios calibrados según perfil Stryd (Running) o Coggan (Bici)
+    const pcts = isRun && Array.isArray(activity?.icu_power_zones) && activity!.icu_power_zones.length >= 4
+      ? activity!.icu_power_zones
+      : isRun ? [80, 90, 100, 115] : [55, 75, 90, 105];
+
+    const wZ1 = Math.round(ftp * (pcts[0] / 100));
+    const wZ2 = Math.round(ftp * (pcts[1] / 100));
+    const wZ3 = Math.round(ftp * (pcts[2] / 100));
+    const wZ4 = Math.round(ftp * (pcts[3] / 100));
+
+    return [
+      { id: "Z1", name: "Recuperación Activa", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${wZ1}W` },
+      { id: "Z2", name: "Resistencia Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${wZ1}-${wZ2}W` },
+      { id: "Z3", name: "Tempo / Ritmo", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${wZ2}-${wZ3}W` },
+      { id: "Z4", name: "Umbral Funcional", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${wZ3}-${wZ4}W` },
+      { id: "Z5", name: "Anaeróbico / VO2", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${wZ4}W` },
+    ];
+  }, [hasWattsData, activity?.icu_zone_times, activity?.icu_power_zones, rawWatts, effFtp, isRun]);
+
+  // 2. Zonas de Frecuencia Cardíaca (HR)
+  const hrZones = useMemo<ZoneItem[]>(() => {
+    if (!hasHrData) return [];
+    const counts = [0, 0, 0, 0, 0];
+    const lthrVal = lthr || 165;
+
+    // A. Lectura de tiempos reales en segundos desde Intervals.icu (icu_hr_zone_times)
+    if (Array.isArray(activity?.icu_hr_zone_times) && activity!.icu_hr_zone_times.length >= 5) {
+      for (let i = 0; i < 5; i++) {
+        counts[i] = activity!.icu_hr_zone_times[i] || 0;
+      }
+    } else if (Array.isArray(rawHrs) && rawHrs.length > 0) {
+      rawHrs.forEach((hr: number) => {
+        if (typeof hr !== "number" || isNaN(hr) || hr < 40) return;
+        const pctLthr = (hr / lthrVal) * 100;
+        if (pctLthr < 68) counts[0]++;
+        else if (pctLthr < 84) counts[1]++;
+        else if (pctLthr < 95) counts[2]++;
+        else if (pctLthr < 105) counts[3]++;
+        else counts[4]++;
+      });
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0) || 1;
+
+    // Umbrales bpm reales de la actividad
+    const hrBpm = Array.isArray(activity?.icu_hr_zones) && activity!.icu_hr_zones.length >= 5
+      ? activity!.icu_hr_zones
+      : [Math.round(lthrVal * 0.68), Math.round(lthrVal * 0.83), Math.round(lthrVal * 0.94), Math.round(lthrVal * 1.05)];
+
+    return [
+      { id: "Z1", name: "Recuperación", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${hrBpm[0]} bpm` },
+      { id: "Z2", name: "Aeróbico / Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${hrBpm[0]}-${hrBpm[1]} bpm` },
+      { id: "Z3", name: "Tempo Moderado", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${hrBpm[1]}-${hrBpm[2]} bpm` },
+      { id: "Z4", name: "Umbral Anaeróbico", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${hrBpm[2]}-${hrBpm[3]} bpm` },
+      { id: "Z5", name: "Máximo Cardíaco", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${hrBpm[3]} bpm` },
+    ];
+  }, [hasHrData, activity?.icu_hr_zone_times, activity?.icu_hr_zones, rawHrs, lthr]);
+
+  // 3. Zonas de Ritmo (Pace)
   const paceZones = useMemo<ZoneItem[]>(() => {
     if (!hasPaceData) return [];
     const counts = [0, 0, 0, 0, 0];
     const tp = thresholdPaceSec || 285;
 
-    if (Array.isArray(activity?.icu_pace_zones) && activity!.icu_pace_zones.length >= 5) {
-      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_pace_zones[i] || 0;
-    } else if (Array.isArray(rawVels)) {
+    if (Array.isArray(rawVels) && rawVels.length > 0) {
       rawVels.forEach((v: number) => {
         if (typeof v !== "number" || isNaN(v) || v < 1.0) return;
         const pSec = 1000 / v;
@@ -95,68 +189,7 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
       { id: "Z4", name: "Umbral Lactato", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${formatPaceSec(Math.round(tp * 1.03))} - ${formatPaceSec(Math.round(tp * 0.95))}` },
       { id: "Z5", name: "VO2 Máx / Sprint", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `< ${formatPaceSec(Math.round(tp * 0.95))}` },
     ];
-  }, [hasPaceData, rawVels, activity?.icu_pace_zones, thresholdPaceSec]);
-
-  // 3. Cálculo de Zonas de Potencia (Watts)
-  const powerZones = useMemo<ZoneItem[]>(() => {
-    if (!hasWattsData) return [];
-    const counts = [0, 0, 0, 0, 0];
-    const ftp = effFtp || 250;
-
-    if (Array.isArray(activity?.icu_power_zones) && activity!.icu_power_zones.length >= 5) {
-      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_power_zones[i] || 0;
-    } else if (Array.isArray(rawWatts)) {
-      rawWatts.forEach((w: number) => {
-        if (typeof w !== "number" || isNaN(w) || w <= 0) return;
-        const pct = (w / ftp) * 100;
-        if (pct < 55) counts[0]++;
-        else if (pct < 75) counts[1]++;
-        else if (pct < 90) counts[2]++;
-        else if (pct < 105) counts[3]++;
-        else counts[4]++;
-      });
-    }
-
-    const total = counts.reduce((a, b) => a + b, 0) || 1;
-    return [
-      { id: "Z1", name: "Recuperación Activa", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${Math.round(ftp * 0.55)}W` },
-      { id: "Z2", name: "Resistencia Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${Math.round(ftp * 0.55)}-${Math.round(ftp * 0.75)}W` },
-      { id: "Z3", name: "Tempo / Ritmo", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${Math.round(ftp * 0.75)}-${Math.round(ftp * 0.9)}W` },
-      { id: "Z4", name: "Umbral Funcional", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${Math.round(ftp * 0.9)}-${Math.round(ftp * 1.05)}W` },
-      { id: "Z5", name: "Anaeróbico / VO2", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${Math.round(ftp * 1.05)}W` },
-    ];
-  }, [hasWattsData, rawWatts, activity?.icu_power_zones, effFtp]);
-
-  // 4. Cálculo de Zonas de Frecuencia Cardíaca (HR)
-  const hrZones = useMemo<ZoneItem[]>(() => {
-    if (!hasHrData) return [];
-    const counts = [0, 0, 0, 0, 0];
-    const hrMax = maxHeartrate || 185;
-    const lthrVal = lthr || 165;
-
-    if (Array.isArray(activity?.icu_hr_zones) && activity!.icu_hr_zones.length >= 5) {
-      for (let i = 0; i < 5; i++) counts[i] = activity!.icu_hr_zones[i] || 0;
-    } else if (Array.isArray(rawHrs)) {
-      rawHrs.forEach((hr: number) => {
-        if (typeof hr !== "number" || isNaN(hr) || hr < 40) return;
-        const pctLthr = (hr / lthrVal) * 100;
-        if (pctLthr < 68) counts[0]++;
-        else if (pctLthr < 84) counts[1]++;
-        else if (pctLthr < 95) counts[2]++;
-        else if (pctLthr < 105) counts[3]++;
-        else counts[4]++;
-      });
-    }
-
-    const total = counts.reduce((a, b) => a + b, 0) || 1;
-    return [
-      { id: "Z1", name: "Recuperación", color: "#38bdf8", bgClass: "bg-sky-500", seconds: counts[0], percent: Math.round((counts[0] / total) * 100), rangeLabel: `< ${Math.round(lthrVal * 0.68)} bpm` },
-      { id: "Z2", name: "Aeróbico / Base", color: "#10b981", bgClass: "bg-emerald-500", seconds: counts[1], percent: Math.round((counts[1] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.68)}-${Math.round(lthrVal * 0.83)} bpm` },
-      { id: "Z3", name: "Tempo Moderado", color: "#f59e0b", bgClass: "bg-amber-500", seconds: counts[2], percent: Math.round((counts[2] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.84)}-${Math.round(lthrVal * 0.94)} bpm` },
-      { id: "Z4", name: "Umbral Anaeróbico", color: "#f97316", bgClass: "bg-orange-500", seconds: counts[3], percent: Math.round((counts[3] / total) * 100), rangeLabel: `${Math.round(lthrVal * 0.95)}-${Math.round(lthrVal * 1.05)} bpm` },
-      { id: "Z5", name: "Máximo Cardíaco", color: "#ef4444", bgClass: "bg-rose-500", seconds: counts[4], percent: Math.round((counts[4] / total) * 100), rangeLabel: `> ${Math.round(lthrVal * 1.05)} bpm` },
-    ];
-  }, [hasHrData, rawHrs, activity?.icu_hr_zones, lthr, maxHeartrate]);
+  }, [hasPaceData, rawVels, thresholdPaceSec]);
 
   const activeZones = activeZoneType === "PACE" ? paceZones : activeZoneType === "WATTS" ? powerZones : hrZones;
   if (!activeZones || activeZones.length === 0) return null;

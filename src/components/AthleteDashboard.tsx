@@ -125,6 +125,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     isReadOnly: effectiveReadOnly,
   });
 
+  useEffect(() => {
+    if (isAuditing && targetAthleteFullProfile) {
+      const aId = targetAthleteFullProfile.intervalsAthleteId || targetAthlete?.intervalsAthleteId;
+      if (aId) {
+        telemetry.refreshTelemetry(aId, undefined, targetAthleteFullProfile.runFtp, targetAthleteFullProfile.bikeFtp, true);
+      }
+    }
+  }, [isAuditing, targetAthleteFullProfile, targetAthlete?.intervalsAthleteId, telemetry.refreshTelemetry]);
+
   const sync = useIntervalsSync({
     athleteId: telemetry.profile.id,
     apiKeyCache: telemetry.apiKeyCache,

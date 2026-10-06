@@ -272,7 +272,7 @@ export function resolveFridayFartlek(runFtp?: number, isMultisport: boolean = fa
   if (isMultisport) {
     return {
       workoutName: "Carrera Continua Z1-Z2 de Soltura (35m)",
-      durationMinutes: 35, tss: 22,
+      durationMinutes: 35, tss: 25,
       powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.68)}W (68% CP)` : "68% Pace",
       justification: "Trote suave de soltura y oxigenación para asimilar los estímulos entre semana y llegar con piernas frescas al fin de semana.",
       workoutDoc: runFtp && runFtp > 0
@@ -309,7 +309,7 @@ export function resolveMidweekRide({
     const dur = isRecovery ? 35 : 45;
     return {
       workoutName: isRecovery ? "Ciclismo de Asimilación & Soltura (35m Z1-Z2)" : "Ciclismo Aeróbico Z2 con Variaciones de Cadencia (45m)",
-      durationMinutes: dur, tss: isRecovery ? 20 : 28,
+      durationMinutes: dur, tss: isRecovery ? 20 : 29,
       powerTarget: bikeFtp ? `${Math.round(bikeFtp * (isRecovery ? 0.60 : 0.65))}W (${isRecovery ? "60% FTP" : "65% FTP"})` : "65% FTP",
       justification: isRecovery ? "Regeneración metabólica y asimilación biológica." : "Eficiencia de pedaleo aeróbico Z2 y cadencia sin fatiga concurrente.",
       workoutDoc: isRecovery ? "Warmup\n- 10m 55% FTP\n\nMain\n- 20m 60% FTP\n\nCooldown\n- 5m 50% FTP" : "Warmup\n- 10m 55% FTP\n\nMain\n- 25m 65% FTP (90-95 rpm)\n- 5m 72% FTP\n\nCooldown\n- 5m 50% FTP",

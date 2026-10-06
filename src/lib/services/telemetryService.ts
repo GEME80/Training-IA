@@ -92,7 +92,7 @@ export class TelemetryService {
           const [athleteData, wellnessData, calendarEvents, sportSettingsData, activitiesData] = await Promise.all([
             client.getAthlete().catch((err) => { console.warn("Aviso al consultar atleta:", err); return null; }),
             client.getWellness(oldestWellnessStr, newestStr).catch((err) => { console.warn("Aviso wellness:", err); return []; }),
-            client.getEvents(oldestEventsStr, futureEventsStr).catch((err) => { console.warn("Aviso eventos:", err); return []; }),
+            client.getEvents(oldestEventsStr, futureEventsStr).catch(() => client.getEvents(formatLocalDateToYMD(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 60)), futureEventsStr)).catch((err) => { console.warn("Aviso eventos:", err); return []; }),
             client.getSportSettings().catch((err) => { console.warn("Aviso sportSettings:", err); return []; }),
             client.getActivities(oldestActivitiesStr, newestStr).catch((err) => { console.warn("Aviso actividades:", err); return []; }),
           ]);

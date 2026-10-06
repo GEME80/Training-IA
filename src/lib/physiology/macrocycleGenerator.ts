@@ -65,7 +65,8 @@ export function formatRange(start: Date, end: Date): string {
   return `${start.getDate()} ${months[start.getMonth()]} - ${end.getDate()} ${months[end.getMonth()]}`;
 }
 export function resolveVolumeScaleFactor(ctl?: number): number {
-  if (!ctl || ctl <= 0) return 0.60;
+  if (ctl === undefined) return 1.0;
+  if (ctl <= 0) return 0.60;
   if (ctl <= 15) return 0.65;
   if (ctl <= 30) return 0.78;
   if (ctl <= 50) return 0.90;

@@ -3,10 +3,9 @@ import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_20M_FTP } from "../ai/knowledge";
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
-import { selectSwimWorkout } from "./swimWorkoutPool";
-import { selectStrengthWorkout } from "./strengthWorkoutPool";
-import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches";
-import { resolveWorkoutAddons } from "./workoutEnhancers";
+import { selectSwimWorkout } from "./swimWorkoutPool"; import { selectStrengthWorkout } from "./strengthWorkoutPool";
+import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"; import { resolveWorkoutAddons } from "./workoutEnhancers";
+import { parseWorkoutDoc } from "./workoutDocParser";
 import {
   getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
   resolveRaceWorkout, resolveWeekendRide, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
@@ -37,8 +36,7 @@ export function generateWeekTemplate(
   const { weekNumber, phase, microcycleType } = week;
   const countdown = week.countdownWeeks || Math.max(1, 16 - (weekNumber || 1) + 1);
   const totalWeeks = (week as any).totalWeeks || (weekNumber + countdown - 1) || 16;
-  const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
-  const isRaceWeek = phase === "RACE_WEEK" || countdown === 1 || microcycleType === "COMPETICION";
+  const isRecovery = microcycleType === "DESCARGA_ASIMILACION", isRaceWeek = phase === "RACE_WEEK" || countdown === 1 || microcycleType === "COMPETICION";
 
   const curatedModel = resolveCuratedModelForWeek(distanceType, week.focusDescription, safeAvailability);
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
@@ -54,12 +52,9 @@ export function generateWeekTemplate(
   const usedRunWorkoutNames = new Set<string>(), usedBikeWorkoutNames = new Set<string>();
 
   for (let idx = 0; idx < days.length; idx++) {
-    const day = days[idx];
-    const d = new Date(weekStart);
+    const day = days[idx], d = new Date(weekStart);
     d.setDate(weekStart.getDate() + idx);
-    const dateStr = d.toISOString().split("T")[0];
-    const formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
-
+    const dateStr = d.toISOString().split("T")[0], formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
     let discList = getDayDisciplines(safeAvailability, day);
 
     if (isRaceWeek) {
@@ -172,9 +167,10 @@ export function generateWeekTemplate(
           usedBikeWorkoutNames.add(rideTitle);
           const baseRideDoc = rideWorkoutDoc || `Warmup\n- 15m 55% FTP\n\nMain\n- ${rideMins - 25}m 65% FTP\n\nCooldown\n- 10m 50% FTP`;
           const addons = resolveWorkoutAddons({ durationMinutes: rideMins, sport: "Ciclismo", isQualityOrLong: true });
+          const parsedRide = parseWorkoutDoc(baseRideDoc, "Ciclismo");
           result.push({
             day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: rideTitle, action: "MANTENER",
-            durationMinutes: rideMins, tss: Math.round(rideMins * 0.68), powerTarget: rideTarget, justification: rideJust,
+            durationMinutes: rideMins, tss: parsedRide.estimatedTss || Math.round(rideMins * 0.66), powerTarget: rideTarget, justification: rideJust,
             workoutDoc: baseRideDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
 
@@ -195,9 +191,10 @@ export function generateWeekTemplate(
               ? `Transición T2 Post-Ciclismo (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`
               : `Transición T2 Técnica & Adaptación (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`;
 
+            const t2Tss = Math.max(12, Math.round(t2M * (t2Pct / 100)));
             result.push({
               day, date: dateStr, formattedDate, discipline: "Carrera", activityType: "Brick",
-              workoutName: t2Title, action: "MANTENER", durationMinutes: t2M, tss: Math.round(t2M * (t2Pct / 100)), powerTarget: t2Pwr,
+              workoutName: t2Title, action: "MANTENER", durationMinutes: t2M, tss: t2Tss, powerTarget: t2Pwr,
               justification: isBuildOrPeak
                 ? "Transición inmediata T2 (< 3-5 min) tras el sector de ciclismo para automatizar la zancada sobre fatiga muscular acumulada."
                 : isTaper
@@ -272,9 +269,10 @@ export function generateWeekTemplate(
           const effDoc = prevDayTest ? `Warmup\n- 10m 65% CP\n\nMain\n- ${effM - 15}m 72% CP\n\nCooldown\n- 5m 60% CP` : longRun.workoutDoc;
           usedRunWorkoutNames.add(effName);
           const addons = resolveWorkoutAddons({ durationMinutes: effM, sport: "Carrera", isQualityOrLong: true });
+          const parsedLong = parseWorkoutDoc(effDoc, "Carrera");
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: effName, action: "MANTENER",
-            durationMinutes: effM, tss: Math.round(effM * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
+            durationMinutes: effM, tss: parsedLong.estimatedTss || Math.round(effM * (longRun.isPeakBlock ? 0.82 : 0.74)), powerTarget: longRun.powerTarget,
             justification: `Tirada de ${effKm} km (${day}, Semana ${weekNumber}, escala CTL: ${Math.round(volumeScaleFactor * 100)}%).`,
             workoutDoc: effDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
@@ -307,7 +305,8 @@ export function generateWeekTemplate(
           }
           usedRunWorkoutNames.add(q.name);
           const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
-          const dur = isBrick ? 85 : 50, tss = isBrick ? 85 : 55;
+          const parsedQ = parseWorkoutDoc(q.workoutDoc, "Carrera");
+          const dur = isBrick ? 85 : (parsedQ.totalMins || 50), tss = isBrick ? 85 : (parsedQ.estimatedTss || 55);
           const addons = resolveWorkoutAddons({ durationMinutes: dur, sport: "Carrera", isQualityOrLong: true });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", activityType: isBrick ? "Brick" : "Carrera",

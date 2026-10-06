@@ -5829,3 +5829,56 @@ flowchart TD
 - **Simulación End-to-End Superada:** Eventos con 377 TSS y 430 TSS se auto-sanan a 37 TSS y 36 TSS, resultando en un total semanal armónico de **443 / 439 TSS** tanto en la vista del atleta como en la del administrador.
 
 
+
+---
+
+## 78. Paridad Fisiológica Absoluta entre Perfil de Atleta y Auditoría de Administrador (Resolución del Desfase 437 TSS vs. 439 TSS)
+
+### 78.1. Diagnóstico de Causa Raíz & Aislamiento Matemático
+1. **La Discrepancia Identificada:**
+   - **Vista Atleta (Eventos Hidratados de Intervals.icu):** Semana 2 totalizaba **9h 21m** y **437 TSS** (Ciclismo: 3h55m / 180 TSS, Carrera: 2h46m / 135 TSS, Natación: 1h30m / 73 TSS, Gimnasio: 1h10m / 49 TSS).
+   - **Vista Administrador (Auditoría Deshidratada en Fallback):** Semana 2 totalizaba **9h 20m** y **439 TSS** (Ciclismo: 3h55m / 181 TSS, Carrera: 2h45m / 136 TSS, Natación: 1h30m / 73 TSS, Gimnasio: 1h10m / 49 TSS).
+   - **Diferencia Neta:** Exactamente **+2 TSS** y **-1 minuto** de disparidad.
+2. **Desglose Sesión a Sesión:**
+   - **Miércoles (Calidad):** En la plantilla estática se asignaba un valor fijo de `50m` y `55 TSS` (`isBrick ? 85 : 50, tss = isBrick ? 85 : 55`). En cambio, el entrenamiento real seleccionado (*Series de Ritmo Progresivo 4x4m*) tiene una estructura DSL de `Warmup 12m + 4x(4m+2m) + Cooldown 8m` = **44m** y **38 TSS** (desfase: -6m, +17 TSS).
+   - **Jueves (Ciclismo Midweek):** La plantilla estática fijaba `tss: 28`. El cálculo de potencia por intervalos (`10m 55% + 25m 65% + 5m 72% + 5m 50%`) arroja **29 TSS** (desfase: -1 TSS).
+   - **Viernes (Soltura Run):** La plantilla estática fijaba `tss: 22`. El cálculo de pasos (`10m 65% + 20m 68% + 5m 60%`) arroja **25 TSS** (desfase: -3 TSS).
+   - **Sábado (Fondo Bike):** La plantilla estática calculaba `125 * 0.68 = 85 TSS`. Los pasos reales arrojan **83 TSS** (desfase: +2 TSS).
+   - **Sábado (T2 Brick):** La plantilla estática calculaba `15 * 0.72 = 11 TSS`. Los pasos reales calculan **12 TSS** (desfase: -1 TSS).
+   - **Domingo (Tirada Larga):** Al no suministrarse CTL explícito en la plantilla de fallback, `resolveVolumeScaleFactor(undefined)` retornaba `0.60`, reduciendo la tirada a 65m y 48 TSS en lugar de los 72m (14 km) y 60 TSS canónicos (desfase: -7m, -12 TSS).
+   - **Suma de Desfases:** $+17 - 1 - 3 + 2 - 1 - 12 = \mathbf{+2\text{ TSS}}$ y $50m - 44m + 65m - 72m = \mathbf{-1\text{ minuto}}$. Aislamiento matemático 100% exacto.
+3. **Causa de la Falta de Hidratación en Modo Administrador:**
+   - En `AthleteDashboard.tsx`, al auditar a un atleta, `targetAthleteFullProfile` se cargaba asíncronamente desde `/api/profile?uid=...`. Sin embargo, `useAthleteTelemetry` ya había disparado su consulta inicial y quedado bloqueado por el regulador de 3 minutos (`180000ms`), impidiendo la hidratación de `calendarEvents` con los eventos reales de Intervals.icu.
+
+### 78.2. Soluciones Arquitectónicas Implementadas
+1. **Extracción y Desacoplamiento de `workoutDocParser.ts`:**
+   - Se desacopló toda la lógica de parseo de intervalos (`parseWorkoutDoc`, `parseStrengthDoc`, `isStrengthDoc`) de `WorkoutChart.tsx` (que estaba al borde del límite con 349 LOC) hacia `src/lib/physiology/workoutDocParser.ts` (208 LOC).
+   - `WorkoutChart.tsx` redujo su tamaño a **149 LOC**, eliminando dependencias de React en la capa de fisiología.
+2. **Cálculo Dinámico Basado en Pasos en `macrocycleTemplates.ts` y `macrocycleTemplateHelpers.ts`:**
+   - Miércoles: Se reemplazó el `dur = 50, tss = 55` hardcodeado por `parseWorkoutDoc(q.workoutDoc, "Carrera")`, obteniendo dinámicamente **44m** y **38 TSS**.
+   - Jueves: Se sincronizó el TSS del rodaje suave a **29 TSS**.
+   - Viernes: Se sincronizó el TSS de la soltura multideporte a **25 TSS**.
+   - Sábado: Se calculó el TSS del fondo ciclista con `parseWorkoutDoc`, entregando **83 TSS**, y el T2 se calibró a **12 TSS**.
+   - Domingo: Se calculó el TSS de la tirada larga con `parseWorkoutDoc`, entregando **60 TSS**.
+3. **Calibración de `resolveVolumeScaleFactor`:**
+   - Si `ctl === undefined`, retorna `1.0` (factor neutro estándar) en lugar de penalizar artificialmente a `0.60`.
+4. **Refresco Inmediato de Telemetría en Modo Auditoría (`AthleteDashboard.tsx`):**
+   - Se añadió un efecto reactivo que, en cuanto `targetAthleteFullProfile` se resuelve desde Firestore, invoca `telemetry.refreshTelemetry(athleteId, undefined, runFtp, bikeFtp, true /* forceRefresh */)`, superando el regulador temporal e hidratando el calendario del administrador al instante.
+5. **Reintento Resiliente en `telemetryService.ts`:**
+   - Si la consulta de calendario amplia (-180 a +60 días) se agota por timeout, el servicio reintenta automáticamente con una ventana compacta de 120 días (-60 a +60 días).
+
+### 78.3. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/lib/physiology/workoutDocParser.ts`: **208 LOC** ($\le 350$ LOC)
+- `src/components/WorkoutChart.tsx`: **149 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplates.ts`: **348 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **347 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleGenerator.ts`: **347 LOC** ($\le 350$ LOC)
+- `src/components/AthleteDashboard.tsx`: **281 LOC** ($\le 350$ LOC)
+- `src/lib/services/telemetryService.ts`: **346 LOC** ($\le 350$ LOC)
+
+### 78.4. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente en 3.1s (Código 0)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Simulación Matemática End-to-End:**
+  - Ambas vistas (Atleta y Administrador) convergen al 100% en **9h 21m** y **437 TSS**.
+  - Desglose por disciplina: Ciclismo 3h55m / 180 TSS, Carrera 2h46m / 135 TSS, Natación 1h30m / 73 TSS, Gimnasio 1h10m / 49 TSS.

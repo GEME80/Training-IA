@@ -6067,3 +6067,40 @@ flowchart TD
 ### 81.4. Certificación
 - `tsc --noEmit`: 0 errores.
 - `npm run build`: 20/20 páginas compiladas (Código 0).
+---
+
+## 82. Erradicación de Monotonía al 80% Pace, Diferenciación Fisiológica por Bloques y Limpieza Definitiva de Vatios Residuales (v4.12)
+
+### 82.1. Diagnóstico de la Causa Raíz
+1. **Falso Positivo de Monotonía al 80%:**
+   - La función `recalibrateLegacyPacePct` y el bucle línea por línea de `PlannedWorkoutPrescription.tsx` evaluaban las líneas aisladas de prescripción (ej. `- 15m 74% Pace`). Como el encabezado `Warmup` o `Cooldown` estaba en la línea previa, `isWarm` e `isCool` eran `false`, provocando que el `else` forzara absolutamente cada fase al `80% Pace (~5:56/km)`.
+2. **Remanentes de Potencia Residual (`304- `, `320- `):**
+   - La expresión regular previa eliminaba `\b\d+\s*W\b`, pero en rangos de potencia como `304-325W (82-87% CP)` borraba `325W` dejando el prefijo dangling `304- ` antepuesto al ritmo.
+3. **Falta de Variedad de Estímulos para Construcción de CTL:**
+   - Un plan de running eficaz requiere zonas claras: Z1 regenerativa activa para recuperar, Z2 base para volumen mitocondrial, Z3 tempo para especificidad de carrera, y Z4 umbral para desplazar el segundo umbral ventilatorio (VT2).
+
+### 82.2. Solución de Ingeniería Fisiológica Implementada
+1. **Motor Contextual por Bloques (`adaptRunningWorkoutDoc` en `runningWorkoutAdapter.ts`):**
+   - Rastrea dinámicamente el estado contextual (`currentSec: "WARMUP" | "MAIN" | "COOLDOWN" | "INTERVALS"`):
+     - **Warmup:** $72\%$ Pace (~6:35/km) en sesiones de soltura, $74\%$ Pace (~6:25/km) en fondos y sesiones de calidad.
+     - **Cooldown:** $71\%$ Pace (~6:41/km) (Z1 suave y ágil, nunca 60% caminando).
+     - **Main Soltura (Viernes):** $76\%$ Pace (~6:15/km Z1-Z2 activa regenerativa).
+     - **Main Base (Domingos):** $80\%$ Pace (~5:56/km Z2 base viva para acumulación eficiente de CTL).
+     - **Main Final Ágil / 70.3:** $88\%$ Pace (~5:24/km Z3 tempo de competición).
+     - **Intervalos de Calidad / Series (Martes):** $98\text{--}100\%$ Pace (~4:45/km) con recuperaciones al $68\%$ Pace (~6:59/km).
+     - **Strides / Progresiones:** $110\text{--}115\%$ Pace (~4:19/km).
+2. **Limpieza Completa de Vatios en `interpolateWorkoutTarget`:**
+   - Erradica `\b\d+\s*(?:-\s*\d+)?\s*W\b` y `^\s*\d+\s*-\s*(?!\d+\s*%)`, garantizando que cadenas como `304-325W (82-87% CP)` o `304- (5:48-5:28/km...)` se purifiquen a ritmos limpios sin residuos numéricos.
+3. **Renderizado Unificado en `PlannedWorkoutPrescription.tsx`:**
+   - Delega la segmentación fisiológica al documento adaptado por bloques y formatea limpiamente el ritmo min/km derivado del ritmo umbral individual.
+4. **Parámetro `workoutName` en `WorkoutDetailModal.tsx`:**
+   - Pasa el nombre de la sesión a `adaptRunningWorkoutDoc` para reconocer automáticamente los días de soltura y regenerativos.
+
+### 82.3. Archivos Auditados ($\le 350$ LOC)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **345 LOC** ($\le 350$)
+- `src/components/macrocycle/PlannedWorkoutPrescription.tsx`: **151 LOC** ($\le 350$)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **295 LOC** ($\le 350$)
+
+### 82.4. Certificación
+- `tsc --noEmit`: 0 errores.
+- `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).

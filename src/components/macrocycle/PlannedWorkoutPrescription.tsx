@@ -1,9 +1,8 @@
 "use client";
-
 import React, { useState } from "react";
 import { Code2, ChevronDown, ChevronUp, Timer, Zap } from "lucide-react";
 import { WorkoutChart } from "../WorkoutChart";
-import { formatPace, parsePaceToSeconds, mapPowerPctToPacePct, recalibrateLegacyPacePct } from "@/lib/physiology/runningWorkoutAdapter";
+import { formatPace, parsePaceToSeconds, mapPowerPctToPacePct } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface PlannedWorkoutPrescriptionProps {
   cleanDoc: string;
@@ -128,11 +127,7 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
                     if (p2) return `${pace1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace`;
                     return `${pace1}% Pace`;
                   });
-                  baseLine = baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
-                    const n1 = recalibrateLegacyPacePct(parseInt(p1, 10), line);
-                    if (p2) return `${n1}-${recalibrateLegacyPacePct(parseInt(p2, 10), line)}% Pace`;
-                    return `${n1}% Pace`;
-                  });
+
                   const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285);
                   return baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
                     const n1 = parseInt(p1, 10);

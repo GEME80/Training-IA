@@ -2,36 +2,18 @@ import { RunningTrainingMode } from "../db/types";
 import { parseWorkoutDoc } from "./workoutDocParser";
 
 export interface RunningProfileMetrics {
-  hasRunningPowerMeter?: boolean;
-  runningTrainingMode?: RunningTrainingMode;
-  runFtp?: number;
-  run_ftp?: number;
-  bikeFtp?: number;
-  bike_ftp?: number;
-  lthr?: number;
-  maxHR?: number;
-  runThresholdPaceSecPerKm?: number;
-  runThresholdPaceStr?: string;
-  threshold_pace?: number; // m/s en Intervals.icu
-  swimCssSecPer100m?: number;
-  swimCssStr?: string;
-  swim_threshold_pace?: number;
+  hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
+  runFtp?: number; run_ftp?: number; bikeFtp?: number; bike_ftp?: number;
+  lthr?: number; maxHR?: number; runThresholdPaceSecPerKm?: number; runThresholdPaceStr?: string;
+  threshold_pace?: number; swimCssSecPer100m?: number; swimCssStr?: string; swim_threshold_pace?: number;
 }
 
 export interface PaceZoneItem {
-  id: string;
-  name: string;
-  nameColor: string;
-  pct: string;
-  range: string;
+  id: string; name: string; nameColor: string; pct: string; range: string;
 }
 
 export interface SwimZoneItem {
-  id: string;
-  name: string;
-  nameColor: string;
-  pct: string;
-  range: string;
+  id: string; name: string; nameColor: string; pct: string; range: string;
 }
 
 /**
@@ -155,55 +137,69 @@ export function mapPowerPctToPacePct(pwrPct: number): number {
 }
 
 /**
- * Recalibra porcentajes obsoletos o lentos de % Pace (ej. 60% Pace -> 72%, 74-76% Z2 -> 80%):
- */
-export function recalibrateLegacyPacePct(p: number, ctx?: string): number {
-  if (p >= 95) return p;
-  const isCool = /cooldown|enfria|recup/i.test(ctx || "");
-  const isWarm = /warmup|calenta/i.test(ctx || "");
-  const isFast = /final|ágil|progres|tempo|70\.3/i.test(ctx || "");
-  if (p <= 65) return 72;
-  if (p <= 72) return isCool ? 72 : 74;
-  if (p <= 77) return isWarm ? 75 : isCool ? 72 : 80;
-  if (p <= 84 && isFast) return 87;
-  return p;
-}
-
-/**
  * Traduce el workoutDoc al vuelo según la modalidad del atleta.
  * En modo POWER devuelve el texto 100% idéntico con % FTP (INVARIANZA TOTAL).
- * En modo PACE sustituye y escala fisiológicamente a % Pace (calidad, tempo y fondos).
+ * En modo PACE aplica fisiología real por bloques (Warmup Z1/Z2 suave, Main según objetivo, Cooldown Z1 regenerativo).
  */
 export function adaptRunningWorkoutDoc(
-  workoutDoc: string, discipline: string, isQuality: boolean, mode: RunningTrainingMode = "POWER"
+  workoutDoc: string, discipline: string, isQuality: boolean = false, mode: RunningTrainingMode = "POWER", workoutName: string = ""
 ): string {
   if (!workoutDoc || discipline !== "Carrera" || mode === "POWER") return workoutDoc;
+  const isSoltura = /soltura|regenerativ|suave|z1-z2/i.test(workoutName);
+  let currentSec: "WARMUP" | "MAIN" | "COOLDOWN" | "INTERVALS" = "MAIN";
   let inCyclingBlock = false;
-  return workoutDoc.split("\n").map((line) => {
-    if (/ciclismo|bici\b|bike|sector\s*2/i.test(line)) inCyclingBlock = true;
-    else if (/carrera|run\b|trote|sector\s*3|transici[oó]n\s*t2|bloque\s*2/i.test(line)) inCyclingBlock = false;
-    if (inCyclingBlock) return line;
+
+  return workoutDoc.split("\n").map((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) return "";
+    const lower = line.toLowerCase();
+    if (/ciclismo|bici\b|bike|sector\s*2/i.test(lower)) inCyclingBlock = true;
+    else if (/carrera|run\b|trote|sector\s*3|transici[oó]n\s*t2|bloque\s*2/i.test(lower)) inCyclingBlock = false;
+    if (inCyclingBlock) return rawLine;
+
+    if (!line.startsWith("-")) {
+      if (/warmup|calentamiento/i.test(lower)) currentSec = "WARMUP";
+      else if (/cooldown|enfriamiento|vuelta a la calma/i.test(lower)) currentSec = "COOLDOWN";
+      else if (/rectas|strides|fartlek|series|intervalos|\b\d+x\b/i.test(lower)) currentSec = "INTERVALS";
+      else if (/main|principal/i.test(lower)) currentSec = "MAIN";
+      return rawLine;
+    }
 
     let clean = line
       .replace(/\s*\([~]?\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\)/gi, "")
       .replace(/\s*\(\d+\s*w\)/gi, "")
       .replace(/\b\d+\s*w\b/gi, "");
 
-    let scaled = clean.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, (_, p1, p2) => {
-      const pace1 = mapPowerPctToPacePct(parseInt(p1, 10));
-      return p2 ? `${pace1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace` : `${pace1}% Pace`;
-    });
+    return clean.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Stryd\s*)?(?:CP|FTP|Pace|pace|Ritmo)/gi, (_, p1, p2) => {
+      const v1 = parseInt(p1, 10);
+      let t1 = v1;
 
-    scaled = scaled.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
-      const n1 = recalibrateLegacyPacePct(parseInt(p1, 10), line);
-      return p2 ? `${n1}-${recalibrateLegacyPacePct(parseInt(p2, 10), line)}% Pace` : `${n1}% Pace`;
-    });
+      if (currentSec === "WARMUP") {
+        t1 = isSoltura ? 72 : 74;
+      } else if (currentSec === "COOLDOWN") {
+        t1 = 71;
+      } else if (currentSec === "INTERVALS") {
+        if (v1 <= 72 || /recup|descanso|recovery/i.test(line)) t1 = 68;
+        else if (v1 >= 100 || /stride|recta/i.test(line)) t1 = Math.max(105, Math.min(115, v1 >= 105 ? v1 : 110));
+        else if (/ágil|70\.3|tempo|progres/i.test(line)) t1 = 88;
+        else t1 = v1 >= 85 ? v1 : 88;
+      } else {
+        const isFastFinish = /final|ágil|progres|tempo|70\.3/i.test(line);
+        const isRecovery = /recup|descanso|recovery/i.test(line) || v1 <= 67;
+        if (isRecovery) t1 = 68;
+        else if (isFastFinish) t1 = 88;
+        else if (isSoltura) t1 = 76;
+        else if (v1 >= 85 && v1 < 95) t1 = v1;
+        else if (v1 >= 95) t1 = v1;
+        else t1 = 80;
+      }
 
-    return scaled
-      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-      .replace(/\bStryd\s*CP\b/gi, "Pace")
-      .replace(/\bStryd\b/gi, "Ritmo")
-      .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
+      if (p2) {
+        const v2 = parseInt(p2, 10);
+        return `${t1}-${t1 + Math.max(2, v2 - v1)}% Pace`;
+      }
+      return `${t1}% Pace`;
+    });
   }).join("\n");
 }
 
@@ -267,12 +263,14 @@ export function interpolateWorkoutTarget(
 
   const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
   let cleanPace = rawTarget
+    .replace(/\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi, "$1")
+    .replace(/\b\d+\s*(?:-\s*\d+)?\s*W\b\s*/gi, "")
+    .replace(/^\s*\d+\s*-\s*(?!\d+\s*%)/, "")
     .replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)")
     .replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)")
     .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral")
     .replace(/\bStryd\b/gi, "Ritmo")
-    .replace(/\s*\(\d+\s*W\)/gi, "")
-    .replace(/\b\d+\s*W\b\s*/gi, "");
+    .replace(/\s*\(\d+\s*W\)/gi, "");
 
   cleanPace = cleanPace.replace(/(?:\(+\s*)?\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km(?:\s*\)+)?/gi, "");
   cleanPace = cleanPace.replace(/\s*\)+(\s*•)/g, "$1");
@@ -283,13 +281,11 @@ export function interpolateWorkoutTarget(
     if (r1 && r2) {
       let p1 = parseInt(r1, 10), p2 = parseInt(r2, 10);
       if (/CP|FTP/i.test(match)) { p1 = mapPowerPctToPacePct(p1); p2 = mapPowerPctToPacePct(p2); }
-      else { p1 = recalibrateLegacyPacePct(p1, rawTarget); p2 = recalibrateLegacyPacePct(p2, rawTarget); }
       const sec1 = Math.round(tp / (p1 / 100)), sec2 = Math.round(tp / (p2 / 100));
       return `${formatPace(Math.max(sec1, sec2))}-${formatPace(Math.min(sec1, sec2))}/km (${p1}-${p2}% Pace)`;
     }
     let p = parseInt(s1, 10);
     if (/CP|FTP/i.test(match)) p = mapPowerPctToPacePct(p);
-    else p = recalibrateLegacyPacePct(p, rawTarget);
     return `${formatPace(Math.round(tp / (p / 100)))}/km (${p}% Pace)`;
   });
 }
@@ -311,7 +307,7 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
   if (mode === "POWER") return item; // BLINDAJE INVIOLABLE: Atletas Stryd quedan 100% intactos
 
   const isQuality = isQualityRunningWorkout(item.workoutName || "", item.workoutDoc, item.day);
-  const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode) : item.workoutDoc;
+  const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode, item.workoutName || "") : item.workoutDoc;
   const rawTarget = item.powerTarget
     ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "PACE", thresholdPaceSec: opts.thresholdPaceSec, lthr: opts.lthr, isQuality })
     : item.powerTarget;

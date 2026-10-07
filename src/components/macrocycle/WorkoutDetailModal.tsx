@@ -86,7 +86,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const isBike = workout.discipline === "Ciclismo";
 
   const adaptedDoc = isRunPace && workout.workoutDoc
-    ? adaptRunningWorkoutDoc(workout.workoutDoc, workout.discipline, false, "PACE")
+    ? adaptRunningWorkoutDoc(workout.workoutDoc, workout.discipline, false, "PACE", workout.workoutName)
     : workout.workoutDoc;
   const parsedDoc = parseWorkoutDoc(adaptedDoc, workout.discipline);
   const plannedTss = isRunPace && parsedDoc.estimatedTss && parsedDoc.estimatedTss > (workout.tss || 0)

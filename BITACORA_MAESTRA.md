@@ -6033,3 +6033,4 @@ flowchart TD
 ### 80.4. Certificación de Calidad y Verificación
 - **Chequeo de Tipos TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Despliegue Firebase App Hosting / Cloud Build:** Verificado y activo en producción con Cloud Build ID `3175cf96` y commit `3c32495`.

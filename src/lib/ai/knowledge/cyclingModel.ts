@@ -70,7 +70,7 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
   ],
   mandatoryTests: [
     { ...BIKE_TEST_RAMP, recommendedWeekIndex: 2 },
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 7 },
+    { ...BIKE_TEST_RAMP, recommendedWeekIndex: 7 },
   ],
   longRunRules: {
     startKm: 60,

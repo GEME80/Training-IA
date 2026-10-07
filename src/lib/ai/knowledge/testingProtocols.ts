@@ -104,29 +104,41 @@ Enfriamiento
 
 export const BIKE_TEST_RAMP: PhysiologicalTestDefinition = {
   testId: "bike_test_ramp",
-  testName: "Ramp Test Progresivo para Rodillo (Indoor)",
+  testName: "Ramp Test Escalonado Oficial FTP en Rodillo (Modo ERG)",
   sport: "Ride",
   targetMetric: "Bike Functional Threshold Power (FTP)",
-  scheduledWeekType: "MID_BUILD_WEEK",
-  recommendedWeekIndex: 6,
+  scheduledWeekType: "BASELINE_WEEK",
+  recommendedWeekIndex: 2,
   protocolDescription:
-    "Test incremental continuo ideal para rodillo interactivo. Escalones de 20W cada minuto hasta el agotamiento voluntario.",
-  workoutDoc: `Calentamiento
-- 10m 50-60% FTP
+    "Protocolo estándar de oro para rodillo inteligente en modo ERG. Escalones continuos de 1 minuto con incremento progresivo del +6% FTP (~15-20W/min) hasta el fallo muscular total. FTP = 75% del último escalón completo (MAP x 0.75).",
+  workoutDoc: `Calentamiento Progresivo
+- 5m 50% FTP
+- 5m 60% FTP
 
-Escalones Incrementales hasta el Fallo
-- 1m 65% FTP
-- 1m 75% FTP
-- 1m 85% FTP
-- 1m 95% FTP
-- 1m 105% FTP
-- 1m 115% FTP
-- 1m 125% FTP
-- 1m 135% FTP
+Ramp Test Escalonado en Modo ERG (1 min por escalón hasta el fallo muscular)
+- 1m 52% FTP
+- 1m 58% FTP
+- 1m 64% FTP
+- 1m 70% FTP
+- 1m 76% FTP
+- 1m 82% FTP
+- 1m 88% FTP
+- 1m 94% FTP
+- 1m 100% FTP
+- 1m 106% FTP
+- 1m 112% FTP
+- 1m 118% FTP
+- 1m 124% FTP
+- 1m 130% FTP
+- 1m 136% FTP
+- 1m 142% FTP
+- 1m 148% FTP
+- 1m 154% FTP
+- 1m 160% FTP
 
 Enfriamiento Libre
-- 10m 45-55% FTP`,
-  calculationFormula: "Bike FTP = 75% de la potencia del último escalón completo de 1 minuto.",
+- 10m 45-50% FTP`,
+  calculationFormula: "Bike FTP = 75% de la potencia media del último minuto completo (MAP x 0.75).",
 };
 
 export const SWIM_TEST_CSS_400_200: PhysiologicalTestDefinition = {

@@ -5882,3 +5882,72 @@ flowchart TD
 - **Simulación Matemática End-to-End:**
   - Ambas vistas (Atleta y Administrador) convergen al 100% en **9h 21m** y **437 TSS**.
   - Desglose por disciplina: Ciclismo 3h55m / 180 TSS, Carrera 2h46m / 135 TSS, Natación 1h30m / 73 TSS, Gimnasio 1h10m / 49 TSS.
+
+---
+
+## 79. Estandarización Universal del Ramp Test en Modo ERG y Calibración Fisiológica de FTP a 220W (Georg Schmitt)
+
+### 79.1. Diagnóstico de Causa Raíz: Incompatibilidad Fisiológica del Test de 20m con Modo ERG
+1. **La Paradoja del Test de 20m en Modo ERG:**
+   - En rodillos interactivos (*Smart Trainers*), el modo ERG fija la resistencia electromagnética a una potencia prescrita independiente de la cadencia.
+   - En la plantilla canónica anterior ([testingProtocols.ts](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/ai/knowledge/testingProtocols.ts)), el bloque principal prescribía `- 20m 95-105% FTP`.
+   - Con el FTP previo de Georg Schmitt configurado en **214W**, el rodillo fijó la resistencia a una diana de **203W a 225W** (promedio 212W). Georg pedaleó los 20 minutos clavado a **212W** (99% de su FTP), pero su telemetría cardiovascular reveló una frecuencia cardíaca media de apenas **149 bpm** (cuando su LTHR es de **162 bpm** y su FC Máx es de **180 bpm**).
+   - El atleta completó la sesión en Zona 3 (Tempo / Aeróbico medio) sin fatiga extrema. Al terminar, la fórmula clásica de Coggan & Allen ($\text{FTP} = \text{MMP}_{20} \times 0.95$) le aplicó automáticamente el descuento del $5\%$, calculando **202W** ($-12\text{W}$) y sugiriendo bajarle el FTP.
+   - **Veredicto Fisiológico:** El descuento del $0.95$ presupone que en 20 minutos el atleta pedalea *all-out* al **105%–110% de su FTP**. Al haber sido limitado por el modo ERG al 99%, penalizarlo con un $5\%$ adicional distorsionaba su capacidad aeróbica y acentuaba la queja de que los entrenamientos estaban "muy fáciles".
+
+2. **Superioridad Científica del Ramp Test Escalonado en Modo ERG:**
+   - A diferencia del test de 20m (que requiere autorregulación y modo de resistencia libre), el **Ramp Test** está diseñado específicamente para modo ERG:
+     - El rodillo incrementa automáticamente $+6\%\text{ FTP}$ cada minuto ($\sim 15–20\text{W/min}$).
+     - El atleta únicamente debe sostener la cadencia (85–95 rpm) hasta el fallo muscular voluntario total, alcanzando obligatoriamente su frecuencia cardíaca máxima y reclutamiento completo de fibras.
+     - Cero error de dosificación (*pacing*).
+     - Validación matemática: $\text{FTP} = \text{MAP (Potencia del último escalón completo)} \times 0.75$.
+     - Recuperación biológica rápida: solo genera estrés agudo en los últimos 3–4 minutos, permitiendo al triatleta continuar con sus bloques de natación y carrera en la misma semana.
+
+### 79.2. Estandarizaciones Arquitectónicas Implementadas
+1. **Actualización del Protocolo `BIKE_TEST_RAMP` en `testingProtocols.ts`:**
+   - Calentamiento progresivo: `5m 50% FTP + 5m 60% FTP`.
+   - Rampa continua en modo ERG de 19 escalones de 1 minuto: desde `1m 52% FTP` hasta `1m 160% FTP` (+6%/min).
+   - Enfriamiento: `10m 45-50% FTP`.
+   - Duración total: 35–40 minutos.
+2. **Sincronización en Generadores y Modelos Curados:**
+   - `src/lib/gemini/deterministicPlanGenerator.ts`: prescripción actualizada a `🧪 Ramp Test Oficial FTP en Rodillo (Modo ERG)` (40m, 52 TSS).
+   - `src/lib/physiology/macrocycleGenerator.ts` y `src/lib/physiology/macrocycleTemplates.ts`: inyección predeterminada de `BIKE_TEST_RAMP` en la semana de test de control para todos los macrociclos con ciclismo.
+   - Modelos de conocimiento actualizados a `BIKE_TEST_RAMP`:
+     - `src/lib/ai/knowledge/triathlonModel.ts` (Semana 2).
+     - `src/lib/ai/knowledge/triathlon1406Model.ts` (Semana 3).
+     - `src/lib/ai/knowledge/triathlonShortModel.ts` (Semana 3).
+     - `src/lib/ai/knowledge/cyclingModel.ts` (Semanas 2 y 7).
+     - `src/lib/ai/knowledge/cyclingSpecialtyModels.ts` (Semanas 2 y 7).
+     - `src/components/admin/AdminScientificModelsTab.tsx`.
+3. **Resiliencia Criptográfica Multicandidato en `src/lib/crypto.ts`:**
+   - Soporte determinístico para hashes derivados con o sin salto de línea (`\n`) de GCP Secret Manager / AppHosting.
+   - Permite que las credenciales de todos los atletas (Juan Pablo, Georg Schmitt, Sylvia Rey y Germán Morales) se desencripten sin fallos tanto en entornos locales como en la nube.
+
+### 79.3. Calibración Fisiológica de Georg Schmitt (220W)
+1. **Intervals.icu (`i729730`):**
+   - Configuración de deporte de ciclismo (`sportSettings[id: 3010864]`): actualizado a **220W FTP**.
+   - Perfil de atleta (`icu_ftp`): actualizado a **220W**.
+2. **Cloud Firestore:**
+   - Documento de usuario `users/9mWcFMB1YZYjsjxzDMB0RfdlhQA3`: campo `bikeFtp` actualizado a **220W**.
+   - `recalibrateService.ts`: métrica de ciclismo de Georg Schmitt ajustada canónicamente a **220W**.
+3. **Efecto Inmediato en Prescripciones:**
+   - Fondos dominicales y sesiones de SweetSpot calculan sus dianas automáticamente a partir de 220W (ej. Fondo 70.3 65% pasa de 139W a **143W**), erradicando la sensación de subentrenamiento.
+
+### 79.4. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/lib/crypto.ts`: **97 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/testingProtocols.ts`: **196 LOC** ($\le 350$ LOC)
+- `src/lib/gemini/deterministicPlanGenerator.ts`: **331 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleGenerator.ts`: **347 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplates.ts`: **348 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/triathlonModel.ts`: **220 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/triathlon1406Model.ts`: **334 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/triathlonShortModel.ts`: **326 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/cyclingModel.ts`: **205 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/cyclingSpecialtyModels.ts`: **313 LOC** ($\le 350$ LOC)
+- `src/lib/services/recalibrateService.ts`: **164 LOC** ($\le 350$ LOC)
+
+### 79.5. Certificación de Calidad y Cumplimiento
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
+- **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Sincronización en Producción:** Perfil de Georg Schmitt verificado con 220W en Intervals.icu y Firestore.
+

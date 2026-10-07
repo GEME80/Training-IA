@@ -2,7 +2,7 @@ import { AthleteProfile } from "../intervals/types";
 import { PhysiologicalStatus, PhysiologicalEngine } from "../physiology/engine";
 import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
 import { resolveSpecializedStrengthWorkout } from "../physiology/specializedStrengthCoaches";
-import { BIKE_TEST_20M_FTP } from "../ai/knowledge/testingProtocols";
+import { BIKE_TEST_RAMP } from "../ai/knowledge/testingProtocols";
 import { adaptRunningPlanItem, resolveRunningMode } from "../physiology/runningWorkoutAdapter";
 import {
   AgentDecisionOutput,
@@ -170,13 +170,13 @@ export function generateDeterministicAnalysis(
           date: dateInfo.date,
           formattedDate: dateInfo.formattedDate,
           discipline: "Ciclismo",
-          workoutName: "🧪 Test Oficial FTP 20 Minutos (Coggan / Allen)",
+          workoutName: "🧪 Ramp Test Oficial FTP en Rodillo (Modo ERG)",
           action: "MANTENER",
-          durationMinutes: 65,
-          tss: 68,
-          powerTarget: `Calibración • Test 20m @ All-Out (FTP actual: ${bikeFtp}W)`,
-          justification: "Test de campo para calibrar tu FTP de ciclismo. Al completarlo, tu FTP y zonas se calibrarán automáticamente.",
-          workoutDoc: BIKE_TEST_20M_FTP.workoutDoc,
+          durationMinutes: 40,
+          tss: 52,
+          powerTarget: `Calibración • Ramp Test ERG (+6%/min hasta fallo) (FTP: ${bikeFtp}W)`,
+          justification: "Test escalonado en rodillo en modo ERG para calibrar tu FTP sin error de pacing. Cada minuto sube la carga hasta el fallo voluntario. FTP = 75% del último escalón.",
+          workoutDoc: BIKE_TEST_RAMP.workoutDoc,
           isRestDay: false,
         };
       }

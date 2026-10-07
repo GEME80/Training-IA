@@ -17,7 +17,7 @@ import {
   resolveTrainingModel,
   calculateProgressiveLongRun,
   calculateProgressiveWeeklyTss,
-  BIKE_TEST_20M_FTP,
+  BIKE_TEST_RAMP,
 } from "../ai/knowledge";
 import { PMCHistoricalSummary } from "./pmcEngine";
 import { calculateTargetPeakCtlPotential } from "./ctlPotentialEngine";
@@ -270,7 +270,7 @@ export function generateCustomMacrocycleBlueprint(
       Object.values(config.athleteMetrics?.weeklyAvailability || {}).some((d: any) => Array.isArray(d) && d.some((s: string) => /ciclismo|bike|ride/i.test(s)));
     const isFtpTestWk = hasCycling && weekNumber === 7 && totalWeeks >= 9 && countdown > 1;
     const rawTests = [...curatedModel.mandatoryTests.filter(t => t.recommendedWeekIndex === weekNumber)];
-    if (isFtpTestWk && !rawTests.some(t => t.sport === "Ride")) rawTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
+    if (isFtpTestWk && !rawTests.some(t => t.sport === "Ride")) rawTests.push({ ...BIKE_TEST_RAMP, recommendedWeekIndex: weekNumber });
     const scheduledTests = countdown > 1 ? rawTests.slice(0, 1) : [];
     if (scheduledTests.length > 0 && !isRecoveryWeek) {
       microType = "TEST_CONTROL";

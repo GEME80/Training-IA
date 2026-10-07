@@ -1,5 +1,5 @@
 import { CuratedTrainingModel } from "./types";
-import { BIKE_TEST_20M_FTP, RUN_TEST_5K_VAM, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
+import { BIKE_TEST_RAMP, RUN_TEST_5K_VAM, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
 
 /**
  * Modelo Científico para Triatlón — Distancia Corta (Sprint y Olímpico)
@@ -56,7 +56,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
     },
   ],
   mandatoryTests: [
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 3 },
+    { ...BIKE_TEST_RAMP, recommendedWeekIndex: 3 },
     { ...SWIM_TEST_CSS_400_200, recommendedWeekIndex: 4 },
   ],
   longRunRules: {

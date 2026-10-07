@@ -1,7 +1,7 @@
 import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines, resolveEffectiveAvailability } from "../gemini/engine";
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
-import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_20M_FTP } from "../ai/knowledge";
+import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_RAMP } from "../ai/knowledge";
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool"; import { selectStrengthWorkout } from "./strengthWorkoutPool";
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"; import { resolveWorkoutAddons } from "./workoutEnhancers";
@@ -43,7 +43,7 @@ export function generateWeekTemplate(
   const scheduledTests = [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
   const hasCycling = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
   const isFtpTestWk = !isRaceWeek && hasCycling && ((microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) || (weekNumber === 7 && totalWeeks >= 9));
-  if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) scheduledTests.push({ ...BIKE_TEST_20M_FTP, recommendedWeekIndex: weekNumber });
+  if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) scheduledTests.push({ ...BIKE_TEST_RAMP, recommendedWeekIndex: weekNumber });
   if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
   const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp);
   const longRunDay = resolveLongRunDay(safeAvailability), longRideDay = resolveLongRideDay(safeAvailability);
@@ -152,7 +152,7 @@ export function generateWeekTemplate(
         if (bikeTest) {
           bikeTestInjected = true;
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: `🧪 TEST OFICIAL FTP: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 65, tss: 68, powerTarget: bikeFtp ? `Test 20m @ All-Out (FTP actual: ${bikeFtp}W)` : "Test 20m FTP All-Out", justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
+            day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: `🧪 TEST OFICIAL FTP: ${bikeTest.testName}`, action: "MANTENER", durationMinutes: 40, tss: 52, powerTarget: bikeFtp ? `Ramp Test ERG (+6%/min hasta fallo) (FTP: ${bikeFtp}W)` : "Ramp Test ERG hasta fallo", justification: bikeTest.protocolDescription, workoutDoc: bikeTest.workoutDoc, isRestDay: false,
           });
           continue;
         }

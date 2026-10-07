@@ -128,7 +128,7 @@ export async function executeRecalibrateBoth() {
       goalTarget: "Pico de forma óptimo",
     },
     athleteMetrics: {
-      ctl: 38.0, atl: 40.0, tsb: -2.0, runFtp: 0, bikeFtp: 214,
+      ctl: 38.0, atl: 40.0, tsb: -2.0, runFtp: 0, bikeFtp: 220,
       runningTrainingMode: "PACE", hasRunningPowerMeter: false,
       weightKg: 78, heightCm: 180, restingHR: 50, maxHR: 180, lthr: 162, age: 40, gender: "M",
       weeklyAvailability: georgMatrix as any,
@@ -150,7 +150,7 @@ export async function executeRecalibrateBoth() {
       for (const d of snap.docs) {
         await d.ref.update({
           seasonPlans: [georgPlanItem], targetRaces: [georgBlueprint.primaryRace],
-          runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 214, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45"
+          runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 220, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45"
         });
       }
     } catch {}

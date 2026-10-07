@@ -1,5 +1,5 @@
 import { CuratedTrainingModel } from "./types";
-import { BIKE_TEST_20M_FTP, RUN_TEST_STRYD_3_9, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
+import { BIKE_TEST_RAMP, RUN_TEST_STRYD_3_9, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
 
 /**
  * Modelo Científico para Triatlón — Larga Distancia (Full IRONMAN 140.6)
@@ -57,7 +57,7 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
   ],
   mandatoryTests: [
     { ...SWIM_TEST_CSS_400_200, recommendedWeekIndex: 2 },
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 3 },
+    { ...BIKE_TEST_RAMP, recommendedWeekIndex: 3 },
     { ...RUN_TEST_STRYD_3_9, recommendedWeekIndex: 4 },
   ],
   longRunRules: {

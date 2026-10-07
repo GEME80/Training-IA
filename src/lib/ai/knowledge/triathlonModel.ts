@@ -1,5 +1,5 @@
 import { CuratedTrainingModel } from "./types";
-import { RUN_TEST_STRYD_3_9, BIKE_TEST_20M_FTP } from "./testingProtocols";
+import { RUN_TEST_STRYD_3_9, BIKE_TEST_RAMP } from "./testingProtocols";
 import {
   BIKE_RONNESTAD_30_15,
   BIKE_TABATA_40_20,
@@ -70,7 +70,7 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     },
   ],
   mandatoryTests: [
-    { ...BIKE_TEST_20M_FTP, recommendedWeekIndex: 2 },
+    { ...BIKE_TEST_RAMP, recommendedWeekIndex: 2 },
     { ...RUN_TEST_STRYD_3_9, recommendedWeekIndex: 6 },
   ],
   longRunRules: {

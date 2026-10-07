@@ -234,14 +234,14 @@ export function calculateProgressiveLongRun(
     baseKm = Math.max(scaledStartKm, Math.round(baseKm * 0.78));
     baseMins = Math.max(scaledStartMins, Math.round(baseMins * 0.78));
     const recPower = runFtp && runFtp > 0
-      ? `${Math.round(runFtp * 0.78)}-${Math.round(runFtp * 0.80)}W (78-80% CP • Asimilación)`
-      : "78-80% CP (Asimilación Biológica)";
+      ? `${Math.round(runFtp * 0.80)}W (80% CP • Asimilación Z2)`
+      : "80% CP (Asimilación Z2)";
     return {
       km: baseKm,
       minutes: baseMins,
       workoutName: `Tirada Larga de Asimilación (${baseKm} km / ${baseMins}m Z2)`,
       powerTarget: recPower,
-      workoutDoc: `Warmup\n- 15m 72% FTP\n\nMain\n- ${Math.max(10, baseMins - 25)}m 79% FTP\n\nCooldown\n- 10m 65% FTP`,
+      workoutDoc: `Warmup\n- 12m 74% FTP\n\nMain\n- ${Math.max(10, baseMins - 20)}m 81% FTP\n\nCooldown\n- 8m 72% FTP`,
       isPeakBlock: false,
     };
   }

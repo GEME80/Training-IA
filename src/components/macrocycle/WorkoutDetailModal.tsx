@@ -11,6 +11,7 @@ import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
 import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
+import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface WorkoutDetailModalProps {
   workout: PlanItem | null;
@@ -118,6 +119,20 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
       .replace(/\bStryd\s*CP\b/gi, "Ritmo Umbral")
       .replace(/\bStryd\b/gi, "Ritmo")
       .trim();
+    while (/\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\s*\(([^()]+)\)/i.test(displayTarget)) {
+      displayTarget = displayTarget.replace(/\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\s*\(([^()]+)\)/gi, "$1");
+    }
+    displayTarget = displayTarget.replace(/^\(+([^\(\)]+)\)+$/, "$1").trim();
+    const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285);
+    displayTarget = displayTarget.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*Pace|(\d+)\s*%\s*Pace)/gi, (_, r1, r2, s1) => {
+      if (r1 && r2) {
+        const p1 = parseInt(r1, 10), p2 = parseInt(r2, 10);
+        const sec1 = Math.round(tpSec / (p1 / 100)), sec2 = Math.round(tpSec / (p2 / 100));
+        return `${formatPace(Math.max(sec1, sec2))}-${formatPace(Math.min(sec1, sec2))}/km (${p1}-${p2}% Pace)`;
+      }
+      const p = parseInt(s1, 10);
+      return `${formatPace(Math.round(tpSec / (p / 100)))}/km (${p}% Pace)`;
+    });
   } else if (isRunPower && displayTarget) {
     displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
   }

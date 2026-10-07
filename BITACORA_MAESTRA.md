@@ -5951,3 +5951,85 @@ flowchart TD
 - **Chequeo de Tipos:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Sincronización en Producción:** Perfil de Georg Schmitt verificado con 220W en Intervals.icu y Firestore.
 
+---
+
+## 80. Auditoría HeadCoach de Fisiología en Carrera: Recalibración Dinámica de Ritmos (% Pace), Erradicación del Estancamiento en Z1/Z2 y Reconstrucción del Estímulo Específico 70.3 para Crecimiento de CTL
+
+### 80.1. Diagnóstico de Causa Raíz Fisiológica y Matemática: La Inversión del Ritmo ($1/v$)
+1. **La Paradoja de Aplicar Fórmulas de Ciclismo a la Carrera a Pie:**
+   - En ciclismo, la potencia metabólica escala cúbicamente con la velocidad debido a la resistencia aerodinámica ($P \propto v^3$). Por ello, un pedaleo al **60%–65% FTP** mantiene una biomecánica idéntica y representa una sólida estimulación aeróbica base (Z2).
+   - En carrera a pie, el costo metabólico es lineal con la velocidad, y el ritmo prescrito es el inverso del tiempo: $T = 1/v$.
+   - Cuando las plantillas iniciales prescribían calentamientos al `65% Pace`, trotes al `68% Pace` y enfriamientos al `60% Pace` (pensadas erróneamente en el espectro porcentual de vatios), produjeron ritmos biológicamente aberrantes para un corredor con umbral de **4:45/km** (285 s/km):
+     - **68% Pace:** $285 / 0.68 = 419\text{ s} = \mathbf{6:59/km}$ (Z1 baja, trote arrastrado).
+     - **65% Pace:** $285 / 0.65 = 438\text{ s} = \mathbf{7:18/km}$ (Z1 límite inferior / caminata rápida).
+     - **60% Pace:** $285 / 0.60 = 475\text{ s} = \mathbf{7:55/km}$ (por debajo de cualquier umbral biomecánico de carrera).
+   - **Consecuencia Biomecánica:** A ritmos de 7:00 a 7:55/km, la cadencia cae por debajo de 155 spm, el tiempo de contacto con el suelo (GCT) se dispara (> 280 ms), y se desactiva el ciclo de estiramiento-acortamiento (SSC) del tendón de Aquiles. El atleta pierde elasticidad reactiva y acumula impacto articular sin recibir un estímulo cardiovascular o mitocondrial significativo.
+
+2. **La Realidad de las Zonas de Ritmo (Daniels / Intervals.icu):**
+   - Zonas reales de ritmo configuradas en Intervals.icu para Georg Schmitt (Umbral 4:45/km):
+     - **Z1 Fácil (Recuperación Activa):** $< 75\%\text{ Pace} \rightarrow 6:20 - 7:18\text{/km}$
+     - **Z2 Moderado (Resistencia Base):** $75 - 85\%\text{ Pace} \rightarrow \mathbf{5:35 - 6:20/km}$
+     - **Z3 Tempo (Ritmo Específico 70.3):** $85 - 94\%\text{ Pace} \rightarrow \mathbf{5:03 - 5:35/km}$
+     - **Z4 Umbral Lactato (LT2):** $95 - 104\%\text{ Pace} \rightarrow 4:34 - 5:00\text{/km}$
+     - **Z5 Intervalos / VO2max:** $105 - 115\%\text{ Pace} \rightarrow 4:08 - 4:31\text{/km}$
+     - **Z6 Repeticiones / Strides:** $> 115\%\text{ Pace} \rightarrow < 4:08\text{/km}$
+   - **Diagnóstico del HeadCoach:** Todas las sesiones suaves, las descargas y los fondos de asimilación estaban cayendo en **Z1 (< 75%)** o en el borde inferior de Z2 (76–79% / 6:01–6:15/km). El atleta nunca tocaba su **Ritmo de Competición 70.3 (Z3 Tempo: 86–88% Pace / 5:24–5:31/km)** ni en los bloques dominicales ni en las transiciones *brick*.
+
+3. **Impacto Crítico en la Progresión del CTL (Modelo de Impulso-Respuesta de Banister):**
+   - Un trote de 35 minutos a 68% Pace generaba apenas **25 TSS**.
+   - Los fondos dominicales generaban solo 55–60 TSS por falta de bloques a ritmo específico.
+   - El TSS semanal total se estancaba en $\sim 370\text{ TSS}$, lo que generaba una tasa de crecimiento de condición física ($\Delta\text{CTL}$) cercana a cero o negativa.
+   - Estando a 7 semanas de Ironman 70.3 Cartagena con CTL actual de **31.8**, el atleta necesita alcanzar un **CTL objetivo de 50–52** previo al tapering. Esto exige una rampa saludable de $+2.8$ a $+3.2$ CTL/semana, requiriendo un volumen semanal sostenible de **450–485 TSS**.
+
+4. **Bug de Interpolación Anidada de Texto:**
+   - La función `interpolateWorkoutTarget` no contaba con un filtro de idempotencia para stripping de evaluaciones previas. Al serializar y re-renderizar, envolvía el porcentaje repetidamente produciendo el texto `(6:59/km (6:59/km (68% Pace)))`.
+
+---
+
+### 80.2. Soluciones Implementadas y Recalibración Fisiológica
+
+1. **Idempotencia y Purga de Anidaciones (`runningWorkoutAdapter.ts` & `WorkoutDetailModal.tsx`):**
+   - Se implementó la función auxiliar `stripNestedTarget(str, regex)` que desenvuelve de forma recursiva cualquier evaluación previa de ritmo (`\d+:\d+/km`), vatios (`\d+W`) o natación (`\d+:\d+/100m`) antes de aplicar la interpolación dinámica del porcentaje.
+   - Se blindó tanto el adapter fisiológico como la vista del modal (`WorkoutDetailModal.tsx`) y el componente de prescripción (`PlannedWorkoutPrescription.tsx`), garantizando que la diana se muestre limpia y unívoca: ej. `6:05/km (78% Pace)`.
+
+2. **Reconstrucción de la Sesión de Viernes (`macrocycleTemplateHelpers.ts`):**
+   - Enfoque multideporte actualizado de trote plano de 35m / 25 TSS (a 68% Pace) a:
+     - **Nombre:** `Carrera Aeróbica Z2 Fluida con Rectas (40m)` (40m, **35 TSS**).
+     - **Estructura:**
+       - Calentamiento: `10m 75% Pace` (~6:20/km).
+       - Principal: `20m 78% Pace` (~6:05/km, Z2 activa y continua).
+       - Rectas (Strides): `5x 20s 105% Pace` (~4:31/km) con `40s 68% Pace` (recuperación activa).
+       - Enfriamiento: `5m 72% Pace` (~6:35/km).
+     - **Aporte Biomecánico:** Reactividad neuromuscular de fibras rápidas tipo IIa sin fatiga glucolítica antes del fin de semana, sumando $+10\text{ TSS}$ netos por semana.
+
+3. **Inyección de Ritmo Específico 70.3 en Fondos Dominicales (`longRunPeriodization.ts`):**
+   - **Fase BUILD (Triatlón 70.3):**
+     - Se introdujo bloque de ritmo específico: `20m 87% CP/Pace` (~5:27/km, Z3 Tempo puro), precedido de Z2 aeróbica viva (`80% Pace` / ~5:56/km) y calentamiento progresivo a `75% Pace`.
+     - El fondo dominical eleva su estímulo de 55–60 TSS a **78–82 TSS**.
+   - **Fase PEAK (Triatlón 70.3):**
+     - Bloques específicos con flotación: `3x 15m 87% CP/Pace` (~5:27/km) con `3m 78% CP/Pace` (~6:05/km).
+     - TSS del fondo: **85–90 TSS**.
+   - **Semanas de Asimilación Biológica (`index.ts`):**
+     - Recalibrado de 79% Pace a `81% Pace` (~5:51/km Z2 fluida) y enfriamiento al `72% Pace` (~6:35/km), erradicando enfriamientos al 65% (7:18/km).
+
+4. **Recalibración de Transiciones Brick y Modelos Multideporte (`triathlonModel.ts`):**
+   - Brick 70.3: el bloque de carrera a pie post-ciclismo se elevó del 82% CP al **86% CP/Pace** (~5:31/km, ritmo de carrera real).
+   - Simulación 70.3 Race Pace: sector de carrera ajustado al **87% CP/Pace** (~5:27/km).
+   - Rodajes de descarga: calentamiento a 74%, continuo a 78% y enfriamiento a 72%, eliminando cualquier prescripción residual inferior al 70% Pace.
+
+---
+
+### 80.3. Auditoría de Archivos y Límites de Modularidad ($\le 350$ LOC)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **343 LOC** ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **347 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/longRunPeriodization.ts`: **217 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/index.ts`: **347 LOC** ($\le 350$ LOC)
+- `src/lib/ai/knowledge/triathlonModel.ts`: **220 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/PlannedWorkoutPrescription.tsx`: **147 LOC** ($\le 350$ LOC)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **307 LOC** ($\le 350$ LOC)
+
+---
+
+### 80.4. Certificación de Calidad y Verificación
+- **Chequeo de Tipos TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
+- **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.

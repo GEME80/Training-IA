@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Code2, ChevronDown, ChevronUp, Timer, Zap } from "lucide-react";
 import { WorkoutChart } from "../WorkoutChart";
-import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { formatPace, parsePaceToSeconds, mapPowerPctToPacePct } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface PlannedWorkoutPrescriptionProps {
   cleanDoc: string;
@@ -119,10 +119,15 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
                   });
                 }
                 if (!isRunPower && discipline === "Carrera") {
-                  const baseLine = line
+                  let baseLine = line
                     .replace(/\s*\(\d+\s*w\)/gi, "")
                     .replace(/\b\d+\s*w\b/gi, "")
-                    .replace(/%\s*(?:stryd\s*)?(?:cp|ftp)/gi, "% Pace");
+                    .replace(/\s*\([~]?\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\)/gi, "");
+                  baseLine = baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:cp|ftp)/gi, (_, p1, p2) => {
+                    const pace1 = mapPowerPctToPacePct(parseInt(p1, 10));
+                    if (p2) return `${pace1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace`;
+                    return `${pace1}% Pace`;
+                  });
                   const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285);
                   return baseLine.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
                     const n1 = parseInt(p1, 10);

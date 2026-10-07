@@ -3,6 +3,7 @@ import { CalendarEvent, ActivityType } from "@/lib/intervals/types";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
+import { adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
 import { SyncIntervalsRequest } from "@/lib/validation/schemas";
 
 export interface IntervalsSyncResult {
@@ -104,14 +105,18 @@ export class IntervalsSyncService {
         workoutText = item.intervalsWorkoutText;
       } else if (!workoutText && item.discipline === "Carrera") {
         const isRunPower = Boolean(item.powerTarget && /\b\d+\s*W\b/i.test(item.powerTarget));
-        const runUnit = isRunPower ? "FTP" : "Pace";
-        workoutText = `Warmup\n- 10m 65% ${runUnit}\n\nMain\n- ${Math.max(10, (item.durationMinutes || 45) - 20)}m 75% ${runUnit}\n\nCooldown\n- 10m 60% ${runUnit}`;
+        workoutText = isRunPower
+          ? `Warmup\n- 10m 65% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 45) - 20)}m 75% FTP\n\nCooldown\n- 10m 60% FTP`
+          : `Warmup\n- 10m 74% Pace\n\nMain\n- ${Math.max(10, (item.durationMinutes || 45) - 20)}m 80% Pace\n\nCooldown\n- 10m 72% Pace`;
       } else if (!workoutText && item.discipline === "Ciclismo") {
         workoutText = `Warmup\n- 10m 55% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 60) - 20)}m 68% FTP\n\nCooldown\n- 10m 50% FTP`;
       }
 
       const isRunPaceOnly = item.discipline === "Carrera" && (!item.powerTarget || !/\b\d+\s*W\b/i.test(item.powerTarget));
-      const canonicalDescription = sanitizeWorkoutDoc(workoutText, {
+      const adaptedText = isRunPaceOnly
+        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, "PACE")
+        : workoutText;
+      const canonicalDescription = sanitizeWorkoutDoc(adaptedText, {
         discipline: item.discipline,
         isRunPaceOnly,
         forIntervalsSync: true,

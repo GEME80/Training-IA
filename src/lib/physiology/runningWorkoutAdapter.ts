@@ -78,15 +78,10 @@ export function parseSwimPaceToSeconds(paceStr?: string): number {
  */
 export function calculateSwimCssZones(cssSec: number = 105): SwimZoneItem[] {
   const css = cssSec > 0 ? cssSec : 105;
-  const z1Start = Math.round(css / 0.65);
-  const z1End = Math.round(css / 0.75);
-  const z2Start = Math.round(css / 0.75);
-  const z2End = Math.round(css / 0.85);
-  const z3Start = Math.round(css / 0.85);
-  const z3End = Math.round(css / 0.94);
-  const z4Start = Math.round(css / 0.95);
-  const z4End = Math.round(css / 1.05);
-  const z5End = Math.round(css / 1.15);
+  const [z1Start, z1End, z2Start, z2End, z3Start, z3End, z4Start, z4End, z5End] = [
+    Math.round(css / 0.65), Math.round(css / 0.75), Math.round(css / 0.75), Math.round(css / 0.85),
+    Math.round(css / 0.85), Math.round(css / 0.94), Math.round(css / 0.95), Math.round(css / 1.05), Math.round(css / 1.15)
+  ];
 
   return [
     { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% CSS", range: `${formatSwimPace(z1End)} - ${formatSwimPace(z1Start)} /100m` },
@@ -111,26 +106,19 @@ export function formatPace(secPerKm?: number): string {
  * Parsea string de ritmo "4:30" o "4:30/km" a segundos por kilómetro
  */
 export function parsePaceToSeconds(paceStr?: string): number {
-  if (!paceStr) return 270; // 4:30 por defecto
-  const clean = paceStr.replace("/km", "").trim();
-  const parts = clean.split(":");
-  if (parts.length === 2) {
-    const mins = parseInt(parts[0], 10) || 0;
-    const secs = parseInt(parts[1], 10) || 0;
-    return mins * 60 + secs;
-  }
-  const numeric = parseFloat(clean);
-  return !Number.isNaN(numeric) && numeric > 0 ? Math.round(numeric * 60) : 270;
+  if (!paceStr) return 270;
+  const parts = paceStr.replace("/km", "").trim().split(":");
+  if (parts.length === 2) return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+  const n = parseFloat(paceStr);
+  return !Number.isNaN(n) && n > 0 ? Math.round(n * 60) : 270;
 }
 
-/**
- * Calcula dinámicamente las 6 zonas de ritmo de carrera (Jack Daniels / Intervals.icu)
- */
 export function calculatePaceZones(thresholdPaceSec: number = 270): PaceZoneItem[] {
   const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
-  const p1S = Math.round(tp / 0.65), p1E = Math.round(tp / 0.75), p2E = Math.round(tp / 0.85);
-  const p3E = Math.round(tp / 0.94), p4E = Math.round(tp / 1.04), p5S = Math.round(tp / 1.05), p5E = Math.round(tp / 1.15);
-
+  const [p1S, p1E, p2E, p3E, p4E, p5S, p5E] = [
+    Math.round(tp / 0.65), Math.round(tp / 0.75), Math.round(tp / 0.85),
+    Math.round(tp / 0.94), Math.round(tp / 1.04), Math.round(tp / 1.05), Math.round(tp / 1.15)
+  ];
   return [
     { id: "Z1", name: "Fácil", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% Pace", range: `${formatPace(p1E)} - ${formatPace(p1S)} /km` },
     { id: "Z2", name: "Moderado", nameColor: "text-sky-600 dark:text-sky-400", pct: "75 - 85% Pace", range: `${formatPace(p2E)} - ${formatPace(p1E)} /km` },
@@ -167,6 +155,21 @@ export function mapPowerPctToPacePct(pwrPct: number): number {
 }
 
 /**
+ * Recalibra porcentajes obsoletos o lentos de % Pace (ej. 60% Pace -> 72%, 74-76% Z2 -> 80%):
+ */
+export function recalibrateLegacyPacePct(p: number, ctx?: string): number {
+  if (p >= 95) return p;
+  const isCool = /cooldown|enfria|recup/i.test(ctx || "");
+  const isWarm = /warmup|calenta/i.test(ctx || "");
+  const isFast = /final|ágil|progres|tempo|70\.3/i.test(ctx || "");
+  if (p <= 65) return 72;
+  if (p <= 72) return isCool ? 72 : 74;
+  if (p <= 77) return isWarm ? 75 : isCool ? 72 : 80;
+  if (p <= 84 && isFast) return 87;
+  return p;
+}
+
+/**
  * Traduce el workoutDoc al vuelo según la modalidad del atleta.
  * En modo POWER devuelve el texto 100% idéntico con % FTP (INVARIANZA TOTAL).
  * En modo PACE sustituye y escala fisiológicamente a % Pace (calidad, tempo y fondos).
@@ -181,18 +184,26 @@ export function adaptRunningWorkoutDoc(
     else if (/carrera|run\b|trote|sector\s*3|transici[oó]n\s*t2|bloque\s*2/i.test(line)) inCyclingBlock = false;
     if (inCyclingBlock) return line;
 
-    const scaled = line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, (_, p1, p2) => {
+    let clean = line
+      .replace(/\s*\([~]?\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\)/gi, "")
+      .replace(/\s*\(\d+\s*w\)/gi, "")
+      .replace(/\b\d+\s*w\b/gi, "");
+
+    let scaled = clean.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, (_, p1, p2) => {
       const pace1 = mapPowerPctToPacePct(parseInt(p1, 10));
-      if (p2) return `${pace1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace`;
-      return `${pace1}% Pace`;
+      return p2 ? `${pace1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace` : `${pace1}% Pace`;
+    });
+
+    scaled = scaled.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
+      const n1 = recalibrateLegacyPacePct(parseInt(p1, 10), line);
+      return p2 ? `${n1}-${recalibrateLegacyPacePct(parseInt(p2, 10), line)}% Pace` : `${n1}% Pace`;
     });
 
     return scaled
       .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
       .replace(/\bStryd\s*CP\b/gi, "Pace")
       .replace(/\bStryd\b/gi, "Ritmo")
-      .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral")
-      .replace(/\s*\(\d+W\)/gi, "");
+      .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
   }).join("\n");
 }
 
@@ -209,20 +220,13 @@ function stripNestedTarget(str: string, pattern: RegExp): string {
 export function interpolateWorkoutTarget(
   rawTarget: string,
   opts: {
-    discipline?: string;
-    mode?: RunningTrainingMode;
-    runFtp?: number;
-    bikeFtp?: number;
-    thresholdPaceSec?: number;
-    swimCssSec?: number;
-    lthr?: number;
-    isQuality?: boolean;
+    discipline?: string; mode?: RunningTrainingMode; runFtp?: number; bikeFtp?: number;
+    thresholdPaceSec?: number; swimCssSec?: number; lthr?: number; isQuality?: boolean;
   } = {}
 ): string {
   if (!rawTarget) return rawTarget;
   const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, swimCssSec = 105 } = opts;
 
-  // 1. Ciclismo: 100% vatios FTP
   if (discipline === "Ciclismo") {
     if (!bikeFtp || bikeFtp <= 0) return rawTarget;
     const cleanBike = stripNestedTarget(rawTarget, /\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi);
@@ -234,7 +238,6 @@ export function interpolateWorkoutTarget(
       .replace(/(?<![(-])\b(\d+)\s*%\s*FTP/gi, (_, p) => `${Math.round(bikeFtp * (parseInt(p, 10) / 100))}W (${p}% FTP)`);
   }
 
-  // 2. Natación: Ritmo CSS por 100m
   if (discipline === "Natacion") {
     const css = swimCssSec > 0 ? swimCssSec : 105;
     const cleanSwim = stripNestedTarget(rawTarget, /\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/100m\s*\(([^()]+)\)/gi);
@@ -251,7 +254,6 @@ export function interpolateWorkoutTarget(
 
   if (discipline !== "Carrera") return rawTarget;
 
-  // 3. Carrera en Modo Potencia: 100% vatios Stryd (% CP) (BLINDADO - CERO CAMBIOS)
   if (mode === "POWER") {
     if (!runFtp || runFtp <= 0) return rawTarget;
     const cleanPwr = stripNestedTarget(rawTarget, /\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi);
@@ -263,7 +265,6 @@ export function interpolateWorkoutTarget(
       .replace(/(?<![(-])\b(\d+)\s*%\s*CP/gi, (_, p) => `${Math.round(runFtp * (parseInt(p, 10) / 100))}W (${p}% CP)`);
   }
 
-  // 4. Carrera en Modo Ritmo (PACE): 100% min/km y % Pace (CERO VATIOS, IDEMPOTENTE)
   const tp = thresholdPaceSec > 0 ? thresholdPaceSec : 270;
   let cleanPace = rawTarget
     .replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)")
@@ -273,17 +274,22 @@ export function interpolateWorkoutTarget(
     .replace(/\s*\(\d+\s*W\)/gi, "")
     .replace(/\b\d+\s*W\b\s*/gi, "");
 
-  cleanPace = stripNestedTarget(cleanPace, /\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\s*\(([^()]+)\)/gi);
+  cleanPace = cleanPace.replace(/(?:\(+\s*)?\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km(?:\s*\)+)?/gi, "");
+  cleanPace = cleanPace.replace(/\s*\)+(\s*•)/g, "$1");
+  cleanPace = cleanPace.replace(/\(+\s*(\d+(?:\s*-\s*\d+)?\s*%\s*(?:CP|FTP|Pace|LTHR))\s*\)+/gi, "$1");
+  cleanPace = cleanPace.replace(/^\s*\(+/, "").replace(/\)+\s*$/, "").trim();
 
   return cleanPace.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR)|(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR))/gi, (match, r1, r2, s1) => {
     if (r1 && r2) {
       let p1 = parseInt(r1, 10), p2 = parseInt(r2, 10);
       if (/CP|FTP/i.test(match)) { p1 = mapPowerPctToPacePct(p1); p2 = mapPowerPctToPacePct(p2); }
+      else { p1 = recalibrateLegacyPacePct(p1, rawTarget); p2 = recalibrateLegacyPacePct(p2, rawTarget); }
       const sec1 = Math.round(tp / (p1 / 100)), sec2 = Math.round(tp / (p2 / 100));
       return `${formatPace(Math.max(sec1, sec2))}-${formatPace(Math.min(sec1, sec2))}/km (${p1}-${p2}% Pace)`;
     }
     let p = parseInt(s1, 10);
     if (/CP|FTP/i.test(match)) p = mapPowerPctToPacePct(p);
+    else p = recalibrateLegacyPacePct(p, rawTarget);
     return `${formatPace(Math.round(tp / (p / 100)))}/km (${p}% Pace)`;
   });
 }

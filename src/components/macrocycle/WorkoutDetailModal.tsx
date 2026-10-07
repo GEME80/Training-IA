@@ -11,7 +11,7 @@ import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
 import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
 import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
-import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { formatPace, parsePaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface WorkoutDetailModalProps {
   workout: PlanItem | null;
@@ -71,19 +71,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   };
 
   const matchedAct = findMatchingActivity();
-  const parsedDoc = parseWorkoutDoc(workout.workoutDoc, workout.discipline);
-  const plannedTss = workout.tss || parsedDoc.estimatedTss || (workout.durationMinutes ? Math.round(workout.durationMinutes * 0.75) : 0);
-  const executedTss = matchedAct ? matchedAct.tss : isExtraActivity ? (workout.tss || 0) : (modalExecuted?.totalTss || 0);
-  const displayActivities = matchedAct ? [matchedAct] : (isExtraActivity && allActs.length > 0 ? [allActs[0]] : []);
-  const isExecuted = displayActivities.length > 0;
-
-  const getDisciplineBadgeClass = (discipline: string) => {
-    if (discipline === "Natacion" || discipline === "Natación") return "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800";
-    if (discipline === "Ciclismo") return "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800";
-    if (discipline === "Fuerza") return "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800";
-    return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
-  };
-
   const isPaceAthlete =
     runningTrainingMode === "PACE" ||
     hasRunningPowerMeter === false ||
@@ -98,6 +85,24 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const isRunPower = workout.discipline === "Carrera" && !isRunPace && effRunFtp > 0;
   const isBike = workout.discipline === "Ciclismo";
 
+  const adaptedDoc = isRunPace && workout.workoutDoc
+    ? adaptRunningWorkoutDoc(workout.workoutDoc, workout.discipline, false, "PACE")
+    : workout.workoutDoc;
+  const parsedDoc = parseWorkoutDoc(adaptedDoc, workout.discipline);
+  const plannedTss = isRunPace && parsedDoc.estimatedTss && parsedDoc.estimatedTss > (workout.tss || 0)
+    ? parsedDoc.estimatedTss
+    : (workout.tss || parsedDoc.estimatedTss || (workout.durationMinutes ? Math.round(workout.durationMinutes * 0.75) : 0));
+  const executedTss = matchedAct ? matchedAct.tss : isExtraActivity ? (workout.tss || 0) : (modalExecuted?.totalTss || 0);
+  const displayActivities = matchedAct ? [matchedAct] : (isExtraActivity && allActs.length > 0 ? [allActs[0]] : []);
+  const isExecuted = displayActivities.length > 0;
+
+  const getDisciplineBadgeClass = (discipline: string) => {
+    if (discipline === "Natacion" || discipline === "Natación") return "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800";
+    if (discipline === "Ciclismo") return "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800";
+    if (discipline === "Fuerza") return "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800";
+    return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
+  };
+
   let displayTitle = workout.workoutName.replace(/\[.*?\]\s*/g, "");
   if (isRunPace) {
     displayTitle = displayTitle
@@ -110,28 +115,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
   let displayTarget = workout.powerTarget;
   if (isRunPace && displayTarget) {
-    displayTarget = displayTarget
-      .replace(/\b\d+\s*-\s*\d+\s*W\b\s*/gi, "")
-      .replace(/\b\d+\s*W\b\s*/gi, "")
-      .replace(/\s*\(\d+\s*W\)/gi, "")
-      .replace(/^\s*\d+\s*-\s*/, "")
-      .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-      .replace(/\bStryd\s*CP\b/gi, "Ritmo Umbral")
-      .replace(/\bStryd\b/gi, "Ritmo")
-      .trim();
-    while (/\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\s*\(([^()]+)\)/i.test(displayTarget)) {
-      displayTarget = displayTarget.replace(/\b\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\s*\(([^()]+)\)/gi, "$1");
-    }
-    displayTarget = displayTarget.replace(/^\(+([^\(\)]+)\)+$/, "$1").trim();
-    const tpSec = thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285);
-    displayTarget = displayTarget.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*Pace|(\d+)\s*%\s*Pace)/gi, (_, r1, r2, s1) => {
-      if (r1 && r2) {
-        const p1 = parseInt(r1, 10), p2 = parseInt(r2, 10);
-        const sec1 = Math.round(tpSec / (p1 / 100)), sec2 = Math.round(tpSec / (p2 / 100));
-        return `${formatPace(Math.max(sec1, sec2))}-${formatPace(Math.min(sec1, sec2))}/km (${p1}-${p2}% Pace)`;
-      }
-      const p = parseInt(s1, 10);
-      return `${formatPace(Math.round(tpSec / (p / 100)))}/km (${p}% Pace)`;
+    displayTarget = interpolateWorkoutTarget(displayTarget, {
+      discipline: "Carrera",
+      mode: "PACE",
+      thresholdPaceSec: thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285),
     });
   } else if (isRunPower && displayTarget) {
     displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
@@ -267,7 +254,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
         {workout.workoutDoc && (
           <PlannedWorkoutPrescription
-            cleanDoc={sanitizeWorkoutDoc(workout.workoutDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace })}
+            cleanDoc={sanitizeWorkoutDoc(adaptedDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace })}
             discipline={workout.discipline}
             isRunPace={isRunPace}
             isRunPower={isRunPower}

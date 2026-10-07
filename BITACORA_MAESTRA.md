@@ -6034,3 +6034,36 @@ flowchart TD
 - **Chequeo de Tipos TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (Código 0)**.
 - **Compilación de Producción:** `npm run build` $\rightarrow$ **20/20 páginas compiladas exitosamente (Código 0)**.
 - **Despliegue Firebase App Hosting / Cloud Build:** Verificado y activo en producción con Cloud Build ID `3175cf96` y commit `3c32495`.
+
+---
+
+## 81. Recalibración Dinámica de Entrenamientos Preexistentes en Calendario y Eliminación de Ritmos Lentos Residuales (v4.11)
+
+### 81.1. Diagnóstico del Problema en Entrenamientos Previamente Guardados
+- **Causa Raíz:** Los atletas con macrociclos generados con anterioridad o eventos ya sincronizados en Intervals.icu tenían entrenamientos con texto explícito en `% Pace` guardados en base de datos (ej. `- 15m 68% Pace (~6:59/km)`, `- 47m 74% Pace (~6:25/km)`, `- 10m 60% Pace (~7:55/km)`).
+- **Falla del Mapeo Previo:** `adaptRunningWorkoutDoc` y `PlannedWorkoutPrescription` únicamente buscaban patrones de potencia `% CP` o `% FTP`. Al recibir un entrenamiento que ya contenía `% Pace`, no lo transformaban y volvían a pintar el ritmo lento legacy.
+- **Anidación de Paréntesis:** El encabezado del target en el modal concatenaba paréntesis duplicados: `(6:36-6:10/km (6:36-6:10/km (72-77% Pace)) • Z2 Base)`.
+
+### 81.2. Solución de Ingeniería Fisiológica Implementada
+1. **Función Central `recalibrateLegacyPacePct` en `runningWorkoutAdapter.ts`:**
+   - Detecta cualquier porcentaje legacy de `% Pace`:
+     - $\le 65\%$ (ej. $60\%$ Cooldown) $\rightarrow$ Elevado al **$72\%$ Pace** (piso biológico contra trote caminando).
+     - $66\text{--}72\%$ (Warmup) $\rightarrow$ **$74\text{--}75\%$ Pace** fluida.
+     - $73\text{--}77\%$ (Main Z2 Aeróbica) $\rightarrow$ **$80\%$ Pace** viva ($5:56\text{ min/km}$ para umbral $4:45$).
+     - $78\text{--}84\%$ en finales ágiles/progresivos 70.3 $\rightarrow$ **$87\%$ Pace** ($5:27\text{ min/km}$, ritmo específico de competición).
+2. **Desanidación Total de Targets en `interpolateWorkoutTarget`:**
+   - Erradicación garantizada de paréntesis repetidos y formato limpio: `${minPace}-${maxPace}/km (${p1}-${p2}% Pace) • ${descripción}`.
+3. **Adaptación al Vuelo en `WorkoutDetailModal.tsx`:**
+   - La prescripción `cleanDoc` ahora procesa `adaptedDoc` antes de renderizar, asegurando que cualquier entrenamiento viejo se muestre inmediatamente con los nuevos ritmos y recalcule el TSS dinámico.
+4. **Sincronización a Intervals.icu (`intervalsSyncService.ts`):**
+   - Antes de enviar el microciclo al API de Intervals.icu, se pasa por `adaptRunningWorkoutDoc`, garantizando que lo que se escribe en Intervals y Garmin Connect tenga los ritmos y zonas corregidos.
+
+### 81.3. Archivos Auditados ($\le 350$ LOC)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **349 LOC** ($\le 350$)
+- `src/components/macrocycle/PlannedWorkoutPrescription.tsx`: **156 LOC** ($\le 350$)
+- `src/components/macrocycle/WorkoutDetailModal.tsx`: **295 LOC** ($\le 350$)
+- `src/lib/services/intervalsSyncService.ts`: **245 LOC** ($\le 350$)
+
+### 81.4. Certificación
+- `tsc --noEmit`: 0 errores.
+- `npm run build`: 20/20 páginas compiladas (Código 0).

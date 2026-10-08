@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.05)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.07)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,10 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.05).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.07).
 
 Contexto Actual del Proyecto:
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
+- Versión 4.07: Fisiología Integral de Carrera por Ritmo (Pace), Variación Rotativa de Entrenamientos, Superposición Atómica de Competiciones (Giro de Rigo = Ciclismo Puro) y Reflejo Inmediato en Auditoría Admin:
+  * Variación Semanal de Running por Ritmo: Erradicación del 80% monótono en Z2. Implementación de `fridayWorkoutResolver.ts` con rotación sistemática de Fartleks Z2-Z3 piramidales (1'-2'-3'-2'-1'), carreras progresivas con final 70.3 y rodajes con strides neuromusculares; e inyección en `triathlonModel.ts` de bloques estructurados de Tempo Z3 extenso (3x 10m, 2x 15m, 4x 6m @ 4:55-5:15 min/km) con flotaciones activas y progresiones en tiradas largas dominicales (`longRunPeriodization.ts`).
+  * Superposición Atómica de Competiciones (`raceDayOverlay.ts`): Inferencia semántica inequívoca: pruebas como el Giro de Rigo o Gran Fondos se clasifican irrevocablemente como Ciclismo. En el día de carrera se asigna 🏁 COMPETICIÓN B: Giro de Rigo (Ciclismo) (240m, 210 TSS, 68-78% FTP), suprimiendo la tirada a pie y natación simultáneas; la víspera (sábado) se convierte en pedaleo de activación (35m Z1 con 3x1m @ 90% FTP) y el lunes posterior en rodillo regenerativo o descanso pasivo.
+  * Hidratación Inteligente de Calendario en Modo Auditoría Admin (`calendarHydration.ts`): Al consultar el calendario en modo solo lectura desde la consola de administración (`isAuditing: true`), el sistema prioriza la prescripción viva del motor del macrociclo (`matchingFallback`) sobre eventos obsoletos de Intervals.icu marcados con `[PULSE AI]`, reflejando instantáneamente los nuevos entrenamientos en pantalla sin depender de purgas externas.
+  * Erradicación de Residuos de Potencia de Carrera en Atletas de Ritmo (`telemetryService.ts` & `PhysiologicalCards.tsx`): `runFtp` forzado a 0 para deportistas evaluados por ritmo (`runningTrainingMode === "PACE"` o sin potenciómetro); reemplazo automático de la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
 - Versión 4.05: Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata:
   * Telemetría Rápida sin Mapas GPS: Carga ultra-ligera de telemetría multi-serie (Ritmo cian, Potencia púrpura, FC rosa, Altitud slate) en `ActivityTelemetryChart`, sin descargas de stream pesado de mapas.
   * Prescripción Plegable & Ocultamiento de Movilidad: Prescripción estructurada replegada en acordeón modular compacto y calentamiento dinámico oculto en sesiones ya ejecutadas.
@@ -829,4 +834,35 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 
 4. **Ley de Normalización Retroactiva Inteligente:**
    - El servicio `workoutSyntaxSanitizer.ts` debe interceptar y transformar retroactivamente cualquier sesión histórica o heredada con anotaciones textuales (ej. `- 40s 110% Pace "200m"` $\rightarrow$ `- 200mtr 110% Pace`), garantizando que la visualización del atleta y la sincronización con Garmin sean siempre puras y canónicas.
+
+---
+
+## 🏁 20. LEYES DE SUPERPOSICIÓN DE COMPETICIONES SECUNDARIAS, PERIODIZACIÓN DE RUNNING POR RITMO Y BLINDAJE DE AUDITORÍA ADMIN (v4.07)
+
+1. **Ley de Inferencia Semántica Real de Pruebas Deportivas:**
+   - Cualquier evento procedente de Intervals.icu (incluso con `type: "Race"` genérico) o registrado como objetivo que contenga términos ciclistas (`giro`, `rigo`, `gran fondo`, `granfondo`, `bike`, `ride`, `ciclismo`, `vuelta`, `clasica`, `cri`) DEBE clasificarse irrevocablemente como **`Ciclismo`**. Queda terminantemente prohibido que una competición ciclista caiga por defecto en Atletismo o herede objetivos en min/km.
+   - Cualquier evento con `aguas abiertas`, `travesia`, `natacion` o `swim` debe clasificarse como **`Natacion`**.
+   - Solo pruebas pedestres (`maraton`, `media maraton`, `10k`, `21k`, `42k`, `trail`, `run`, `carrera`) o triatlones se clasifican como disciplina pedestre o combinada.
+
+2. **Ley de Reemplazo Atómico en Día de Competición Secundaria (`raceDayOverlay.ts`):**
+   - El día de una competición tipo B/C (ej. Gran Fondo Giro de Rigo), el sistema **reemplaza la totalidad del entrenamiento programado** para esa fecha con la competición oficial (`🏁 COMPETICIÓN B: [Nombre]`).
+   - Queda estrictamente prohibido programar tiradas a pie, natación o sesiones dobles el día de una prueba secundaria de gran fondo.
+
+3. **Ley de Víspera y Post-Competición Fisiológica:**
+   - **Víspera (Día -1):** Todo entrenamiento duro, fondo largo o brick T2 queda sustituido por una activación neuromuscular corta de la misma disciplina de la prueba (ej. `Pedaleo de Activación Pre-Competición (35m con 3x1m @ 90% FTP)` para ciclismo, o `Activación Final Pre-Carrera (20m con 3 Strides)` para atletismo).
+   - **Post-Competición (Día +1):** Las sesiones de calidad, tests o fuerza quedan sustituidas por recuperación activa (rodillo regenerativo $40\text{m Z1}$ o descanso pasivo total).
+
+4. **Ley de Variación Semanal de Running por Ritmo (Anti-Monotonía Z2):**
+   - Queda prohibido prescribir todas las sesiones de running estáticas al $80\%$ Pace continuo semana tras semana.
+   - **Viernes:** Rotación obligatoria vía `fridayWorkoutResolver.ts` entre Fartleks aeróbicos piramidales Z2-Z3 ($1'-2'-3'-2'-1'$), carreras progresivas con final a ritmo 70.3 ($88-92\%$), rodajes con Strides de cadencia ($105\%$ Pace) y solturas de asimilación.
+   - **Miércoles (Calidad/Tempo):** Inyección de bloques estructurados de Tempo Z3 ($3\times 10\text{m}$, $2\times 15\text{m}$, $4\times 6\text{m}$ a $4:55-5:15\text{ min/km}$) con flotaciones activas ($76\%$) y recuperaciones al $68\%$.
+   - **Domingo (Tirada Larga):** Progresiones periodizadas con bloques de ritmo específico de media distancia y descansos activos.
+
+5. **Ley de Prioridad de Prescripción Viva en Modo Auditoría Admin (`calendarHydration.ts`):**
+   - Al auditar un atleta en modo solo lectura (`isAuditing: true`), si un evento en Intervals.icu fue generado previamente por el sistema (`[PULSE AI]` / `[SGEA]`), el motor de hidratación **DEBE priorizar la prescripción viva de `matchingFallback`** (título, descripción estructurada, TSS y dianas actualizadas).
+   - El `id` de Intervals.icu se preserva para sincronización posterior, pero la interfaz de auditoría siempre debe reflejar los entrenamientos del macrociclo actualizado, sin quedar bloqueada por sesiones obsoletas guardadas en Intervals.icu.
+
+6. **Ley de Invarianza de Métricas para Atletas de Ritmo (Erradicación de Vatios Run Fantasma):**
+   - Si un atleta entrena en modo `PACE` o tiene `hasRunningPowerMeter === false` (o atleta Georg Schmitt `i729730`), el parámetro `runFtp` debe forzarse a $0$ en telemetría y dashboard.
+   - La tarjeta visible `strydCp` ("Potencia Run 400W") debe conmutar automáticamente a `runPace` (**"Ritmo Carrera: 4:45 min/km"**), erradicando cualquier residuo de 400W en la interfaz.
 

@@ -1,9 +1,15 @@
-# ⚡ SGEA Pro (v4.05) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v4.07) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🏁 **Superposición Fisiológica de Carreras, Carrera por Ritmo & Hidratación Viva en Auditoría Admin (v4.07):**
+  - **Inferencia Semántica & Superposición Atómica de Competiciones (`raceDayOverlay.ts`):** Inferencia exacta de disciplina real: pruebas como el *Giro de Rigo* o *Gran Fondos* se clasifican inequívocamente como **Ciclismo puro** (nunca atletismo). El día de la prueba se asigna `🏁 COMPETICIÓN B: Giro de Rigo (Ciclismo)` ($240\text{m}$, $210\text{ TSS}$, $68\text{-}78\%\text{ FTP}$), suprimiendo la tirada a pie y natación simultáneas; la víspera (sábado) se convierte en pedaleo de activación neuromuscular ($35\text{m Z1}$) y el lunes posterior en rodillo regenerativo o descanso pasivo.
+  - **Variación Metodológica y Fartleks Rotativos (`fridayWorkoutResolver.ts` & `triathlonModel.ts`):** Erradicación total de entrenamientos monótonos al 80% Z2 continuo. Rotación programada de Fartleks aeróbicos piramidales Z2-Z3 ($1'-2'-3'-2'-1'$), carreras progresivas con final a ritmo 70.3, rodajes con strides neuromusculares ($105\%$ Pace), y bloques estructurados de Tempo Z3 extenso ($3\times 10\text{m}$, $2\times 15\text{m}$, $4\times 6\text{m}$ a ritmo $4:55\text{-}5:15\text{ min/km}$) con flotaciones activas y recuperaciones al $68\%$.
+  - **Hidratación Inteligente de Calendario en Modo Auditoría Admin (`calendarHydration.ts`):** Al consultar el calendario en modo solo lectura desde la consola de administración (`isAuditing: true`), el sistema prioriza la prescripción viva del motor del macrociclo (`matchingFallback`) sobre eventos obsoletos de Intervals.icu marcados con `[PULSE AI]`, reflejando instantáneamente los nuevos entrenamientos en pantalla sin depender de purgas externas de Intervals.icu.
+  - **Erradicación de Residuos de Potencia de Carrera en Atletas de Ritmo (`telemetryService.ts` & `PhysiologicalCards.tsx`):** Forzado de `runFtp = 0` para deportistas evaluados por ritmo (`runningTrainingMode === "PACE"` o sin potenciómetro); reemplazo automático de la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
 
 - 📈 **Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata (v4.05):**
   - **Distribución de Zonas Fisiológicas SSOT (`ActivityZoneDistribution`):** Mapeo canónico 1:1 con las zonas del perfil del atleta (`AthleteZonesViewer`):

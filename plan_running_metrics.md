@@ -1,14 +1,27 @@
-# 📋 PLAN MAESTRO INTEGRAL DE EJECUCIÓN: Motor Multideporte de Workouts (Running Dual Mix, Natación CSS 100% Intervals Compliant, Breakthroughs y Recalibración Reactiva) — SGEA v3.83
+# 📋 PLAN MAESTRO INTEGRAL DE EJECUCIÓN: Motor Multideporte de Workouts (Running Dual Mix, Natación CSS 100% Intervals Compliant, Breakthroughs y Recalibración Reactiva) — SGEA v4.07
 
-> [!IMPORTANT]
-> **ESTADO DEL PLAN: EN REVISIÓN (PENDIENTE DE APROBACIÓN EXPLÍCITA).**
-> **REGLA DE BLOQUEO:** Ningún cambio de código o comando destructivo se ejecutará hasta recibir la confirmación y el "OK" formal del usuario.
+> [!NOTE]
+> **ESTADO DEL PLAN: IMPLEMENTADO, VERIFICADO Y CONSOLIDADO EN PRODUCCIÓN (v4.07).**
 
 ---
 
-## 🧭 1. CONTEXTO, AVANCES PREVIOS (CONVERSACIÓN "Plan de Ritmo/HR") Y NUEVAS NECESIDADES
+## 🧭 1. CONTEXTO, AVANCES PREVIOS Y CONSOLIDACIÓN FISIOLÓGICA
 
-### 🏆 1.1. Logros Consolidados y Verificados en el Repositorio (v3.83 - Commits `35cca19`, `ff0e2db`, `8183bff`, `32bda71`, `58ef03a`):
+### 🏆 1.1. Logros v4.07 (Consolidación Carrera por Ritmo, Variación Metodológica y Superposición de Carreras):
+1. **Erradicación del 80% Monótono en Carrera por Ritmo:**
+   - Creación de `fridayWorkoutResolver.ts` para rotación semanal de Fartleks Z2-Z3 piramidales ($1'-2'-3'-2'-1'$), progresivos finalizando a ritmo 70.3 y rodajes con strides neuromusculares ($105\%$ Pace).
+   - Inyección en `triathlonModel.ts` de bloques extensivos de Tempo Z3 ($3\times 10\text{m}$, $2\times 15\text{m}$, $4\times 6\text{m}$ a $4:55-5:15\text{ min/km}$) con flotaciones al $76\%$ Pace y descansos al $68\%$ Pace.
+   - Periodización rotativa de tiradas dominicales en `longRunPeriodization.ts` alternando bloques específicos y soltura de descarga.
+2. **Superposición Fisiológica de Carreras Secundarias (`raceDayOverlay.ts`):**
+   - Inferencia de disciplina real: pruebas ciclistas (Giro de Rigo, Gran Fondo) clasificadas irrevocablemente como Ciclismo.
+   - Día de Carrera: Asignación atómica de `🏁 COMPETICIÓN B: Giro de Rigo (Ciclismo)` ($240\text{m}$, $210\text{ TSS}$, $68-78\%\text{ FTP}$), eliminando tiradas a pie y natación simultáneas.
+   - Víspera y Post-Carrera: Pedaleo de activación suave ($35\text{m Z1}$) el sábado y descanso/rodillo regenerativo ($40\text{m Z1}$) el lunes.
+3. **Reflejo Inmediato en Modo Auditoría Admin (`calendarHydration.ts`):**
+   - Priorización de la prescripción viva del motor (`matchingFallback`) sobre eventos obsoletos de Intervals.icu marcados con `[PULSE AI]`.
+4. **Erradicación de Residuos de Potencia de Carrera (`telemetryService.ts` & `PhysiologicalCards.tsx`):**
+   - Forzado de `runFtp = 0` para deportistas evaluados por ritmo (`runningTrainingMode === "PACE"` o sin potenciómetro); reemplazo automático de la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
+
+### 🏆 1.2. Logros Consolidados Previos (v3.83 - Commits `35cca19`, `ff0e2db`, `8183bff`, `32bda71`, `58ef03a`):
 1. **Rediseño UX Modular de Perfil en 4 Pestañas (`AthletePhysiologyView.tsx`):**
    - Consolidación limpia sin interfaces duplicadas:
      * **Pestaña 1 (`AthleteZonesTab.tsx`):** Zonas & Umbrales (Potencia de Carrera, Ritmo Umbral, FC LTHR y Ciclismo FTP con tarjetas de calibración/breakthroughs interactivas).

@@ -165,6 +165,17 @@ radar
 
 ---
 
+### 🟢 MEJORA 7: Superposición Fisiológica de Carreras Secundarias (Race Day Overlay), Variación de Running por Ritmo y Reflejo Inmediato en Auditoría Admin [✅ COMPLETADA AL 100% v4.07]
+* **Estado:** ✅ **COMPLETADA EN v4.07**.
+* **Impacto:** Erradicó desajustes metodológicos al auditar atletas desde el espacio de administración y aseguró coherencia fisiológica absoluta:
+  - `src/lib/physiology/raceDayOverlay.ts` (188 LOC): Inferencia semántica exacta de disciplina deportiva (ej. Giro de Rigo clasificado como Ciclismo puro, nunca atletismo). Reemplazo atómico del día de carrera por $240\text{m}$ @ $68-78\%\text{ FTP}$ ($210\text{ TSS}$), víspera como pedaleo suave de activación ($35\text{m Z1}$) y post-carrera como rodillo regenerativo.
+  - `src/lib/physiology/fridayWorkoutResolver.ts` (168 LOC): Rotación de microciclos de los viernes (Fartleks Z2-Z3 piramidales, progresivos 70.3 y strides neuromusculares) suprimiendo el 80% monótono continuo.
+  - `src/lib/ai/knowledge/triathlonModel.ts`: Inyección de bloques estructurados de Tempo Z3 ($3\times 10\text{m}$, $2\times 15\text{m}$, $4\times 6\text{m}$ @ $4:55-5:15\text{ min/km}$).
+  - `src/lib/intervals/calendarHydration.ts` (313 LOC): En modo auditoría admin (`isAuditing: true`), prioriza la prescripción viva de `matchingFallback` para eventos `[PULSE AI]`, reflejando instantáneamente los nuevos entrenamientos en pantalla sin depender de purgas externas de Intervals.icu.
+  - `src/lib/services/telemetryService.ts` & `src/components/PhysiologicalCards.tsx`: Forzado de `runFtp = 0` para atletas en modo `PACE` o sin Stryd, sustituyendo la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
+
+---
+
 ## 📋 3. Matriz de Ejecución y Restricciones Inviolables (LOC Budgets & Zero-Rework)
 
 

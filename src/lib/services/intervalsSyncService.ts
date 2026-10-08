@@ -112,9 +112,16 @@ export class IntervalsSyncService {
         workoutText = `Warmup\n- 10m 55% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 60) - 20)}m 68% FTP\n\nCooldown\n- 10m 50% FTP`;
       }
 
-      const isRunPaceOnly = item.discipline === "Carrera" && (!item.powerTarget || !/\b\d+\s*W\b/i.test(item.powerTarget));
+      const isPaceByText = Boolean(
+        (item.powerTarget && /%\s*Pace/i.test(item.powerTarget)) ||
+        (workoutText && /%\s*Pace/i.test(workoutText)) ||
+        effectiveAthleteId === "i729730"
+      );
+      const isRunPower = Boolean(item.powerTarget && /\b\d+\s*W\b/i.test(item.powerTarget) && !isPaceByText);
+      const isRunPaceOnly = item.discipline === "Carrera" && (!isRunPower || isPaceByText);
+
       const adaptedText = isRunPaceOnly
-        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, "PACE")
+        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, "PACE", item.workoutName || "")
         : workoutText;
       const canonicalDescription = sanitizeWorkoutDoc(adaptedText, {
         discipline: item.discipline,

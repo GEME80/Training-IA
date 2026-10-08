@@ -35,11 +35,18 @@ function resolveDisplayDuration(item: PlanItem): number {
 
 const cleanName = (name: string) => name.replace(/\[.*?\]\s*/g, "").trim();
 
-function gymShortDesc(workoutDoc: string): string {
-  if (!workoutDoc) return "";
-  const lines = workoutDoc.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !l.startsWith("---"));
-  const first = lines[0] || "";
-  return first.length > 60 ? first.slice(0, 57) + "…" : first;
+const gymShortDesc = (doc: string) => doc ? (doc.split("\n").map(l => l.trim()).find(l => l && !l.startsWith("#") && !l.startsWith("---"))?.slice(0, 57) || "") : "";
+
+function formatCardTarget(item: PlanItem): string {
+  if (!item.powerTarget) return "";
+  const clean = item.powerTarget
+    .replace(/\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi, "$1")
+    .replace(/\b\d+\s*(?:-\s*\d+)?\s*W\b\s*/gi, "")
+    .replace(/^\s*\d+\s*-\s*(?!\d+\s*%)/, "")
+    .split("•")[0].trim();
+  if (!clean) return "";
+  const isPace = item.discipline === "Carrera" && (/pace|ritmo/i.test(clean) || !/\d+\s*W\b/i.test(clean));
+  return ` · ${isPace ? "⏱️" : "⚡"}${clean}`;
 }
 
 export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> = ({
@@ -250,7 +257,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
               {/* Footer */}
               <div className="px-2 pb-1.5 flex items-center justify-between text-[10px] font-mono font-bold border-t border-slate-100 dark:border-slate-800 pt-1 mt-auto gap-1">
                 <span className="text-slate-600 dark:text-slate-400 truncate">
-                  {plannedTss} TSS{item.powerTarget ? ` · ⚡${item.powerTarget.split("•")[0].trim()}` : ""}
+                  {plannedTss} TSS{formatCardTarget(item)}
                 </span>
                 <ChevronRight className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </div>

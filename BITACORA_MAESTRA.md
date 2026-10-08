@@ -6104,3 +6104,31 @@ flowchart TD
 ### 82.4. Certificación
 - `tsc --noEmit`: 0 errores.
 - `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
+---
+
+## 83. Sincronización Automática Forzada en Intervals.icu y Limpieza Visual en Tarjetas de Calendario para Atletas por Ritmo (v4.13)
+
+### 83.1. Diagnóstico de la Causa Raíz
+1. **Bloqueo Idempotente de Sincronización Pasada en `useAutoIntervalsSync.ts`:**
+   - La clave de migración `migrationKey` estaba fijada en `auto_intervals_purge_sync_v1_20261003_${athleteId}` y validaba `lastAutoPurgeSync === "2026-10-03"`. Al haber completado esa sincronización el 3 de octubre, el hook en segundo plano consideraba la tarea como finalizada y no ejecutaba la purga y sincronización de los nuevos entrenamientos diferenciados con el Ramp Test y las zonas variadas.
+2. **Detección Incompleta de Modo Ritmo en `IntervalsSyncService.syncPlan`:**
+   - Evaluaba `!item.powerTarget || !/\b\d+\s*W\b/i.test(item.powerTarget)`. Si un entrenamiento de carrera conservaba algún remanente de vatios en el objetivo, `isRunPaceOnly` resultaba `false`, omitiendo la adaptación del documento de sesión antes de crearlo en Intervals.icu.
+3. **Contaminación Visual de Ícono `⚡` en Tarjetas de Calendario:**
+   - En `AthleteCalendarDayColumn.tsx`, el pie de tarjeta anteponía ciegamente el rayo `⚡` a todas las sesiones, mostrando objetivos de carrera con símbolo de potencia y prefijos huérfanos.
+
+### 83.2. Solución de Ingeniería Fisiológica y Software
+1. **Actualización de Clave de Migración v3 (`useAutoIntervalsSync.ts`):**
+   - Actualizada la clave a `auto_intervals_purge_sync_v3_20261007_${athleteId}` con corte en `fromDate: "2026-10-07"` y persistencia de `lastAutoPurgeSync: "2026-10-07"`. Cada atleta en modalidad Ritmo que acceda a la plataforma ejecutará la purga y sincronización de los microciclos en segundo plano.
+2. **Blindaje de Detección de Modo Ritmo (`intervalsSyncService.ts`):**
+   - Incorpora `isPaceByText` reconociendo patrones `% Pace` en `powerTarget` o `workoutDoc`, así como al atleta Georg Schmitt (`i729730`). Pasa `item.workoutName` a `adaptRunningWorkoutDoc` para preservar los bloques de soltura y regenerativos.
+3. **Formateo Limpio de Objetivos en Tarjetas de Calendario (`AthleteCalendarDayColumn.tsx`):**
+   - Nueva función auxiliar `formatCardTarget(item)` que purga residuos de potencia y conmuta inteligentemente entre `⏱️` (Ritmo) y `⚡` (Potencia/FTP).
+
+### 83.3. Archivos Auditados ($\le 350$ LOC)
+- `src/hooks/useAutoIntervalsSync.ts`: **169 LOC** ($\le 350$)
+- `src/lib/services/intervalsSyncService.ts`: **252 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteCalendarDayColumn.tsx`: **347 LOC** ($\le 350$)
+
+### 83.4. Certificación
+- `tsc --noEmit`: 0 errores.
+- `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).

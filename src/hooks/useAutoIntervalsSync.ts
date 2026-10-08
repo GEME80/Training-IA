@@ -63,9 +63,9 @@ export function useAutoIntervalsSync({
     if (!isPaceTarget) return;
 
     // Clave de migración idempotente: garantiza que se ejecute solo UNA vez
-    const migrationKey = `auto_intervals_purge_sync_v1_20261003_${athleteId}`;
+    const migrationKey = `auto_intervals_purge_sync_v3_20261007_${athleteId}`;
     const alreadyDoneInStorage = userStorage.getItem(migrationKey) === "done";
-    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-03";
+    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-07";
 
     if (alreadyDoneInStorage || alreadyDoneInProfile || isExecutingRef.current) {
       return;
@@ -78,7 +78,7 @@ export function useAutoIntervalsSync({
 
     const executeBackgroundPurgeAndSync = async () => {
       isExecutingRef.current = true;
-      const fromDate = "2026-10-03";
+      const fromDate = "2026-10-07";
 
       try {
         console.info(`[AutoIntervalsSync] Iniciando sincronización transparente en segundo plano para ${athleteId}...`);
@@ -131,7 +131,7 @@ export function useAutoIntervalsSync({
           await persistProfileField(
             user?.uid,
             user?.email || userProfile?.email || "",
-            { lastAutoPurgeSync: "2026-10-03" },
+            { lastAutoPurgeSync: "2026-10-07" },
             isReadOnly
           );
 

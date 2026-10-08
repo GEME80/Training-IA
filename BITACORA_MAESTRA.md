@@ -6188,3 +6188,43 @@ flowchart TD
 - `tsc --noEmit`: 0 errores.
 - `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 85. Resolución Integral: Coherencia de Macro/Microciclo, Giro de Rigo (100% Ciclismo) y Reflejo Inmediato en Modo Auditoría Admin
+
+### 85.1. Contexto & Diagnóstico Clínico
+El Head Coach reportó discrepancias críticas observadas desde la consola de administración al auditar a Georg Schmitt (`i729730`):
+1. **Giro de Rigo Clasificado Erróneamente como Atletismo:** Al sincronizarse desde Intervals.icu con `type: "Race"`, el resolvedor de disciplinas caía en el valor por defecto (`"Carrera"`), emparejando un Gran Fondo de ciclismo con la tirada larga a pie, sobrecargando el domingo con natación y asignando ritmos en min/km ($5:15\text{ min/km}$) en lugar de vatios de pedaleo.
+2. **Entrenamientos Antiguos en Vista de Auditoría Admin:** Al visualizar el calendario en modo solo lectura (`isAuditing: true`), `calendarHydration.ts` priorizaba los nombres y documentos planos guardados en Intervals (`cleanName` = `Carrera Continua Z1-Z2 de Soltura (35m)`), ocultando en la pantalla las nuevas prescripciones fisiológicas (Fartleks, Tempos Z3, Strides y progresiones).
+3. **Tarjeta Residual "Potencia Run 400 W":** Un atleta evaluado 100% por ritmo sin potenciómetro mostraba la tarjeta por defecto de Stryd con 400W residuales en el dashboard.
+
+### 85.2. Solución Fisiológica e Informática Implementada
+1. **Superposición Fisiológica de Carreras Secundarias (`raceDayOverlay.ts`):**
+   - Inferencia inequívoca de la disciplina real: Cualquier prueba que contenga `giro`, `rigo`, `gran fondo`, etc. se clasifica irrevocablemente como `Ciclismo`.
+   - Día de Competición B: Reemplazo atómico de la jornada dominical por `🏁 COMPETICIÓN B: Giro de Rigo` ($240\text{m}$, $210\text{ TSS}$, $68\text{-}78\%\text{ FTP}$), eliminando tiradas a pie y natación simultáneas.
+   - Víspera (Sábado): Sustitución por `Pedaleo de Activación Pre-Competición (35m con 3x1m @ 90% FTP)`, descartando fondos extenuantes o transiciones T2.
+   - Post-Carrera (Lunes): Transición automática a descanso pasivo o rodillo regenerativo ($40\text{m Z1}$).
+2. **Hidratación Inteligente de Calendario (`calendarHydration.ts`):**
+   - `resolveDiscipline(type, name)` ahora evalúa exhaustivamente el nombre del evento.
+   - Para sesiones generadas previamente por PULSE AI (`isPulseGenerated`), se da precedencia absoluta a `matchingFallback` (la prescripción viva del motor del macrociclo) preservando el `id` de Intervals.icu para actualizaciones transparentes.
+   - Integración nativa de `applyRaceDaysToPlan` sobre el plan hidratado antes de la adaptación a ritmos.
+3. **Erradicación de Residuos de Potencia de Carrera (`telemetryService.ts`, `PhysiologicalCards.tsx`, `AthleteDashboardOverview.tsx`):**
+   - Forzado de `runFtp = 0` para atletas en modo `PACE` o sin potenciómetro (`hasRunningPowerMeter === false` / `i729730`).
+   - Mapeo automático de la tarjeta visible `"strydCp"` hacia `"runPace"` ("Ritmo Carrera: 4:45 min/km"), eliminando cualquier mención a 400W.
+
+### 85.3. Archivos Auditados ($\le 350$ LOC)
+- `src/lib/physiology/raceDayOverlay.ts`: **188 LOC** ($\le 350$)
+- `src/lib/intervals/calendarHydration.ts`: **313 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteCalendarWeekRow.tsx`: **347 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteContinuousCalendar.tsx`: **338 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteDashboardViewRouter.tsx`: **327 LOC** ($\le 350$)
+- `src/components/PhysiologicalCards.tsx`: **228 LOC** ($\le 350$)
+- `src/lib/services/telemetryService.ts`: **347 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteDashboardOverview.tsx`: **254 LOC** ($\le 350$)
+
+### 85.4. Certificación
+- `tsc --noEmit`: 0 errores.
+- `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
+- Suite de pruebas de microciclo: 6/6 aserciones aprobadas al 100%.
+
+

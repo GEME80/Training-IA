@@ -188,7 +188,12 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
                   runningOpts
                 ),
                 telemetry.calendarEvents,
-                runningOpts
+                runningOpts,
+                {
+                  bikeFtp: telemetry.profile.bike_ftp,
+                  primaryRaceDate: season.blueprint?.primaryRace?.date,
+                  targetRaces: season.blueprint?.primaryRace ? [season.blueprint.primaryRace] : undefined,
+                }
               )
             : []
         }

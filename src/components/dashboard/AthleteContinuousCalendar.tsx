@@ -144,7 +144,10 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       )
     : [];
   const activeWeekPlan = activeWeekForAgenda
-    ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents, runningOpts)
+    ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents, runningOpts, {
+        bikeFtp, primaryRaceDate: blueprint?.primaryRace?.date,
+        targetRaces: blueprint?.primaryRace ? [blueprint.primaryRace] : undefined,
+      })
     : [];
 
   return (

@@ -3,12 +3,24 @@ import { MacrocycleWeek } from "../physiology/macrocycle";
 import { CalendarEvent } from "./types";
 import { formatLocalDateToYMD } from "../dateUtils";
 import { adaptRunningPlanItem } from "../physiology/runningWorkoutAdapter";
+import {
+  isRaceCalendarEvent,
+  raceInfoFromEvent,
+  raceInfoFromTarget,
+  applyRaceDaysToPlan,
+  RaceDayInfo,
+} from "../physiology/raceDayOverlay";
 
 const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-function resolveDiscipline(type: string): DisciplineType {
+export function resolveDiscipline(type: string, name: string = ""): DisciplineType {
+  const n = (name || "").toLowerCase();
   const t = (type || "").toLowerCase();
+  if (/giro|rigo|gran\s*fondo|granfondo|vuelta|cl[aá]sica|ciclo|ciclismo|bike|ride|cycling|mtb|bici/i.test(n)) return "Ciclismo";
+  if (/aguas\s*abiertas|traves[ií]a|nataci[oó]n|swim/i.test(n)) return "Natacion";
+  if (/marat[oó]n|media\s*marat[oó]n|ultra|trail|\b(5|10|15|21|42)\s*k\b/i.test(n)) return "Carrera";
+
   if (/run|carrera|trailrun|virtualrun/i.test(t)) return "Carrera";
   if (/ride|ciclismo|bike|virtualride|cycling/i.test(t)) return "Ciclismo";
   if (/weight|fuerza|strength/i.test(t)) return "Fuerza";
@@ -65,14 +77,48 @@ function filterEveWorkouts(items: PlanItem[]): PlanItem[] {
   return [buildEvePlanItem(chosen)];
 }
 
+export interface CalendarHydrationOptions {
+  bikeFtp?: number;
+  primaryRaceDate?: string;
+  targetRaces?: Array<{ date?: string; name?: string; priority?: string; distance?: string }>;
+}
+
 export function hydrateWeekPlanFromEvents(
   week: MacrocycleWeek,
   fallbackPlan: PlanItem[],
   calendarEvents?: CalendarEvent[],
-  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; lthr?: number }
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; lthr?: number },
+  opts?: CalendarHydrationOptions
 ): PlanItem[] {
+  const detectedRaces: RaceDayInfo[] = [];
+  (calendarEvents || []).forEach((evt) => {
+    const rInfo = raceInfoFromEvent(evt);
+    if (rInfo) detectedRaces.push(rInfo);
+  });
+  if (opts?.targetRaces) {
+    opts.targetRaces.forEach((tr) => {
+      const rInfo = raceInfoFromTarget(tr);
+      if (rInfo && !detectedRaces.some((r) => r.date === rInfo.date)) {
+        detectedRaces.push(rInfo);
+      }
+    });
+  }
+
   if (!calendarEvents || calendarEvents.length === 0 || !week?.startDate) {
-    return fallbackPlan;
+    const overlaid = applyRaceDaysToPlan(fallbackPlan, detectedRaces, {
+      bikeFtp: opts?.bikeFtp,
+      primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
+    });
+    if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
+      return overlaid.map((item) =>
+        adaptRunningPlanItem(item, {
+          mode: "PACE",
+          thresholdPaceSec: runningOpts.thresholdPaceSec,
+          lthr: runningOpts.lthr,
+        })
+      );
+    }
+    return overlaid;
   }
 
   const weekStart = new Date(week.startDate + "T00:00:00");
@@ -88,13 +134,11 @@ export function hydrateWeekPlanFromEvents(
   }
 
   const raceDates = new Set<string>();
+  detectedRaces.forEach((r) => raceDates.add(r.date));
   calendarEvents.forEach((evt) => {
-    const isRace =
-      evt.category === "RACE" ||
-      evt.category === "TARGET" ||
-      (evt.type as string) === "Race" ||
-      /giro de rigo|competici|gran fondo|ironman|marat[oó]n|triatl[oó]n/i.test(`${evt.name || ""} ${evt.type || ""}`);
-    if (isRace && evt.start_date_local) raceDates.add(evt.start_date_local.split("T")[0]);
+    if (isRaceCalendarEvent(evt) && evt.start_date_local) {
+      raceDates.add(evt.start_date_local.split("T")[0]);
+    }
   });
 
   const weekDateSet = new Set(weekDates.map((w) => w.dateStr));
@@ -104,7 +148,20 @@ export function hydrateWeekPlanFromEvents(
   });
 
   if (matchingEvents.length === 0) {
-    return fallbackPlan;
+    const overlaid = applyRaceDaysToPlan(fallbackPlan, detectedRaces, {
+      bikeFtp: opts?.bikeFtp,
+      primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
+    });
+    if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
+      return overlaid.map((item) =>
+        adaptRunningPlanItem(item, {
+          mode: "PACE",
+          thresholdPaceSec: runningOpts.thresholdPaceSec,
+          lthr: runningOpts.lthr,
+        })
+      );
+    }
+    return overlaid;
   }
 
   const eventsByDate: Record<string, CalendarEvent[]> = {};
@@ -145,7 +202,11 @@ export function hydrateWeekPlanFromEvents(
     const dayFallbackDiscs = new Set(dayFallback.map((p) => p.discipline));
 
     dayEvts.forEach((evt) => {
-      const disc = resolveDiscipline(evt.type);
+      if (isRaceCalendarEvent(evt)) {
+        // Eventos de competición oficial se sobreponen atómicamente por raceDayOverlay
+        return;
+      }
+      const disc = resolveDiscipline(evt.type, evt.name);
       const isPulseGenerated = evt.name && (/\[(?:PULSE AI|SGEA)\]/i.test(evt.name) || /test.*(ftp|css|vam|stryd|calibraci[oó]n)/i.test(evt.name));
       
       if (isPulseGenerated && dayFallbackDiscs.size > 0 && !dayFallbackDiscs.has(disc) && !dayFallbackDiscs.has("Descanso")) {
@@ -179,20 +240,21 @@ export function hydrateWeekPlanFromEvents(
         return;
       }
 
-      // Blindaje Anti-Maratón & Descarga de Fuerza:
-      // Si el evento de Intervals es un residuo previo de maratón (Canova/Pfitzinger) pero el plan actual
-      // tiene un rodaje adaptado, o si es una fuerza consecutiva convertida en movilidad articular:
-      const isObsoleteMarathonEvt = isPulseGenerated && /canova|pfitzinger 42k|fondo cumbre/i.test(cleanName) && !matchingFallback?.workoutName.toLowerCase().includes("canova");
-      const isObsoleteStrengthEvt = isPulseGenerated && disc === "Fuerza" && matchingFallback?.workoutName.includes("Movilidad") && !cleanName.includes("Movilidad");
-
-      if ((isObsoleteMarathonEvt || isObsoleteStrengthEvt) && matchingFallback) {
+      // Si el evento fue generado previamente por PULSE AI y tenemos la prescripción actualizada
+      // del motor del macrociclo (Fartleks, Bloques Tempo Z3, Tirada progresiva con descansos activos):
+      if (isPulseGenerated && matchingFallback) {
         hydratedItems.push({
           ...matchingFallback,
           id: evt.id ? String(evt.id) : undefined,
           date: dateStr,
           formattedDate,
           day,
-          justification: isObsoleteMarathonEvt ? "Adaptado: Rodaje de asimilación post-test" : matchingFallback.justification,
+          durationMinutes: matchingFallback.durationMinutes || Math.round((evt.moving_time || 0) / 60) || 45,
+          tss: matchingFallback.tss || evt.icu_training_load || undefined,
+          powerTarget: matchingFallback.powerTarget,
+          workoutName: matchingFallback.workoutName,
+          workoutDoc: matchingFallback.workoutDoc,
+          justification: matchingFallback.justification || `Planificado por SGEA/PULSE AI (${disc})`,
         });
         return;
       }
@@ -212,9 +274,6 @@ export function hydrateWeekPlanFromEvents(
 
       let tss = evt.icu_training_load || undefined;
       const fallbackTss = matchingFallback?.tss;
-      // Blindaje de integridad fisiológica: si Intervals.icu calculó un TSS corrupto
-      // (ej. confusión de metros con minutos en natación dando 377 o 430 TSS para 45m),
-      // o si excede el límite biológico plausible (~1.6 TSS/min, máx 100 TSS para <=60m):
       if (typeof tss === "number") {
         const maxPlausibleTss = Math.max(100, Math.round(mins * 1.6));
         if (tss > maxPlausibleTss) {
@@ -235,8 +294,13 @@ export function hydrateWeekPlanFromEvents(
     });
   }
 
+  const overlaidItems = applyRaceDaysToPlan(hydratedItems, detectedRaces, {
+    bikeFtp: opts?.bikeFtp,
+    primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
+  });
+
   if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
-    return hydratedItems.map((item) =>
+    return overlaidItems.map((item) =>
       adaptRunningPlanItem(item, {
         mode: "PACE",
         thresholdPaceSec: runningOpts.thresholdPaceSec,
@@ -245,5 +309,5 @@ export function hydrateWeekPlanFromEvents(
     );
   }
 
-  return hydratedItems;
+  return overlaidItems;
 }

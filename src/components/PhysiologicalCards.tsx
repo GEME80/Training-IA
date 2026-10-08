@@ -45,7 +45,14 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
 }) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
-  const activeMetrics = visibleMetrics && visibleMetrics.length > 0 ? visibleMetrics : DEFAULT_VISIBLE_METRICS;
+  const activeMetrics = useMemo(() => {
+    const base = visibleMetrics && visibleMetrics.length > 0 ? visibleMetrics : DEFAULT_VISIBLE_METRICS;
+    const isPaceMode = !runFtp || runFtp <= 0;
+    if (isPaceMode) {
+      return base.map((m) => (m === "strydCp" ? "runPace" : m));
+    }
+    return base;
+  }, [visibleMetrics, runFtp]);
 
   const metricConfigs = useMemo(() => {
     return buildMetricConfigs({

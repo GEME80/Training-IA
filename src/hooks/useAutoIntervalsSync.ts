@@ -63,9 +63,9 @@ export function useAutoIntervalsSync({
     if (!isPaceTarget) return;
 
     // Clave de migración idempotente: garantiza que se ejecute solo UNA vez
-    const migrationKey = `auto_intervals_purge_sync_v3_20261007_${athleteId}`;
+    const migrationKey = `auto_intervals_purge_sync_v4_20261008_${athleteId}`;
     const alreadyDoneInStorage = userStorage.getItem(migrationKey) === "done";
-    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-07";
+    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-08";
 
     if (alreadyDoneInStorage || alreadyDoneInProfile || isExecutingRef.current) {
       return;
@@ -131,7 +131,7 @@ export function useAutoIntervalsSync({
           await persistProfileField(
             user?.uid,
             user?.email || userProfile?.email || "",
-            { lastAutoPurgeSync: "2026-10-07" },
+            { lastAutoPurgeSync: "2026-10-08" },
             isReadOnly
           );
 

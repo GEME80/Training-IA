@@ -124,8 +124,26 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           justification: "Transición T2 rápida (< 5m). Adaptación neuromuscular a la carrera con pre-fatiga de pedaleo a ritmo de carrera 70.3.",
           workoutDoc: "Bloque 1: Ciclismo 70.3 Pace\n- 1h30m 78% FTP\n\nTransición T2 Exprés (< 5 min)\n\nBloque 2: Carrera de Transición (Primeros 10m @ 180 spm)\n- 25m 86% CP",
         },
+        {
+          name: "Bloques Extensivos Ritmo 70.3 (3x 10m @ 88% CP)",
+          powerTarget: "88% CP",
+          justification: "Fijación del ritmo específico de medio maratón 70.3 (Z3 Tempo) con aclaramiento de lactato.",
+          workoutDoc: "Warmup\n- 12m 74% CP\n\nMain (Ritmo Específico 70.3)\n3x\n- 10m 88% CP\n- 2m 68% CP\n\nCooldown\n- 8m 72% CP",
+        },
         RUN_DISTANCE_SERIES_5X_1000M,
+        {
+          name: "Tempo Fraccionado Sub-Umbral (2x 15m @ 88% CP)",
+          powerTarget: "88% CP",
+          justification: "Capacidad de sostener Z3 Tempo de media distancia con fatiga acumulada.",
+          workoutDoc: "Warmup\n- 12m 74% CP\n\nMain (Tempo Específico 70.3)\n2x\n- 15m 88% CP\n- 3m 68% CP\n\nCooldown\n- 8m 72% CP",
+        },
         RUN_BILLAT_30_30,
+        {
+          name: "Series de Ritmo Crucero 70.3 con Flotaciones (4x 8m @ 89% CP)",
+          powerTarget: "89% CP",
+          justification: "Eficiencia mecánica a ritmo sostenido y tolerancia al esfuerzo sub-umbral.",
+          workoutDoc: "Warmup\n- 12m 74% CP\n\nMain (Ritmo Crucero 70.3)\n4x\n- 8m 89% CP\n- 2m 76% CP (flotación Z2)\n\nCooldown\n- 8m 72% CP",
+        },
         RUN_DISTANCE_SERIES_6X_800M,
         {
           name: "Sweetspot Bike (3x12m @ 88% FTP) + Trote Transición (20m)",
@@ -146,6 +164,24 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
           powerTarget: "85% FTP + 86% CP",
           justification: "Reactividad a 10 días de la prueba sin agotar reservas de glucógeno.",
           workoutDoc: "Bloque 1: Bici\n- 25m 60% FTP\n3x\n- 2m 85% FTP\n- 2m 50% FTP\n- 8m 60% FTP\n\nTransición T2 Exprés\n\nBloque 2: Carrera\n- 15m 86% CP",
+        },
+        {
+          name: "Tempo Continuo Específico 70.3 (50m con 25m @ 88% CP)",
+          powerTarget: "88% CP",
+          justification: "Fijación neuromuscular del ritmo objetivo de media distancia (Z3 Tempo sostenido).",
+          workoutDoc: "Warmup\n- 15m 74% CP\n\nMain (Bloque Continuo Ritmo Carrera 70.3)\n- 25m 88% CP\n\nCooldown\n- 10m 72% CP",
+        },
+        {
+          name: "Simulación de Carrera Fraccionada (3x 12m @ 88% CP)",
+          powerTarget: "88% CP",
+          justification: "Densidad de volumen en Z3 Tempo a semanas de la competición para consolidar CTL específico.",
+          workoutDoc: "Warmup\n- 12m 74% CP\n\nMain (Simulación Ritmo 70.3)\n3x\n- 12m 88% CP\n- 2m 68% CP\n\nCooldown\n- 8m 72% CP",
+        },
+        {
+          name: "Series Progresivas a Ritmo de Competición (4x 6m @ 88-92% CP)",
+          powerTarget: "88-92% CP",
+          justification: "Progresión desde ritmo de crucero 70.3 hasta ritmo umbral con mínimo impacto.",
+          workoutDoc: "Warmup\n- 12m 74% CP\n\nMain (Progresión Ritmo 70.3 a Umbral)\n4x\n- 6m 90% CP\n- 2m 68% CP\n\nCooldown\n- 8m 72% CP",
         },
       ],
       taper: [

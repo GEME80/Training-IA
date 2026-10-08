@@ -3,6 +3,7 @@ import { resolveTrainingModel } from "../ai/knowledge";
 import { ALL_CYCLING_OUTDOOR_WORKOUTS } from "../ai/knowledge/workoutPools/cyclingOutdoorPool";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
+import { resolveFridayWorkout, FridayWorkoutParams } from "./fridayWorkoutResolver";
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a), y = Math.abs(b);
@@ -268,27 +269,17 @@ export function resolveEveRide(bikeFtp?: number) {
   };
 }
 
-export function resolveFridayFartlek(runFtp?: number, isMultisport: boolean = false) {
-  if (isMultisport) {
-    return {
-      workoutName: "Carrera Aeróbica Z2 Fluida con Rectas (40m)",
-      durationMinutes: 40, tss: 35,
-      powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.78)}W (78% CP • Z2 Activa)` : "78% Pace",
-      justification: "Rodaje aeróbico continuo Z2 con 5 rectas de reactividad neuromuscular al 105% sin fatiga glucolítica antes del fin de semana.",
-      workoutDoc: runFtp && runFtp > 0
-        ? "Warmup\n- 10m 74% CP\n\nMain (Z2 Activa)\n- 20m 78% CP\n\nRectas (Strides)\n5x\n- 20s 105% CP\n- 40s 65% CP\n\nCooldown\n- 5m 70% CP"
-        : "Warmup\n- 10m 75% Pace\n\nMain (Z2 Activa)\n- 20m 78% Pace\n\nRectas (Strides)\n5x\n- 20s 105% Pace\n- 40s 68% Pace\n\nCooldown\n- 5m 72% Pace",
-    };
+export function resolveFridayFartlek(
+  runFtpOrOpts?: number | FridayWorkoutParams,
+  maybeMulti: boolean = false
+) {
+  if (typeof runFtpOrOpts === "object" && runFtpOrOpts !== null) {
+    return resolveFridayWorkout(runFtpOrOpts);
   }
-  return {
-    workoutName: "Carrera - Fartlek Dinámico & Activación Aeróbica (45m)",
-    durationMinutes: 45, tss: 42,
-    powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.74)}-${Math.round(runFtp * 0.90)}W (Z2-Z4)` : "74-90% Pace",
-    justification: "Cambios de ritmo alegres y controlados para activar reactividad neuromuscular sin agotar las piernas antes de la tirada larga.",
-    workoutDoc: runFtp && runFtp > 0
-      ? "Warmup\n- 15m 74% CP\n\nMain (Fartlek Ágil)\n6x\n- 1m 90% CP\n- 2m 72% CP\n\nCooldown\n- 12m 70% CP"
-      : "Warmup\n- 15m 75% Pace\n\nMain (Fartlek Ágil)\n6x\n- 1m 90% Pace\n- 2m 72% Pace\n\nCooldown\n- 12m 72% Pace",
-  };
+  return resolveFridayWorkout({
+    runFtp: runFtpOrOpts,
+    isMultisport: maybeMulti,
+  });
 }
 
 export function resolveMidweekRide({

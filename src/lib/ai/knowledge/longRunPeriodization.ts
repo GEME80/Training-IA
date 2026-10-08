@@ -111,23 +111,69 @@ export function buildDynamicLongRunStructure(params: {
     const cappedKm = Math.min(18, Math.max(10, rawKm));
 
     if (isPeak) {
-      return {
-        workoutName: `Tirada Específica Ritmo 70.3 con Flotaciones (${cappedKm} km / ${cappedMins}m)`,
-        powerTarget: fmtPwr(85, 88, "Ritmo 70.3"),
-        workoutDoc: `Warmup\n- 15m 75% CP\n\nMain (Intervalos Ritmo 70.3)\n3x\n- 15m 87% CP\n- 3m 78% CP\n\nCooldown\n- 10m 72% CP`,
-      };
+      const peakVar = weekNumber % 3;
+      if (peakVar === 1) {
+        return {
+          workoutName: `Tirada Específica Ritmo 70.3 con Flotaciones (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(85, 88, "Ritmo 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Intervalos Ritmo 70.3)\n3x\n- 15m 87% CP\n- 3m 76% CP (flotación Z2)\n\nCooldown\n- 10m 71% CP`,
+        };
+      } else if (peakVar === 2) {
+        return {
+          workoutName: `Tirada Específica 70.3 en Bloques Largos (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(85, 88, "Ritmo 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Bloques Largos Ritmo 70.3)\n2x\n- 18m 87% CP\n- 3m 68% CP\n\nCooldown\n- 10m 71% CP`,
+        };
+      } else {
+        return {
+          workoutName: `Tirada Específica 70.3 con Simulación Continua (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(85, 88, "Ritmo 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Base)\n- ${Math.max(15, cappedMins - 48)}m 80% CP\n\nMain (Ritmo Específico 70.3 Continuo)\n- 25m 88% CP\n\nCooldown\n- 8m 71% CP`,
+        };
+      }
     }
     if (phase === "BUILD") {
+      const buildVar = weekNumber % 3;
+      if (buildVar === 1) {
+        return {
+          workoutName: `Tirada Específica 70.3 con Bloque de Ritmo Carrera (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(80, 88, "Z2 Base -> Ritmo 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Base)\n- ${Math.max(15, cappedMins - 45)}m 80% CP\n\nMain (Ritmo Específico 70.3)\n- 20m 87% CP\n\nCooldown\n- 10m 71% CP`,
+        };
+      } else if (buildVar === 2) {
+        return {
+          workoutName: `Tirada Específica 70.3 con Bloques Sub-Umbral (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(82, 88, "Bloques 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Base)\n- ${Math.max(15, cappedMins - 45)}m 80% CP\n\nMain (Bloques Ritmo 70.3)\n2x\n- 12m 88% CP\n- 3m 68% CP\n\nCooldown\n- 10m 71% CP`,
+        };
+      } else {
+        return {
+          workoutName: `Tirada Progresiva 70.3 Escalón Final (${cappedKm} km / ${cappedMins}m)`,
+          powerTarget: fmtPwr(80, 88, "Progresivo 70.3"),
+          workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Base)\n- ${Math.max(15, cappedMins - 40)}m 80% CP\n\nMain (Progresión Ritmo Carrera)\n- 12m 86% CP\n- 8m 89% CP\n\nCooldown\n- 10m 71% CP`,
+        };
+      }
+    }
+    if (phase === "TAPER") {
+      const taperM = Math.min(60, Math.max(35, cappedMins - 20));
+      const taperKm = Math.min(12, Math.max(7, cappedKm - 4));
       return {
-        workoutName: `Tirada Específica 70.3 con Bloque de Ritmo Carrera (${cappedKm} km / ${cappedMins}m)`,
-        powerTarget: fmtPwr(80, 88, "Z2 Base -> Ritmo 70.3"),
-        workoutDoc: `Warmup\n- 15m 75% CP\n\nMain (Z2 Base)\n- ${Math.max(15, cappedMins - 45)}m 80% CP\n\nMain (Ritmo Específico 70.3)\n- 20m 87% CP\n\nCooldown\n- 10m 72% CP`,
+        workoutName: `Carrera Continua de Afinamiento Pre-70.3 (${taperKm} km / ${taperM}m)`,
+        powerTarget: fmtPwr(76, 88, "Z2 + Chispa 70.3"),
+        workoutDoc: `Warmup\n- 12m 74% CP\n\nMain (Z2 Cómoda)\n- ${taperM - 22}m 78% CP\n\nMain (Recordatorio Ritmo Carrera)\n2x\n- 3m 87% CP\n- 2m 68% CP\n\nCooldown\n- 5m 71% CP`,
+      };
+    }
+    if (weekNumber % 2 === 0) {
+      return {
+        workoutName: `Rodaje Aeróbico 70.3 con Rectas de Cadencia (${cappedKm} km / ${cappedMins}m)`,
+        powerTarget: fmtPwr(76, 105, "Z2 + Strides"),
+        workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(15, cappedMins - 32)}m 80% CP (180 spm)\n\nRectas Finales\n5x\n- 20s 105% CP\n- 40s 65% CP\n\nCooldown\n- 7m 71% CP`,
       };
     }
     return {
       workoutName: `Rodaje Aeróbico Continuo 70.3 (${cappedKm} km / ${cappedMins}m Z2)`,
       powerTarget: fmtPwr(76, 81, "Z2 Base Activa"),
-      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(15, cappedMins - 25)}m 80% CP\n\nCooldown\n- 10m 72% CP`,
+      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(15, cappedMins - 25)}m 80% CP\n\nCooldown\n- 10m 71% CP`,
     };
   }
 

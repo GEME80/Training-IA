@@ -6132,3 +6132,59 @@ flowchart TD
 ### 83.4. Certificación
 - `tsc --noEmit`: 0 errores.
 - `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+---
+
+## 84. Erradicación de Monotonía en Running por Ritmo, Estímulos Específicos de Bloques Z3 Tempo (70.3) y Rotación Periodizada Semanal (v4.14)
+
+### 84.1. Diagnóstico de HeadCoach y Fisiología del Ejercicio
+1. **Monotonía Crónica de los Viernes:**
+   - La función `resolveFridayFartlek` en `macrocycleTemplateHelpers.ts` no recibía el número de semana ni la fase de periodización, devolviendo de manera hardcodeada la misma sesión `Carrera Aeróbica Z2 Fluida con Rectas (40m)` durante las 9 semanas consecutivas.
+2. **Carencia de Bloques Específicos de Z3 Tempo para Media Distancia (70.3):**
+   - En media distancia de triatlón (Ironman 70.3), el medio maratón se compite predominantemente en **Zona 3 Tempo ($85\text{--}92\%$ del Ritmo Umbral, ~5:35 a 5:10/km para George)**.
+   - En `triathlonModel.ts`, la fase `build` solo contemplaba intervalos anaeróbicos y VO2max (`5x1000m`, `Billat 30/30`, `6x800m`), mientras que la fase `peak` únicamente contenía sesiones multideporte (bici + brick). Como los miércoles de carrera pura filtraban sesiones con bici/brick, la fase `peak` quedaba sin opciones de carrera y caía en un fallback fijo: `Series de 5x3m` semana tras semana.
+3. **Colapso en Tiradas Largas Dominicales de 70.3:**
+   - En `longRunPeriodization.ts`, la fase `BUILD` repetía siempre 20m al 87% y la fase `PEAK` repetía siempre `3x (15m 87% - 3m 78%)`.
+   - Además, en `runningWorkoutAdapter.ts`, la línea `- 3m 78% CP` de descanso se convertía erróneamente en `- 3m 88% Pace` (¡más rápida que el intervalo de trabajo!), destruyendo la fisiología del descanso o flotación.
+
+### 84.2. Solución de Ingeniería y Periodización Aplicada
+1. **Nuevo Motor Modular `fridayWorkoutResolver.ts` (168 LOC):**
+   - Implementa rotación semanal dinámica por fases y tipos de microciclo:
+     * **W1 (Base 1):** Rodaje Aeróbico Z2 Fluido con Rectas ($40\text{m}$, 5 rectas al $105\%$).
+     * **W2 (Base 2):** Fartlek Aeróbico Dinámico Z2-Z3 ($40\text{m}$ con $6\times [1\text{m Z3 } 88\% + 2\text{m Z2 flotación } 76\%]$).
+     * **W3 (Build 1):** Carrera Progresiva con Final a Ritmo 70.3 ($40\text{m}$ con $15\text{m Z2} + 12\text{m Z3 } 87\%$).
+     * **W4 (Descarga):** Carrera de Soltura & Asimilación Z1-Z2 ($35\text{m}$ regenerativo a $76\%$ Pace).
+     * **W5 (Peak 1):** Carrera Aeróbica Z2 Fluida con 5 Rectas reactivas ($40\text{m}$).
+     * **W6 (Peak 2):** Fartlek Aeróbico Dinámico Z2-Z3 ($6\times [1\text{m } 88\% + 2\text{m flotación } 76\%]$).
+     * **W7 (Control):** Carrera Progresiva con Final a Ritmo 70.3 ($12\text{m } @ 87\%$).
+     * **W8 (Taper):** Carrera Suave de Puesta a Punto con Strides ($30\text{m}$, 4 rectas).
+     * **W9 (Race Week):** Trote Suave Pre-Carrera con Strides de Activación ($25\text{m}$).
+2. **Inyección de Bloques Extensivos de Z3 Tempo en `triathlonModel.ts`:**
+   - Añadidas sesiones de carrera pura en `build` y `peak`:
+     * `Bloques Extensivos Ritmo 70.3 (3x 10m @ 88% CP / Pace)`
+     * `Tempo Fraccionado Sub-Umbral (2x 15m @ 88% CP / Pace)`
+     * `Series de Ritmo Crucero 70.3 con Flotaciones (4x 8m @ 89% CP / Pace)`
+     * `Tempo Continuo Específico 70.3 (50m con 25m continuo @ 88% CP / Pace)`
+     * `Simulación de Carrera Fraccionada (3x 12m @ 88% CP / Pace)`
+     * `Series Progresivas a Ritmo de Competición (4x 6m @ 88-92% CP / Pace)`
+3. **Periodización Rotativa de Tiradas Largas Dominicales (`longRunPeriodization.ts`):**
+   - Rotación semanal en `BUILD` y `PEAK` alternando bloques continuos de 20-25m en Z3, bloques fraccionados ($2\times 12\text{m}$, $2\times 18\text{m}$), flotaciones Z2 y progresiones escalonadas.
+   - Corrección de intervalos de recuperación a $68\%$ y flotaciones a $76\%$.
+4. **Fisiología de Adaptación de Documentos (`runningWorkoutAdapter.ts`):**
+   - En `INTERVALS`: preservación exacta del ritmo Z3 Tempo ($v1 \ge 85 \Rightarrow t1 = v1$), mapeo de descansos activos al $68\%$ Pace y flotaciones al $76\%$ Pace.
+5. **Actualización de Clave de Sincronización Automática (`useAutoIntervalsSync.ts`):**
+   - Actualizada a `auto_intervals_purge_sync_v4_20261008_${athleteId}` para propagar transparentemente las sesiones variadas a Intervals.icu.
+
+### 84.3. Archivos Auditados ($\le 350$ LOC)
+- `src/lib/physiology/fridayWorkoutResolver.ts`: **168 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/triathlonModel.ts`: **256 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/longRunPeriodization.ts`: **263 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **338 LOC** ($\le 350$)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **344 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **348 LOC** ($\le 350$)
+- `src/hooks/useAutoIntervalsSync.ts`: **169 LOC** ($\le 350$)
+
+### 84.4. Certificación
+- `tsc --noEmit`: 0 errores.
+- `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
+

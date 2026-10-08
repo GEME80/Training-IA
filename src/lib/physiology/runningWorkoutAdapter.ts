@@ -179,15 +179,17 @@ export function adaptRunningWorkoutDoc(
       } else if (currentSec === "COOLDOWN") {
         t1 = 71;
       } else if (currentSec === "INTERVALS") {
-        if (v1 <= 72 || /recup|descanso|recovery/i.test(line)) t1 = 68;
+        if (/recup|descanso|recovery/i.test(line) || v1 <= 72) t1 = 68;
+        else if (/flotaci/i.test(line) || (v1 >= 73 && v1 <= 79)) t1 = 76;
         else if (v1 >= 100 || /stride|recta/i.test(line)) t1 = Math.max(105, Math.min(115, v1 >= 105 ? v1 : 110));
-        else if (/ágil|70\.3|tempo|progres/i.test(line)) t1 = 88;
+        else if (/ágil|70\.3|tempo|progres/i.test(line)) t1 = (v1 >= 85 && v1 <= 94) ? v1 : 88;
         else t1 = v1 >= 85 ? v1 : 88;
       } else {
         const isFastFinish = /final|ágil|progres|tempo|70\.3/i.test(line);
         const isRecovery = /recup|descanso|recovery/i.test(line) || v1 <= 67;
         if (isRecovery) t1 = 68;
-        else if (isFastFinish) t1 = 88;
+        else if (/flotaci/i.test(line)) t1 = 76;
+        else if (isFastFinish) t1 = (v1 >= 85 && v1 <= 94) ? v1 : 88;
         else if (isSoltura) t1 = 76;
         else if (v1 >= 85 && v1 < 95) t1 = v1;
         else if (v1 >= 95) t1 = v1;
@@ -215,10 +217,7 @@ function stripNestedTarget(str: string, pattern: RegExp): string {
  */
 export function interpolateWorkoutTarget(
   rawTarget: string,
-  opts: {
-    discipline?: string; mode?: RunningTrainingMode; runFtp?: number; bikeFtp?: number;
-    thresholdPaceSec?: number; swimCssSec?: number; lthr?: number; isQuality?: boolean;
-  } = {}
+  opts: { discipline?: string; mode?: RunningTrainingMode; runFtp?: number; bikeFtp?: number; thresholdPaceSec?: number; swimCssSec?: number; lthr?: number; isQuality?: boolean } = {}
 ): string {
   if (!rawTarget) return rawTarget;
   const { discipline = "Carrera", mode = "POWER", runFtp, bikeFtp, thresholdPaceSec = 270, swimCssSec = 105 } = opts;

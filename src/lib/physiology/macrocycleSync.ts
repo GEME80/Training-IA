@@ -170,10 +170,7 @@ export function syncAndCalibrateBlueprint(
           ? "42k"
           : "10k");
 
-      const resolvedPeriodization =
-        syncedBp.periodization === "2:1" || !syncedBp.periodization
-          ? "3:1"
-          : syncedBp.periodization;
+      const resolvedPeriodization = syncedBp.periodization || "3:1";
 
       const upgradedBp = generateCustomMacrocycleBlueprint({
         distanceType: distanceType as any,

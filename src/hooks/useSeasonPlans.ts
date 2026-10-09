@@ -146,8 +146,17 @@ export function useSeasonPlans({
     try {
       await fetch("/api/macrocycles", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ athleteId: profileId, blueprint: syncedBlueprint, primaryRace: primaryTargetRace || syncedBlueprint.primaryRace, source }),
+        body: JSON.stringify({
+          athleteId: profileId,
+          uid: user?.uid,
+          blueprint: syncedBlueprint,
+          primaryRace: primaryTargetRace || syncedBlueprint.primaryRace,
+          source,
+        }),
       });
+      if (user?.uid) {
+        persistProfileField(user.uid, user.email || userProfile?.email || "", { seasonPlans: updatedPlans }, isReadOnly).catch(() => {});
+      }
     } catch (e) {
       console.warn("Aviso al persistir macrociclo en Firestore:", e);
     }
@@ -232,10 +241,13 @@ export function useSeasonPlans({
       else if (storedPlans?.length) resolvedPlans = storedPlans;
 
       const storedAthleteId = profileId || userProfile?.intervalsAthleteId;
-      if (resolvedPlans.length === 0 && storedAthleteId && (isSuper || storedAthleteId !== "i442091")) {
+      const targetId = storedAthleteId || user?.uid;
+      const masterAthleteId = process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || "i442091";
+      if (resolvedPlans.length === 0 && targetId && (isSuper || targetId !== masterAthleteId)) {
         try {
           const userEmailParam = encodeURIComponent(userProfile?.email || user?.email || "");
-          const macroRes = await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(storedAthleteId)}&requesterEmail=${userEmailParam}`);
+          const uidParam = user?.uid ? `&uid=${encodeURIComponent(user.uid)}` : "";
+          const macroRes = await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(targetId)}${uidParam}&requesterEmail=${userEmailParam}`);
           if (macroRes.ok) {
             const macroData = await macroRes.json();
             if (macroData.success && macroData.macrocycle?.blueprint) {

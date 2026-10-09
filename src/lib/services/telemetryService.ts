@@ -244,7 +244,7 @@ export class TelemetryService {
 
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
             const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
-            const isPaceRun = storedUser?.profile?.hasRunningPowerMeter === false || storedUser?.profile?.runningTrainingMode === "PACE" || effectiveAthleteId === "i729730";
+            const isPaceRun = storedUser?.profile?.hasRunningPowerMeter === false || storedUser?.profile?.runningTrainingMode === "PACE";
             const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0));
             const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
             const initialRunFtp = isPaceRun ? 0 : resolvedRunFtp;

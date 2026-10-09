@@ -85,14 +85,14 @@ export function sanitizeMacrocycleBlueprint(blueprint: MacrocycleBlueprint): Mac
           /bloque 1: ciclismo|1h\d+m bici|bici @/i.test(doc);
 
         if (hasBikePollution) {
-          const runFtp = blueprint.runFtpAtCreation || 275;
+          const runFtp = blueprint.runFtpAtCreation && blueprint.runFtpAtCreation > 0 ? blueprint.runFtpAtCreation : 0;
           return {
             ...item,
             discipline: "Carrera",
             workoutName: "Series de Potencia Crítica en Carrera (5x 3m 90% CP)",
             durationMinutes: 50,
             tss: 52,
-            powerTarget: `${Math.round(runFtp * 0.9)}W (90% CP)`,
+            powerTarget: runFtp > 0 ? `${Math.round(runFtp * 0.9)}W (90% CP)` : "90% CP / Ritmo Umbral",
             justification: "Sesión específica de calidad en carrera a pie para desarrollo de potencia aeróbica y economía de zancada.",
             workoutDoc: "Warmup\n- 12m 65% CP\n\n5x\n- 3m 90% CP\n- 2m 60% CP\n\nCooldown\n- 8m 60% CP",
           };

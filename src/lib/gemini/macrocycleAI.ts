@@ -142,9 +142,13 @@ export class MacrocycleAIEngine {
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.2,
+            maxOutputTokens: 600,
+          },
         }),
-        signal: AbortSignal.timeout(35000),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (res.ok) {

@@ -11,154 +11,139 @@ export {
   evaluateTestForUpgrade,
 } from "@/lib/physiology/ctlPotentialEngine";
 
-export async function executeRecalibrateBoth() {
+/**
+ * Recalibra dinámicamente el macrociclo activo de un atleta leyendo sus datos vivos
+ * de perfil, carrera objetivo y matriz de disponibilidad desde Firestore.
+ */
+export async function recalibrateAthletePlan(athleteIdentifier: string): Promise<{
+  success: boolean;
+  athleteId: string;
+  macrocycleId?: string;
+  weeks?: number;
+  primaryRace?: string;
+  error?: string;
+}> {
+  if (!adminDb) {
+    return { success: false, athleteId: athleteIdentifier, error: "Base de datos no disponible" };
+  }
+
+  try {
+    // Localizar el documento del usuario por uid, intervalsAthleteId o email
+    let userDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+    const directDoc = await adminDb.collection("users").doc(athleteIdentifier).get();
+    if (directDoc.exists) {
+      userDoc = directDoc;
+    } else {
+      const qId = await adminDb.collection("users").where("intervalsAthleteId", "==", athleteIdentifier).limit(1).get();
+      if (!qId.empty) {
+        userDoc = qId.docs[0];
+      } else {
+        const qEmail = await adminDb.collection("users").where("email", "==", athleteIdentifier).limit(1).get();
+        if (!qEmail.empty) userDoc = qEmail.docs[0];
+      }
+    }
+
+    if (!userDoc || !userDoc.exists) {
+      return { success: false, athleteId: athleteIdentifier, error: "Atleta no encontrado en Firestore" };
+    }
+
+    const userData = userDoc.data() || {};
+    const effectiveAthleteId = userData.intervalsAthleteId || userDoc.id;
+    const profile = userData.profile || {};
+    const primaryRace = (userData.targetRaces && userData.targetRaces[0]) || null;
+    const activePlan = (userData.seasonPlans && userData.seasonPlans[0]?.blueprint) || null;
+
+    if (!activePlan && !primaryRace) {
+      return { success: false, athleteId: effectiveAthleteId, error: "Sin macrociclo activo ni carrera objetivo" };
+    }
+
+    const distanceType = activePlan?.distanceType || primaryRace?.distance || "42k";
+    const startDate = activePlan?.startDate || new Date().toISOString().split("T")[0];
+    const totalWeeks = activePlan?.totalWeeks || 16;
+    const periodization = activePlan?.periodization || "3:1";
+
+    const upgradedBlueprint = generateCustomMacrocycleBlueprint({
+      distanceType: distanceType as any,
+      startDate,
+      weeksCount: totalWeeks,
+      customGoal: activePlan?.cycleTitle || primaryRace?.name || "Macrociclo Recalibrado",
+      periodization: periodization as any,
+      primaryRace: primaryRace || undefined,
+      athleteMetrics: {
+        ctl: profile.ctl || userData.ctl,
+        atl: profile.atl || userData.atl,
+        tsb: profile.tsb || userData.tsb,
+        runFtp: profile.runFtp || userData.runFtp,
+        bikeFtp: profile.bikeFtp || userData.bikeFtp,
+        runningTrainingMode: profile.runningTrainingMode || userData.runningTrainingMode,
+        hasRunningPowerMeter: profile.hasRunningPowerMeter ?? userData.hasRunningPowerMeter,
+        weightKg: profile.weightKg || userData.weightKg,
+        heightCm: profile.heightCm || userData.heightCm,
+        restingHR: profile.restingHR || userData.restingHR,
+        maxHR: profile.maxHR || userData.maxHR,
+        lthr: profile.lthr || userData.lthr,
+        age: profile.age || userData.age,
+        gender: profile.gender || userData.gender,
+        weeklyAvailability: userData.weeklyAvailability || profile.weeklyAvailability,
+      },
+    });
+
+    const macrocycleId = await saveMacrocycleToFirestore(effectiveAthleteId, upgradedBlueprint, primaryRace, "WIZARD_CUSTOM");
+
+    const updatedPlanItem = {
+      id: `plan-${Date.now()}`,
+      planName: upgradedBlueprint.cycleTitle,
+      goalType: distanceType.toUpperCase(),
+      blueprint: upgradedBlueprint,
+      startDate: upgradedBlueprint.startDate,
+      endDate: upgradedBlueprint.weeks[upgradedBlueprint.weeks.length - 1]?.endDate,
+      totalWeeks: upgradedBlueprint.totalWeeks,
+      status: "ACTIVE",
+      orderIndex: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    await userDoc.ref.update({
+      seasonPlans: [updatedPlanItem],
+      ...(primaryRace ? { targetRaces: [primaryRace] } : {}),
+      updatedAt: new Date().toISOString(),
+    });
+
+    return {
+      success: true,
+      athleteId: effectiveAthleteId,
+      macrocycleId,
+      weeks: upgradedBlueprint.totalWeeks,
+      primaryRace: primaryRace?.name,
+    };
+  } catch (err: any) {
+    return { success: false, athleteId: athleteIdentifier, error: err?.message || "Error al recalibrar" };
+  }
+}
+
+/**
+ * Recalibra dinámicamente los atletas activos en base de datos.
+ * Preserva retrocompatibilidad con la API de administración.
+ */
+export async function executeRecalibrateBoth(targetAthleteId?: string) {
+  if (targetAthleteId) {
+    const res = await recalibrateAthletePlan(targetAthleteId);
+    return [res];
+  }
+
+  if (!adminDb) return [];
+
+  const usersSnap = await adminDb.collection("users").get();
   const results: any[] = [];
 
-  // 1. GERMÁN MORALES (Maratón de Tokio 2027)
-  const germanMatrix = {
-    Lunes: ["Descanso"],
-    Martes: ["Ciclismo"],
-    Miércoles: ["Carrera", "Fuerza"],
-    Jueves: ["Ciclismo", "Fuerza"],
-    Viernes: ["Carrera", "Fuerza"],
-    Sábado: ["Ciclismo"],
-    Domingo: ["Carrera"],
-  };
-
-  const germanBlueprint = generateCustomMacrocycleBlueprint({
-    distanceType: "42k",
-    startDate: "2026-09-14",
-    weeksCount: 25,
-    customGoal: "Maratón de Tokio 2027 (42.195 km) - Sub 3h15",
-    periodization: "3:1",
-    primaryRace: {
-      id: "race-german-tokio-marathon",
-      name: "🏆 Maratón de Tokio 2027 (42.195 km)",
-      date: "2027-03-07",
-      distance: "42k" as any,
-      priority: "A",
-      goalTarget: "Pico de Forma & Marca Personal Sub 3h15",
-    },
-    athleteMetrics: {
-      ctl: 37.5, atl: 42.0, tsb: -4.5, runFtp: 336, bikeFtp: 240,
-      weightKg: 84, heightCm: 185, restingHR: 49, maxHR: 185, lthr: 168, age: 46, gender: "M",
-      weeklyAvailability: germanMatrix as any,
-      historicalMetrics: {
-        peakCtlLastYear: 86.9, annualVolumeTss: 19426, maxAtlRecorded: 135, minTsbRecorded: -28, avgRampRate: 2.8, recordedDaysCount: 365,
-      } as any,
-    },
-  });
-
-  const germanMacroId = await saveMacrocycleToFirestore("i442091", germanBlueprint, germanBlueprint.primaryRace, "WIZARD_CUSTOM");
-  results.push({
-    athlete: "Germán Morales", athleteId: "i442091", macrocycleId: germanMacroId,
-    weeks: germanBlueprint.totalWeeks, primaryRace: germanBlueprint.primaryRace?.name,
-  });
-
-  // 2. JUAN PABLO VÁSQUEZ (Triseries Paipa 2026)
-  const juanMatrix = {
-    Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Ciclismo"],
-    Jueves: ["Fuerza"], Viernes: ["Natacion"], Sábado: ["Ciclismo"], Domingo: ["Carrera"],
-  };
-
-  const juanBlueprint = generateCustomMacrocycleBlueprint({
-    distanceType: "triathlon_short",
-    startDate: "2026-09-14",
-    weeksCount: 7,
-    customGoal: "Triseries Paipa 2026 (Triatlón Olímpico)",
-    periodization: "2:1",
-    primaryRace: {
-      id: "race-juan-triseries",
-      name: "🏆 Triseries Paipa 2026 (Lago Sochagota)",
-      date: "2026-11-01",
-      distance: "triathlon_short" as any,
-      priority: "A",
-      goalTarget: "Completar con Pico de Rendimiento",
-    },
-    athleteMetrics: {
-      ctl: 42.0, atl: 45.0, tsb: -3.0, runFtp: 275, bikeFtp: 215,
-      weightKg: 74, heightCm: 177, restingHR: 52, maxHR: 182, lthr: 165, age: 43, gender: "M",
-      weeklyAvailability: juanMatrix as any,
-      historicalMetrics: {
-        peakCtlLastYear: 68.0, annualVolumeTss: 14200, maxAtlRecorded: 110, minTsbRecorded: -22, avgRampRate: 2.2, recordedDaysCount: 365,
-      } as any,
-    },
-  });
-
-  const juanMacroId = await saveMacrocycleToFirestore("juan.vasquez.1983@gmail.com", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
-  await saveMacrocycleToFirestore("i444697", juanBlueprint, juanBlueprint.primaryRace, "WIZARD_CUSTOM");
-
-  if (adminDb) {
-    try {
-      const juanSnap = await adminDb.collection("users").where("email", "==", "juan.vasquez.1983@gmail.com").get();
-      const juanPlanItem = {
-        id: `plan-juan-${Date.now()}`, planName: juanBlueprint.cycleTitle, goalType: "TRIATHLON_SHORT",
-        blueprint: juanBlueprint, startDate: juanBlueprint.startDate, endDate: juanBlueprint.weeks[juanBlueprint.weeks.length - 1]?.endDate,
-        totalWeeks: juanBlueprint.totalWeeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(),
-      };
-      for (const d of juanSnap.docs) {
-        await d.ref.update({ seasonPlans: [juanPlanItem], targetRaces: [juanBlueprint.primaryRace] });
-      }
-    } catch (e) { console.warn("Aviso al persistir plan en doc de Juan Pablo:", e); }
+  for (const doc of usersSnap.docs) {
+    const data = doc.data();
+    if (Array.isArray(data.seasonPlans) && data.seasonPlans.length > 0) {
+      const athId = data.intervalsAthleteId || doc.id;
+      const res = await recalibrateAthletePlan(athId);
+      results.push(res);
+    }
   }
-
-  results.push({
-    athlete: "Juan Pablo Vásquez", athleteId: "i444697", macrocycleId: juanMacroId,
-    weeks: juanBlueprint.totalWeeks, primaryRace: juanBlueprint.primaryRace?.name,
-  });
-
-  // 3. GEORG SCHMITT (Ironman 70.3 Cartagena 2026 + Giro de Rigo Tipo B)
-  const georgMatrix = {
-    Lunes: ["Descanso"], Martes: ["Ciclismo", "Natacion"], Miércoles: ["Carrera"],
-    Jueves: ["Fuerza", "Ciclismo"], Viernes: ["Carrera"], Sábado: ["Ciclismo", "Fuerza"], Domingo: ["Carrera", "Natacion"],
-  };
-
-  const georgBlueprint = generateCustomMacrocycleBlueprint({
-    distanceType: "triathlon_703",
-    startDate: "2026-09-28",
-    weeksCount: 9,
-    customGoal: "Ironman Cartagena 2026 70.3",
-    periodization: "3:1",
-    primaryRace: {
-      id: "race-georg-cartagena-703",
-      name: "🏆 Ironman Cartagena 2026 70.3",
-      date: "2026-11-29",
-      distance: "triathlon_703" as any,
-      priority: "A",
-      goalTarget: "Pico de forma óptimo",
-    },
-    athleteMetrics: {
-      ctl: 38.0, atl: 40.0, tsb: -2.0, runFtp: 0, bikeFtp: 220,
-      runningTrainingMode: "PACE", hasRunningPowerMeter: false,
-      weightKg: 78, heightCm: 180, restingHR: 50, maxHR: 180, lthr: 162, age: 40, gender: "M",
-      weeklyAvailability: georgMatrix as any,
-      historicalMetrics: {
-        peakCtlLastYear: 62.0, annualVolumeTss: 13500, maxAtlRecorded: 95, minTsbRecorded: -18, avgRampRate: 2.0, recordedDaysCount: 365,
-      } as any,
-    },
-  });
-
-  const georgMacroId = await saveMacrocycleToFirestore("i729730", georgBlueprint, georgBlueprint.primaryRace, "WIZARD_CUSTOM");
-  if (adminDb) {
-    try {
-      const snap = await adminDb.collection("users").where("intervalsAthleteId", "==", "i729730").get();
-      const georgPlanItem = {
-        id: `plan-georg-${Date.now()}`, planName: georgBlueprint.cycleTitle, goalType: "TRIATHLON_703",
-        blueprint: georgBlueprint, startDate: georgBlueprint.startDate, endDate: georgBlueprint.weeks[georgBlueprint.weeks.length - 1]?.endDate,
-        totalWeeks: georgBlueprint.totalWeeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(),
-      };
-      for (const d of snap.docs) {
-        await d.ref.update({
-          seasonPlans: [georgPlanItem], targetRaces: [georgBlueprint.primaryRace],
-          runningTrainingMode: "PACE", hasRunningPowerMeter: false, runFtp: 0, bikeFtp: 220, runThresholdPaceSecPerKm: 285, runThresholdPaceStr: "4:45"
-        });
-      }
-    } catch {}
-  }
-  results.push({
-    athlete: "Georg Schmitt", athleteId: "i729730", macrocycleId: georgMacroId,
-    weeks: georgBlueprint.totalWeeks, primaryRace: georgBlueprint.primaryRace?.name,
-  });
 
   return results;
 }

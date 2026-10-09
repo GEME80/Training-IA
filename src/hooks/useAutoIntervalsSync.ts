@@ -54,18 +54,11 @@ export function useAutoIntervalsSync({
     // Si no hay atleta o macrociclo activo con semanas, esperar
     if (!athleteId || !blueprint?.weeks || blueprint.weeks.length === 0) return;
 
-    // Solo atletas en modo PACE o específicamente Georg Schmitt (i729730)
-    const isPaceTarget =
-      athleteId === "i729730" ||
-      runningOpts?.mode === "PACE" ||
-      userProfile?.runningTrainingMode === "PACE";
-
-    if (!isPaceTarget) return;
-
-    // Clave de migración idempotente: garantiza que se ejecute solo UNA vez
-    const migrationKey = `auto_intervals_purge_sync_v4_20261008_${athleteId}`;
+    // Clave de migración idempotente v5 (Modernización Multi-Sport & Paramétrica)
+    // Garantiza que se ejecute solo UNA vez por atleta tras la actualización v5.0
+    const migrationKey = `auto_intervals_v5_modernization_20261012_${athleteId}`;
     const alreadyDoneInStorage = userStorage.getItem(migrationKey) === "done";
-    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-08";
+    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-12";
 
     if (alreadyDoneInStorage || alreadyDoneInProfile || isExecutingRef.current) {
       return;
@@ -78,10 +71,18 @@ export function useAutoIntervalsSync({
 
     const executeBackgroundPurgeAndSync = async () => {
       isExecutingRef.current = true;
-      const fromDate = "2026-10-07";
+      // Los atletas ya tienen planificado su fin de semana hasta el domingo (2026-10-11).
+      // Se preserva intacto de viernes a domingo y la modernización aplica a partir del próximo lunes (2026-10-12).
+      const d = new Date();
+      const day = d.getDay(); // 0 = Domingo, 1 = Lunes, ..., 5 = Viernes, 6 = Sábado
+      const daysUntilMonday = day === 0 ? 1 : (8 - day) % 7 || 7;
+      const nextMon = new Date(d);
+      nextMon.setDate(d.getDate() + daysUntilMonday);
+      const computedNextMonday = nextMon.toISOString().split("T")[0];
+      const fromDate = computedNextMonday < "2026-10-12" ? "2026-10-12" : computedNextMonday;
 
       try {
-        console.info(`[AutoIntervalsSync] Iniciando sincronización transparente en segundo plano para ${athleteId}...`);
+        console.info(`[AutoIntervalsSync] Iniciando sincronización transparente en segundo plano para ${athleteId} desde ${fromDate}...`);
 
         // 1. Generar la plantilla de microciclos del macrociclo
         const fullPlan: PlanItem[] = [];
@@ -99,7 +100,7 @@ export function useAutoIntervalsSync({
           fullPlan.push(...weekPlan);
         });
 
-        // 2. Filtrar exclusivamente sesiones a partir de mañana (2026-10-03)
+        // 2. Filtrar exclusivamente sesiones a partir del próximo lunes (preservando el fin de semana actual y el historial)
         const futurePlan = fullPlan.filter((item) => !item.date || item.date >= fromDate);
 
         if (futurePlan.length === 0) {
@@ -125,13 +126,13 @@ export function useAutoIntervalsSync({
         const data = await res.json();
         if (data.success) {
           console.info(
-            `[AutoIntervalsSync] Sincronización exitosa en segundo plano para ${athleteId}. Sesiones purgadas: ${data.deletedCount || 0}, Sesiones en Pace sincronizadas: ${data.createdCount || 0}`
+            `[AutoIntervalsSync] Sincronización exitosa en segundo plano para ${athleteId}. Sesiones purgadas: ${data.deletedCount || 0}, Sesiones actualizadas desde ${fromDate}: ${data.createdCount || 0}`
           );
           userStorage.setItem(migrationKey, "done");
           await persistProfileField(
             user?.uid,
             user?.email || userProfile?.email || "",
-            { lastAutoPurgeSync: "2026-10-08" },
+            { lastAutoPurgeSync: "2026-10-12" },
             isReadOnly
           );
 

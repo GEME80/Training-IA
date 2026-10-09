@@ -8,6 +8,14 @@ import {
   BIKE_TORQUE_BAJA_CADENCIA,
   BIKE_SWEETSPOT_EXTENSIVO,
   BIKE_VO2MAX_COGGAN_5X3,
+  BIKE_SEILER_4X8_THRESHOLD,
+  BIKE_BILLAT_30_30_VO2MAX,
+  BIKE_SWEETSPOT_PIRAMIDE,
+  BIKE_OVER_UNDERS_CRISS_CROSS,
+  BIKE_THRESHOLD_TT_SIMULATION,
+  BIKE_MICROBURSTS_15_15,
+  BIKE_TEMPO_CADENCIA_VARIABLE,
+  ALL_CYCLING_INTERVAL_WORKOUTS,
 } from "./workoutPools/cyclingIntervalPool";
 import {
   BIKE_OUTDOOR_REPECHOS_LIBRES,
@@ -15,6 +23,8 @@ import {
   BIKE_OUTDOOR_FAST_FINISH,
   BIKE_OUTDOOR_ASIMILACION_SOCIAL,
   BIKE_OUTDOOR_GRAN_FONDO_MONTAÑA,
+  BIKE_OUTDOOR_REGENERATIVO_CAFE,
+  ALL_CYCLING_OUTDOOR_WORKOUTS,
 } from "./workoutPools/cyclingOutdoorPool";
 
 export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
@@ -107,7 +117,9 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
     qualityWorkouts: {
       base: [
         BIKE_SWEETSPOT_EXTENSIVO,
+        BIKE_SWEETSPOT_PIRAMIDE,
         BIKE_TORQUE_BAJA_CADENCIA,
+        BIKE_TEMPO_CADENCIA_VARIABLE,
         {
           name: "Ciclismo Tempo Aeróbico Z3 (2x15m @ 80% FTP)",
           powerTarget: "80% FTP",
@@ -123,16 +135,23 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
       ],
       build: [
         BIKE_RONNESTAD_30_15,
+        BIKE_SEILER_4X8_THRESHOLD,
+        BIKE_BILLAT_30_30_VO2MAX,
         BIKE_ESCALERA_PIRAMIDAL_VAM,
         BIKE_OVER_UNDERS_SHUTTLING,
+        BIKE_OVER_UNDERS_CRISS_CROSS,
+        BIKE_THRESHOLD_TT_SIMULATION,
         BIKE_VO2MAX_COGGAN_5X3,
         BIKE_TABATA_40_20,
         BIKE_SWEETSPOT_EXTENSIVO,
+        BIKE_SWEETSPOT_PIRAMIDE,
         BIKE_TORQUE_BAJA_CADENCIA,
       ],
       peak: [
         BIKE_OVER_UNDERS_SHUTTLING,
+        BIKE_OVER_UNDERS_CRISS_CROSS,
         BIKE_VO2MAX_COGGAN_5X3,
+        BIKE_THRESHOLD_TT_SIMULATION,
         {
           name: "Simulación de Marcha Gran Fondo (3x 20m @ 88% FTP con descansos cortos)",
           powerTarget: "88% FTP",
@@ -155,15 +174,9 @@ export const CYCLING_GRAN_FONDO_MODEL: CuratedTrainingModel = {
         },
       ],
     },
-    bikeMidWeekWorkouts: [
-      BIKE_RONNESTAD_30_15,
-      BIKE_ESCALERA_PIRAMIDAL_VAM,
-      BIKE_OVER_UNDERS_SHUTTLING,
-      BIKE_TORQUE_BAJA_CADENCIA,
-      BIKE_SWEETSPOT_EXTENSIVO,
-      BIKE_TABATA_40_20,
-    ],
+    bikeMidWeekWorkouts: ALL_CYCLING_INTERVAL_WORKOUTS,
     recoveryAerobicWorkouts: [
+      BIKE_OUTDOOR_REGENERATIVO_CAFE,
       {
         name: "Ciclismo Suave Z1 de Recuperación (35m)",
         powerTarget: "52% FTP",

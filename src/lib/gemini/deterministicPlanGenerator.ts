@@ -25,9 +25,9 @@ export function generateDeterministicAnalysis(
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY
 ): AgentDecisionOutput {
   const isFatigued = status.status === "OVERTRAINING_RISK" || status.status === "CAUTION";
-  const runningMode = resolveRunningMode(profile);
-  const runFtp = runningMode === "POWER" ? (profile.run_ftp || 280) : 0;
-  const bikeFtp = profile.bike_ftp || 200;
+  const runningMode = profile.runningTrainingMode || (profile.run_ftp && profile.run_ftp > 0 ? "POWER" : "PACE");
+  const runFtp = runningMode === "POWER" ? (profile.run_ftp || 0) : 0;
+  const bikeFtp = profile.bike_ftp || 0;
   const phase = macrocyclePhase?.phase || "MAINTENANCE";
   const isFtpTestWeek = !isFatigued && (macrocyclePhase?.blueprint?.currentWeek?.microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(`${macrocyclePhase?.guideline || ""} ${macrocyclePhase?.suggestedFocus || ""}`));
   const macroTitle = macrocyclePhase?.primaryRace ? `Macrociclo: ${macrocyclePhase.phaseLabel} (${macrocyclePhase.weeksRemaining} sem para ${macrocyclePhase.primaryRace.name}).` : `Macrociclo: Mantenimiento General Adaptativo.`;

@@ -15,6 +15,12 @@ import {
   RUN_PIRAMIDE_CONTINUA_Z2_Z3,
 } from "./workoutPools/runningFartlekPool";
 import {
+  RUN_TEMPO_CONTINUO_30M,
+  RUN_TEMPO_PROGRESIVO_CANOVA,
+  RUN_TEMPO_ONDULADO_ESTRUCTURADO,
+} from "./workoutPools/runningTempoPool";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
+import {
   BIKE_RONNESTAD_30_15,
   BIKE_TABATA_40_20,
   BIKE_ESCALERA_PIRAMIDAL_VAM,
@@ -106,6 +112,9 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
         RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
         RUN_PIRAMIDE_CONTINUA_Z2_Z3,
         RUN_FARTLEK_SUECO_PIRAMIDAL,
+        RUN_TEMPO_CONTINUO_30M,
+        RUN_TEMPO_PROGRESIVO_CANOVA,
+        RUN_TEMPO_ONDULADO_ESTRUCTURADO,
         {
           name: "Carrera Continua Suave + Rectas Progresivas de Zancada (45m)",
           powerTarget: "72% CP + Rectas @ 105% CP",
@@ -165,22 +174,7 @@ export const FIVE_K_SPEED_MODEL: CuratedTrainingModel = {
       BIKE_TORQUE_BAJA_CADENCIA,
       BIKE_SWEETSPOT_EXTENSIVO,
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Z2 Suave (30m)",
-        powerTarget: "70% CP",
-        justification: "Oxigenación y soltura con impacto mínimo.",
-        workoutDoc: "Warmup\n- 5m 60% CP\n\nMain\n- 20m 70% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 30,
-      },
-      {
-        name: "Trote Regenerativo Suave Z1 (25m)",
-        powerTarget: "65% CP",
-        justification: "Lavado neuromuscular y relajación.",
-        workoutDoc: "Main\n- 25m 65% CP",
-        durationMin: 25,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Tríada S&C: Sóleo Reactivo + Manguito Rotador + Core Anti-Rotación",

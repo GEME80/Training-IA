@@ -7,6 +7,11 @@ import {
   BIKE_OVER_UNDERS_SHUTTLING,
   BIKE_TORQUE_BAJA_CADENCIA,
   BIKE_SWEETSPOT_EXTENSIVO,
+  BIKE_SEILER_4X8_THRESHOLD,
+  BIKE_SWEETSPOT_PIRAMIDE,
+  BIKE_OVER_UNDERS_CRISS_CROSS,
+  BIKE_MICROBURSTS_15_15,
+  BIKE_THRESHOLD_TT_SIMULATION,
 } from "./workoutPools/cyclingIntervalPool";
 
 /**
@@ -129,7 +134,12 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
     },
     bikeMidWeekWorkouts: [
       BIKE_TORQUE_BAJA_CADENCIA,
+      BIKE_SWEETSPOT_EXTENSIVO,
+      BIKE_SWEETSPOT_PIRAMIDE,
+      BIKE_OVER_UNDERS_SHUTTLING,
+      BIKE_OVER_UNDERS_CRISS_CROSS,
       BIKE_ESCALERA_PIRAMIDAL_VAM,
+      BIKE_SEILER_4X8_THRESHOLD,
     ],
     recoveryAerobicWorkouts: [
       {
@@ -277,6 +287,10 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
     bikeMidWeekWorkouts: [
       BIKE_TABATA_40_20,
       BIKE_RONNESTAD_30_15,
+      BIKE_MICROBURSTS_15_15,
+      BIKE_OVER_UNDERS_SHUTTLING,
+      BIKE_ESCALERA_PIRAMIDAL_VAM,
+      BIKE_THRESHOLD_TT_SIMULATION,
     ],
     recoveryAerobicWorkouts: [
       {

@@ -18,6 +18,16 @@ import {
   RUN_PIRAMIDE_CONTINUA_Z2_Z3,
 } from "./workoutPools/runningFartlekPool";
 import {
+  RUN_TEMPO_CRUISE_4X_2000M,
+  RUN_TEMPO_CONTINUO_30M,
+  RUN_TEMPO_PROGRESIVO_CANOVA,
+  RUN_TEMPO_ALTERNANCIAS_3X_8M,
+  RUN_TEMPO_FRACCIONADO_2X_15M,
+  RUN_TEMPO_ONDULADO_ESTRUCTURADO,
+} from "./workoutPools/runningTempoPool";
+import { RUN_DISTANCE_REPETICIONES_12X_200M } from "./workoutPools/runningDistancePool";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
+import {
   BIKE_RONNESTAD_30_15,
   BIKE_TABATA_40_20,
   BIKE_ESCALERA_PIRAMIDAL_VAM,
@@ -110,6 +120,10 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
         RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
         RUN_PIRAMIDE_CONTINUA_Z2_Z3,
         RUN_FARTLEK_SUECO_PIRAMIDAL,
+        RUN_TEMPO_CONTINUO_30M,
+        RUN_TEMPO_PROGRESIVO_CANOVA,
+        RUN_DISTANCE_REPETICIONES_12X_200M,
+        RUN_TEMPO_ONDULADO_ESTRUCTURADO,
         {
           name: "Fartlek Progresivo por Sensaciones (45m)",
           powerTarget: "85% CP en cambios",
@@ -172,22 +186,7 @@ export const TEN_K_ROAD_MODEL: CuratedTrainingModel = {
       BIKE_TORQUE_BAJA_CADENCIA,
       BIKE_TABATA_40_20,
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Z2 Base + Strides (35m)",
-        powerTarget: "72% CP",
-        justification: "Oxigenación y recuperación activa con zancada suelta.",
-        workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 20m 72% CP\n\n4x\n- 20s 110% CP\n- 40s 60% CP\n\nCooldown\n- 5m 60% CP",
-        durationMin: 35,
-      },
-      {
-        name: "Trote Regenerativo Suave Z1 (30m)",
-        powerTarget: "65% CP",
-        justification: "Lavado neuromuscular y oxigenación celular sin estrés biológico.",
-        workoutDoc: "Warmup\n- 6m 60% CP\n\nMain\n- 20m 65% CP\n\nCooldown\n- 4m 55% CP",
-        durationMin: 30,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Tríada S&C: Fuerza Unipodal Búlgara + Hombro Libre + Estabilidad Pélvica",

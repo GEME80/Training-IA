@@ -8,9 +8,10 @@ import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"
 import { parseWorkoutDoc } from "./workoutDocParser";
 import {
   getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
-  resolveRaceWorkout, resolveWeekendRide, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
+  resolveRaceWorkout, resolveWeekendRide, resolveTriathlonBrick, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
   resolveCuratedModelForWeek, resolveMidweekRide,
 } from "./macrocycleTemplateHelpers";
+import { AntiMonotonyMemoryBuffer, applyParametricProgression } from "./workoutProgressionEngine";
 import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
@@ -50,6 +51,8 @@ export function generateWeekTemplate(
   const result: PlanItem[] = [];
   let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false, runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
   const usedRunWorkoutNames = new Set<string>(), usedBikeWorkoutNames = new Set<string>();
+  const memory = new AntiMonotonyMemoryBuffer(5);
+  memory.record(longRun.workoutName);
 
   for (let idx = 0; idx < days.length; idx++) {
     const day = days[idx], d = new Date(weekStart);
@@ -174,35 +177,13 @@ export function generateWeekTemplate(
             workoutDoc: baseRideDoc, isRestDay: false, mobilityWarmup: addons.mobilityWarmup, fuelingStrategy: addons.fuelingStrategy,
           });
 
-          if (curatedModel.sportCategory === "Triathlon" && !isRecovery && !isRaceWeek) {
-            const isBuildOrPeak = phase === "BUILD" || phase === "PEAK";
-            const isTaper = phase === "TAPER";
-            const t2M = isTaper
-              ? 12
-              : isBuildOrPeak
-              ? (distanceType === "triathlon_1406" ? 30 : distanceType === "triathlon_703" ? 25 : 15)
-              : (distanceType === "triathlon_1406" ? 20 : 15);
+          memory.record(rideTitle);
 
-            const t2Pct = isTaper ? 75 : isBuildOrPeak ? 85 : 72;
-            const t2Pwr = runFtp ? `${Math.round(runFtp * (t2Pct / 100))}W (${t2Pct}% CP)` : `${t2Pct}% Pace`;
-            const t2Title = isTaper
-              ? `Mini-Transición T2 de Activación (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`
-              : isBuildOrPeak
-              ? `Transición T2 Post-Ciclismo (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`
-              : `Transición T2 Técnica & Adaptación (${t2M}m @ ${t2Pct}% ${runFtp ? "CP" : "Pace"})`;
-
-            const t2Tss = Math.max(12, Math.round(t2M * (t2Pct / 100)));
-            result.push({
-              day, date: dateStr, formattedDate, discipline: "Carrera", activityType: "Brick",
-              workoutName: t2Title, action: "MANTENER", durationMinutes: t2M, tss: t2Tss, powerTarget: t2Pwr,
-              justification: isBuildOrPeak
-                ? "Transición inmediata T2 (< 3-5 min) tras el sector de ciclismo para automatizar la zancada sobre fatiga muscular acumulada."
-                : isTaper
-                ? "Mini-transición rápida para mantener la agilidad de zancada post-pedaleo y la memoria muscular."
-                : "Transición suave T2 para acostumbrar al sistema cardiovascular y neuromuscular a la redistribución del flujo sanguíneo.",
-              workoutDoc: `Warmup\n- 3m 65% CP Adaptación\n\nMain (Ritmo de Carrera en Fatiga)\n- ${t2M - 5}m ${t2Pct}% CP (180 spm)\n\nCooldown\n- 2m 55% CP`,
-              isRestDay: false,
-            });
+          const brick = resolveTriathlonBrick({ day, dateStr, formattedDate, curatedModel, phase, isRecovery, isRaceWeek, distanceType, runFtp });
+          if (brick) {
+            usedRunWorkoutNames.add(brick.workoutName);
+            memory.record(brick.workoutName);
+            result.push(brick);
           }
           continue;
         }
@@ -232,14 +213,12 @@ export function generateWeekTemplate(
         const bikeVars = curatedModel.workoutVariations.bikeMidWeekWorkouts || [];
         const bStride = getCoprimeStride(bikeVars.length, 3);
         const bIdx = ((weekNumber - 1) * bStride + (bikeCount - 1)) % (bikeVars.length || 1);
-        let selBike = bikeVars[bIdx >= 0 ? bIdx : 0] || bikeVars[0];
-        for (let a = 0; a < bikeVars.length; a++) {
-          const candidate = bikeVars[(bIdx + a) % bikeVars.length];
-          if (!usedBikeWorkoutNames.has(candidate.name)) { selBike = candidate; break; }
-        }
+        const selBikeRaw = memory.selectDiverseCandidate(bikeVars, bIdx);
+        const selBike = applyParametricProgression(selBikeRaw, { weekNumber, phase, isRecovery });
         const isTriOrMulti = curatedModel.sportCategory === "Triathlon" || hasCycling;
         const midRide = resolveMidweekRide({ phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike });
         usedBikeWorkoutNames.add(midRide.workoutName);
+        memory.record(midRide.workoutName);
         result.push({
           day, date: dateStr, formattedDate, discipline: "Ciclismo", workoutName: midRide.workoutName, action: "MANTENER",
           durationMinutes: midRide.durationMinutes, tss: midRide.tss, powerTarget: midRide.powerTarget,
@@ -296,14 +275,15 @@ export function generateWeekTemplate(
         const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj && !discList.includes("Fuerza");
 
         if (isEligibleQuality) {
-          let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp);
+          let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, { isRecovery, memoryBuffer: memory });
           const isRunningProgram = curatedModel.sportCategory === "Running";
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
             const phaseList = curatedModel.workoutVariations.qualityWorkouts[phase.toLowerCase() as "base" | "build" | "peak" | "taper"] || [];
             const nonBrick = phaseList.find((v) => !v.name.toLowerCase().includes("brick")) || phaseList[0];
-            if (nonBrick) q = { name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp), justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc };
+            if (nonBrick) q = applyParametricProgression({ name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp), justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc }, { weekNumber, phase, isRecovery });
           }
           usedRunWorkoutNames.add(q.name);
+          memory.record(q.name);
           const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
           const parsedQ = parseWorkoutDoc(q.workoutDoc, "Carrera");
           const dur = isBrick ? 85 : (parsedQ.totalMins || 50), tss = isBrick ? 85 : (parsedQ.estimatedTss || 55);
@@ -320,12 +300,9 @@ export function generateWeekTemplate(
         const recVars = curatedModel.workoutVariations.recoveryAerobicWorkouts || [];
         const rStride = getCoprimeStride(recVars.length, 2);
         const recIdx = ((weekNumber - 1) * rStride + (runCount - 1)) % (recVars.length || 1);
-        let recW = recVars[recIdx >= 0 ? recIdx : 0] || recVars[0];
-        for (let a = 0; a < recVars.length; a++) {
-          const candidate = recVars[(recIdx + a) % recVars.length];
-          if (!usedRunWorkoutNames.has(candidate.name)) { recW = candidate; break; }
-        }
+        const recW = memory.selectDiverseCandidate(recVars, recIdx);
         usedRunWorkoutNames.add(recW.name);
+        memory.record(recW.name);
         const dur = phase === "TAPER" || isRecovery ? 35 : (recW.durationMin || 40);
 
         result.push({

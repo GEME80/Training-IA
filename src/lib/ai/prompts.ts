@@ -288,13 +288,16 @@ export function buildMacrocycleArchitectSystemPrompt(
 - Enfoque Deportivo: ${config.trainingApproach || "Entrenamiento Cruzado"}
 - Estrategia de Asimilación: ${config.periodization === "2:1" ? "Ratio 2:1 Preventivo (2 sem carga : 1 sem descarga)" : config.periodization === "3:1" ? "Ratio 3:1 Clásico (3 sem carga : 1 sem descarga)" : "Progresión Continua"}
 ${availabilityBlock}${testsBlock}${directiveBlock}
-=== INSTRUCCIONES DE RESPUESTA (FORMATO JSON) ===
-Genera un análisis arquitectónico en JSON con:
-- reasoningHeadline (Título estratégico claro y motivador)
-- reasoningNotes (3 a 4 notas concisas de justificación metodológica según ${curatedModel.displayName})
-- projectedPeakCtl (CTL pico proyectado al final de las ${config.weeksCount || 16} semanas)
-- recommendedRampRate (Tasa de rampa recomendada en CTL/semana: ${curatedModel.banisterRampRateLimits.minCtlPerWeek}-${curatedModel.banisterRampRateLimits.maxCtlPerWeek} pts/sem)
-- blueprint (Estructura semana a semana con fases, TSS target, microciclos modelo y semanas de test programadas). Si un día tiene 2 disciplinas en la matriz (ej. Carrera + Fuerza), DEBES contemplar la Doble Sesión completa (ambos entrenamientos) en el diseño de microciclos de ese día.`;
+=== INSTRUCCIONES DE RESPUESTA (FORMATO JSON ESTRICTO) ===
+Genera un análisis cualitativo y estratégico de periodización en formato JSON únicamente con estos campos (la estructura matemática de semanas y microciclos ya está resuelta por el motor determinístico):
+{
+  "reasoningHeadline": "string (Título estratégico y motivador del macrociclo)",
+  "reasoningNotes": [
+    "string (3 a 4 notas concisas de justificación metodológica según ${curatedModel.displayName}, distribución de fases y pauta de asimilación)"
+  ],
+  "projectedPeakCtl": number (estimación del CTL cumbre en el bloque pico),
+  "recommendedRampRate": number (tasa segura de incremento semanal de CTL entre ${curatedModel.banisterRampRateLimits.minCtlPerWeek} y ${curatedModel.banisterRampRateLimits.maxCtlPerWeek})
+}`;
 }
 
 export interface DailyAuditPromptContext {

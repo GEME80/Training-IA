@@ -43,7 +43,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
 
       const isSuper = isMasterAdminEmail(emailKey);
       const masterAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
-      const isPace = data.runningTrainingMode === "PACE" || data.hasRunningPowerMeter === false || data.intervalsAthleteId === "i729730";
+      const isPace = data.runningTrainingMode === "PACE" || data.hasRunningPowerMeter === false;
       const item: AdminUserListItem = {
         uid: data.uid || doc.id,
         email: emailKey,
@@ -66,9 +66,9 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         weightKg: data.weightKg, restingHR: data.restingHR, maxHR: data.maxHR, lthr: data.lthr,
         planPrice: typeof data.planPrice === "number" ? data.planPrice : (isSuper ? 0 : 80),
         planCurrency: data.planCurrency || "USD",
-        billingStatus: data.billingStatus || (data.intervalsAthleteId === "i729730" ? "PAID" : (isSuper ? "PAID" : "PENDING")),
+        billingStatus: data.billingStatus || (isSuper ? "PAID" : "PENDING"),
         billingCycleDay: data.billingCycleDay || 5,
-        lastPaymentDate: data.lastPaymentDate || (data.intervalsAthleteId === "i729730" ? "2026-10-01" : undefined),
+        lastPaymentDate: data.lastPaymentDate || undefined,
         paymentMethod: data.paymentMethod || "TRANSFER",
         paymentReference: data.paymentReference, paymentReportedAt: data.paymentReportedAt,
         primaryGoalRace: data.primaryGoalRace, primaryGoalDate: data.primaryGoalDate,

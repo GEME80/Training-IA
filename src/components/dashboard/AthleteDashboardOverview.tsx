@@ -191,7 +191,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 stickyTopSlot={
                   <PhysiologicalCards
                     status={physioStatus}
-                    runFtp={(profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE" || profile.id === "i729730") ? 0 : profile.run_ftp}
+                    runFtp={(profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE") ? 0 : profile.run_ftp}
                     bikeFtp={profile.bike_ftp}
                     weightKg={profile.weight}
                     age={profile.age}

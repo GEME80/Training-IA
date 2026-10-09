@@ -75,8 +75,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     runningTrainingMode === "PACE" ||
     hasRunningPowerMeter === false ||
     userProfile?.runningTrainingMode === "PACE" ||
-    userProfile?.hasRunningPowerMeter === false ||
-    effAthleteId === "i729730";
+    userProfile?.hasRunningPowerMeter === false;
 
   const isRunPace =
     workout.discipline === "Carrera" &&

@@ -33,7 +33,7 @@ export function calculateBillingStats(users: AdminUserListItem[]): AdminBillingS
   athletes.forEach((athlete) => {
     // Si no tiene tarifa fijada, asignamos tarifa estándar base de 80 USD
     const price = typeof athlete.planPrice === "number" ? athlete.planPrice : 80;
-    const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+    const status = athlete.billingStatus || "PENDING";
 
     totalExpectedRevenue += price;
 
@@ -133,25 +133,8 @@ export function calculateSquadAthleticStats(users: AdminUserListItem[]): SquadAt
     }
 
     // Identificar carreras objetivo del atleta
-    const raceName =
-      u.primaryGoalRace ||
-      (u.displayName?.toLowerCase().includes("german") || u.email.includes("morales")
-        ? "Tokyo Marathon 2027"
-        : u.intervalsAthleteId === "i729730"
-        ? "Ironman 70.3 Cartagena"
-        : u.displayName?.includes("Vasquez")
-        ? "Media Maratón Medellín"
-        : undefined);
-
-    const raceDateStr =
-      u.primaryGoalDate ||
-      (u.displayName?.toLowerCase().includes("german") || u.email.includes("morales")
-        ? "2027-03-07"
-        : u.intervalsAthleteId === "i729730"
-        ? "2026-12-06"
-        : u.displayName?.includes("Vasquez")
-        ? "2026-11-15"
-        : undefined);
+    const raceName = u.primaryGoalRace || undefined;
+    const raceDateStr = u.primaryGoalDate || undefined;
 
     if (raceName && raceDateStr) {
       const raceDate = new Date(raceDateStr);

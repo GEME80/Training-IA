@@ -7,6 +7,11 @@ import {
   BIKE_OVER_UNDERS_SHUTTLING,
   BIKE_TORQUE_BAJA_CADENCIA,
   BIKE_SWEETSPOT_EXTENSIVO,
+  BIKE_SEILER_4X8_THRESHOLD,
+  BIKE_SWEETSPOT_PIRAMIDE,
+  BIKE_OVER_UNDERS_CRISS_CROSS,
+  BIKE_THRESHOLD_TT_SIMULATION,
+  BIKE_TEMPO_CADENCIA_VARIABLE,
 } from "./workoutPools/cyclingIntervalPool";
 import {
   RUN_DISTANCE_ESCALERA_200_800,
@@ -18,6 +23,7 @@ import {
   RUN_FARTLEK_POLACO_FLOTACION,
   RUN_BILLAT_30_30,
 } from "./workoutPools/runningFartlekPool";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
 
 export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
   modelId: "TRIATHLON_70_3",
@@ -202,34 +208,17 @@ export const TRIATHLON_70_3_MODEL: CuratedTrainingModel = {
     bikeMidWeekWorkouts: [
       BIKE_RONNESTAD_30_15,
       BIKE_SWEETSPOT_EXTENSIVO,
+      BIKE_SWEETSPOT_PIRAMIDE,
+      BIKE_SEILER_4X8_THRESHOLD,
       BIKE_ESCALERA_PIRAMIDAL_VAM,
       BIKE_OVER_UNDERS_SHUTTLING,
+      BIKE_OVER_UNDERS_CRISS_CROSS,
+      BIKE_THRESHOLD_TT_SIMULATION,
       BIKE_TORQUE_BAJA_CADENCIA,
       BIKE_TABATA_40_20,
+      BIKE_TEMPO_CADENCIA_VARIABLE,
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Z2 Aeróbica de Soltura (40m)",
-        powerTarget: "78% CP",
-        justification: "Oxigenación celular y soltura de piernas sin impacto excesivo.",
-        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 25m 78% CP\n\nCooldown\n- 5m 72% CP",
-        durationMin: 40,
-      },
-      {
-        name: "Carrera Continua Z2 + 4 Strides Reactivos (45m)",
-        powerTarget: "78% CP + Strides @ 105% CP",
-        justification: "Reactividad neuromuscular tras el pedaleo sin fatiga metabólica.",
-        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 25m 78% CP\n\n4x\n- 20s 105% CP\n- 40s 65% CP\n\nCooldown\n- 5m 72% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Trote Regenerativo Suave (30m Z1-Z2)",
-        powerTarget: "74% CP",
-        justification: "Lavado muscular y recuperación activa entre sesiones clave.",
-        workoutDoc: "Warmup\n- 5m 70% CP\n\nMain\n- 20m 74% CP\n\nCooldown\n- 5m 70% CP",
-        durationMin: 30,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Tríada S&C Triatlón: Sóleo Reactivo + Manguito Escapular + Core Anti-Rotación",

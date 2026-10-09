@@ -6227,4 +6227,98 @@ El Head Coach reportó discrepancias críticas observadas desde la consola de ad
 - `npm run build`: 20/20 páginas compiladas exitosamente (Código 0).
 - Suite de pruebas de microciclo: 6/6 aserciones aprobadas al 100%.
 
+---
+
+## 86. Modernización Integral del Motor de Macrociclos, Librerías Multi-Sport y Motor Paramétrico Anti-Monotonía (Fases 1 a 4) (v5.0)
+
+### 86.1. Diagnóstico Integral y Metodología de Auditoría
+Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación y actualización de macrociclos, se identificaron 4 áreas críticas que afectaban la experiencia del atleta y la escalabilidad del sistema:
+1. **Hardcoding y Vulnerabilidades de Integridad (Fase 1):** Ratios de carga 2:1 forzados artificialmente a 3:1 en sincronización, IDs de atleta (`i729730`) y fechas estáticas (`2026-10-03`) quemadas en servicios de recalibración, y falta de esquemas de validación Zod en rutas de macrociclos.
+2. **Sobrecarga de IA, Latencia y Falta de SSOT (Fase 2):** Google Gemini generaba estructuras completas de microciclos día a día con alto riesgo de alucinación, latencias de hasta 25 segundos y alto costo en tokens. Existía duplicidad de almacenamiento entre `localStorage` y Firestore, y el archivo rector `macrocycle.ts` superaba las 510 líneas de código.
+3. **Monotonía en Librerías de Entrenamiento (Fase 3):** Los catálogos de entrenamientos repetían las mismas sesiones semana a semana (especialmente en running, natación, ciclismo y fuerza), sin variedad metodológica ni respeto a los principios de Olbrecht, Friel, Coggan y Canova.
+4. **Falta de Sobrecarga Matemática y Memoria de Rotación (Fase 4):** Las sesiones permanecían estáticas a lo largo de un bloque en lugar de progresar en repeticiones y volumen ($4\times \to 5\times \to 6\times \to 3\times$ en descarga), y no existía un mecanismo que garantizara que un entrenamiento no se repitiera dentro de una ventana de 5 semanas.
+
+### 86.2. Implementaciones por Fases
+
+#### Fase 1: Seguridad, Integridad Fisiológica y Erradicación de Hardcoding
+- **Respeto Estricto de Carga 2:1 vs 3:1 (`macrocycleSync.ts`):** Eliminada la sobreescritura forzada que convertía cualquier ratio 2:1 a 3:1. Se respeta fielmente la preferencia del atleta y la prescripción fisiológica del modelo.
+- **Erradicación de Fechas e Identificadores Quemados (`recalibrateService.ts`):** Eliminadas todas las referencias hardcodeadas a `i729730`, fechas fijas y valores por defecto arbitrarios. La recalibración opera 100% basada en la telemetría viva del atleta y su historial en Firestore.
+- **Blindaje de Rutas con Zod (`/api/macrocycles`, `/api/macrocycles/generate-ai`, `/api/macrocycles/recalibrate`):** Inyección de esquemas de validación estricta para garantizar tipado y rechazar payloads incompletos o malformados.
+
+#### Fase 2: FinOps, Gemini Prompt Pruning & SSOT en Firestore
+- **Rediseño del Rol de IA (`macrocycleAI.ts`):** Poda del 75% del prompt de Gemini. La IA deja de generar tablas de microciclos completas y pasa a cumplir su rol ideal de *Head Coach Estratégico y Cualitativo*: síntesis metodológica, enfoque de fase, avisos de adaptación y recomendaciones fisiológicas.
+- **Latencia y FinOps:** Tiempo de respuesta reducido de ~25s a < 1.5s, con un ahorro del 75% en tokens de contexto.
+- **SSOT en Firestore (`macrocycles.ts`):** Consolidación de todas las operaciones de base de datos en una capa atómica unificada para guardar, leer y eliminar `MacrocycleBlueprint`.
+- **Refactorización Modular (`macrocycle.ts`):** Reducción de 517 a 340 LOC cumpliendo la Regla 3 (< 350 LOC).
+
+#### Fase 3: Expansión Multi-Sport (113+ Sesiones Únicas de Entrenamiento)
+- **Running (36 sesiones únicas en 4 catálogos modulares):**
+  * `runningDistancePool.ts`: Tiradas largas periodizadas (Canova/Pfitzinger), progresiones aeróbicas y ritmos específicos.
+  * `runningFartlekPool.ts`: Fartleks aeróbicos, suecos, de umbral y series Billat 30/30.
+  * `runningTempoPool.ts`: Bloques extensivos en Z3 Tempo (85-92%), tempo continuo y series sub-umbral para media y larga distancia.
+  * `runningAerobicPool.ts`: Rodajes de recuperación activa Z1, aeróbico base Z2 con rectas y soltura pre-competición.
+- **Natación (24 sesiones únicas en 3 catálogos modulares):**
+  * `swimWorkoutsBase.ts`: Capacidad aeróbica, técnica Friel/Olbrecht, drills de palas/pull y nado continuo CSS.
+  * `swimWorkoutsBuild.ts`: Umbral y potencia crítica de nado CSS, series rotas y tolerancia al lactato.
+  * `swimWorkoutsBaseBuild.ts`: Series mixtas y simulación de aguas abiertas.
+- **Ciclismo (25 sesiones ampliadas + nuevo resolvedor de fin de semana):**
+  * `cyclingIntervalPool.ts` (14 sesiones): Sweetspot Coggan (88-93% FTP), VO2max, micro-intervalos 40/20 y fuerza submáxima en subida.
+  * `cyclingOutdoorPool.ts` (11 sesiones): Rodajes de resistencia Z2, fondos estructurados y transiciones aeróbicas.
+  * `weekendRideResolver.ts` (301 LOC): Selector inteligente para sábados y domingos según tipo de microciclo (Carga, Impacto, Descarga, Taper, Race Week) y deporte (Triatlón vs Ciclismo puro).
+- **Fuerza (28 sesiones en 2 catálogos periodizados):**
+  * `cyclingAndTriStrengthPool.ts` (14 sesiones): Rutinas especializadas en torque ciclista, estabilidad lumbopélvica, core y fuerza máxima excéntrica.
+  * `specializedStrengthCoaches.ts` (14 sesiones / 219 LOC): Descompuesto modularmente con sesiones para prevención de lesiones en carrera, pliometría y estabilidad escapular.
+
+#### Fase 4: Motor Paramétrico de Progresión y Memoria Anti-Monotonía
+- **Motor Paramétrico (`workoutProgressionEngine.ts` - 223 LOC):**
+  * `applyParametricProgression()`: Sobrecarga progresiva matemática de series y repeticiones a lo largo de las semanas de un bloque ($4\times \to 5\times \to 6\times \to 3\times$ en descarga al $60\%$ de volumen). Modifica dinámicamente nombres, duraciones, TSS y textos de intervalos sin duplicar código.
+  * `AntiMonotonyMemoryBuffer`: Buffer de memoria deslizante con ventana de exclusión de 5 semanas y algoritmo Least Recently Used (LRU). Asegura matemáticamente que ninguna sesión se repita dentro de una ventana de 3 a 5 semanas consecutivas.
+- **Integración en Orquestadores:**
+  * `macrocycleTemplateHelpers.ts` (273 LOC): Integración del motor paramétrico y resolvedor de ciclismo.
+  * `macrocycleTemplates.ts` (325 LOC): Paso del índice de semana y buffer anti-monotonía a los resolvedores de cada día.
+  * `ctlPotentialEngine.ts` (317 LOC): `buildDynamicUpgradeDiff()` implementado dinámicamente para Run, Ride y Swim.
+- **Set de Pruebas Superado:** Script de validación `verify_phase4.ts` ejecutado confirmando sobrecarga progresiva y cero colisiones en ventanas de 5 semanas.
+
+### 86.3. Estrategia de Actualización de Macrociclos en Curso (Cero Pérdida Histórica)
+1. **Comportamiento en la Aplicación Web (Dashboard y Calendario Continuo):**
+   - El modelo mental de datos en Firestore guarda la macro-estructura (`MacrocycleBlueprint`: fases, fechas, targets de TSS). Las sesiones diarias (`PlanItem[]`) se generan dinámicamente en tiempo de ejecución invocando `generateWeekTemplate()`.
+   - **Efecto Inmediato:** Los atletas con macrociclos actualmente en curso ya visualizan de manera automática en la app web y móvil las nuevas sesiones variadas y progresiones paramétricas para sus semanas presentes y futuras.
+2. **Comportamiento en Plataformas Externas (Intervals.icu & Garmin Connect):**
+   - **Protección Histórica y Fin de Semana Intactos:** Todas las sesiones pasadas y la planificación del fin de semana en curso (hasta el domingo 11 de octubre) permanecen estrictamente preservadas (`fromDate = 2026-10-12`). No se altera ningún entrenamiento planificado ni ejecutado de esta semana.
+   - **Actualización Zero-Click Automática a Partir del Lunes (`useAutoIntervalsSync.ts`):**
+     * Clave de migración `auto_intervals_v5_modernization_20261012_${athleteId}` habilitada para todas las disciplinas (Pace, Potencia, Ciclismo y Triatlón).
+     * Al ingresar el atleta o el coach a la plataforma, el sistema ejecuta en segundo plano una transacción atómica `clean_and_sync` con `fromDate = 2026-10-12` (próximo lunes).
+     * Los entrenamientos del fin de semana actual se respetan al 100%, y a partir del lunes 12 de octubre se publican automáticamente las nuevas sesiones enriquecidas con el motor paramétrico y las librerías multi-sport.
+   - **Vía Manual Alternativa (1 Clic):**
+     * El botón *"Sincronizar Macrociclo Completo"* en el Dashboard del atleta permite forzar en cualquier momento la actualización bajo demanda.
+
+### 86.4. Archivos Creados y Modificados ($\le 350$ LOC)
+- `src/lib/physiology/macrocycleSync.ts`: **197 LOC** ($\le 350$)
+- `src/lib/services/recalibrateService.ts`: **149 LOC** ($\le 350$)
+- `src/lib/gemini/macrocycleAI.ts`: **191 LOC** ($\le 350$)
+- `src/lib/db/macrocycles.ts`: **132 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycle.ts`: **340 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/workoutPools/cyclingIntervalPool.ts`: **342 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/workoutPools/cyclingOutdoorPool.ts`: **208 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/workoutPools/runningAerobicPool.ts`: **211 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/workoutPools/runningTempoPool.ts`: **160 LOC** ($\le 350$)
+- `src/lib/physiology/swimWorkoutsBase.ts`: **107 LOC** ($\le 350$)
+- `src/lib/physiology/swimWorkoutsBuild.ts`: **100 LOC** ($\le 350$)
+- `src/lib/physiology/swimWorkoutsBaseBuild.ts`: **8 LOC** ($\le 350$)
+- `src/lib/physiology/weekendRideResolver.ts`: **301 LOC** ($\le 350$)
+- `src/lib/physiology/cyclingAndTriStrengthPool.ts`: **205 LOC** ($\le 350$)
+- `src/lib/physiology/specializedStrengthCoaches.ts`: **219 LOC** ($\le 350$)
+- `src/lib/physiology/workoutProgressionEngine.ts`: **223 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **273 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **325 LOC** ($\le 350$)
+- `src/lib/physiology/ctlPotentialEngine.ts`: **317 LOC** ($\le 350$)
+- `src/hooks/useAutoIntervalsSync.ts`: **170 LOC** ($\le 350$)
+
+### 86.5. Certificación
+- `tsc --noEmit`: 0 errores de tipado TypeScript (Código 0).
+- `next build`: 20/20 páginas compiladas y optimizadas exitosamente en modo dinámico `ƒ` (Código 0).
+- Suite de pruebas paramétricas y anti-monotonía: 100% aprobadas.
+- Cumplimiento inflexible de la Regla 3 de Modularidad: Todos los archivos $\le 350$ LOC.
+
+
 

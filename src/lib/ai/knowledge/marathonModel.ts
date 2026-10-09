@@ -6,7 +6,18 @@ import {
   RUN_DISTANCE_EXTENSIVO_3X_4KM,
   RUN_DISTANCE_SERIES_5X_1000M,
   RUN_DISTANCE_SERIES_6X_800M,
+  RUN_DISTANCE_REPETICIONES_12X_200M,
+  RUN_DISTANCE_MILLA_4X_1600M,
 } from "./workoutPools/runningDistancePool";
+import {
+  RUN_TEMPO_CRUISE_4X_2000M,
+  RUN_TEMPO_CONTINUO_30M,
+  RUN_TEMPO_PROGRESIVO_CANOVA,
+  RUN_TEMPO_ALTERNANCIAS_3X_8M,
+  RUN_TEMPO_FRACCIONADO_2X_15M,
+  RUN_TEMPO_ONDULADO_ESTRUCTURADO,
+} from "./workoutPools/runningTempoPool";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
 import {
   RUN_FARTLEK_MONEGETTI,
   RUN_FARTLEK_POLACO_FLOTACION,
@@ -117,6 +128,10 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
         RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
         RUN_PIRAMIDE_CONTINUA_Z2_Z3,
         RUN_FARTLEK_SUECO_PIRAMIDAL,
+        RUN_TEMPO_CONTINUO_30M,
+        RUN_TEMPO_PROGRESIVO_CANOVA,
+        RUN_DISTANCE_REPETICIONES_12X_200M,
+        RUN_TEMPO_ONDULADO_ESTRUCTURADO,
         {
           name: "Series de Capacidad Aeróbica (4x4m @ 88% CP)",
           powerTarget: "88% CP",
@@ -134,6 +149,10 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
         RUN_DISTANCE_EXTENSIVO_3X_4KM,
         RUN_TEMPO_BLOQUES_3X_10M,
         RUN_DISTANCE_SERIES_6X_800M,
+        RUN_TEMPO_CRUISE_4X_2000M,
+        RUN_TEMPO_FRACCIONADO_2X_15M,
+        RUN_TEMPO_ALTERNANCIAS_3X_8M,
+        RUN_DISTANCE_MILLA_4X_1600M,
       ],
       peak: [
         {
@@ -190,43 +209,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
       BIKE_TORQUE_BAJA_CADENCIA,
       BIKE_TABATA_40_20,
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Z2 Base + 5 Strides Reactivos (45m)",
-        powerTarget: "81% CP + Strides @ 115% CP",
-        justification: "Reactividad elástica del tendón de Aquiles y economía de zancada.",
-        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 25m 81% CP\n\n5x\n- 20s 115% CP\n- 40s 65% CP\n\nCooldown\n- 5m 65% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Carrera Continua Aeróbica Z2 (45m)",
-        powerTarget: "81% CP",
-        justification: "Consistencia aeróbica y volumen mitocondrial.",
-        workoutDoc: "Warmup\n- 10m 74% CP\n\nMain\n- 30m 81% CP\n\nCooldown\n- 5m 65% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Carrera Continua Progresiva Suave (45m)",
-        powerTarget: "78% a 84% CP",
-        justification: "Estimulación hemodinámica gradual y aclimatación de ritmo.",
-        workoutDoc: "Warmup\n- 15m 74% CP\n\nMain\n- 20m 80% CP\n- 5m 84% CP\n\nCooldown\n- 5m 65% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Carrera Continua de Asimilación & Cadencia 180 spm (40m)",
-        powerTarget: "78% CP",
-        justification: "Eficiencia biomecánica, contacto de suelo breve y recuperación activa.",
-        workoutDoc: "Warmup\n- 10m 72% CP\n\nMain\n- 25m 78% CP\n\nCooldown\n- 5m 65% CP",
-        durationMin: 40,
-      },
-      {
-        name: "Trote Regenerativo Suave Z1 (35m)",
-        powerTarget: "72% CP",
-        justification: "Lavado neuromuscular y oxigenación celular sin estrés biológico.",
-        workoutDoc: "Warmup\n- 8m 60% CP\n\nMain\n- 22m 65% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 35,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Tríada S&C: Sóleo Excéntrico + Estabilidad Escapular + Core Anti-Rotación",

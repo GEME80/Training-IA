@@ -35,14 +35,14 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
   const athletes = users.filter((u) => u.role === "athlete" && u.status === "active");
 
   const paidCount = athletes.filter(
-    (a) => (a.billingStatus || (a.intervalsAthleteId === "i729730" ? "PAID" : "PENDING")) === "PAID"
+    (a) => (a.billingStatus || "PENDING") === "PAID"
   ).length;
 
   const verifyCount = athletes.filter((a) => a.billingStatus === "PENDING_VERIFICATION").length;
   const pendingCount = athletes.length - paidCount;
 
   const filteredAthletes = athletes.filter((athlete) => {
-    const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+    const status = athlete.billingStatus || "PENDING";
     if (filter === "PAID") return status === "PAID";
     if (filter === "VERIFY") return status === "PENDING_VERIFICATION";
     if (filter === "PENDING") return status === "PENDING" || status === "OVERDUE" || status === "PENDING_VERIFICATION";
@@ -154,7 +154,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
             {filteredAthletes.map((athlete) => {
               const price = typeof athlete.planPrice === "number" ? athlete.planPrice : 80;
               const currency = athlete.planCurrency || "USD";
-              const status = athlete.billingStatus || (athlete.intervalsAthleteId === "i729730" ? "PAID" : "PENDING");
+              const status = athlete.billingStatus || "PENDING";
               const isUpdating = updatingUid === athlete.uid;
 
               return (

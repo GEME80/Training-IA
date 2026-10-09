@@ -1,6 +1,7 @@
 import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
-import { ALL_CYCLING_OUTDOOR_WORKOUTS } from "../ai/knowledge/workoutPools/cyclingOutdoorPool";
+import { resolveWeekendRide, resolveTriathlonBrick, WeekendRideParams, WeekendRideResult } from "./weekendRideResolver";
+import { applyParametricProgression, AntiMonotonyMemoryBuffer } from "./workoutProgressionEngine";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 import { resolveFridayWorkout, FridayWorkoutParams } from "./fridayWorkoutResolver";
@@ -39,7 +40,8 @@ export function selectQualityWorkout(
   weekNumber: number,
   curatedModel: ReturnType<typeof resolveTrainingModel>,
   runFtp?: number,
-  bikeFtp?: number
+  bikeFtp?: number,
+  opts?: { isRecovery?: boolean; memoryBuffer?: AntiMonotonyMemoryBuffer; recentWorkoutNames?: string[] }
 ): { name: string; powerTarget: string; justification: string; workoutDoc: string; durationMin?: number; tss?: number } {
   const vars = curatedModel.workoutVariations.qualityWorkouts;
   let rawList = vars.base;
@@ -68,23 +70,31 @@ export function selectQualityWorkout(
   ];
 
   const stride = getCoprimeStride(list.length, 2);
-  const idx = ((weekNumber - 1) * stride) % list.length;
-  const baseWorkout = list[idx >= 0 ? idx : 0] || list[0];
-  const cycleRound = Math.floor((weekNumber - 1) / list.length);
-  const dynPowerTarget = interpolatePowerTarget(baseWorkout.powerTarget, runFtp, bikeFtp);
+  const preferredIdx = ((weekNumber - 1) * stride) % list.length;
+  let baseWorkout: typeof list[0];
 
-  if (cycleRound > 0) {
-    return {
-      ...baseWorkout,
-      name: `${baseWorkout.name} (Progresión Bloque II)`,
-      powerTarget: dynPowerTarget,
-      justification: `${baseWorkout.justification} Estímulo consolidado en fase avanzada.`,
-    };
+  if (opts?.memoryBuffer) {
+    baseWorkout = opts.memoryBuffer.selectDiverseCandidate(list, preferredIdx);
+  } else if (opts?.recentWorkoutNames && opts.recentWorkoutNames.length > 0) {
+    const tempBuffer = new AntiMonotonyMemoryBuffer(5);
+    opts.recentWorkoutNames.forEach((n) => tempBuffer.record(n));
+    baseWorkout = tempBuffer.selectDiverseCandidate(list, preferredIdx);
+  } else {
+    baseWorkout = list[preferredIdx >= 0 ? preferredIdx : 0] || list[0];
   }
-  return {
+
+  const dynPowerTarget = interpolatePowerTarget(baseWorkout.powerTarget, runFtp, bikeFtp);
+  const targetWorkout = {
     ...baseWorkout,
     powerTarget: dynPowerTarget,
   };
+
+  // Sobrecarga progresiva paramétrica (4x -> 5x -> 6x -> deload 3x)
+  return applyParametricProgression(targetWorkout, {
+    weekNumber,
+    phase,
+    isRecovery: opts?.isRecovery,
+  });
 }
 
 export function resolveRaceWorkout(params: {
@@ -157,82 +167,7 @@ export function resolveRaceWorkout(params: {
 
 export const resolveRaceSundayWorkout = resolveRaceWorkout;
 
-export function resolveWeekendRide(params: {
-  distanceType?: MacrocycleDistanceType;
-  phase: string;
-  weekNumber: number;
-  isRecovery: boolean;
-  bikeFtp?: number;
-}): { rideMins: number; rideTitle: string; rideJust: string; rideTarget: string; workoutDoc?: string } {
-  const { distanceType, phase, weekNumber, isRecovery, bikeFtp } = params;
-  let rideMins = 90;
-  let rideTitle = "Fondo Resistencia Ciclismo";
-  let rideJust = "Volumen mitocondrial continuo.";
-  let rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.65)}W (65% FTP)` : "65% FTP";
-  let workoutDoc: string | undefined = undefined;
-
-  if (distanceType === "triathlon_1406") {
-    if (isRecovery) rideMins = 120;
-    else if (phase === "PEAK") rideMins = [270, 300, 240][(weekNumber - 1) % 3];
-    else if (phase === "BUILD") rideMins = [240, 270, 210, 285][(weekNumber - 1) % 4];
-    else if (phase.startsWith("BASE")) rideMins = [180, 210, 195, 240][(weekNumber - 1) % 4];
-    else rideMins = weekNumber % 2 === 0 ? 90 : 135;
-    rideTitle = `Fondo Ciclismo Ironman (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
-  } else if (distanceType === "triathlon_703") {
-    if (isRecovery) rideMins = 75;
-    else if (phase === "PEAK") rideMins = [150, 165, 135][(weekNumber - 1) % 3];
-    else if (phase === "BUILD") rideMins = [140, 160, 135, 165][(weekNumber - 1) % 4];
-    else if (phase.startsWith("BASE")) rideMins = [110, 125, 120, 135][(weekNumber - 1) % 4];
-    else if (phase === "TAPER") rideMins = [55, 60][(weekNumber - 1) % 2];
-    else rideMins = 60;
-    rideTitle = `Fondo Ciclismo 70.3 (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
-  } else if (distanceType === "triathlon_short") {
-    if (isRecovery) rideMins = 45;
-    else if (phase === "PEAK") rideMins = [80, 90, 85][(weekNumber - 1) % 3];
-    else if (phase === "BUILD") rideMins = [75, 85, 80][(weekNumber - 1) % 3];
-    else if (phase.startsWith("BASE")) rideMins = [65, 75, 70][(weekNumber - 1) % 3];
-    else if (phase === "TAPER") rideMins = [45, 50][(weekNumber - 1) % 2];
-    else rideMins = 50;
-    rideTitle = `Fondo Ciclismo Olímpico (${rideMins}m Z2)`;
-  } else if (distanceType === "cycling_climbing") {
-    if (isRecovery) rideMins = 75;
-    else if (phase === "PEAK") rideMins = [180, 210, 195][(weekNumber - 1) % 3];
-    else if (phase === "BUILD") rideMins = [150, 180, 165, 195][(weekNumber - 1) % 4];
-    else if (phase.startsWith("BASE")) rideMins = [120, 150, 135, 165][(weekNumber - 1) % 4];
-    else rideMins = 75;
-    rideTitle = `Fondo Ciclismo de Puertos & Escalada (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2-Z3)`;
-    rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.70)}W (70% FTP)` : "70% FTP";
-  } else if (distanceType === "cycling_fondo" || distanceType === "cycling_criterium") {
-    if (isRecovery) rideMins = 70;
-    else if (phase === "PEAK") rideMins = [180, 210, 190][(weekNumber - 1) % 3];
-    else if (phase === "BUILD") rideMins = [150, 175, 160, 190][(weekNumber - 1) % 4];
-    else if (phase.startsWith("BASE")) rideMins = [120, 140, 130, 155][(weekNumber - 1) % 4];
-    else rideMins = 60;
-    rideTitle = `Fondo Ciclismo Gran Fondo (${Math.floor(rideMins / 60)}h${rideMins % 60 ? rideMins % 60 + "m" : ""} Z2)`;
-  } else if (phase === "TAPER") {
-    rideMins = weekNumber % 2 === 0 ? 45 : 55;
-    rideTitle = `Pedaleo Ciclista de Descarga Pre-Carrera (${rideMins}m Z1)`;
-    rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.58)}W (58% FTP)` : "58% FTP";
-  } else if (isRecovery) {
-    rideMins = 60;
-    rideTitle = "Fondo Suave de Asimilación Ciclismo (1h Z1-Z2)";
-    rideTarget = bikeFtp ? `${Math.round(bikeFtp * 0.60)}W (60% FTP)` : "60% FTP";
-  } else if (phase === "PEAK") {
-    rideMins = [110, 120, 105][(weekNumber - 1) % 3];
-    rideTitle = `Fondo Específico Ciclismo (${rideMins}m Z2/Z3)`;
-  } else {
-    // Fondos Outdoor Libres con Misión Fisiológica (Rotación de fin de semana)
-    const outdoorPool = ALL_CYCLING_OUTDOOR_WORKOUTS;
-    const sel = outdoorPool[(weekNumber - 1) % outdoorPool.length];
-    rideMins = isRecovery ? Math.min(90, Math.round(sel.durationMin * 0.75)) : sel.durationMin;
-    rideTitle = sel.name;
-    rideJust = sel.justification;
-    rideTarget = interpolatePowerTarget(sel.powerTarget, undefined, bikeFtp);
-    workoutDoc = sel.workoutDoc;
-  }
-
-  return { rideMins, rideTitle, rideJust, rideTarget, workoutDoc };
-}
+export { resolveWeekendRide, resolveTriathlonBrick, type WeekendRideParams, type WeekendRideResult };
 
 /**
  * Resuelve dinámicamente el día óptimo para la Tirada Larga de Carrera

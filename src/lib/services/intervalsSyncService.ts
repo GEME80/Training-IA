@@ -114,8 +114,7 @@ export class IntervalsSyncService {
 
       const isPaceByText = Boolean(
         (item.powerTarget && /%\s*Pace/i.test(item.powerTarget)) ||
-        (workoutText && /%\s*Pace/i.test(workoutText)) ||
-        effectiveAthleteId === "i729730"
+        (workoutText && /%\s*Pace/i.test(workoutText))
       );
       const isRunPower = Boolean(item.powerTarget && /\b\d+\s*W\b/i.test(item.powerTarget) && !isPaceByText);
       const isRunPaceOnly = item.discipline === "Carrera" && (!isRunPower || isPaceByText);

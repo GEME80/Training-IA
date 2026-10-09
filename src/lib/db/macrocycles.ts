@@ -5,6 +5,7 @@ import { sanitizeMacrocycleBlueprint } from "../physiology/macrocycleSanitizer";
 export interface StoredMacrocycleData {
   id: string;
   athleteId: string;
+  uid?: string;
   createdAt: string;
   updatedAt: string;
   blueprint: MacrocycleBlueprint;
@@ -15,13 +16,14 @@ export interface StoredMacrocycleData {
 }
 
 /**
- * Guarda un macrociclo generado o personalizado en Firestore para el atleta.
+ * Guarda un macrociclo generado o personalizado en Firestore para el atleta y lo unifica con su UID.
  */
 export async function saveMacrocycleToFirestore(
   athleteId: string,
   blueprint: MacrocycleBlueprint,
   primaryRace?: TargetRace | null,
-  source: "AI_GENERATED" | "WIZARD_CUSTOM" | "TEMPLATE_DEFAULT" = "WIZARD_CUSTOM"
+  source: "AI_GENERATED" | "WIZARD_CUSTOM" | "TEMPLATE_DEFAULT" = "WIZARD_CUSTOM",
+  uid?: string
 ): Promise<string> {
   const macrocycleId = `macro_${Date.now()}`;
   const now = new Date().toISOString();
@@ -30,6 +32,7 @@ export async function saveMacrocycleToFirestore(
   const payload: StoredMacrocycleData = {
     id: macrocycleId,
     athleteId,
+    uid,
     createdAt: now,
     updatedAt: now,
     blueprint: cleanBlueprint,
@@ -40,20 +43,26 @@ export async function saveMacrocycleToFirestore(
 
   if (adminDb) {
     try {
-      // 1. Guardar en la subcolección de macrociclos
-      const macroRef = adminDb.collection("users").doc(athleteId).collection("macrocycles").doc(macrocycleId);
-      await macroRef.set(payload);
-
-      // 2. Establecer como macrociclo activo en el perfil principal
-      const activeRef = adminDb.collection("users").doc(athleteId).collection("meta").doc("active_macrocycle");
-      await activeRef.set({
+      const metaPayload = {
         activeMacrocycleId: macrocycleId,
         updatedAt: now,
         cycleTitle: cleanBlueprint.cycleTitle,
         totalWeeks: cleanBlueprint.totalWeeks,
         startDate: cleanBlueprint.startDate,
         primaryRace: primaryRace || cleanBlueprint.primaryRace,
-      }, { merge: true });
+      };
+
+      // 1. Guardar en la subcolección del athleteId
+      if (athleteId) {
+        await adminDb.collection("users").doc(athleteId).collection("macrocycles").doc(macrocycleId).set(payload);
+        await adminDb.collection("users").doc(athleteId).collection("meta").doc("active_macrocycle").set(metaPayload, { merge: true });
+      }
+
+      // 2. Unificación SSOT con el UID del usuario (si difiere de athleteId)
+      if (uid && uid !== athleteId) {
+        await adminDb.collection("users").doc(uid).collection("macrocycles").doc(macrocycleId).set(payload);
+        await adminDb.collection("users").doc(uid).collection("meta").doc("active_macrocycle").set(metaPayload, { merge: true });
+      }
     } catch (err) {
       console.warn("Aviso: No se pudo escribir en Firestore Admin, persistiendo en caché de sesión:", err);
     }
@@ -63,33 +72,55 @@ export async function saveMacrocycleToFirestore(
 }
 
 /**
- * Obtiene el macrociclo activo de un atleta desde Firestore.
+ * Obtiene el macrociclo activo de un atleta desde Firestore resolviendo por athleteId o UID.
  */
 export async function getActiveMacrocycleFromFirestore(
-  athleteId: string
+  athleteIdentifier: string,
+  uid?: string
 ): Promise<StoredMacrocycleData | null> {
   if (!adminDb) return null;
 
   try {
-    const activeRef = adminDb.collection("users").doc(athleteId).collection("meta").doc("active_macrocycle");
-    const activeDoc = await activeRef.get();
+    const candidates = [athleteIdentifier, uid].filter(Boolean) as string[];
 
-    if (activeDoc.exists) {
-      const activeId = activeDoc.data()?.activeMacrocycleId;
-      if (activeId) {
-        const macroDoc = await adminDb
-          .collection("users")
-          .doc(athleteId)
-          .collection("macrocycles")
-          .doc(activeId)
-          .get();
+    for (const id of candidates) {
+      const activeRef = adminDb.collection("users").doc(id).collection("meta").doc("active_macrocycle");
+      const activeDoc = await activeRef.get();
 
-        if (macroDoc.exists) {
-          const rawData = macroDoc.data() as StoredMacrocycleData;
-          return {
-            ...rawData,
-            blueprint: sanitizeMacrocycleBlueprint(rawData.blueprint),
-          };
+      if (activeDoc.exists) {
+        const activeId = activeDoc.data()?.activeMacrocycleId;
+        if (activeId) {
+          const macroDoc = await adminDb.collection("users").doc(id).collection("macrocycles").doc(activeId).get();
+          if (macroDoc.exists) {
+            const rawData = macroDoc.data() as StoredMacrocycleData;
+            return {
+              ...rawData,
+              blueprint: sanitizeMacrocycleBlueprint(rawData.blueprint),
+            };
+          }
+        }
+      }
+    }
+
+    // Si no se encuentra directo, buscar si algún usuario tiene intervalsAthleteId === athleteIdentifier
+    if (athleteIdentifier) {
+      const querySnap = await adminDb.collection("users").where("profile.intervalsAthleteId", "==", athleteIdentifier).limit(1).get();
+      if (!querySnap.empty) {
+        const userDoc = querySnap.docs[0];
+        const activeRef = userDoc.ref.collection("meta").doc("active_macrocycle");
+        const activeDoc = await activeRef.get();
+        if (activeDoc.exists) {
+          const activeId = activeDoc.data()?.activeMacrocycleId;
+          if (activeId) {
+            const macroDoc = await userDoc.ref.collection("macrocycles").doc(activeId).get();
+            if (macroDoc.exists) {
+              const rawData = macroDoc.data() as StoredMacrocycleData;
+              return {
+                ...rawData,
+                blueprint: sanitizeMacrocycleBlueprint(rawData.blueprint),
+              };
+            }
+          }
         }
       }
     }

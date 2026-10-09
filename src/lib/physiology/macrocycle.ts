@@ -1,4 +1,5 @@
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
+import { generateCustomMacrocycleBlueprint } from "./macrocycleGenerator";
 
 export interface TargetRace {
   id: string;
@@ -189,198 +190,21 @@ export function generateMacrocycleBlueprint(
     return null;
   }
 
-  // CASO 2: CON CARRERA OBJETIVO
-  const totalPrepWeeks = 16;
   const raceDateObj = new Date(primaryRace.date);
-  const raceMonday = getMonday(raceDateObj);
-
-  // Fecha de inicio del ciclo específico de 16 semanas
-  const kickoffMonday = new Date(raceMonday);
-  kickoffMonday.setDate(raceMonday.getDate() - (totalPrepWeeks - 1) * 7);
-
   const diffMs = raceDateObj.getTime() - now.getTime();
   const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  const weeksRemaining = Math.ceil(daysRemaining / 7);
+  const weeksRemaining = Math.max(1, Math.ceil(daysRemaining / 7));
+  const totalWeeks = Math.min(24, Math.max(8, weeksRemaining));
+  const distType = primaryRace.distance || "42k";
 
-  // 2A: SI HOY ES ANTES DE LA FECHA DE INICIO DEL CICLO DE 16 SEMANAS -> MANTENIMIENTO PRE-CARRERA
-  if (currentMonday.getTime() < kickoffMonday.getTime() || weeksRemaining > 16) {
-    const diffToKickoffMs = kickoffMonday.getTime() - currentMonday.getTime();
-    const weeksUntilKickoff = Math.ceil(diffToKickoffMs / (1000 * 60 * 60 * 24 * 7));
-
-    const totalWeeks = Math.max(8, weeksUntilKickoff + 4);
-    const weeks: MacrocycleWeek[] = [];
-
-    for (let i = 0; i < totalWeeks; i++) {
-      const weekMon = new Date(currentMonday);
-      weekMon.setDate(currentMonday.getDate() + i * 7);
-      const weekSun = new Date(weekMon);
-      weekSun.setDate(weekMon.getDate() + 6);
-
-      const isRecovery = (i + 1) % 4 === 0;
-      const isCurrent = i === 0;
-      const isKickoffWeek = weekMon.getTime() === kickoffMonday.getTime();
-
-      weeks.push({
-        weekNumber: i + 1,
-        countdownWeeks: weeksUntilKickoff - i,
-        startDate: formatDate(weekMon),
-        endDate: formatDate(weekSun),
-        formattedRange: formatRange(weekMon, weekSun),
-        phase: "PRE_SEASON_MAINTENANCE",
-        phaseLabel: "Mantenimiento Pre-Maratón",
-        microcycleType: isKickoffWeek ? "CARGA" : isRecovery ? "DESCARGA_ASIMILACION" : "MANTENIMIENTO",
-        microcycleLabel: isKickoffWeek
-          ? "🚀 KICKOFF MARATÓN (Sem 1/16)"
-          : isRecovery
-          ? "Asimilación / Descarga (3:1)"
-          : "Mantenimiento Aeróbico",
-        microcycleBadgeColor: isKickoffWeek
-          ? "bg-amber-500/25 text-amber-300 border-amber-500/40 font-bold"
-          : isRecovery
-          ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-          : "bg-slate-800 text-slate-300 border-slate-700",
-        targetTss: isRecovery ? 260 : 330,
-        maxLongRunMinutes: isRecovery ? 45 : 55,
-        focusDescription: isKickoffWeek
-          ? `¡Inicio oficial del ciclo específico de 16 semanas para ${primaryRace.name}!`
-          : isRecovery
-          ? "Descarga de volumen y asimilación biológica para refrescar el TSB."
-          : `Mantenimiento de fitness (CTL) y salud articular hasta iniciar el ciclo de 16 semanas el ${formatDate(kickoffMonday)}.`,
-        isCurrentWeek: isCurrent,
-      });
-    }
-
-    return {
-      mode: "PRE_SEASON_MAINTENANCE",
-      cycleTitle: `Ciclo de Mantenimiento Pre-${primaryRace.name}`,
-      primaryRace,
-      startDate: formatDate(kickoffMonday),
-      raceDate: primaryRace.date,
-      weeksUntilKickoff,
-      totalWeeks,
-      currentWeekIndex: 0,
-      currentWeek: weeks[0],
-      weeks,
-    };
-  }
-
-  // 2B: DENTRO DE LAS 16 SEMANAS -> PLAN ESPECÍFICO DE MARATÓN ACTIVO
-  const weeks: MacrocycleWeek[] = [];
-  let currentWeekIndex = 0;
-
-  for (let i = 0; i < totalPrepWeeks; i++) {
-    const weekMon = new Date(kickoffMonday);
-    weekMon.setDate(kickoffMonday.getDate() + i * 7);
-    const weekSun = new Date(weekMon);
-    weekSun.setDate(weekMon.getDate() + 6);
-
-    const countdown = totalPrepWeeks - i;
-    const weekNumber = i + 1;
-
-    let phase: MacrocyclePhaseType = "BASE_1";
-    let phaseLabel = "Base Aeróbica I";
-    let microType: MicrocycleType = "CARGA";
-    let microLabel = "Microciclo de Carga";
-    let badgeColor = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
-    let targetTss = 360;
-    let maxLongRun = 65;
-    let focus = "Consistencia y acondicionamiento muscular base.";
-
-    if (countdown === 1) {
-      phase = "RACE_WEEK";
-      phaseLabel = "Semana de Competición";
-      microType = "COMPETICION";
-      microLabel = "🏆 Competición Objetivo";
-      badgeColor = "bg-amber-500/25 text-amber-300 border-amber-500/40";
-      targetTss = 180;
-      maxLongRun = 25;
-      focus = "Máxima frescura neuromuscular, recarga de glucógeno y ritmo de carrera.";
-    } else if (countdown <= 3) {
-      phase = "TAPER";
-      phaseLabel = "Tapering & Puesta a Punto";
-      microType = "TAPER";
-      microLabel = "Puesta a Punto (-40% Vol)";
-      badgeColor = "bg-rose-500/20 text-rose-300 border-rose-500/30";
-      targetTss = countdown === 2 ? 240 : 280;
-      maxLongRun = countdown === 2 ? 45 : 55;
-      focus = "Puesta a punto (Taper): bajamos los kilómetros manteniendo toques de chispa para llegar descansado y muy rápido al día de la carrera.";
-    } else if (countdown <= 6) {
-      phase = "PEAK";
-      phaseLabel = "Pico de Forma & Fondos Específicos";
-      const isPeakRecovery = countdown === 4;
-      microType = isPeakRecovery ? "DESCARGA_ASIMILACION" : "IMPACTO_CHOQUE";
-      microLabel = isPeakRecovery ? "Descarga de Asimilación (3:1)" : "🔥 Impacto / Fondo Clave";
-      badgeColor = isPeakRecovery
-        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-        : "bg-orange-500/25 text-orange-300 border-orange-500/40";
-      targetTss = isPeakRecovery ? 380 : 540;
-      maxLongRun = isPeakRecovery ? 90 : 165;
-      focus = isPeakRecovery
-        ? "Asimilación estratégica: descanso prioritario para consolidar las adaptaciones de los fondos clave."
-        : "Máxima preparación: tiradas largas con tramos al ritmo objetivo de tu carrera para ganar confianza y ritmo.";
-    } else if (countdown <= 12) {
-      phase = "BUILD";
-      phaseLabel = "Construcción Específica & Umbral";
-      const isBuildRecovery = countdown === 8 || countdown === 12;
-      microType = isBuildRecovery ? "DESCARGA_ASIMILACION" : "CARGA";
-      microLabel = isBuildRecovery ? "Descarga / Asimilación (3:1)" : "Construcción & Umbral";
-      badgeColor = isBuildRecovery
-        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-        : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
-      targetTss = isBuildRecovery ? 340 : 470;
-      maxLongRun = isBuildRecovery ? 75 : 135;
-      focus = isBuildRecovery
-        ? "Recuperación estratégica: soltamos piernas y recargamos energía antes del siguiente bloque de intensidad."
-        : "Ritmo de carrera y potencia: series a ritmo exigente y aumento gradual de la distancia en la tirada larga del fin de semana.";
-    } else {
-      phase = countdown > 14 ? "BASE_1" : "BASE_2";
-      phaseLabel = countdown > 14 ? "Base Aeróbica I" : "Base Aeróbica II";
-      const isBaseRecovery = countdown === 13;
-      microType = isBaseRecovery ? "DESCARGA_ASIMILACION" : "CARGA";
-      microLabel = isBaseRecovery ? "Descarga / Asimilación" : "Base & Resistencia";
-      badgeColor = isBaseRecovery
-        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-        : "bg-teal-500/20 text-teal-300 border-teal-500/30";
-      targetTss = isBaseRecovery ? 300 : 410;
-      maxLongRun = isBaseRecovery ? 55 : 75;
-      focus = isBaseRecovery
-        ? "Semana de asimilación: reducimos el volumen para absorber el entrenamiento previo y recuperar piernas frescas."
-        : "Construcción de base aeróbica: carreras continuas suaves y repeticiones cortas en cuesta para ganar fuerza y resistencia en las piernas.";
-    }
-
-    const isCurrent = currentMonday.getTime() === weekMon.getTime();
-    if (isCurrent) currentWeekIndex = i;
-
-    weeks.push({
-      weekNumber,
-      countdownWeeks: countdown,
-      startDate: formatDate(weekMon),
-      endDate: formatDate(weekSun),
-      formattedRange: formatRange(weekMon, weekSun),
-      phase,
-      phaseLabel,
-      microcycleType: microType,
-      microcycleLabel: microLabel,
-      microcycleBadgeColor: badgeColor,
-      targetTss,
-      maxLongRunMinutes: maxLongRun,
-      focusDescription: getCleanFocusDescription(focus, phase, microType === "DESCARGA_ASIMILACION"),
-      isCurrentWeek: isCurrent,
-    });
-  }
-
-  return {
-    mode: "MARATHON_SPECIFIC",
-    cycleTitle: "Ciclo de Preparación Específica de Maratón",
+  return generateCustomMacrocycleBlueprint({
+    distanceType: distType,
+    startDate: formatDate(getMonday(now)),
+    weeksCount: totalWeeks,
     primaryRace,
-    startDate: weeks[0].startDate,
-    raceDate: primaryRace.date,
-    weeksUntilKickoff: 0,
-    totalWeeks: totalPrepWeeks,
-    currentWeekIndex,
-    currentWeek: weeks[currentWeekIndex] || weeks[0],
-    weeks,
-  };
+    customGoal: primaryRace.name,
+    periodization: "3:1",
+  });
 }
 
 /**

@@ -171,6 +171,66 @@ export interface TestEvaluationResult {
   proposal?: MacrocycleUpgradeProposal;
 }
 
+function buildDynamicUpgradeDiff(
+  testSport: "Ride" | "Run" | "Swim",
+  prevVal: number,
+  newVal: number
+): { diffItems: UpgradeDiffItem[]; keyDeltaText: string } {
+  if (testSport === "Ride") {
+    const prevW = Math.round(prevVal), newW = Math.round(newVal), dW = newW - prevW;
+    return {
+      keyDeltaText: `Fondo ciclista ajusta potencia crucero de ${Math.round(prevW * 0.68)}W a ${Math.round(newW * 0.68)}W`,
+      diffItems: [
+        { day: "Martes", currentWorkout: `Intervalos de Umbral (4x8m @ ${Math.round(prevW * 1.04)}W)`, proposedWorkout: `Intervalos de Umbral (4x8m @ ${Math.round(newW * 1.04)}W)`, changeSummary: `+${Math.round(dW * 1.04)}W por nuevo FTP`, isKeyWorkout: true },
+        { day: "Jueves", currentWorkout: `Rodaje Z2 60m (${Math.round(prevW * 0.65)}W)`, proposedWorkout: `Rodaje Z2 60m (${Math.round(newW * 0.65)}W)`, changeSummary: `+${Math.round(dW * 0.65)}W en rodaje aeróbico`, isKeyWorkout: false },
+        { day: "Sábado", currentWorkout: "Descanso Total / Soltura", proposedWorkout: "Descanso Total / Soltura", changeSummary: "Sin modificaciones", isKeyWorkout: false },
+        { day: "Domingo", currentWorkout: `Fondo Resistencia Z2 (${Math.round(prevW * 0.68)}W)`, proposedWorkout: `Fondo Resistencia Z2 (${Math.round(newW * 0.68)}W)`, changeSummary: `+${Math.round(dW * 0.68)}W en ritmo crucero`, isKeyWorkout: true },
+      ],
+    };
+  }
+
+  if (testSport === "Swim") {
+    const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.round(s % 60) < 10 ? "0" : ""}${Math.round(s % 60)}`;
+    const prevCSS = fmt(prevVal), newCSS = fmt(newVal), dSec = Math.round(prevVal - newVal);
+    return {
+      keyDeltaText: `Ritmo de referencia CSS se ajusta de ${prevCSS}/100m a ${newCSS}/100m`,
+      diffItems: [
+        { day: "Martes", currentWorkout: `Series CSS (8x 100m @ ${prevCSS}/100m)`, proposedWorkout: `Series CSS (8x 100m @ ${newCSS}/100m)`, changeSummary: `${dSec > 0 ? dSec : 2}s/100m más rápido por nuevo CSS`, isKeyWorkout: true },
+        { day: "Jueves", currentWorkout: "Fondo Aeróbico Pull/Palas Z2", proposedWorkout: "Fondo Aeróbico Pull/Palas Z2 (Pacing optimizado)", changeSummary: "Tracción y economía de nado adaptadas", isKeyWorkout: false },
+        { day: "Sábado", currentWorkout: "Descanso Total", proposedWorkout: "Descanso Total", changeSummary: "Sin modificaciones", isKeyWorkout: false },
+        { day: "Domingo", currentWorkout: "Nado Continuo de Resistencia (2000m)", proposedWorkout: "Nado Continuo de Resistencia (2200m)", changeSummary: "+200m de volumen aeróbico asimilable", isKeyWorkout: true },
+      ],
+    };
+  }
+
+  // Running
+  const isPwr = prevVal > 120;
+  if (isPwr) {
+    const prevU = Math.round(prevVal * 0.95), newU = Math.round(newVal * 0.95);
+    return {
+      keyDeltaText: "Tirada dominical sube volumen de forma gradual con potencia recalculada",
+      diffItems: [
+        { day: "Martes", currentWorkout: `Series de Umbral (5x1000m @ ${prevU}W)`, proposedWorkout: `Series de Umbral (5x1000m @ ${newU}W)`, changeSummary: `+${newU - prevU}W por nuevo CP`, isKeyWorkout: true },
+        { day: "Jueves", currentWorkout: `Rodaje Z2 60m (${Math.round(prevVal * 0.72)}W)`, proposedWorkout: `Rodaje Z2 60m (${Math.round(newVal * 0.72)}W)`, changeSummary: `+${Math.round((newVal - prevVal) * 0.72)}W aeróbico`, isKeyWorkout: false },
+        { day: "Sábado", currentWorkout: "Descanso Total", proposedWorkout: "Descanso Total", changeSummary: "Sin modificaciones", isKeyWorkout: false },
+        { day: "Domingo", currentWorkout: `Tirada Larga Z2 (${Math.round(prevVal * 0.72)}W)`, proposedWorkout: `Tirada Larga Z2 (${Math.round(newVal * 0.72)}W, +2 km)`, changeSummary: "+2 km adicionales y potencia recalculada", isKeyWorkout: true },
+      ],
+    };
+  }
+
+  const fmtP = (s: number) => `${Math.floor(s / 60)}:${Math.round(s % 60) < 10 ? "0" : ""}${Math.round(s % 60)}/km`;
+  const dP = Math.round(prevVal - newVal);
+  return {
+    keyDeltaText: "Tirada dominical incrementa volumen manteniendo nuevo ritmo base",
+    diffItems: [
+      { day: "Martes", currentWorkout: `Series de Umbral (5x1000m @ ${fmtP(prevVal)})`, proposedWorkout: `Series de Umbral (5x1000m @ ${fmtP(newVal)})`, changeSummary: `${dP > 0 ? dP : 4}s/km más rápido por nuevo ritmo umbral`, isKeyWorkout: true },
+      { day: "Jueves", currentWorkout: `Rodaje Z2 60m (${fmtP(prevVal + 45)})`, proposedWorkout: `Rodaje Z2 60m (${fmtP(newVal + 45)})`, changeSummary: "Ritmo aeróbico recalibrado", isKeyWorkout: false },
+      { day: "Sábado", currentWorkout: "Descanso Total", proposedWorkout: "Descanso Total", changeSummary: "Sin modificaciones", isKeyWorkout: false },
+      { day: "Domingo", currentWorkout: "Tirada Larga Z2", proposedWorkout: "Tirada Larga Z2 (+2 km)", changeSummary: "+2 km de fondo aeróbico a ritmo actualizado", isKeyWorkout: true },
+    ],
+  };
+}
+
 /**
  * Evalúa el resultado de un test oficial según el Principio de No-Degradación:
  * - Si es mejora (>= +2%): Genera propuesta de UPGRADE si no está en Freeze Window.
@@ -233,6 +293,8 @@ export function evaluateTestForUpgrade(
 
   const proposedPeak = Math.max(currentPeak + 2, potential.targetPeakCtl);
 
+  const dynamicDiff = buildDynamicUpgradeDiff(testSport, previousThresholdValue, newThresholdValue);
+
   const proposal: MacrocycleUpgradeProposal = {
     id: `upgrade-${athleteId}-${Date.now()}`,
     athleteId,
@@ -242,13 +304,8 @@ export function evaluateTestForUpgrade(
     currentPeakCtl: currentPeak,
     proposedPeakCtl: proposedPeak,
     weeklyTimeDeltaMin: 35,
-    keyLongWorkoutDelta: "Tirada dominical sube de 24 km a 26 km de forma gradual",
-    nextWeekDiff: [
-      { day: "Martes", currentWorkout: "6x1000m @ 3:55/km", proposedWorkout: "6x1000m @ 3:51/km", changeSummary: "+4s/km más rápido por nuevo ritmo umbral", isKeyWorkout: true },
-      { day: "Jueves", currentWorkout: "Rodaje Z2 60m (175W)", proposedWorkout: "Rodaje Z2 60m (185W)", changeSummary: "+10W manteniendo misma duración", isKeyWorkout: false },
-      { day: "Sábado", currentWorkout: "Descanso Total", proposedWorkout: "Descanso Total", changeSummary: "Sin modificaciones", isKeyWorkout: false },
-      { day: "Domingo", currentWorkout: "Fondo 22 km @ 4:45/km", proposedWorkout: "Fondo 24 km @ 4:45/km", changeSummary: "+2 km adicionales de fondo aeróbico", isKeyWorkout: true },
-    ],
+    keyLongWorkoutDelta: dynamicDiff.keyDeltaText,
+    nextWeekDiff: dynamicDiff.diffItems,
     status: "PENDING",
   };
 

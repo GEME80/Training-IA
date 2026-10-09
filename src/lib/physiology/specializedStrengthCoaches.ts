@@ -6,6 +6,12 @@ import {
   STRENGTH_TRIAD_4_ECCENTRIC_TRAP_TRENDELENBURG,
   STRENGTH_TRIAD_5_REGENERATIVE_MOBILITY_PREHAB,
 } from "../ai/knowledge/workoutPools/strengthTriadPool";
+import {
+  CYCLING_BASE_STRENGTH_WORKOUTS,
+  CYCLING_BUILD_STRENGTH_WORKOUTS,
+  TRIATHLON_BASE_STRENGTH_WORKOUTS,
+  TRIATHLON_BUILD_STRENGTH_WORKOUTS,
+} from "./cyclingAndTriStrengthPool";
 
 /**
  * 🏋️ SUITE DE 5 COACHES DE FORTALECIMIENTO ESPECIALIZADOS (S&C)
@@ -88,66 +94,14 @@ const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
 
 // S2: Cycling & Climbing Strength Coach
 const S2_CYCLING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
-  BASE: [
-    {
-      name: "S2: Torque en Cuádriceps & Fase de Empuje de Pedaleo (35m)",
-      focus: "Cuádriceps (fase 1:00 a 5:00), Glúteo Mayor y Prensa",
-      durationMin: 35,
-      tss: 26,
-      justification: "Desarrolla el torque máximo necesario para subir puertos a 50-60 rpm sin claudicación muscular.",
-      workoutDoc: "Calentamiento (5m)\n- Movilidad de cadera y rodilla dinámicas\n\nBloque Principal (3 Rondas)\n- 8x Sentadilla pesada controlada (80% 1RM)\n- 10x Prensa de piernas unilateral\n- 12x Subidas a escalón alto con carga\n- 35s Plancha prona isométrica en codos\n\nEnfriamiento (5m)\n- Estiramiento profundo de cuádriceps",
-    },
-    {
-      name: "S2: Resistencia Postural Isométrica Aero & Lumbar (35m)",
-      focus: "Erectores Espinales, Core Anti-Extensión y Trapecios",
-      durationMin: 35,
-      tss: 24,
-      justification: "Previene el dolor lumbar y cervical al mantener la posición aerodinámica durante 3-5 horas.",
-      workoutDoc: "Activación (5m)\n- Cat-cow y dislocaciones con banda\n\nBloque Postural (3 Rondas)\n- 45s Plancha en posición de acoples aero\n- 10x Bird-dog resistido con minibanda\n- 12x Face-pulls para romboides y trapecio medio\n- 12x Hip thrust con apoyo de escápulas\n\nEnfriamiento (5m)\n- Descompresión espinal colgado",
-    },
-  ],
-  BUILD: [
-    {
-      name: "S2: Potencia Crítica en Subida & Fuerza-Resistencia (35m)",
-      focus: "Fuerza Unipodal y Rendimiento en W/kg en Puertos",
-      durationMin: 35,
-      tss: 28,
-      justification: "Optimiza la transferencia de potencia al pedal y reduce la fatiga neuromuscular periférica.",
-      workoutDoc: "Activación (5m)\n- Movilidad articular completa\n\nBloque Principal (3 Rondas)\n- 8x Sentadilla búlgara pesada con mancuernas por pierna\n- 10x Peso muerto rumano con mancuernas pesadas\n- 12x Extensiones de cadera en banco inclinado\n- 12x Pallof press anti-rotación\n\nEnfriamiento (5m)\n- Foam roller en banda iliotibial y glúteos",
-    },
-  ],
+  BASE: CYCLING_BASE_STRENGTH_WORKOUTS,
+  BUILD: CYCLING_BUILD_STRENGTH_WORKOUTS,
 };
 
 // S3: Triathlon Multi-Sport Strength Coach
 const S3_TRIATHLON_POOL: Record<string, StrengthWorkoutDefinition[]> = {
-  BASE: [
-    {
-      name: "S3: Escápula & Manguito Rotador (Swimmer's Shoulder Shield) (35m)",
-      focus: "Serrato Anterior, Dorsal Ancho y Manguito Rotador",
-      durationMin: 35,
-      tss: 24,
-      justification: "Protege la articulación glenohumeral contra sobreuso en natación y fortalece la tracción acuática.",
-      workoutDoc: "Calentamiento (5m)\n- Dislocaciones y círculos de hombro con banda\n\nBloque Escapular (3 Rondas)\n- 12x Rotaciones externas de hombro con codo pegado\n- 10x 'Y-T-W' prono en suelo o fitball\n- 12x Jalón al pecho con elástico concentrado\n- 35s Plancha lateral con apoyo de antebrazo\n\nEnfriamiento (5m)\n- Apertura torácica y estiramiento de pectoral",
-    },
-    {
-      name: "S3: Core Hidrodinámico & Estabilidad de Transición Brick (35m)",
-      focus: "Transverso Abdominal, Glúteo Medio y Cadera",
-      durationMin: 35,
-      tss: 25,
-      justification: "Alineación hidrodinámica en el agua y estabilización neuromuscular en la bajada de la bici a correr.",
-      workoutDoc: "Activación (5m)\n- Activación pélvica en suelo\n\nBloque Transición (3 Rondas)\n- 30s Hollow body hold con piernas extendidas\n- 10x Step-ups rápidos a escalón simulando ritmo T2\n- 12x Puente supino unilateral\n- 12x Monster walks con banda\n\nEnfriamiento (5m)\n- Descarga miofascial de piernas",
-    },
-  ],
-  BUILD: [
-    {
-      name: "S3: Fuerza Neuromuscular Concurrente & Resistencia Postural (35m)",
-      focus: "Fuerza Integral Concurrente Bici-Carrera",
-      durationMin: 35,
-      tss: 27,
-      justification: "Soporte metabólico y mecánico para sostener el ritmo en el sector final de carrera a pie en triatlón.",
-      workoutDoc: "Calentamiento (5m)\n- Movilidad dinámica de cadera y tobillo\n\nBloque Concurrente (3 Rondas)\n- 8x Sentadillas búlgaras con pausa abajo 2s\n- 10x Peso muerto rumano con mancuernas\n- 10x Remo con banda elástica cerrado\n- 30s Plancha prono con elevación de talón\n\nEnfriamiento (5m)\n- Estiramiento dinámico y respiración",
-    },
-  ],
+  BASE: TRIATHLON_BASE_STRENGTH_WORKOUTS,
+  BUILD: TRIATHLON_BUILD_STRENGTH_WORKOUTS,
 };
 
 // S4: Trail & Ultra Mountain Strength Coach

@@ -1,4 +1,5 @@
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
+import { GoalFeasibilityResult } from "./goalFeasibilityEngine";
 import { generateCustomMacrocycleBlueprint } from "./macrocycleGenerator";
 
 export interface TargetRace {
@@ -50,6 +51,9 @@ export interface MacrocycleWeek {
   isFutureWeek?: boolean;
   milestone?: string;
   isRecoveryWeek?: boolean;
+  raceGoal?: string;
+  stagedRacePaceSec?: number;
+  stagedRacePaceKmStr?: string;
 }
 
 export interface MacrocycleBlueprint {
@@ -81,8 +85,9 @@ export interface MacrocycleBlueprint {
   runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
   /** CTL pico proyectado en el bloque cumbre */
   targetPeakCtl?: number;
+  /** Evaluación fisiológica continua de la meta del atleta */
+  goalFeasibility?: GoalFeasibilityResult;
 }
-
 
 export interface SeasonPlanItem {
   id: string;

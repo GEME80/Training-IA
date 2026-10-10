@@ -123,6 +123,10 @@ export class MacrocycleAIEngine {
         : `Calibración por vatios: Stryd CP ${profile.run_ftp ? `${profile.run_ftp}W` : "Pendiente de calibración (Test Sem 2)"} y Bike FTP ${profile.bike_ftp ? `${profile.bike_ftp}W` : "Pendiente de calibración (Test Sem 2)"}.`,
     ];
 
+    if (baseBlueprint.goalFeasibility) {
+      defaultNotes.unshift(baseBlueprint.goalFeasibility.coachAdvice);
+    }
+
     if (!apiKey) {
       return {
         success: true,
@@ -148,6 +152,7 @@ export class MacrocycleAIEngine {
           },
           customPromptDirective: options?.customPrompt,
           historicalProfile: options?.historicalProfile,
+          goalFeasibility: baseBlueprint.goalFeasibility,
         }
       );
 
@@ -163,7 +168,7 @@ export class MacrocycleAIEngine {
           generationConfig: {
             responseMimeType: "application/json",
             temperature: 0.2,
-            maxOutputTokens: 600,
+            maxOutputTokens: 1500,
           },
         }),
         signal: AbortSignal.timeout(15000),

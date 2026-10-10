@@ -6,6 +6,7 @@ import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 import { resolveFridayWorkout, FridayWorkoutParams } from "./fridayWorkoutResolver";
 import { generateMetricRunningWorkout } from "./metricIntervalEngine";
+import { generateLinearRunningWorkout } from "./linearProgressionEngine";
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a), y = Math.abs(b);
@@ -49,85 +50,30 @@ export function selectQualityWorkout(
     mode?: "PACE" | "POWER";
     thresholdPaceSec?: number;
     microcycleType?: string;
+    stagedRacePaceSec?: number;
+    distanceType?: string;
   }
 ): { name: string; powerTarget: string; justification: string; workoutDoc: string; durationMin?: number; tss?: number } {
-  const vars = curatedModel.workoutVariations.qualityWorkouts;
-  let rawList = vars.base;
-  if (phase === "PEAK") {
-    rawList = vars.peak && vars.peak.length > 0 ? vars.peak : vars.build;
-  } else if (phase === "BUILD") {
-    rawList = vars.build && vars.build.length > 0 ? vars.build : vars.base;
-  } else if (phase === "TAPER" || phase === "RACE_WEEK") {
-    rawList = vars.taper && vars.taper.length > 0 ? vars.taper : vars.base;
-  }
-
-  const runOnly = (rawList || []).filter((w) => {
-    const txt = (w.name + " " + w.justification + " " + w.workoutDoc).toLowerCase();
-    const isSwim = txt.includes("nataci") || txt.includes("nado") || txt.includes("swim") || txt.includes("brazada") || txt.includes("css ");
-    const hasBikeOrBrick = txt.includes("ciclismo") || txt.includes("bici") || txt.includes("pedaleo") || txt.includes("bike") || txt.includes("brick") || txt.includes("transición");
-    return !isSwim && !hasBikeOrBrick;
-  });
-
-  // Generador paramétrico de intervalos métricos en distancia (mtr):
-  // Permite un mix fisiológico real (series en pista por distancia vs fartleks/tempos por tiempo)
-  const metricInterval = generateMetricRunningWorkout({
-    weekNumber,
+  const linear = generateLinearRunningWorkout({
     phase,
-    microcycleType: opts?.microcycleType || (opts?.isRecovery ? "DESCARGA" : "CARGA"),
-    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
-    thresholdPaceSec: opts?.thresholdPaceSec,
-    runFtp,
-  });
-
-  // PARIDAD 50/50 ANTI-MONOTONÍA:
-  // Alterna semanas pares e impares entre el motor dinámico métrico (pirámides, escaleras, repeticiones)
-  // y las sesiones curadas de autor (Canova, Daniels, Pfitzinger), garantizando máxima variedad.
-  const isMetricWeek = weekNumber % 2 === 0;
-  let baseWorkout: {
-    name: string;
-    powerTarget: string;
-    justification: string;
-    workoutDoc: string;
-    durationMin?: number;
-    tss?: number;
-  };
-
-  if (isMetricWeek || runOnly.length === 0) {
-    baseWorkout = {
-      name: metricInterval.name,
-      powerTarget: metricInterval.powerTarget,
-      justification: metricInterval.justification,
-      workoutDoc: metricInterval.workoutDoc,
-      durationMin: metricInterval.durationMinutes,
-      tss: metricInterval.tss,
-    };
-  } else {
-    const stride = getCoprimeStride(runOnly.length, 2);
-    const preferredIdx = ((weekNumber - 1) * stride) % runOnly.length;
-
-    if (opts?.memoryBuffer) {
-      baseWorkout = opts.memoryBuffer.selectDiverseCandidate(runOnly, preferredIdx);
-    } else if (opts?.recentWorkoutNames && opts.recentWorkoutNames.length > 0) {
-      const tempBuffer = new AntiMonotonyMemoryBuffer(6);
-      opts.recentWorkoutNames.forEach((n) => tempBuffer.record(n));
-      baseWorkout = tempBuffer.selectDiverseCandidate(runOnly, preferredIdx);
-    } else {
-      baseWorkout = runOnly[preferredIdx >= 0 ? preferredIdx : 0] || metricInterval;
-    }
-  }
-
-  const dynPowerTarget = interpolatePowerTarget(baseWorkout.powerTarget, runFtp, bikeFtp);
-  const targetWorkout = {
-    ...baseWorkout,
-    powerTarget: dynPowerTarget,
-  };
-
-  // Sobrecarga progresiva paramétrica (4x -> 5x -> 6x -> deload 3x)
-  return applyParametricProgression(targetWorkout, {
     weekNumber,
-    phase,
     isRecovery: opts?.isRecovery,
+    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
+    runFtp,
+    bikeFtp,
+    thresholdPaceSec: opts?.thresholdPaceSec,
+    stagedRacePaceSec: opts?.stagedRacePaceSec,
+    distanceType: opts?.distanceType,
   });
+
+  return {
+    name: linear.name,
+    powerTarget: linear.powerTarget,
+    justification: linear.justification,
+    workoutDoc: linear.workoutDoc,
+    durationMin: linear.durationMinutes,
+    tss: linear.tss,
+  };
 }
 
 import { parseGoalTimeToMinutes } from "./raceGoalParser";

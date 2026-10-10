@@ -1,26 +1,11 @@
-import {
-  MacrocycleDefinition,
-  getMacrocycleDefinitionById,
-  getMacrocycleDefinitionByDistance,
-  MacrocycleDistanceType,
-  MACROCYCLE_LIBRARY,
-} from "./macrocycleLibrary";
-import {
-  MacrocycleBlueprint,
-  MacrocycleWeek,
-  MacrocyclePhaseType,
-  MicrocycleType,
-  TargetRace,
-} from "./macrocycle";
+import { MacrocycleDefinition, getMacrocycleDefinitionById, getMacrocycleDefinitionByDistance, MacrocycleDistanceType, MACROCYCLE_LIBRARY } from "./macrocycleLibrary";
+import { MacrocycleBlueprint, MacrocycleWeek, MacrocyclePhaseType, MicrocycleType, TargetRace } from "./macrocycle";
 import { WeeklyAvailabilityMap } from "../gemini/engine";
-import {
-  resolveTrainingModel,
-  calculateProgressiveLongRun,
-  calculateProgressiveWeeklyTss,
-  BIKE_TEST_RAMP,
-} from "../ai/knowledge";
+import { resolveTrainingModel, calculateProgressiveLongRun, calculateProgressiveWeeklyTss, BIKE_TEST_RAMP } from "../ai/knowledge";
 import { PMCHistoricalSummary } from "./pmcEngine";
 import { calculateTargetPeakCtlPotential } from "./ctlPotentialEngine";
+import { evaluateGoalFeasibility, GoalFeasibilityResult } from "./goalFeasibilityEngine";
+
 
 export interface CustomMacrocycleConfig {
   definitionId?: string;
@@ -205,6 +190,15 @@ export function generateCustomMacrocycleBlueprint(
   const buildEndWeek = baseEndWeek + buildWeeksCount;
   const peakEndWeek = buildEndWeek + peakWeeksCount;
 
+  const rawGoalCandidate = config.primaryRace?.goalTarget || (config as any).raceGoal || config.customGoal;
+  const goalFeasibility = (rawGoalCandidate && (config.distanceType || def.distanceType))
+    ? evaluateGoalFeasibility(rawGoalCandidate, config.distanceType || def.distanceType, {
+        runFtp: config.athleteMetrics?.runFtp, bikeFtp: config.athleteMetrics?.bikeFtp,
+        weightKg: config.athleteMetrics?.weightKg, ctl: athleteCtl,
+        thresholdPaceSec: (config.athleteMetrics as any)?.thresholdPaceSec, lthr: config.athleteMetrics?.lthr,
+      })
+    : undefined;
+
   const weeks: MacrocycleWeek[] = [];
   let currentWeekIndex = 0;
 
@@ -303,6 +297,7 @@ export function generateCustomMacrocycleBlueprint(
       microcycleLabel: microLabel, microcycleBadgeColor: badgeColor, targetTss, maxLongRunMinutes: longRun.minutes,
       focusDescription, isCurrentWeek: isCurrent, isPastWeek: isPast, isFutureWeek: isFuture,
       ...(raceGoalTarget ? { raceGoal: raceGoalTarget } : {}),
+      ...(goalFeasibility ? { stagedRacePaceSec: goalFeasibility.stagedRacePaceSec, stagedRacePaceKmStr: goalFeasibility.stagedRacePaceKmStr } : {}),
     } as any);
   }
 
@@ -334,5 +329,6 @@ export function generateCustomMacrocycleBlueprint(
     runFtpAtCreation: config.athleteMetrics?.runFtp, bikeFtpAtCreation: config.athleteMetrics?.bikeFtp,
     runningTrainingMode: config.athleteMetrics?.runningTrainingMode,
     periodization: config.periodization || (isConservative ? "2:1" : "3:1"), targetPeakCtl: peakPlanCalc.targetPeakCtl,
+    goalFeasibility,
   };
 }

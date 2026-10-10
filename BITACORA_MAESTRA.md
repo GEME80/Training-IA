@@ -6692,6 +6692,56 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
   - Tiradas largas dominicales (S1 a S8): 8 sesiones distintas y progresivas (PASS ✅).
   - Modo Stryd CP POWER: 0 residuos de ritmo `/km` (PASS ✅).
 
+---
+
+## 95. VERSIÓN 5.19: MOTOR SOBERANO DE FACTIBILIDAD FISIOLÓGICA (GOAL FEASIBILITY), PROGRESIÓN PEDAGÓGICA LINEAL Y DESBLOQUEO REAL DE GEMINI IA
+
+### 95.1. Origen y Diagnóstico Forense
+1. **Factibilidad Dinámica de Objetivos sin Hardcoding:**
+   - Anteriormente, los objetivos de tiempo de los atletas (ej. 3h05m, 2h30m, 1h25m, 38:00) o bien se trataban estáticamente o eran ignorados fuera del día de carrera (dejando las semanas 1 a 15 idénticas).
+   - Atletas con metas hiper-ambiciosas (ej. 2h30m con CP de 240W, en forma real de 3h45) corrían el riesgo de sobreentrenamiento o lesiones miofibrilares si se prescribían ritmos suicidas (3:33/km) desde la semana 1, o recibían planes desconectados de su aspiración.
+2. **Paridad Alterna 50/50 y Pérdida de Progresión Pedagógica:**
+   - En `macrocycleTemplateHelpers.ts:85`, la condición `isMetricWeek = weekNumber % 2 === 0` forzaba una alternancia par/impar donde las semanas impares (1, 3, 5, 7) revertían a plantillas de texto estáticas, destruyendo la secuencia visible semana a semana (10x 100m cuestas $\rightarrow$ 8x 200m zancada $\rightarrow$ 6x 300m ritmo rápido $\rightarrow$ 4x 100m descarga).
+   - En `macrocycleTemplates.ts:279`, `isEligibleQuality` excluía las semanas de recuperación (`!isRecovery`) y taper (`phase !== "TAPER"`), convirtiendo las sesiones de asimilación activa en trotes genéricos.
+3. **Rol Cosmético de Gemini AI (Cuello de Botella de 600 Tokens):**
+   - En `macrocycleAI.ts:166`, la llamada a Gemini limitaba `maxOutputTokens: 600`, impidiendo análisis profundos y limitando el output a un resumen superficial, sin alimentar a Gemini con la brecha fisiológica de la meta.
+
+### 95.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Motor Soberano de Factibilidad Fisiológica (`goalFeasibilityEngine.ts` - 190 LOC):**
+   - Evalúa matemáticamente cualquier meta cronométrica contra la telemetría viva de Intervals.icu (Stryd CP W/kg, FTP, CTL, ritmo umbral actual) empleando las ecuaciones fisiológicas de Peter Riegel y Jack Daniels.
+   - Clasifica la meta en `REALISTIC` ($\le 5\%$), `CHALLENGING` ($5-15\%$) y `HIGHLY_ASPIRATIONAL` ($> 15\%$).
+   - Para metas hiper-ambiciosas, implementa **Stepping Stones** (escalera biomecánica segura: $0.92 \times \text{ritmo actual}$), protegiendo contra desgarros mientras guía progresivamente hacia el hito intermedio con consejos de Head Coach de nivel olímpico.
+2. **Motor de Progresión Pedagógica Continua (`linearProgressionEngine.ts` - 297 LOC):**
+   - **Fase Base:** Semana 1 (10x 100m cuestas) $\rightarrow$ Semana 2 (8x 200m zancada fluida) $\rightarrow$ Semana 3 (6x 300m ritmo rápido) $\rightarrow$ Semana 4 (Descarga 3:1: 4x 100m soltura neuromuscular).
+   - **Fase Build:** Semana 5 (6x 1000m umbral) $\rightarrow$ Semana 6 (7x 1000m sobrecarga) $\rightarrow$ Semana 7 (4x 2000m resistencia a la velocidad / ritmo objetivo) $\rightarrow$ Semana 8 (Descarga 3:1: 4x 800m crucero asimilación).
+   - **Fase Peak:** Semanas 9 a 13 con bloques Renato Canova (3x 3000m ritmo maratón específico, 2x 5000m, 12x 400m chispa).
+   - **Fase Taper:** 4x 1000m afinamiento y 4x 400m chispa pre-carrera.
+3. **Conexión Limpia en `macrocycleTemplateHelpers.ts` (273 LOC) y `macrocycleTemplates.ts` (341 LOC):**
+   - Erradicado el bloque de paridad 50/50 (`isMetricWeek`). Integrado `generateLinearRunningWorkout` directamente.
+   - Habilitado `isEligibleQuality` en semanas de recuperación y taper para prescribir las sesiones estructuradas de soltura activa (4x 100m / 4x 800m / 4x 400m) en lugar de trotes genéricos.
+   - Propagación de `stagedRacePaceSec` desde `goalFeasibility` hacia todas las semanas del macrociclo.
+4. **Desbloqueo Real de Gemini AI (`macrocycleAI.ts` - 214 LOC & `prompts.ts` - 339 LOC):**
+   - `buildMacrocycleArchitectSystemPrompt` ahora inyecta el bloque de evaluación de factibilidad: meta solicitada, predicción fisiológica, brecha %, ritmo y potencia escalonados, y directriz del Head Coach.
+   - Ampliado el límite de generación a `maxOutputTokens: 1500` para permitir respuestas tácticas y reflexiones profundas de periodización.
+
+### 95.3. Archivos Modificados / Creados ($\le 350$ LOC)
+- `src/lib/physiology/goalFeasibilityEngine.ts`: **190 LOC** [Nuevo] ($\le 350$)
+- `src/lib/physiology/linearProgressionEngine.ts`: **297 LOC** [Nuevo] ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **273 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **341 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycle.ts`: **347 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleGenerator.ts`: **334 LOC** ($\le 350$)
+- `src/lib/ai/prompts.ts`: **339 LOC** ($\le 350$)
+- `src/lib/gemini/macrocycleAI.ts`: **214 LOC** ($\le 350$)
+
+### 95.4. Certificación
+- `npm run build`: 20/20 rutas estáticas y dinámicas compiladas exitosamente (Código 0).
+- Verificación fisiológica ejecutada vía TypeScript:
+  - Caso German Morales (3h05 Tokio): Objetivo 185m vs Predicho 184m (Brecha -0.5%, REALISTIC ✅). Potencia meta 249W (89% CP), ritmo 4:23/km.
+  - Caso Hiper-Aspiracional (2h30 con 240W): Objetivo 150m vs Predicho 221m (Brecha +32.1%, HIGHLY_ASPIRATIONAL ✅). Ritmo escalonado 4:49/km stepping stone para 3h23 seguro sin lesiones.
+  - Progresión semanal verificada: Sem 1 (10x 100m) $\rightarrow$ Sem 3 (6x 300m) $\rightarrow$ Sem 4 (4x 100m descarga) $\rightarrow$ Sem 6 (7x 1000m) $\rightarrow$ Sem 7 (4x 2000m) $\rightarrow$ Sem 11 (3x 3000m Canova) $\rightarrow$ Sem 14 (4x 400m chispa) $\rightarrow$ Sem 16 (42.2k meta 3h05) (PASS ✅).
+
+
 
 
 

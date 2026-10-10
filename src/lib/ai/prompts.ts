@@ -202,8 +202,8 @@ ${directiveBlock}
 }
 
 import { resolveTrainingModel } from "./knowledge";
-
 import { PMCHistoricalSummary } from "../physiology/pmcEngine";
+import { GoalFeasibilityResult, formatGoalMinutes } from "../physiology/goalFeasibilityEngine";
 
 export interface MacrocyclePromptContext {
   profile: AthleteProfile;
@@ -216,6 +216,7 @@ export interface MacrocyclePromptContext {
   };
   customPromptDirective?: string;
   historicalProfile?: PMCHistoricalSummary;
+  goalFeasibility?: GoalFeasibilityResult;
 }
 
 /**
@@ -235,24 +236,19 @@ export function buildMacrocycleArchitectSystemPrompt(
     raceName: config.raceName,
   });
 
-  const directiveBlock = customPromptDirective?.trim()
-    ? `\nDIRECTRICES PERSONALIZADAS DEL ATLETA:\n${customPromptDirective.trim()}\n`
-    : "";
-
+  const directiveBlock = customPromptDirective?.trim() ? `\nDIRECTRICES PERSONALIZADAS DEL ATLETA:\n${customPromptDirective.trim()}\n` : "";
   const availabilityBlock = config.weeklyAvailability
     ? `\n=== MATRIZ SEMANAL DE DISPONIBILIDAD DEPORTIVA ===\n${Object.entries(config.weeklyAvailability)
-        .map(([day, discs]) => `- ${day}: ${Array.isArray(discs) ? discs.join(" + ") : discs} ${Array.isArray(discs) && discs.length > 1 ? "(DOBLE SESIÓN: prescribir ambos estímulos)" : ""}`)
-        .join("\n")}\n`
-    : "";
-
+        .map(([day, discs]) => `- ${day}: ${Array.isArray(discs) ? discs.join(" + ") : discs} ${Array.isArray(discs) && discs.length > 1 ? "(DOBLE SESIÓN)" : ""}`).join("\n")}\n` : "";
   const testsBlock = curatedModel.mandatoryTests.length > 0
-    ? `\n=== PROTOCOLOS DE TESTS FISIOLÓGICOS REQUERIDOS ===\n${curatedModel.mandatoryTests
-        .map(
-          (t) =>
-            `- Semana ${t.recommendedWeekIndex}: ${t.testName} (${t.sport}, Métrica: ${t.targetMetric})\n  Pauta: ${t.protocolDescription}`
-        )
-        .join("\n")}\n`
-    : "";
+    ? `\n=== PROTOCOLOS DE TESTS FISIOLÓGICOS REQUERIDOS ===\n${curatedModel.mandatoryTests.map((t) => `- Semana ${t.recommendedWeekIndex}: ${t.testName} (${t.sport}, Métrica: ${t.targetMetric})\n  Pauta: ${t.protocolDescription}`).join("\n")}\n` : "";
+  const feasibilityBlock = ctx.goalFeasibility
+    ? `\n=== FACTIBILIDAD FISIOLÓGICA DE LA META (HEAD COACH) ===
+- Meta Solicitada: ${formatGoalMinutes(ctx.goalFeasibility.targetGoalMinutes)} (${ctx.goalFeasibility.targetRacePaceKmStr})
+- Estimación Fisiológica: ${formatGoalMinutes(ctx.goalFeasibility.predictedGoalMinutes)} (${ctx.goalFeasibility.currentSafePaceKmStr})
+- Brecha Fisiológica: ${ctx.goalFeasibility.gapPercentage > 0 ? `+${ctx.goalFeasibility.gapPercentage}%` : `${ctx.goalFeasibility.gapPercentage}%`} • Estado: ${ctx.goalFeasibility.status}
+- Ritmo Escalonado: ${ctx.goalFeasibility.stagedRacePaceKmStr}${ctx.goalFeasibility.targetPowerWatts ? ` (${ctx.goalFeasibility.targetPowerWatts}W • ${ctx.goalFeasibility.targetPowerPctCp}% CP)` : ""}
+- Directriz Head Coach: ${ctx.goalFeasibility.coachAdvice}\n` : "";
 
   const historicalBlock = historicalProfile && historicalProfile.recordedDaysCount > 0
     ? `\n=== HISTÓRICO ANUAL DE TELEMETRÍA (365 DÍAS) ===
@@ -283,17 +279,18 @@ export function buildMacrocycleArchitectSystemPrompt(
 - Pulso Cardíaco: LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"} | FC Reposo: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"}${curatedModel.biotypeCrossTrainingRule ? `\n- Regla de Biotipo (${curatedModel.displayName}): ${curatedModel.biotypeCrossTrainingRule.notes}` : ""}${historicalBlock}
 === PARÁMETROS DEL PLAN RECTOR SOLICITADO POR EL ATLETA ===
 - Evento / Desafío: ${config.hasRace || config.raceName ? `Competición (${config.raceName || "Carrera Objetivo"}, Distancia: ${config.targetDistance || config.raceDistance || "42.2k"})` : `Foco de Temporada (${config.athleteMoment || "Construcción de Base"})`}
+- Meta Cronimétrica / Objetivo: ${config.raceGoal || "Pico de Forma Competitivo"}
 - Fecha de la Carrera: ${config.raceDate || "No definida"}
 - Semanas Totales Solicitadas: ${config.weeksCount || 16} semanas exactas
 - Enfoque Deportivo: ${config.trainingApproach || "Entrenamiento Cruzado"}
 - Estrategia de Asimilación: ${config.periodization === "2:1" ? "Ratio 2:1 Preventivo (2 sem carga : 1 sem descarga)" : config.periodization === "3:1" ? "Ratio 3:1 Clásico (3 sem carga : 1 sem descarga)" : "Progresión Continua"}
-${availabilityBlock}${testsBlock}${directiveBlock}
+${availabilityBlock}${testsBlock}${feasibilityBlock}${directiveBlock}
 === INSTRUCCIONES DE RESPUESTA (FORMATO JSON ESTRICTO) ===
 Genera un análisis cualitativo y estratégico de periodización en formato JSON únicamente con estos campos (la estructura matemática de semanas y microciclos ya está resuelta por el motor determinístico):
 {
   "reasoningHeadline": "string (Título estratégico y motivador del macrociclo)",
   "reasoningNotes": [
-    "string (3 a 4 notas concisas de justificación metodológica según ${curatedModel.displayName}, distribución de fases y pauta de asimilación)"
+    "string (4 a 6 notas profundas de justificación metodológica según ${curatedModel.displayName}, análisis de la meta solicitada vs estimación fisiológica y pauta de asimilación)"
   ],
   "projectedPeakCtl": number (estimación del CTL cumbre en el bloque pico),
   "recommendedRampRate": number (tasa segura de incremento semanal de CTL entre ${curatedModel.banisterRampRateLimits.minCtlPerWeek} y ${curatedModel.banisterRampRateLimits.maxCtlPerWeek})

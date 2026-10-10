@@ -20,7 +20,7 @@ export function generateWeekTemplate(
   week: MacrocycleWeek, runFtp?: number, bikeFtp?: number,
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType?: MacrocycleDistanceType, athleteCtl?: number, primaryRaceDate?: string,
-  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; raceGoal?: string }
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; raceGoal?: string; stagedRacePaceSec?: number }
 ): PlanItem[] {
   const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -276,7 +276,7 @@ export function generateWeekTemplate(
         }
 
         const isAdj = day === "Sábado" && longRunDay === "Domingo";
-        const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj;
+        const isEligibleQuality = runCount === 1 && day !== longRunDay && !isAdj;
 
         if (isEligibleQuality) {
           let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, {
@@ -285,6 +285,8 @@ export function generateWeekTemplate(
             mode: (runningOpts?.mode as any),
             thresholdPaceSec: runningOpts?.thresholdPaceSec,
             microcycleType: week.microcycleType,
+            stagedRacePaceSec: (week as any).stagedRacePaceSec || runningOpts?.stagedRacePaceSec,
+            distanceType: distanceType || curatedModel.modelId,
           });
           const isRunningProgram = curatedModel.sportCategory === "Running";
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
@@ -296,7 +298,7 @@ export function generateWeekTemplate(
           memory.record(q.name);
           const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
           const parsedQ = parseWorkoutDoc(q.workoutDoc, "Carrera");
-          const dur = isBrick ? 85 : (parsedQ.totalMins || 50), tss = isBrick ? 85 : (parsedQ.estimatedTss || 55);
+          const dur = isBrick ? 85 : (q.durationMin || parsedQ.totalMins || 50), tss = isBrick ? 85 : (q.tss || parsedQ.estimatedTss || 55);
           const addons = resolveWorkoutAddons({ durationMinutes: dur, sport: "Carrera", isQualityOrLong: true });
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", activityType: isBrick ? "Brick" : "Carrera",

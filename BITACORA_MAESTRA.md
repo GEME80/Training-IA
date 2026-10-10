@@ -6750,18 +6750,18 @@ Para validar que la arquitectura de macrociclos, periodización, anti-monotonía
 
 ### 96.2. Arquitectura de Pruebas Implementada
 1. **Matriz de Atletas Demo (`demoAthletesData.ts` - 341 LOC):**
-   - **TC-01:** `demo_runner_tokio_305` — Germán Morales (Maratón Tokio 3:05, Cross-Training, Stryd CP 280W, Potencia Running).
-   - **TC-02:** `demo_runner_valencia_230` — Sofía Arango (Valencia 2:30 Aspiracional, CP 240W, Stepping Stone 3h23 seguro).
-   - **TC-03:** `demo_runner_pace_daniels` — Carlos Mendoza (21K Daniels, Sin Potenciómetro, Modo Ritmo min/km puro).
-   - **TC-04:** `demo_cyclist_gran_fondo` — Mateo Vélez (Gran Fondo 140K Ciclismo Puro, Rønnestad 30/15, 0 sesiones running).
-   - **TC-05:** `demo_triathlete_703` — Valentina Ríos (Triatlón Media Distancia 70.3, Natación técnica, rodaje y bici Z2).
-   - **TC-06:** `demo_base_mitochondrial` — Alejandro Gómez (Base Building Salud / Longevidad Attia-Seiler, sin carrera A).
-   - **TC-07:** `demo_rehab_post_race` — Diana Morales (Recuperación / Asimilación Post-Competición, carga $\le 250$ TSS).
+   - **TC-01:** `demo_runner_tokio_305` — Demo - Lucas Silva (Maratón Tokio 3:05, Cross-Training, Stryd CP 280W, Potencia Running).
+   - **TC-02:** `demo_runner_valencia_230` — Demo - Sofía Arango (Valencia 2:30 Aspiracional, CP 240W, Stepping Stone 3h23 seguro).
+   - **TC-03:** `demo_runner_pace_daniels` — Demo - Carlos Mendoza (21K Daniels, Sin Potenciómetro, Modo Ritmo min/km puro).
+   - **TC-04:** `demo_cyclist_gran_fondo` — Demo - Mateo Vélez (Gran Fondo 140K Ciclismo Puro, Rønnestad 30/15, 0 sesiones running).
+   - **TC-05:** `demo_triathlete_703` — Demo - Valentina Ríos (Triatlón Media Distancia 70.3, Natación técnica, rodaje y bici Z2).
+   - **TC-06:** `demo_base_mitochondrial` — Demo - Alejandro Gómez (Base Building Salud / Longevidad Attia-Seiler, sin carrera A).
+   - **TC-07:** `demo_rehab_post_race` — Demo - Elena Restrepo (Recuperación / Asimilación Post-Competición, carga $\le 250$ TSS).
 
-2. **Suite de Ejecución y Gestión Firestore (`demoAthletesSuite.ts` - 188 LOC):**
+2. **Suite de Ejecución y Gestión Firestore (`demoAthletesSuite.ts` - 239 LOC):**
    - `runPhase1TestSuite()`: Evalúa deterministamente la Fase 1 (Semanas 1-4) de los 7 atletas verificando factibilidad, microciclos 3:1, progresiones lineales y distribución por deporte.
-   - `seedDemoAthletes()`: Siembra los 7 perfiles en Firestore con tags de seguridad (`demoTag: "PULSE_DEMO_ATHLETE"` e IDs `demo_*`).
-   - `cleanDemoAthletes()`: Purga exclusivamente los documentos demo sin alterar usuarios reales ni Superadmin.
+   - `seedDemoAthletes()`: Siembra los 7 perfiles en Firestore con tags de seguridad (`demoTag: "PULSE_DEMO_ATHLETE"` e IDs `demo_*`). Protección absoluta: nunca sobrescribe usuarios reales.
+   - `cleanDemoAthletes()`: Purga exclusivamente los documentos demo con quíntuple candado de seguridad (IDs `demo_*`, tag explícito, dominio `@pulse-demo.com`, lista blanca y exclusión garantizada de `gerkof@gmail.com` y SuperAdmin).
 
 3. **API Endpoint Administrativo (`/api/admin/demo-athletes` - 114 LOC):**
    - `GET`: Retorna los atletas demo y ejecuta el reporte de auditoría en vivo.
@@ -6776,7 +6776,7 @@ Para validar que la arquitectura de macrociclos, periodización, anti-monotonía
 
 ### 96.3. Verificación de Cumplimiento de Límites
 - `demoAthletesData.ts`: 341 LOC ($\le 350$ ✅)
-- `demoAthletesSuite.ts`: 188 LOC ($\le 350$ ✅)
+- `demoAthletesSuite.ts`: 239 LOC ($\le 350$ ✅)
 - `src/app/api/admin/demo-athletes/route.ts`: 114 LOC ($\le 350$ ✅)
 - `AdminUsersTab.tsx`: 331 LOC ($\le 350$ ✅)
 - `npm run build`: 21/21 rutas compiladas con Código 0 ✅.

@@ -122,17 +122,33 @@ export function runPhase1TestSuite(): Phase1TestResultItem[] {
   });
 }
 
+const PROTECTED_ACCOUNTS = new Set([
+  "gerkof@gmail.com",
+  (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "").toLowerCase(),
+  (process.env.SUPERADMIN_EMAIL || "").toLowerCase(),
+].filter(Boolean));
+
 /**
  * Siembra los 7 atletas demo en Firestore para pruebas en la interfaz web.
+ * Garantía absoluta: NUNCA sobrescribe ni toca usuarios reales.
  */
 export async function seedDemoAthletes(): Promise<{ success: boolean; count: number; message: string }> {
   if (!adminDb) return { success: true, count: DEMO_ATHLETES.length, message: "Modo local: 7 atletas simulados listos." };
 
   const batch = adminDb.batch();
   const now = new Date().toISOString();
+  let seededCount = 0;
 
-  DEMO_ATHLETES.forEach((athlete) => {
-    const userRef = adminDb!.collection("users").doc(athlete.id);
+  for (const athlete of DEMO_ATHLETES) {
+    // Salvaguarda: Solo IDs que empiecen por demo_ y correos @pulse-demo.com
+    if (!athlete.id.startsWith("demo_") || !athlete.email.endsWith("@pulse-demo.com")) continue;
+
+    const userRef = adminDb.collection("users").doc(athlete.id);
+    const existingDoc = await userRef.get();
+
+    // Si ya existe un documento y no es un demo explícito, abortar toque
+    if (existingDoc.exists && existingDoc.data()?.isDemoAthlete !== true) continue;
+
     const profileDoc: Partial<UserProfileData> & Record<string, any> = {
       uid: athlete.id,
       email: athlete.email,
@@ -155,34 +171,69 @@ export async function seedDemoAthletes(): Promise<{ success: boolean; count: num
       lastLoginAt: now,
     };
     batch.set(userRef, profileDoc, { merge: true });
-  });
+    seededCount++;
+  }
 
-  await batch.commit();
-  return { success: true, count: DEMO_ATHLETES.length, message: `${DEMO_ATHLETES.length} atletas demo sembrados con éxito en Firestore.` };
+  if (seededCount > 0) await batch.commit();
+  return { success: true, count: seededCount, message: `${seededCount} atletas demo sembrados con éxito. Usuarios reales 100% protegidos.` };
 }
 
 /**
- * Elimina todos los atletas demo de Firestore de forma segura.
+ * Elimina exclusivamente los atletas demo de Firestore de forma quirúrgica.
+ * Salvaguarda quíntuple: Jamás toca usuarios reales ni cuentas de administración.
  */
 export async function cleanDemoAthletes(): Promise<{ success: boolean; count: number; message: string }> {
   if (!adminDb) return { success: true, count: DEMO_ATHLETES.length, message: "Modo local: atletas demo eliminados." };
 
+  const knownDemoIds = new Set(DEMO_ATHLETES.map((a) => a.id));
   const snapshot = await adminDb.collection("users").where("demoTag", "==", "PULSE_DEMO_ATHLETE").get();
-  if (snapshot.empty) {
-    let count = 0;
-    for (const a of DEMO_ATHLETES) {
-      const doc = await adminDb.collection("users").doc(a.id).get();
-      if (doc.exists) {
-        await adminDb.collection("users").doc(a.id).delete();
-        count++;
-      }
-    }
-    return { success: true, count, message: `${count} atletas demo eliminados.` };
-  }
 
   const batch = adminDb.batch();
-  snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-  await batch.commit();
+  let deletedCount = 0;
 
-  return { success: true, count: snapshot.size, message: `${snapshot.size} atletas demo eliminados de Firestore.` };
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    const email = (data?.email || "").toLowerCase();
+
+    // Quíntuple verificación de seguridad:
+    const isKnownDemoId = knownDemoIds.has(doc.id) && doc.id.startsWith("demo_");
+    const isExplicitDemoTag = data.isDemoAthlete === true && data.demoTag === "PULSE_DEMO_ATHLETE";
+    const isDemoDomain = email.endsWith("@pulse-demo.com");
+    const isNotProtected = !PROTECTED_ACCOUNTS.has(email) && doc.id !== "superadmin-root";
+    const isNotAdmin = data.role !== "admin";
+
+    if (isKnownDemoId && isExplicitDemoTag && isDemoDomain && isNotProtected && isNotAdmin) {
+      batch.delete(doc.ref);
+      deletedCount++;
+    }
+  }
+
+  // Fallback seguro: solo barrer IDs conocidos de DEMO_ATHLETES
+  if (deletedCount === 0) {
+    for (const a of DEMO_ATHLETES) {
+      if (!a.id.startsWith("demo_")) continue;
+      const docRef = adminDb.collection("users").doc(a.id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const data = doc.data();
+        const email = (data?.email || "").toLowerCase();
+        if (
+          data?.isDemoAthlete === true &&
+          email.endsWith("@pulse-demo.com") &&
+          !PROTECTED_ACCOUNTS.has(email)
+        ) {
+          batch.delete(docRef);
+          deletedCount++;
+        }
+      }
+    }
+  }
+
+  if (deletedCount > 0) await batch.commit();
+
+  return {
+    success: true,
+    count: deletedCount,
+    message: `${deletedCount} atletas demo eliminados. Cero impacto en usuarios reales.`,
+  };
 }

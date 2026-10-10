@@ -49,8 +49,8 @@ export interface DemoAthletePersona {
 export const DEMO_ATHLETES: DemoAthletePersona[] = [
   {
     id: "demo_runner_tokio_305",
-    email: "demo_german_tokio305@pulse-demo.com",
-    displayName: "Germán Morales (Maratón Tokio 3:05)",
+    email: "demo_lucas_tokio305@pulse-demo.com",
+    displayName: "Demo - Lucas Silva (Maratón Tokio 3:05)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99001",
@@ -93,7 +93,7 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   {
     id: "demo_runner_valencia_230",
     email: "demo_sofia_valencia230@pulse-demo.com",
-    displayName: "Sofía Arango (Aspiracional Valencia 2:30)",
+    displayName: "Demo - Sofía Arango (Aspiracional Valencia 2:30)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99002",
@@ -134,8 +134,8 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   },
   {
     id: "demo_runner_pace_daniels",
-    email: "demo_carlos_pace21k@pulse-demo.com",
-    displayName: "Carlos Mendoza (21K Ritmo Daniels)",
+    email: "demo_carlos_daniels21k@pulse-demo.com",
+    displayName: "Demo - Carlos Mendoza (21K Ritmo Daniels)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99003",
@@ -178,8 +178,8 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   },
   {
     id: "demo_cyclist_gran_fondo",
-    email: "demo_mateo_granfondo@pulse-demo.com",
-    displayName: "Mateo Vélez (Gran Fondo Ciclismo 140K)",
+    email: "demo_mateo_cycling140k@pulse-demo.com",
+    displayName: "Demo - Mateo Vélez (Gran Fondo Ciclismo 140K)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99004",
@@ -221,7 +221,7 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   {
     id: "demo_triathlete_703",
     email: "demo_valentina_tri703@pulse-demo.com",
-    displayName: "Valentina Ríos (Triatlón 70.3)",
+    displayName: "Demo - Valentina Ríos (Triatlón 70.3)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99005",
@@ -262,8 +262,8 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   },
   {
     id: "demo_base_mitochondrial",
-    email: "demo_alejandro_basegpp@pulse-demo.com",
-    displayName: "Alejandro Gómez (Base Building Salud)",
+    email: "demo_alejandro_base@pulse-demo.com",
+    displayName: "Demo - Alejandro Gómez (Base Building Salud)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99006",
@@ -301,8 +301,8 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
   },
   {
     id: "demo_rehab_post_race",
-    email: "demo_diana_rehab@pulse-demo.com",
-    displayName: "Diana Morales (Recuperación & Rehab)",
+    email: "demo_elena_rehab@pulse-demo.com",
+    displayName: "Demo - Elena Restrepo (Recuperación & Rehab)",
     role: "athlete",
     status: "active",
     intervalsAthleteId: "i99007",

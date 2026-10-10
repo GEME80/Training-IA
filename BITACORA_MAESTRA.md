@@ -189,6 +189,24 @@ El sistema programa automáticamente tests diagnósticos en las **Semanas 2 y 8*
 
 ---
 
+### 🛡️ 5.6. Motor de Pureza Fisiológica y Blindaje de Zonas (Potencia vs Ritmo v5.23)
+
+A partir de la versión 5.23, se implementa una separación e invariancia absoluta de modalidades de prescripción para carrera a pie (Running):
+1. **Modo Potencia (`mode === "POWER"`, `runFtp > 0`):** 100% de los entrenamientos prescritos en **Vatios (W)** y **% CP**. Se purga y bloquea cualquier fuga de ritmos (`min/km`), zonas Daniels o `% Pace`.
+2. **Modo Ritmo (`mode === "PACE"`, `runFtp: 0`):** 100% de los entrenamientos prescritos en **min/km** y **% Pace**. Se purga y bloquea cualquier fuga de vatios (W), menciones a Stryd o `% CP`.
+3. **Estandarización Canónica de Sintaxis:** Duración temporal expresada con `m` o `s` (`- 15m Z2`, `- 45s recovery`); distancia métrica expresada con `mtr` o `km` (`- 100mtr en Cuesta`, `- 1000mtr Umbral`). Esto garantiza 100% de compatibilidad con el Workout Builder de Intervals.icu y previene falsos cálculos de TSS por colisión de unidades.
+4. **Decálogo de Validación Integral de Macrociclos (Head Coach & Software Architecture):**
+   - **Dimensión 1:** Modelo Banister (PMC) con Ramp Rate semanal de CTL limitado a $+3$ hasta $+7\text{ TSS/día/sem}$ y control de ACWR ($0.8\text{--}1.3$).
+   - **Dimensión 2:** Rigor de microciclos 3:1 y 2:1 con descargas reales (reducción del $25\%\text{--}40\%$ de TSS).
+   - **Dimensión 3:** Progresión no lineal de Tirada Larga dominical ($\le 10\%$ semanal, tope biomecánico en asfalto de $165\text{ min} / 34\text{ km}$).
+   - **Dimensión 4:** Control del Índice de Monotonía de Foster ($< 1.8$) y distribución polarizada 80/20.
+   - **Dimensión 5:** Aislamiento multideporte estricto (cero sesiones cruzadas involuntarias para corredores o ciclistas puros).
+   - **Dimensión 6:** *Feasibility Engine* adaptativo con *Stepping Stones* (cero hardcoding de marcas objetivo).
+   - **Dimensión 7:** Protocolos de test de campo en semanas 2 y 8 con generación de propuestas de recalibración dinámicas.
+   - **Dimensión 8:** Tapering biológico (Costill/Mujika) con reposicionamiento inteligente del día de carrera (Sábado vs Domingo).
+   - **Dimensión 9:** Hidratación e interoperabilidad 100% compliant con Intervals.icu / Garmin FIT.
+   - **Dimensión 10:** Cross-training compensatorio para atletas de alto impacto mecánico articular.
+
 ---
 
 ## 6. Reglas Fisiológicas del Motor de Reajuste

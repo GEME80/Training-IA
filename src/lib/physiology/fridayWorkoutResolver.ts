@@ -11,6 +11,7 @@ export interface FridayWorkoutParams {
   weekNumber?: number;
   phase?: string;
   isRecovery?: boolean;
+  targetDistance?: string;
 }
 
 export interface FridayWorkoutResult {
@@ -23,7 +24,7 @@ export interface FridayWorkoutResult {
 }
 
 export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkoutResult {
-  const { runFtp, isMultisport = false, weekNumber = 1, phase = "BASE", isRecovery = false } = params;
+  const { runFtp, isMultisport = false, weekNumber = 1, phase = "BASE", isRecovery = false, targetDistance = "" } = params;
   const isPwr = runFtp !== undefined && runFtp > 0;
 
   // 1. SEMANA DE COMPETICIÓN (RACE WEEK)
@@ -68,7 +69,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
     };
   }
 
-  // 4. MULTIDEPORTE / TRIATLÓN (Variación rotativa por semanas)
+  // 4. MULTIDEPORTE / CROSS-TRAINING (Variación rotativa por semanas)
   if (isMultisport) {
     const rot = (weekNumber - 1) % 4;
 
@@ -87,16 +88,37 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
     }
 
     if (rot === 2) {
-      // Semana 3, 7, 11... Carrera Progresiva con Final a Ritmo 70.3 (Z3)
+      // Semana 3, 7, 11... Carrera Progresiva con Final a Ritmo Objetivo
+      const td = targetDistance.toLowerCase();
+      const is703 = /70\.3|703/i.test(td);
+      const isMarathon = /42k|marat/i.test(td);
+      const isHalf = /21k|media/i.test(td);
+
+      const targetLabel = is703
+        ? "Ritmo Carrera 70.3"
+        : isMarathon
+        ? "Ritmo Maratón (M-Pace)"
+        : isHalf
+        ? "Ritmo Medio Maratón"
+        : "Ritmo Vivo Z3 Tempo";
+
+      const titleName = is703
+        ? "Carrera Progresiva con Final a Ritmo 70.3 (40m)"
+        : isMarathon
+        ? "Carrera Progresiva con Final a Ritmo Maratón (40m)"
+        : isHalf
+        ? "Carrera Progresiva con Final a Ritmo Medio Maratón (40m)"
+        : "Carrera Progresiva con Final Vivo Z3 Tempo (40m)";
+
       return {
-        workoutName: "Carrera Progresiva con Final a Ritmo 70.3 (40m)",
+        workoutName: titleName,
         durationMinutes: 40,
         tss: 37,
         powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.87)}W (Z2->Z3)` : "76-87% Pace",
-        justification: "Rodaje en progresión aeróbica desde Z2 cómoda cerrando con 12 minutos sólidos a ritmo específico de carrera 70.3 (Z3 Tempo).",
+        justification: `Rodaje en progresión aeróbica desde Z2 cómoda cerrando con 12 minutos sólidos a ${targetLabel.toLowerCase()} para fijar economía biomecánica.`,
         workoutDoc: isPwr
-          ? "Warmup\n- 10m 74% CP\n\nMain (Z2 Cómoda)\n- 15m 78% CP\n\nFinal Vivo (Ritmo Carrera 70.3)\n- 12m 87% CP\n\nCooldown\n- 3m 70% CP"
-          : "Warmup\n- 10m 74% Pace\n\nMain (Z2 Cómoda)\n- 15m 78% Pace\n\nFinal Vivo (Ritmo Carrera 70.3)\n- 12m 87% Pace\n\nCooldown\n- 3m 71% Pace",
+          ? `Warmup\n- 10m 74% CP\n\nMain (Z2 Cómoda)\n- 15m 78% CP\n\nFinal Vivo (${targetLabel})\n- 12m 87% CP\n\nCooldown\n- 3m 70% CP`
+          : `Warmup\n- 10m 74% Pace\n\nMain (Z2 Cómoda)\n- 15m 78% Pace\n\nFinal Vivo (${targetLabel})\n- 12m 87% Pace\n\nCooldown\n- 3m 71% Pace`,
       };
     }
 

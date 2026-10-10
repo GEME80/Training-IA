@@ -6363,6 +6363,48 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `next build`: 20/20 páginas compiladas exitosamente en 3.2s (Código 0).
 - Todos los archivos cumplen estrictamente la cota de $\le 350$ LOC.
 
+---
+
+## 88. Desacoplamiento Fisiológico de Ritmo 70.3, Corrección de Horizonte Temporal y Purga Quirúrgica Masiva para Germán Morales (v5.11)
+
+### 88.1. Diagnóstico de la Auditoría Inicial
+1. **Desacoplamiento de Ritmo 70.3 para Atletas de Maratón:**
+   - Se detectaron 31 eventos con la etiqueta "70.3" en la cuenta de Germán Morales a pesar de estar preparando la Maratón (42.2 km).
+   - *Causa raíz 1:* En `macrocycleTemplates.ts:263`, `hasCycling: true` (entrenamiento cruzado) forzaba `isMultisport = true`.
+   - *Causa raíz 2:* En `fridayWorkoutResolver.ts:90`, si `isMultisport = true`, la rotación semanal inyectaba forzosamente `"Carrera Progresiva con Final a Ritmo 70.3 (40m)"`.
+   - *Causa raíz 3:* En `macrocycleTemplateHelpers.ts:243`, el taper de ciclismo tenía hardcodeado `"Main (Afinamiento Ritmo 70.3)"`.
+2. **Defecto de Horizonte Temporal en la Purga (`deleteFutureWorkouts`):**
+   - En `intervalsSyncService.ts:177`, la fecha final por defecto estaba fija en `"2026-12-31"`.
+   - Como la maratón de Germán culmina el **7 de marzo de 2027**, cualquier sincronización previa borraba los eventos de 2026 pero dejaba intactos los de 2027, acumulando **48 días con eventos duplicados (hasta 6 copias por día)** y 486 eventos redundantes.
+
+### 88.2. Correcciones Implementadas
+1. **Etiquetado Fisiológico Dinámico según Distancia Objetivo (`fridayWorkoutResolver.ts` - 190 LOC):**
+   - `resolveFridayWorkout` ahora recibe `targetDistance`. Si la distancia es Maratón (`42k`), prescribe dinámicamente `"Carrera Progresiva con Final a Ritmo Maratón (M-Pace)"`. Solo si la prueba es explícitamente triatlón 70.3 emite "Ritmo 70.3".
+2. **Eliminación de Texto Quemado en Tapering (`macrocycleTemplateHelpers.ts` - 287 LOC):**
+   - Sustituido `"Afinamiento Ritmo 70.3"` por `"Afinamiento Aeróbico Dinámico"` aplicable universalmente a ciclistas y corredores.
+3. **Cálculo Dinámico de Horizonte de Purga (`intervalsSyncService.ts` - 256 LOC):**
+   - Sustituido el límite fijo `"2026-12-31"` por cálculo dinámico que abarca toda la temporada del atleta (`toDate || maxPlanDate || "2027-12-31"`).
+
+### 88.3. Ejecución y Auditoría en Vivo (Atleta Germán Morales `i442091`)
+1. **Blindaje de Fin de Semana:**
+   - 4 eventos del fin de semana (9, 10 y 11 de octubre de 2026) preservados intactos.
+2. **Purga Quirúrgica Masiva:**
+   - 486 eventos viejos y duplicados eliminados con éxito en Intervals.icu.
+3. **Regeneración e Inserción Limpia (21 Semanas: 12-Oct-2026 a 07-Mar-2027):**
+   - 189 entrenamientos limpios generados con Stryd CP 336W, Bike FTP 226W y CTL 42.4.
+   - **Chequeo 70.3:** 0 eventos (100% limpio de referencias a 70.3).
+   - **Chequeo Duplicados:** 0 días duplicados (100% limpio).
+
+### 88.4. Archivos Modificados ($\le 350$ LOC)
+- `src/lib/physiology/fridayWorkoutResolver.ts`: **190 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **287 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **332 LOC** ($\le 350$)
+- `src/lib/services/intervalsSyncService.ts`: **256 LOC** ($\le 350$)
+
+### 88.5. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente en 2.8s (Código 0).
+
 
 
 

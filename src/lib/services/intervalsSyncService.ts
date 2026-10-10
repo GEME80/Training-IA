@@ -174,7 +174,7 @@ export class IntervalsSyncService {
 
     const client = new IntervalsClient(effAthleteId, effApiKey);
     const startStr = fromDate || "2026-10-03";
-    const endStr = toDate || "2026-12-31";
+    const endStr = toDate || "2027-12-31";
 
     try {
       const existingEvents = await client.getEvents(startStr, endStr);
@@ -219,13 +219,18 @@ export class IntervalsSyncService {
     const { athleteId, apiKey, uid, email, fromDate, toDate, plan } = input;
     const startStr = fromDate || "2026-10-03";
 
+    // Extraer horizonte dinámico del plan para garantizar purga completa de toda la temporada
+    const planDates = plan ? plan.map((p) => p.date).filter(Boolean).sort() : [];
+    const maxPlanDate = planDates.length > 0 ? planDates[planDates.length - 1] : undefined;
+    const effectiveToDate = toDate || maxPlanDate || "2027-12-31";
+
     const delResult = await this.deleteFutureWorkouts({
       athleteId,
       apiKey,
       uid,
       email,
       fromDate: startStr,
-      toDate,
+      toDate: effectiveToDate,
     });
 
     if (delResult.isAuthError) {

@@ -261,7 +261,8 @@ export function generateWeekTemplate(
         const isEveFriday = day === "Viernes" && (longRunDay === "Domingo" || longRunDay === "Sábado");
         if (isEveFriday) {
           const isMulti = curatedModel.sportCategory === "Triathlon" || hasCycling;
-          const fri = resolveFridayFartlek({ runFtp, isMultisport: isMulti, weekNumber, phase, isRecovery });
+          const targetDist = distanceType || curatedModel.modelId || "";
+          const fri = resolveFridayFartlek({ runFtp, isMultisport: isMulti, weekNumber, phase, isRecovery, targetDistance: targetDist });
           usedRunWorkoutNames.add(fri.workoutName);
           result.push({
             day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: fri.workoutName, action: "MANTENER",

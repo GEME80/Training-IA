@@ -218,7 +218,8 @@ export function resolveEveRide(bikeFtp?: number) {
 
 export function resolveFridayFartlek(
   runFtpOrOpts?: number | FridayWorkoutParams,
-  maybeMulti: boolean = false
+  maybeMulti: boolean = false,
+  targetDistance?: string
 ) {
   if (typeof runFtpOrOpts === "object" && runFtpOrOpts !== null) {
     return resolveFridayWorkout(runFtpOrOpts);
@@ -226,6 +227,7 @@ export function resolveFridayFartlek(
   return resolveFridayWorkout({
     runFtp: runFtpOrOpts,
     isMultisport: maybeMulti,
+    targetDistance,
   });
 }
 
@@ -239,8 +241,8 @@ export function resolveMidweekRide({
     return {
       workoutName: "Ciclismo de Puesta a Punto con Chispa (35m con 3x2m @ 80% FTP)",
       durationMinutes: 35, tss: 22, powerTarget: bikeFtp ? `${Math.round(bikeFtp * 0.70)}W (70% FTP)` : "70% FTP",
-      justification: "Activación neuromuscular a ritmo de competición 70.3 sin fatiga residual.",
-      workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain (Afinamiento Ritmo 70.3)\n3x\n- 2m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 8m 50% FTP",
+      justification: "Activación neuromuscular aeróbica sin fatiga residual antes de la competición.",
+      workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain (Afinamiento Aeróbico Dinámico)\n3x\n- 2m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 8m 50% FTP",
     };
   }
   if (isRecovery || (bikeCount > 1 && isTriOrMulti)) {

@@ -120,34 +120,53 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                       </div>
                     </td>
 
-                    {/* Columna 2: Estado de Acceso */}
+                    {/* Columna 2: Estado de Acceso & Suscripción */}
                     <td className="py-4 px-5 sm:px-6">
-                      {isPending ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-300 whitespace-nowrap shadow-2xs">
-                          <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
-                          <span>Solicitud Pendiente</span>
-                          {isPreAuth && (
-                            <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 font-mono">
-                              Invitado
+                      <div className="flex flex-col gap-1.5 items-start">
+                        {isPending ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-300 whitespace-nowrap shadow-2xs">
+                            <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
+                            <span>Solicitud Pendiente</span>
+                            {isPreAuth && (
+                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 font-mono">
+                                Invitado
+                              </span>
+                            )}
+                          </span>
+                        ) : u.status === "active" ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap shadow-2xs">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Activo</span>
+                            {isPreAuth && (
+                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono">
+                                Preautorizado
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 whitespace-nowrap shadow-2xs">
+                            <UserX className="h-3.5 w-3.5 text-rose-600" />
+                            <span>Deshabilitado</span>
+                          </span>
+                        )}
+
+                        <div className="text-[10px] font-mono">
+                          {u.billingStatus === "PAID" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/70 font-semibold">
+                              <span>${u.planPrice || 80} USD</span>
+                              <span className="text-emerald-600 font-bold">✓ Pagado</span>
+                            </span>
+                          ) : u.billingStatus === "PENDING_VERIFICATION" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
+                              <span>Por verificar</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                              <span>Pendiente (${u.planPrice || 80})</span>
                             </span>
                           )}
-                        </span>
-                      ) : u.status === "active" ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap shadow-2xs">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Activo</span>
-                          {isPreAuth && (
-                            <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono">
-                              Preautorizado
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 whitespace-nowrap shadow-2xs">
-                          <UserX className="h-3.5 w-3.5 text-rose-600" />
-                          <span>Deshabilitado</span>
-                        </span>
-                      )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Columna 3: Conexión Intervals.icu */}
@@ -175,6 +194,18 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                     {/* Columna 4: Umbrales Fisiológicos */}
                     <td className="py-4 px-5 sm:px-6">
                       <div className="flex flex-col gap-1.5 text-xs font-mono whitespace-nowrap">
+                        <div className="text-[10px] font-sans font-semibold">
+                          {u.swimCssStr && u.bikeFtp && (u.runFtp || u.runThresholdPaceStr) ? (
+                            <span className="text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">🏊🚴🏃 Triatlón</span>
+                          ) : u.bikeFtp && (!u.runFtp && !u.runThresholdPaceStr) ? (
+                            <span className="text-cyan-800 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">🚴 Ciclismo Puro</span>
+                          ) : u.runThresholdPaceStr && (!u.runFtp || u.runningTrainingMode === "PACE") ? (
+                            <span className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">⏱️ Running (Ritmo)</span>
+                          ) : u.runFtp ? (
+                            <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">🏃 Running (Potencia Stryd)</span>
+                          ) : null}
+                        </div>
+
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {Boolean(u.runFtp && u.runFtp > 0) ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/70 text-[11px] font-semibold">

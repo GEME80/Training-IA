@@ -133,6 +133,20 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
             </span>
           )}
         </div>
+
+        {/* Subscription / Billing Badge */}
+        <div>
+          {u.billingStatus === "PAID" ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span>${u.planPrice || 80} USD</span>
+              <span className="font-bold text-emerald-600">✓ Pagado</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <span>Pendiente (${u.planPrice || 80})</span>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 3. Fila de Parámetros Fisiológicos */}
@@ -155,11 +169,23 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
             <span className="ml-auto font-sans text-[10px]">N/A</span>
           </div>
         )}
-        <div className="flex items-center gap-1 text-cyan-800">
-          <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
-          <span className="text-[10px] text-slate-500 font-sans">Bike FTP:</span>
-          <strong className="font-bold ml-auto">{u.bikeFtp || 0}W</strong>
-        </div>
+        {Boolean(u.bikeFtp && u.bikeFtp > 0) ? (
+          <div className="flex items-center gap-1 text-cyan-800">
+            <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
+            <span className="text-[10px] text-slate-500 font-sans">Bike FTP:</span>
+            <strong className="font-bold ml-auto">{u.bikeFtp}W</strong>
+          </div>
+        ) : u.swimCssStr ? (
+          <div className="flex items-center gap-1 text-sky-800">
+            <span className="text-[10px] text-slate-500 font-sans">🏊 CSS:</span>
+            <strong className="font-bold ml-auto">{u.swimCssStr}</strong>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-slate-400">
+            <span className="text-[10px] text-slate-500 font-sans">Ciclismo:</span>
+            <span className="ml-auto font-sans text-[10px]">N/A</span>
+          </div>
+        )}
       </div>
 
       {/* 4. Botonera de Acciones Táctiles */}

@@ -99,12 +99,25 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
     const kmMatch = clean.match(/(\d+(?:\.\d+)?)\s*km\b/i);
     if (kmMatch) return Math.max(0.5, Math.round(parseFloat(kmMatch[1]) * 4.5 * 10) / 10);
 
-    const mtrMatch = clean.match(/(\d+)\s*(?:mtr|metros?)\b/i);
-    if (mtrMatch) {
-      const mVal = parseInt(mtrMatch[1], 10);
-      if (isCycling) return mVal;
-      if (isSwim) return Math.max(0.5, Math.round((mVal / 50) * 10) / 10);
-      return Math.max(0.3, Math.round((mVal / 225) * 10) / 10);
+    const isExplicitMtr = clean.match(/(\d+)\s*(?:mtr|metros?)\b/i);
+    const isShortMtr = !clean.match(/\d+\s*m(?:in|inutos?)\b/i) && clean.match(/(\d+)\s*m\b/i);
+
+    let meterVal: number | null = null;
+    if (isExplicitMtr) {
+      meterVal = parseInt(isExplicitMtr[1], 10);
+    } else if (isShortMtr) {
+      const cand = parseInt(isShortMtr[1], 10);
+      if (isSwim && cand >= 25) {
+        meterVal = cand;
+      } else if (!isCycling && (cand >= 50 || /cuesta|pista|stride|zancada/i.test(clean))) {
+        meterVal = cand;
+      }
+    }
+
+    if (meterVal !== null) {
+      if (isCycling) return meterVal;
+      if (isSwim) return Math.max(0.5, Math.round((meterVal / 50) * 10) / 10);
+      return Math.max(0.3, Math.round((meterVal / 225) * 10) / 10);
     }
 
     const hoursMatch = clean.match(/(\d+)\s*h\b/i);
@@ -113,13 +126,8 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
 
     let total = 0;
     if (hoursMatch) total += parseInt(hoursMatch[1], 10) * 60;
-    if (minsMatch) {
-      const val = parseInt(minsMatch[1], 10);
-      if (isSwim && val >= 25) {
-        total += Math.max(0.5, Math.round((val / 50) * 10) / 10);
-      } else {
-        total += val;
-      }
+    if (minsMatch && meterVal === null) {
+      total += parseInt(minsMatch[1], 10);
     }
     if (secsMatch) total += Math.max(0.2, parseInt(secsMatch[1], 10) / 60);
     return total > 0 ? total : 5;

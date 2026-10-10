@@ -6813,6 +6813,38 @@ Para validar que la arquitectura de macrociclos, periodización, anti-monotonía
 - Suite de pruebas de Fase 1: 7/7 casos PASSED (100% Éxito) ✅.
 - Límites de código: Todos los archivos $\le 350$ LOC ✅.
 
+---
+
+## 98. AUDITORÍA FORENSE DETALLADA DE ATLETAS DEMO: CORRECCIÓN DE PARSEO DE METROS EN WORKOUTS Y VISIBILIDAD DE SUSCRIPCIÓN EN PANEL (v5.22)
+
+### 98.1. Hallazgos Críticos de la Auditoría
+1. **Error Crítico de Parseo de Metros vs Minutos (`workoutDocParser.ts`):**
+   - En prescripciones con repeticiones métricas como `- 100m 110% Pace en Cuesta`, el analizador tomaba la `m` como minutos (100 minutos por repetición).
+   - Resultado: 10 repeticiones generaban 1035 minutos y **2046 TSS** en una sesión de 45 minutos.
+   - Solución: Regla estricta para interpretar `m` como metros en atletismo y natación cuando el valor es $\ge 50$ (o natación $\ge 25$) o incluye descriptores de biomecánica/cuesta, calculando la duración fisiológica real por ritmo de intervalo (~25s para 100m). El TSS se normalizó de 2046 TSS a **52 TSS exactos**.
+2. **Coherencia Biométrica para Ciclista Puro y Corredor Puro (`demoAthletesData.ts`):**
+   - Carlos Mendoza (21K Bogotá, Solo Running) tenía asignado `bikeFtp: 175`. Se normalizó a `bikeFtp: 0` para asegurar que un corredor puro sin bici no tenga umbrales fantasma.
+   - Mateo Vélez (Gran Fondo 140K, Solo Ciclismo) tenía `runningTrainingMode: "PACE"`. Se normalizó a `POWER` (potenciómetro de bicicleta) con `runFtp: 0` y cero sesiones pedestres.
+3. **Visibilidad de Compra y Disciplina en Tabla de Usuarios (`AdminUsersTable.tsx` & `AdminUserCardMobile.tsx`):**
+   - Se incorporó la insignia visual de Suscripción/Compra (`$80 USD ✓ Pagado` / `Pendiente`) en la columna de acceso de la tabla de atletas.
+   - Se añadió un tag explícito de disciplina deportiva en la columna de umbrales (`🏃 Running • Stryd`, `⏱️ Running • Ritmo`, `🚴 Ciclismo Puro`, `🏊🚴🏃 Triatlón`) para claridad operativa del Head Coach y administrador.
+
+### 98.2. Resultados de la Suite Exhaustiva de 7 Atletas Demo
+- **TC-01 (Lucas Silva, 42K Tokio 3:05, Cross-Training, Stryd 280W):** 16 semanas, REALISTIC, 249W objetivo, Cuestas 100m en S1, Fondo 14 km Z2 en domingo. PASSED ✅.
+- **TC-02 (Sofía Arango, 42K Valencia 2:30, Solo Running, Stryd 240W):** 16 semanas, HIGHLY_ASPIRATIONAL, 214W objetivo, escalonamiento realista hacia sub 3h. PASSED ✅.
+- **TC-03 (Carlos Mendoza, 21K Bogotá 1:35, Solo Running, Daniels Pace 4:20):** 14 semanas, REALISTIC, 0W Stryd, prescripción 100% en min/km, 45m / 52 TSS. PASSED ✅.
+- **TC-04 (Mateo Vélez, Gran Fondo 140K, Solo Ciclismo, Bike FTP 270W):** 16 semanas, Rønnestad 30/15, 0 sesiones de carrera pedestre. PASSED ✅.
+- **TC-05 (Valentina Ríos, Ironman 70.3 Cartagena, Triatlón Completo):** 18 semanas, Swim CSS 1:35, Bike FTP 250W, Run CP 290W, 9 sesiones/semana multi-deporte. PASSED ✅.
+- **TC-06 (Alejandro Gómez, Base Mitocondrial Salud, Attia Z2):** 10 semanas, Run CP 250W, Bike FTP 190W, 6 sesiones Z2 sin pico de carrera. PASSED ✅.
+- **TC-07 (Elena Restrepo, Post-Maratón Rehab):** 6 semanas, carga contenida $\le 383$ TSS pico, regeneración activa. PASSED ✅.
+
+### 98.3. Certificación de Calidad
+- `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
+- `workoutDocParser.ts`: 217 LOC ($\le 350$ ✅).
+- `AdminUsersTable.tsx`: 335 LOC ($\le 350$ ✅).
+- `AdminUserCardMobile.tsx`: 261 LOC ($\le 350$ ✅).
+- `demoAthletesData.ts`: 241 LOC ($\le 350$ ✅).
+
 
 
 

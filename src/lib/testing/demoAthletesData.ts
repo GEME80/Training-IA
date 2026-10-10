@@ -116,7 +116,7 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
     planPrice: 80,
     billingStatus: "PAID",
     biometrics: {
-      runFtp: 0, bikeFtp: 175, weightKg: 65, ctl: 38, lthr: 174, maxHR: 190, restingHR: 50,
+      runFtp: 0, bikeFtp: 0, weightKg: 65, ctl: 38, lthr: 174, maxHR: 190, restingHR: 50,
       runningTrainingMode: "PACE", hasRunningPowerMeter: false, runThresholdPaceStr: "4:20", runThresholdPaceSec: 260,
     },
     wizardConfig: {
@@ -144,7 +144,7 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
     billingStatus: "PAID",
     biometrics: {
       runFtp: 0, bikeFtp: 270, weightKg: 72, ctl: 55, lthr: 165, maxHR: 185, restingHR: 46,
-      runningTrainingMode: "PACE", hasRunningPowerMeter: false,
+      runningTrainingMode: "POWER", hasRunningPowerMeter: false,
     },
     wizardConfig: {
       hasRace: true, raceName: "Gran Fondo Nairo Quintana", raceDistance: "cycling_fondo", raceDate: "2026-10-25",

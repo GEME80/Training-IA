@@ -49,7 +49,11 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
   const fmtTarget = (pctCp: number, pacePct: number, note?: string): string => {
     if (isPower) {
       const w = Math.round(runFtp * (pctCp / 100));
-      return `${w}W (${pctCp}% CP${note ? ` • ${note}` : ""})`;
+      const cleanNote = note
+        ?.replace(/Ritmo\s*Meta:\s*\d{1,2}:\d{2}(?:\/km)?/gi, "Potencia Específica")
+        ?.replace(/Ritmo\s*Umbral/gi, "Stryd CP")
+        ?.replace(/Ritmo\s*Objetivo/gi, "Potencia Objetivo");
+      return `${w}W (${pctCp}% CP${cleanNote ? ` • ${cleanNote}` : ""})`;
     }
     const sec = Math.round(thresholdPaceSec / (pacePct / 100));
     return `${formatPaceSecToStr(sec)} (${pacePct}% Pace${note ? ` • ${note}` : ""})`;
@@ -237,7 +241,11 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       `- 10m ${isPower ? "60% CP" : "65% Pace"}`,
     ].join("\n");
 
-    const targetNote = stagedRacePaceSec ? `Ritmo Meta: ${formatPaceSecToStr(stagedRacePaceSec)}` : "Ritmo Umbral Extendido";
+    const targetNote = isPower
+      ? "Potencia de Competición"
+      : stagedRacePaceSec
+      ? `Ritmo Meta: ${formatPaceSecToStr(stagedRacePaceSec)}`
+      : "Ritmo Umbral Extendido";
 
     return {
       name: "Progresión Build Sem 3: Bloques Largos de Resistencia a la Velocidad (4x 2000mtr)",
@@ -268,7 +276,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       workoutDoc: doc,
       durationMinutes: 72,
       tss: 88,
-      powerTarget: fmtTarget(93, 93, "Ritmo Objetivo Maratón"),
+      powerTarget: fmtTarget(93, 93, isPower ? "Potencia Objetivo Maratón" : "Ritmo Objetivo Maratón"),
       justification: "Bloque cumbre de Renato Canova: economía específica a ritmo de carrera para calibrar el consumo de glucógeno.",
     };
   }

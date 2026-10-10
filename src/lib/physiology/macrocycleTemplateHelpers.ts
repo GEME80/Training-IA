@@ -90,7 +90,12 @@ export function resolveRaceWorkout(params: {
     const isShort = triKm <= 60, isIron = triKm > 150;
     const durMins = isIron ? 660 : isShort ? 150 : 310;
     const raceTss = isIron ? 520 : isShort ? 210 : 305;
-    const pwrTarget = bikeFtp && runFtp ? `Bike ${Math.round(bikeFtp * 0.78)}W / Run ${Math.round(runFtp * 0.84)}W` : "Ritmo Objetivo Triatlón";
+    const isPower = !!(runFtp && runFtp > 0);
+    const pwrTarget = bikeFtp && runFtp
+      ? `Bike ${Math.round(bikeFtp * 0.78)}W / Run ${Math.round(runFtp * 0.84)}W`
+      : bikeFtp
+      ? `Bike ${Math.round(bikeFtp * 0.78)}W / Run Ritmo Umbral`
+      : "Ritmo Objetivo Triatlón";
 
     return {
       day, date: dateStr, formattedDate, discipline: "Carrera", activityType: "Triatlón",
@@ -98,10 +103,10 @@ export function resolveRaceWorkout(params: {
       action: "MANTENER", durationMinutes: durMins, tss: raceTss, powerTarget: pwrTarget,
       justification: `🏆 DÍA DE COMPETICIÓN TRIATLÓN (${triKm} km). Transiciones T1/T2 fluidas y nutrición programada.`,
       workoutDoc: isIron
-        ? "Sector 1: Natación\n- 3.8 km Aguas Abiertas @ Ritmo Medido\n\nTransición T1 (< 6 min)\n\nSector 2: Ciclismo 180 km\n- 180 km @ 68-72% FTP (60-80g CHO/h)\n\nTransición T2 (< 4 min)\n\nSector 3: Maratón Final\n- 42.2 km @ 72-76% CP"
+        ? `Sector 1: Natación\n- 3.8 km Aguas Abiertas @ Ritmo Medido\n\nTransición T1 (< 6 min)\n\nSector 2: Ciclismo 180 km\n- 180 km @ 68-72% FTP (60-80g CHO/h)\n\nTransición T2 (< 4 min)\n\nSector 3: Maratón Final\n- 42.2 km @ ${isPower ? "72-76% CP" : "75-80% Ritmo Umbral"}`
         : isShort
-        ? "Sector 1: Natación\n- 1.5 km Aguas Abiertas @ Ritmo Objetivo\n\nTransición T1 (< 3 min)\n\nSector 2: Ciclismo\n- 40 km @ 85% FTP\n\nTransición T2 (< 2 min)\n\nSector 3: Carrera a pie\n- 10 km @ 88-90% CP"
-        : "Sector 1: Natación\n- 1.9 km Aguas Abiertas @ Ritmo Constante\n\nTransición T1 (< 4 min)\n\nSector 2: Ciclismo 70.3\n- 90 km @ 76-80% FTP\n\nTransición T2 (< 3 min)\n\nSector 3: Medio Maratón\n- 21.1 km @ 82-84% CP",
+        ? `Sector 1: Natación\n- 1.5 km Aguas Abiertas @ Ritmo Objetivo\n\nTransición T1 (< 3 min)\n\nSector 2: Ciclismo\n- 40 km @ 85% FTP\n\nTransición T2 (< 2 min)\n\nSector 3: Carrera a pie\n- 10 km @ ${isPower ? "88-90% CP" : "90-93% Ritmo Umbral"}`
+        : `Sector 1: Natación\n- 1.9 km Aguas Abiertas @ Ritmo Constante\n\nTransición T1 (< 4 min)\n\nSector 2: Ciclismo 70.3\n- 90 km @ 76-80% FTP\n\nTransición T2 (< 3 min)\n\nSector 3: Medio Maratón\n- 21.1 km @ ${isPower ? "82-84% CP" : "85-88% Ritmo Umbral"}`,
       isRestDay: false,
     };
   }
@@ -123,13 +128,14 @@ export function resolveRaceWorkout(params: {
     const trailKm = curatedModel.targetDistanceKm || 50;
     const durMins = Math.min(360, Math.round(trailKm * 5.5));
     const raceTss = Math.min(380, Math.round(trailKm * 5.0));
+    const isPower = !!(runFtp && runFtp > 0);
     return {
       day, date: dateStr, formattedDate, discipline: "Carrera", activityType: "Trail",
       workoutName: `🏆 COMPETICIÓN TRAIL: ${curatedModel.displayName.split("(")[0].trim()} (${trailKm} km)`,
       action: "MANTENER", durationMinutes: durMins, tss: raceTss,
-      powerTarget: runFtp ? `${Math.round(runFtp * 0.76)}W (76% CP)` : "72-78% CP (RPE 5-6 en subidas)",
+      powerTarget: isPower ? `${Math.round(runFtp * 0.76)}W (76% CP)` : "Ritmo Trail Sostenible (RPE 5-6 en subidas)",
       justification: `🏆 DÍA DE COMPETICIÓN TRAIL (${trailKm} km). Gestión de esfuerzo en desniveles y nutrición programada cada 45m.`,
-      workoutDoc: `Sector 1: Salida y Primer Ascenso\n- Ritmo controlado (68-75% CP), caminar rampas >15%\n\nSector 2: Terreno Mixto y Crestas\n- Ritmo de crucero (75-80% CP), avituallamiento constante 50-70g CHO/h\n\nSector 3: Bajada Final y Meta\n- Agilidad técnica y zancada corta hasta cruzar meta`,
+      workoutDoc: `Sector 1: Salida y Primer Ascenso\n- Ritmo controlado (${isPower ? "68-75% CP" : "RPE 4-5 / 70-75% Ritmo"}), caminar rampas >15%\n\nSector 2: Terreno Mixto y Crestas\n- Ritmo de crucero (${isPower ? "75-80% CP" : "RPE 6 / 75-80% Ritmo"}), avituallamiento constante 50-70g CHO/h\n\nSector 3: Bajada Final y Meta\n- Agilidad técnica y zancada corta hasta cruzar meta`,
       isRestDay: false,
     };
   }

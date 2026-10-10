@@ -38,6 +38,7 @@ interface AthleteMacrocycleViewProps {
   onSelectPlan: (planId: string, weekIdx: number) => void;
   onOpenSeasonStudio: () => void;
   onSyncFullMacrocycle: () => void;
+  onSyncTriweeklyBlock?: (startIdx?: number) => void;
   onOpenAICoachSession: () => void;
   onSelectWeek: (idx: number) => void;
   onJumpToMicrocycle?: (weekOffset: number, weekPlan: PlanItem[]) => void;
@@ -67,6 +68,7 @@ export const AthleteMacrocycleView: React.FC<AthleteMacrocycleViewProps> = ({
   onSelectPlan,
   onOpenSeasonStudio,
   onSyncFullMacrocycle,
+  onSyncTriweeklyBlock,
   onOpenAICoachSession,
   onSelectWeek,
   onJumpToMicrocycle,
@@ -92,6 +94,7 @@ export const AthleteMacrocycleView: React.FC<AthleteMacrocycleViewProps> = ({
         onSelectPlan={onSelectPlan}
         onOpenSeasonStudio={onOpenSeasonStudio}
         onSyncFullMacrocycle={onSyncFullMacrocycle}
+        onSyncTriweeklyBlock={onSyncTriweeklyBlock ? () => onSyncTriweeklyBlock(selectedMacroWeekIdx) : undefined}
         onOpenAICoachSession={onOpenAICoachSession}
       />
 
@@ -111,6 +114,7 @@ export const AthleteMacrocycleView: React.FC<AthleteMacrocycleViewProps> = ({
         onUpdateWeekMicrocycle={onUpdateWeekMicrocycle}
         onOpenCoachChat={onOpenAICoachSession}
         onSyncFullMacrocycle={async () => onSyncFullMacrocycle()}
+        onSyncTriweeklyBlock={onSyncTriweeklyBlock ? async (idx) => onSyncTriweeklyBlock(idx ?? selectedMacroWeekIdx) : undefined}
       />
     </div>
   );

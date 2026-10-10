@@ -8,14 +8,15 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
-
 import { getMondayOfWeekStr, getLocalTodayStr } from "@/lib/dateUtils";
+import { MacrocycleSyncConfirmModal } from "./MacrocycleSyncConfirmModal";
 
 interface MacrocycleTimelineBarProps {
   blueprint: MacrocycleBlueprint;
   selectedIndex: number;
   onSelectWeek: (idx: number) => void;
   onSyncFullMacrocycle?: () => Promise<void>;
+  onSyncTriweeklyBlock?: (startIdx?: number) => Promise<void> | void;
 }
 
 export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
@@ -23,9 +24,11 @@ export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
   selectedIndex,
   onSelectWeek,
   onSyncFullMacrocycle,
+  onSyncTriweeklyBlock,
 }) => {
   const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(false);
   const [isSyncingFull, setIsSyncingFull] = useState<boolean>(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
 
   const weeks = blueprint.weeks || [];
   const maxTssInCycle = Math.max(...weeks.map((w) => w.targetTss || 300), 500);
@@ -99,30 +102,23 @@ export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
             </span>
           </div>
 
-          {onSyncFullMacrocycle && (
+          {(onSyncFullMacrocycle || onSyncTriweeklyBlock) && (
             <button
               type="button"
               disabled={isSyncingFull}
-              onClick={async () => {
-                setIsSyncingFull(true);
-                try {
-                  await onSyncFullMacrocycle();
-                } finally {
-                  setIsSyncingFull(false);
-                }
-              }}
+              onClick={() => setIsConfirmModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-xs font-bold shadow-sm hover:shadow transition cursor-pointer disabled:opacity-50"
-              title="Sincroniza todo el plan rector (las semanas del macrociclo) a tu calendario de Intervals.icu respetando tu configuración de días de entrenamiento y descanso."
+              title="Sincroniza con Intervals.icu: elige entre la ventana rodante recomendada de 3 semanas o el plan completo."
             >
               {isSyncingFull ? (
                 <>
                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  <span>Sincronizando Macrociclo...</span>
+                  <span>Sincronizando...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5 text-cyan-400 dark:text-cyan-600" />
-                  <span>Sincronizar Macrociclo Completo ({weeks.length} Sem)</span>
+                  <span>Sincronizar con Intervals ({weeks.length} Sem)</span>
                 </>
               )}
             </button>
@@ -139,6 +135,33 @@ export const MacrocycleTimelineBar: React.FC<MacrocycleTimelineBarProps> = ({
           </button>
         </div>
       </div>
+
+      <MacrocycleSyncConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        totalWeeks={weeks.length}
+        isSyncing={isSyncingFull}
+        onConfirmRollingSync={async () => {
+          if (onSyncTriweeklyBlock) {
+            setIsSyncingFull(true);
+            try {
+              await onSyncTriweeklyBlock(selectedIndex);
+            } finally {
+              setIsSyncingFull(false);
+            }
+          }
+        }}
+        onConfirmFullSync={async () => {
+          if (onSyncFullMacrocycle) {
+            setIsSyncingFull(true);
+            try {
+              await onSyncFullMacrocycle();
+            } finally {
+              setIsSyncingFull(false);
+            }
+          }
+        }}
+      />
 
       {!isTimelineCollapsed && (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 animate-fadeIn">

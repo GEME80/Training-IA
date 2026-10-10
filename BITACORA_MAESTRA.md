@@ -6582,6 +6582,50 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 93. Blindaje Universal de Sincronización Rodante Adaptativa, Erradicación de Fechas Quemadas y Alertas de Zonas Activas (v5.17)
+
+### 93.1. Diagnóstico y Problemas Resueltos
+1. **Riesgo Fisiológico de Sincronización Masiva Inadvertida:**
+   - En `AthleteHeroBanner.tsx` y `MacrocycleTimelineBar.tsx` el botón principal invitaba a sincronizar de golpe las 24 a 52 semanas del macrociclo a Intervals.icu.
+   - Si un atleta mejoraba su fitness (ej. incremento de Stryd CP o FTP en bicicleta tras un test), o cambiaba su disponibilidad, las semanas lejanas quedaban congeladas en Intervals con objetivos estáticos.
+2. **Fechas Residuales Quemadas (`2026-10-03` y `2026-10-12`):**
+   - En `intervalsSyncService.ts`, `useIntervalsSync.ts` y `useAutoIntervalsSync.ts` persistían fechas estáticas de migraciones anteriores como valores por defecto.
+   - En `useAutoIntervalsSync.ts`, el efecto en segundo plano volcaba masivamente todas las semanas futuras del plan rector a Intervals.
+3. **Ausencia de Feedback Visual Inmediato sobre Umbrales Activos en el Calendario:**
+   - Los atletas no tenían confirmación visual en la fila de la semana sobre qué potencia de Stryd (CP) o ritmo Daniels (Pace) y FTP de ciclismo estaban calibrando sus sesiones.
+
+### 93.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Modal de Confirmación Pedagógica (`MacrocycleSyncConfirmModal.tsx` - 137 LOC):**
+   - Creado componente modal accesible y reusable que educa al atleta en la metodología adaptativa moderna.
+   - Promueve prioritariamente la opción: **"Sincronizar Próximas 3 Semanas (Recomendado)"** (Ventana Rodante 2:1 alineada al fitness actual).
+   - Permite la opción secundaria avanzada **"Sincronizar Todo el Plan"** bajo decisión consciente del usuario.
+2. **Erradicación Total de Fechas Quemadas:**
+   - En [`intervalsSyncService.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/services/intervalsSyncService.ts) y [`useIntervalsSync.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/hooks/useIntervalsSync.ts): Fechas de inicio y horizonte final calculadas 100% dinámicamente con `new Date()` (hoy y horizonte de 1 año).
+   - En [`useAutoIntervalsSync.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/hooks/useAutoIntervalsSync.ts): La sincronización automática de fondo se limitó estrictamente a la ventana rodante de máximo 3 semanas desde el próximo lunes, neutralizando cualquier sobreescritura descontrolada de 52 semanas.
+3. **Badge de Telemetría y Zonas Activas en Calendario (`AthleteCalendarWeekRow.tsx` - 348 LOC):**
+   - Añadido badge dinámico en la barra de acciones de la semana: `CP [runFtp]W • FTP [bikeFtp]W` (o ritmo Daniels si corre por ritmo).
+   - Tooltip informativo en el botón `Esta sem.` para invitar a la actualización inmediata de zonas en Garmin Connect e Intervals.icu tras cualquier recalibración.
+4. **Propagación de Ventana Rodante:**
+   - `MacrocyclePreviewTimeline.tsx` y `AthleteMacrocycleView.tsx` propagan `onSyncTriweeklyBlock` a todas las vistas hijas.
+
+### 93.3. Archivos Modificados / Creados ($\le 350$ LOC)
+- `src/components/macrocycle/MacrocycleSyncConfirmModal.tsx`: **137 LOC** ($\le 350$) [Nuevo]
+- `src/lib/services/intervalsSyncService.ts`: **266 LOC** ($\le 350$)
+- `src/hooks/useIntervalsSync.ts`: **323 LOC** ($\le 350$)
+- `src/hooks/useAutoIntervalsSync.ts`: **170 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteHeroBanner.tsx`: **213 LOC** ($\le 350$)
+- `src/components/macrocycle/MacrocycleTimelineBar.tsx`: **230 LOC** ($\le 350$)
+- `src/components/MacrocyclePreviewTimeline.tsx`: **132 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteMacrocycleView.tsx`: **121 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteCalendarWeekRow.tsx`: **348 LOC** ($\le 350$)
+
+### 93.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+
 
 
 

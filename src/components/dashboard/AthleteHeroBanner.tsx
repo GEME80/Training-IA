@@ -17,6 +17,7 @@ import {
   calculatePlanStatus,
 } from "@/lib/physiology/macrocycle";
 import { resolveCurrentWeekIndex } from "@/lib/physiology/macrocycleSync";
+import { MacrocycleSyncConfirmModal } from "../macrocycle/MacrocycleSyncConfirmModal";
 
 interface AthleteHeroBannerProps {
   seasonPlans: SeasonPlanItem[];
@@ -34,6 +35,7 @@ interface AthleteHeroBannerProps {
   onSelectPlan: (planId: string, weekIdx: number) => void;
   onOpenSeasonStudio: () => void;
   onSyncFullMacrocycle: () => void;
+  onSyncTriweeklyBlock?: () => void;
   onOpenAICoachSession: () => void;
 }
 
@@ -53,8 +55,10 @@ export const AthleteHeroBanner: React.FC<AthleteHeroBannerProps> = ({
   onSelectPlan,
   onOpenSeasonStudio,
   onSyncFullMacrocycle,
+  onSyncTriweeklyBlock,
   onOpenAICoachSession,
 }) => {
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
   return (
     <div className="rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex flex-col gap-4 shadow-sm">
       {/* FILA 1: CADENA DE PLANES DE TEMPORADA */}
@@ -145,12 +149,12 @@ export const AthleteHeroBanner: React.FC<AthleteHeroBannerProps> = ({
           <button
             type="button"
             disabled={isSyncing}
-            onClick={onSyncFullMacrocycle}
+            onClick={() => setIsConfirmModalOpen(true)}
             className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-900/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-4 py-2.5 text-xs font-bold shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition cursor-pointer disabled:opacity-50"
-            title="Sube todas las semanas estructuradas del plan rector a Intervals.icu respetando tus días de descanso y zonas de potencia."
+            title="Sincroniza con Intervals.icu: elige entre la ventana rodante adaptativa de 3 semanas o el macrociclo completo."
           >
             <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
-            <span>{isSyncing ? "Sincronizando..." : `Sincronizar Macrociclo (${weeks.length} Sem)`}</span>
+            <span>{isSyncing ? "Sincronizando..." : `Sincronizar con Intervals (${weeks.length} Sem)`}</span>
           </button>
 
           <button
@@ -192,6 +196,18 @@ export const AthleteHeroBanner: React.FC<AthleteHeroBannerProps> = ({
           </div>
         ) : null}
       </div>
+
+      <MacrocycleSyncConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        totalWeeks={weeks.length}
+        isSyncing={isSyncing}
+        onConfirmRollingSync={() => {
+          if (onSyncTriweeklyBlock) onSyncTriweeklyBlock();
+          else onSyncFullMacrocycle();
+        }}
+        onConfirmFullSync={onSyncFullMacrocycle}
+      />
     </div>
   );
 };

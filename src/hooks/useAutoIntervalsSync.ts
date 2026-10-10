@@ -54,11 +54,10 @@ export function useAutoIntervalsSync({
     // Si no hay atleta o macrociclo activo con semanas, esperar
     if (!athleteId || !blueprint?.weeks || blueprint.weeks.length === 0) return;
 
-    // Clave de migración idempotente v5 (Modernización Multi-Sport & Paramétrica)
-    // Garantiza que se ejecute solo UNA vez por atleta tras la actualización v5.0
-    const migrationKey = `auto_intervals_v5_modernization_20261012_${athleteId}`;
+    // Clave de sincronización adaptativa rodante por atleta (Ventana de 3 semanas)
+    const migrationKey = `auto_intervals_rolling_v5_${athleteId}`;
     const alreadyDoneInStorage = userStorage.getItem(migrationKey) === "done";
-    const alreadyDoneInProfile = userProfile?.lastAutoPurgeSync === "2026-10-12";
+    const alreadyDoneInProfile = Boolean(userProfile?.lastAutoPurgeSync);
 
     if (alreadyDoneInStorage || alreadyDoneInProfile || isExecutingRef.current) {
       return;
@@ -71,22 +70,24 @@ export function useAutoIntervalsSync({
 
     const executeBackgroundPurgeAndSync = async () => {
       isExecutingRef.current = true;
-      // Los atletas ya tienen planificado su fin de semana hasta el domingo (2026-10-11).
-      // Se preserva intacto de viernes a domingo y la modernización aplica a partir del próximo lunes (2026-10-12).
+      // Sincronización rodante adaptativa: a partir del próximo lunes para respetar la semana en curso
       const d = new Date();
-      const day = d.getDay(); // 0 = Domingo, 1 = Lunes, ..., 5 = Viernes, 6 = Sábado
+      const day = d.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
       const daysUntilMonday = day === 0 ? 1 : (8 - day) % 7 || 7;
       const nextMon = new Date(d);
       nextMon.setDate(d.getDate() + daysUntilMonday);
-      const computedNextMonday = nextMon.toISOString().split("T")[0];
-      const fromDate = computedNextMonday < "2026-10-12" ? "2026-10-12" : computedNextMonday;
+      const fromDate = nextMon.toISOString().split("T")[0];
 
       try {
-        console.info(`[AutoIntervalsSync] Iniciando sincronización transparente en segundo plano para ${athleteId} desde ${fromDate}...`);
+        console.info(`[AutoIntervalsSync] Iniciando sincronización rodante adaptativa para ${athleteId} desde ${fromDate}...`);
 
-        // 1. Generar la plantilla de microciclos del macrociclo
-        const fullPlan: PlanItem[] = [];
-        blueprint.weeks.forEach((week) => {
+        // 1. Filtrar exclusivamente las próximas semanas (máximo ventana rodante de 3 semanas para respetar adaptabilidad)
+        const targetWeeks = blueprint.weeks
+          .filter((w) => !w.startDate || w.startDate >= fromDate)
+          .slice(0, 3);
+
+        const rollingPlan: PlanItem[] = [];
+        targetWeeks.forEach((week) => {
           const weekPlan = generateWeekTemplate(
             week,
             runFtp,
@@ -97,18 +98,17 @@ export function useAutoIntervalsSync({
             undefined,
             runningOpts
           );
-          fullPlan.push(...weekPlan);
+          rollingPlan.push(...weekPlan);
         });
 
-        // 2. Filtrar exclusivamente sesiones a partir del próximo lunes (preservando el fin de semana actual y el historial)
-        const futurePlan = fullPlan.filter((item) => !item.date || item.date >= fromDate);
+        const futurePlan = rollingPlan.filter((item) => !item.date || item.date >= fromDate);
 
         if (futurePlan.length === 0) {
           isExecutingRef.current = false;
           return;
         }
 
-        // 3. Llamar al backend atómico clean_and_sync
+        // 2. Llamar al backend atómico clean_and_sync con ventana rodante
         const res = await fetch("/api/sync-intervals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -126,13 +126,13 @@ export function useAutoIntervalsSync({
         const data = await res.json();
         if (data.success) {
           console.info(
-            `[AutoIntervalsSync] Sincronización exitosa en segundo plano para ${athleteId}. Sesiones purgadas: ${data.deletedCount || 0}, Sesiones actualizadas desde ${fromDate}: ${data.createdCount || 0}`
+            `[AutoIntervalsSync] Sincronización rodante exitosa para ${athleteId}. Sesiones purgadas: ${data.deletedCount || 0}, Sesiones sincronizadas (3 semanas) desde ${fromDate}: ${data.createdCount || 0}`
           );
           userStorage.setItem(migrationKey, "done");
           await persistProfileField(
             user?.uid,
             user?.email || userProfile?.email || "",
-            { lastAutoPurgeSync: "2026-10-12" },
+            { lastAutoPurgeSync: fromDate },
             isReadOnly
           );
 

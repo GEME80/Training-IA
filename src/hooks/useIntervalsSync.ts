@@ -267,7 +267,7 @@ export function useIntervalsSync({
     }
   };
 
-  const handleDeleteFutureWorkouts = async (fromDateStr: string = "2026-10-03") => {
+  const handleDeleteFutureWorkouts = async (fromDateStr?: string) => {
     if (isReadOnly) {
       setSyncNotification({
         title: "Modo Auditoría (Solo Lectura)",
@@ -276,6 +276,8 @@ export function useIntervalsSync({
       });
       return;
     }
+    const todayStr = new Date().toISOString().split("T")[0];
+    const targetFromDate = fromDateStr || todayStr;
     setIsSyncing(true);
     try {
       const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || "";
@@ -288,14 +290,14 @@ export function useIntervalsSync({
           apiKey: activeApiKey,
           uid: user?.uid,
           email: user?.email || userProfile?.email || "",
-          fromDate: fromDateStr,
+          fromDate: targetFromDate,
         }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Error al eliminar sesiones en Intervals.icu");
       setSyncNotification({
         title: "Limpieza Completada en Intervals.icu",
-        message: `Se eliminaron ${data.deletedCount || 0} sesiones planificadas a partir del ${fromDateStr}. Listo para sincronizar el macrociclo purificado.`,
+        message: `Se eliminaron ${data.deletedCount || 0} sesiones planificadas a partir del ${targetFromDate}. Listo para sincronizar el macrociclo purificado.`,
         type: "success",
       });
     } catch (err: any) {

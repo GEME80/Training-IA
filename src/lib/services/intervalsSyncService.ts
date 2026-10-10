@@ -173,8 +173,14 @@ export class IntervalsSyncService {
     }
 
     const client = new IntervalsClient(effAthleteId, effApiKey);
-    const startStr = fromDate || "2026-10-03";
-    const endStr = toDate || "2027-12-31";
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const defaultHorizon = new Date(today);
+    defaultHorizon.setFullYear(defaultHorizon.getFullYear() + 1);
+    const defaultEndStr = defaultHorizon.toISOString().split("T")[0];
+
+    const startStr = fromDate || todayStr;
+    const endStr = toDate || defaultEndStr;
 
     try {
       const existingEvents = await client.getEvents(startStr, endStr);
@@ -205,7 +211,7 @@ export class IntervalsSyncService {
 
   /**
    * Ejecuta en una sola transacción atómica de backend:
-   * 1. Limpieza de entrenamientos futuros en Intervals.icu desde `fromDate` (default 2026-10-03).
+   * 1. Limpieza de entrenamientos futuros en Intervals.icu desde `fromDate`.
    * 2. Sincronización transparente de los nuevos entrenamientos purificados.
    */
   static async cleanAndSync(input: SyncIntervalsRequest): Promise<{
@@ -217,12 +223,16 @@ export class IntervalsSyncService {
     error?: string;
   }> {
     const { athleteId, apiKey, uid, email, fromDate, toDate, plan } = input;
-    const startStr = fromDate || "2026-10-03";
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const startStr = fromDate || todayStr;
 
     // Extraer horizonte dinámico del plan para garantizar purga completa de toda la temporada
     const planDates = plan ? plan.map((p) => p.date).filter(Boolean).sort() : [];
     const maxPlanDate = planDates.length > 0 ? planDates[planDates.length - 1] : undefined;
-    const effectiveToDate = toDate || maxPlanDate || "2027-12-31";
+    const defaultHorizon = new Date(today);
+    defaultHorizon.setFullYear(defaultHorizon.getFullYear() + 1);
+    const effectiveToDate = toDate || maxPlanDate || defaultHorizon.toISOString().split("T")[0];
 
     const delResult = await this.deleteFutureWorkouts({
       athleteId,

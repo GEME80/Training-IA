@@ -26,6 +26,7 @@ interface MacrocyclePreviewTimelineProps {
   onUpdateWeekMicrocycle?: (weekIndex: number, newMicrocycleType: MicrocycleType) => void;
   onOpenCoachChat?: () => void;
   onSyncFullMacrocycle?: () => Promise<void>;
+  onSyncTriweeklyBlock?: (startIdx?: number) => Promise<void>;
   isCompact?: boolean;
 }
 
@@ -42,6 +43,7 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
   onRecalibrateWeekWithAI,
   onOpenCoachChat,
   onSyncFullMacrocycle,
+  onSyncTriweeklyBlock,
 }) => {
   const effRunFtp = runFtp ?? blueprint.runFtpAtCreation ?? 285;
   const effBikeFtp = bikeFtp ?? blueprint.bikeFtpAtCreation ?? 260;
@@ -83,6 +85,7 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
         selectedIndex={selectedIndex}
         onSelectWeek={handleSelectWeek}
         onSyncFullMacrocycle={onSyncFullMacrocycle}
+        onSyncTriweeklyBlock={onSyncTriweeklyBlock}
       />
 
       {/* 2. Espacio de Trabajo de la Semana Activa */}

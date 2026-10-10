@@ -30,9 +30,7 @@ const fmtMins = (m: number) =>
 
 function DisciplineBar({
   icon, mins, tss, executedTss, textColor, barColor, isPastWeek,
-}: {
-  icon: React.ReactNode; mins: number; tss: number; executedTss: number; textColor: string; barColor: string; isPastWeek: boolean;
-}) {
+}: { icon: React.ReactNode; mins: number; tss: number; executedTss: number; textColor: string; barColor: string; isPastWeek: boolean }) {
   if (mins <= 0 && executedTss <= 0) return null;
   const displayed = executedTss > 0 ? executedTss : isPastWeek ? tss : 0;
   const pct = tss > 0 ? Math.min(100, Math.round((displayed / tss) * 100)) : 0;
@@ -90,11 +88,9 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     try { await onSyncWeekToIntervals(weekPlan); } finally { setIsSyncingCurrentWeek(false); }
   };
 
-  let totalMins = 0, plannedTss = 0;
-  let runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0;
+  let totalMins = 0, plannedTss = 0, runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0;
   let swimMins = 0, swimTss = 0, strengthMins = 0, strengthTss = 0;
-  let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0;
-  let execDirectTotalTss = 0;
+  let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0, execDirectTotalTss = 0;
 
   const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const weekDates: string[] = [];
@@ -110,10 +106,10 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     if (!item.isRestDay && item.discipline !== "Descanso") {
       totalMins += m; plannedTss += t;
       const d = item.discipline.toLowerCase();
-      if (d === "carrera" || d === "run") { runMins += m; runTss += t; }
-      else if (d === "ciclismo" || d === "ride") { bikeMins += m; bikeTss += t; }
-      else if (d === "natacion" || d === "natación" || d === "swim") { swimMins += m; swimTss += t; }
-      else if (d === "fuerza" || d === "fortalecimiento" || d === "weighttraining" || d === "gym") strengthMins += m, strengthTss += t;
+      if (/run|carrera/.test(d)) { runMins += m; runTss += t; }
+      else if (/ride|ciclismo/.test(d)) { bikeMins += m; bikeTss += t; }
+      else if (/swim|nataci/.test(d)) { swimMins += m; swimTss += t; }
+      else if (/gym|fuerza|fortalecimiento|weight/.test(d)) { strengthMins += m; strengthTss += t; }
     }
   });
 
@@ -301,11 +297,16 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
       {/* ── BARRA INFERIOR DE ACCIONES ── */}
       {(isCurrentWeek || isSelectedWeek) && (
         <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 px-1">
-          <span className="text-[10px] text-slate-500 font-mono">
-            {isCurrentWeek
-              ? "Semana en curso · sincronizada con Intervals.icu"
-              : `Semana ${wIdx + 1} · ${fullPhaseLabel}`}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] text-slate-500 font-mono">
+              {isCurrentWeek ? "Semana en curso · Intervals.icu" : `Semana ${wIdx + 1} · ${fullPhaseLabel}`}
+            </span>
+            {(isCurrentWeek || isFutureWeek) && !isHistoricalOnly && (
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">
+                {runningOpts?.mode === "PACE" ? `Pace ${runningOpts.thresholdPaceStr || "4:45"}/km` : `CP ${runFtp}W`} • FTP {bikeFtp}W
+              </span>
+            )}
+          </div>
           <div className="flex items-center space-x-2">
             <button
               type="button"
@@ -321,7 +322,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                 onClick={handleSyncTriweekly}
                 disabled={isSyncingTriweekly || isSyncingCurrentWeek}
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Sincronizar bloque tri-semanal a Intervals.icu"
+                title="Sincronizar bloque tri-semanal a Intervals.icu (ventana rodante adaptativa)"
               >
                 <RefreshCw className={`h-3.5 w-3.5 text-emerald-500 ${isSyncingTriweekly ? "animate-spin" : ""}`} />
                 <span>{isSyncingTriweekly ? "Sincronizando..." : "Sync 3 sem (2:1)"}</span>
@@ -333,7 +334,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                 onClick={handleSyncWeek}
                 disabled={isSyncingTriweekly || isSyncingCurrentWeek}
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Sincronizar esta semana a Intervals.icu"
+                title="Sincroniza esta semana a Intervals.icu y actualiza tus zonas en Garmin Connect"
               >
                 <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isSyncingCurrentWeek ? "animate-spin" : ""}`} />
                 <span>{isSyncingCurrentWeek ? "Sincronizando..." : "Esta sem."}</span>

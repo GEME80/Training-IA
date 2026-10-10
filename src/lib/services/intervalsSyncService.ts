@@ -112,15 +112,16 @@ export class IntervalsSyncService {
         workoutText = `Warmup\n- 10m 55% FTP\n\nMain\n- ${Math.max(10, (item.durationMinutes || 60) - 20)}m 68% FTP\n\nCooldown\n- 10m 50% FTP`;
       }
 
-      const isPaceByText = Boolean(
-        (item.powerTarget && /%\s*Pace/i.test(item.powerTarget)) ||
-        (workoutText && /%\s*Pace/i.test(workoutText))
+      const isExplicitPower = Boolean(
+        (item.powerTarget && (/\b\d+\s*W\b/i.test(item.powerTarget) || /%\s*CP\b/i.test(item.powerTarget) || /stryd/i.test(item.powerTarget))) ||
+        (workoutText && (/%\s*CP\b/i.test(workoutText) || /stryd/i.test(workoutText))) ||
+        (item.workoutName && /stryd/i.test(item.workoutName))
       );
-      const isRunPower = Boolean(item.powerTarget && /\b\d+\s*W\b/i.test(item.powerTarget) && !isPaceByText);
-      const isRunPaceOnly = item.discipline === "Carrera" && (!isRunPower || isPaceByText);
+      const isRunPower = item.discipline === "Carrera" && isExplicitPower;
+      const isRunPaceOnly = item.discipline === "Carrera" && !isRunPower;
 
-      const adaptedText = isRunPaceOnly
-        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, "PACE", item.workoutName || "")
+      const adaptedText = item.discipline === "Carrera"
+        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, isRunPower ? "POWER" : "PACE", item.workoutName || "")
         : workoutText;
       const canonicalDescription = sanitizeWorkoutDoc(adaptedText, {
         discipline: item.discipline,

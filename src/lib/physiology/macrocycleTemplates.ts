@@ -7,12 +7,11 @@ import { selectSwimWorkout } from "./swimWorkoutPool"; import { selectStrengthWo
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"; import { resolveWorkoutAddons } from "./workoutEnhancers";
 import { parseWorkoutDoc } from "./workoutDocParser";
 import {
-  getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget,
-  resolveRaceWorkout, resolveWeekendRide, resolveTriathlonBrick, resolveLongRunDay, resolveLongRideDay, resolveEveRide, resolveFridayFartlek,
-  resolveCuratedModelForWeek, resolveMidweekRide,
+  getCoprimeStride, buildRestDay, selectQualityWorkout, interpolatePowerTarget, resolveRaceWorkout,
+  resolveWeekendRide, resolveTriathlonBrick, resolveLongRunDay, resolveLongRideDay, resolveEveRide,
+  resolveFridayFartlek, resolveCuratedModelForWeek, resolveMidweekRide,
 } from "./macrocycleTemplateHelpers";
-import { AntiMonotonyMemoryBuffer, applyParametricProgression } from "./workoutProgressionEngine";
-import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
+import { AntiMonotonyMemoryBuffer, applyParametricProgression } from "./workoutProgressionEngine"; import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
 
@@ -61,7 +60,14 @@ export function generateWeekTemplate(
     const day = days[idx], d = new Date(weekStart);
     d.setDate(weekStart.getDate() + idx);
     const dateStr = d.toISOString().split("T")[0], formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
-    let discList = getDayDisciplines(safeAvailability, day);
+    let discList = getDayDisciplines(safeAvailability, day).filter((d) => {
+      if (d === "Descanso" || d === "Fuerza") return true;
+      if (curatedModel.sportCategory === "Running") return d === "Carrera";
+      if (curatedModel.sportCategory === "Cycling") return d === "Ciclismo";
+      if (curatedModel.sportCategory === "Triathlon") return d === "Carrera" || d === "Ciclismo" || d === "Natacion";
+      return true;
+    });
+    if (discList.length === 0) discList = ["Descanso"];
 
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
@@ -84,7 +90,9 @@ export function generateWeekTemplate(
         continue;
       }
 
-      const isEveOfRace = (primaryRaceDate && Math.abs(new Date(primaryRaceDate).getTime() - d.getTime()) <= 86400000) || day === "Sábado";
+      const isEveOfRace = primaryRaceDate
+        ? Math.round((new Date(primaryRaceDate + "T00:00:00").getTime() - new Date(dateStr + "T00:00:00").getTime()) / 86400000) === 1
+        : day === "Sábado";
 
       for (const disc of discList) {
         if (disc === "Descanso") continue;
@@ -101,7 +109,8 @@ export function generateWeekTemplate(
           continue;
         }
         if (disc === "Carrera") {
-          result.push({ day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides @ 85% CP)", action: "MANTENER", durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16, powerTarget: runFtp ? `${Math.round(runFtp * 0.68)}W` : "Z1 Trote Suave", justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 10m 70% CP\n3x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP", isRestDay: false });
+          const preW = runFtp ? `${Math.round(runFtp * 0.68)}W (68% CP)` : "70% Pace (Z1 Trote Suave)";
+          result.push({ day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: isEveOfRace ? "Activación Final Pre-Carrera (15m Suave)" : "Trote Suave Pre-Carrera (25m + 3 Strides)", action: "MANTENER", durationMinutes: isEveOfRace ? 15 : 25, tss: isEveOfRace ? 9 : 16, powerTarget: preW, justification: "Soltura neuromuscular con mínimo impacto articular.", workoutDoc: "Warmup\n- 10m 65% CP\n\nMain\n- 10m 70% CP\n3x\n- 20s 85% CP\n- 40s 55% CP\n\nCooldown\n- 5m 60% CP", isRestDay: false });
           continue;
         }
         result.push(buildRestDay(day, dateStr, formattedDate));

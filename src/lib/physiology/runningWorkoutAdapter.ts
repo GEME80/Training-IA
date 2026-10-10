@@ -286,7 +286,7 @@ export function interpolateWorkoutTarget(
   cleanPace = cleanPace.replace(/\(+\s*(\d+(?:\s*-\s*\d+)?\s*%\s*(?:CP|FTP|Pace|LTHR))\s*\)+/gi, "$1");
   cleanPace = cleanPace.replace(/^\s*\(+/, "").replace(/\)+\s*$/, "").trim();
 
-  return cleanPace.replace(/(?:(\d+)\s*-\s*(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR)|(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR))/gi, (match, r1, r2, s1) => {
+  return cleanPace.replace(/(?:(\d+)\s*(?:-|a|vs)\s*(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR)|(\d+)\s*%\s*(?:CP|FTP|Pace|LTHR))/gi, (match, r1, r2, s1) => {
     if (r1 && r2) {
       let p1 = parseInt(r1, 10), p2 = parseInt(r2, 10);
       if (/CP|FTP/i.test(match)) { p1 = mapPowerPctToPacePct(p1); p2 = mapPowerPctToPacePct(p2); }
@@ -304,7 +304,7 @@ export function interpolateWorkoutTarget(
  * - Atleta Stryd (POWER): traduce cualquier sesión con % Pace a % CP y vatios Stryd exactos.
  * - Atleta Ritmo (PACE): traduce cualquier sesión con % CP/W a % Pace y min/km Daniels.
  */
-export function adaptRunningPlanItem<T extends { discipline?: string; workoutName?: string; workoutDoc?: string; powerTarget?: string; day?: string; isRestDay?: boolean }>(
+export function adaptRunningPlanItem<T extends { discipline?: string; workoutName?: string; workoutDoc?: string; powerTarget?: string; day?: string; isRestDay?: boolean; justification?: string }>(
   item: T,
   opts: { mode?: RunningTrainingMode; runFtp?: number; thresholdPaceSec?: number; lthr?: number } = {}
 ): T {
@@ -315,31 +315,29 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
   if (mode === "POWER") {
     const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, "POWER", item.workoutName || "") : item.workoutDoc;
     const rawTarget = item.powerTarget ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "POWER", runFtp: opts.runFtp, isQuality }) : item.powerTarget;
-    const adaptedTarget = rawTarget?.replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km\b/gi, "").trim();
+    const adaptedTarget = rawTarget?.replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km\b/gi, "").replace(/\s*•\s*Ritmo Meta:\s*$/gi, "").trim();
     const adaptedName = item.workoutName
-      ? item.workoutName
-          .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")
-          .replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP")
-          .replace(/Ritmo\s*Umbral/gi, "Stryd CP")
-          .replace(/Test Oficial Ritmo Umbral \(Pace\)/gi, "Test Oficial Stryd CP")
+      ? item.workoutName.replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/Test Oficial Ritmo Umbral \(Pace\)/gi, "Test Oficial Stryd CP")
       : item.workoutName;
-    return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget };
+    const adaptedJust = item.justification ? item.justification.replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP") : item.justification;
+    return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget, justification: adaptedJust };
   }
 
   const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode, item.workoutName || "") : item.workoutDoc;
   const rawTarget = item.powerTarget ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "PACE", thresholdPaceSec: opts.thresholdPaceSec, lthr: opts.lthr, isQuality }) : item.powerTarget;
   const adaptedTarget = rawTarget?.replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)").replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)").replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
   const adaptedName = item.workoutName
-    ? item.workoutName
-        .replace(/\s*\(\d+W\)/gi, "").replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace").replace(/\bStryd\s*CP\b/gi, "Pace").replace(/\bStryd\b/gi, "Ritmo")
-        .replace(/Potencia\s*Cr[íi]tica|Critical\s*Power/gi, "Ritmo Umbral").replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)")
+    ? item.workoutName.replace(/\s*\(\d+W\)/gi, "").replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace").replace(/\bStryd\s*CP\b/gi, "Pace").replace(/\bStryd\b/gi, "Ritmo").replace(/Potencia\s*Cr[íi]tica|Critical\s*Power/gi, "Ritmo Umbral").replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)")
     : item.workoutName;
+  const adaptedJust = item.justification
+    ? item.justification.replace(/Stryd\s*CP|Critical\s*Power|Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral").replace(/vatios\s*Stryd|vatios/gi, "ritmo").replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
+    : item.justification;
 
   let adaptedTss = (item as any).tss;
   if (adaptedDoc && adaptedDoc !== item.workoutDoc) {
     const parsed = parseWorkoutDoc(adaptedDoc, "Carrera");
     if (parsed.estimatedTss && parsed.estimatedTss > (adaptedTss || 0)) adaptedTss = parsed.estimatedTss;
   }
-  return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget, tss: adaptedTss };
+  return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget, justification: adaptedJust, tss: adaptedTss };
 }
 

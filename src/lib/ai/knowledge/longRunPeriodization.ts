@@ -284,7 +284,7 @@ export function buildDynamicLongRunStructure(params: {
       const easyMins = baseMins - fastMins - 25;
       const targetStr = runFtp && runFtp > 0
         ? `${Math.round(runFtp * 0.81)}W Z2 -> ${Math.round(runFtp * 0.90)}W Final (81%->90% CP)`
-        : "81% CP Z2 -> Aceleración final 90% CP";
+        : "81% Pace Z2 -> Aceleración final 90% Pace";
       return {
         workoutName: `Tirada Larga Progresiva "Fast-Finish" Pfitzinger (${baseKm} km / ${baseMins}m)`,
         powerTarget: targetStr,

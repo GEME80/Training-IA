@@ -122,7 +122,7 @@ export function calculateTargetPeakCtlPotential(input: CtlPotentialInput): CtlPo
     const attainableCtl = currentCtl + buildWeeks * safeRampRate;
     let optimal = 65;
     if (input.targetDistanceKm && input.targetDistanceKm > 100) optimal = 80;
-    targetPeakCtl = Math.round(Math.min(optimal + 10, Math.max(45, attainableCtl)) * 10) / 10;
+    targetPeakCtl = Math.round(Math.min(optimal + 10, attainableCtl) * 10) / 10;
   }
 
   const targetPeakWeeklyTss = Math.round(Math.max(7 * targetPeakCtl + 45 * 1.5, (targetPeakCtl * 7) / 0.84));

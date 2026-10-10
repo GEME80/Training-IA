@@ -147,7 +147,7 @@ Cooldown
 
 export const RUN_AEROBIC_STRIDES_6X_45M: RunningAerobicWorkoutItem = {
   name: "Rodaje Aeróbico Z2 con 6 Progresivos Cortos (45m + 6 Strides)",
-  powerTarget: "74% Pace + Strides @ 95% CP",
+  powerTarget: "74% Pace + Strides @ 95% Pace",
   justification: "Consistencia aeróbica básica rematada con progresivos de 100m para mantener reactividad neural en las piernas.",
   workoutDoc: `Warmup
 - 10m 65% Pace

@@ -33,7 +33,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
       workoutName: "Trote Suave Pre-Carrera con Strides de Activación (25m)",
       durationMinutes: 25,
       tss: 16,
-      powerTarget: isPwr ? `${Math.round(runFtp * 0.72)}W (Z1-Z2)` : "72-75% Pace (Z1)",
+      powerTarget: isPwr ? `${Math.round(runFtp * 0.72)}W (72% CP • Z1-Z2)` : "72-75% Pace (Z1)",
       justification: "Trote regenerativo y 3 rectas muy fluidas para activar el tono neuromuscular y calmar nervios pre-competición con cero fatiga.",
       workoutDoc: isPwr
         ? "Warmup\n- 10m 70% CP\n\nMain (Soltura)\n- 10m 74% CP\n\nStrides de Activación (Chispa sin forzar)\n3x\n- 20s 88% CP\n- 40s 65% CP\n\nCooldown\n- 5m 68% CP"
@@ -79,7 +79,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
         workoutName: "Fartlek Aeróbico Dinámico Z2-Z3 (40m)",
         durationMinutes: 40,
         tss: 38,
-        powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.88)}W (Z2-Z3)` : "76-88% Pace",
+        powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.88)}W (76-88% CP • Z2-Z3)` : "76-88% Pace",
         justification: "Fartlek continuo con 6 cambios cortos de 1 min a ritmo Z3 Tempo y 2 min de flotación en Z2 activa para estimular fibras tipo IIa sin fatigar para la tirada.",
         workoutDoc: isPwr
           ? "Warmup\n- 10m 74% CP\n\nMain (Fartlek Dinámico Z2-Z3)\n6x\n- 1m 88% CP\n- 2m 76% CP (flotación Z2)\n\nCooldown\n- 6m 72% CP"
@@ -114,7 +114,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
         workoutName: titleName,
         durationMinutes: 40,
         tss: 37,
-        powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.87)}W (Z2->Z3)` : "76-87% Pace",
+        powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.87)}W (76-87% CP • Z2->Z3)` : "76-87% Pace",
         justification: `Rodaje en progresión aeróbica desde Z2 cómoda cerrando con 12 minutos sólidos a ${targetLabel.toLowerCase()} para fijar economía biomecánica.`,
         workoutDoc: isPwr
           ? `Warmup\n- 10m 74% CP\n\nMain (Z2 Cómoda)\n- 15m 78% CP\n\nFinal Vivo (${targetLabel})\n- 12m 87% CP\n\nCooldown\n- 3m 70% CP`
@@ -156,7 +156,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
       workoutName: "Carrera Progresiva Aeróbica (45m con Final Z3)",
       durationMinutes: 45,
       tss: 43,
-      powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.88)}W (Z2->Z3)` : "76-88% Pace",
+      powerTarget: isPwr ? `${Math.round(runFtp * 0.76)}-${Math.round(runFtp * 0.88)}W (76-88% CP • Z2->Z3)` : "76-88% Pace",
       justification: "Rodaje progresivo comenzando cómodo y consolidando 15 minutos en Z3 Tempo sostenido.",
       workoutDoc: isPwr
         ? "Warmup\n- 12m 74% CP\n\nMain (Z2 Cómoda)\n- 15m 78% CP\n\nFinal Vivo (Z3 Tempo)\n- 15m 87% CP\n\nCooldown\n- 3m 70% CP"
@@ -181,7 +181,7 @@ export function resolveFridayWorkout(params: FridayWorkoutParams): FridayWorkout
     workoutName: "Carrera - Fartlek Dinámico & Activación Aeróbica (45m)",
     durationMinutes: 45,
     tss: 42,
-    powerTarget: isPwr ? `${Math.round(runFtp * 0.74)}-${Math.round(runFtp * 0.90)}W (Z2-Z4)` : "74-90% Pace",
+    powerTarget: isPwr ? `${Math.round(runFtp * 0.74)}-${Math.round(runFtp * 0.90)}W (74-90% CP • Z2-Z4)` : "74-90% Pace",
     justification: "Cambios de ritmo alegres y controlados para activar reactividad neuromuscular sin agotar las piernas antes de la tirada larga.",
     workoutDoc: isPwr
       ? "Warmup\n- 15m 74% CP\n\nMain (Fartlek Ágil)\n6x\n- 1m 90% CP\n- 2m 72% CP\n\nCooldown\n- 12m 70% CP"

@@ -230,8 +230,8 @@ export function calculateProgressiveLongRun(
 
   // Modulador en semanas de descarga biológica con variedad pedagógica
   if (isRecoveryWeek) {
-    baseKm = Math.max(scaledStartKm, Math.round(baseKm * 0.78));
-    baseMins = Math.max(scaledStartMins, Math.round(baseMins * 0.78));
+    baseKm = Math.max(Math.round(scaledStartKm * 0.85), Math.round(baseKm * 0.72));
+    baseMins = Math.max(Math.round(scaledStartMins * 0.85), Math.round(baseMins * 0.72));
     const dynamicRec = buildDynamicLongRunStructure({
       baseKm, baseMins, phase, weekNumber, countdown, isPeak: false,
       runFtp, modelId: model.modelId, sportCategory: model.sportCategory,

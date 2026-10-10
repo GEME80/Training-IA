@@ -129,6 +129,8 @@ export function resolveTrainingModel(params: {
  * Calcula la progresión matemática y fisiológica de la tirada larga dominical.
  * volumeScaleFactor ajusta el volumen según el CTL real del atleta (anti-lesión).
  */
+import { parseGoalTimeToMinutes } from "../../physiology/raceGoalParser";
+
 export function calculateProgressiveLongRun(
   model: CuratedTrainingModel,
   weekNumber: number,
@@ -138,7 +140,8 @@ export function calculateProgressiveLongRun(
   countdown: number,
   volumeScaleFactor: number = 1.0,
   athleteCtl?: number,
-  runFtp?: number
+  runFtp?: number,
+  goalTarget?: string
 ): {
   km: number;
   minutes: number;
@@ -155,19 +158,10 @@ export function calculateProgressiveLongRun(
   let levelMaxMins = Math.min(rules.peakMinutes, maxCapMins);
 
   if (athleteCtl !== undefined && model.athleteLevelCaps) {
-    const begThreshold = model.athleteLevelCaps.BEGINNER.ctlThresholdMax || 35;
-    const intThreshold = model.athleteLevelCaps.INTERMEDIATE.ctlThresholdMax || 65;
-
-    if (athleteCtl < begThreshold) {
-      levelMaxKm = model.athleteLevelCaps.BEGINNER.maxLongRunKm;
-      levelMaxMins = model.athleteLevelCaps.BEGINNER.maxLongRunMinutes;
-    } else if (athleteCtl <= intThreshold) {
-      levelMaxKm = model.athleteLevelCaps.INTERMEDIATE.maxLongRunKm;
-      levelMaxMins = model.athleteLevelCaps.INTERMEDIATE.maxLongRunMinutes;
-    } else {
-      levelMaxKm = model.athleteLevelCaps.ADVANCED_ELITE.maxLongRunKm;
-      levelMaxMins = model.athleteLevelCaps.ADVANCED_ELITE.maxLongRunMinutes;
-    }
+    const { BEGINNER: beg, INTERMEDIATE: inter, ADVANCED_ELITE: elite } = model.athleteLevelCaps;
+    const caps = athleteCtl < (beg.ctlThresholdMax || 35) ? beg : athleteCtl <= (inter.ctlThresholdMax || 65) ? inter : elite;
+    levelMaxKm = caps.maxLongRunKm;
+    levelMaxMins = caps.maxLongRunMinutes;
   }
 
   // Aplicar factor de escala al arranque respetando los caps fisiológicos del nivel del atleta
@@ -184,18 +178,21 @@ export function calculateProgressiveLongRun(
     const raceDist = isTri
       ? (model.modelId === "TRIATHLON_SHORT" ? 10 : model.modelId === "TRIATHLON_70_3" ? 21.1 : 42.2)
       : (model.targetDistanceKm || 42.2);
-    const raceMins = isTri
+    const parsedGoalMins = parseGoalTimeToMinutes(goalTarget);
+    const defaultMins = isTri
       ? (model.modelId === "TRIATHLON_SHORT" ? 50 : model.modelId === "TRIATHLON_70_3" ? 95 : 210)
       : model.sportCategory === "Cycling" ? (model.longRunRules.peakMinutes || 240) : (raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22);
+    const raceMins = parsedGoalMins && parsedGoalMins > 0 ? parsedGoalMins : defaultMins;
     const racePower = runFtp && runFtp > 0
       ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
       : rules.targetIntensityPercentCpOrFtp;
+    const goalSuffix = goalTarget ? ` - Meta: ${goalTarget}` : "";
     return {
       km: Math.round(raceDist * 10) / 10,
       minutes: raceMins,
-      workoutName: `🏆 COMPETICIÓN OBJETIVO: ${model.displayName.split("(")[0].trim()} (${raceDist} km)`,
+      workoutName: `🏆 COMPETICIÓN OBJETIVO: ${model.displayName.split("(")[0].trim()} (${raceDist} km${goalSuffix})`,
       powerTarget: racePower,
-      workoutDoc: `Warmup\n- 15m 65% FTP Activación & Movilidad\n\nMain (Competición Oficial)\n- ${raceDist} km @ Ritmo Objetivo de Carrera\n- Control nutricional: 60-80g CHO/h e hidratación\n\nCooldown\n- 10m Caminata de Recuperación`,
+      workoutDoc: `Warmup\n- 15m 65% CP Activación & Movilidad\n\nMain (Competición Oficial)\n- ${raceDist} km @ Ritmo Objetivo de Carrera\n- Control nutricional: 60-80g CHO/h e hidratación\n\nCooldown\n- 10m Caminata de Recuperación`,
       isPeakBlock: true,
     };
   }
@@ -231,19 +228,21 @@ export function calculateProgressiveLongRun(
   if (Number.isNaN(baseKm) || baseKm <= 0) baseKm = scaledStartKm || 14;
   if (Number.isNaN(baseMins) || baseMins <= 0) baseMins = scaledStartMins || 75;
 
-  // Modulador en semanas de descarga biológica
+  // Modulador en semanas de descarga biológica con variedad pedagógica
   if (isRecoveryWeek) {
     baseKm = Math.max(scaledStartKm, Math.round(baseKm * 0.78));
     baseMins = Math.max(scaledStartMins, Math.round(baseMins * 0.78));
-    const recPower = runFtp && runFtp > 0
-      ? `${Math.round(runFtp * 0.80)}W (80% CP • Asimilación Z2)`
-      : "80% CP (Asimilación Z2)";
+    const dynamicRec = buildDynamicLongRunStructure({
+      baseKm, baseMins, phase, weekNumber, countdown, isPeak: false,
+      runFtp, modelId: model.modelId, sportCategory: model.sportCategory,
+      targetDistanceKm: model.targetDistanceKm, isRecovery: true,
+    });
     return {
       km: baseKm,
       minutes: baseMins,
-      workoutName: `Tirada Larga de Asimilación (${baseKm} km / ${baseMins}m Z2)`,
-      powerTarget: recPower,
-      workoutDoc: `Warmup\n- 12m 74% FTP\n\nMain\n- ${Math.max(10, baseMins - 20)}m 81% FTP\n\nCooldown\n- 8m 72% FTP`,
+      workoutName: dynamicRec.workoutName,
+      powerTarget: dynamicRec.powerTarget,
+      workoutDoc: dynamicRec.workoutDoc,
       isPeakBlock: false,
     };
   }

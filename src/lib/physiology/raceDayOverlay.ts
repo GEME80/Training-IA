@@ -71,7 +71,7 @@ function shiftDate(dateStr: string, days: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function buildRaceDayItem(race: RaceDayInfo, bikeFtp?: number): PlanItem {
+export function buildRaceDayItem(race: RaceDayInfo, bikeFtp?: number, runFtp?: number): PlanItem {
   const { day, formattedDate } = dateMeta(race.date);
   const label = race.priority === "A" ? "🏆 COMPETICIÓN OBJETIVO" : `🏁 COMPETICIÓN ${race.priority}`;
   const base = { id: race.eventId, day, date: race.date, formattedDate, action: "MANTENER" as const, isRestDay: false };
@@ -90,11 +90,18 @@ export function buildRaceDayItem(race: RaceDayInfo, bikeFtp?: number): PlanItem 
       workoutDoc: "Warmup\n- 10m Suave\n\nMain\n- Competición a ritmo CSS sostenido\n\nCooldown\n- 5m Suave",
     };
   }
+  const runPwr = runFtp && runFtp > 0
+    ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
+    : "88-92% CP (Ritmo Objetivo)";
+  const runDoc = runFtp && runFtp > 0
+    ? `Warmup\n- 12m 74% CP\n\nMain (Competición Oficial)\n- Ritmo Objetivo de Carrera (88-92% CP / ${Math.round(runFtp * 0.90)}W)\n\nCooldown\n- 8m 68% CP`
+    : `Warmup\n- 12m 74% CP\n\nMain (Competición Oficial)\n- Ritmo Objetivo de Carrera\n\nCooldown\n- 8m 68% CP`;
+
   return {
     ...base, discipline: "Carrera", activityType: race.isTriathlon ? "Triatlón" : undefined, workoutName: `${label}: ${race.name}`,
-    durationMinutes: race.isTriathlon ? 180 : 60, tss: race.isTriathlon ? 200 : 75, powerTarget: "88-95% Pace",
+    durationMinutes: race.isTriathlon ? 180 : 60, tss: race.isTriathlon ? 200 : 75, powerTarget: runPwr,
     justification: `Competición secundaria (Tipo ${race.priority}). Usar como test de ritmo y nutrición sin vaciarse.`,
-    workoutDoc: "Warmup\n- 12m 74% Pace\n\nMain (Competición)\n- 40m 90% Pace\n\nCooldown\n- 8m 70% Pace",
+    workoutDoc: runDoc,
   };
 }
 
@@ -139,7 +146,7 @@ function buildRecoveryItem(dateStr: string, discipline: DisciplineType, bikeFtp?
 export function applyRaceDaysToPlan(
   plan: PlanItem[],
   races: RaceDayInfo[],
-  opts: { bikeFtp?: number; primaryRaceDate?: string } = {}
+  opts: { bikeFtp?: number; runFtp?: number; primaryRaceDate?: string } = {}
 ): PlanItem[] {
   const secondary = races.filter((r) => {
     if (opts.primaryRaceDate && r.date === opts.primaryRaceDate) return false;
@@ -164,7 +171,7 @@ export function applyRaceDaysToPlan(
     const isAObjective = (p: PlanItem) => p.date === date && /COMPETICI[ÓO]N OBJETIVO/i.test(p.workoutName || "");
     if (date >= minDate && date <= maxDate && !result.some(isAObjective)) {
       result = result.filter((p) => p.date !== date);
-      result.push(buildRaceDayItem(race, opts.bikeFtp));
+      result.push(buildRaceDayItem(race, opts.bikeFtp, opts.runFtp));
     }
     const eve = shiftDate(date, -1);
     if (eve >= minDate && eve <= maxDate && !raceByDate.has(eve) && !result.some((p) => p.date === eve && /COMPETICI/i.test(p.workoutName || ""))) {

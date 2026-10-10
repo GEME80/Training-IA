@@ -20,7 +20,7 @@ export function generateWeekTemplate(
   week: MacrocycleWeek, runFtp?: number, bikeFtp?: number,
   availability: WeeklyAvailabilityMap = DEFAULT_WEEKLY_AVAILABILITY,
   distanceType?: MacrocycleDistanceType, athleteCtl?: number, primaryRaceDate?: string,
-  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; }
+  runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; raceGoal?: string }
 ): PlanItem[] {
   const safeAvailability = resolveEffectiveAvailability(availability);
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -48,7 +48,8 @@ export function generateWeekTemplate(
   const isFtpTestWk = !isRaceWeek && hasCycling && ((microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) || (weekNumber === 7 && totalWeeks >= 9));
   if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) scheduledTests.push({ ...BIKE_TEST_RAMP, recommendedWeekIndex: weekNumber });
   if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
-  const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp);
+  const raceGoal = (week as any).raceGoal || runningOpts?.raceGoal;
+  const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp, raceGoal);
   const longRunDay = resolveLongRunDay(safeAvailability), longRideDay = resolveLongRideDay(safeAvailability);
   const result: PlanItem[] = [];
   let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false, runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
@@ -65,7 +66,7 @@ export function generateWeekTemplate(
     if (isRaceWeek) {
       const isTargetRaceDay = primaryRaceDate ? dateStr === primaryRaceDate : day === "Domingo";
       if (isTargetRaceDay) {
-        result.push(resolveRaceWorkout({ curatedModel, longRun, dateStr, formattedDate, day, runFtp, bikeFtp }));
+        result.push(resolveRaceWorkout({ curatedModel, longRun, dateStr, formattedDate, day, runFtp, bikeFtp, raceGoal }));
         continue;
       }
 
@@ -218,7 +219,7 @@ export function generateWeekTemplate(
         const selBikeRaw = memory.selectDiverseCandidate(bikeVars, bIdx);
         const selBike = applyParametricProgression(selBikeRaw, { weekNumber, phase, isRecovery });
         const isTriOrMulti = curatedModel.sportCategory === "Triathlon" || hasCycling;
-        const midRide = resolveMidweekRide({ phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike });
+        const midRide = resolveMidweekRide({ phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike, weekNumber });
         usedBikeWorkoutNames.add(midRide.workoutName);
         memory.record(midRide.workoutName);
         result.push({
@@ -326,7 +327,7 @@ export function generateWeekTemplate(
     }
   }
 
-  const runningMode = runningOpts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
+  const runningMode = runningOpts?.mode || (week as any).runningTrainingMode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
   return result.map((item) =>
     adaptRunningPlanItem(item, {
       mode: runningMode,

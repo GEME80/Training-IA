@@ -3,10 +3,19 @@ export type WeeklyAvailabilityMap = Record<string, DisciplineType[] | Discipline
 
 export const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
 
-export function normalizeDisciplines(val?: DisciplineType[] | DisciplineType): DisciplineType[] {
+export function normalizeDisciplines(val?: any): DisciplineType[] {
   if (!val) return ["Descanso"];
-  if (Array.isArray(val)) return val.length > 0 ? val : ["Descanso"];
-  return [val];
+  const list = Array.isArray(val) ? val : [val];
+  const mapped = list.map((item) => {
+    if (typeof item !== "string") return "Descanso" as DisciplineType;
+    const s = item.trim().toLowerCase();
+    if (/carrera|running|run/i.test(s)) return "Carrera" as DisciplineType;
+    if (/ciclismo|bike|cycling|ride/i.test(s)) return "Ciclismo" as DisciplineType;
+    if (/fuerza|strength|gym|pesa/i.test(s)) return "Fuerza" as DisciplineType;
+    if (/natacion|natación|swim/i.test(s)) return "Natacion" as DisciplineType;
+    return "Descanso" as DisciplineType;
+  });
+  return mapped.length > 0 ? mapped : ["Descanso"];
 }
 
 export function getDayDisciplines(avail?: WeeklyAvailabilityMap, dayName?: string): DisciplineType[] {

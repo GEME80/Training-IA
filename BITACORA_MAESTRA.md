@@ -6625,6 +6625,74 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 94. Erradicación Total de Monotonía en Macrociclos, Prescripción Dinámica de Metas de Carrera y Blindaje de Modo Potencia Stryd (v5.18)
+
+### 94.1. Diagnóstico Forense y Causas Raíz
+1. **Monotonía en Ciclismo Cruzado en Semanas Consecutivas:**
+   - En [`src/lib/physiology/macrocycleTemplateHelpers.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/macrocycleTemplateHelpers.ts), la función `resolveMidweekRide` contenía una condición `if (isRecovery || (bikeCount > 1 && isTriOrMulti))` que forzaba siempre la sesión *"Ciclismo Aeróbico Z2 con Variaciones de Cadencia (45m)"*, anulando la rotación de candidatos seleccionados del pool (`selBike`).
+2. **Monotonía en Sesiones de Fortalecimiento (S&C):**
+   - En [`src/lib/physiology/specializedStrengthCoaches.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/specializedStrengthCoaches.ts), las semanas de descarga (`isRecovery`) estaban agrupadas junto con `TAPER` en un array de solo 2 elementos. En periodizaciones 3:1 (semanas 4, 8, 12, 16), la operación `(weekNumber - 1) % 2` siempre resultaba en el índice 1, repitiendo exactamente *"Movilidad Articular Dinámica & Descarga"* en cada semana de asimilación. Asimismo, en la fase Build para corredores se repetía *"Potencia Reactiva Sóleo-Aquiles"*.
+3. **Hardcodeo de 195 Minutos (3h15) en Competiciones:**
+   - Tanto en `macrocycleTemplateHelpers.ts` como en `index.ts`, para cualquier distancia $\ge 40$ km se asignaban de forma fija `195` minutos de duración, ignorando por completo la meta del atleta (ej. Tokio 3h05 = 185 min).
+4. **Monotonía en Tiradas Largas Dominicales:**
+   - La estructura pedagógica del domingo solo escalaba en kilómetros o TSS, pero carecía de variedad en las estructuras de entrenamiento y de variantes dedicadas a la asimilación en semanas de descarga.
+5. **Residuos de Ritmo en Atletas con Potenciómetro Stryd (`POWER`):**
+   - Atletas que seleccionaban Stryd CP recibían en algunas sesiones textos residuales de `% Pace` o `/km` en lugar de una prescripción limpia en vatios (% CP).
+
+### 94.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Parser Universal de Objetivos de Carrera (`src/lib/physiology/raceGoalParser.ts` - 50 LOC):**
+   - Creada función `parseGoalTimeToMinutes(goalTarget)` que extrae minutos exactos de formatos `"3:05"`, `"3:05:00"`, `"Sub 3h05"`, `"3h05m"`, `"185 min"`, `"1:25"`, `"38:00"`.
+   - `resolveRaceWorkout` y `calculateProgressiveLongRun` calculan dinámicamente la duración exacta del día de carrera (ej. 185 min para 3:05) y adaptan los requerimientos de nutrición intra-carrera a la duración real.
+2. **Erradicación de Monotonía en Ciclismo Cruzado (`macrocycleTemplateHelpers.ts` - 327 LOC):**
+   - Eliminado el bypass forzado; implementado un pool variado de recuperación (`recList`) con 4 sesiones distintas en semanas de descarga, y progresión paramétrica anti-monotonía en semanas de carga.
+3. **Pools Expandidos y Rotación Coprima en S&C (`specializedStrengthCoaches.ts` - 277 LOC):**
+   - Creado `S5_PREHAB_POOL.RECOVERY` con 5 sesiones especializadas: Isometría analgésica de tendón (Dr. Jill Cook), Estabilidad lumbo-pélvica (Pallof), Movilidad 3D descompresiva, y Tríada prehab. Rotación desacoplada con paso coprimo para garantizar que las semanas 4, 8, 12 y 16 jamás repitan sesión.
+   - Expandido el pool `S1_RUNNING_POOL.BUILD` con Frans Bosch y reactividad pliométrica excéntrica.
+4. **Matriz Anti-Monotonía en Tiradas Largas (`longRunPeriodization.ts` - 347 LOC):**
+   - 4 variantes en Base (Construcción Z2, Progresión final, Ondulado con flotaciones, Fondo mitocondrial con strides).
+   - 4 variantes en Build (Fast-Finish Pfitzinger, Bloques específicos, Ondulado alternado Canova, Simulación nutricional).
+   - 4 variantes de Asimilación para semanas de recuperación.
+5. **Adaptación Estricta Stryd en Modo POWER (`runningWorkoutAdapter.ts` - 345 LOC & `calendarHydration.ts` - 313 LOC):**
+   - Erradicación total de referencias a `/km` o `% Pace` cuando el modo es `POWER`, traduciendo con exactitud a vatios y `% CP`.
+6. **Refactorización Modular de UI (`MacrocycleView.tsx` - 342 LOC & `MacrocycleEmptyState.tsx` - 152 LOC):**
+   - Extraído componente `MacrocycleEmptyState.tsx` manteniendo la vista por debajo de 350 LOC e integrando todos los parámetros de carrera y potencia a `generateWeekTemplate`.
+
+### 94.3. Archivos Modificados / Creados ($\le 350$ LOC)
+- `src/lib/physiology/raceGoalParser.ts`: **50 LOC** [Nuevo] ($\le 350$)
+- `src/components/MacrocycleEmptyState.tsx`: **152 LOC** [Nuevo] ($\le 350$)
+- `src/lib/physiology/specializedStrengthCoaches.ts`: **277 LOC** ($\le 350$)
+- `src/lib/intervals/calendarHydration.ts`: **313 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **327 LOC** ($\le 350$)
+- `src/hooks/useIntervalsSync.ts`: **335 LOC** ($\le 350$)
+- `src/components/dashboard/headcoach/useHeadCoachChat.ts`: **337 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleGenerator.ts`: **338 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **339 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteDashboardViewRouter.tsx`: **339 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteContinuousCalendar.tsx`: **341 LOC** ($\le 350$)
+- `src/components/MacrocycleView.tsx`: **342 LOC** ($\le 350$)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **345 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/longRunPeriodization.ts`: **347 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteCalendarWeekRow.tsx`: **348 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/index.ts`: **348 LOC** ($\le 350$)
+- `src/lib/ai/headcoach/deterministicFallback.ts`: **349 LOC** ($\le 350$)
+- `src/components/MacrocyclePreviewTimeline.tsx`: **142 LOC** ($\le 350$)
+- `src/lib/physiology/raceDayOverlay.ts`: **195 LOC** ($\le 350$)
+- `src/hooks/useAutoIntervalsSync.ts`: **176 LOC** ($\le 350$)
+- `src/lib/gemini/types.ts`: **122 LOC** ($\le 350$)
+
+### 94.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+- Test de regresión ejecutado con `tsx`:
+  - Parser de meta Tokio 3:05: 185 min exactos (PASS ✅).
+  - Anti-monotonía Ciclismo S17 vs S18: Sesiones diferenciadas (PASS ✅).
+  - Rotación S&C semanas de descarga (S4, S8, S12, S16): 4 sesiones completamente distintas (PASS ✅).
+  - Tiradas largas dominicales (S1 a S8): 8 sesiones distintas y progresivas (PASS ✅).
+  - Modo Stryd CP POWER: 0 residuos de ritmo `/km` (PASS ✅).
+
+
 
 
 

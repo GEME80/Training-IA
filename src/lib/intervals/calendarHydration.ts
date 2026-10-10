@@ -78,6 +78,7 @@ function filterEveWorkouts(items: PlanItem[]): PlanItem[] {
 }
 
 export interface CalendarHydrationOptions {
+  runFtp?: number;
   bikeFtp?: number;
   primaryRaceDate?: string;
   targetRaces?: Array<{ date?: string; name?: string; priority?: string; distance?: string }>;
@@ -107,18 +108,18 @@ export function hydrateWeekPlanFromEvents(
   if (!calendarEvents || calendarEvents.length === 0 || !week?.startDate) {
     const overlaid = applyRaceDaysToPlan(fallbackPlan, detectedRaces, {
       bikeFtp: opts?.bikeFtp,
+      runFtp: opts?.runFtp,
       primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
     });
-    if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
-      return overlaid.map((item) =>
-        adaptRunningPlanItem(item, {
-          mode: "PACE",
-          thresholdPaceSec: runningOpts.thresholdPaceSec,
-          lthr: runningOpts.lthr,
-        })
-      );
-    }
-    return overlaid;
+    const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+    return overlaid.map((item) =>
+      adaptRunningPlanItem(item, {
+        mode: runMode,
+        runFtp: opts?.runFtp,
+        thresholdPaceSec: runningOpts?.thresholdPaceSec,
+        lthr: runningOpts?.lthr,
+      })
+    );
   }
 
   const weekStart = new Date(week.startDate + "T00:00:00");
@@ -296,18 +297,17 @@ export function hydrateWeekPlanFromEvents(
 
   const overlaidItems = applyRaceDaysToPlan(hydratedItems, detectedRaces, {
     bikeFtp: opts?.bikeFtp,
+    runFtp: opts?.runFtp,
     primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
   });
 
-  if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
-    return overlaidItems.map((item) =>
-      adaptRunningPlanItem(item, {
-        mode: "PACE",
-        thresholdPaceSec: runningOpts.thresholdPaceSec,
-        lthr: runningOpts.lthr,
-      })
-    );
-  }
-
-  return overlaidItems;
+  const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+  return overlaidItems.map((item) =>
+    adaptRunningPlanItem(item, {
+      mode: runMode,
+      runFtp: opts?.runFtp,
+      thresholdPaceSec: runningOpts?.thresholdPaceSec,
+      lthr: runningOpts?.lthr,
+    })
+  );
 }

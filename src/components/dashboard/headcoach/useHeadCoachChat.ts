@@ -33,35 +33,18 @@ export interface UseHeadCoachChatProps {
   weeklyAvailability?: WeeklyAvailabilityMap;
   currentPlan: PlanItem[];
   dailyExecutedActivities?: Record<string, any>;
-  apiKey?: string;
-  geminiApiKey?: string;
-  selectedModel?: string;
-  temperature?: number;
-  uid?: string;
-  email?: string;
+  apiKey?: string; geminiApiKey?: string; selectedModel?: string; temperature?: number;
+  uid?: string; email?: string;
   onApplyPlanAndSync?: (plan?: PlanItem[]) => Promise<void>;
   onPlanUpdate?: (updatedPlan: PlanItem[]) => void;
   onSelectWeek?: (weekNumber: number) => void;
 }
 
 export function useHeadCoachChat({
-  profile,
-  effectiveBlueprint,
-  activeWeekNumber,
-  realCurrentWeekNumber,
-  selectedWeekData,
-  weeklyAvailability,
-  currentPlan,
-  dailyExecutedActivities = {},
-  apiKey,
-  geminiApiKey,
-  selectedModel = "gemini-3.5-flash",
-  temperature = 0.0,
-  uid,
-  email,
-  onApplyPlanAndSync,
-  onPlanUpdate,
-  onSelectWeek,
+  profile, effectiveBlueprint, activeWeekNumber, realCurrentWeekNumber, selectedWeekData,
+  weeklyAvailability, currentPlan, dailyExecutedActivities = {}, apiKey, geminiApiKey,
+  selectedModel = "gemini-3.5-flash", temperature = 0.0, uid, email,
+  onApplyPlanAndSync, onPlanUpdate, onSelectWeek,
 }: UseHeadCoachChatProps) {
   const [isApplying, setIsApplying] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
@@ -118,13 +101,19 @@ export function useHeadCoachChat({
         ? getOffsetForWeek(selectedWeekData)
         : (activeWeekNumber - realCurrentWeekNumber);
 
+      const runningOpts = {
+        mode: effectiveBlueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
+        raceGoal: effectiveBlueprint?.primaryRace?.goalTarget,
+      };
+      const primaryRaceDate = effectiveBlueprint?.primaryRace?.date || effectiveBlueprint?.raceDate || undefined;
       const effectivePlanForWeek = (activeWeekNumber === realCurrentWeekNumber && currentPlan && currentPlan.length > 0)
         ? currentPlan
         : selectedWeekData
         ? generateWeekTemplate(
-            selectedWeekData, profile.run_ftp, profile.bike_ftp,
+            selectedWeekData, profile.run_ftp || 0, profile.bike_ftp || 0,
             (temporaryAvailability as any) || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability,
-            (effectiveBlueprint?.distanceType as any) || "MARATON_42K", profile.ctl
+            (effectiveBlueprint?.distanceType as any) || "MARATON_42K", profile.ctl,
+            primaryRaceDate, runningOpts
           )
         : currentPlan;
 

@@ -26,10 +26,8 @@ export function handleDeterministicFallback(
 
     const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
     const defaultWeekBlueprint = {
-      weekNumber: targetPlanningWeekNum,
-      countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
-      totalWeeks: totalWeeksCount,
-      startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
+      weekNumber: targetPlanningWeekNum, countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
+      totalWeeks: totalWeeksCount, startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
       phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
       focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
       targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
@@ -37,9 +35,13 @@ export function handleDeterministicFallback(
       maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
     };
 
+    const runningOpts = {
+      mode: macroPhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
+      raceGoal: macroPhase?.primaryRace?.goalTarget,
+    };
     const rawFallbackPlan = generateWeekTemplate(
-      defaultWeekBlueprint as any, profile.run_ftp, profile.bike_ftp,
-      safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date
+      defaultWeekBlueprint as any, profile.run_ftp || 0, profile.bike_ftp || 0,
+      safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts
     );
 
     const fallbackGeneratedPlan = rawFallbackPlan.map((p, pIdx) => {
@@ -192,19 +194,21 @@ ${actionPlanText}`;
       const resolvedDist = (macroPhase?.primaryRace?.distance as any) || "42k";
       const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
       const defaultWeekBlueprint = {
-        weekNumber: targetPlanningWeekNum,
-        countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
-        totalWeeks: totalWeeksCount,
-        startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
+        weekNumber: targetPlanningWeekNum, countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
+        totalWeeks: totalWeeksCount, startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
         phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
         focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
         targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
         microcycleType: isDeload ? ("RECOVERY" as const) : ("LOAD" as const),
         maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
       };
+      const runningOpts = {
+        mode: macroPhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
+        raceGoal: macroPhase?.primaryRace?.goalTarget,
+      };
       const rawTemplate = generateWeekTemplate(
-        defaultWeekBlueprint as any, profile.run_ftp, profile.bike_ftp,
-        safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date
+        defaultWeekBlueprint as any, profile.run_ftp || 0, profile.bike_ftp || 0,
+        safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts
       );
       const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
       modifiedPlan = rawTemplate.map((p) => {

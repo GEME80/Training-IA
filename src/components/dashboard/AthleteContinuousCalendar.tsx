@@ -143,12 +143,12 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
     ? generateWeekTemplate(
         activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability,
         (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
-        undefined, runningOpts
+        blueprint.primaryRace?.date, runningOpts
       )
     : [];
   const activeWeekPlan = activeWeekForAgenda
     ? hydrateWeekPlanFromEvents(activeWeekForAgenda, rawActiveWeekPlan, calendarEvents, runningOpts, {
-        bikeFtp, primaryRaceDate: blueprint?.primaryRace?.date,
+        runFtp, bikeFtp, primaryRaceDate: blueprint?.primaryRace?.date,
         targetRaces: blueprint?.primaryRace ? [blueprint.primaryRace] : undefined,
       })
     : [];

@@ -64,10 +64,10 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   const rawWeekPlan = isHistoricalOnly ? [] : generateWeekTemplate(
     week, runFtp, bikeFtp, effectiveAvailability,
     (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
-    undefined, runningOpts
+    blueprint.primaryRace?.date, runningOpts
   );
   const weekPlan = hydrateWeekPlanFromEvents(week, rawWeekPlan, calendarEvents, runningOpts, {
-    bikeFtp, primaryRaceDate: blueprint?.primaryRace?.date,
+    runFtp, bikeFtp, primaryRaceDate: blueprint?.primaryRace?.date,
     targetRaces: blueprint?.primaryRace ? [blueprint.primaryRace] : undefined,
   });
 

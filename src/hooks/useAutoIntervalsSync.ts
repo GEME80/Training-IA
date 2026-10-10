@@ -86,6 +86,12 @@ export function useAutoIntervalsSync({
           .filter((w) => !w.startDate || w.startDate >= fromDate)
           .slice(0, 3);
 
+        const effPrimaryRaceDate = blueprint.primaryRace?.date || blueprint.raceDate || undefined;
+        const effRunningOpts = {
+          ...runningOpts,
+          mode: blueprint.runningTrainingMode || runningOpts?.mode || (runFtp > 0 ? "POWER" : "PACE"),
+          raceGoal: blueprint.primaryRace?.goalTarget,
+        };
         const rollingPlan: PlanItem[] = [];
         targetWeeks.forEach((week) => {
           const weekPlan = generateWeekTemplate(
@@ -95,8 +101,8 @@ export function useAutoIntervalsSync({
             resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
             (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
             ctl || 35,
-            undefined,
-            runningOpts
+            effPrimaryRaceDate,
+            effRunningOpts
           );
           rollingPlan.push(...weekPlan);
         });

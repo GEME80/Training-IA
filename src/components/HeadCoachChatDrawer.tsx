@@ -541,11 +541,16 @@ export const HeadCoachChatDrawer: React.FC<HeadCoachChatDrawerProps> = ({
 
       const rawFallback = generateWeekTemplate(
         currentWeekBp as any,
-        profile.run_ftp,
-        profile.bike_ftp,
+        profile.run_ftp || 0,
+        profile.bike_ftp || 0,
         resolveEffectiveAvailability(weeklyAvailability),
         (macrocyclePhase?.blueprint?.distanceType || macrocyclePhase?.primaryRace?.distance) as any,
-        profile.ctl
+        profile.ctl,
+        macrocyclePhase?.primaryRace?.date,
+        {
+          mode: macrocyclePhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
+          raceGoal: macrocyclePhase?.primaryRace?.goalTarget,
+        }
       );
 
       // Mapear fechas reales sin asumir que el array tiene exactamente 7 items

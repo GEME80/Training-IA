@@ -57,10 +57,20 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
   };
 
   const weeks = blueprint.weeks || [];
-  const selectedWeek: MacrocycleWeek = weeks[selectedIndex] || weeks[0];
+  const selectedWeek = weeks[selectedIndex];
   const effAvailability = (blueprint?.availabilitySnapshot as any) || weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY;
+  const runningMode = blueprint.runningTrainingMode || (effRunFtp > 0 ? "POWER" : "PACE");
+  const runningOpts = {
+    mode: runningMode,
+    raceGoal: blueprint.primaryRace?.goalTarget,
+  };
   const selectedWeekPlan = selectedWeek
-    ? generateWeekTemplate(selectedWeek, effRunFtp, effBikeFtp, effAvailability, distanceType)
+    ? generateWeekTemplate(
+        selectedWeek, effRunFtp, effBikeFtp, effAvailability,
+        distanceType || (blueprint.distanceType as any), blueprint.athleteCtlAtCreation,
+        blueprint.primaryRace?.date || blueprint.raceDate || undefined,
+        runningOpts
+      )
     : [];
 
   const getOffsetForWeek = (w: MacrocycleWeek): number => {
@@ -102,7 +112,7 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
           dailyExecutedActivities={dailyExecutedActivities}
           onOpenCoachWithPlan={() => {
             const offset = getOffsetForWeek(selectedWeek);
-            const plan = generateWeekTemplate(selectedWeek, effRunFtp, effBikeFtp, effAvailability, distanceType);
+            const plan = selectedWeekPlan;
             if (onRecalibrateWeekWithAI) {
               onRecalibrateWeekWithAI(offset, plan);
             } else if (onOpenCoachChat) {

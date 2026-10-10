@@ -263,7 +263,8 @@ export function generateCustomMacrocycleBlueprint(
     }
 
     // Cálculo dinámico progresivo desde el modelo curado (SSOT) con volumeScaleFactor, athleteCtl y runFtp del atleta
-    const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown, volumeScaleFactor, athleteCtl, config.athleteMetrics?.runFtp);
+    const raceGoalTarget = config.primaryRace?.goalTarget || (config as any).raceGoal;
+    const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, countdown, volumeScaleFactor, athleteCtl, config.athleteMetrics?.runFtp, raceGoalTarget);
     const targetTss = calculateProgressiveWeeklyTss(curatedModel, weekNumber, totalWeeks, isRecoveryWeek, phase, dynamicTssBaseline, { startTss: peakPlanCalc.startWeeklyTss, peakTss: peakPlanCalc.targetPeakWeeklyTss });
 
     const hasCycling = curatedModel.sportCategory === "Cycling" || curatedModel.sportCategory === "Triathlon" ||
@@ -286,7 +287,7 @@ export function generateCustomMacrocycleBlueprint(
     const isTri = curatedModel.sportCategory === "Triathlon";
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
     const raceNote = (isEventDriven && countdown === 1)
-      ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
+      ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km${raceGoalTarget ? ` - Meta: ${raceGoalTarget}` : ""}). Carrera objetivo con ritmo específico y tapering.`)
       : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? "Fondo dominical" : "Tirada dominical"} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;
 
@@ -297,23 +298,12 @@ export function generateCustomMacrocycleBlueprint(
     if (isCurrent) currentWeekIndex = i;
 
     weeks.push({
-      weekNumber,
-      countdownWeeks: countdown,
-      startDate: formatDate(weekMon),
-      endDate: formatDate(weekSun),
-      formattedRange: formatRange(weekMon, weekSun),
-      phase,
-      phaseLabel,
-      microcycleType: microType,
-      microcycleLabel: microLabel,
-      microcycleBadgeColor: badgeColor,
-      targetTss,
-      maxLongRunMinutes: longRun.minutes,
-      focusDescription,
-      isCurrentWeek: isCurrent,
-      isPastWeek: isPast,
-      isFutureWeek: isFuture,
-    });
+      weekNumber, countdownWeeks: countdown, startDate: formatDate(weekMon), endDate: formatDate(weekSun),
+      formattedRange: formatRange(weekMon, weekSun), phase, phaseLabel, microcycleType: microType,
+      microcycleLabel: microLabel, microcycleBadgeColor: badgeColor, targetTss, maxLongRunMinutes: longRun.minutes,
+      focusDescription, isCurrentWeek: isCurrent, isPastWeek: isPast, isFutureWeek: isFuture,
+      ...(raceGoalTarget ? { raceGoal: raceGoalTarget } : {}),
+    } as any);
   }
 
   if (currentMonday.getTime() < startMonday.getTime()) currentWeekIndex = 0;

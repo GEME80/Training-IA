@@ -140,9 +140,13 @@ export function mapPowerPctToPacePct(pwrPct: number): number {
 export function adaptRunningWorkoutDoc(
   workoutDoc: string, discipline: string, isQuality: boolean = false, mode: RunningTrainingMode = "POWER", workoutName: string = ""
 ): string {
-  if (!workoutDoc || discipline !== "Carrera") return workoutDoc;
   if (mode === "POWER") {
-    return workoutDoc.replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/%\s*FTP\b/gi, "% CP");
+    return workoutDoc
+      .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")
+      .replace(/%\s*FTP\b/gi, "% CP")
+      .replace(/@\s*\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km/gi, "@ Ritmo Umbral (100% CP)")
+      .replace(/\(\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\/km\)/gi, "")
+      .replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd Critical Power (CP)");
   }
   const isSoltura = /soltura|regenerativ|suave|z1-z2/i.test(workoutName);
   let currentSec: "WARMUP" | "MAIN" | "COOLDOWN" | "INTERVALS" = "MAIN";
@@ -251,6 +255,9 @@ export function interpolateWorkoutTarget(
   if (mode === "POWER") {
     let cleanPwr = stripNestedTarget(rawTarget, /\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi)
       .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")
+      .replace(/%\s*FTP\b/gi, "% CP")
+      .replace(/\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km\b/gi, "")
+      .replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP")
       .replace(/Ritmo\s*Umbral/gi, "Stryd CP")
       .replace(/\(Z1 Puro\)/gi, "(Z1)")
       .replace(/\(Z2 Aeróbico\)/gi, "(Z2)");
@@ -308,7 +315,7 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
   if (mode === "POWER") {
     const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, "POWER", item.workoutName || "") : item.workoutDoc;
     const rawTarget = item.powerTarget ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "POWER", runFtp: opts.runFtp, isQuality }) : item.powerTarget;
-    const adaptedTarget = rawTarget?.replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP");
+    const adaptedTarget = rawTarget?.replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/\b\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?\/km\b/gi, "").trim();
     const adaptedName = item.workoutName
       ? item.workoutName
           .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")

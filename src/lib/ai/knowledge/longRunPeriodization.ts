@@ -23,6 +23,7 @@ export function buildDynamicLongRunStructure(params: {
   modelId?: string;
   sportCategory?: string;
   targetDistanceKm?: number;
+  isRecovery?: boolean;
 }): LongRunStructureResult {
   const {
     baseKm: rawKm,
@@ -219,31 +220,66 @@ export function buildDynamicLongRunStructure(params: {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // 5. MARATÓN 42.195 KM (100% INTACTO E INALTERADO)
+  // 5. MARATÓN 42.195 KM (PERIODIZACIÓN CIENTÍFICA CANOVA / PFITZINGER)
   // ══════════════════════════════════════════════════════════════
   const baseKm = rawKm;
   const baseMins = rawMins;
+
+  if (params.isRecovery) {
+    const recIdx = (weekNumber - 1) % 4;
+    if (recIdx === 0) {
+      return {
+        workoutName: `Tirada de Asimilación & Descarga Biológica (${baseKm} km / ${baseMins}m Z1-Z2)`,
+        powerTarget: fmtPwr(76, 80, "Asimilación Z1-Z2"),
+        workoutDoc: `Warmup\n- 12m 72% CP\n\nMain (Rodaje Regenerativo Cómodo)\n- ${Math.max(15, baseMins - 22)}m 78% CP\n\nCooldown\n- 10m 70% CP`,
+      };
+    }
+    if (recIdx === 1) {
+      return {
+        workoutName: `Rodaje Largo de Asimilación Activa & Fluidez (${baseKm} km / ${baseMins}m Z2)`,
+        powerTarget: fmtPwr(78, 81, "Z2 Fluida"),
+        workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Cómoda y Estable)\n- ${Math.max(15, baseMins - 25)}m 80% CP\n\nCooldown\n- 10m 70% CP`,
+      };
+    }
+    if (recIdx === 2) {
+      return {
+        workoutName: `Tirada de Descarga Regenerativa & Lavado Metabólico (${baseKm} km / ${baseMins}m)`,
+        powerTarget: fmtPwr(75, 79, "Descarga Z1-Z2"),
+        workoutDoc: `Warmup\n- 10m 70% CP\n\nMain (Asimilación Biológica)\n- ${Math.max(15, baseMins - 20)}m 77% CP\n\nCooldown\n- 10m 68% CP`,
+      };
+    }
+    return {
+      workoutName: `Tirada de Asimilación Aeróbica & Reseteo Mitocondrial (${baseKm} km / ${baseMins}m)`,
+      powerTarget: fmtPwr(77, 81, "Reseteo Z2"),
+      workoutDoc: `Warmup\n- 12m 72% CP\n\nMain (Z2 Regenerativa)\n- ${Math.max(15, baseMins - 22)}m 79% CP\n\nCooldown\n- 10m 70% CP`,
+    };
+  }
 
   if (isPeak) {
     if (countdown <= 3 && countdown > 1) {
       return {
         workoutName: `📉 DESCENSO PICO — Transición a Tapering (${baseKm} km / ${baseMins}m @ Ritmo Carrera)`,
         powerTarget: fmtPwr(88, 92, "Ritmo de Carrera"),
-        workoutDoc: `Warmup\n- 15m 74% FTP\n\nMain (Ritmo Específico)\n- 25m 90% FTP\n- ${Math.max(10, baseMins - 50)}m 81% FTP\n\nCooldown\n- 10m 72% FTP`,
+        workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Ritmo Específico)\n- 25m 90% CP\n- ${Math.max(10, baseMins - 50)}m 81% CP\n\nCooldown\n- 10m 72% CP`,
+      };
+    }
+    if (weekNumber % 2 === 0) {
+      return {
+        workoutName: `🔥 FONDO CUMBRE ESPECÍFICO CANOVA (${baseKm} km / ${baseMins}m con Bloques de Ritmo Carrera)`,
+        powerTarget: fmtPwr(90, 94, "Ritmo de Carrera"),
+        workoutDoc: `Warmup\n- 20m 75% CP\n\nMain (Bloques Canova)\n2x\n- 25m 92% CP\n- 5m 75% CP\n\nMain (Z2)\n- ${Math.max(10, baseMins - 85)}m 82% CP\n\nCooldown\n- 10m 72% CP`,
       };
     }
     return {
-      workoutName: `🔥 FONDO CUMBRE ESPECÍFICO CANOVA (${baseKm} km / ${baseMins}m con Bloques de Ritmo Carrera)`,
-      powerTarget: fmtPwr(90, 94, "Ritmo de Carrera"),
-      workoutDoc: `Warmup\n- 20m 75% CP\n\nMain (Bloques Canova)\n2x\n- 25m 92% CP\n- 5m 75% CP\n\nMain (Z2)\n- ${Math.max(10, baseMins - 85)}m 82% CP\n\nCooldown\n- 10m 72% CP`,
+      workoutName: `🔥 SIMULACIÓN CUMBRE DE MARATÓN CONTINUA (${baseKm} km / ${baseMins}m @ 90% CP)`,
+      powerTarget: fmtPwr(88, 91, "Simulación Ritmo Objetivo"),
+      workoutDoc: `Warmup\n- 20m 75% CP\n\nMain (Ritmo Objetivo Sostenido)\n- ${Math.max(20, baseMins - 40)}m 90% CP\n- Nutrición: 60-80g CHO/h\n\nCooldown\n- 10m 72% CP`,
     };
   }
 
   if (phase === "BUILD") {
-    // Alternancia 3:1 de estímulos en BUILD: Fast-Finish vs Bloques Ritmo vs Progresivo
-    const styleIdx = (weekNumber - 1) % 3;
+    const styleIdx = (weekNumber - 1) % 4;
     if (styleIdx === 0) {
-      // Fast-Finish Pfitzinger
       const fastMins = Math.min(25, Math.max(15, Math.round(baseMins * 0.22)));
       const easyMins = baseMins - fastMins - 25;
       const targetStr = runFtp && runFtp > 0
@@ -256,7 +292,6 @@ export function buildDynamicLongRunStructure(params: {
       };
     }
     if (styleIdx === 1) {
-      // Bloques de Ritmo Maratón Intercalados
       const blockMins = Math.min(20, Math.max(12, Math.round(baseMins * 0.16)));
       const baseSub = baseMins - (blockMins * 2 + 5) - 25;
       return {
@@ -265,21 +300,42 @@ export function buildDynamicLongRunStructure(params: {
         workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2)\n- ${Math.max(10, Math.round(baseSub / 2))}m 81% CP\n\n2x\n- ${blockMins}m 90% CP\n- 5m 74% CP\n\nMain (Z2)\n- ${Math.max(10, Math.round(baseSub / 2))}m 81% CP\n\nCooldown\n- 10m 72% CP`,
       };
     }
-    // Fartlek Aeróbico de Fondo
+    if (styleIdx === 2) {
+      return {
+        workoutName: `Tirada Larga Ondulada con Cambios de Ritmo Aeróbico (${baseKm} km / ${baseMins}m)`,
+        powerTarget: fmtPwr(80, 88, "Ondulaciones"),
+        workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2)\n- ${Math.max(15, baseMins - 55)}m 81% CP\n\nMain (Flotaciones Dinámicas)\n3x\n- 5m 88% CP\n- 3m 75% CP\n\nCooldown\n- 10m 72% CP`,
+      };
+    }
     return {
-      workoutName: `Tirada Larga Ondulada con Cambios de Ritmo Aeróbico (${baseKm} km / ${baseMins}m)`,
-      powerTarget: fmtPwr(80, 88, "Ondulaciones"),
-      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2)\n- ${Math.max(15, baseMins - 55)}m 81% CP\n\nMain (Flotaciones Dinámicas)\n3x\n- 5m 88% CP\n- 3m 75% CP\n\nCooldown\n- 10m 72% CP`,
+      workoutName: `Tirada Larga de Simulación Nutricional & Ritmo Estable (${baseKm} km / ${baseMins}m @ 84% CP)`,
+      powerTarget: fmtPwr(82, 85, "Z2 Alta Estable"),
+      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Ritmo Firme y Nutrición)\n- ${Math.max(20, baseMins - 30)}m 84% CP\n- Pauta: gel cada 40m e hidratación constante\n\nCooldown\n- 10m 70% CP`,
     };
   }
 
-  // BASE: Alternancia de Construcción Aeróbica Pura y Progresión Suave
-  if (weekNumber % 2 === 0) {
+  // BASE: Cuatro estructuras pedagógicas de volumen y eficiencia
+  const baseIdx = (weekNumber - 1) % 4;
+  if (baseIdx === 1) {
     const finalProgMins = Math.min(15, Math.max(10, Math.round(baseMins * 0.15)));
     return {
       workoutName: `Tirada Larga Aeróbica con Progresión Final (${baseKm} km / ${baseMins}m Z2)`,
       powerTarget: fmtPwr(80, 85, "Z2 -> Progresión Final"),
       workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Cómoda)\n- ${Math.max(15, baseMins - finalProgMins - 25)}m 81% CP\n\nFinal Ágil\n- ${finalProgMins}m 85% CP\n\nCooldown\n- 10m 72% CP`,
+    };
+  }
+  if (baseIdx === 2) {
+    return {
+      workoutName: `Tirada Larga Ondulada con Flotaciones de Cadencia (${baseKm} km / ${baseMins}m)`,
+      powerTarget: fmtPwr(80, 86, "Z2 + Flotaciones"),
+      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Base)\n- ${Math.max(15, baseMins - 45)}m 80% CP\n\nFlotaciones de Cadencia\n3x\n- 4m 86% CP\n- 2m 76% CP\n\nCooldown\n- 8m 70% CP`,
+    };
+  }
+  if (baseIdx === 3) {
+    return {
+      workoutName: `Fondo Mitocondrial Extensivo con Strides Reactivos (${baseKm} km / ${baseMins}m)`,
+      powerTarget: fmtPwr(79, 105, "Z2 + Strides"),
+      workoutDoc: `Warmup\n- 15m 74% CP\n\nMain (Z2 Pura)\n- ${Math.max(15, baseMins - 35)}m 80% CP\n\nRectas (Strides)\n5x\n- 20s 105% CP\n- 40s 65% CP\n\nCooldown\n- 5m 70% CP`,
     };
   }
 

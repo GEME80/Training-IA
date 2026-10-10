@@ -115,12 +115,18 @@ export function useIntervalsSync({
       return;
     }
 
+    const effPrimaryRaceDate = blueprint.primaryRace?.date || blueprint.raceDate || primaryRace?.date || undefined;
+    const effRunningOpts = {
+      ...runningOpts,
+      mode: blueprint.runningTrainingMode || runningOpts?.mode || (runFtp > 0 ? "POWER" : "PACE"),
+      raceGoal: blueprint.primaryRace?.goalTarget || primaryRace?.goalTarget,
+    };
     const fullCyclePlan: PlanItem[] = [];
     blueprint.weeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
         week, runFtp, bikeFtp,
         resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
-        (blueprint.distanceType || primaryRace?.distance) as any, ctl, undefined, runningOpts
+        (blueprint.distanceType || primaryRace?.distance) as any, ctl, effPrimaryRaceDate, effRunningOpts
       );
       fullCyclePlan.push(...weekPlan);
     });
@@ -214,11 +220,17 @@ export function useIntervalsSync({
     }
 
     const triweeklyPlan: PlanItem[] = [];
+    const effPrimaryRaceDate = blueprint.primaryRace?.date || blueprint.raceDate || primaryRace?.date || undefined;
+    const effRunningOpts = {
+      ...runningOpts,
+      mode: blueprint.runningTrainingMode || runningOpts?.mode || (runFtp > 0 ? "POWER" : "PACE"),
+      raceGoal: blueprint.primaryRace?.goalTarget || primaryRace?.goalTarget,
+    };
     targetWeeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
         week, runFtp, bikeFtp,
         resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
-        (blueprint.distanceType || primaryRace?.distance) as any, ctl, undefined, runningOpts
+        (blueprint.distanceType || primaryRace?.distance) as any, ctl, effPrimaryRaceDate, effRunningOpts
       );
       triweeklyPlan.push(...weekPlan);
     });

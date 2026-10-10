@@ -130,10 +130,13 @@ export function selectQualityWorkout(
   });
 }
 
+import { parseGoalTimeToMinutes } from "./raceGoalParser";
+export { parseGoalTimeToMinutes };
+
 export function resolveRaceWorkout(params: {
-  curatedModel: ReturnType<typeof resolveTrainingModel>; longRun: any; dateStr: string; formattedDate: string; day?: string; runFtp?: number; bikeFtp?: number;
+  curatedModel: ReturnType<typeof resolveTrainingModel>; longRun: any; dateStr: string; formattedDate: string; day?: string; runFtp?: number; bikeFtp?: number; raceGoal?: string;
 }): PlanItem {
-  const { curatedModel, longRun, dateStr, formattedDate, day = "Domingo", runFtp, bikeFtp } = params;
+  const { curatedModel, longRun, dateStr, formattedDate, day = "Domingo", runFtp, bikeFtp, raceGoal } = params;
   const sportCat = curatedModel.sportCategory;
 
   if (sportCat === "Triathlon") {
@@ -187,13 +190,21 @@ export function resolveRaceWorkout(params: {
 
   const raceDist = curatedModel.targetDistanceKm || longRun.km || 42.2;
   const is5K = raceDist <= 6, is10K = raceDist > 6 && raceDist <= 12, is21K = raceDist > 12 && raceDist <= 25;
-  const durMins = is5K ? 25 : is10K ? 50 : is21K ? 105 : 195;
-  const raceTss = is5K ? 45 : is10K ? 85 : is21K ? 160 : 260;
+  const goalCandidate = raceGoal || longRun.goalTarget || (curatedModel as any).raceGoal;
+  const parsedMins = parseGoalTimeToMinutes(goalCandidate);
+  const defaultDur = is5K ? 25 : is10K ? 50 : is21K ? 105 : 195;
+  const durMins = parsedMins && parsedMins > 0 ? parsedMins : defaultDur;
+  const raceTss = is5K ? 45 : is10K ? 85 : is21K ? 160 : Math.round(durMins * 1.35);
+
+  const goalTag = goalCandidate ? ` • Meta: ${goalCandidate}` : "";
+  const nameGoalTag = goalCandidate && !longRun.workoutName?.includes(goalCandidate) ? ` (Meta: ${goalCandidate})` : "";
+  const baseName = longRun.workoutName || `🏆 COMPETICIÓN OBJETIVO: ${curatedModel.displayName.split("(")[0].trim()} (${raceDist} km)`;
+  const finalName = `${baseName}${nameGoalTag}`;
 
   return {
-    day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: longRun.workoutName,
+    day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: finalName,
     action: "MANTENER", durationMinutes: durMins, tss: raceTss, powerTarget: longRun.powerTarget,
-    justification: `🏆 DÍA DE COMPETICIÓN (${raceDist} km). Ejecutar estrategia de nutrición y ritmo objetivo.`,
+    justification: `🏆 DÍA DE COMPETICIÓN (${raceDist} km${goalTag}). Ejecutar nutrición (${Math.min(90, Math.round(durMins * 0.4))}g CHO/h) y ritmo objetivo para cruzar la meta en ~${durMins}m.`,
     workoutDoc: longRun.workoutDoc, isRestDay: false,
   };
 }
@@ -253,10 +264,11 @@ export function resolveFridayFartlek(
 }
 
 export function resolveMidweekRide({
-  phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike,
+  phase, isRecovery, bikeCount, isTriOrMulti, bikeFtp, selBike, weekNumber = 1,
 }: {
   phase: string; isRecovery: boolean; bikeCount: number; isTriOrMulti: boolean;
   bikeFtp?: number; selBike: { name: string; durationMin?: number; powerTarget: string; justification: string; workoutDoc: string };
+  weekNumber?: number;
 }) {
   if (phase === "TAPER") {
     return {
@@ -266,16 +278,21 @@ export function resolveMidweekRide({
       workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain (Afinamiento Aeróbico Dinámico)\n3x\n- 2m 80% FTP\n- 2m 55% FTP\n\nCooldown\n- 8m 50% FTP",
     };
   }
-  if (isRecovery || (bikeCount > 1 && isTriOrMulti)) {
-    const dur = isRecovery ? 35 : 45;
+  if (isRecovery) {
+    const recList = [
+      { name: "Ciclismo de Asimilación & Soltura Z1-Z2 (35m)", doc: "Warmup\n- 10m 55% FTP\n\nMain\n- 20m 60% FTP (90-95 rpm)\n\nCooldown\n- 5m 50% FTP", pwr: 0.60, just: "Regeneración metabólica y asimilación biológica activa." },
+      { name: "Descongestión Metabólica & Cadencia Fluida Z1 (35m)", doc: "Warmup\n- 10m 50% FTP\n\nMain\n- 20m 56% FTP (95-100 rpm)\n\nCooldown\n- 5m 45% FTP", pwr: 0.56, just: "Cadencia ágil de descongestión muscular y optimización del retorno venoso." },
+      { name: "Ciclismo Regenerativo con Aceleraciones Suaves (35m Z1-Z2)", doc: "Warmup\n- 10m 55% FTP\n\nMain\n- 15m 60% FTP\n3x\n- 30s 75% FTP (100 rpm)\n- 90s 50% FTP\n\nCooldown\n- 5m 50% FTP", pwr: 0.62, just: "Estimulación neuromuscular suave sin elevar la concentración de lactato." },
+      { name: "Soltura Biológica & Oxigenación Mitocondrial (30m Z1)", doc: "Warmup\n- 8m 50% FTP\n\nMain\n- 17m 55% FTP\n\nCooldown\n- 5m 45% FTP", pwr: 0.55, just: "Oxigenación capilar profunda y recuperación periférica sin fatiga residual." },
+    ];
+    const pick = recList[(Math.max(0, weekNumber - 1) + (bikeCount - 1)) % recList.length];
     return {
-      workoutName: isRecovery ? "Ciclismo de Asimilación & Soltura (35m Z1-Z2)" : "Ciclismo Aeróbico Z2 con Variaciones de Cadencia (45m)",
-      durationMinutes: dur, tss: isRecovery ? 20 : 29,
-      powerTarget: bikeFtp ? `${Math.round(bikeFtp * (isRecovery ? 0.60 : 0.65))}W (${isRecovery ? "60% FTP" : "65% FTP"})` : "65% FTP",
-      justification: isRecovery ? "Regeneración metabólica y asimilación biológica." : "Eficiencia de pedaleo aeróbico Z2 y cadencia sin fatiga concurrente.",
-      workoutDoc: isRecovery ? "Warmup\n- 10m 55% FTP\n\nMain\n- 20m 60% FTP\n\nCooldown\n- 5m 50% FTP" : "Warmup\n- 10m 55% FTP\n\nMain\n- 25m 65% FTP (90-95 rpm)\n- 5m 72% FTP\n\nCooldown\n- 5m 50% FTP",
+      workoutName: pick.name, durationMinutes: 35, tss: 20,
+      powerTarget: bikeFtp ? `${Math.round(bikeFtp * pick.pwr)}W (${Math.round(pick.pwr * 100)}% FTP)` : `${Math.round(pick.pwr * 100)}% FTP`,
+      justification: pick.just, workoutDoc: pick.doc,
     };
   }
+
   const dur = selBike.durationMin || 50;
   return {
     workoutName: selBike.name, durationMinutes: dur, tss: Math.round(dur * 0.78),

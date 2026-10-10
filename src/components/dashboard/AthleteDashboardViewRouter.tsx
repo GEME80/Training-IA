@@ -53,11 +53,21 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
     isReadOnly,
   });
 
+  const effectiveRunningMode =
+    season.blueprint?.runningTrainingMode ||
+    ((telemetry.profile.hasRunningPowerMeter === false ||
+      telemetry.profile.runningTrainingMode === "PACE" ||
+      telemetry.profile.runningTrainingMode === "HYBRID" ||
+      !telemetry.profile.run_ftp)
+      ? ("PACE" as const)
+      : ("POWER" as const));
+
   const runningOpts = {
-    mode: (telemetry.profile.hasRunningPowerMeter === false || telemetry.profile.runningTrainingMode === "PACE" || telemetry.profile.runningTrainingMode === "HYBRID" || !telemetry.profile.run_ftp) ? "PACE" as const : "POWER" as const,
+    mode: effectiveRunningMode,
     thresholdPaceSec: telemetry.profile.runThresholdPaceSecPerKm,
     thresholdPaceStr: telemetry.profile.runThresholdPaceStr,
     lthr: telemetry.profile.lthr,
+    raceGoal: season.blueprint?.primaryRace?.goalTarget || season.primaryRace?.goalTarget,
   };
 
   if (activeNavSection === "dashboard") {
@@ -185,15 +195,16 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
                   resolveEffectiveAvailability((season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability),
                   (season.macrocyclePhase?.blueprint?.distanceType || season.primaryRace?.distance) as any,
                   telemetry.profile.ctl,
-                  undefined,
+                  season.blueprint?.primaryRace?.date || season.primaryRace?.date || undefined,
                   runningOpts
                 ),
                 telemetry.calendarEvents,
                 runningOpts,
                 {
+                  runFtp: telemetry.profile.run_ftp,
                   bikeFtp: telemetry.profile.bike_ftp,
-                  primaryRaceDate: season.blueprint?.primaryRace?.date,
-                  targetRaces: season.blueprint?.primaryRace ? [season.blueprint.primaryRace] : undefined,
+                  primaryRaceDate: season.blueprint?.primaryRace?.date || season.primaryRace?.date,
+                  targetRaces: season.blueprint?.primaryRace ? [season.blueprint.primaryRace] : (season.primaryRace ? [season.primaryRace] : undefined),
                 }
               )
             : []

@@ -29,7 +29,10 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
       startWeek: number;
       endWeek: number;
       weeksCount: number;
+      totalTss: number;
       avgTss: number;
+      minTss: number;
+      maxTss: number;
       maxLongRun: number;
       focusSummary: string;
     }[] = [];
@@ -44,6 +47,7 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
         "Semana de Competición"
       );
 
+      const tss = w.targetTss || 250;
       if (!last || last.phase !== w.phase) {
         groups.push({
           phase: w.phase,
@@ -51,14 +55,20 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
           startWeek: w.weekNumber,
           endWeek: w.weekNumber,
           weeksCount: 1,
-          avgTss: w.targetTss || 250,
+          totalTss: tss,
+          avgTss: tss,
+          minTss: tss,
+          maxTss: tss,
           maxLongRun: w.maxLongRunMinutes || 0,
           focusSummary: w.focusDescription || "Desarrollo de resistencia específica y adaptaciones fisiológicas.",
         });
       } else {
         last.endWeek = w.weekNumber;
         last.weeksCount += 1;
-        last.avgTss = Math.round((last.avgTss * (last.weeksCount - 1) + (w.targetTss || 250)) / last.weeksCount);
+        last.totalTss = (last.totalTss || last.avgTss * (last.weeksCount - 1)) + tss;
+        last.avgTss = Math.round(last.totalTss / last.weeksCount);
+        if (tss < (last.minTss ?? tss)) last.minTss = tss;
+        if (tss > (last.maxTss ?? tss)) last.maxTss = tss;
         if ((w.maxLongRunMinutes || 0) > last.maxLongRun) last.maxLongRun = w.maxLongRunMinutes || 0;
       }
     });
@@ -132,10 +142,15 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[10px] font-mono">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
-                      ~{grp.avgTss} TSS/sem
+                  <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono">
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold" title="Carga promedio semanal de la fase">
+                      Media: ~{grp.avgTss} TSS
                     </span>
+                    {grp.maxTss > grp.avgTss && (
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold border border-amber-500/25" title="Semana con carga cumbre en esta fase">
+                        Pico: {grp.maxTss} TSS
+                      </span>
+                    )}
                     {grp.maxLongRun > 0 && (
                       <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/20">
                         Fondo: {grp.maxLongRun} min

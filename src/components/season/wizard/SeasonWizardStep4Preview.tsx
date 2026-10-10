@@ -5,6 +5,7 @@ import { Sparkles, Rocket, Bot, CheckCircle2, ArrowLeft } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { SeasonCurveChart } from "./SeasonCurveChart";
 import { MacrocyclePhaseBreakdown } from "./MacrocyclePhaseBreakdown";
+import { SeasonMethodologyHighlights } from "./SeasonMethodologyHighlights";
 
 interface SeasonWizardStep4PreviewProps {
   blueprint: MacrocycleBlueprint | null;
@@ -108,22 +109,9 @@ export const SeasonWizardStep4Preview: React.FC<SeasonWizardStep4PreviewProps> =
         primaryRaceName={blueprint.primaryRace?.name}
       />
 
-      {/* 4. JUSTIFICACIÓN & NOTAS DE LA IA */}
+      {/* 4. PILARES & METODOLOGÍA GRÁFICA */}
       {aiNotes && aiNotes.length > 0 && (
-        <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-3.5 border border-slate-200 dark:border-slate-800 space-y-1.5">
-          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-            Criterios de Periodización Aplicados:
-          </span>
-          <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300 font-mono">
-            {aiNotes.map((note, nIdx) => (
-              <li key={nIdx} className="flex items-start gap-1.5">
-                <span className="text-emerald-500">•</span>
-                <span>{note}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <SeasonMethodologyHighlights aiNotes={aiNotes} />
       )}
 
       {/* 4. BOTÓN DE ACTIVACIÓN */}

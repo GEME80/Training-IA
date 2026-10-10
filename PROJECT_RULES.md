@@ -8,15 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v4.07).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v5.10).
 
 Contexto Actual del Proyecto:
+- Versión 5.10: Modernización Integral de Macrociclos (Fases 1 a 4), Fuente Canónica Intervals.icu (`m` vs `mtr`), Motor Paramétrico de Intervalos Métricos de Pista (`metricIntervalEngine.ts`), Buffer Anti-Monotonía de 5 semanas, Sincronización Automática Diferida al 12-Oct y Notificaciones In-App (`RecalibrationNoticeBanner`):
+  * Principio de Fuente Canónica & Sintaxis Intervals.icu: Emisión directa y nativa de `mtr` para metros de distancia (ej. `- 400mtr 102% Pace`, `- 1000mtr 95% CP`) y `m`/`s` para minutos/segundos de duración (ej. `- 10m 74% Pace`, `- 1m30s 55% Pace`). Erradicación de heurísticas de adivinanza regex en `workoutSyntaxSanitizer.ts` (83 LOC).
+  * Motor Paramétrico Métrico (`metricIntervalEngine.ts`): Generación algorítmica de series de pista (200m a 3000m) y descansos cronometrados por tiempo, calculando duración y TSS dinámicamente según ritmo umbral o Stryd CP sin código quemado. Integrado con `macrocycleTemplateHelpers.ts` para un mix balanceado (pista por distancia `mtr` vs fondos por tiempo `m`).
+  * Biblioteca Multi-Sport de 113+ Sesiones Únicas & Sobrecarga Paramétrica (`workoutProgressionEngine.ts`): Progresión matemática de repeticiones ($4x \to 5x \to 6x \to 3x$ deload) y ventana deslizante de exclusión LRU de 5 semanas con cero repeticiones consecutivas.
+  * Sincronización Diferida y Blindaje del Fin de Semana (`useAutoIntervalsSync.ts`): Cero alteraciones en las sesiones planificadas de viernes a domingo; activación automática transparente de las nuevas sesiones a partir del lunes 12 de octubre (`fromDate = 2026-10-12`).
+  * Notificaciones In-App (`RecalibrationNoticeBanner.tsx`): Banner interactivo en el Dashboard que informa al atleta sobre las mejoras y adaptaciones del plan con botón de descarte.
 - Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versión 4.07: Fisiología Integral de Carrera por Ritmo (Pace), Variación Rotativa de Entrenamientos, Superposición Atómica de Competiciones (Giro de Rigo = Ciclismo Puro) y Reflejo Inmediato en Auditoría Admin:
-  * Variación Semanal de Running por Ritmo: Erradicación del 80% monótono en Z2. Implementación de `fridayWorkoutResolver.ts` con rotación sistemática de Fartleks Z2-Z3 piramidales (1'-2'-3'-2'-1'), carreras progresivas con final 70.3 y rodajes con strides neuromusculares; e inyección en `triathlonModel.ts` de bloques estructurados de Tempo Z3 extenso (3x 10m, 2x 15m, 4x 6m @ 4:55-5:15 min/km) con flotaciones activas y progresiones en tiradas largas dominicales (`longRunPeriodization.ts`).
-  * Superposición Atómica de Competiciones (`raceDayOverlay.ts`): Inferencia semántica inequívoca: pruebas como el Giro de Rigo o Gran Fondos se clasifican irrevocablemente como Ciclismo. En el día de carrera se asigna 🏁 COMPETICIÓN B: Giro de Rigo (Ciclismo) (240m, 210 TSS, 68-78% FTP), suprimiendo la tirada a pie y natación simultáneas; la víspera (sábado) se convierte en pedaleo de activación (35m Z1 con 3x1m @ 90% FTP) y el lunes posterior en rodillo regenerativo o descanso pasivo.
-  * Hidratación Inteligente de Calendario en Modo Auditoría Admin (`calendarHydration.ts`): Al consultar el calendario en modo solo lectura desde la consola de administración (`isAuditing: true`), el sistema prioriza la prescripción viva del motor del macrociclo (`matchingFallback`) sobre eventos obsoletos de Intervals.icu marcados con `[PULSE AI]`, reflejando instantáneamente los nuevos entrenamientos en pantalla sin depender de purgas externas.
-  * Erradicación de Residuos de Potencia de Carrera en Atletas de Ritmo (`telemetryService.ts` & `PhysiologicalCards.tsx`): `runFtp` forzado a 0 para deportistas evaluados por ritmo (`runningTrainingMode === "PACE"` o sin potenciómetro); reemplazo automático de la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
 - Versión 4.05: Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata:
   * Telemetría Rápida sin Mapas GPS: Carga ultra-ligera de telemetría multi-serie (Ritmo cian, Potencia púrpura, FC rosa, Altitud slate) en `ActivityTelemetryChart`, sin descargas de stream pesado de mapas.
   * Prescripción Plegable & Ocultamiento de Movilidad: Prescripción estructurada replegada en acordeón modular compacto y calentamiento dinámico oculto en sesiones ya ejecutadas.
@@ -122,7 +123,7 @@ Leyes Inviolables de Gobernanza:
 1. Fuente Única de Verdad: Intervals.icu es la ÚNICA fuente para telemetría deportiva. Firestore almacena perfiles con AES-256-GCM y macrociclos activos.
 2. Puerto 3000 Único: El servidor corre exclusivamente en el puerto 3000 vía `npm run dev:clean`. Prohibido abrir puertos 3001 o 3002.
 3. Modularidad Estricta: Ningún archivo puede superar las 350 líneas de código; `AthleteDashboard.tsx` estrictamente < 160 LOC; Rutas API <= 80 LOC.
-4. Sintaxis Stryd: La potencia de carrera se prescribe siempre por Tiempo + % FTP (¡NUNCA Distancia con % FTP!).
+4. Sintaxis Canónica Intervals.icu & Garmin: En distancia se utiliza estrictamente `mtr` (ej. `- 400mtr 100% Pace`, `- 1000mtr 95% CP`) o `km`, y en tiempo se utiliza `m` o `s` (ej. `- 10m 70% Pace`, `- 1m30s 65% Pace`). Se prohíbe usar `m` para metros de distancia (Intervals.icu lo interpreta como minutos). La potencia continua de carrera se prescribe por Tiempo + % FTP / % CP.
 5. Modo 100% Manual: Cero cron jobs o Cloud Scheduler en background. Toda invocación es disparada manualmente por el atleta.
 6. Robustez y Resiliencia: NODE_OPTIONS='--max-http-header-size=131072' obligatorio, auto-recuperador en <head> y RootLayout, transpilación de Firebase y límites de error en App Router.
 7. Set de Pruebas Obligatorio: Cuando reciba la orden "Actualiza la bitácora maestra" o "Cierre de tarea", ejecutaré automáticamente `./node_modules/.bin/tsc --noEmit` y `npm run build` antes de documentar el avance en BITACORA_MAESTRA.md.
@@ -192,8 +193,8 @@ flowchart TD
 ---
 
 ## 🏃 4. SINTAXIS Y REGLAS DE WORKOUTS PARA INTERVALS.ICU
-1. **Carrera por Potencia Stryd:** Debe especificarse siempre por **Tiempo + % FTP** (ej. `- 45m 75-80%`). **¡NUNCA uses distancia (km/m) con % FTP!** (evita el error crítico de 80h en relojes Garmin).
-2. **Carrera por Distancia / Ritmo:** Usa Metros/Km (`km`/`mtr`) + `% Pace` (ej. `- 10km 85-90% Pace`).
+1. **Carrera por Potencia Stryd (Fondos/Tempo):** Se prescribe por **Tiempo + % FTP / % CP** (ej. `- 45m 75-80%`).
+2. **Series Métricas de Pista (Intervalos):** Se generan algorítmicamente vía `metricIntervalEngine.ts` usando distancia estricta en `mtr` (ej. `- 400mtr 100% Pace` o `- 1000mtr 95% CP`) y recuperaciones cronometradas en tiempo con `m` o `s` (ej. `- 1m30s 65% Pace`). Se prohíbe terminantemente usar `m` para distancia. Fondos continuos por distancia usan `km` + `% Pace` (ej. `- 10km 85-90% Pace`).
 3. **Ciclismo:** Usa Tiempo + `% FTP` (ej. `- 60m 70%`).
 4. **Fuerza / Gimnasio:** Formato texto plano descriptivo (`WeightTraining`).
 5. **Días de Descanso:** Se configuran como descansos pasivos con 0 TSS (`isRestDay: true`).

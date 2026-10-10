@@ -6,6 +6,10 @@
  * 1. Intervals.icu Workout Builder DSL
  * 2. Garmin Connect FIT Protocol (Steps y Repeat Loops)
  * 3. Pulse WorkoutChart Renderer
+ * 
+ * Principio de Fuente Canónica:
+ * - El sistema emite directamente 'mtr' para metros de distancia y 'm'/'s' para minutos/segundos de tiempo.
+ * - Sin expresiones regulares de adivinanza o transformación de unidades.
  */
 
 export interface SanitizeOptions {
@@ -54,66 +58,17 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       // a) Eliminar arroba "@" que confunde algunos dispositivos Garmin
       line = line.replace(/@\s*/g, "");
 
-      const isCycling =
-        options?.discipline === "Ciclismo" ||
-        options?.discipline === "Ride" ||
-        options?.discipline === "Bike" ||
-        /%\s*FTP\b/i.test(line) ||
-        /\bFTP\b/i.test(doc || "");
-
-      const isSwim =
-        !isCycling &&
-        (options?.discipline === "Natacion" ||
-          options?.discipline === "Natación" ||
-          options?.discipline === "Swim" ||
-          /nataci|swim|crol|braza|swolf|piscina|aletas/i.test(doc || ""));
-
-      // b) Transformar pasos fraccionados con tiempo forzado y nota de distancia (solo carrera)
-      // Ej: "- 40s 110% Pace (200m)" o '- 40s 110% Pace "200m"' => '- 200mtr 110% Pace'
-      // Preserva descansos por tiempo intactos: '- 1m 55% Pace', '- 1m30s 55% Pace'
-      const legacyDistanceMatch = line.match(
-        /^-\s*(?:\d+h)?(?:\d+m(?:in)?)?(?:\d+s)?\s+(.*?)\s+["\(](\d+\s*(?:m|km|mtr|metros?))(?:\s+[^"\)]*)?["\)]\s*$/i
-      );
-      if (legacyDistanceMatch && !isCycling && !isSwim) {
-        const intensity = legacyDistanceMatch[1].trim();
-        let rawDist = legacyDistanceMatch[2].trim().toLowerCase().replace(/\s*metros?/, "mtr").replace(/\s+/, "");
-        if (rawDist.endsWith("m") && !rawDist.endsWith("km") && !rawDist.endsWith("mtr")) {
-          rawDist = rawDist.slice(0, -1) + "mtr";
-        }
-        line = `- ${rawDist} ${intensity}`;
-      }
-
-      // c) Normalizar distancias métricas a la especificación oficial Intervals.icu ('mtr'):
-      // En Ciclismo jamás se usan 'mtr' (toda duración 'm' son minutos).
-      // En Natación, todos los pasos activos de nado son metros (mtr), preservando pausas por tiempo.
-      // En Carrera/Pista, las distancias fijas se convierten a 'mtr' para evitar confusión con minutos.
-      if (isCycling) {
-        line = line.replace(/^-\s*(\d+)\s*mtr\b/i, "- $1m");
-        line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1m");
-      } else if (isSwim) {
-        line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1mtr");
-        const isRestStep = /recovery|rest|pausa|descanso/i.test(line);
-        if (!isRestStep) {
-          line = line.replace(/^-\s*(\d+)\s*m\b/i, "- $1mtr");
-        }
-        line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
-      } else {
-        line = line.replace(/^-\s*(\d+)\s*metros?\b/i, "- $1mtr");
-        line = line.replace(/^-\s*(200|300|400|600|800|1000|1200|1500|1600|2000|3000|5000)\s*m\b/i, "- $1mtr");
-        line = line.replace(/^-\s*(\d+(?:\.\d+)?)\s*km\b/i, "- $1km");
-      }
-
-      // d) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles
+      // b) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles
       line = line.replace(/\s*\(([^)]+)\)\s*$/, (_m, note) => ` "${note.trim()}"`);
 
-      // e) Normalización de unidades de carrera (Pace para atletas sin Stryd, CP para atletas Stryd)
+      // c) Normalización de unidades de carrera (Pace para atletas de ritmo, CP para atletas Stryd)
       if (options?.isRunPaceOnly || (options?.discipline === "Carrera" && options?.isRunPaceOnly)) {
         line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
       } else if (options?.discipline === "Carrera") {
         line = line.replace(/%\s*FTP\b/gi, "% CP");
       }
 
-      // f) Limpiar espacios redundantes dentro de la línea
+      // d) Limpiar espacios redundantes dentro de la línea
       line = line.replace(/\s{2,}/g, " ").trim();
     }
 

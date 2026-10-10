@@ -6320,5 +6320,49 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - Suite de pruebas paramétricas y anti-monotonía: 100% aprobadas.
 - Cumplimiento inflexible de la Regla 3 de Modularidad: Todos los archivos $\le 350$ LOC.
 
+---
+
+## 87. Fuente Canónica Intervals.icu (`m` vs `mtr`), Motor Paramétrico de Intervalos Métricos de Pista y Notificaciones In-App (v5.1)
+
+### 87.1. Diagnóstico y Principio de Fuente Canónica
+1. **Poda de Expresiones Regulares Heurísticas en el Sanitizador:**
+   - Previamente, `workoutSyntaxSanitizer.ts` intentaba adivinar si números como `400m` eran metros o minutos mediante una lista quemada (`200|300|400|600|800|1000...m`).
+   - Dado que el atleta no introduce texto libre y el sistema es el único emisor del entrenamiento, se adoptó el **Principio de Fuente Canónica**: la fuente genera directamente la unidad adecuada (`mtr` para metros de distancia, `m`/`s` para minutos/segundos de tiempo), erradicando el código defensivo innecesario.
+2. **Mix Fisiológico Indispensable (Tiempo vs. Distancia):**
+   - Los rodajes, tiradas largas y fartleks se rigen por tiempo (`m`) para acotar la carga metabólica.
+   - Las series fraccionadas de calidad y pista (VO2max, velocidad, umbral Canova) se rigen por distancia métrica (`mtr`: 200, 400, 600, 800, 1000, 1200, 1600, 2000, 3000 mtr), con descansos estrictamente por tiempo cronometrado (`m`/`s`) para garantizar el aclaramiento de lactato y resíntesis de fosfocreatina.
+
+### 87.2. Implementaciones Realizadas
+1. **Depuración Radical de `workoutSyntaxSanitizer.ts` (83 LOC):**
+   - Eliminadas todas las expresiones regulares de adivinanza heurística y conversiones de unidades.
+   - El archivo se reduce a 83 LOC, limitándose a estructurar encabezados de repetición (`Main Set Nx`), normalizar comillas y eliminar espacios superfluos.
+2. **Motor Paramétrico de Intervalos Métricos (`metricIntervalEngine.ts` - 267 LOC):**
+   - Diseñado para generar dinámicamente series de pista en formato nativo Intervals.icu/Garmin:
+     * Series cortas: $200\text{mtr}, 300\text{mtr}, 400\text{mtr}, 500\text{mtr}$.
+     * Series medias: $600\text{mtr}, 800\text{mtr}, 1000\text{mtr}, 1200\text{mtr}$.
+     * Bloques largos: $1600\text{mtr}, 2000\text{mtr}, 3000\text{mtr}$.
+     * Descansos cronometrados: $45\text{s}, 1\text{m}, 1\text{m}15\text{s}, 1\text{m}30\text{s}, 2\text{m}, 2\text{m}30\text{s}, 3\text{m}$.
+   - Calcula dinámicamente en tiempo de ejecución la duración total y el TSS exacto en base al ritmo umbral o potencia Stryd del atleta.
+   - Integrado en `selectQualityWorkout` (`macrocycleTemplateHelpers.ts`) para rotar en armonía con los fartleks y tempos mediante el buffer de memoria anti-monotonía.
+3. **Soporte de Bloques en `workoutProgressionEngine.ts` (225 LOC):**
+   - Soporte para sobrecarga progresiva tanto en formato `Nx` como en `Main Set Nx`, escalando series dinámicamente ($6\times 400\text{mtr} \to 7\times 400\text{mtr}$).
+4. **Banner Inteligente de Aviso y Confirmación In-App (`RecalibrationNoticeBanner.tsx` - 75 LOC):**
+   - Notificación no intrusiva y colapsable en `AthleteDashboardOverview.tsx` (257 LOC) que informa al atleta sobre la activación del nuevo motor de macrociclos, el mix de series métricas y la protección del fin de semana, con botón de descarte `[ Entendido ✓ ]`.
+
+### 87.3. Archivos Modificados y Creados ($\le 350$ LOC)
+- `src/lib/physiology/workoutSyntaxSanitizer.ts`: **83 LOC** ($\le 350$)
+- `src/lib/physiology/metricIntervalEngine.ts`: **267 LOC** ($\le 350$)
+- `src/lib/physiology/workoutProgressionEngine.ts`: **225 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **285 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplates.ts`: **331 LOC** ($\le 350$)
+- `src/components/dashboard/RecalibrationNoticeBanner.tsx`: **75 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteDashboardOverview.tsx`: **257 LOC** ($\le 350$)
+
+### 87.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente en 3.2s (Código 0).
+- Todos los archivos cumplen estrictamente la cota de $\le 350$ LOC.
+
+
 
 

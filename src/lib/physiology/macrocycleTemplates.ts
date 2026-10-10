@@ -275,7 +275,13 @@ export function generateWeekTemplate(
         const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj && !discList.includes("Fuerza");
 
         if (isEligibleQuality) {
-          let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, { isRecovery, memoryBuffer: memory });
+          let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, {
+            isRecovery,
+            memoryBuffer: memory,
+            mode: (runningOpts?.mode as any),
+            thresholdPaceSec: runningOpts?.thresholdPaceSec,
+            microcycleType: week.microcycleType,
+          });
           const isRunningProgram = curatedModel.sportCategory === "Running";
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
             const phaseList = curatedModel.workoutVariations.qualityWorkouts[phase.toLowerCase() as "base" | "build" | "peak" | "taper"] || [];

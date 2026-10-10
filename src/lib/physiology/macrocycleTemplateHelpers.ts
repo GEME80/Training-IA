@@ -5,6 +5,7 @@ import { applyParametricProgression, AntiMonotonyMemoryBuffer } from "./workoutP
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 import { resolveFridayWorkout, FridayWorkoutParams } from "./fridayWorkoutResolver";
+import { generateMetricRunningWorkout } from "./metricIntervalEngine";
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a), y = Math.abs(b);
@@ -41,7 +42,14 @@ export function selectQualityWorkout(
   curatedModel: ReturnType<typeof resolveTrainingModel>,
   runFtp?: number,
   bikeFtp?: number,
-  opts?: { isRecovery?: boolean; memoryBuffer?: AntiMonotonyMemoryBuffer; recentWorkoutNames?: string[] }
+  opts?: {
+    isRecovery?: boolean;
+    memoryBuffer?: AntiMonotonyMemoryBuffer;
+    recentWorkoutNames?: string[];
+    mode?: "PACE" | "POWER";
+    thresholdPaceSec?: number;
+    microcycleType?: string;
+  }
 ): { name: string; powerTarget: string; justification: string; workoutDoc: string; durationMin?: number; tss?: number } {
   const vars = curatedModel.workoutVariations.qualityWorkouts;
   let rawList = vars.base;
@@ -60,14 +68,18 @@ export function selectQualityWorkout(
     return !isSwim && !hasBikeOrBrick;
   });
 
-  const list = runOnly.length > 0 ? runOnly : [
-    {
-      name: "Series de Potencia Crítica en Carrera (5x3m @ 90% CP)",
-      powerTarget: runFtp && runFtp > 0 ? `${Math.round(runFtp * 0.90)}W (90% CP)` : "90% CP",
-      justification: "Estímulo de calidad aeróbica en carrera a pie con aclaramiento eficiente de lactato.",
-      workoutDoc: "Warmup\n- 12m 65% FTP\n\n5x\n- 3m 90% FTP\n- 2m 60% FTP\n\nCooldown\n- 8m 60% FTP",
-    }
-  ];
+  // Generador paramétrico de intervalos métricos en distancia (mtr):
+  // Permite un mix fisiológico real (series en pista por distancia vs fartleks/tempos por tiempo)
+  const metricInterval = generateMetricRunningWorkout({
+    weekNumber,
+    phase,
+    microcycleType: opts?.microcycleType || (opts?.isRecovery ? "DESCARGA" : "CARGA"),
+    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
+    thresholdPaceSec: opts?.thresholdPaceSec,
+    runFtp,
+  });
+
+  const list = runOnly.length > 0 ? [...runOnly, metricInterval] : [metricInterval];
 
   const stride = getCoprimeStride(list.length, 2);
   const preferredIdx = ((weekNumber - 1) * stride) % list.length;

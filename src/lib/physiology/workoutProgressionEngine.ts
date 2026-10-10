@@ -158,8 +158,8 @@ export function applyParametricProgression(
     return workout;
   }
 
-  // Detectar bloque de repeticiones en el workoutDoc: "4x\n" o "5x\n" o "10x\n"
-  const docRepMatch = workout.workoutDoc.match(/^(\d+)x\s*$/m);
+  // Detectar bloque de repeticiones en el workoutDoc: "4x\n" o "Main Set 5x\n"
+  const docRepMatch = workout.workoutDoc.match(/^(?:Main Set\s+)?(\d+)x\s*$/im);
   // Detectar repeticiones en el nombre: "(5x 1000m)" o "(4x 8m)" o "(3x 15m)"
   const titleRepMatch = workout.name.match(/\((\d+)x\s*([^)]+)\)/i);
 
@@ -183,7 +183,9 @@ export function applyParametricProgression(
 
   let updatedDoc = workout.workoutDoc;
   if (docRepMatch) {
-    updatedDoc = updatedDoc.replace(/^(\d+)x\s*$/m, `${newReps}x`);
+    updatedDoc = updatedDoc.replace(/^(?:Main Set\s+)?\d+x\s*$/im, (match) =>
+      match.toLowerCase().includes("main set") ? `Main Set ${newReps}x` : `${newReps}x`
+    );
   }
 
   let updatedName = workout.name;

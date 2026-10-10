@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { saveMacrocycleToFirestore, getActiveMacrocycleFromFirestore, deleteActiveMacrocycleFromFirestore } from "@/lib/db/macrocycles";
 import { isMasterAdminEmail } from "@/lib/env";
 import { executeRecalibrateBoth } from "@/lib/services/recalibrateService";
+import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { IntervalsClient } from "@/lib/intervals/client";
 
 export async function GET(req: NextRequest) {
   try {
@@ -90,9 +92,31 @@ export async function DELETE(req: NextRequest) {
     }
 
     await deleteActiveMacrocycleFromFirestore(targetId, uid);
+
+    // Limpieza reactiva de eventos futuros [PULSE AI] / [SGEA] previamente sincronizados en Intervals.icu
+    try {
+      const { athleteId: effAthId, apiKey: effApiKey } = await resolveIntervalsCredentials({ athleteId: targetId, uid });
+      if (effAthId && effApiKey) {
+        const client = new IntervalsClient(effAthId, effApiKey);
+        const todayStr = new Date().toISOString().split("T")[0];
+        const nextYear = new Date();
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        const futureLimitStr = nextYear.toISOString().split("T")[0];
+        const futureEvts = await client.getEvents(todayStr, futureLimitStr).catch(() => []);
+        const toDelete = (futureEvts || []).filter(
+          (e) => e.id && e.category === "WORKOUT" && (e.name?.startsWith("[PULSE AI]") || e.name?.startsWith("[SGEA]"))
+        );
+        if (toDelete.length > 0) {
+          await Promise.all(toDelete.map((e) => client.deleteEvent(e.id!).catch(() => {})));
+        }
+      }
+    } catch (cleanErr) {
+      console.warn("Aviso al limpiar eventos futuros en Intervals al borrar plan:", cleanErr);
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Macrociclo activo eliminado y desactivado exitosamente en Firestore",
+      message: "Macrociclo activo eliminado y desactivado exitosamente en Firestore e Intervals.icu",
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error al eliminar macrociclo";

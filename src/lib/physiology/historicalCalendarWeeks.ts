@@ -41,7 +41,28 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
     : currentMondayStr;
   const refMondayDate = getMonday(referenceMondayStr);
 
-  const effectiveWeeksBack = Math.max(0, maxWeeksBack);
+  const effectiveWeeksBackRaw = Math.max(0, maxWeeksBack);
+  if (effectiveWeeksBackRaw <= 0) return [];
+
+  // Calcular semanas reales que contienen actividades en dailyExecutedActivities
+  const activityDates = Object.keys(dailyExecutedActivities)
+    .filter((d) => {
+      const actData = dailyExecutedActivities[d];
+      return actData && actData.activities && actData.activities.length > 0;
+    })
+    .sort();
+
+  let effectiveWeeksBack = 0;
+  if (activityDates.length > 0) {
+    const earliestActDate = activityDates[0];
+    const earliestMonday = getMonday(earliestActDate);
+    const diffMs = refMondayDate.getTime() - earliestMonday.getTime();
+    if (diffMs > 0) {
+      const diffWeeks = Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000));
+      effectiveWeeksBack = Math.min(diffWeeks, effectiveWeeksBackRaw);
+    }
+  }
+
   if (effectiveWeeksBack <= 0) return [];
 
   const historicalWeeks: MacrocycleWeek[] = [];
@@ -108,7 +129,7 @@ export function buildHistoricalCalendarWeeks(options: HistoricalWeeksOptions): M
   return historicalWeeks;
 }
 
-/** Construye un blueprint de respaldo anual unificado cuando el atleta no tiene macrociclo activo */
+/** Construye un blueprint de respaldo cuando el atleta no tiene macrociclo activo (Modo Historial Puro) */
 export function buildHistoricalBlueprint(
   dailyExecutedActivities: DailyExecutedMap = {},
   athleteProfile?: any
@@ -118,11 +139,11 @@ export function buildHistoricalBlueprint(
   const nowSunday = new Date(nowMonday);
   nowSunday.setDate(nowMonday.getDate() + 6);
 
-  // 1. Semanas pasadas (28 semanas en orden cronológico: antigua -> reciente)
+  // 1. Semanas pasadas reales (orden cronológico: antigua -> reciente)
   const pastWeeks = buildHistoricalCalendarWeeks({
     blueprintStartDate: currentMondayStr,
     dailyExecutedActivities,
-    maxWeeksBack: 28,
+    maxWeeksBack: 52,
   }).reverse();
 
   // 2. Semana actual en curso
@@ -145,45 +166,14 @@ export function buildHistoricalBlueprint(
     isPastWeek: false,
   };
 
-  // 3. Ventana futura de 23 semanas para proyectar en el calendario anual continuo (28 + 1 + 23 = 52 semanas)
-  const futureWeeksCount = 23;
-  const futureWeeks: MacrocycleWeek[] = [];
-  for (let i = 1; i <= futureWeeksCount; i++) {
-    const fMon = new Date(nowMonday);
-    fMon.setDate(nowMonday.getDate() + i * 7);
-    const fSun = new Date(fMon);
-    fSun.setDate(fMon.getDate() + 6);
-    const fMonStr = formatLocalDateToYMD(fMon);
-    const fSunStr = formatLocalDateToYMD(fSun);
-
-    futureWeeks.push({
-      weekNumber: pastWeeks.length + 1 + i,
-      countdownWeeks: 0,
-      startDate: fMonStr,
-      endDate: fSunStr,
-      formattedRange: `${fMonStr.slice(5)} - ${fSunStr.slice(5)}`,
-      phase: "RECOVERY",
-      phaseLabel: "Sin Plan Activo",
-      microcycleType: "DESCARGA_ASIMILACION",
-      microcycleLabel: "Disponible",
-      microcycleBadgeColor: "bg-slate-500/20 text-slate-400 border-slate-500/30",
-      targetTss: 0,
-      maxLongRunMinutes: 0,
-      focusDescription: "Semana disponible para proyectar macrociclo con IA",
-      isCurrentWeek: false,
-      isRecoveryWeek: false,
-      isPastWeek: false,
-      isHistorical: false,
-    } as any);
-  }
-
-  const allWeeks = [...pastWeeks, currentWeek, ...futureWeeks];
+  // Cero semanas futuras ficticias: si no hay macrociclo activo, el calendario no inventa semanas futuras.
+  const allWeeks = [...pastWeeks, currentWeek];
 
   return {
     id: "historical-timeline-blueprint",
     cycleTitle: "Historial de Carga & Entrenamientos Realizados",
     distanceType: undefined,
-    startDate: currentMondayStr,
+    startDate: allWeeks[0]?.startDate || currentMondayStr,
     totalWeeks: allWeeks.length,
     weeks: allWeeks,
     currentWeekIndex: pastWeeks.length,

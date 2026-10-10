@@ -6546,6 +6546,43 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 92. Erradicación de Semanas Fantasma en Modo Sin Macrociclo y Limpieza Automática de Eventos Futuros en Intervals.icu (v5.16)
+
+### 92.1. Causa Raíz Forense Diagnosticada
+1. **Generación Hardcodeada de 23 Semanas Futuras como 'Historial':**
+   - En [`src/lib/physiology/historicalCalendarWeeks.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/historicalCalendarWeeks.ts), la función `buildHistoricalBlueprint` (usada como fallback cuando el atleta no tiene macrociclo activo) creaba de forma quemada `const futureWeeksCount = 23;` proyectando semanas futuras hasta finales de año (semanas 50 a 52).
+   - En [`src/components/dashboard/AthleteCalendarWeekRow.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteCalendarWeekRow.tsx), la condición `isHistoricalOnly` rotulaba erróneamente todas esas semanas futuras como **"Historial"** (ej. *Historial W50*).
+   - Al eliminar el macrociclo Tokio 2027 (que abarcaba hasta 2027), las semanas de 2027 desaparecieron en base de datos, pero el calendario sintetizaba inmediatamente las semanas hasta la semana 50 como "Historial".
+2. **Generación Indiscriminada de Semanas Pasadas sin Actividad:**
+   - `buildHistoricalCalendarWeeks` generaba obligatoriamente 52 semanas pasadas, incluso si el atleta no tenía ninguna actividad registrada en ese rango.
+3. **Persistencia de Eventos Futuros de Entrenamiento en Intervals.icu:**
+   - Al borrar el macrociclo de la plataforma, los entrenamientos previamente sincronizados con prefijo `[PULSE AI]` o `[SGEA]` permanecían en el calendario de Intervals.icu.
+   - `telemetryService` consulta eventos hasta `next60Days` (~semana 50), rehidratando los días de esas semanas con los eventos huérfanos de Intervals.icu.
+
+### 92.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Erradicación de Semanas Futuras en Modo Sin Plan (`historicalCalendarWeeks.ts` - 184 LOC):**
+   - Eliminado el bucle quemado de 23 semanas futuras en `buildHistoricalBlueprint`.
+   - Cuando no hay macrociclo activo, el blueprint unificado contiene estrictamente la **Semana Actual** y las semanas pasadas reales.
+   - `buildHistoricalCalendarWeeks` ahora detecta la fecha más antigua con actividades reales en `dailyExecutedActivities`, generando únicamente las semanas que efectivamente cuentan con entrenamientos registrados.
+2. **Blindaje en Calendario Continuo (`AthleteContinuousCalendar.tsx` - 341 LOC):**
+   - La variable `futureWeeks` se fija en `[]` si `isRealPlan` es falso (`isHistoricalOnly`).
+   - El banner `↑ Plan Futuro` y los divisores futuros solo se despliegan si existe un macrociclo real activo.
+3. **Limpieza Automática en Intervals.icu (`src/app/api/macrocycles/route.ts` - 125 LOC):**
+   - En el método `DELETE /api/macrocycles`, se agregaron credenciales reactivas para conectarse a Intervals.icu y purgar automáticamente todos los eventos futuros con categoría `WORKOUT` y prefijo `[PULSE AI]` o `[SGEA]`.
+   - Al eliminar el plan, el calendario de Intervals.icu y el de PULSE AI quedan 100% limpios y sincronizados.
+
+### 92.3. Archivos Modificados ($\le 350$ LOC)
+- `src/lib/physiology/historicalCalendarWeeks.ts`: **184 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteContinuousCalendar.tsx`: **341 LOC** ($\le 350$)
+- `src/app/api/macrocycles/route.ts`: **125 LOC** ($\le 350$)
+
+### 92.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+
 
 
 

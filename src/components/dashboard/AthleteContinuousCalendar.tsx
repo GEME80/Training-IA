@@ -68,16 +68,18 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const todayStr = getLocalTodayStr();
   const blueprintWeeks = blueprint.weeks || [];
 
-  // Ventana anual continua estricta de 52 semanas (1 año calendario)
-  const maxHistoricalWeeks = Math.max(0, 52 - blueprintWeeks.length);
+  const isRealPlan = Boolean(blueprint && blueprint.id !== "historical-timeline-blueprint" && !(blueprint as any).isHistoricalOnly);
+  const maxHistoricalWeeks = isRealPlan ? Math.max(0, 52 - blueprintWeeks.length) : 0;
   const historicalWeeks = useMemo(
     () =>
-      buildHistoricalCalendarWeeks({
-        blueprintStartDate: blueprint.startDate || currentMonStr,
-        dailyExecutedActivities,
-        maxWeeksBack: maxHistoricalWeeks,
-      }),
-    [blueprint.startDate, currentMonStr, dailyExecutedActivities, maxHistoricalWeeks]
+      isRealPlan
+        ? buildHistoricalCalendarWeeks({
+            blueprintStartDate: blueprint.startDate || currentMonStr,
+            dailyExecutedActivities,
+            maxWeeksBack: maxHistoricalWeeks,
+          })
+        : [],
+    [blueprint.startDate, currentMonStr, dailyExecutedActivities, maxHistoricalWeeks, isRealPlan]
   );
 
   // Semana actual del blueprint (puede coincidir fecha)
@@ -92,12 +94,14 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   );
 
   // Semanas futuras: posteriores a la semana actual, en orden ascendente (próxima primero)
+  // Blindaje estricto: si NO hay plan activo (isRealPlan === false), CERO semanas futuras.
   const futureWeeks = useMemo(() => {
+    if (!isRealPlan) return [];
     const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
     return blueprintWeeks
       .filter((w) => w.startDate > cutoff)
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
-  }, [blueprintWeeks, currentBlueprintWeek, currentMonStr]);
+  }, [blueprintWeeks, currentBlueprintWeek, currentMonStr, isRealPlan]);
 
   const pastWeeks = useMemo(() => {
     const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
@@ -135,7 +139,6 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
 
   // Vista móvil: agenda de la semana activa
   const activeWeekForAgenda = blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
-  const isRealPlan = Boolean(blueprint && blueprint.id !== "historical-timeline-blueprint" && !(blueprint as any).isHistoricalOnly);
   const rawActiveWeekPlan = isRealPlan && activeWeekForAgenda
     ? generateWeekTemplate(
         activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability,
@@ -239,7 +242,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       {/* ── VISTA ESCRITORIO: Cuadrícula Continua Anual ── */}
       <div ref={scrollContainerRef} className="hidden md:block overflow-x-auto mt-3">
         {/* Etiqueta de orientación: FUTURO */}
-        {futureWeeks.length > 0 && (
+        {futureWeeks.length > 0 && isRealPlan && (
           <div className="min-w-[960px] 2xl:min-w-0 flex items-center gap-3 px-3 py-2 mt-2">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent to-indigo-300 dark:to-indigo-700" />
             <span className="text-[10px] font-black font-mono text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
@@ -323,7 +326,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                   <div className="flex items-center gap-3 px-3 py-1">
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-300 dark:to-slate-700" />
                     <span className="text-[10px] font-black font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      ↓ Historial Ejecutado ({historicalWeeks.length} sem)
+                      ↓ Historial Ejecutado ({isRealPlan ? historicalWeeks.length : pastWeeks.length} sem)
                     </span>
                     <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-slate-700" />
                   </div>

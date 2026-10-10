@@ -16,6 +16,7 @@ interface AthleteSeasonStudioViewProps {
   runFtp?: number; bikeFtp?: number; lthr?: number; ctl?: number;
   weightKg?: number; heightCm?: number; birthDate?: string; gender?: "M" | "F" | "OTHER";
   restingHR?: number; maxHR?: number;
+  runningTrainingMode?: "POWER" | "PACE";
   weeklyAvailability?: WeeklyAvailabilityMap;
   historicalMetrics?: PMCHistoricalSummary;
   targetRaces: TargetRace[];
@@ -32,7 +33,7 @@ interface AthleteSeasonStudioViewProps {
 
 export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = ({
   athleteId, runFtp = 0, bikeFtp = 0, lthr = 0, ctl = 0, weightKg, heightCm, birthDate,
-  gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, targetRaces, seasonPlans,
+  gender, restingHR, maxHR, runningTrainingMode, weeklyAvailability, historicalMetrics, targetRaces, seasonPlans,
   onSaveTargetRaces, onSaveSeasonPlans, onApplyPlan, onPersistAvailability,
   onNavigateToDashboard, onNavigateToProfile, onOpenHeadCoach, onDeleteActivePlan,
 }) => {
@@ -113,7 +114,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       distanceType: distType,
       startDate, weeksCount: prog.weeks, customGoal: prog.name,
       primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
-      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
+      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
     });
 
     if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -143,7 +144,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       const blueprint = generateCustomMacrocycleBlueprint({
         distanceType: distType, startDate, weeksCount, customGoal: userPrompt,
         primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
-        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics },
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
       });
 
       if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
@@ -290,6 +291,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                       weightKg={weightKg} heightCm={heightCm} birthDate={birthDate}
                       gender={gender} restingHR={restingHR} maxHR={maxHR}
                       historicalMetrics={historicalMetrics}
+                      runningTrainingMode={runningTrainingMode}
                       onGenerateAIPlan={handleGenerateAIPlan}
                       onApplyDirectBlueprint={handleApplyDirectBlueprint}
                       onNavigateToProfile={onNavigateToProfile}

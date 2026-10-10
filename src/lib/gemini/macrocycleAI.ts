@@ -82,6 +82,8 @@ export class MacrocycleAIEngine {
         maxHR: profile.maxHR,
         gender: profile.gender,
         age: profile.age,
+        hasRunningPowerMeter: profile.hasRunningPowerMeter,
+        runningTrainingMode: (config as any)?.runningTrainingMode || profile.runningTrainingMode || (profile.run_ftp && profile.run_ftp > 0 ? "POWER" : "PACE"),
         // ✅ Matriz Semanal del Atleta propagada al motor generador
         weeklyAvailability: config.weeklyAvailability as any,
         // ✅ Telemetría Histórica de 365 días para rampa Banister

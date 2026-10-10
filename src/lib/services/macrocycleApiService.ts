@@ -24,6 +24,8 @@ export interface MacrocycleAiRequestBody {
   maxHR?: number;
   lthr?: number;
   historicalMetrics?: any;
+  hasRunningPowerMeter?: boolean;
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
 }
 
 export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody) {
@@ -56,6 +58,8 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
     heightCm: body.heightCm || storedUser?.profile.heightCm,
     birthDate: body.birthDate || storedUser?.profile.birthDate,
     gender: body.gender || (storedUser?.profile.gender as any),
+    hasRunningPowerMeter: body.hasRunningPowerMeter ?? storedUser?.profile.hasRunningPowerMeter ?? ((runFtp || storedUser?.profile.runFtp || 0) > 0),
+    runningTrainingMode: body.runningTrainingMode || (wizardConfig as any)?.runningTrainingMode || storedUser?.profile.runningTrainingMode || (((runFtp || storedUser?.profile.runFtp || 0) > 0) ? "POWER" : "PACE"),
   };
   let wellness: AthleteWellness[] = [];
 
@@ -114,6 +118,8 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
           lthr: runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath.lthr,
           run_ftp: runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp,
           bike_ftp: rideSport?.ftp || anyAth.icu_ftp || ath.bike_ftp || bikeFtp || storedUser?.profile.bikeFtp,
+          hasRunningPowerMeter: body.hasRunningPowerMeter ?? storedUser?.profile.hasRunningPowerMeter ?? (Boolean(runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp)),
+          runningTrainingMode: body.runningTrainingMode || (wizardConfig as any)?.runningTrainingMode || storedUser?.profile.runningTrainingMode || ((runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp) ? "POWER" : "PACE"),
         };
       }
       wellness = wel;
@@ -137,6 +143,7 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
     physioStatus,
     {
       ...wizardConfig,
+      runningTrainingMode: body.runningTrainingMode || (wizardConfig as any)?.runningTrainingMode || profile.runningTrainingMode,
       weeklyAvailability: wizardConfig?.weeklyAvailability || null,
     },
     {

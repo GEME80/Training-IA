@@ -342,6 +342,7 @@ export function generateCustomMacrocycleBlueprint(
     availabilitySnapshot: config.athleteMetrics?.weeklyAvailability as any,
     distanceType: config.distanceType, athleteCtlAtCreation: athleteCtl,
     runFtpAtCreation: config.athleteMetrics?.runFtp, bikeFtpAtCreation: config.athleteMetrics?.bikeFtp,
+    runningTrainingMode: config.athleteMetrics?.runningTrainingMode,
     periodization: config.periodization || (isConservative ? "2:1" : "3:1"), targetPeakCtl: peakPlanCalc.targetPeakCtl,
   };
 }

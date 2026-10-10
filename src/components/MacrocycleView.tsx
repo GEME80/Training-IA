@@ -97,8 +97,9 @@ export const MacrocycleView: React.FC<MacrocycleViewProps> = ({
     }
   };
 
+  const effAvailability = (blueprint?.availabilitySnapshot as any) || weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY;
   const selectedWeekPlan = selectedWeek
-    ? generateWeekTemplate(selectedWeek, profile.run_ftp, profile.bike_ftp, weeklyAvailability, primaryRace?.distance as any)
+    ? generateWeekTemplate(selectedWeek, profile.run_ftp, profile.bike_ftp, effAvailability, primaryRace?.distance as any)
     : [];
 
   const getDistanceLabel = (dist?: string) => {

@@ -53,26 +53,6 @@ export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): Wee
     resolved[day] = getDayDisciplines(avail, day);
   }
 
-  // Prevención de colisión de ciclismo consecutivo entre semana (ej. Martes + Miércoles o Miércoles + Jueves)
-  const tueList = normalizeDisciplines(resolved["Martes"]);
-  const wedList = normalizeDisciplines(resolved["Miércoles"]);
-  const thuList = normalizeDisciplines(resolved["Jueves"]);
-
-  const tueHasBike = tueList.includes("Ciclismo");
-  const wedHasBike = wedList.includes("Ciclismo");
-  const thuHasBike = thuList.includes("Ciclismo");
-
-  if (tueHasBike && wedHasBike) {
-    let nextTue = tueList.map((d: DisciplineType) => (d === "Ciclismo" ? "Carrera" : d));
-    if (!nextTue.includes("Carrera")) nextTue.push("Carrera");
-    resolved["Martes"] = nextTue;
-  }
-  if (wedHasBike && thuHasBike) {
-    let nextThu = thuList.filter((d: DisciplineType) => d !== "Ciclismo");
-    if (nextThu.length === 0) nextThu = ["Fuerza"];
-    resolved["Jueves"] = nextThu;
-  }
-
   return resolved;
 }
 

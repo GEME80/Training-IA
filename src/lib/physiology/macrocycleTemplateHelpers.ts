@@ -79,20 +79,41 @@ export function selectQualityWorkout(
     runFtp,
   });
 
-  const list = runOnly.length > 0 ? [...runOnly, metricInterval] : [metricInterval];
+  // PARIDAD 50/50 ANTI-MONOTONÍA:
+  // Alterna semanas pares e impares entre el motor dinámico métrico (pirámides, escaleras, repeticiones)
+  // y las sesiones curadas de autor (Canova, Daniels, Pfitzinger), garantizando máxima variedad.
+  const isMetricWeek = weekNumber % 2 === 0;
+  let baseWorkout: {
+    name: string;
+    powerTarget: string;
+    justification: string;
+    workoutDoc: string;
+    durationMin?: number;
+    tss?: number;
+  };
 
-  const stride = getCoprimeStride(list.length, 2);
-  const preferredIdx = ((weekNumber - 1) * stride) % list.length;
-  let baseWorkout: typeof list[0];
-
-  if (opts?.memoryBuffer) {
-    baseWorkout = opts.memoryBuffer.selectDiverseCandidate(list, preferredIdx);
-  } else if (opts?.recentWorkoutNames && opts.recentWorkoutNames.length > 0) {
-    const tempBuffer = new AntiMonotonyMemoryBuffer(5);
-    opts.recentWorkoutNames.forEach((n) => tempBuffer.record(n));
-    baseWorkout = tempBuffer.selectDiverseCandidate(list, preferredIdx);
+  if (isMetricWeek || runOnly.length === 0) {
+    baseWorkout = {
+      name: metricInterval.name,
+      powerTarget: metricInterval.powerTarget,
+      justification: metricInterval.justification,
+      workoutDoc: metricInterval.workoutDoc,
+      durationMin: metricInterval.durationMinutes,
+      tss: metricInterval.tss,
+    };
   } else {
-    baseWorkout = list[preferredIdx >= 0 ? preferredIdx : 0] || list[0];
+    const stride = getCoprimeStride(runOnly.length, 2);
+    const preferredIdx = ((weekNumber - 1) * stride) % runOnly.length;
+
+    if (opts?.memoryBuffer) {
+      baseWorkout = opts.memoryBuffer.selectDiverseCandidate(runOnly, preferredIdx);
+    } else if (opts?.recentWorkoutNames && opts.recentWorkoutNames.length > 0) {
+      const tempBuffer = new AntiMonotonyMemoryBuffer(6);
+      opts.recentWorkoutNames.forEach((n) => tempBuffer.record(n));
+      baseWorkout = tempBuffer.selectDiverseCandidate(runOnly, preferredIdx);
+    } else {
+      baseWorkout = runOnly[preferredIdx >= 0 ? preferredIdx : 0] || metricInterval;
+    }
   }
 
   const dynPowerTarget = interpolatePowerTarget(baseWorkout.powerTarget, runFtp, bikeFtp);

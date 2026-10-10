@@ -14,6 +14,8 @@ interface SeasonWizardStep3PhysiologyProps {
   gender?: "M" | "F" | "OTHER";
   restingHR?: number;
   maxHR?: number;
+  runningTrainingMode?: "POWER" | "PACE";
+  onChangeRunningTrainingMode?: (mode: "POWER" | "PACE") => void;
   periodization: "2:1" | "3:1" | "CONTINUO";
   onChangePeriodization: (p: "2:1" | "3:1" | "CONTINUO") => void;
   customPromptText: string;
@@ -33,6 +35,8 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
   gender,
   restingHR,
   maxHR,
+  runningTrainingMode = "POWER",
+  onChangeRunningTrainingMode,
   periodization,
   onChangePeriodization,
   customPromptText,
@@ -107,7 +111,60 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
         )}
       </div>
 
-      {/* 2. RITMO DE PROGRESIÓN Y RECUPERACIÓN (LENGUAJE CLARO Y AMIGABLE) */}
+      {/* 2. MODALIDAD DE PRESCRIPCIÓN DE CARRERA (POTENCIA STRYD VS RITMO DANIELS) */}
+      <div className="space-y-2">
+        <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
+          Modalidad de Prescripción para Carrera
+        </label>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div
+            onClick={() => onChangeRunningTrainingMode?.("POWER")}
+            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1 ${
+              runningTrainingMode === "POWER"
+                ? "border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 ring-2 ring-amber-500/20 shadow-xs"
+                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Zap className="h-4 w-4 text-amber-500" />
+                Potencia Stryd (CP {runFtp > 0 ? `${runFtp}W` : "Activa"})
+              </h4>
+              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold text-[9px]">
+                {runFtp > 0 ? "Vatios Stryd" : "Potenciómetro"}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Prescripción 100% en vatios y % CP. Zonas exactas de potencia insensible a viento y pendiente.
+            </p>
+          </div>
+
+          <div
+            onClick={() => onChangeRunningTrainingMode?.("PACE")}
+            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1 ${
+              runningTrainingMode === "PACE"
+                ? "border-sky-500 bg-sky-50/70 dark:bg-sky-950/30 ring-2 ring-sky-500/20 shadow-xs"
+                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Activity className="h-4 w-4 text-sky-500" />
+                Ritmo Daniels (min/km)
+              </h4>
+              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[9px]">
+                Ritmo Umbral
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Prescripción estructurada por % de Ritmo Daniels (% Pace) y tiempos de paso por kilómetro.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. RITMO DE PROGRESIÓN Y RECUPERACIÓN (LENGUAJE CLARO Y AMIGABLE) */}
       <div className="space-y-2">
         <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
           Estrategia de Progresión y Descanso

@@ -273,7 +273,7 @@ export function generateWeekTemplate(
         }
 
         const isAdj = day === "Sábado" && longRunDay === "Domingo";
-        const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj && !discList.includes("Fuerza");
+        const isEligibleQuality = runCount === 1 && !isRecovery && phase !== "TAPER" && day !== longRunDay && !isAdj;
 
         if (isEligibleQuality) {
           let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, {
@@ -325,8 +325,12 @@ export function generateWeekTemplate(
   }
 
   const runningMode = runningOpts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
-  if (runningMode === "PACE" || runningMode === "HYBRID") {
-    return result.map((item) => adaptRunningPlanItem(item, { mode: "PACE", thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr }));
-  }
-  return result;
+  return result.map((item) =>
+    adaptRunningPlanItem(item, {
+      mode: runningMode,
+      runFtp,
+      thresholdPaceSec: runningOpts?.thresholdPaceSec,
+      lthr: runningOpts?.lthr,
+    })
+  );
 }

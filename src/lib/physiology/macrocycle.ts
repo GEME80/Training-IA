@@ -77,6 +77,8 @@ export interface MacrocycleBlueprint {
   bikeFtpAtCreation?: number;
   /** Ratio de periodización: "3:1" estándar o "2:1" conservador */
   periodization?: "3:1" | "2:1" | "ESTANDAR" | "CONSERVADOR";
+  /** Modalidad de carrera que rigió la prescripción: Potencia vs Ritmo */
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
   /** CTL pico proyectado en el bloque cumbre */
   targetPeakCtl?: number;
 }

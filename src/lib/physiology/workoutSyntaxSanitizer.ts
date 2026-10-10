@@ -65,7 +65,7 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       if (options?.isRunPaceOnly || (options?.discipline === "Carrera" && options?.isRunPaceOnly)) {
         line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
       } else if (options?.discipline === "Carrera") {
-        line = line.replace(/%\s*FTP\b/gi, "% CP");
+        line = line.replace(/%\s*FTP\b/gi, "% CP").replace(/%\s*Pace\b/gi, "% CP");
       }
 
       // d) Limpiar espacios redundantes dentro de la línea

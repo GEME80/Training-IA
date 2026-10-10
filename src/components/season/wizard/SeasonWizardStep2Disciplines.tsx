@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Zap, Footprints, Bike, Dumbbell, Waves, Mountain, HeartPulse, Layers, Check, ExternalLink, Moon } from "lucide-react";
-import { WeeklyAvailabilityMap, DisciplineType, DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, DisciplineType, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines } from "@/lib/gemini/engine";
 import { CompactAvailabilityMatrix } from "@/components/profile/CompactAvailabilityMatrix";
 
 interface SeasonWizardStep2DisciplinesProps {
@@ -98,7 +98,10 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
 
   const handleSelectApproach = (apprId: string) => {
     onChangeTrainingApproach(apprId);
-    if (onChangeWeeklyAvailability) {
+    // BLINDAJE DE MATRIZ: Si el atleta ya tiene una matriz personalizada con días configurados,
+    // preservarla 100% para no destruir su programación semanal (evita cambiar días de carrera por fuerza).
+    const hasCustomMatrix = weeklyAvailability && Object.keys(weeklyAvailability).length >= 3;
+    if (onChangeWeeklyAvailability && !hasCustomMatrix) {
       if (apprId === "Triatlón") {
         onChangeWeeklyAvailability({
           Lunes: ["Descanso"],
@@ -214,8 +217,7 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
           {daysList.map((day) => {
-            const rawVal = weeklyAvailability?.[day as keyof WeeklyAvailabilityMap] || (day === "Lunes" ? ["Descanso"] : day === "Sábado" || day === "Martes" ? ["Ciclismo"] : ["Carrera"]);
-            const dayDiscs: DisciplineType[] = Array.isArray(rawVal) ? (rawVal as DisciplineType[]) : [(rawVal as DisciplineType || "Descanso")];
+            const dayDiscs = getDayDisciplines(weeklyAvailability, day);
             const isRest = dayDiscs.includes("Descanso");
 
             return (

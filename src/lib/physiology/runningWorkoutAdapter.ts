@@ -60,17 +60,13 @@ export function parseSwimPaceToSeconds(paceStr?: string): number {
  */
 export function calculateSwimCssZones(cssSec: number = 105): SwimZoneItem[] {
   const css = cssSec > 0 ? cssSec : 105;
-  const [z1Start, z1End, z2Start, z2End, z3Start, z3End, z4Start, z4End, z5End] = [
-    Math.round(css / 0.65), Math.round(css / 0.75), Math.round(css / 0.75), Math.round(css / 0.85),
-    Math.round(css / 0.85), Math.round(css / 0.94), Math.round(css / 0.95), Math.round(css / 1.05), Math.round(css / 1.15)
-  ];
-
+  const [z1S, z1E, z2E, z3E, z4E, z5E] = [Math.round(css / 0.65), Math.round(css / 0.75), Math.round(css / 0.85), Math.round(css / 0.94), Math.round(css / 1.05), Math.round(css / 1.15)];
   return [
-    { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% CSS", range: `${formatSwimPace(z1End)} - ${formatSwimPace(z1Start)} /100m` },
-    { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "75 - 85% CSS", range: `${formatSwimPace(z2End)} - ${formatSwimPace(z2Start)} /100m` },
-    { id: "Z3", name: "Tempo / Crucero", nameColor: "text-teal-600 dark:text-teal-400", pct: "85 - 94% CSS", range: `${formatSwimPace(z3End)} - ${formatSwimPace(z3Start)} /100m` },
-    { id: "Z4", name: "Umbral CSS", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "95 - 105% CSS", range: `${formatSwimPace(z4End)} - ${formatSwimPace(z4Start)} /100m` },
-    { id: "Z5", name: "Sprint / VO2max", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 105% CSS", range: `< ${formatSwimPace(z5End)} /100m` },
+    { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% CSS", range: `${formatSwimPace(z1E)} - ${formatSwimPace(z1S)} /100m` },
+    { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "75 - 85% CSS", range: `${formatSwimPace(z2E)} - ${formatSwimPace(z1E)} /100m` },
+    { id: "Z3", name: "Tempo / Crucero", nameColor: "text-teal-600 dark:text-teal-400", pct: "85 - 94% CSS", range: `${formatSwimPace(z3E)} - ${formatSwimPace(z2E)} /100m` },
+    { id: "Z4", name: "Umbral CSS", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "95 - 105% CSS", range: `${formatSwimPace(z4E)} - ${formatSwimPace(z3E)} /100m` },
+    { id: "Z5", name: "Sprint / VO2max", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 105% CSS", range: `< ${formatSwimPace(z5E)} /100m` },
   ];
 }
 
@@ -144,7 +140,10 @@ export function mapPowerPctToPacePct(pwrPct: number): number {
 export function adaptRunningWorkoutDoc(
   workoutDoc: string, discipline: string, isQuality: boolean = false, mode: RunningTrainingMode = "POWER", workoutName: string = ""
 ): string {
-  if (!workoutDoc || discipline !== "Carrera" || mode === "POWER") return workoutDoc;
+  if (!workoutDoc || discipline !== "Carrera") return workoutDoc;
+  if (mode === "POWER") {
+    return workoutDoc.replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP").replace(/%\s*FTP\b/gi, "% CP");
+  }
   const isSoltura = /soltura|regenerativ|suave|z1-z2/i.test(workoutName);
   let currentSec: "WARMUP" | "MAIN" | "COOLDOWN" | "INTERVALS" = "MAIN";
   let inCyclingBlock = false;
@@ -250,8 +249,12 @@ export function interpolateWorkoutTarget(
   if (discipline !== "Carrera") return rawTarget;
 
   if (mode === "POWER") {
-    if (!runFtp || runFtp <= 0) return rawTarget;
-    const cleanPwr = stripNestedTarget(rawTarget, /\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi);
+    let cleanPwr = stripNestedTarget(rawTarget, /\b\d+\s*(?:-\s*\d+)?\s*W\s*\(([^()]+)\)/gi)
+      .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")
+      .replace(/Ritmo\s*Umbral/gi, "Stryd CP")
+      .replace(/\(Z1 Puro\)/gi, "(Z1)")
+      .replace(/\(Z2 Aeróbico\)/gi, "(Z2)");
+    if (!runFtp || runFtp <= 0) return cleanPwr;
     return cleanPwr
       .replace(/(?:(\d+)\s*%\s*a\s*(\d+)\s*%\s*CP|(\d+)\s*-\s*(\d+)\s*%\s*CP)/gi, (_, a1, a2, r1, r2) => {
         const p1 = parseInt(a1 || r1, 10), p2 = parseInt(a2 || r2, 10);
@@ -290,55 +293,46 @@ export function interpolateWorkoutTarget(
 }
 
 /**
- * Adapta un PlanItem completo de carrera si el atleta entrena en Modo Ritmo.
- * Si el atleta entrena con Stryd (POWER), retorna el PlanItem intacto sin mutaciones (INVARIANZA 100%).
+ * Adapta un PlanItem de carrera de forma estrictamente bidireccional:
+ * - Atleta Stryd (POWER): traduce cualquier sesión con % Pace a % CP y vatios Stryd exactos.
+ * - Atleta Ritmo (PACE): traduce cualquier sesión con % CP/W a % Pace y min/km Daniels.
  */
 export function adaptRunningPlanItem<T extends { discipline?: string; workoutName?: string; workoutDoc?: string; powerTarget?: string; day?: string; isRestDay?: boolean }>(
   item: T,
-  opts: {
-    mode?: RunningTrainingMode;
-    thresholdPaceSec?: number;
-    lthr?: number;
-  } = {}
+  opts: { mode?: RunningTrainingMode; runFtp?: number; thresholdPaceSec?: number; lthr?: number } = {}
 ): T {
   if (item.discipline !== "Carrera" || item.isRestDay) return item;
-  const mode = opts.mode || "POWER";
-  if (mode === "POWER") return item; // BLINDAJE INVIOLABLE: Atletas Stryd quedan 100% intactos
-
+  const mode = opts.mode || (opts.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
   const isQuality = isQualityRunningWorkout(item.workoutName || "", item.workoutDoc, item.day);
-  const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode, item.workoutName || "") : item.workoutDoc;
-  const rawTarget = item.powerTarget
-    ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "PACE", thresholdPaceSec: opts.thresholdPaceSec, lthr: opts.lthr, isQuality })
-    : item.powerTarget;
-  const adaptedTarget = rawTarget
-    ?.replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)")
-    .replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)")
-    .replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
 
+  if (mode === "POWER") {
+    const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, "POWER", item.workoutName || "") : item.workoutDoc;
+    const rawTarget = item.powerTarget ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "POWER", runFtp: opts.runFtp, isQuality }) : item.powerTarget;
+    const adaptedTarget = rawTarget?.replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP").replace(/Ritmo\s*Umbral/gi, "Stryd CP").replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP");
+    const adaptedName = item.workoutName
+      ? item.workoutName
+          .replace(/%\s*(?:Pace|pace|Ritmo)\b/gi, "% CP")
+          .replace(/Ritmo\s*Umbral\s*\(Pace\)/gi, "Stryd CP")
+          .replace(/Ritmo\s*Umbral/gi, "Stryd CP")
+          .replace(/Test Oficial Ritmo Umbral \(Pace\)/gi, "Test Oficial Stryd CP")
+      : item.workoutName;
+    return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget };
+  }
+
+  const adaptedDoc = item.workoutDoc ? adaptRunningWorkoutDoc(item.workoutDoc, item.discipline, isQuality, mode, item.workoutName || "") : item.workoutDoc;
+  const rawTarget = item.powerTarget ? interpolateWorkoutTarget(item.powerTarget, { discipline: "Carrera", mode: "PACE", thresholdPaceSec: opts.thresholdPaceSec, lthr: opts.lthr, isQuality }) : item.powerTarget;
+  const adaptedTarget = rawTarget?.replace(/Stryd\s*Critical\s*Power\s*\(CP\)/gi, "Ritmo Umbral (Pace)").replace(/Stryd\s*CP/gi, "Ritmo Umbral (Pace)").replace(/Potencia\s*Cr[íi]tica/gi, "Ritmo Umbral");
   const adaptedName = item.workoutName
     ? item.workoutName
-        .replace(/\s*\(\d+W\)/gi, "")
-        .replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace")
-        .replace(/\bStryd\s*CP\b/gi, "Pace")
-        .replace(/\bStryd\b/gi, "Ritmo")
-        .replace(/Potencia\s*Cr[íi]tica|Critical\s*Power/gi, "Ritmo Umbral")
-        .replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)")
+        .replace(/\s*\(\d+W\)/gi, "").replace(/%\s*(?:Stryd\s*)?(?:CP|FTP)/gi, "% Pace").replace(/\bStryd\s*CP\b/gi, "Pace").replace(/\bStryd\b/gi, "Ritmo")
+        .replace(/Potencia\s*Cr[íi]tica|Critical\s*Power/gi, "Ritmo Umbral").replace(/Test Oficial Stryd CP/gi, "Test Oficial Ritmo Umbral (Pace)")
     : item.workoutName;
 
   let adaptedTss = (item as any).tss;
   if (adaptedDoc && adaptedDoc !== item.workoutDoc) {
     const parsed = parseWorkoutDoc(adaptedDoc, "Carrera");
-    if (parsed.estimatedTss && parsed.estimatedTss > (adaptedTss || 0)) {
-      adaptedTss = parsed.estimatedTss;
-    }
+    if (parsed.estimatedTss && parsed.estimatedTss > (adaptedTss || 0)) adaptedTss = parsed.estimatedTss;
   }
-
-  return {
-    ...item,
-    workoutName: adaptedName || item.workoutName,
-    workoutDoc: adaptedDoc,
-    powerTarget: adaptedTarget || item.powerTarget,
-    tss: adaptedTss,
-  };
+  return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget, tss: adaptedTss };
 }
 

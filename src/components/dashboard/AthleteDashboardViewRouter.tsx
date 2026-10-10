@@ -137,6 +137,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         gender={telemetry.profile.gender}
         restingHR={telemetry.profile.restingHR}
         maxHR={telemetry.profile.maxHR}
+        runningTrainingMode={telemetry.profile.runningTrainingMode === "PACE" ? "PACE" : ((telemetry.profile.run_ftp || 0) > 0 ? "POWER" : "PACE")}
         weeklyAvailability={season.weeklyAvailability}
         historicalMetrics={telemetry.historicalSummary}
         targetRaces={season.targetRaces}

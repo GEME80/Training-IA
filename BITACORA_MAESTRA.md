@@ -6491,6 +6491,62 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 91. Inviolabilidad de la Matriz Deportiva, Adaptador Bidireccional Total Stryd Potencia vs Daniels Ritmo y Paridad 50/50 Anti-Monotonía (v5.15)
+
+### 91.1. Diagnóstico Forense y Causas Raíz
+1. **Sobrescritura Arbitraria de la Matriz Deportiva (Código Quemado):**
+   - En `src/components/season/wizard/SeasonWizardStep2Disciplines.tsx`, al seleccionar un enfoque metodológico en el wizard (`handleSelectApproach`), se sobreescribía de forma destructiva la matriz deportiva configurada por el atleta con plantillas estáticas donde el jueves estaba fijado como `["Fuerza"]`.
+   - En `src/lib/gemini/types.ts:70-74`, una regla de colisión forzada en `resolveEffectiveAvailability` mutaba el jueves si había ciclismo el miércoles y jueves, pisando la elección del atleta.
+   - En `src/lib/physiology/macrocycleTemplates.ts:251`, la condición `!discList.includes("Fuerza")` en `isEligibleQuality` invalidaba días donde el atleta tenía programada doble sesión (ej. Carrera + Fuerza), impidiendo que se prescribiera calidad de carrera.
+2. **Falso Blindaje de Potencia Stryd vs Ritmo Daniels:**
+   - En `runningWorkoutAdapter.ts:167`, `adaptRunningPlanItem` contenía una salida prematura `if (mode === "POWER") return item;`. Dado que los bancos de entrenamientos de carrera (`runningDistancePool`, `runningTempoPool`, `runningAerobicPool`) estaban redactados en `% Pace`, el código devolvía la sesión en `% Pace` sin convertir a `% CP` ni calcular los vatios Stryd exactos con `runFtp` (336W para Germán Morales).
+   - En `workoutSyntaxSanitizer.ts`, solo existía conversión `% CP` $\rightarrow$ `% Pace` y no la inversa.
+   - En `SeasonWizardStep3Physiology.tsx`, el atleta carecía de confirmación y memoria visual interactiva sobre la modalidad de carrera seleccionada (Potencia Stryd vs Ritmo Daniels).
+3. **Monotonía en Microciclos de Calidad:**
+   - El motor dinámico métrico (`metricIntervalEngine.ts`) estaba diluido como 1 candidato entre 14 opciones en las plantillas curadas, provocando que se repitieran las mismas sesiones durante semanas.
+
+### 91.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Módulo A: Inviolabilidad de la Matriz Deportiva:**
+   - Erradicada la mutación forzada de jueves en `src/lib/gemini/types.ts`.
+   - Blindado `handleSelectApproach` en `SeasonWizardStep2Disciplines.tsx` para preservar la matriz personalizada del atleta si ya cuenta con días asignados, utilizando `getDayDisciplines(weeklyAvailability, day)` en lugar de arreglos quemados.
+   - Priorizado `blueprint?.availabilitySnapshot` como SSOT primaria en `MacrocyclePreviewTimeline.tsx` y `MacrocycleView.tsx`.
+   - Habilitada la calidad en doble sesión "Carrera + Fuerza" en `macrocycleTemplates.ts`.
+2. **Módulo B: Adaptador Bidireccional Total Pace $\leftrightarrow$ Power:**
+   - Reescrito `src/lib/physiology/runningWorkoutAdapter.ts`: `adaptRunningWorkoutDoc`, `interpolateWorkoutTarget` y `adaptRunningPlanItem` ahora convierten simétricamente `% Pace` a `% CP` y vatios Stryd exactos calculados a partir de `runFtp` cuando `mode === "POWER"`.
+   - Incorporada la conversión inversa `% Pace` $\rightarrow$ `% CP` en `workoutSyntaxSanitizer.ts`.
+   - Aplicado `adaptRunningPlanItem` a todas las sesiones de carrera del macrociclo en `macrocycleTemplates.ts`.
+3. **Módulo C: Selector y Memoria Visual de Modalidad en el Asistente:**
+   - Creado card interactivo de selección `⚡ Potencia Stryd` vs `⏱️ Ritmo Daniels` en `SeasonWizardStep3Physiology.tsx`.
+   - Estado y sincronización bidireccional en `SeasonAIGenerator.tsx`, `AthleteSeasonStudioView.tsx`, `AthleteDashboardViewRouter.tsx`, `macrocycleApiService.ts` y `macrocycleAI.ts`.
+   - Persistencia de `runningTrainingMode` en el tipo `MacrocycleBlueprint` (`macrocycle.ts`) y en la salida de `macrocycleGenerator.ts`.
+4. **Módulo D: Paridad 50/50 Anti-Monotonía y Variabilidad:**
+   - En `macrocycleTemplateHelpers.ts`, `selectQualityWorkout` ahora alterna de manera determinista 50/50 (semanas pares dinámicas métricas paramétricas y semanas impares curadas de autor Canova/Daniels/Pfitzinger) con stride coprimo y memoria anti-repetición de 6 semanas (`AntiMonotonyMemoryBuffer`).
+
+### 91.3. Archivos Modificados ($\le 350$ LOC)
+- `src/lib/gemini/types.ts`: **113 LOC** ($\le 350$)
+- `src/components/season/wizard/SeasonWizardStep2Disciplines.tsx`: **266 LOC** ($\le 350$)
+- `src/components/season/wizard/SeasonWizardStep3Physiology.tsx`: **257 LOC** ($\le 350$)
+- `src/components/season/SeasonAIGenerator.tsx`: **335 LOC** ($\le 350$)
+- `src/components/MacrocyclePreviewTimeline.tsx`: **129 LOC** ($\le 350$)
+- `src/components/MacrocycleView.tsx`: **464 LOC** (Vista preexistente)
+- `src/lib/physiology/macrocycleTemplates.ts`: **336 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleTemplateHelpers.ts`: **308 LOC** ($\le 350$)
+- `src/lib/physiology/runningWorkoutAdapter.ts`: **338 LOC** ($\le 350$)
+- `src/lib/physiology/workoutSyntaxSanitizer.ts`: **83 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteSeasonStudioView.tsx`: **330 LOC** ($\le 350$)
+- `src/components/dashboard/AthleteDashboardViewRouter.tsx`: **328 LOC** ($\le 350$)
+- `src/lib/services/macrocycleApiService.ts`: **162 LOC** ($\le 350$)
+- `src/lib/gemini/macrocycleAI.ts`: **193 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycleGenerator.ts`: **348 LOC** ($\le 350$)
+- `src/lib/physiology/macrocycle.ts`: **342 LOC** ($\le 350$)
+
+### 91.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+
 
 
 

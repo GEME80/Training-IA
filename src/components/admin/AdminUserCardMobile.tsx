@@ -137,23 +137,28 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
 
       {/* 3. Fila de Parámetros Fisiológicos */}
       <div className="grid grid-cols-2 gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-mono">
-        {u.runningTrainingMode === "PACE" || !u.hasRunningPowerMeter ? (
-          <div className="flex items-center gap-1 text-emerald-800">
-            <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
-            <span className="text-[10px] text-slate-500 font-sans">Ritmo:</span>
-            <strong className="font-bold ml-auto">{u.runThresholdPaceStr || "4:45"}/km</strong>
-          </div>
-        ) : (
+        {Boolean(u.runFtp && u.runFtp > 0) ? (
           <div className="flex items-center gap-1 text-amber-800">
             <Zap className="h-3 w-3 text-amber-600 shrink-0" />
             <span className="text-[10px] text-slate-500 font-sans">Run CP:</span>
-            <strong className="font-bold ml-auto">{u.runFtp || 0} W</strong>
+            <strong className="font-bold ml-auto">{u.runFtp}W</strong>
+          </div>
+        ) : u.runThresholdPaceStr ? (
+          <div className="flex items-center gap-1 text-emerald-800">
+            <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
+            <span className="text-[10px] text-slate-500 font-sans">Ritmo:</span>
+            <strong className="font-bold ml-auto">{u.runThresholdPaceStr}/km</strong>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-slate-400">
+            <span className="text-[10px] font-sans">Carrera:</span>
+            <span className="ml-auto font-sans text-[10px]">N/A</span>
           </div>
         )}
         <div className="flex items-center gap-1 text-cyan-800">
           <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
           <span className="text-[10px] text-slate-500 font-sans">Bike FTP:</span>
-          <strong className="font-bold ml-auto">{u.bikeFtp || 0} W</strong>
+          <strong className="font-bold ml-auto">{u.bikeFtp || 0}W</strong>
         </div>
       </div>
 

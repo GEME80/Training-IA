@@ -6775,12 +6775,44 @@ Para validar que la arquitectura de macrociclos, periodización, anti-monotonía
    - Compatible con el botón de impersonación existente `[Auditar Atleta]` para navegar en vivo en el navegador como cualquiera de los 7 atletas en modo lectura.
 
 ### 96.3. Verificación de Cumplimiento de Límites
-- `demoAthletesData.ts`: 341 LOC ($\le 350$ ✅)
-- `demoAthletesSuite.ts`: 239 LOC ($\le 350$ ✅)
+- `demoAthletesData.ts`: 240 LOC ($\le 350$ ✅)
+- `demoAthletesSuite.ts`: 293 LOC ($\le 350$ ✅)
 - `src/app/api/admin/demo-athletes/route.ts`: 114 LOC ($\le 350$ ✅)
 - `AdminUsersTab.tsx`: 331 LOC ($\le 350$ ✅)
 - `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
 - Suite de pruebas automatizadas: **7/7 Casos PASSED (100% Éxito) ✅**.
+
+---
+
+## 97. PERSISTENCIA EN VIVO DE MACROCICLOS DEMO Y NORMALIZACIÓN MULTI-DEPORTE DE UMBRALES (v5.21)
+
+### 97.1. Causa Raíz Diagnosticada
+1. **Falta de Persistencia del Plan al Sembrar:** `seedDemoAthletes()` únicamente insertaba el documento de usuario en `users/{id}`, sin generar ni almacenar el macrociclo activo en `macrocycles/{macroId}` ni en `meta/active_macrocycle`. Al auditar o abrir el panel del atleta, el calendario aparecía vacío sin plan.
+2. **Parches de Código Heredados en Mapeo de Umbrales:** En `adminUsers.ts:59-65`, persistían filtros antiguos con números mágicos (`data.runFtp === 327`, `data.bikeFtp === 240`, `data.bikeFtp === 226`, o pace fallback forzado `"4:45"`), lo cual eliminaba el FTP de ciclistas o inventaba ritmos de carrera a atletas que solo hacían ciclismo.
+3. **Ausencia de Estado de Suscripción/Compra:** Los demos no tenían configurado `billingStatus: "PAID"` ni `planPrice`, lo que provocaba que el sistema los tratara como usuarios con facturación pendiente o bloqueada.
+
+### 97.2. Solución Integral Implementada
+1. **Generación y Persistencia Automática de Macrociclos (`demoAthletesSuite.ts` - 293 LOC):**
+   - Al sembrar los demos, `seedDemoAthletes()` ejecuta `generateCustomMacrocycleBlueprint()` para cada persona y persiste el plan completo mediante `saveMacrocycleToFirestore()`.
+   - Cada atleta demo cuenta inmediatamente con su macrociclo activo oficial listo para ser visualizado en el calendario y analizado por el Head Coach.
+   - `cleanDemoAthletes()` realiza un purgado profundo de las subcolecciones `macrocycles` y `meta`, asegurando cero residuos.
+2. **Normalización Fisiológica Multi-Deporte (`demoAthletesData.ts` - 240 LOC & `adminUsers.ts` - 347 LOC):**
+   - Eliminados todos los números mágicos de `adminUsers.ts`. Se respetan 100% los valores biométricos almacenados.
+   - Cada perfil demo cuenta con métricas coherentes con su disciplina:
+     - Runners Stryd: Run CP, Bike FTP (cross-training), Pace Umbral, LTHR, MaxHR, RestingHR.
+     - Runner Daniels: Pace Umbral (4:20/km), 0W de Stryd, LTHR, MaxHR, RestingHR.
+     - Ciclista Gran Fondo: Bike FTP 270W, LTHR, MaxHR (sin falso ritmo de carrera).
+     - Triatleta 70.3: Run CP 290W, Bike FTP 250W, Swim CSS 1:35/100m, LTHR, MaxHR.
+     - Base y Rehab: Volúmenes y umbrales adecuados de regeneración.
+3. **Presentación Clara en Tabla y Tarjetas Móviles (`AdminUsersTable.tsx` & `AdminUserCardMobile.tsx`):**
+   - Renderizado condicional inteligente: Muestra Run CP solo si existe, Ritmo solo si es aplicable, Bike FTP para disciplinas con ciclismo, y CSS para natación, con peso y LTHR visibles.
+   - Estado de suscripción `billingStatus: "PAID"` y `planPrice: 80` habilitado.
+
+### 97.3. Certificación
+- `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
+- Suite de pruebas de Fase 1: 7/7 casos PASSED (100% Éxito) ✅.
+- Límites de código: Todos los archivos $\le 350$ LOC ✅.
+
 
 
 

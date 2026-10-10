@@ -122,6 +122,8 @@ export function runPhase1TestSuite(): Phase1TestResultItem[] {
   });
 }
 
+import { saveMacrocycleToFirestore } from "../db/macrocycles";
+
 const PROTECTED_ACCOUNTS = new Set([
   "gerkof@gmail.com",
   (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "").toLowerCase(),
@@ -129,57 +131,104 @@ const PROTECTED_ACCOUNTS = new Set([
 ].filter(Boolean));
 
 /**
- * Siembra los 7 atletas demo en Firestore para pruebas en la interfaz web.
+ * Siembra los 7 atletas demo en Firestore con su perfil completo y su macrociclo activo generado.
  * Garantía absoluta: NUNCA sobrescribe ni toca usuarios reales.
  */
 export async function seedDemoAthletes(): Promise<{ success: boolean; count: number; message: string }> {
   if (!adminDb) return { success: true, count: DEMO_ATHLETES.length, message: "Modo local: 7 atletas simulados listos." };
 
-  const batch = adminDb.batch();
   const now = new Date().toISOString();
   let seededCount = 0;
 
   for (const athlete of DEMO_ATHLETES) {
-    // Salvaguarda: Solo IDs que empiecen por demo_ y correos @pulse-demo.com
     if (!athlete.id.startsWith("demo_") || !athlete.email.endsWith("@pulse-demo.com")) continue;
 
     const userRef = adminDb.collection("users").doc(athlete.id);
     const existingDoc = await userRef.get();
-
-    // Si ya existe un documento y no es un demo explícito, abortar toque
     if (existingDoc.exists && existingDoc.data()?.isDemoAthlete !== true) continue;
 
+    // 1. Perfil Completo del Atleta con todos los umbrales y suscripción activa
     const profileDoc: Partial<UserProfileData> & Record<string, any> = {
       uid: athlete.id,
       email: athlete.email,
       displayName: athlete.displayName,
       role: athlete.role,
       status: athlete.status,
-      intervalsAthleteId: athlete.biometrics.hasRunningPowerMeter ? athlete.intervalsAthleteId : undefined,
+      intervalsAthleteId: athlete.intervalsAthleteId,
       runFtp: athlete.biometrics.runFtp,
       bikeFtp: athlete.biometrics.bikeFtp,
+      swimCssStr: athlete.biometrics.swimCssStr,
       weightKg: athlete.biometrics.weightKg,
       ctl: athlete.biometrics.ctl,
+      lthr: athlete.biometrics.lthr,
+      maxHR: athlete.biometrics.maxHR,
+      restingHR: athlete.biometrics.restingHR,
       runningTrainingMode: athlete.biometrics.runningTrainingMode,
       hasRunningPowerMeter: athlete.biometrics.hasRunningPowerMeter,
       runThresholdPaceStr: athlete.biometrics.runThresholdPaceStr,
+      runThresholdPaceSecPerKm: athlete.biometrics.runThresholdPaceSec,
       weeklyAvailability: athlete.wizardConfig.weeklyAvailability,
+      planPrice: athlete.planPrice || 80,
+      planCurrency: "USD",
+      billingStatus: athlete.billingStatus || "PAID",
+      primaryGoalRace: athlete.wizardConfig.raceName,
+      primaryGoalDate: athlete.wizardConfig.raceDate,
       isDemoAthlete: true,
       demoTag: "PULSE_DEMO_ATHLETE",
       createdAt: now,
       updatedAt: now,
       lastLoginAt: now,
     };
-    batch.set(userRef, profileDoc, { merge: true });
+    await userRef.set(profileDoc, { merge: true });
+
+    // 2. Generar el Blueprint Completo del Macrociclo con IA/Motor Determinista
+    const { wizardConfig, biometrics } = athlete;
+    const blueprint = generateCustomMacrocycleBlueprint({
+      distanceType: wizardConfig.raceDistance || (wizardConfig.athleteMoment as any) || "maintenance",
+      startDate: wizardConfig.startDate,
+      weeksCount: wizardConfig.weeksCount,
+      customGoal: wizardConfig.raceName || `Plan ${wizardConfig.athleteMoment}`,
+      periodization: wizardConfig.periodization,
+      primaryRace: wizardConfig.hasRace && wizardConfig.raceName ? {
+        id: `race-${athlete.id}`,
+        name: wizardConfig.raceName,
+        date: wizardConfig.raceDate || "",
+        distance: wizardConfig.raceDistance || "42k",
+        priority: "A",
+        goalTarget: wizardConfig.raceGoal,
+      } : undefined,
+      athleteMetrics: {
+        ctl: biometrics.ctl,
+        runFtp: biometrics.runFtp,
+        bikeFtp: biometrics.bikeFtp,
+        runningTrainingMode: biometrics.runningTrainingMode,
+        hasRunningPowerMeter: biometrics.hasRunningPowerMeter,
+        weightKg: biometrics.weightKg,
+        weeklyAvailability: wizardConfig.weeklyAvailability,
+      },
+    });
+
+    // 3. Persistir el Macrociclo Activo en Firestore para inspección en vivo
+    await saveMacrocycleToFirestore(
+      athlete.id,
+      blueprint,
+      blueprint.primaryRace,
+      "AI_GENERATED",
+      athlete.id
+    );
+
     seededCount++;
   }
 
-  if (seededCount > 0) await batch.commit();
-  return { success: true, count: seededCount, message: `${seededCount} atletas demo sembrados con éxito. Usuarios reales 100% protegidos.` };
+  return {
+    success: true,
+    count: seededCount,
+    message: `${seededCount} atletas demo sembrados con umbrales completos y macrociclos activos en Firestore.`,
+  };
 }
 
 /**
- * Elimina exclusivamente los atletas demo de Firestore de forma quirúrgica.
+ * Elimina exclusivamente los atletas demo y sus macrociclos de Firestore de forma quirúrgica.
  * Salvaguarda quíntuple: Jamás toca usuarios reales ni cuentas de administración.
  */
 export async function cleanDemoAthletes(): Promise<{ success: boolean; count: number; message: string }> {
@@ -188,14 +237,12 @@ export async function cleanDemoAthletes(): Promise<{ success: boolean; count: nu
   const knownDemoIds = new Set(DEMO_ATHLETES.map((a) => a.id));
   const snapshot = await adminDb.collection("users").where("demoTag", "==", "PULSE_DEMO_ATHLETE").get();
 
-  const batch = adminDb.batch();
   let deletedCount = 0;
 
   for (const doc of snapshot.docs) {
     const data = doc.data();
     const email = (data?.email || "").toLowerCase();
 
-    // Quíntuple verificación de seguridad:
     const isKnownDemoId = knownDemoIds.has(doc.id) && doc.id.startsWith("demo_");
     const isExplicitDemoTag = data.isDemoAthlete === true && data.demoTag === "PULSE_DEMO_ATHLETE";
     const isDemoDomain = email.endsWith("@pulse-demo.com");
@@ -203,12 +250,19 @@ export async function cleanDemoAthletes(): Promise<{ success: boolean; count: nu
     const isNotAdmin = data.role !== "admin";
 
     if (isKnownDemoId && isExplicitDemoTag && isDemoDomain && isNotProtected && isNotAdmin) {
-      batch.delete(doc.ref);
+      // Purgar subcolecciones de macrociclos y meta
+      const macroSnap = await doc.ref.collection("macrocycles").get();
+      const metaSnap = await doc.ref.collection("meta").get();
+      const subBatch = adminDb.batch();
+      macroSnap.docs.forEach((m) => subBatch.delete(m.ref));
+      metaSnap.docs.forEach((m) => subBatch.delete(m.ref));
+      subBatch.delete(doc.ref);
+      await subBatch.commit();
       deletedCount++;
     }
   }
 
-  // Fallback seguro: solo barrer IDs conocidos de DEMO_ATHLETES
+  // Fallback seguro: barrer IDs conocidos de DEMO_ATHLETES
   if (deletedCount === 0) {
     for (const a of DEMO_ATHLETES) {
       if (!a.id.startsWith("demo_")) continue;
@@ -217,23 +271,23 @@ export async function cleanDemoAthletes(): Promise<{ success: boolean; count: nu
       if (doc.exists) {
         const data = doc.data();
         const email = (data?.email || "").toLowerCase();
-        if (
-          data?.isDemoAthlete === true &&
-          email.endsWith("@pulse-demo.com") &&
-          !PROTECTED_ACCOUNTS.has(email)
-        ) {
-          batch.delete(docRef);
+        if (data?.isDemoAthlete === true && email.endsWith("@pulse-demo.com") && !PROTECTED_ACCOUNTS.has(email)) {
+          const macroSnap = await docRef.collection("macrocycles").get();
+          const metaSnap = await docRef.collection("meta").get();
+          const subBatch = adminDb.batch();
+          macroSnap.docs.forEach((m) => subBatch.delete(m.ref));
+          metaSnap.docs.forEach((m) => subBatch.delete(m.ref));
+          subBatch.delete(docRef);
+          await subBatch.commit();
           deletedCount++;
         }
       }
     }
   }
 
-  if (deletedCount > 0) await batch.commit();
-
   return {
     success: true,
     count: deletedCount,
-    message: `${deletedCount} atletas demo eliminados. Cero impacto en usuarios reales.`,
+    message: `${deletedCount} atletas demo y sus macrociclos eliminados sin tocar usuarios reales.`,
   };
 }

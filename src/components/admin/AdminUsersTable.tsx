@@ -175,32 +175,41 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                     {/* Columna 4: Umbrales Fisiológicos */}
                     <td className="py-4 px-5 sm:px-6">
                       <div className="flex flex-col gap-1.5 text-xs font-mono whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
-                          {isPaceMode ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/70 text-[11px] font-semibold">
-                              <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
-                              <span className="text-slate-500 font-sans">Ritmo:</span>
-                              <strong className="font-bold">{u.runThresholdPaceStr || "4:45"}/km</strong>
-                            </span>
-                          ) : (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {Boolean(u.runFtp && u.runFtp > 0) ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/70 text-[11px] font-semibold">
                               <Zap className="h-3 w-3 text-amber-600 shrink-0" />
                               <span className="text-slate-500 font-sans">Run CP:</span>
-                              <strong className="font-bold">{u.runFtp || 0}W</strong>
+                              <strong className="font-bold">{u.runFtp}W</strong>
+                            </span>
+                          ) : u.runThresholdPaceStr ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/70 text-[11px] font-semibold">
+                              <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span className="text-slate-500 font-sans">Ritmo:</span>
+                              <strong className="font-bold">{u.runThresholdPaceStr}/km</strong>
+                            </span>
+                          ) : null}
+
+                          {Boolean(u.bikeFtp && u.bikeFtp > 0) && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200/70 text-[11px] font-semibold">
+                              <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
+                              <span className="text-slate-500 font-sans">Bike FTP:</span>
+                              <strong className="font-bold">{u.bikeFtp}W</strong>
                             </span>
                           )}
 
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200/70 text-[11px] font-semibold">
-                            <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
-                            <span className="text-slate-500 font-sans">Bike FTP:</span>
-                            <strong className="font-bold">{u.bikeFtp || 0}W</strong>
-                          </span>
+                          {u.swimCssStr && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200/70 text-[11px] font-semibold">
+                              <span className="text-slate-500 font-sans">🏊 CSS:</span>
+                              <strong className="font-bold">{u.swimCssStr}/100m</strong>
+                            </span>
+                          )}
                         </div>
 
-                        {(u.weightKg || u.swimCssStr) && (
+                        {(u.weightKg || u.lthr) && (
                           <div className="text-[10px] text-slate-400 font-sans flex items-center gap-2">
                             {u.weightKg && <span>⚖️ {u.weightKg} kg</span>}
-                            {u.swimCssStr && <span>🏊 CSS: {u.swimCssStr}/100m</span>}
+                            {u.lthr && <span>❤️ LTHR: {u.lthr} bpm</span>}
                           </div>
                         )}
                       </div>

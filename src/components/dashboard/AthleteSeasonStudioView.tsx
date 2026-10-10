@@ -105,15 +105,16 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     const distType =
       prog.key === "MANTENIMIENTO" || prog.discipline === "Salud"
         ? "maintenance"
+        : prog.key === "BASE_BUILD" || prog.discipline === "Base"
+        ? "base_building"
         : prog.discipline === "Triatlón" ? "triathlon_703"
-        : prog.key === "BASE_BUILD" ? "42k"
         : prog.discipline === "Carrera" ? (prog.weeks <= 12 ? "21k" : "42k")
         : "42k";
 
     const blueprint = generateCustomMacrocycleBlueprint({
       distanceType: distType,
       startDate, weeksCount: prog.weeks, customGoal: prog.name,
-      primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
+      primaryRace: (distType === "maintenance" || distType === "base_building") ? undefined : (primaryRace || undefined),
       athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
     });
 
@@ -136,14 +137,15 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       const diff = today.getDate() + (today.getDay() === 0 ? 1 : 8 - today.getDay());
       const startDate = new Date(today.setDate(diff)).toISOString().split("T")[0];
       const isMaint = /manten|salud|health|longev/i.test(primaryDiscipline + userPrompt);
+      const isBase = /base|gpp|pretemporada/i.test(primaryDiscipline + userPrompt);
       const isTri = /triat|triath/i.test(primaryDiscipline);
       const isTrail = /trail|ultra|monta/i.test(primaryDiscipline);
       const isCycling = /cicl|bici|fondo|bike/i.test(primaryDiscipline);
-      const distType = isMaint ? "maintenance" : isTri ? "triathlon_703" : isTrail ? "trail_50k" : isCycling ? "cycling_fondo" : "42k";
+      const distType = isMaint ? "maintenance" : isBase ? "base_building" : isTri ? "triathlon_703" : isTrail ? "trail_50k" : isCycling ? "cycling_fondo" : "42k";
 
       const blueprint = generateCustomMacrocycleBlueprint({
         distanceType: distType, startDate, weeksCount, customGoal: userPrompt,
-        primaryRace: distType === "maintenance" ? undefined : (primaryRace || undefined),
+        primaryRace: (distType === "maintenance" || distType === "base_building") ? undefined : (primaryRace || undefined),
         athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
       });
 

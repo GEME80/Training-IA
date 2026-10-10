@@ -37,7 +37,9 @@ export function generateWeekTemplate(
   const { weekNumber, phase, microcycleType } = week;
   const countdown = week.countdownWeeks || Math.max(1, 16 - (weekNumber || 1) + 1);
   const totalWeeks = (week as any).totalWeeks || (weekNumber + countdown - 1) || 16;
-  const isRecovery = microcycleType === "DESCARGA_ASIMILACION", isRaceWeek = phase === "RACE_WEEK" || countdown === 1 || microcycleType === "COMPETICION";
+  const isRecovery = microcycleType === "DESCARGA_ASIMILACION";
+  const hasTargetRace = Boolean(primaryRaceDate) || (Boolean(distanceType) && distanceType !== "maintenance" && distanceType !== "base_building" && distanceType !== "injury_rehab" && distanceType !== "post_race_recovery");
+  const isRaceWeek = (microcycleType === "COMPETICION" || phase === "RACE_WEEK" || (countdown === 1 && hasTargetRace)) && microcycleType !== "MANTENIMIENTO" && phase !== "MAINTENANCE";
 
   const curatedModel = resolveCuratedModelForWeek(distanceType, week.focusDescription, safeAvailability);
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);

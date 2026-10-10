@@ -96,7 +96,7 @@ export function generateWizardMacrocycle(
   // CASO 1: SIN CARRERA (Momento del Atleta)
   if (!config.hasRace) {
     const moment = config.athleteMoment || "maintenance";
-    const totalWeeks = config.weeksCount || (moment === "post_race_recovery" ? 3 : moment === "injury_rehab" ? 6 : 8);
+    const totalWeeks = config.weeksCount || (config as any).momentWeeks || (moment === "base_building" ? 10 : moment === "post_race_recovery" ? 3 : moment === "injury_rehab" ? 6 : 8);
     const weeks: MacrocycleWeek[] = [];
 
     for (let i = 0; i < totalWeeks; i++) {
@@ -171,14 +171,9 @@ export function generateWizardMacrocycle(
     return {
       mode: "GENERAL_MAINTENANCE",
       cycleTitle: `Plan de ${moment === "base_building" ? "Construcción de Base GPP" : moment === "post_race_recovery" ? "Recuperación Post-Carrera" : moment === "injury_rehab" ? "Reacondicionamiento" : "Mantenimiento Adaptativo"} (${totalWeeks} semanas)`,
-      primaryRace: null,
-      startDate: weeks[0].startDate,
-      raceDate: null,
-      weeksUntilKickoff: 0,
-      totalWeeks,
-      currentWeekIndex: 0,
-      currentWeek: weeks[0],
-      weeks,
+      primaryRace: null, startDate: weeks[0].startDate, raceDate: null,
+      weeksUntilKickoff: 0, totalWeeks, currentWeekIndex: 0, currentWeek: weeks[0], weeks,
+      distanceType: moment === "base_building" ? "base_building" : "maintenance",
     };
   }
 
@@ -243,14 +238,10 @@ export function generateWizardMacrocycle(
     return {
       mode: "PRE_SEASON_MAINTENANCE",
       cycleTitle: `Mantenimiento Pre-Competición: ${primaryRace.name} (${totalBridgeWeeks} semanas hasta Kickoff)`,
-      primaryRace,
-      startDate: weeks[0]?.startDate || formatDate(currentMonday),
-      raceDate: primaryRace.date,
-      weeksUntilKickoff: timeline.weeksUntilKickoff,
-      totalWeeks: totalBridgeWeeks,
-      currentWeekIndex: resolvedCurrentIndex,
-      currentWeek: weeks[resolvedCurrentIndex] || weeks[0],
-      weeks,
+      primaryRace, startDate: weeks[0]?.startDate || formatDate(currentMonday), raceDate: primaryRace.date,
+      weeksUntilKickoff: timeline.weeksUntilKickoff, totalWeeks: totalBridgeWeeks,
+      currentWeekIndex: resolvedCurrentIndex, currentWeek: weeks[resolvedCurrentIndex] || weeks[0],
+      weeks, distanceType: "maintenance",
     };
   }
 

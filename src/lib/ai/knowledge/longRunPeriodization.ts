@@ -66,6 +66,14 @@ export function buildDynamicLongRunStructure(params: {
     targetDistanceKm !== undefined &&
     targetDistanceKm <= 10;
 
+  const isGeneralHealthOrBase =
+    sportCategory === "General" ||
+    modelId === "BASE_GPP" ||
+    modelId === "BASE_LONGEVITY" ||
+    modelId === "GENERAL_BUILD" ||
+    modelId === "POST_RACE_DELOAD" ||
+    modelId === "INJURY_REHAB";
+
   // ══════════════════════════════════════════════════════════════
   // 1. TRIATLÓN OLÍMPICO / SPRINT (Cero Maratón, Cero Canova)
   // ══════════════════════════════════════════════════════════════
@@ -191,7 +199,27 @@ export function buildDynamicLongRunStructure(params: {
   }
 
   // ══════════════════════════════════════════════════════════════
-  // 4. MARATÓN 42.195 KM (100% INTACTO E INALTERADO)
+  // 4. MANTENIMIENTO, SALUD & BASE GPP (Cero Canova 42K)
+  // ══════════════════════════════════════════════════════════════
+  if (isGeneralHealthOrBase) {
+    const cappedMins = Math.min(90, Math.max(40, rawMins));
+    const cappedKm = Math.min(16, Math.max(7, rawKm));
+    if (phase === "BUILD" || isPeak) {
+      return {
+        workoutName: `Tirada Progresiva Cómoda en Zona 2 (${cappedKm} km / ${cappedMins}m)`,
+        powerTarget: fmtPwr(74, 82, "Z2 Cómoda Progresiva"),
+        workoutDoc: `Warmup\n- 12m 72% CP Activación\n\nMain (Z2 Aeróbica)\n- ${Math.max(20, cappedMins - 22)}m 78-82% CP\n\nCooldown\n- 10m 68% CP Soltura`,
+      };
+    }
+    return {
+      workoutName: `Fondo Mitocondrial Cómodo Z2 (${cappedKm} km / ${cappedMins}m)`,
+      powerTarget: fmtPwr(70, 78, "Z2 Mitocondrial"),
+      workoutDoc: `Warmup\n- 10m 70% CP Activación\n\nMain (Z2 Continua)\n- ${Math.max(20, cappedMins - 18)}m 75% CP\n\nCooldown\n- 8m 68% CP`,
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // 5. MARATÓN 42.195 KM (100% INTACTO E INALTERADO)
   // ══════════════════════════════════════════════════════════════
   const baseKm = rawKm;
   const baseMins = rawMins;

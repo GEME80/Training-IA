@@ -60,6 +60,7 @@ export function resolveTrainingModel(params: {
   if (dist === "trail_50k") return TRAIL_ULTRA_MODEL;
   if (dist === "general_build") return GENERAL_BUILD_MODEL;
   if (dist === "base_building") return BASE_GPP_MODEL;
+  if (dist === "maintenance") return BASE_LONGEVITY_MODEL;
   if (dist === "speed_block") return SPEED_BLOCK_MODEL;
 
   const moment = (params.athleteMoment || "").toLowerCase();
@@ -177,7 +178,8 @@ export function calculateProgressiveLongRun(
   const scaledPeakMins = Math.min(maxCapMins, levelMaxMins);
 
   // 1. Fase de Competición Oficial
-  if (phase === "RACE_WEEK" || countdown === 1) {
+  const isMoment = model.sportCategory === "General" || model.modelId === "BASE_LONGEVITY" || model.modelId === "BASE_GPP";
+  if (phase === "RACE_WEEK" || (countdown === 1 && !isMoment && phase !== "MAINTENANCE" && phase !== "RECOVERY")) {
     const isTri = model.sportCategory === "Triathlon";
     const raceDist = isTri
       ? (model.modelId === "TRIATHLON_SHORT" ? 10 : model.modelId === "TRIATHLON_70_3" ? 21.1 : 42.2)

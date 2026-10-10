@@ -98,8 +98,9 @@ export const MacrocycleView: React.FC<MacrocycleViewProps> = ({
   };
 
   const effAvailability = (blueprint?.availabilitySnapshot as any) || weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY;
+  const effectiveDistanceType = (blueprint?.distanceType || primaryRace?.distance || (blueprint?.mode === "GENERAL_MAINTENANCE" ? "maintenance" : undefined)) as any;
   const selectedWeekPlan = selectedWeek
-    ? generateWeekTemplate(selectedWeek, profile.run_ftp, profile.bike_ftp, effAvailability, primaryRace?.distance as any)
+    ? generateWeekTemplate(selectedWeek, profile.run_ftp, profile.bike_ftp, effAvailability, effectiveDistanceType)
     : [];
 
   const getDistanceLabel = (dist?: string) => {
@@ -412,7 +413,7 @@ export const MacrocycleView: React.FC<MacrocycleViewProps> = ({
             runFtp={profile.run_ftp}
             bikeFtp={profile.bike_ftp}
             weeklyAvailability={weeklyAvailability}
-            distanceType={primaryRace?.distance as any}
+            distanceType={effectiveDistanceType}
             selectedWeekIndex={selectedWeekIndex}
             onSelectWeek={(idx) => setSelectedWeekIndex(idx)}
             onJumpToMicrocycle={onJumpToMicrocycleWithAI}

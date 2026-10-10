@@ -197,7 +197,7 @@ export const SeasonStudioModal: React.FC<SeasonStudioModalProps> = ({
       startDate,
       endDate,
       periodization: progressionRate === "CONSERVADOR" ? "2:1" : "3:1",
-      primaryRace: primaryRace || null,
+      primaryRace: (selectedGoalTemplate === "MANTENIMIENTO" || selectedGoalTemplate === "BASE_BUILD") ? null : (primaryRace || null),
       athleteMetrics: {
         ctl,
         runFtp,

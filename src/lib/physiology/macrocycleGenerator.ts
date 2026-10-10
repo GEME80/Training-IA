@@ -285,7 +285,7 @@ export function generateCustomMacrocycleBlueprint(
     const testBadge = scheduledTests.length > 0 ? `🧪 ${resolvedTestName} • ` : "";
     const isTri = curatedModel.sportCategory === "Triathlon";
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
-    const raceNote = countdown === 1
+    const raceNote = (isEventDriven && countdown === 1)
       ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km). Carrera objetivo con ritmo específico y tapering.`)
       : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? "Fondo dominical" : "Tirada dominical"} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;

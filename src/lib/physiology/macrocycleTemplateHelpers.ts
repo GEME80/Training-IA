@@ -295,7 +295,9 @@ export function resolveCuratedModelForWeek(
     const hasSwim = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /natacion|swim/i.test(d)));
     const hasRide = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
     const hasRun = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /carrera|run/i.test(d)));
-    if (/70\.3|703|medio iron/i.test(f)) resolved = "triathlon_703";
+    if (/manten|salud|longev|caco|rehab/i.test(f)) resolved = "maintenance";
+    else if (/base|gpp|pretemporada/i.test(f)) resolved = "base_building";
+    else if (/70\.3|703|medio iron/i.test(f)) resolved = "triathlon_703";
     else if (/ironman|140\.6|1406/i.test(f)) resolved = "triathlon_1406";
     else if (hasSwim && hasRide) resolved = "triathlon_short";
     else if (hasRide && !hasRun) resolved = "cycling_fondo";

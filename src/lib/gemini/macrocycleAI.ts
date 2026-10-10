@@ -43,27 +43,41 @@ export class MacrocycleAIEngine {
     const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
     const startDate = config.startDate || new Date(today.setDate(diff)).toISOString().split("T")[0];
 
-    const distType = (config.targetDistance || config.raceDistance || "42k") as any;
-    const requestedWeeks = config.weeksCount || 16;
+    const isMaintenanceOrMoment = !config.hasRace && Boolean(config.athleteMoment || !config.raceName);
+    const resolvedMomentDist = config.athleteMoment === "base_building"
+      ? "base_building"
+      : config.athleteMoment === "post_race_recovery"
+      ? "post_race_recovery"
+      : config.athleteMoment === "injury_rehab"
+      ? "injury_rehab"
+      : "maintenance";
 
-    // 1. Resolver modelo científico rector (Canova / Coggan / Friel / Koop / Seiler)
+    const distType = (isMaintenanceOrMoment ? resolvedMomentDist : (config.targetDistance || config.raceDistance || "42k")) as any;
+    const requestedWeeks = config.weeksCount || (isMaintenanceOrMoment ? (config.athleteMoment === "post_race_recovery" ? 3 : config.athleteMoment === "injury_rehab" ? 6 : 8) : 16);
+
+    // 1. Resolver modelo científico rector SSOT (Canova / Daniels / Coggan / Seiler / Attia)
     const curatedModel = resolveTrainingModel({
-      targetDistance: config.targetDistance,
-      raceDistance: config.raceDistance,
+      targetDistance: distType,
+      raceDistance: config.hasRace ? config.raceDistance : undefined,
       athleteMoment: config.athleteMoment,
       trainingApproach: config.trainingApproach,
-      raceName: config.raceName,
+      raceName: config.hasRace ? config.raceName : undefined,
+      customGoal: !config.hasRace ? `Plan de ${resolvedMomentDist}` : undefined,
     });
 
     const isPreventive = config.periodization === "2:1";
+
+    const customGoalTitle = !config.hasRace
+      ? `Plan de ${config.athleteMoment === "base_building" ? "Construcción de Base GPP" : config.athleteMoment === "post_race_recovery" ? "Recuperación Post-Carrera" : config.athleteMoment === "injury_rehab" ? "Reacondicionamiento" : "Mantenimiento Adaptativo"} (${requestedWeeks} semanas). Metodología: ${curatedModel.displayName}`
+      : `${config.raceName || "Macrociclo de Temporada"}. Metodología: ${curatedModel.displayName}`;
 
     const baseBlueprint = generateCustomMacrocycleBlueprint({
       distanceType: distType,
       startDate,
       weeksCount: requestedWeeks,
-      customGoal: `${config.raceName || "Macrociclo de Temporada"}. Metodología: ${curatedModel.displayName}`,
+      customGoal: customGoalTitle,
       periodization: (config.periodization as any) || "3:1",
-      primaryRace: config.hasRace || config.raceName ? {
+      primaryRace: (config.hasRace && config.raceName) ? {
         id: `race-${Date.now()}`,
         name: config.raceName || "Competición Objetivo",
         date: config.raceDate || "",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity } from "lucide-react";
+import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity, Sparkles, Trash2 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { useAuth } from "@/context/AuthContext";
 import { AdminUsersTable } from "./AdminUsersTable";
@@ -25,16 +25,19 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   onInspectAthlete,
 }) => {
   const { user, userProfile } = useAuth();
-  const [searchTerm, setSearchTerm] = useState<string>("" );
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [quickFilter, setQuickFilter] = useState<QuickTabFilter>("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [connectionFilter, setConnectionFilter] = useState<string>("ALL");
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isSeedingDemos, setIsSeedingDemos] = useState<boolean>(false);
 
   // Modales
   const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<AdminUserListItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<AdminUserListItem | null>(null);
+
+  const hasDemos = useMemo(() => users.some((u) => u.uid?.startsWith("demo_") || u.email?.includes("pulse-demo.com")), [users]);
 
   // Conteo para métricas y segmentos
   const counts = useMemo(() => {
@@ -55,20 +58,9 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         (u.displayName && u.displayName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (u.intervalsAthleteId && u.intervalsAthleteId.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      let matchesQuick = true;
-      if (quickFilter === "ACTIVE") {
-        matchesQuick = u.status === "active";
-      } else if (quickFilter === "PENDING") {
-        matchesQuick = u.status === "pending";
-      } else if (quickFilter === "INVITED") {
-        matchesQuick = isPreAuth;
-      }
-
+      const matchesQuick = quickFilter === "ALL" ? true : quickFilter === "ACTIVE" ? u.status === "active" : quickFilter === "PENDING" ? u.status === "pending" : isPreAuth;
       const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
-      const matchesConnection =
-        connectionFilter === "ALL" ||
-        (connectionFilter === "CONNECTED" && Boolean(u.intervalsAthleteId)) ||
-        (connectionFilter === "UNLINKED" && !u.intervalsAthleteId);
+      const matchesConnection = connectionFilter === "ALL" || (connectionFilter === "CONNECTED" && Boolean(u.intervalsAthleteId)) || (connectionFilter === "UNLINKED" && !u.intervalsAthleteId);
 
       return matchesSearch && matchesQuick && matchesRole && matchesConnection;
     });
@@ -80,6 +72,34 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  const handleSeedDemos = async () => {
+    setIsSeedingDemos(true);
+    try {
+      const res = await fetch("/api/admin/demo-athletes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "seed", requesterUid: user?.uid || userProfile?.uid, requesterEmail: user?.email || userProfile?.email }),
+      });
+      const data = await res.json();
+      if (data.success) { showMessage("7 Atletas Demo sembrados para pruebas.", "success"); onRefresh(); }
+      else showMessage(data.error || "Error al sembrar demos.", "error");
+    } catch { showMessage("Error al sembrar demos.", "error"); } finally { setIsSeedingDemos(false); }
+  };
+
+  const handleCleanDemos = async () => {
+    setIsSeedingDemos(true);
+    try {
+      const res = await fetch("/api/admin/demo-athletes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clean", requesterUid: user?.uid || userProfile?.uid, requesterEmail: user?.email || userProfile?.email }),
+      });
+      const data = await res.json();
+      if (data.success) { showMessage("Atletas demo eliminados correctamente.", "success"); onRefresh(); }
+      else showMessage(data.error || "Error al eliminar demos.", "error");
+    } catch { showMessage("Error al eliminar demos.", "error"); } finally { setIsSeedingDemos(false); }
+  };
+
   const handleStatusChange = async (targetUid: string, targetEmail: string, newStatus: UserStatus) => {
     try {
       const requesterUid = user?.uid || userProfile?.uid || "superadmin-root";
@@ -88,14 +108,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
       const res = await fetch("/api/admin/users/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          targetUid,
-          targetEmail,
-          newStatus,
-          status: newStatus,
-          requesterUid,
-          requesterEmail,
-        }),
+        body: JSON.stringify({ targetUid, targetEmail, newStatus, status: newStatus, requesterUid, requesterEmail }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al actualizar estado");
@@ -125,6 +138,30 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {hasDemos ? (
+            <button
+              type="button"
+              onClick={handleCleanDemos}
+              disabled={isSeedingDemos}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+              title="Borrar los atletas demo de prueba"
+            >
+              <Trash2 className="h-4 w-4 text-rose-600" />
+              <span className="hidden sm:inline">Borrar Demos</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSeedDemos}
+              disabled={isSeedingDemos}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+              title="Sembrar los 7 atletas demo para pruebas"
+            >
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              <span className="hidden sm:inline">+ 7 Demos</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleManualRefresh}
@@ -142,7 +179,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer w-full sm:w-auto"
           >
             <UserPlus className="h-4 w-4" />
-            <span>+ Invitar / Registrar Atleta</span>
+            <span>+ Invitar Atleta</span>
           </button>
         </div>
       </div>
@@ -188,57 +225,23 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
       {/* 3. Segmentos Rápidos de Navegación (Tabs por Estado) */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar touch-bounce border-b border-slate-200/80 pb-2.5">
-        <button
-          type="button"
-          onClick={() => setQuickFilter("ALL")}
-          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-            quickFilter === "ALL"
-              ? "bg-slate-900 text-white shadow-xs"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
+        <button type="button" onClick={() => setQuickFilter("ALL")} className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${quickFilter === "ALL" ? "bg-slate-900 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
           <Users className="h-3.5 w-3.5" />
           <span>Todos ({counts.total})</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setQuickFilter("ACTIVE")}
-          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-            quickFilter === "ACTIVE"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
+        <button type="button" onClick={() => setQuickFilter("ACTIVE")} className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${quickFilter === "ACTIVE" ? "bg-emerald-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
           <CheckCircle2 className="h-3.5 w-3.5" />
           <span>Activos ({counts.active})</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setQuickFilter("PENDING")}
-          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-            quickFilter === "PENDING"
-              ? "bg-amber-500 text-white shadow-xs"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
+        <button type="button" onClick={() => setQuickFilter("PENDING")} className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${quickFilter === "PENDING" ? "bg-amber-500 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
           <Clock className="h-3.5 w-3.5" />
           <span>Solicitudes Pendientes ({counts.pending})</span>
-          {counts.pending > 0 && (
-            <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
-          )}
+          {counts.pending > 0 && <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />}
         </button>
 
-        <button
-          type="button"
-          onClick={() => setQuickFilter("INVITED")}
-          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-            quickFilter === "INVITED"
-              ? "bg-sky-600 text-white shadow-xs"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
+        <button type="button" onClick={() => setQuickFilter("INVITED")} className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${quickFilter === "INVITED" ? "bg-sky-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
           <Mail className="h-3.5 w-3.5" />
           <span>Invitados ({counts.invited})</span>
         </button>

@@ -6741,6 +6741,47 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
   - Caso Hiper-Aspiracional (2h30 con 240W): Objetivo 150m vs Predicho 221m (Brecha +32.1%, HIGHLY_ASPIRATIONAL ✅). Ritmo escalonado 4:49/km stepping stone para 3h23 seguro sin lesiones.
   - Progresión semanal verificada: Sem 1 (10x 100m) $\rightarrow$ Sem 3 (6x 300m) $\rightarrow$ Sem 4 (4x 100m descarga) $\rightarrow$ Sem 6 (7x 1000m) $\rightarrow$ Sem 7 (4x 2000m) $\rightarrow$ Sem 11 (3x 3000m Canova) $\rightarrow$ Sem 14 (4x 400m chispa) $\rightarrow$ Sem 16 (42.2k meta 3h05) (PASS ✅).
 
+---
+
+## 96. SUITE EXHAUSTIVA DE PRUEBAS DE FASE 1 CON ATLETAS DEMO MULTI-ROL (v5.20)
+
+### 96.1. Propósito y Alcance
+Para validar que la arquitectura de macrociclos, periodización, anti-monotonía y cálculo progresivo funcione holísticamente en todos los perfiles atléticos (Running puro, Cross-Training, Ciclismo Gran Fondo, Triatlón 70.3, Mantenimiento/Base Salud y Recuperación/Rehab), se implementó una suite completa de 7 atletas demo con datos biométricos, objetivos y configuraciones del Wizard que cubren el 100% de los flujos de usuario.
+
+### 96.2. Arquitectura de Pruebas Implementada
+1. **Matriz de Atletas Demo (`demoAthletesData.ts` - 341 LOC):**
+   - **TC-01:** `demo_runner_tokio_305` — Germán Morales (Maratón Tokio 3:05, Cross-Training, Stryd CP 280W, Potencia Running).
+   - **TC-02:** `demo_runner_valencia_230` — Sofía Arango (Valencia 2:30 Aspiracional, CP 240W, Stepping Stone 3h23 seguro).
+   - **TC-03:** `demo_runner_pace_daniels` — Carlos Mendoza (21K Daniels, Sin Potenciómetro, Modo Ritmo min/km puro).
+   - **TC-04:** `demo_cyclist_gran_fondo` — Mateo Vélez (Gran Fondo 140K Ciclismo Puro, Rønnestad 30/15, 0 sesiones running).
+   - **TC-05:** `demo_triathlete_703` — Valentina Ríos (Triatlón Media Distancia 70.3, Natación técnica, rodaje y bici Z2).
+   - **TC-06:** `demo_base_mitochondrial` — Alejandro Gómez (Base Building Salud / Longevidad Attia-Seiler, sin carrera A).
+   - **TC-07:** `demo_rehab_post_race` — Diana Morales (Recuperación / Asimilación Post-Competición, carga $\le 250$ TSS).
+
+2. **Suite de Ejecución y Gestión Firestore (`demoAthletesSuite.ts` - 188 LOC):**
+   - `runPhase1TestSuite()`: Evalúa deterministamente la Fase 1 (Semanas 1-4) de los 7 atletas verificando factibilidad, microciclos 3:1, progresiones lineales y distribución por deporte.
+   - `seedDemoAthletes()`: Siembra los 7 perfiles en Firestore con tags de seguridad (`demoTag: "PULSE_DEMO_ATHLETE"` e IDs `demo_*`).
+   - `cleanDemoAthletes()`: Purga exclusivamente los documentos demo sin alterar usuarios reales ni Superadmin.
+
+3. **API Endpoint Administrativo (`/api/admin/demo-athletes` - 114 LOC):**
+   - `GET`: Retorna los atletas demo y ejecuta el reporte de auditoría en vivo.
+   - `POST { action: "seed" }`: Siembra en 1 clic los 7 atletas demo.
+   - `POST { action: "clean" }`: Borra en 1 clic todos los atletas demo.
+   - `POST { action: "run-tests" }`: Ejecuta la matriz de pruebas y entrega el reporte JSON.
+
+4. **Interfaz de Usuario Administrativa (`AdminUsersTab.tsx` - 331 LOC):**
+   - Botón contextual `[+ 7 Demos]` (púrpura) cuando no hay demos en el sistema.
+   - Botón contextual `[Borrar Demos]` (rojo) cuando hay demos detectados.
+   - Compatible con el botón de impersonación existente `[Auditar Atleta]` para navegar en vivo en el navegador como cualquiera de los 7 atletas en modo lectura.
+
+### 96.3. Verificación de Cumplimiento de Límites
+- `demoAthletesData.ts`: 341 LOC ($\le 350$ ✅)
+- `demoAthletesSuite.ts`: 188 LOC ($\le 350$ ✅)
+- `src/app/api/admin/demo-athletes/route.ts`: 114 LOC ($\le 350$ ✅)
+- `AdminUsersTab.tsx`: 331 LOC ($\le 350$ ✅)
+- `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
+- Suite de pruebas automatizadas: **7/7 Casos PASSED (100% Éxito) ✅**.
+
 
 
 

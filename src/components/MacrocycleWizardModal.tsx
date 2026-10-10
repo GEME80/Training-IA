@@ -62,12 +62,24 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
   // Estado del paso actual en el Wizard (1 a 5)
   const [currentStep, setCurrentStep] = useState<number>(1);
 
+  // Fecha sugerida por defecto: 16 semanas desde hoy
+  const defaultSuggestedRaceDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 16 * 7);
+    return d.toISOString().split("T")[0];
+  }, []);
+
+  // Modalidad rectora deducida del perfil real del atleta
+  const defaultIntensityMetric = (profile?.hasRunningPowerMeter === false || profile?.runningTrainingMode === "PACE" || (!profile?.run_ftp && profile?.runningTrainingMode !== "POWER"))
+    ? "PACE"
+    : "POWER";
+
   // Paso 1 & 2: Tipo de Plan y Detalles
   const [hasRace, setHasRace] = useState<boolean>(true);
-  const [raceName, setRaceName] = useState<string>("Maratón de Tokio 2027");
+  const [raceName, setRaceName] = useState<string>("");
   const [raceDistance, setRaceDistance] = useState<any>("42k");
-  const [raceDate, setRaceDate] = useState<string>("2027-03-07");
-  const [raceGoal, setRaceGoal] = useState<string>("Sub-3h00m (280W Stryd)");
+  const [raceDate, setRaceDate] = useState<string>(defaultSuggestedRaceDate);
+  const [raceGoal, setRaceGoal] = useState<string>("");
 
   const [athleteMoment, setAthleteMoment] = useState<any>("maintenance");
   const [momentWeeks, setMomentWeeks] = useState<number>(8);
@@ -76,7 +88,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
   const [bridgeStrategy, setBridgeStrategy] = useState<"MAINTENANCE" | "BASE_GPP" | "EXTENDED_SPECIFIC">("MAINTENANCE");
 
   // Modalidad de Intensidad Rector (Potencia, FC, Ritmo o RPE)
-  const [intensityMetric, setIntensityMetric] = useState<"POWER" | "HEART_RATE" | "PACE" | "RPE">("POWER");
+  const [intensityMetric, setIntensityMetric] = useState<"POWER" | "HEART_RATE" | "PACE" | "RPE">(defaultIntensityMetric);
 
   // Paso 5: Estado de Generación con IA
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
@@ -301,7 +313,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                       type="text"
                       value={raceName}
                       onChange={(e) => setRaceName(e.target.value)}
-                      placeholder="Ej. Maratón de Tokio 2027"
+                      placeholder="Ej. Maratón de Valencia, Gran Fondo, etc."
                       className="mt-1 w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
                     />
                   </div>

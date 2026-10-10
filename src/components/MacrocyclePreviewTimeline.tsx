@@ -45,8 +45,8 @@ export const MacrocyclePreviewTimeline: React.FC<MacrocyclePreviewTimelineProps>
   onSyncFullMacrocycle,
   onSyncTriweeklyBlock,
 }) => {
-  const effRunFtp = runFtp ?? blueprint.runFtpAtCreation ?? 285;
-  const effBikeFtp = bikeFtp ?? blueprint.bikeFtpAtCreation ?? 260;
+  const effRunFtp = runFtp ?? blueprint.runFtpAtCreation ?? 0;
+  const effBikeFtp = bikeFtp ?? blueprint.bikeFtpAtCreation ?? 0;
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<number>(blueprint.currentWeekIndex || 0);
   const [selectedWorkoutModal, setSelectedWorkoutModal] = useState<PlanItem | null>(null);
 

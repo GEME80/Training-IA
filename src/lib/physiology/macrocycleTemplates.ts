@@ -60,13 +60,7 @@ export function generateWeekTemplate(
     const day = days[idx], d = new Date(weekStart);
     d.setDate(weekStart.getDate() + idx);
     const dateStr = d.toISOString().split("T")[0], formattedDate = `${d.getDate()} ${months[d.getMonth()]}`;
-    let discList = getDayDisciplines(safeAvailability, day).filter((d) => {
-      if (d === "Descanso" || d === "Fuerza") return true;
-      if (curatedModel.sportCategory === "Running") return d === "Carrera";
-      if (curatedModel.sportCategory === "Cycling") return d === "Ciclismo";
-      if (curatedModel.sportCategory === "Triathlon") return d === "Carrera" || d === "Ciclismo" || d === "Natacion";
-      return true;
-    });
+    let discList = getDayDisciplines(safeAvailability, day);
     if (discList.length === 0) discList = ["Descanso"];
 
     if (isRaceWeek) {

@@ -227,12 +227,10 @@ export class IntervalsSyncService {
     const todayStr = today.toISOString().split("T")[0];
     const startStr = fromDate || todayStr;
 
-    // Extraer horizonte dinámico del plan para garantizar purga completa de toda la temporada
-    const planDates = plan ? plan.map((p) => p.date).filter(Boolean).sort() : [];
-    const maxPlanDate = planDates.length > 0 ? planDates[planDates.length - 1] : undefined;
+    // Extraer horizonte para garantizar purga completa de toda la temporada
     const defaultHorizon = new Date(today);
     defaultHorizon.setFullYear(defaultHorizon.getFullYear() + 1);
-    const effectiveToDate = toDate || maxPlanDate || defaultHorizon.toISOString().split("T")[0];
+    const effectiveToDate = toDate || defaultHorizon.toISOString().split("T")[0];
 
     const delResult = await this.deleteFutureWorkouts({
       athleteId,

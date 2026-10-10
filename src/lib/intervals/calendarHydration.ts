@@ -153,16 +153,15 @@ export function hydrateWeekPlanFromEvents(
       bikeFtp: opts?.bikeFtp,
       primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
     });
-    if (runningOpts?.mode === "PACE" || runningOpts?.mode === "HYBRID") {
-      return overlaid.map((item) =>
-        adaptRunningPlanItem(item, {
-          mode: "PACE",
-          thresholdPaceSec: runningOpts.thresholdPaceSec,
-          lthr: runningOpts.lthr,
-        })
-      );
-    }
-    return overlaid;
+    const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+    return overlaid.map((item) =>
+      adaptRunningPlanItem(item, {
+        mode: runMode,
+        runFtp: opts?.runFtp,
+        thresholdPaceSec: runningOpts?.thresholdPaceSec,
+        lthr: runningOpts?.lthr,
+      })
+    );
   }
 
   const eventsByDate: Record<string, CalendarEvent[]> = {};

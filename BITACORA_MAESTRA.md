@@ -6845,6 +6845,29 @@ Para validar que la arquitectura de macrociclos, periodización, anti-monotonía
 - `AdminUserCardMobile.tsx`: 261 LOC ($\le 350$ ✅).
 - `demoAthletesData.ts`: 241 LOC ($\le 350$ ✅).
 
+---
+
+## 99. ESTANDARIZACIÓN ESTRICTA DE SIGLAS: `m` EXCLUSIVO PARA TIEMPO (MINUTOS) Y `mtr` EXCLUSIVO PARA DISTANCIA (METROS) (v5.23)
+
+### 99.1. Regla Canónica de Sintaxis
+Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
+1. **Tiempo en Minutos:** Se abrevia exclusivamente con **`m`** (ej. `- 15m 70% CP`, `- 45m Z2`, `(45m)`, `- 2m recovery`).
+2. **Tiempo en Segundos:** Se abrevia exclusivamente con **`s`** (ej. `- 60s 55% CP`, `- 15s recovery`, `- 2m30s`).
+3. **Distancia en Metros:** Se prescribe exclusivamente con **`mtr`** (ej. `- 100mtr en Cuesta`, `- 400mtr VO2max`, `- 1000mtr Umbral`, `- 50mtr Drill`).
+4. **Distancia en Kilómetros:** Se prescribe con **`km`** (ej. `- 14 km Z2`, `- 21.1 km`).
+
+### 99.2. Archivos Refactorizados
+- `linearProgressionEngine.ts`: Todas las progresiones pedestres actualizadas a `100mtr`, `200mtr`, `300mtr`, `400mtr`, `800mtr`, `1000mtr`, `2000mtr`, `3000mtr`, manteniendo `15m` y `10m` para calentamiento y vuelta a la calma.
+- `macrocycleTemplates.ts`: Actualizada sesión previa de natación a `200mtr`, `25mtr`, `100mtr`.
+- `swimWorkoutsBase.ts`, `swimWorkoutsBuild.ts` y `swimWorkoutsPeakTaper.ts`: Todas las distancias acuáticas normalizadas a `mtr` (`50mtr`, `100mtr`, `200mtr`, `400mtr`), con tiempos en `m` y `s`.
+- `workoutDocParser.ts`: Regla inequívoca: `mtr` es siempre distancia métrica; `m` es siempre tiempo en minutos.
+- `demoAthletesData.ts`: Descripciones de prueba actualizadas a `mtr`.
+
+### 99.3. Certificación de Calidad
+- `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
+- Suite de pruebas de Fase 1: 7/7 casos PASSED (100% Éxito) ✅.
+- Todos los archivos modificados $\le 350$ LOC ✅.
+
 
 
 

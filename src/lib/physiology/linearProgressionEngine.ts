@@ -55,7 +55,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     return `${formatPaceSecToStr(sec)} (${pacePct}% Pace${note ? ` • ${note}` : ""})`;
   };
 
-  // 1. FASE BASE: Progresión Neuromuscular de Zancada y Cuestas (100m -> 200m -> 300m)
+  // 1. FASE BASE: Progresión Neuromuscular de Zancada y Cuestas (100mtr -> 200mtr -> 300mtr)
   if (normPhase.includes("BASE") || normPhase === "MAINTENANCE") {
     if (isRecovery || mesocycleStep === 4) {
       const warmupM = 15;
@@ -65,7 +65,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- ${warmupM}m ${isPower ? "65% CP" : "70% Pace"}`,
         "",
         "Main Set 4x",
-        `- 100m ${isPower ? "105% CP" : "105% Pace"}`,
+        `- 100mtr ${isPower ? "105% CP" : "105% Pace"}`,
         `- 60s ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -73,7 +73,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: "Progresión Base: Soltura Neuromuscular & Reactividad (4x 100m)",
+        name: "Progresión Base: Soltura Neuromuscular & Reactividad (4x 100mtr)",
         workoutDoc: doc,
         durationMinutes: 32,
         tss: 34,
@@ -88,7 +88,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
         "",
         "Main Set 10x",
-        `- 100m ${isPower ? "115% CP" : "110% Pace"} en Cuesta`,
+        `- 100mtr ${isPower ? "115% CP" : "110% Pace"} en Cuesta`,
         `- 60s Trote Suave Bajada ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -96,7 +96,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: "Progresión Base Sem 1: Cuestas Cortas & Potencia Elástica (10x 100m)",
+        name: "Progresión Base Sem 1: Cuestas Cortas & Potencia Elástica (10x 100mtr)",
         workoutDoc: doc,
         durationMinutes: 45,
         tss: 52,
@@ -111,7 +111,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
         "",
         "Main Set 8x",
-        `- 200m ${isPower ? "112% CP" : "108% Pace"}`,
+        `- 200mtr ${isPower ? "112% CP" : "108% Pace"}`,
         `- 60s ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -119,7 +119,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: "Progresión Base Sem 2: Zancada Fluida & Cadencia (8x 200m)",
+        name: "Progresión Base Sem 2: Zancada Fluida & Cadencia (8x 200mtr)",
         workoutDoc: doc,
         durationMinutes: 48,
         tss: 56,
@@ -134,7 +134,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
       "",
       "Main Set 6x",
-      `- 300m ${isPower ? "108% CP" : "105% Pace"}`,
+      `- 300mtr ${isPower ? "108% CP" : "105% Pace"}`,
       `- 90s ${isPower ? "55% CP" : "60% Pace"}`,
       "",
       "Cooldown",
@@ -142,7 +142,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     ].join("\n");
 
     return {
-      name: "Progresión Base Sem 3: Potencia Aláctica & Ritmo Rápido (6x 300m)",
+      name: "Progresión Base Sem 3: Potencia Aláctica & Ritmo Rápido (6x 300mtr)",
       workoutDoc: doc,
       durationMinutes: 52,
       tss: 62,
@@ -151,7 +151,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     };
   }
 
-  // 2. FASE BUILD: Progresión de Capacidad Aeróbica y Ritmo Umbral (6x 1000m -> 7x 1000m -> 4x 2000m)
+  // 2. FASE BUILD: Progresión de Capacidad Aeróbica y Ritmo Umbral (6x 1000mtr -> 7x 1000mtr -> 4x 2000mtr)
   if (normPhase.includes("BUILD")) {
     if (isRecovery || mesocycleStep === 4) {
       const doc = [
@@ -159,7 +159,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
         "",
         "Main Set 4x",
-        `- 800m ${isPower ? "96% CP" : "96% Pace"}`,
+        `- 800mtr ${isPower ? "96% CP" : "96% Pace"}`,
         `- 90s ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -167,7 +167,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: "Progresión Build: Asimilación & Mantenimiento Aeróbico (4x 800m)",
+        name: "Progresión Build: Asimilación & Mantenimiento Aeróbico (4x 800mtr)",
         workoutDoc: doc,
         durationMinutes: 44,
         tss: 48,
@@ -183,7 +183,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
         "",
         `Main Set ${reps}x`,
-        `- 1000m ${isPower ? "100% CP" : "100% Pace"}`,
+        `- 1000mtr ${isPower ? "100% CP" : "100% Pace"}`,
         `- 90s ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -191,7 +191,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: `Progresión Build Sem 1: Intervalos Umbral Daniels (${reps}x 1000m)`,
+        name: `Progresión Build Sem 1: Intervalos Umbral Daniels (${reps}x 1000mtr)`,
         workoutDoc: doc,
         durationMinutes: 55,
         tss: 68,
@@ -207,7 +207,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
         `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
         "",
         `Main Set ${reps}x`,
-        `- 1000m ${isPower ? "100% CP" : "100% Pace"}`,
+        `- 1000mtr ${isPower ? "100% CP" : "100% Pace"}`,
         `- 90s ${isPower ? "55% CP" : "60% Pace"}`,
         "",
         "Cooldown",
@@ -215,7 +215,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       ].join("\n");
 
       return {
-        name: `Progresión Build Sem 2: Sobrecarga de Volumen Umbral (${reps}x 1000m)`,
+        name: `Progresión Build Sem 2: Sobrecarga de Volumen Umbral (${reps}x 1000mtr)`,
         workoutDoc: doc,
         durationMinutes: 62,
         tss: 78,
@@ -224,13 +224,13 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       };
     }
 
-    // mesocycleStep === 3 (Sobrecarga de resistencia a la velocidad: 4x 2000m)
+    // mesocycleStep === 3 (Sobrecarga de resistencia a la velocidad: 4x 2000mtr)
     const doc = [
       "Warmup",
       `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
       "",
       "Main Set 4x",
-      `- 2000m ${isPower ? "96% CP" : "96% Pace"}`,
+      `- 2000mtr ${isPower ? "96% CP" : "96% Pace"}`,
       `- 2m ${isPower ? "55% CP" : "60% Pace"}`,
       "",
       "Cooldown",
@@ -240,7 +240,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     const targetNote = stagedRacePaceSec ? `Ritmo Meta: ${formatPaceSecToStr(stagedRacePaceSec)}` : "Ritmo Umbral Extendido";
 
     return {
-      name: "Progresión Build Sem 3: Bloques Largos de Resistencia a la Velocidad (4x 2000m)",
+      name: "Progresión Build Sem 3: Bloques Largos de Resistencia a la Velocidad (4x 2000mtr)",
       workoutDoc: doc,
       durationMinutes: 68,
       tss: 85,
@@ -256,7 +256,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       `- 15m ${isPower ? "68% CP" : "72% Pace"}`,
       "",
       "Main Set 3x",
-      `- 3000m ${isPower ? "93% CP" : "93% Pace"}`,
+      `- 3000mtr ${isPower ? "93% CP" : "93% Pace"}`,
       `- 2m30s ${isPower ? "55% CP" : "60% Pace"}`,
       "",
       "Cooldown",
@@ -264,7 +264,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     ].join("\n");
 
     return {
-      name: "Especificidad Peak Canova: Bloques Extensos a Ritmo de Competición (3x 3000m)",
+      name: "Especificidad Peak Canova: Bloques Extensos a Ritmo de Competición (3x 3000mtr)",
       workoutDoc: doc,
       durationMinutes: 72,
       tss: 88,
@@ -279,7 +279,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
     `- 15m ${isPower ? "65% CP" : "70% Pace"}`,
     "",
     "Main Set 4x",
-    `- 400m ${isPower ? "102% CP" : "100% Pace"}`,
+    `- 400mtr ${isPower ? "102% CP" : "100% Pace"}`,
     `- 60s ${isPower ? "55% CP" : "60% Pace"}`,
     "",
     "Cooldown",
@@ -287,7 +287,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
   ].join("\n");
 
   return {
-    name: "Afinamiento Taper: Chispa Neuromuscular & Activación Rápida (4x 400m)",
+    name: "Afinamiento Taper: Chispa Neuromuscular & Activación Rápida (4x 400mtr)",
     workoutDoc: doc,
     durationMinutes: 35,
     tss: 38,

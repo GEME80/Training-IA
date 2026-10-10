@@ -89,7 +89,7 @@ export function generateWeekTemplate(
       for (const disc of discList) {
         if (disc === "Descanso") continue;
         if (disc === "Natacion") {
-          result.push({ day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18, powerTarget: "Sensibilidad Acuática", justification: "Contacto suave y soltura pre-carrera.", workoutDoc: "Warmup\n- 200m 70% Pace\n\nMain\n4x\n- 25m 95% Pace\n- 25m 60% Pace\n\nCooldown\n- 100m 60% Pace", isRestDay: false });
+          result.push({ day, date: dateStr, formattedDate, discipline: "Natacion", workoutName: "Natación de Sensaciones Acuáticas & Soltura (25m)", action: "MANTENER", durationMinutes: 25, tss: 18, powerTarget: "Sensibilidad Acuática", justification: "Contacto suave y soltura pre-carrera.", workoutDoc: "Warmup\n- 200mtr 70% Pace\n\nMain\n4x\n- 25mtr 95% Pace\n- 25mtr 60% Pace\n\nCooldown\n- 100mtr 60% Pace", isRestDay: false });
           continue;
         }
         if (disc === "Ciclismo") {

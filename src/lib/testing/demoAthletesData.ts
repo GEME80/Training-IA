@@ -76,7 +76,7 @@ export const DEMO_ATHLETES: DemoAthletePersona[] = [
     expectedCriteria: {
       expectedModelKeyword: "Canova", expectedFeasibilityStatus: "REALISTIC",
       shouldHavePowerTargetInWatts: true,
-      phase1Description: "Base con cuestas cortas (10x 100m -> 6x 300m -> 4x 100m) y tirada dominical progresiva.",
+      phase1Description: "Base con cuestas cortas (10x 100mtr -> 6x 300mtr -> 4x 100mtr) y tirada dominical progresiva.",
     },
   },
   {

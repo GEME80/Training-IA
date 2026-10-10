@@ -1,5 +1,5 @@
 import { CuratedTrainingModel } from "./types";
-import { RUN_TEST_STRYD_3_9, RUN_TEST_20M_TT } from "./testingProtocols";
+import { RUN_TEST_STRYD_3_9, RUN_TEST_20M_TT, RUN_TEST_RACE_PACE_SIM } from "./testingProtocols";
 import {
   RUN_DISTANCE_ESCALERA_200_800,
   RUN_DISTANCE_BLOQUES_3X_2000M,
@@ -90,6 +90,7 @@ export const MARATHON_42K_MODEL: CuratedTrainingModel = {
   mandatoryTests: [
     { ...RUN_TEST_STRYD_3_9, recommendedWeekIndex: 2 },
     { ...RUN_TEST_20M_TT, recommendedWeekIndex: 8 },
+    { ...RUN_TEST_RACE_PACE_SIM, recommendedWeekIndex: 15 },
   ],
   longRunRules: {
     startKm: 16,

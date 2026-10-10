@@ -6405,6 +6405,57 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente en 2.8s (Código 0).
 
+---
+
+## 89. Jerarquía Generosa Anti-Monotonía, Nomenclatura Atlética Familiar y Catálogo Maestro de Tests Fisiológicos Multideporte (v5.13)
+
+### 89.1. Catálogo Maestro de Tests Fisiológicos Multideporte (`testingProtocols.ts`, `types.ts`)
+1. **Ampliación Tipológica:**
+   - La interfaz `PhysiologicalTestDefinition` se amplió para soportar formalmente disciplinas: `"Run" | "Ride" | "Swim" | "Brick" | "Trail"`, junto con métricas de potencia Stryd/Bike, ritmos Daniels VDOT, ritmos CSS acuáticos y desnivel D+.
+2. **Suite de 11 Protocolos de Evaluación:**
+   - **Running Potencia:** `RUN_TEST_STRYD_3_9` (Test 3/9 min para Curva CP Stryd) y `RUN_TEST_20M_TT` (20 min contrarreloj CP).
+   - **Running Ritmo / VDOT:** `RUN_TEST_5K_VAM` (5K contrarreloj) y `RUN_TEST_3000M_TRACK` (3000m en pista VAM).
+   - **Running Especificidad Maratón:** `RUN_TEST_RACE_PACE_SIM` (Ensayo específico a ritmo de maratón en tirada larga, Semana 15 en macrociclos largos).
+   - **Ciclismo Potencia:** `BIKE_TEST_RAMP` (Ramp Test ERG escalonado +6%/min hasta fallo) y `BIKE_TEST_20M_FTP` (Coggan/Allen 20 min).
+   - **Natación:** `SWIM_TEST_CSS_400_200` (CSS 400m + 200m) y `SWIM_TEST_1000M_TT` (Test de resistencia aeróbica continua 1000m).
+   - **Triatlón / Multideporte:** `TRI_BRICK_SIMULATION` (Simulación de transición bici-carrera post-fatiga).
+   - **Trail Running:** `TRAIL_VERTICAL_KM_TEST` (Kilómetro Vertical con bastones / potencia de ascenso).
+3. **Inyección en Modelos Científicos:**
+   - Integrado `RUN_TEST_RACE_PACE_SIM` en `marathonModel.ts` como hito de control para la Semana 15 antes de la fase de afinamiento (tapering).
+
+### 89.2. Jerarquía Generosa Anti-Monotonía de Series Métricas (`metricIntervalEngine.ts`)
+1. **Superación de Series Monótonas:**
+   - Se erradicó la generación repetitiva de series lineales homogéneas.
+   - Se implementó un motor generativo probabilístico con 6 familias de estímulos:
+     - `PYRAMID`: Pirámides ascendentes/descendentes (ej. 400m - 800m - 1200m - 800m - 400m).
+     - `LADDER`: Escaleras progresivas (ej. 200m -> 400m -> 600m -> 800m).
+     - `MIXED`: Bloques combinados mixtos de volumen y velocidad (ej. 2x1000m + 4x400m).
+     - `REPETITION`: Repeticiones con micropausas calibradas (ej. 8x400m o 5x1000m).
+     - `FARTLEK`: Cambios continuos de ritmo por distancia y tiempo.
+     - `TEMPO_BLOCKS`: Bloques fraccionados de umbral (ej. 3x2000m o 2x3000m).
+2. **Sintaxis Estricta Intervals.icu:**
+   - Generación rigurosa de distancias en metros usando `mtr` (ej. `400mtr 100% Pace`) y recuperaciones en tiempo (`m` o `s`), garantizando compatibilidad 100% con Intervals.icu y relojes Garmin/Apple.
+
+### 89.3. Erradicación de Nomenclatura Médica y Adopción de Jerga Atlética Natural
+1. **Fuerza Funcional:**
+   - Eliminados términos ininteligibles como *stiffness de tobillo* y *Anti-Trendelenburg*.
+   - Reemplazados por: `"Fuerza de Tobillos y Reactividad"` y `"Fuerza de Cadera y Glúteos"`.
+2. **Aeróbico / Carrera:**
+   - Sustituido `"Capilarización & Densidad Mitocondrial"` por `"Rodaje Base Aeróbico Z2 (45m)"`.
+
+### 89.4. Archivos Modificados ($\le 350$ LOC)
+- `src/lib/ai/knowledge/types.ts`: **149 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/testingProtocols.ts`: **324 LOC** ($\le 350$)
+- `src/lib/physiology/metricIntervalEngine.ts`: **272 LOC** ($\le 350$)
+- `src/lib/physiology/specializedStrengthCoaches.ts`: **219 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/workoutPools/runningAerobicPool.ts`: **211 LOC** ($\le 350$)
+- `src/lib/ai/knowledge/marathonModel.ts`: **240 LOC** ($\le 350$)
+
+### 89.5. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+
 
 
 

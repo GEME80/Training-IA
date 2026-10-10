@@ -37,123 +37,133 @@ interface IntervalStepConfig {
   restIntensityPct: number;
 }
 
-/**
- * Catálogo paramétrico de estructuras de intervalos por distancia.
- * Cubre series cortas (velocidad), medias (VO2max), escaleras y bloques de umbral extenso.
- */
-const METRIC_STRUCTURES = [
-  // 1. Series Cortas (Velocidad & Neuromuscular)
+export type MetricStructureCategory = "PYRAMID" | "LADDER" | "MIXED" | "REPETITION" | "FARTLEK" | "TEMPO_BLOCKS";
+
+export interface MetricWorkoutStep {
+  reps?: number;
+  distanceMtr?: number;
+  durationSec?: number;
+  intensityPct: number;
+  restSec: number;
+  restIntensityPct: number;
+}
+
+export interface MetricStructureDef {
+  category: MetricStructureCategory;
+  title: string;
+  phaseCompatibility: Array<"BASE" | "BUILD" | "PEAK" | "TAPER" | "RACE_WEEK">;
+  justification: string;
+  steps: MetricWorkoutStep[];
+}
+
+const METRIC_STRUCTURES: MetricStructureDef[] = [
+  // 1. PIRÁMIDES DE PISTA
   {
-    type: "SHORT_SPEED",
-    title: "Series de Velocidad Pura en Pista",
-    reps: 8,
-    distanceMtr: 200,
-    intensityPct: 110,
-    restSec: 60,
-    restIntensityPct: 55,
-    justification: "Reclutamiento elástico de unidades motoras rápidas, cadencia ágil y economía de zancada.",
+    category: "PYRAMID",
+    title: "Pirámide Clásica de Pista",
+    phaseCompatibility: ["BUILD", "PEAK"],
+    justification: "Transición ascendente y descendente de volumen para entrenar reclutamiento neuromuscular y economía en fatiga.",
+    steps: [
+      { distanceMtr: 400, intensityPct: 105, restSec: 60, restIntensityPct: 55 },
+      { distanceMtr: 800, intensityPct: 101, restSec: 90, restIntensityPct: 55 },
+      { distanceMtr: 1200, intensityPct: 98, restSec: 120, restIntensityPct: 55 },
+      { distanceMtr: 800, intensityPct: 101, restSec: 90, restIntensityPct: 55 },
+      { distanceMtr: 400, intensityPct: 106, restSec: 60, restIntensityPct: 55 },
+    ],
+  },
+  // 2. ESCALERAS DESCENDENTES DE RITMO
+  {
+    category: "LADDER",
+    title: "Escalera Descendente de Ritmo",
+    phaseCompatibility: ["BUILD", "PEAK"],
+    justification: "Cada escalón es más corto y más rápido, enseñando al cuerpo a acelerar progresivamente con ácido láctico acumulado.",
+    steps: [
+      { distanceMtr: 2000, intensityPct: 92, restSec: 150, restIntensityPct: 55 },
+      { distanceMtr: 1600, intensityPct: 95, restSec: 120, restIntensityPct: 55 },
+      { distanceMtr: 1200, intensityPct: 98, restSec: 105, restIntensityPct: 55 },
+      { distanceMtr: 800, intensityPct: 102, restSec: 90, restIntensityPct: 55 },
+    ],
   },
   {
-    type: "ANAEROBIC_POWER",
-    title: "Intervalos Cortos de Potencia Anaeróbica",
-    reps: 6,
-    distanceMtr: 300,
-    intensityPct: 108,
-    restSec: 75,
-    restIntensityPct: 55,
-    justification: "Desarrollo de potencia láctica y tolerancia a la acidosis con recuperación completa.",
+    category: "LADDER",
+    title: "Escalera Corta de Velocidad",
+    phaseCompatibility: ["BASE", "BUILD", "TAPER"],
+    justification: "Dos bloques de aceleración elástica para mejorar la reactividad de tobillo sin agotamiento glucolítico masivo.",
+    steps: [
+      { reps: 2, distanceMtr: 200, intensityPct: 110, restSec: 60, restIntensityPct: 55 },
+      { reps: 2, distanceMtr: 400, intensityPct: 105, restSec: 75, restIntensityPct: 55 },
+      { reps: 2, distanceMtr: 600, intensityPct: 101, restSec: 90, restIntensityPct: 55 },
+    ],
+  },
+  // 3. SERIES MIXTAS / COMBINADAS (Fondo + Chispa Final)
+  {
+    category: "MIXED",
+    title: "Series Combinadas (Umbral + Transferencia Rápida)",
+    phaseCompatibility: ["BUILD", "PEAK"],
+    justification: "Bloque principal de ritmo umbral seguido de series cortas vivas para reclutar fibras rápidas en estado de pre-fatiga.",
+    steps: [
+      { reps: 4, distanceMtr: 1000, intensityPct: 98, restSec: 105, restIntensityPct: 55 },
+      { reps: 4, distanceMtr: 300, intensityPct: 108, restSec: 60, restIntensityPct: 55 },
+    ],
   },
   {
-    type: "CLASSIC_400",
-    title: "Series Rectoras de 400m en Pista",
-    reps: 8,
-    distanceMtr: 400,
-    intensityPct: 105,
-    restSec: 90,
-    restIntensityPct: 55,
-    justification: "Clásico estímulo de pista para capacidad glucolítica y ritmo de carrera fraccionado.",
+    category: "MIXED",
+    title: "Series de Milla con Rectas de Cadencia",
+    phaseCompatibility: ["BASE", "BUILD"],
+    justification: "Volumen aeróbico específico de milla con transferencias cortas a alta frecuencia de zancada (185+ spm).",
+    steps: [
+      { reps: 3, distanceMtr: 1600, intensityPct: 94, restSec: 120, restIntensityPct: 55 },
+      { reps: 4, distanceMtr: 200, intensityPct: 110, restSec: 60, restIntensityPct: 55 },
+    ],
+  },
+  // 4. FARTLEKS ESTRUCTURADOS (Tiempo / Distancia Continua)
+  {
+    category: "FARTLEK",
+    title: "Fartlek Clásico de Cambios de Ritmo",
+    phaseCompatibility: ["BASE", "BUILD", "PEAK"],
+    justification: "Cambios de ritmo continuos por sensaciones que desarrollan capacidad de acelerar y recuperar sobre la marcha.",
+    steps: [
+      { reps: 5, durationSec: 120, intensityPct: 98, restSec: 60, restIntensityPct: 70 },
+      { reps: 5, durationSec: 60, intensityPct: 105, restSec: 60, restIntensityPct: 70 },
+    ],
+  },
+  // 5. BLOQUES DE TEMPO SOSTENIDO
+  {
+    category: "TEMPO_BLOCKS",
+    title: "Tempo en Bloques a Ritmo Objetivo",
+    phaseCompatibility: ["BASE", "BUILD", "PEAK"],
+    justification: "Fijación del ritmo específico de carrera con pausa corta al trote para lavado de lactato.",
+    steps: [
+      { reps: 2, distanceMtr: 3000, intensityPct: 90, restSec: 150, restIntensityPct: 65 },
+    ],
+  },
+  // 6. SERIES RECTORAS CLÁSICAS DE PISTA (VO2max)
+  {
+    category: "REPETITION",
+    title: "Series de Pista (800m VO2max)",
+    phaseCompatibility: ["BUILD", "PEAK"],
+    justification: "Estímulo clásico de 2 a 3 minutos en VO2max para elevar la potencia aeróbica máxima.",
+    steps: [
+      { reps: 6, distanceMtr: 800, intensityPct: 101, restSec: 105, restIntensityPct: 55 },
+    ],
   },
   {
-    type: "SPEED_ENDURANCE_500",
-    title: "Series Fraccionadas de 500m",
-    reps: 6,
-    distanceMtr: 500,
-    intensityPct: 103,
-    restSec: 90,
-    restIntensityPct: 55,
-    justification: "Transición entre velocidad pura y resistencia aeróbica de alta intensidad.",
-  },
-  // 2. Series Medias (VO2max & Tolerancia al Lactato)
-  {
-    type: "VO2MAX_600",
-    title: "Series de Capacidad Aeróbica (600m)",
-    reps: 6,
-    distanceMtr: 600,
-    intensityPct: 102,
-    restSec: 105,
-    restIntensityPct: 55,
-    justification: "Sostenimiento del consumo máximo de oxígeno con aclaramiento eficiente de lactato.",
+    category: "REPETITION",
+    title: "Series de Pista (1000m Ritmo Umbral)",
+    phaseCompatibility: ["BASE", "BUILD", "PEAK"],
+    justification: "Intervalos de un kilómetro para expandir el volumen en el umbral anaeróbico funcional.",
+    steps: [
+      { reps: 5, distanceMtr: 1000, intensityPct: 98, restSec: 105, restIntensityPct: 55 },
+    ],
   },
   {
-    type: "VO2MAX_800",
-    title: "Series de Consumo Máximo de Oxígeno (800m)",
-    reps: 5,
-    distanceMtr: 800,
-    intensityPct: 101,
-    restSec: 120,
-    restIntensityPct: 55,
-    justification: "Estímulo de 2 a 3 minutos en VO2max para elevar el techo cardiovascular.",
-  },
-  {
-    type: "THRESHOLD_1000",
-    title: "Series de Umbral Funcional Daniels (1000m)",
-    reps: 5,
-    distanceMtr: 1000,
-    intensityPct: 98,
-    restSec: 120,
-    restIntensityPct: 55,
-    justification: "Elevación del ritmo umbral en intervalos métricos clásicos de un kilómetro.",
-  },
-  {
-    type: "CRUISE_1200",
-    title: "Intervalos de Ritmo Crucero Daniels (1200m)",
-    reps: 4,
-    distanceMtr: 1200,
-    intensityPct: 96,
-    restSec: 150,
-    restIntensityPct: 55,
-    justification: "Tolerancia a la fatiga en distancias intermedias de umbral anaeróbico.",
-  },
-  // 3. Bloques Largos & Ritmo Competitivo (Canova Special Blocks)
-  {
-    type: "CANOVA_1600",
-    title: "Intervalos de Milla Canova (1600m)",
-    reps: 4,
-    distanceMtr: 1600,
-    intensityPct: 94,
-    restSec: 150,
-    restIntensityPct: 55,
-    justification: "Resistencia específica a ritmo de competición con densidad de volumen alta.",
-  },
-  {
-    type: "THRESHOLD_2000",
-    title: "Bloques Extensivos de Umbral (2000m)",
-    reps: 3,
-    distanceMtr: 2000,
-    intensityPct: 92,
-    restSec: 180,
-    restIntensityPct: 60,
-    justification: "Máximo estado estable de lactato en bloques de dos kilómetros con recuperación activa.",
-  },
-  {
-    type: "TEMPO_3000",
-    title: "Series Largas a Ritmo de Medio Maratón (3000m)",
-    reps: 2,
-    distanceMtr: 3000,
-    intensityPct: 90,
-    restSec: 180,
-    restIntensityPct: 65,
-    justification: "Automatización biomecánica y eficiencia metabólica en distancias de 3 km.",
+    category: "REPETITION",
+    title: "Series de Pista (400m de Economía de Zancada)",
+    phaseCompatibility: ["BASE", "TAPER", "RACE_WEEK"],
+    justification: "Repeticiones cortas con recuperación completa para afinar la técnica y zancada elástica.",
+    steps: [
+      { reps: 8, distanceMtr: 400, intensityPct: 105, restSec: 75, restIntensityPct: 55 },
+    ],
   },
 ];
 
@@ -182,85 +192,80 @@ export function generateMetricRunningWorkout(params: MetricWorkoutParams): Metri
     runFtp = 300,
   } = params;
 
-  // 1. Selección de estructura según fase de periodización
-  let eligibleStructures = METRIC_STRUCTURES;
-  if (phase === "BASE") {
-    // En Base: predominio de series cortas neuromusculares y primeras series de 800-1000m
-    eligibleStructures = METRIC_STRUCTURES.filter(
-      (s) => s.distanceMtr <= 1000 && (s.type.includes("SHORT") || s.distanceMtr <= 800)
-    );
-  } else if (phase === "BUILD") {
-    // En Build: VO2max de 600m a 1600m y bloques de 1000-2000m
-    eligibleStructures = METRIC_STRUCTURES.filter((s) => s.distanceMtr >= 400 && s.distanceMtr <= 2000);
-  } else if (phase === "PEAK") {
-    // En Peak: Ritmo específico Canova de 1000m a 3000m
-    eligibleStructures = METRIC_STRUCTURES.filter((s) => s.distanceMtr >= 800);
-  } else if (phase === "TAPER" || phase === "RACE_WEEK") {
-    // En Taper: Series cortas de activación ágil
-    eligibleStructures = METRIC_STRUCTURES.filter((s) => s.distanceMtr <= 400);
-  }
-
+  // 1. Filtrar familias de estímulos según compatibilidad de fase
+  const normPhase = (phase || "BASE").toUpperCase() as "BASE" | "BUILD" | "PEAK" | "TAPER" | "RACE_WEEK";
+  let eligibleStructures = METRIC_STRUCTURES.filter((s) => s.phaseCompatibility.includes(normPhase));
   if (eligibleStructures.length === 0) eligibleStructures = METRIC_STRUCTURES;
 
-  // Rotación semanal determinista coprima
-  const structIdx = (weekNumber * 3) % eligibleStructures.length;
+  // Rotación semanal determinista anti-monotonía
+  const structIdx = (weekNumber * 2 + 1) % eligibleStructures.length;
   const selected = eligibleStructures[structIdx] || METRIC_STRUCTURES[0];
 
-  // 2. Modulación de repeticiones por microciclo
-  let reps = selected.reps;
-  if (microcycleType === "DESCARGA" || phase === "TAPER" || phase === "RACE_WEEK") {
-    reps = Math.max(3, Math.round(selected.reps * 0.6));
-  } else if (microcycleType === "IMPACTO") {
-    reps = selected.reps + 1;
-  }
-
-  // 3. Formateo de targets e intensidades
   const intensityUnit = mode === "POWER" ? "% CP" : "% Pace";
   const restUnit = mode === "POWER" ? "% CP" : "% Pace";
-  const restStr = formatRestInterval(selected.restSec);
 
-  const mainStep = `- ${selected.distanceMtr}mtr ${selected.intensityPct}${intensityUnit}`;
-  const restStep = `- ${restStr} ${selected.restIntensityPct}${restUnit}`;
-
-  const warmupMins = phase === "RACE_WEEK" ? 10 : 15;
+  const isDeload = microcycleType === "DESCARGA" || normPhase === "TAPER" || normPhase === "RACE_WEEK";
+  const warmupMins = normPhase === "RACE_WEEK" ? 10 : 15;
   const warmupPct = mode === "POWER" ? "68% CP" : "74% Pace";
   const cooldownMins = 10;
   const cooldownPct = mode === "POWER" ? "60% CP" : "70% Pace";
 
-  const workoutDoc = [
-    "Warmup",
-    `- ${warmupMins}m ${warmupPct}`,
-    "",
-    `Main Set ${reps}x`,
-    mainStep,
-    restStep,
-    "",
-    "Cooldown",
-    `- ${cooldownMins}m ${cooldownPct}`,
-  ].join("\n");
+  // 2. Construcción de bloques del workoutDoc
+  const docLines: string[] = ["Warmup", `- ${warmupMins}m ${warmupPct}`, ""];
+  let totalWorkSec = 0;
+  let weightedIntensitySum = 0;
+  let totalStepCount = 0;
 
-  // 4. Cálculo dinámico de duración y TSS
-  // Tiempo de cada repetición en segundos = (distancia / 1000) * (ritmo_umbral / (intensidad / 100))
-  const stepTimeSec = (selected.distanceMtr / 1000) * (thresholdPaceSec / (selected.intensityPct / 100));
-  const totalWorkSec = reps * (stepTimeSec + selected.restSec);
+  selected.steps.forEach((step, idx) => {
+    let effectiveReps = step.reps || 1;
+    if (isDeload && effectiveReps > 2) {
+      effectiveReps = Math.max(2, Math.round(effectiveReps * 0.7));
+    }
+
+    const restStr = formatRestInterval(step.restSec);
+    let stepWorkTimeSec = 0;
+
+    if (step.distanceMtr) {
+      stepWorkTimeSec = (step.distanceMtr / 1000) * (thresholdPaceSec / (step.intensityPct / 100));
+    } else if (step.durationSec) {
+      stepWorkTimeSec = step.durationSec;
+    }
+
+    totalWorkSec += effectiveReps * (stepWorkTimeSec + step.restSec);
+    weightedIntensitySum += effectiveReps * step.intensityPct;
+    totalStepCount += effectiveReps;
+
+    const mainText = step.distanceMtr
+      ? `- ${step.distanceMtr}mtr ${step.intensityPct}${intensityUnit}`
+      : `- ${formatRestInterval(step.durationSec || 60)} ${step.intensityPct}${intensityUnit}`;
+    const restText = `- ${restStr} ${step.restIntensityPct}${restUnit}`;
+
+    if (effectiveReps > 1) {
+      docLines.push(`Main Set ${effectiveReps}x`, mainText, restText, "");
+    } else {
+      if (idx === 0) docLines.push("Main Set");
+      docLines.push(mainText, restText);
+    }
+  });
+
+  docLines.push("", "Cooldown", `- ${cooldownMins}m ${cooldownPct}`);
+
+  // 3. Duración total y cálculo dinámico de TSS
   const totalMins = Math.round(warmupMins + cooldownMins + totalWorkSec / 60);
-
-  // Estimación de TSS según factor de intensidad
-  const ifFactor = selected.intensityPct / 100;
+  const avgIntensityPct = totalStepCount > 0 ? weightedIntensitySum / totalStepCount : 100;
+  const ifFactor = avgIntensityPct / 100;
   const estimatedTss = Math.round((totalMins * Math.pow(ifFactor, 2) * 100) / 60);
 
   const powerTarget =
     mode === "POWER"
-      ? `${Math.round(runFtp * (selected.intensityPct / 100))}W (${selected.intensityPct}% CP)`
-      : `${selected.intensityPct}% Pace`;
-
-  const workoutName = `${selected.title} (${reps}x ${selected.distanceMtr}m @ ${selected.intensityPct}${intensityUnit})`;
+      ? `${Math.round(runFtp * ifFactor)}W (${Math.round(avgIntensityPct)}% CP Promedio)`
+      : `${Math.round(avgIntensityPct)}% Pace`;
 
   return {
-    name: workoutName,
-    workoutDoc,
+    name: selected.title,
+    workoutDoc: docLines.join("\n"),
     durationMinutes: totalMins,
-    tss: Math.max(35, Math.min(120, estimatedTss)),
+    tss: Math.max(35, Math.min(125, estimatedTss)),
     powerTarget,
     justification: selected.justification,
   };

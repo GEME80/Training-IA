@@ -34,8 +34,8 @@ export interface MacrocyclePhaseDistribution {
 export interface PhysiologicalTestDefinition {
   testId: string;
   testName: string;
-  sport: "Run" | "Ride" | "Swim";
-  targetMetric: "Stryd Critical Power (CP)" | "Bike Functional Threshold Power (FTP)" | "CSS Swim Pace";
+  sport: "Run" | "Ride" | "Swim" | "Brick" | "Trail";
+  targetMetric: "Stryd Critical Power (CP)" | "Bike Functional Threshold Power (FTP)" | "CSS Swim Pace" | "Jack Daniels VDOT (Pace)" | "Ritmo Objetivo Maratón" | string;
   scheduledWeekType: "BASELINE_WEEK" | "MID_BUILD_WEEK" | "PRE_PEAK_WEEK";
   recommendedWeekIndex: number;
   protocolDescription: string;

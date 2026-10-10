@@ -23,19 +23,19 @@ const S1_RUNNING_POOL: Record<string, StrengthWorkoutDefinition[]> = {
   BASE: [
     STRENGTH_TRIAD_1_SOLEUS_SCAPULA_ROTATION,
     {
-      name: "S1: Sóleo Excéntrico & Stiffness de Tobillo Stryd LSS (35m)",
-      focus: "Sóleo, Tendón de Aquiles y Leg Spring Stiffness",
+      name: "S1: Fuerza de Tobillos y Reactividad (35m)",
+      focus: "Fuerza de Tobillos, Gemelos y Reactividad Elástica",
       durationMin: 35,
       tss: 25,
-      justification: "Aumenta la absorción elástica del pie reduciendo el tiempo de contacto (GCT < 210ms) y previene fascitis plantar.",
-      workoutDoc: "Calentamiento & Movilidad (5m)\n- Movilidad de tobillo contra pared\n\nBloque Principal (3 Rondas)\n- 12x Elevación de talón sentado con carga (sóleo - 3s bajada)\n- 10x Pogo hops elásticos (mínimo contacto en suelo)\n- 10x Peso muerto rumano unilateral\n- 12x Monster walks con minibanda\n\nEnfriamiento (5m)\n- Descarga miofascial de gemelos y sóleo",
+      justification: "Aumenta la absorción elástica del pie reduciendo el tiempo de contacto en el suelo y previene molestias en la fascia plantar.",
+      workoutDoc: "Calentamiento & Movilidad (5m)\n- Movilidad de tobillo contra pared\n\nBloque Principal (3 Rondas)\n- 12x Elevación de talón sentado con carga (sóleo - 3s bajada)\n- 10x Saltos reactivos tipo pogo (mínimo contacto en suelo)\n- 10x Peso muerto rumano unilateral\n- 12x Monster walks con minibanda\n\nEnfriamiento (5m)\n- Descarga miofascial de gemelos y sóleo",
     },
     {
-      name: "S1: Estabilidad Pélvica & Glúteo Medio Anti-Trendelenburg (35m)",
-      focus: "Glúteo Medio, Cuádriceps y Control Pélvico",
+      name: "S1: Fuerza de Cadera y Glúteos (35m)",
+      focus: "Glúteos, Cadera y Estabilidad de Rodilla",
       durationMin: 35,
       tss: 24,
-      justification: "Evita la basculación de la pelvis y el valgo dinámico de rodilla en el maratón.",
+      justification: "Fortalece los estabilizadores de cadera y previene la fatiga de rodilla y sobrecarga lumbar en carrera.",
       workoutDoc: "Activación (5m)\n- Puentes de glúteo unipodales\n\nBloque Principal (3 Rondas)\n- 10x Sentadilla búlgara por pierna con mancuernas\n- 12x Plancha lateral con abducción de pierna\n- 12x Clamshells con banda de alta tensión\n- 15x Elevaciones tibiales contra pared\n\nEnfriamiento (5m)\n- Estiramiento de psoas y piramidal",
     },
     {

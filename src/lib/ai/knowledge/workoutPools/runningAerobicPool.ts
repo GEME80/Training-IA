@@ -27,13 +27,13 @@ Cooldown
 };
 
 export const RUN_AEROBIC_Z2_CAPILARIZACION_45M: RunningAerobicWorkoutItem = {
-  name: "Rodaje Aeróbico de Capilarización & Densidad Mitocondrial (45m Z2)",
+  name: "Rodaje Base Aeróbico Z2 (45m)",
   powerTarget: "72-76% Pace (Z2 Aeróbico)",
-  justification: "Incremento de la red capilar en fibras tipo I y maximización de la oxidación de ácidos grasos.",
+  justification: "Desarrollo aeróbico continuo y eficiente quema de grasas a ritmo cómodo y conversacional.",
   workoutDoc: `Warmup
 - 8m 65% Pace
 
-Main (Capilarización)
+Main (Rodaje Base)
 - 32m 74% Pace
 
 Cooldown

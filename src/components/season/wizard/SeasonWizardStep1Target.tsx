@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Trophy, Flag, Plus, Check, ArrowRight, Zap, Sprout, X } from "lucide-react";
+import { Trophy, Flag, Plus, Check, ArrowRight, ShieldCheck, Layers, X } from "lucide-react";
 import { TargetRace } from "@/lib/physiology/macrocycle";
 
 interface SeasonWizardStep1TargetProps {
@@ -11,10 +11,10 @@ interface SeasonWizardStep1TargetProps {
   onAddNewRace?: (race: TargetRace) => void;
   targetDistance: string;
   onChangeDistance: (d: string) => void;
-  customDistanceText: string;
-  onChangeCustomDistanceText: (t: string) => void;
-  isCustomDistance: boolean;
-  onToggleCustomDistance: (v: boolean) => void;
+  customDistanceText?: string;
+  onChangeCustomDistanceText?: (t: string) => void;
+  isCustomDistance?: boolean;
+  onToggleCustomDistance?: (v: boolean) => void;
   weeksCount: number;
   onChangeWeeksCount: (w: number) => void;
   planTitle: string;
@@ -26,37 +26,32 @@ interface SeasonWizardStep1TargetProps {
 }
 
 const DISTANCE_OPTIONS = [
-  { value: "triathlon_short", label: "Sprint / Olímpico", emoji: "🏊🚴🏃", color: "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300" },
-  { value: "triathlon_703", label: "70.3 Triatlón", emoji: "🏊", color: "border-sky-400 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300" },
-  { value: "triathlon_1406", label: "140.6 IRONMAN", emoji: "⚡", color: "border-purple-400 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300" },
-  { value: "cycling_fondo", label: "Gran Fondo Ciclismo", emoji: "🚴", color: "border-blue-400 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300" },
-  { value: "42k", label: "42K Maratón", emoji: "🏆", color: "border-orange-400 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300" },
-  { value: "21k", label: "21K Media", emoji: "🏅", color: "border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" },
-  { value: "10k", label: "10K", emoji: "🏃", color: "border-lime-400 bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300" },
-  { value: "5k", label: "5K", emoji: "🏃", color: "border-green-400 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300" },
-  { value: "trail", label: "Trail/Ultra", emoji: "⛰️", color: "border-stone-400 bg-stone-50 dark:bg-stone-950/30 text-stone-700 dark:text-stone-300" },
+  { value: "triathlon_short", label: "Sprint / Olímpico", color: "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300" },
+  { value: "triathlon_703", label: "70.3 Medio Ironman", color: "border-sky-400 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300" },
+  { value: "triathlon_1406", label: "140.6 Full Ironman", color: "border-purple-400 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300" },
+  { value: "cycling_fondo", label: "Gran Fondo / Ciclismo", color: "border-blue-400 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300" },
+  { value: "42k", label: "42K Maratón", color: "border-orange-400 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300" },
+  { value: "21k", label: "21K Media Maratón", color: "border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" },
+  { value: "10k", label: "10K Ruta", color: "border-lime-400 bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300" },
+  { value: "5k", label: "5K Ruta", color: "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300" },
+  { value: "trail", label: "Trail Running / Montaña", color: "border-stone-400 bg-stone-50 dark:bg-stone-950/30 text-stone-700 dark:text-stone-300" },
 ];
 
 export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = ({
   primaryRace, targetRaces = [], onSelectPrimaryRace, onAddNewRace,
-  targetDistance, onChangeDistance,
-  weeksCount, onChangeWeeksCount,
-  planTitle, onChangePlanTitle,
-  startDateMode, onChangeStartDateMode,
+  targetDistance, onChangeDistance, weeksCount, onChangeWeeksCount,
+  planTitle, onChangePlanTitle, startDateMode, onChangeStartDateMode,
   customStartDate, onChangeCustomStartDate,
-  customDistanceText, onChangeCustomDistanceText, isCustomDistance, onToggleCustomDistance,
 }) => {
-  // "race" | "norace" | null (not chosen yet)
   const [pathChoice, setPathChoice] = useState<"race" | "norace" | null>(() => {
     if (primaryRace) return "race";
+    if (targetDistance === "maintenance" || targetDistance === "base_building") return "norace";
     return null;
   });
   const [isCreatingRace, setIsCreatingRace] = useState(false);
   const [inlineName, setInlineName] = useState("");
   const [inlineDate, setInlineDate] = useState("");
-  const [inlineDistance, setInlineDistance] = useState<TargetRace["distance"]>(
-    (targetDistance as any) || "10k"
-  );
+  const [inlineDistance, setInlineDistance] = useState<TargetRace["distance"]>((targetDistance as any) || "42k");
   const [inlineGoal, setInlineGoal] = useState("");
 
   const weeksUntilRace = useMemo(() => {
@@ -78,56 +73,62 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
     const diffWeeks = Math.max(4, Math.ceil((new Date(inlineDate + "T00:00:00").getTime() - Date.now()) / (7 * 86400000)));
     onChangeWeeksCount(Math.min(36, diffWeeks));
     onChangePlanTitle(`Macrociclo para ${newRace.name}`);
-    onChangeDistance(newRace.distance || "10k");
+    onChangeDistance(newRace.distance || "42k");
     setIsCreatingRace(false); setInlineName(""); setInlineDate(""); setInlineGoal("");
   };
 
-  const handleChooseNoRace = (preset: "base" | "threshold") => {
+  const handleChooseNoRace = (preset: "maintenance" | "build") => {
     if (onSelectPrimaryRace) onSelectPrimaryRace(null);
-    if (preset === "base") {
-      onChangePlanTitle("Construcción de Base Aeróbica"); onChangeDistance("base_building"); onChangeWeeksCount(12);
+    if (preset === "maintenance") {
+      onChangePlanTitle("Mantenimiento Adaptativo & Salud");
+      onChangeDistance("maintenance");
+      onChangeWeeksCount(8);
     } else {
-      onChangePlanTitle("Bloque de Umbral & Potencia"); onChangeDistance("general_build"); onChangeWeeksCount(8);
+      onChangePlanTitle("Construcción de Base Aeróbica (GPP)");
+      onChangeDistance("base_building");
+      onChangeWeeksCount(10);
     }
     setPathChoice("norace");
   };
 
   return (
-    <div className="space-y-5 animate-fadeIn">
-
+    <div className="space-y-4 animate-fadeIn">
       {/* ── PREGUNTA INICIAL: ¿CON O SIN CARRERA? ── */}
       {pathChoice === null && (
         <div className="space-y-3">
-          <div className="text-center space-y-1 pb-2">
-            <p className="text-xs font-mono font-bold text-slate-500 uppercase">¿Cuál es tu objetivo principal?</p>
-          </div>
-
+          <p className="text-center text-xs font-mono font-bold text-slate-500 uppercase pb-1">¿Cuál es tu objetivo principal?</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* PATH A: TENGO CARRERA */}
             <button
               type="button"
               onClick={() => setPathChoice("race")}
-              className="group p-5 rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 text-left hover:border-amber-500 hover:shadow-md transition-all cursor-pointer"
+              className="group p-5 rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 text-left hover:border-amber-500 hover:shadow-md transition cursor-pointer"
             >
-              <div className="text-3xl mb-2">🏆</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 mb-3">
+                <Trophy className="h-5 w-5" />
+              </div>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Tengo una carrera objetivo</h4>
-              <p className="text-[11px] text-slate-500 mt-1 font-mono">Maratón, triatlón, 10K, trail… El plan se estructura hasta el día del evento.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                Seleccionar <ArrowRight className="h-3 w-3" />
+              <p className="text-[11px] text-slate-500 mt-1 font-mono leading-relaxed">
+                Maratón, triatlón, 10K, ciclismo fondo, trail... El plan se periodiza exactamente hasta el evento.
+              </p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 font-mono">
+                Seleccionar objetivo <ArrowRight className="h-3 w-3" />
               </span>
             </button>
 
-            {/* PATH B: SIN CARRERA */}
             <button
               type="button"
               onClick={() => setPathChoice("norace")}
-              className="group p-5 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 text-left hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer"
+              className="group p-5 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 text-left hover:border-emerald-500 hover:shadow-md transition cursor-pointer"
             >
-              <div className="text-3xl mb-2">🌱</div>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white">Entrenamiento base / Mantenimiento</h4>
-              <p className="text-[11px] text-slate-500 mt-1 font-mono">Sin carrera próxima. Mejora tu condición, potencia o mantén la forma.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                Seleccionar <ArrowRight className="h-3 w-3" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mb-3">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">Mantenimiento o Base Building</h4>
+              <p className="text-[11px] text-slate-500 mt-1 font-mono leading-relaxed">
+                Sin carrera próxima. Construye base aeróbica mitocondrial o mantén tu condición física con carga equilibrada.
+              </p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 font-mono">
+                Elegir bloque <ArrowRight className="h-3 w-3" />
               </span>
             </button>
           </div>
@@ -136,18 +137,17 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
 
       {/* ── PATH A: CON CARRERA ── */}
       {pathChoice === "race" && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <h4 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono">
               <Trophy className="h-3.5 w-3.5 text-amber-500" /> Carrera Objetivo
             </h4>
             <button type="button" onClick={() => { setPathChoice(null); if (onSelectPrimaryRace) onSelectPrimaryRace(null); }}
-              className="text-[10px] font-mono text-slate-400 hover:text-slate-600 cursor-pointer flex items-center gap-0.5">
-              <X className="h-3 w-3" /> Cambiar
+              className="text-[10px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer flex items-center gap-0.5">
+              <X className="h-3 w-3" /> Cambiar enfoque
             </button>
           </div>
 
-          {/* Carrera ya vinculada */}
           {primaryRace && !isCreatingRace ? (
             <div className="rounded-2xl border-2 border-amber-400/80 bg-gradient-to-r from-amber-50 to-white dark:from-amber-950/30 dark:to-slate-900 p-4 space-y-2">
               <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                 </span>
                 {weeksUntilRace !== null && (
                   <span className="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-300">
-                    ⏳ {weeksUntilRace} semanas
+                    {weeksUntilRace} semanas hasta el evento
                   </span>
                 )}
               </div>
@@ -175,13 +175,12 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                   </select>
                 )}
                 <button type="button" onClick={() => setIsCreatingRace(true)}
-                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 hover:text-slate-900 cursor-pointer">
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                   + Otra carrera
                 </button>
               </div>
             </div>
           ) : !isCreatingRace ? (
-            /* Selección de carrera guardada o nueva */
             <div className="space-y-3">
               {targetRaces.length > 0 && (
                 <div className="space-y-1.5">
@@ -208,10 +207,9 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
               </button>
             </div>
           ) : (
-            /* Formulario inline nuevo */
             <form onSubmit={handleSaveInlineRace} className="rounded-2xl border border-emerald-400/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                <h4 className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 font-mono">
                   <Flag className="h-3.5 w-3.5" /> Nueva Carrera
                 </h4>
                 <button type="button" onClick={() => setIsCreatingRace(false)} className="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer">Cancelar</button>
@@ -231,13 +229,12 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[9px] font-mono font-bold text-slate-500 uppercase block">Distancia / Modalidad</label>
+                <label className="text-[9px] font-mono font-bold text-slate-500 uppercase block">Distancia Oficial</label>
                 <div className="flex flex-wrap gap-1.5">
                   {DISTANCE_OPTIONS.map(opt => (
-                    <button key={opt.value} type="button"
-                      onClick={() => setInlineDistance(opt.value as any)}
+                    <button key={opt.value} type="button" onClick={() => setInlineDistance(opt.value as any)}
                       className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono transition cursor-pointer ${inlineDistance === opt.value ? opt.color + " border-2" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500"}`}>
-                      {opt.emoji} {opt.label}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
@@ -250,47 +247,57 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
         </div>
       )}
 
-      {/* ── PATH B: SIN CARRERA ── */}
+      {/* ── PATH B: SIN CARRERA (MANTENIMIENTO O BUILD BASE) ── */}
       {pathChoice === "norace" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Sprout className="h-3.5 w-3.5 text-emerald-500" /> Tipo de Entrenamiento
+            <h4 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Modalidad Sin Competencia
             </h4>
             <button type="button" onClick={() => setPathChoice(null)}
-              className="text-[10px] font-mono text-slate-400 hover:text-slate-600 cursor-pointer flex items-center gap-0.5">
+              className="text-[10px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer flex items-center gap-0.5">
               <X className="h-3 w-3" /> Cambiar
             </button>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <button type="button"
-              onClick={() => handleChooseNoRace("base")}
-              className={`p-3.5 rounded-xl border-2 text-left cursor-pointer transition ${planTitle.includes("Base") ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-400"}`}>
-              <Sprout className="h-5 w-5 text-emerald-500 mb-1.5" />
-              <strong className="text-xs text-slate-900 dark:text-white block">Base Aeróbica</strong>
-              <span className="text-[10px] text-slate-400 font-mono">12 semanas · Zona 2 & volumen</span>
+            <button type="button" onClick={() => handleChooseNoRace("maintenance")}
+              className={`p-4 rounded-2xl border-2 text-left cursor-pointer transition ${targetDistance === "maintenance" ? "border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30 ring-2 ring-emerald-500/20" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-400"}`}>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-2">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <strong className="text-xs text-slate-900 dark:text-white block font-mono">Mantenimiento Adaptativo</strong>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-1 leading-relaxed">
+                8 semanas base. Preserva tu condición física y salud con carga sostenible, protegiendo las articulaciones.
+              </p>
             </button>
-            <button type="button"
-              onClick={() => handleChooseNoRace("threshold")}
-              className={`p-3.5 rounded-xl border-2 text-left cursor-pointer transition ${planTitle.includes("Umbral") ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-400"}`}>
-              <Zap className="h-5 w-5 text-cyan-500 mb-1.5" />
-              <strong className="text-xs text-slate-900 dark:text-white block">Umbral & Potencia</strong>
-              <span className="text-[10px] text-slate-400 font-mono">8 semanas · FTP & VO2max</span>
+
+            <button type="button" onClick={() => handleChooseNoRace("build")}
+              className={`p-4 rounded-2xl border-2 text-left cursor-pointer transition ${targetDistance === "base_building" ? "border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/30 ring-2 ring-cyan-500/20" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-cyan-400"}`}>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 mb-2">
+                <Layers className="h-4 w-4" />
+              </div>
+              <strong className="text-xs text-slate-900 dark:text-white block font-mono">Build & Base Aeróbica (GPP)</strong>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-1 leading-relaxed">
+                10 semanas base. Construcción de volumen mitocondrial en Zona 2 y capacidad de trabajo sin picos de fatiga.
+              </p>
             </button>
           </div>
         </div>
       )}
 
-      {/* ── CONFIGURACIÓN DE INICIO (siempre visible cuando hay un path elegido) ── */}
+      {/* ── PARÁMETROS GENERALES DEL CICLO ── */}
       {pathChoice !== null && (
-        <div className="space-y-3 pt-1 border-t border-slate-100 dark:border-slate-800">
-          {/* Inicio del plan */}
+        <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">¿Cuándo empezamos?</label>
+            <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">¿Cuándo iniciamos el plan?</label>
             <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-              {[["CURRENT_WEEK", "⚡ Esta Semana"], ["NEXT_WEEK", "📅 Próxima"], ["CUSTOM", "🗓️ Fecha"]] .map(([mode, label]) => (
-                <button key={mode} type="button"
-                  onClick={() => onChangeStartDateMode(mode as any)}
+              {[
+                { mode: "CURRENT_WEEK", label: "Esta Semana" },
+                { mode: "NEXT_WEEK", label: "Próximo Lunes" },
+                { mode: "CUSTOM", label: "Fecha Manual" },
+              ].map(({ mode, label }) => (
+                <button key={mode} type="button" onClick={() => onChangeStartDateMode(mode as any)}
                   className={`py-2 px-1 rounded-xl font-bold transition cursor-pointer text-center ${startDateMode === mode ? "bg-emerald-500 text-white shadow-xs" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}>
                   {label}
                 </button>
@@ -302,21 +309,19 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
             )}
           </div>
 
-          {/* Duración (solo si no hay carrera vinculada) */}
-          {!primaryRace && (
+          {!primaryRace ? (
             <div className="space-y-2 rounded-xl bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Duración:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Duración del Bloque:</span>
                 <span className="px-2 py-0.5 rounded-lg bg-emerald-500 text-white font-black">{weeksCount} semanas</span>
               </div>
-              <input type="range" min={4} max={36} step={1} value={weeksCount} onChange={e => onChangeWeeksCount(Number(e.target.value))}
+              <input type="range" min={4} max={24} step={1} value={weeksCount} onChange={e => onChangeWeeksCount(Number(e.target.value))}
                 className="w-full accent-emerald-500 cursor-pointer" />
               <div className="flex justify-between text-[9px] font-mono text-slate-400">
-                <span>4 sem</span><span>36 sem</span>
+                <span>4 sem (mínimo)</span><span>24 sem (máximo)</span>
               </div>
             </div>
-          )}
-          {primaryRace?.date && (
+          ) : (
             <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-2">
               <p className="text-[11px] text-amber-700 dark:text-amber-300 font-mono font-bold">
                 🎯 Duración calculada: {weeksCount} semanas hasta {primaryRace.name}
@@ -324,9 +329,8 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
             </div>
           )}
 
-          {/* Nombre del macrociclo */}
           <div className="space-y-1">
-            <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">Nombre del Plan <span className="text-slate-300">(opcional)</span></label>
+            <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">Nombre del Macrociclo</label>
             <input type="text" value={planTitle} onChange={e => onChangePlanTitle(e.target.value)}
               placeholder="Ej: Temporada 2026 — Maratón Valencia"
               className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:outline-none" />

@@ -77,5 +77,6 @@ export function resolveDistTypeFromWizard(dist: string, approach?: string): Macr
   if (d.includes("10")) return "10k";
   if (d.includes("5")) return "5k";
   if (d.includes("maint") || a.includes("mantenimiento")) return "maintenance";
+  if (d.includes("base") || d.includes("build") || a.includes("base") || a.includes("build")) return "base_building";
   return "42k";
 }

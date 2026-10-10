@@ -79,8 +79,6 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
     return "Macrociclo de Temporada";
   });
   const [targetDistance, setTargetDistance] = useState<string>(primaryRace?.distance || "42k");
-  const [customDistanceText, setCustomDistanceText] = useState<string>("");
-  const [isCustomDistance, setIsCustomDistance] = useState<boolean>(false);
   const [startDateMode, setStartDateMode] = useState<"CURRENT_WEEK" | "NEXT_WEEK" | "CUSTOM">("CURRENT_WEEK");
   const [customStartDate, setCustomStartDate] = useState<string>("");
 
@@ -208,7 +206,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
             </div>
           </div>
           <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            Motor v3.2
+            IA Periodización Adaptativa
           </span>
         </div>
 
@@ -249,10 +247,10 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           onAddNewRace={onAddNewRace}
           targetDistance={targetDistance}
           onChangeDistance={setTargetDistance}
-          customDistanceText={customDistanceText}
-          onChangeCustomDistanceText={setCustomDistanceText}
-          isCustomDistance={isCustomDistance}
-          onToggleCustomDistance={setIsCustomDistance}
+          customDistanceText=""
+          onChangeCustomDistanceText={() => {}}
+          isCustomDistance={false}
+          onToggleCustomDistance={() => {}}
           weeksCount={weeksCount}
           onChangeWeeksCount={setWeeksCount}
           planTitle={planTitle}
@@ -325,7 +323,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
             disabled={currentStep === 3 && (isGeneratingPlan || isGenerating)}
             className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
           >
-            <span>{currentStep === 3 ? (isGeneratingPlan || isGenerating ? "Generando..." : "Generar con Head Coach IA") : "Siguiente"}</span>
+            <span>{currentStep === 3 ? (isGeneratingPlan || isGenerating ? "Head Coach IA Periodizando..." : "Generar Macrociclo con Head Coach IA") : "Siguiente"}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>

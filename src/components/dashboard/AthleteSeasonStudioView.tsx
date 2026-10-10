@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { BookOpen, Sparkles, Check, Target, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Check, Target, ChevronDown, ChevronUp } from "lucide-react";
 import { TargetRace, MacrocycleBlueprint, SeasonPlanItem } from "@/lib/physiology/macrocycle";
 import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
 import { SeasonActivePlanCard } from "../season/SeasonActivePlanCard";
-import { SeasonProgramLibrary, ProgramTemplate, PROGRAM_TEMPLATES } from "../season/SeasonProgramLibrary";
 import { SeasonAIGenerator } from "../season/SeasonAIGenerator";
 import { SeasonRacesTab } from "../season/SeasonRacesTab";
 import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
@@ -37,8 +36,6 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   onSaveTargetRaces, onSaveSeasonPlans, onApplyPlan, onPersistAvailability,
   onNavigateToDashboard, onNavigateToProfile, onOpenHeadCoach, onDeleteActivePlan,
 }) => {
-  const [leftTab, setLeftTab] = useState<"ai_designer" | "library">("ai_designer");
-  const [selectedProgramKey, setSelectedProgramKey] = useState<string>("MARATON_42K");
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -69,7 +66,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     setTimeout(() => setSuccessMessage(null), 3000);
   };
 
-  const handleOpenDesigner = () => { setIsDesignSectionOpen(true); setLeftTab("ai_designer"); };
+  const handleOpenDesigner = () => { setIsDesignSectionOpen(true); };
 
   const handleAddRace = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,40 +91,6 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
     onSaveTargetRaces(targetRaces.filter((r) => r.id !== id));
     if (selectedRaceId === id) setSelectedRaceId(null);
     showNotification("Carrera eliminada");
-  };
-
-  const handleConfirmProgram = (prog: ProgramTemplate) => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
-    const startDate = new Date(today.setDate(diff)).toISOString().split("T")[0];
-
-    const distType =
-      prog.key === "MANTENIMIENTO" || prog.discipline === "Salud"
-        ? "maintenance"
-        : prog.key === "BASE_BUILD" || prog.discipline === "Base"
-        ? "base_building"
-        : prog.discipline === "Triatlón" ? "triathlon_703"
-        : prog.discipline === "Carrera" ? (prog.weeks <= 12 ? "21k" : "42k")
-        : "42k";
-
-    const blueprint = generateCustomMacrocycleBlueprint({
-      distanceType: distType,
-      startDate, weeksCount: prog.weeks, customGoal: prog.name,
-      primaryRace: (distType === "maintenance" || distType === "base_building") ? undefined : (primaryRace || undefined),
-      athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
-    });
-
-    if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
-    const lastWeek = blueprint.weeks[blueprint.weeks.length - 1];
-    const newPlanItem: SeasonPlanItem = {
-      id: "plan_" + Date.now(), planName: prog.name, goalType: prog.key,
-      startDate: blueprint.startDate, endDate: lastWeek ? lastWeek.endDate : startDate,
-      totalWeeks: prog.weeks, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
-    };
-    onSaveSeasonPlans([newPlanItem]);
-    setIsDesignSectionOpen(false);
-    showNotification(`¡Programa "${prog.name}" activado como Plan Vigente!`);
   };
 
   const handleGenerateAIPlan = async (userPrompt: string, weeksCount: number, primaryDiscipline: string) => {
@@ -214,7 +177,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
             onDeletePlan={handleDeleteActivePlan}
           />
 
-          {/* Wizard / Diseñador */}
+          {/* Wizard / Diseñador Inteligente */}
           <div className="space-y-3">
             {activePlan && !isDesignSectionOpen ? (
               <button
@@ -228,40 +191,22 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                   </div>
                   <div className="text-left">
                     <p className="text-xs font-bold text-slate-800 dark:text-white">Diseñar Nuevo Macrociclo</p>
-                    <p className="text-[10px] text-slate-400 font-mono">Wizard IA paso a paso · Biblioteca de {PROGRAM_TEMPLATES.length} programas</p>
+                    <p className="text-[10px] text-slate-400 font-mono">Wizard IA paso a paso · Adaptado a tu fisiología</p>
                   </div>
                 </div>
                 <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 transition" />
               </button>
             ) : (
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden animate-fadeIn">
-                {/* Tab nav */}
-                <div className="flex items-center justify-between px-4 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex">
-                    <button
-                      type="button"
-                      onClick={() => setLeftTab("ai_designer")}
-                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold transition cursor-pointer border-b-2 ${
-                        leftTab === "ai_designer"
-                          ? "border-emerald-500 text-emerald-700 dark:text-emerald-300"
-                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                      }`}
-                    >
+                {/* Header de la sección de diseño */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Diseñar con IA
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLeftTab("library")}
-                      className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold transition cursor-pointer border-b-2 ${
-                        leftTab === "library"
-                          ? "border-emerald-500 text-emerald-700 dark:text-emerald-300"
-                          : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      Biblioteca ({PROGRAM_TEMPLATES.length})
-                    </button>
+                    </div>
+                    <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider font-mono">
+                      Diseñador Inteligente de Macrociclos
+                    </span>
                   </div>
                   {activePlan && (
                     <button
@@ -275,32 +220,24 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                 </div>
 
                 <div className="p-4 sm:p-5">
-                  {leftTab === "library" ? (
-                    <SeasonProgramLibrary
-                      selectedProgramKey={selectedProgramKey}
-                      onSelectProgram={(prog) => setSelectedProgramKey(prog.key)}
-                      onConfirmProgram={handleConfirmProgram}
-                    />
-                  ) : (
-                    <SeasonAIGenerator
-                      athleteId={athleteId}
-                      weeklyAvailability={weeklyAvailability}
-                      primaryRace={primaryRace}
-                      targetRaces={targetRaces}
-                      onSelectPrimaryRace={(r) => setSelectedRaceId(r ? r.id : null)}
-                      onAddNewRace={handleAddNewRaceInline}
-                      ctl={ctl} runFtp={runFtp} bikeFtp={bikeFtp} lthr={lthr}
-                      weightKg={weightKg} heightCm={heightCm} birthDate={birthDate}
-                      gender={gender} restingHR={restingHR} maxHR={maxHR}
-                      historicalMetrics={historicalMetrics}
-                      runningTrainingMode={runningTrainingMode}
-                      onGenerateAIPlan={handleGenerateAIPlan}
-                      onApplyDirectBlueprint={handleApplyDirectBlueprint}
-                      onNavigateToProfile={onNavigateToProfile}
-                      onPersistAvailability={onPersistAvailability}
-                      isGenerating={isGeneratingAI}
-                    />
-                  )}
+                  <SeasonAIGenerator
+                    athleteId={athleteId}
+                    weeklyAvailability={weeklyAvailability}
+                    primaryRace={primaryRace}
+                    targetRaces={targetRaces}
+                    onSelectPrimaryRace={(r) => setSelectedRaceId(r ? r.id : null)}
+                    onAddNewRace={handleAddNewRaceInline}
+                    ctl={ctl} runFtp={runFtp} bikeFtp={bikeFtp} lthr={lthr}
+                    weightKg={weightKg} heightCm={heightCm} birthDate={birthDate}
+                    gender={gender} restingHR={restingHR} maxHR={maxHR}
+                    historicalMetrics={historicalMetrics}
+                    runningTrainingMode={runningTrainingMode}
+                    onGenerateAIPlan={handleGenerateAIPlan}
+                    onApplyDirectBlueprint={handleApplyDirectBlueprint}
+                    onNavigateToProfile={onNavigateToProfile}
+                    onPersistAvailability={onPersistAvailability}
+                    isGenerating={isGeneratingAI}
+                  />
                 </div>
               </div>
             )}

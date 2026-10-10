@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Activity, ShieldCheck, Zap, Heart, Flame, Sparkles, Bot } from "lucide-react";
+import { Activity, ShieldCheck, Zap, Flame, Timer } from "lucide-react";
 
 interface SeasonWizardStep3PhysiologyProps {
   ctl?: number;
@@ -20,8 +20,8 @@ interface SeasonWizardStep3PhysiologyProps {
   onChangePeriodization: (p: "2:1" | "3:1" | "CONTINUO") => void;
   customPromptText: string;
   onChangeCustomPromptText: (t: string) => void;
-  onGeneratePlan: () => void;
-  isGenerating: boolean;
+  onGeneratePlan?: () => void;
+  isGenerating?: boolean;
 }
 
 export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyProps> = ({
@@ -41,8 +41,6 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
   onChangePeriodization,
   customPromptText,
   onChangeCustomPromptText,
-  onGeneratePlan,
-  isGenerating,
 }) => {
   const wkgRun = weightKg && runFtp ? (runFtp / weightKg).toFixed(2) : undefined;
   const wkgBike = weightKg && bikeFtp ? (bikeFtp / weightKg).toFixed(2) : undefined;
@@ -84,7 +82,7 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
           </div>
 
           <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <span className="text-[9px] text-slate-400 block uppercase">FTP Bici</span>
+            <span className="text-[9px] text-slate-400 block uppercase">FTP Ciclismo</span>
             <strong className="text-xs font-black text-cyan-600 dark:text-cyan-400">
               {bikeFtp > 0 ? `${bikeFtp}W` : "—"}
             </strong>
@@ -111,16 +109,16 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
         )}
       </div>
 
-      {/* 2. MODALIDAD DE PRESCRIPCIÓN DE CARRERA (POTENCIA STRYD VS RITMO DANIELS) */}
+      {/* 2. MODALIDAD DE PRESCRIPCIÓN DE RUNNING (POTENCIA STRYD VS RITMO DE PASO) */}
       <div className="space-y-2">
         <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
-          Modalidad de Prescripción para Carrera
+          Prescripción de Carrera: Potencia Stryd o Ritmo de Paso
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div
             onClick={() => onChangeRunningTrainingMode?.("POWER")}
-            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1 ${
+            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1.5 ${
               runningTrainingMode === "POWER"
                 ? "border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 ring-2 ring-amber-500/20 shadow-xs"
                 : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
@@ -129,20 +127,20 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Zap className="h-4 w-4 text-amber-500" />
-                Potencia Stryd (CP {runFtp > 0 ? `${runFtp}W` : "Activa"})
+                Potencia Stryd (CP {runFtp > 0 ? `${runFtp}W` : "Vatios"})
               </h4>
-              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold text-[9px]">
-                {runFtp > 0 ? "Vatios Stryd" : "Potenciómetro"}
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold text-[9px]">
+                {runFtp > 0 ? "Stryd CP" : "Potenciómetro"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Prescripción 100% en vatios y % CP. Zonas exactas de potencia insensible a viento y pendiente.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+              Prescripción 100% en vatios y % CP. Zonas exactas de potencia insensibles a pendientes, viento o terreno.
             </p>
           </div>
 
           <div
             onClick={() => onChangeRunningTrainingMode?.("PACE")}
-            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1 ${
+            className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1.5 ${
               runningTrainingMode === "PACE"
                 ? "border-sky-500 bg-sky-50/70 dark:bg-sky-950/30 ring-2 ring-sky-500/20 shadow-xs"
                 : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300"
@@ -150,24 +148,24 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
           >
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Activity className="h-4 w-4 text-sky-500" />
-                Ritmo Daniels (min/km)
+                <Timer className="h-4 w-4 text-sky-500" />
+                Ritmo de Paso (min/km)
               </h4>
-              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[9px]">
+              <span className="px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-700 dark:text-sky-300 font-mono font-bold text-[9px]">
                 Ritmo Umbral
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Prescripción estructurada por % de Ritmo Daniels (% Pace) y tiempos de paso por kilómetro.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+              Prescripción por ritmo de carrera (min/km) y zonas de paso calculadas a partir de tu ritmo umbral funcional.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 3. RITMO DE PROGRESIÓN Y RECUPERACIÓN (LENGUAJE CLARO Y AMIGABLE) */}
+      {/* 3. ESTRATEGIA DE PROGRESIÓN Y DESCANSO */}
       <div className="space-y-2">
         <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
-          Estrategia de Progresión y Descanso
+          Estrategia de Progresión y Descanso (Ratio de Carga)
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -182,14 +180,14 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                Ritmo Preventivo
+                Ritmo Preventivo (2:1)
               </h4>
-              <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-mono font-bold text-[9px]">
+              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-mono font-bold text-[9px]">
                 Recomendado
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              2 semanas de entrenamiento + 1 semana suave de asimilación. Ideal para asimilar mejor la carga y cuidar el cuerpo.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+              2 semanas de carga progresiva + 1 semana suave de descarga y asimilación biológica. Máxima longevidad deportiva.
             </p>
           </div>
 
@@ -204,53 +202,31 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Flame className="h-4 w-4 text-amber-500" />
-                Ritmo Estándar
+                Ritmo Estándar (3:1)
               </h4>
-              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[9px]">
+              <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[9px]">
                 Clásico
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              3 semanas de entrenamiento progresivo + 1 semana suave. Progresión clásica de volumen.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
+              3 semanas de carga progresiva + 1 semana suave de asimilación. Progresión clásica de volumen para atletas adaptados.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 3. DIRECTRICES ESPECÍFICAS ADICIONALES */}
+      {/* 4. NOTAS O PREFERENCIAS ADICIONALES */}
       <div className="space-y-1">
         <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">
-          Notas o Preferencias para el Entrenador IA (Opcional)
+          Directrices Específicas para el Head Coach IA (Opcional)
         </label>
         <textarea
           rows={2}
           value={customPromptText}
           onChange={(e) => onChangeCustomPromptText(e.target.value)}
-          placeholder="Ej: Tiradas largas los domingos, series de umbral los martes..."
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:outline-none resize-none"
+          placeholder="Ej: Tiradas largas los domingos, series de umbral los martes, enfocar en economía de carrera..."
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:outline-none resize-none font-mono"
         />
-      </div>
-
-      {/* 4. BOTÓN DISPARADOR DE LA IA */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={onGeneratePlan}
-          disabled={isGenerating}
-          className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center space-x-2 transition cursor-pointer disabled:opacity-50"
-        >
-          {isGenerating ? (
-            <>
-              <Bot className="h-4 w-4 animate-spin text-white" />
-              <span>Head Coach IA Periodizando Temporada...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 text-white" />
-              <span>Generar Macrociclo con Head Coach IA</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

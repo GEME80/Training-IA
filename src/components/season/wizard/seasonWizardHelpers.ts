@@ -64,19 +64,28 @@ export function resolveDistTypeFromWizard(dist: string, approach?: string): Macr
   const d = (dist || "").toLowerCase();
   const a = (approach || "").toLowerCase();
   const combined = `${d} ${a}`;
-  const isTri = /triat|triath|triseries|tri-series/i.test(combined);
 
+  // Prioridad 1: Objetivos explícitos sin carrera
+  if (d.includes("maint") || a.includes("mantenimiento")) return "maintenance";
+  if (d.includes("base") || d.includes("build") || a.includes("base") || a.includes("build")) return "base_building";
+
+  // Prioridad 2: Triatlón / Multideporte
+  const isTri = /triat|triath|triseries|tri-series/i.test(combined);
   const has703 = /70\.3|703|half|medio/i.test(combined);
   if (d.includes("sprint") || d.includes("olimp") || d === "triathlon_short" || (isTri && (combined.includes("short") || combined.includes("olimp") || combined.includes("sprint") || combined.includes("paipa")))) return "triathlon_short";
   if (d.includes("70.3") || d.includes("703") || d === "triathlon_703" || (isTri && has703)) return "triathlon_703";
   if (d.includes("140.6") || d.includes("1406") || d.includes("full") || (d.includes("iron") && !has703) || d === "triathlon_1406" || (a.includes("iron") && !has703)) return "triathlon_1406";
   if (isTri) return "triathlon_703";
+
+  // Prioridad 3: Ciclismo
   if (d.includes("bici") || d.includes("cicli") || d.includes("fondo") || d === "cycling_fondo" || a.includes("cicli")) return "cycling_fondo";
+
+  // Prioridad 4: Trail
   if (d.includes("trail") || d.includes("ultra") || d === "trail_50k" || a.includes("trail")) return "trail_50k";
+
+  // Prioridad 5: Running
   if (d.includes("21")) return "21k";
   if (d.includes("10")) return "10k";
   if (d.includes("5")) return "5k";
-  if (d.includes("maint") || a.includes("mantenimiento")) return "maintenance";
-  if (d.includes("base") || d.includes("build") || a.includes("base") || a.includes("build")) return "base_building";
   return "42k";
 }

@@ -136,6 +136,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       totalWeeks: blueprint.weeks.length, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
     };
     onSaveSeasonPlans([newPlanItem]);
+    setIsDesignSectionOpen(false);
     showNotification(`¡Macrociclo "${newPlanItem.planName}" activado!`);
   };
 

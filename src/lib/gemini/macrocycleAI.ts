@@ -43,8 +43,8 @@ export class MacrocycleAIEngine {
     const diff = today.getDate() + (day === 0 ? 1 : 8 - day);
     const startDate = config.startDate || new Date(today.setDate(diff)).toISOString().split("T")[0];
 
-    const isMaintenanceOrMoment = !config.hasRace && Boolean(config.athleteMoment || !config.raceName);
-    const resolvedMomentDist = config.athleteMoment === "base_building"
+    const isMaintenanceOrMoment = !config.hasRace && Boolean(config.athleteMoment || !config.raceName || config.targetDistance === "maintenance" || config.targetDistance === "base_building");
+    const resolvedMomentDist = (config.athleteMoment === "base_building" || config.targetDistance === "base_building")
       ? "base_building"
       : config.athleteMoment === "post_race_recovery"
       ? "post_race_recovery"
@@ -53,7 +53,7 @@ export class MacrocycleAIEngine {
       : "maintenance";
 
     const distType = (isMaintenanceOrMoment ? resolvedMomentDist : (config.targetDistance || config.raceDistance || "42k")) as any;
-    const requestedWeeks = config.weeksCount || (isMaintenanceOrMoment ? (config.athleteMoment === "post_race_recovery" ? 3 : config.athleteMoment === "injury_rehab" ? 6 : 8) : 16);
+    const requestedWeeks = config.weeksCount || (isMaintenanceOrMoment ? (config.athleteMoment === "post_race_recovery" ? 3 : config.athleteMoment === "injury_rehab" ? 6 : (distType === "base_building" ? 10 : 8)) : 16);
 
     // 1. Resolver modelo científico rector SSOT (Canova / Daniels / Coggan / Seiler / Attia)
     const curatedModel = resolveTrainingModel({

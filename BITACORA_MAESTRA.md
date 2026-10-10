@@ -6455,6 +6455,43 @@ Tras una auditoría arquitectónica y fisiológica exhaustiva de la generación 
 - `tsc --noEmit`: 0 errores (Código 0).
 - `next build`: 20/20 páginas compiladas exitosamente (Código 0).
 
+---
+
+## 90. Corrección Crítica del Ciclo de Vida de Borrado de Macrociclos y Eliminación de Resurrección en Hard Refresh (v5.14)
+
+### 90.1. Causa Raíz Diagnosticada
+1. **Falta de Endpoint y Función de Borrado:**
+   - [`src/app/api/macrocycles/route.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/app/api/macrocycles/route.ts) solo exponía `GET` y `POST`.
+   - [`src/lib/db/macrocycles.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/db/macrocycles.ts) no poseía ninguna función para eliminar o desactivar el documento `meta/active_macrocycle`.
+2. **Resurrección Automática en Hard Refresh:**
+   - Al pulsar "Eliminar", `handleDeleteActivePlan()` en `useSeasonPlans.ts` solo borraba `season_plans` de `localStorage` y limpiaba el estado volátil de React.
+   - En Firestore, el documento `meta/active_macrocycle` y el perfil del usuario continuaban con el macrociclo activo.
+   - Al hacer `Command + Shift + R`, `initPlans()` detectaba `resolvedPlans.length === 0` e invocaba `GET /api/macrocycles`, el cual devolvía el macrociclo huérfano de Firestore, resucitándolo y reescribiéndolo en `localStorage`.
+
+### 90.2. Solución Fisiológica y de Arquitectura Implementada
+1. **Desactivación y Borrado en Base de Datos (`macrocycles.ts` - 188 LOC):**
+   - Creada la función `deleteActiveMacrocycleFromFirestore(athleteIdentifier, uid)`.
+   - Elimina atómicamente el documento `users/{id}/meta/active_macrocycle`.
+   - Marca `isActive: false` en los documentos de la subcolección `macrocycles`.
+   - Limpia los campos `seasonPlans: []` y `profile.seasonPlans: []` en el documento del atleta.
+2. **Endpoint HTTP `DELETE` (`src/app/api/macrocycles/route.ts` - 101 LOC):**
+   - Añadido manejador `export async function DELETE(req: NextRequest)` que procesa `athleteId` y `uid`.
+   - Soporte para acción explícita `action: "delete_active"` en el método `POST`.
+3. **Persistencia y Limpieza Completa en el Frontend (`useSeasonPlans.ts` - 348 LOC):**
+   - `handleDeleteActivePlan()` ahora invoca `DELETE /api/macrocycles?athleteId=...&uid=...` de forma asíncrona antes de purgar el estado local.
+   - Purgadas las claves `season_plans`, `active_blueprint` y las claves legacy globales (`sgea_active_blueprint`, `sgea_season_plans_chain`).
+   - Refresco de telemetría y notificación de confirmación de eliminación completa.
+
+### 90.3. Archivos Modificados ($\le 350$ LOC)
+- `src/lib/db/macrocycles.ts`: **188 LOC** ($\le 350$)
+- `src/app/api/macrocycles/route.ts`: **101 LOC** ($\le 350$)
+- `src/hooks/useSeasonPlans.ts`: **348 LOC** ($\le 350$)
+
+### 90.4. Certificación
+- `tsc --noEmit`: 0 errores (Código 0).
+- `next build`: 20/20 páginas compiladas exitosamente (Código 0).
+
+
 
 
 

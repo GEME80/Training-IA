@@ -130,3 +130,59 @@ export async function getActiveMacrocycleFromFirestore(
 
   return null;
 }
+
+/**
+ * Elimina o desactiva el macrociclo activo de Firestore para el atleta y su UID.
+ */
+export async function deleteActiveMacrocycleFromFirestore(
+  athleteIdentifier: string,
+  uid?: string
+): Promise<boolean> {
+  if (!adminDb) return false;
+
+  try {
+    const candidates = [athleteIdentifier, uid].filter(Boolean) as string[];
+
+    for (const id of candidates) {
+      const userDocRef = adminDb.collection("users").doc(id);
+      const activeRef = userDocRef.collection("meta").doc("active_macrocycle");
+      const activeDoc = await activeRef.get();
+      if (activeDoc.exists) {
+        const activeId = activeDoc.data()?.activeMacrocycleId;
+        if (activeId) {
+          await userDocRef.collection("macrocycles").doc(activeId).update({ isActive: false }).catch(() => {});
+        }
+        await activeRef.delete().catch(() => {});
+      }
+      await userDocRef.update({
+        seasonPlans: [],
+        "profile.seasonPlans": [],
+      }).catch(() => {});
+    }
+
+    if (athleteIdentifier) {
+      const querySnap = await adminDb.collection("users").where("profile.intervalsAthleteId", "==", athleteIdentifier).limit(1).get();
+      if (!querySnap.empty) {
+        const userDoc = querySnap.docs[0];
+        const activeRef = userDoc.ref.collection("meta").doc("active_macrocycle");
+        const activeDoc = await activeRef.get();
+        if (activeDoc.exists) {
+          const activeId = activeDoc.data()?.activeMacrocycleId;
+          if (activeId) {
+            await userDoc.ref.collection("macrocycles").doc(activeId).update({ isActive: false }).catch(() => {});
+          }
+          await activeRef.delete().catch(() => {});
+        }
+        await userDoc.ref.update({
+          seasonPlans: [],
+          "profile.seasonPlans": [],
+        }).catch(() => {});
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("Aviso al eliminar macrociclo activo de Firestore:", err);
+    return false;
+  }
+}

@@ -82,11 +82,8 @@ export function useSeasonPlans({
     ? (currentlyViewedPlan?.blueprint || macrocyclePhase?.blueprint || null)
     : (macrocyclePhase?.blueprint || null);
 
-  const isMaintenanceCycle =
-    blueprint?.mode === "PRE_SEASON_MAINTENANCE" ||
-    blueprint?.mode === "GENERAL_MAINTENANCE" ||
-    (!blueprint?.primaryRace && !primaryARace) ||
-    (Boolean(blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento")) && !blueprint?.primaryRace && !primaryARace);
+  const isMaintenanceCycle = blueprint?.mode === "PRE_SEASON_MAINTENANCE" || blueprint?.mode === "GENERAL_MAINTENANCE" ||
+    (!blueprint?.primaryRace && !primaryARace) || (Boolean(blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento")) && !blueprint?.primaryRace && !primaryARace);
 
   const primaryRace = blueprint?.primaryRace || primaryARace || null;
   const weeks = blueprint?.weeks || [];
@@ -146,13 +143,7 @@ export function useSeasonPlans({
     try {
       await fetch("/api/macrocycles", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          athleteId: profileId,
-          uid: user?.uid,
-          blueprint: syncedBlueprint,
-          primaryRace: primaryTargetRace || syncedBlueprint.primaryRace,
-          source,
-        }),
+        body: JSON.stringify({ athleteId: profileId, uid: user?.uid, blueprint: syncedBlueprint, primaryRace: primaryTargetRace || syncedBlueprint.primaryRace, source }),
       });
       if (user?.uid) {
         persistProfileField(user.uid, user.email || userProfile?.email || "", { seasonPlans: updatedPlans }, isReadOnly).catch(() => {});
@@ -207,6 +198,9 @@ export function useSeasonPlans({
     } else {
       userStorage.removeItem("season_plans");
       userStorage.removeItem("active_blueprint");
+      if (typeof window !== "undefined") {
+        try { localStorage.removeItem("sgea_active_blueprint"); localStorage.removeItem("sgea_season_plans_chain"); } catch {}
+      }
       setViewingPlanId(null);
       setMacrocyclePhase(null);
     }
@@ -215,13 +209,24 @@ export function useSeasonPlans({
 
   const handleDeleteActivePlan = async () => {
     if (isReadOnly) return;
+    const targetId = profileId || userProfile?.intervalsAthleteId || user?.uid;
+    if (targetId) {
+      const uParam = user?.uid ? `&uid=${encodeURIComponent(user.uid)}` : "";
+      await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(targetId)}${uParam}`, { method: "DELETE" }).catch(() => {});
+    }
+    userStorage.removeItem("season_plans");
+    userStorage.removeItem("active_blueprint");
+    if (typeof window !== "undefined") {
+      try { localStorage.removeItem("sgea_active_blueprint"); localStorage.removeItem("sgea_season_plans_chain"); } catch {}
+    }
     await handleSaveSeasonPlans([]);
     setViewingPlanId(null);
     setMacrocyclePhase(null);
+    if (refreshTelemetry) await refreshTelemetry(profileId, apiKeyCache, runFtp, bikeFtp);
     if (setSyncNotification) {
       setSyncNotification({
         title: "Plan Eliminado",
-        message: "El macrociclo activo ha sido eliminado. Tu calendario ha quedado restablecido.",
+        message: "El macrociclo activo ha sido eliminado de la base de datos y tu calendario ha quedado restablecido.",
         type: "success",
       });
     }
@@ -253,16 +258,12 @@ export function useSeasonPlans({
             if (macroData.success && macroData.macrocycle?.blueprint) {
               const bp = syncBlueprintToCurrentDate(macroData.macrocycle.blueprint);
               const restoredPlan: SeasonPlanItem = {
-                id: macroData.macrocycle.id || "plan-active",
-                planName: bp.cycleTitle || "Macrociclo Activo",
-                goalType: bp.distanceType ? bp.distanceType.toUpperCase() : "CUSTOM_MACROCYCLE",
-                blueprint: bp,
+                id: macroData.macrocycle.id || "plan-active", planName: bp.cycleTitle || "Macrociclo Activo",
+                goalType: bp.distanceType ? bp.distanceType.toUpperCase() : "CUSTOM_MACROCYCLE", blueprint: bp,
                 startDate: bp.startDate || new Date().toISOString().split("T")[0],
                 endDate: bp.weeks?.[bp.weeks.length - 1]?.endDate || new Date().toISOString().split("T")[0],
                 totalWeeks: bp.totalWeeks || bp.weeks?.length || 16,
-                status: "ACTIVE",
-                orderIndex: 0,
-                createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
+                status: "ACTIVE", orderIndex: 0, createdAt: macroData.macrocycle.createdAt || new Date().toISOString(),
               };
               resolvedPlans = [restoredPlan];
               if (macroData.macrocycle.primaryRace) {

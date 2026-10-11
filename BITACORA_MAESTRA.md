@@ -7592,3 +7592,36 @@ El error `#310` de React corresponde a una **violación de las Rules of Hooks ("
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
 - **Modularidad:** Todos los componentes $\le 350$ LOC ✅.
+
+---
+
+## 117. OPTIMIZACIÓN ULTRA-MINIMALISTA DE DATOS TELEMÉTRICOS Y ALTA VISIBILIDAD DE FRANJA OBJETIVO (v5.41)
+
+### 117.1. Diagnóstico de Experiencia de Usuario & Deportes
+Tras verificar la resolución del error `#310`, el deportista observó:
+1. El panel de datos ejecutados ocupaba un espacio vertical excesivo, desplazando la gráfica y las zonas.
+2. En la gráfica de telemetría no se apreciaba con claridad la zona de trabajo objetivo (franja casi invisible y etiqueta ilegible en pantallas de teléfono móvil).
+
+### 117.2. Solución de Ingeniería y Diseño Deportivo
+1. **Franja de Trabajo Objetivo de Alta Visibilidad (`TargetWorkZoneOverlay` en `telemetryChartHelpers.tsx` - 252 LOC):**
+   - Altura mínima garantizada de 16px para evitar que rangos estrechos se compriman a líneas imperceptibles de 2-4px.
+   - Sombreado de zona con `fillOpacity: 0.24` y líneas delimitadoras de rango `strokeWidth="1.6"` en trazo punteado `5,3`.
+   - Píldora badge flotante con fondo opaco al 95% y tipografía monospace blanca `🎯 {label}` de alta legibilidad en pantallas retina/móvil.
+   - Pill en el header de la gráfica con badge temático `🎯 Objetivo: {label}`.
+   - Cálculo en `WorkoutDetailModal.tsx` con apertura de zona de entrenamiento fisiológica ($\pm 8\%$) ante valores puntuales (ej. 140 W $\rightarrow$ 129–151 W Z2).
+
+2. **Panel de Métricas Ultra-Minimalista (`ExecutedSessionMetricsTable.tsx` - 219 LOC):**
+   - **Barra de Macro KPIs:** Reemplazo de los 3 bloques cuadrados grandes por una barra unificada horizontal compacta de 36px con divisores sutiles (`Duración` • `Distancia` • `Carga TSS`).
+   - **Métricas Avanzadas en Rejilla 4x2 HUD:** `NP`, `IF`, `VI`, `Pw:Hr`, `Trabajo`, `EF`, `W/kg` y `Desnivel` dispuestos en chips de telemetría compactos que reducen en un 55% la altura requerida.
+   - **Tabla Canónica Fisiológica Compactada:** `Mín | Prom | Máx` con espaciado `py-0.5`, números tabulares alineados a la derecha y `Prom.` resaltado en negrita.
+
+### 117.3. Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad:**
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 346 LOC ($\le 350$).
+  - `src/components/macrocycle/telemetryChartHelpers.tsx`: 252 LOC ($\le 350$).
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 219 LOC ($\le 350$).
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 324 LOC ($\le 350$).
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 313 LOC ($\le 350$).
+

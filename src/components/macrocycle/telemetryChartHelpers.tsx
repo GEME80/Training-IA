@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface TelemetrySamplePoint {
   sampleIdx: number;
   timeSec: number;
@@ -172,3 +174,79 @@ export function computeTargetBandY(
   }
   return null;
 }
+
+export function TargetWorkZoneOverlay({
+  targetBandY,
+  padding,
+  plotW,
+  chartWidth,
+}: {
+  targetBandY: { topY: number; bottomY: number; color: string; label: string };
+  padding: { left: number; right: number };
+  plotW: number;
+  chartWidth: number;
+}) {
+  const rawH = targetBandY.bottomY - targetBandY.topY;
+  const height = Math.max(16, rawH);
+  const adjustedTopY = rawH < 16 ? targetBandY.topY - (16 - rawH) / 2 : targetBandY.topY;
+  const badgeWidth = Math.min(130, Math.max(90, targetBandY.label.length * 7 + 30));
+  const badgeX = chartWidth - padding.right - badgeWidth - 4;
+  const badgeY = Math.max(6, adjustedTopY - 14);
+
+  return (
+    <g className="target-work-zone">
+      {/* Sombra de zona con alta visibilidad y textura */}
+      <rect
+        x={padding.left}
+        y={adjustedTopY}
+        width={plotW}
+        height={height}
+        fill={targetBandY.color}
+        fillOpacity={0.24}
+      />
+      {/* Líneas delimitadoras de rango */}
+      <line
+        x1={padding.left}
+        y1={adjustedTopY}
+        x2={chartWidth - padding.right}
+        y2={adjustedTopY}
+        stroke={targetBandY.color}
+        strokeWidth="1.6"
+        strokeDasharray="5,3"
+        strokeOpacity="0.9"
+      />
+      <line
+        x1={padding.left}
+        y1={adjustedTopY + height}
+        x2={chartWidth - padding.right}
+        y2={adjustedTopY + height}
+        stroke={targetBandY.color}
+        strokeWidth="1.6"
+        strokeDasharray="5,3"
+        strokeOpacity="0.9"
+      />
+      {/* Píldora Badge Nítida y Legible en Móvil */}
+      <rect
+        x={badgeX}
+        y={badgeY}
+        width={badgeWidth}
+        height={14}
+        rx={3.5}
+        fill={targetBandY.color}
+        fillOpacity={0.95}
+      />
+      <text
+        x={badgeX + badgeWidth / 2}
+        y={badgeY + 10}
+        textAnchor="middle"
+        fill="#ffffff"
+        fontSize="9"
+        fontWeight="bold"
+        fontFamily="ui-monospace, SFMono-Regular, monospace"
+      >
+        🎯 {targetBandY.label}
+      </text>
+    </g>
+  );
+}
+

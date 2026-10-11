@@ -122,20 +122,33 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   }
 
   const parseTargetWorkRange = (): TargetWorkRange | undefined => {
-    const raw = displayTarget || workout.powerTarget || (workout as any).paceTarget || "";
+    let raw = displayTarget || workout.powerTarget || (workout as any).paceTarget || "";
+    if (!raw && workout.workoutDoc) {
+      const matchW = workout.workoutDoc.match(/(\d{2,4})\s*[-–—]\s*(\d{2,4})\s*W/i);
+      if (matchW) raw = matchW[0];
+      else {
+        const matchP = workout.workoutDoc.match(/(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})/);
+        if (matchP) raw = matchP[0];
+        else {
+          const matchSingleW = workout.workoutDoc.match(/(\d{2,4})\s*W/i);
+          if (matchSingleW) raw = matchSingleW[0];
+        }
+      }
+    }
     if (!raw) return undefined;
     const wMatch = raw.match(/(\d{2,4})\s*[-–—]\s*(\d{2,4})\s*W/i);
     if (wMatch) return { min: parseInt(wMatch[1], 10), max: parseInt(wMatch[2], 10), type: "WATTS", label: `${wMatch[1]}–${wMatch[2]} W` };
     const sMatch = raw.match(/(\d{2,4})\s*W/i);
     if (sMatch) {
       const w = parseInt(sMatch[1], 10);
-      return { min: Math.round(w * 0.96), max: Math.round(w * 1.04), type: "WATTS", label: `~${w} W` };
+      const minW = Math.round(w * 0.92), maxW = Math.round(w * 1.08);
+      return { min: minW, max: maxW, type: "WATTS", label: `${minW}–${maxW} W (Obj: ${w}W)` };
     }
     const pMatch = raw.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
     if (pMatch) {
       const p1 = parseInt(pMatch[1], 10) * 60 + parseInt(pMatch[2], 10);
       const p2 = parseInt(pMatch[3], 10) * 60 + parseInt(pMatch[4], 10);
-      return { min: Math.min(p1, p2), max: Math.max(p1, p2), type: "PACE", label: `${pMatch[1]}:${pMatch[2]}–${pMatch[3]}:${pMatch[4]}` };
+      return { min: Math.min(p1, p2), max: Math.max(p1, p2), type: "PACE", label: `${pMatch[1]}:${pMatch[2]}–${pMatch[3]}:${pMatch[4]} min/km` };
     }
     return undefined;
   };

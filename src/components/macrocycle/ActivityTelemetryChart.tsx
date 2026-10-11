@@ -9,6 +9,7 @@ import {
   formatSec,
   TargetWorkRange,
   computeTargetBandY,
+  TargetWorkZoneOverlay,
 } from "./telemetryChartHelpers";
 
 export type { TargetWorkRange };
@@ -34,14 +35,7 @@ interface ActivityTelemetryChartProps {
 }
 
 export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
-  activityId,
-  athleteId,
-  apiKey,
-  uid,
-  email,
-  summaryStats,
-  targetRange,
-  onMetricsDiscovered,
+  activityId, athleteId, apiKey, uid, email, summaryStats, targetRange, onMetricsDiscovered,
 }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -179,11 +173,16 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   return (
     <div className="rounded-2xl p-3 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-2.5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Sparkles className="h-3.5 w-3.5 text-cyan-500" />
           <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            Telemetría de Carrera / Ruta ({formatSec(timeArray[timeArray.length - 1] || 0)})
+            Telemetría ({formatSec(timeArray[timeArray.length - 1] || 0)})
           </span>
+          {targetRange && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs">
+              🎯 Objetivo: {targetRange.label}
+            </span>
+          )}
           {activeMetric === "ALL" && (
             <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 pl-2 border-l border-slate-200 dark:border-slate-700">
               {hasPace && <span className="text-cyan-600 dark:text-cyan-400">● Ritmo</span>}
@@ -279,14 +278,12 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
 
           {/* Franja de Trabajo Objetivo Planificado (Target Zone) */}
           {targetBandY && (
-            <g className="target-work-zone">
-              <rect x={padding.left} y={targetBandY.topY} width={plotW} height={Math.max(4, targetBandY.bottomY - targetBandY.topY)} fill={targetBandY.color} fillOpacity={0.12} />
-              <line x1={padding.left} y1={targetBandY.topY} x2={chartWidth - padding.right} y2={targetBandY.topY} stroke={targetBandY.color} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.75" />
-              <line x1={padding.left} y1={targetBandY.bottomY} x2={chartWidth - padding.right} y2={targetBandY.bottomY} stroke={targetBandY.color} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.75" />
-              <text x={chartWidth - padding.right - 4} y={targetBandY.topY - 3} textAnchor="end" className="text-[9px] font-mono font-bold fill-slate-500 dark:fill-slate-400">
-                🎯 {targetBandY.label}
-              </text>
-            </g>
+            <TargetWorkZoneOverlay
+              targetBandY={targetBandY}
+              padding={padding}
+              plotW={plotW}
+              chartWidth={chartWidth}
+            />
           )}
 
           {(activeMetric === "ALL" || activeMetric === "ALTITUDE") && altPoints.length > 0 && (

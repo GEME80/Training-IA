@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Activity } from "lucide-react";
 import { AthleteWellness, DailyExecutedMap } from "@/lib/intervals/types";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generatePMCSeries, PMCTimeframe, PMCDataPoint } from "@/lib/physiology/pmcEngine";
 import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
-import { AthletePMCKpiCards } from "./AthletePMCKpiCards";
-import { AthletePMCSVG } from "./AthletePMCSVG";
-import { PlannedVsActualProgress } from "./PlannedVsActualProgress";
-import { PMCInsightFooter } from "./PMCInsightFooter";
+import { AthletePMCSVG, VisibleCurvesState } from "./AthletePMCSVG";
+import { PMCComplianceHeader } from "./PMCComplianceHeader";
+import { PMCInsightReport } from "./PMCInsightReport";
 
 interface AthletePMCChartProps {
   wellnessHistory: AthleteWellness[];
@@ -39,12 +38,17 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
   weeklyAvailability,
 }) => {
   const [timeframe, setTimeframe] = useState<PMCTimeframe>("1y");
-  const [showProjection, setShowProjection] = useState<boolean>(true);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [visibleCurves, setVisibleCurves] = useState<VisibleCurvesState>({
+    ctl: true,
+    atl: true,
+    tsb: true,
+    projection: true,
+  });
 
   const { points, summary } = useMemo(() => {
-    return generatePMCSeries(wellnessHistory, blueprint, timeframe, showProjection);
-  }, [wellnessHistory, blueprint, timeframe, showProjection]);
+    return generatePMCSeries(wellnessHistory, blueprint, timeframe, visibleCurves.projection ?? true);
+  }, [wellnessHistory, blueprint, timeframe, visibleCurves.projection]);
 
   const todayIdx = points.findIndex((p) => p.label === "Hoy");
   const splitIdx = todayIdx !== -1 ? todayIdx : points.findIndex((p) => p.isProjected) - 1;
@@ -54,7 +58,13 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
   const weeksCount = Math.round(points.length / 7);
   const daysCount = points.length;
 
-  // Cálculo de Carga y Volumen para PlannedVsActualProgress
+  // Actividades del día activo bajo el crosshair
+  const activeDayActivities = useMemo(() => {
+    if (!activePoint?.date || !dailyExecutedActivities) return null;
+    return dailyExecutedActivities[activePoint.date] || null;
+  }, [activePoint?.date, dailyExecutedActivities]);
+
+  // Cálculo de Carga (TSS) y Volumen (Horas) de la semana
   const { actualTss, plannedTss, actualHours, plannedHours } = useMemo(() => {
     let actTss = weeklyExecutedTss || 0;
     let actMin = 0;
@@ -103,38 +113,43 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
     return { actualTss: actTss, plannedTss: planTss, actualHours: actHrs, plannedHours: planHrs };
   }, [weeklyExecutedTss, dailyExecutedActivities, weeklyAvailability, summary.plannedCtlToday, blueprint]);
 
+  const toggleCurve = (curve: keyof VisibleCurvesState) => {
+    setVisibleCurves((prev) => ({ ...prev, [curve]: prev[curve] === false }));
+  };
+
   return (
     <div className="space-y-3 sm:space-y-4 animate-fadeIn select-none">
-      {/* ── CABECERA: DESKTOP (4 TARJETAS GRANDES) vs MÓVIL (ACTUAL VS PLAN COMPACTO) ── */}
-      <div className="hidden md:grid">
-        <AthletePMCKpiCards summary={summary} targetPoint={points[points.length - 1] || null} />
-      </div>
-
-      <div className="block md:hidden">
-        <PlannedVsActualProgress
-          actualTss={actualTss}
-          plannedTss={plannedTss}
-          actualHours={actualHours}
-          plannedHours={plannedHours}
-        />
-      </div>
+      {/* ── CABECERA UNIFICADA DE CUMPLIMIENTO (MOBILE 2x2 & DESKTOP 4 CARDS) ── */}
+      <PMCComplianceHeader
+        summary={summary}
+        blueprint={blueprint}
+        actualTss={actualTss}
+        plannedTss={plannedTss}
+        actualHours={actualHours}
+        plannedHours={plannedHours}
+        activeRampRate={activePoint?.rampRate}
+      />
 
       {/* ── CONTENEDOR PRINCIPAL PMC ── */}
       <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-6 shadow-sm space-y-3 sm:space-y-4 pb-20 md:pb-6">
-        {/* DESKTOP: Barra superior de pestañas y HUD extendido */}
+        {/* DESKTOP: Barra superior con HUD extendido y sesiones del día */}
         <div className="hidden md:flex md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-6">
-            <span className="pb-2 border-b-2 border-sky-500 text-xs font-black text-sky-600 dark:text-sky-400 uppercase tracking-wider">
-              FORMA Y EVOLUCIÓN
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+              TELEMETRÍA DE CARGA & FORMA
+            </span>
+            <span className="text-xs text-slate-400 font-medium">
+              ({weeksCount} Sem · {daysCount} d)
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-xs font-bold bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
-            <span className="text-slate-600 dark:text-slate-300 font-black">
+          {/* HUD reactivo al crosshair */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-bold bg-slate-50 dark:bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+            <span className="text-slate-700 dark:text-slate-200 font-black">
               {formatPmcHeaderDate(activePoint?.date)}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Forma:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-400">Aptitud:</span>
               <span className="text-sky-500 font-black">{activePoint?.ctl ?? "—"}</span>
               {activePoint?.plannedCtl !== undefined && (
                 <span className="text-amber-500 text-[11px] font-bold">
@@ -142,59 +157,109 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span className="text-slate-400">Fatiga:</span>
               <span className="text-purple-500 font-black">{activePoint?.atl ?? "—"}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span className="text-slate-400">Frescura:</span>
-              <span className={`font-black ${(activePoint?.tsb ?? 0) >= 0 ? "text-emerald-500" : "text-amber-500"}`}>
+              <span className={`font-black ${(activePoint?.tsb ?? 0) >= 0 ? "text-emerald-500" : (activePoint?.tsb ?? 0) >= -30 ? "text-amber-500" : "text-rose-500"}`}>
                 {activePoint?.tsb !== undefined ? (activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb) : "—"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Progresión:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-400">Rampa:</span>
               <span className={`font-black ${(activePoint?.rampRate ?? 0) >= 0 ? "text-emerald-500" : "text-sky-500"}`}>
                 {activePoint?.rampRate !== undefined ? (activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate) : "0"}
               </span>
             </div>
+            {activeDayActivities && activeDayActivities.totalTss > 0 && (
+              <div className="flex items-center gap-1 pl-1 border-l border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400 font-black">
+                <Activity className="w-3 h-3" />
+                <span>{activeDayActivities.totalTss} TSS ({activeDayActivities.activities.length} ses)</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* DESKTOP: Selector de horizontes y checkbox proyección */}
+        {/* DESKTOP: Leyenda Interactiva (Switches sin checkboxes) + Selector de Rango */}
         <div className="hidden md:flex items-center justify-between gap-3 pt-1">
-          <span className="text-xs text-slate-400 font-semibold">
-            <strong className="text-slate-700 dark:text-slate-200 font-black">{weeksCount} Semanas</strong> {daysCount} días
-          </span>
+          {/* Switches interactivos tipo pill */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => toggleCurve("ctl")}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                visibleCurves.ctl !== false
+                  ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-60"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${visibleCurves.ctl !== false ? "bg-sky-500" : "bg-slate-300"}`} />
+              <span>Aptitud (CTL)</span>
+            </button>
 
-          <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700/50">
-              {(["3m", "6m", "1y"] as PMCTimeframe[]).map((tf) => (
-                <button
-                  key={tf}
-                  type="button"
-                  onClick={() => setTimeframe(tf)}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
-                    timeframe === tf || (timeframe === "90d" && tf === "3m")
-                      ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
-                  }`}
-                >
-                  {tf === "3m" ? "3 Meses" : tf === "6m" ? "6 Meses" : "1 Año (365d)"}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleCurve("atl")}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                visibleCurves.atl !== false
+                  ? "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-60"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${visibleCurves.atl !== false ? "bg-purple-500" : "bg-slate-300"}`} />
+              <span>Fatiga (ATL)</span>
+            </button>
 
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={showProjection}
-                onChange={(e) => setShowProjection(e.target.checked)}
-                className="rounded text-sky-600 focus:ring-sky-500 h-4 w-4 border-slate-300 dark:border-slate-700"
-              />
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <button
+              type="button"
+              onClick={() => toggleCurve("tsb")}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                visibleCurves.tsb !== false
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-60"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${visibleCurves.tsb !== false ? "bg-emerald-500" : "bg-slate-300"}`} />
+              <span>Forma (TSB)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => toggleCurve("projection")}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                visibleCurves.projection !== false
+                  ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                  : "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-200 dark:border-slate-800 opacity-60"
+              }`}
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${visibleCurves.projection !== false ? "text-amber-500" : "text-slate-400"}`} />
               <span>Proyección a Carrera</span>
-            </label>
+            </button>
+          </div>
+
+          {/* Selector de Rango Temporal Desktop */}
+          <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700/50">
+            {[
+              { id: "30d" as PMCTimeframe, label: "30D" },
+              { id: "90d" as PMCTimeframe, label: "90D" },
+              { id: "6m" as PMCTimeframe, label: "6M" },
+              { id: "1y" as PMCTimeframe, label: "1 Año" },
+            ].map((tf) => (
+              <button
+                key={tf.id}
+                type="button"
+                onClick={() => setTimeframe(tf.id)}
+                className={`px-3 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
+                  timeframe === tf.id || (timeframe === "3m" && tf.id === "90d")
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -246,32 +311,17 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
           </div>
         </div>
 
-        {/* RENDERIZADOR SVG DE 3 PANELES INDEPENDIENTES (CANVAS INTACTO) */}
+        {/* RENDERIZADOR SVG DE 3 PANELES INDEPENDIENTES */}
         <AthletePMCSVG
           points={points}
           activeIdx={activeIdx}
           onHoverIdx={setHoveredIdx}
-          showProjection={showProjection}
+          showProjection={visibleCurves.projection !== false}
+          visibleCurves={visibleCurves}
         />
 
-        {/* EN MOBILE (< 768px): Footer Ligero Desencajonado (Hero Chip + Rampa + Acordeón) */}
-        <div className="block md:hidden">
-          <PMCInsightFooter activePoint={activePoint} />
-        </div>
-
-        {/* EN DESKTOP (>= 768px): Texto explicativo fisiológico oficial de Intervals.icu */}
-        <div className="hidden md:block pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 space-y-1">
-          <p>
-            <strong className="text-sky-500 font-bold">La línea azul muestra la aptitud (CTL).</strong> Esta es una media móvil ponderada exponencialmente de 42 días de su carga de entrenamiento.{" "}
-            <strong className="text-purple-500 font-bold">La línea morada muestra la fatiga (ATL).</strong> Se trata de una media móvil ponderada exponencialmente de 7 días. Para ponerse en forma, necesita crear estrés aumentando la carga, manteniendo la línea violeta por encima de la azul.
-          </p>
-          <p>
-            <strong className="text-emerald-500 font-bold">Tu forma (TSB) es tu aptitud menos fatiga.</strong> Cuando tu forma está en la{" "}
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">zona de entrenamiento óptima (-10 a -30)</span>, estás ganando forma. Cuando tu forma sea{" "}
-            <span className="text-sky-500 font-bold">fresco (+5 a +20)</span> y estés en forma, estás listo para competir. Evite permanecer en la{" "}
-            <span className="text-red-500 font-bold">zona de alto riesgo (&lt; -30)</span> durante mucho tiempo para prevenir sobreentrenamiento. Referencias: <em>Monitoring your training load by Science2Sport</em> y <em>Managing Training Using TSB by Joe Friel</em>.
-          </p>
-        </div>
+        {/* PIE DESACOPLADO & LIGERO: Hero Status Card, Diagnóstico vs Prescripción y Acordeón */}
+        <PMCInsightReport activePoint={activePoint} summary={summary} />
       </div>
     </div>
   );

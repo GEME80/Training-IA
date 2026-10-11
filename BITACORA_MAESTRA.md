@@ -7972,6 +7972,51 @@ Esto causaba que:
   - `src/components/dashboard/AthleteCalendarWeekRow.tsx`: 349 LOC ($\le 350$) ✅.
   - `src/lib/intervals/calendarHydration.ts`: 337 LOC ($\le 350$) ✅.
   - `src/lib/physiology/macrocycleTemplates.ts`: 348 LOC ($\le 350$) ✅.
-  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 334 LOC ($\le 350$) ✅.
+---
+
+## 126. OPTIMIZACIÓN INTEGRAL DE VISTA EVOLUCIÓN & PMC: ANCLAJE TEMPORAL, FITNESS CTL REAL VS. PLAN, LEYENDA INTERACTIVA DESKTOP Y HERO STATUS REPORT (v5.50)
+
+### 126.1. Cabecera Unificada de Cumplimiento Fisiológico (`PMCComplianceHeader.tsx`)
+- **Contexto Temporal de Microciclo Activo:**
+  - Encabezado explícito: `CUMPLIMIENTO SEMANAL · SEMANA ACTIVA (Sem XX · DD al DD Mes)` derivado dinámicamente de la fecha del sistema y el macrociclo.
+- **3 Pilares Coordinados (Real vs. Plan):**
+  - **Fitness Biológico (CTL):** Comparación `CTL Actual / CTL Planificado` con cálculo de $\Delta\text{Gap}$ y rampa semanal (`+X.X /sem`).
+  - **Carga Estructural (TSS):** `XXX / YYY TSS` con barra proporcional de 4px (`h-1 rounded-full`) y estado semántico (esmeralda en plan, ámbar en desviación).
+  - **Volumen Mecánico (Horas):** `X.X / Y.Y hrs` con tipografía mono y barra proporcional.
+- **Arquitectura Responsiva Dual:**
+  - **Mobile (< 768px):** Rejilla ultra-compacta 2x2 ($\le 72$px de alto total) optimizada para visualización sin scroll excesivo.
+  - **Desktop (>= 768px):** Fila ejecutiva de 4 tarjetas en `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4` con métricas ampliadas.
+
+### 126.2. Telemetría y Controles Desacoplados (`AthletePMCChart.tsx` y `AthletePMCSVG.tsx`)
+- **Sincronización Transparente:**
+  - Retiro definitivo de cualquier botón, icono o trigger manual de sync en toda la pantalla de PMC; la sincronización es 100% en segundo plano.
+- **Leyenda Interactiva Desktop (Switches sin Formularios):**
+  - Botones pill interactivos con puntos de color (`Aptitud (CTL)`, `Fatiga (ATL)`, `Forma (TSB)`, `Proyección a Carrera`) que atenúan las curvas a opacidad 0.08 sin checkboxes rígidos.
+  - HUD reactivo al crosshair en la cabecera del gráfico que muestra fecha, CTL (actual + plan), ATL, TSB, rampa e indicación de sesiones ejecutadas del día (`XX TSS (N ses)`).
+- **Selector Móvil Segmentado y Scrubber HUD:**
+  - Selector de rangos horizontal `[ 30D | 90D | 6M | 1 Año ]` con `bg-purple-600 text-white` en activo.
+  - HUD Scrubber táctil en una sola línea plana directamente sobre el canvas.
+- **Soporte SVG Flexible (`AthletePMCSVG.tsx`):**
+  - Manejo de `visibleCurves` en área sombreada, curvas, proyecciones y círculos magnéticos del crosshair.
+
+### 126.3. Aligeramiento Inferior Desencajonado (`PMCInsightReport.tsx`)
+- **Hero Status Card Dinámico:**
+  - Estado fisiológico con badge semántico (`🟢 Frescura / Taper`, `🟡 Sobrecarga Productiva`, `🔴 Fatiga Crítica`) e insight llano en máximo 2 líneas.
+- **Estructura en 2 Columnas para Desktop:**
+  - Columna Izquierda: Diagnóstico del Modelo Fisiológico.
+  - Columna Derecha: Prescripción Táctica Recomendada.
+- **Acordeón Técnico Colapsable:**
+  - Desplegable cerrado por defecto (`collapsed: true`) con el marco metodológico oficial (Banister Impulse-Response, Joe Friel, Science2Sport).
+
+### 126.4. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/dashboard/pmc/PMCComplianceHeader.tsx`: 249 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/PMCInsightReport.tsx`: 174 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 329 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/AthletePMCSVG.tsx`: 348 LOC ($\le 350$) ✅.
+  - `src/lib/physiology/pmcEngine.ts`: 268 LOC ($\le 350$) ✅.
+
 
 

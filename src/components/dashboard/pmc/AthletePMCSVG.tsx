@@ -3,11 +3,19 @@
 import React, { useRef } from "react";
 import { PMCDataPoint } from "@/lib/physiology/pmcEngine";
 
+export interface VisibleCurvesState {
+  ctl?: boolean;
+  atl?: boolean;
+  tsb?: boolean;
+  projection?: boolean;
+}
+
 interface AthletePMCSVGProps {
   points: PMCDataPoint[];
   activeIdx: number;
   onHoverIdx: (idx: number | null) => void;
   showProjection: boolean;
+  visibleCurves?: VisibleCurvesState;
 }
 
 export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
@@ -15,6 +23,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
   activeIdx,
   onHoverIdx,
   showProjection,
+  visibleCurves,
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -36,7 +45,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
   // Escalas Y
   const maxLoad = 130;
   const scaleP1 = (v: number) => p1Bottom - (Math.max(0, Math.min(maxLoad, v)) / maxLoad) * (p1Bottom - p1Top);
-  const p1Ticks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130];
+  const p1Ticks = [20, 40, 60, 80, 100, 120];
 
   const minTsb = -45;
   const maxTsb = 35;
@@ -145,30 +154,23 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
         </text>
 
         {/* Área sombreada CTL Real */}
-        <path d={makeAreaPath(0, pastEnd)} fill="url(#ctlAreaSoft)" />
+        <path d={makeAreaPath(0, pastEnd)} fill="url(#ctlAreaSoft)" opacity={visibleCurves?.ctl === false ? 0.05 : 1} />
 
         {/* Curva Azul: Aptitud Real (CTL) */}
-        <path d={makeLinePath((p) => p.ctl, 0, pastEnd, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" />
+        <path d={makeLinePath((p) => p.ctl, 0, pastEnd, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeOpacity={visibleCurves?.ctl === false ? 0.08 : 1} />
         {/* Curva Morada: Fatiga Real (ATL) */}
-        <path d={makeLinePath((p) => p.atl, 0, pastEnd, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.5" strokeLinecap="round" />
+        <path d={makeLinePath((p) => p.atl, 0, pastEnd, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.5" strokeLinecap="round" strokeOpacity={visibleCurves?.atl === false ? 0.08 : 1} />
 
         {/* Curva Esperada del Plan (Línea discontinua ámbar/dorada desde inicio del plan) */}
         {planStartIdx >= 0 && (
-          <path
-            d={makeLinePath((p) => p.plannedCtl, planStartIdx, points.length - 1, scaleP1)}
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="1.8"
-            strokeDasharray="4 3"
-            strokeOpacity="0.9"
-          />
+          <path d={makeLinePath((p) => p.plannedCtl, planStartIdx, points.length - 1, scaleP1)} fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeDasharray="4 3" strokeOpacity={visibleCurves?.ctl === false ? 0.08 : 0.9} />
         )}
 
         {/* Proyección Real Futura */}
-        {showProjection && splitIdx >= 0 && (
+        {showProjection && visibleCurves?.projection !== false && splitIdx >= 0 && (
           <>
-            <path d={makeLinePath((p) => p.ctl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2" strokeDasharray="4 3" strokeOpacity="0.8" />
-            <path d={makeLinePath((p) => p.atl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity="0.8" />
+            <path d={makeLinePath((p) => p.ctl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#0284c7" strokeWidth="2" strokeDasharray="4 3" strokeOpacity={visibleCurves?.ctl === false ? 0.08 : 0.8} />
+            <path d={makeLinePath((p) => p.atl, futureStart, points.length - 1, scaleP1)} fill="none" stroke="#9333ea" strokeWidth="1.5" strokeDasharray="4 3" strokeOpacity={visibleCurves?.atl === false ? 0.08 : 0.8} />
           </>
         )}
 
@@ -177,15 +179,15 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
           <g>
             <text x={W - padR + 10} y={scaleP1(70) - 26} fill="#64748b" fontSize="10" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
             <text x={W - padR + 10} y={scaleP1(70) - 12} fill="#94a3b8" fontSize="9">Aptitud Real</text>
-            <text x={W - padR + 10} y={scaleP1(70) + 2} fill="#0284c7" fontSize="12" fontWeight="900">{activePoint.ctl}</text>
+            <text x={W - padR + 10} y={scaleP1(70) + 2} fill="#0284c7" fontSize="12" fontWeight="900" opacity={visibleCurves?.ctl === false ? 0.2 : 1}>{activePoint.ctl}</text>
             {activePoint.plannedCtl !== undefined && (
               <>
                 <text x={W - padR + 10} y={scaleP1(70) + 16} fill="#f59e0b" fontSize="9">Aptitud Plan</text>
-                <text x={W - padR + 10} y={scaleP1(70) + 29} fill="#f59e0b" fontSize="11" fontWeight="900">{activePoint.plannedCtl}</text>
+                <text x={W - padR + 10} y={scaleP1(70) + 29} fill="#f59e0b" fontSize="11" fontWeight="900" opacity={visibleCurves?.ctl === false ? 0.2 : 1}>{activePoint.plannedCtl}</text>
               </>
             )}
             <text x={W - padR + 10} y={scaleP1(70) + 42} fill="#94a3b8" fontSize="9">Fatiga</text>
-            <text x={W - padR + 10} y={scaleP1(70) + 55} fill="#9333ea" fontSize="12" fontWeight="900">{activePoint.atl}</text>
+            <text x={W - padR + 10} y={scaleP1(70) + 55} fill="#9333ea" fontSize="12" fontWeight="900" opacity={visibleCurves?.atl === false ? 0.2 : 1}>{activePoint.atl}</text>
           </g>
         )}
 
@@ -214,7 +216,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
           if (idx === 0) return null;
           const prev = points[idx - 1];
           const isFut = idx > pastEnd;
-          if (isFut && !showProjection) return null;
+          if (isFut && (!showProjection || visibleCurves?.projection === false)) return null;
           return (
             <line
               key={`tsb-seg-${idx}`}
@@ -225,6 +227,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
               stroke={getTsbColor(p.tsb)}
               strokeWidth="1.8"
               strokeLinecap="round"
+              strokeOpacity={visibleCurves?.tsb === false ? 0.08 : 1}
               strokeDasharray={isFut ? "3 3" : undefined}
             />
           );
@@ -238,7 +241,7 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
             stroke="#f59e0b"
             strokeWidth="1.2"
             strokeDasharray="3 2"
-            strokeOpacity="0.75"
+            strokeOpacity={visibleCurves?.tsb === false ? 0.08 : 0.75}
           />
         )}
 
@@ -330,12 +333,12 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
             <line x1={scaleX(activeIdx)} y1={p1Top} x2={scaleX(activeIdx)} y2={p3Bottom} stroke="#0f172a" strokeWidth="1.2" />
             <rect x={scaleX(activeIdx) - 26} y={p1Top - 14} width="52" height="13" rx="3" fill="#0f172a" />
             <text x={scaleX(activeIdx)} y={p1Top - 4} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
-            <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.ctl)} r="3.5" fill="#0284c7" stroke="#fff" strokeWidth="1.5" />
-            {activePoint.plannedCtl !== undefined && (
+            {visibleCurves?.ctl !== false && <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.ctl)} r="3.5" fill="#0284c7" stroke="#fff" strokeWidth="1.5" />}
+            {visibleCurves?.ctl !== false && activePoint.plannedCtl !== undefined && (
               <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.plannedCtl)} r="3" fill="#f59e0b" stroke="#fff" strokeWidth="1.2" />
             )}
-            <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.atl)} r="3" fill="#9333ea" stroke="#fff" strokeWidth="1.2" />
-            <circle cx={scaleX(activeIdx)} cy={scaleP2(activePoint.tsb)} r="3" fill={getTsbColor(activePoint.tsb)} stroke="#fff" strokeWidth="1.2" />
+            {visibleCurves?.atl !== false && <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.atl)} r="3" fill="#9333ea" stroke="#fff" strokeWidth="1.2" />}
+            {visibleCurves?.tsb !== false && <circle cx={scaleX(activeIdx)} cy={scaleP2(activePoint.tsb)} r="3" fill={getTsbColor(activePoint.tsb)} stroke="#fff" strokeWidth="1.2" />}
           </g>
         )}
       </svg>

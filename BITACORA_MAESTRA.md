@@ -8018,5 +8018,62 @@ Esto causaba que:
   - `src/components/dashboard/pmc/AthletePMCSVG.tsx`: 348 LOC ($\le 350$) ✅.
   - `src/lib/physiology/pmcEngine.ts`: 268 LOC ($\le 350$) ✅.
 
+---
+
+## 127. REFACTORIZACIÓN INTEGRAL DE PERFIL DEL ATLETA & FISIOLOGÍA: ARQUITECTURA CONTEXTUAL POR DEPORTE Y CONTINUIDAD COGGAN/CSS (v5.51)
+
+### 127.1. Limpieza de Cabecera del Atleta (`AthleteBiometricsBar.tsx`)
+- **Supresión de Textos Redundantes:** Se eliminó el subtítulo estático en `AthletePhysiologyView.tsx` (`"Control de umbrales, biometría, matriz de disponibilidad..."`).
+- **Identidad & Biometría Pura:** Se creó [`AthleteBiometricsBar.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/profile/AthleteBiometricsBar.tsx) (64 LOC) mostrando Avatar `GE`, Nombre `German Morales` y biometría `46a (Hombre) • 82kg • 185cm • IMC 24.0`.
+- **Desacoplamiento de Controles Huérfanos:** Se retiraron de la cabecera los badges aislados de vatios (`336W`) y el conmutador general de modo de carrera, trasladándolos de manera contextual a la disciplina correspondiente.
+
+### 127.2. Navegación Maestra por Disciplina (`SportContextSelector.tsx`)
+- **Selector Rector Dinámico:** Se creó [`SportContextSelector.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/profile/SportContextSelector.tsx) (47 LOC) con tabs maestros:
+  `[ 🏃 Carrera ]` | `[ 🚴 Ciclismo ]` | `[ 🏊 Natación ]`.
+- **Estandarización al Color de Marca:** Pestaña activa en morado corporativo (`bg-purple-600 text-white rounded-xl shadow-sm`), erradicando el uso del naranja/ámbar como color de interacción.
+- **Gobierno Reactivo:** La disciplina activa sincroniza simultáneamente las tarjetas de umbrales superiores y las tablas de zonas inferiores.
+
+### 127.3. Tarjetas de Umbrales Contextuales (`ContextualThresholdsGrid.tsx`)
+- **Cuadrícula Contextual de 3-4 Micro-Cards:** Se creó [`ContextualThresholdsGrid.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/profile/ContextualThresholdsGrid.tsx) (275 LOC):
+  - **Carrera:** Potencia Run (`336W` · `4.10 W/kg`), Ritmo Daniels VDOT (`4:23 /km` · `Umbral T`), FC Umbral/Máx (`178 / 185 bpm`), FC Reposo (`54 bpm`) y switch interno `[ ⚡ Potencia (W) ]` vs `[ ⏱ Ritmo (/km) ]`.
+  - **Ciclismo:** FTP Ciclismo (`226W` · `2.76 W/kg`), FC Umbral (`178 bpm`), FC Reposo (`54 bpm`) y switch interno `[ ⚡ Potencia (W) ]` vs `[ ❤️ Frecuencia Cardíaca (ppm) ]`.
+  - **Natación:** Ritmo CSS (`2:10 /100m` · `Velocidad Crítica`), FC Umbral / Esfuerzo (`178 bpm`), FC Reposo (`54 bpm`), con ocultamiento total de vatios.
+- **Acordeón Maestro de Umbrales:** Cabecera con botón de repliegue/expansión rápida `[ ▾ Umbrales de [Deporte] ]` y botón de ajuste `[ Editar ]`.
+
+### 127.4. Corrección Fisiológica y Tablas de Zonas (`DynamicZonesTable.tsx`)
+- **Continuidad Estricta en Ciclismo (Modelo Coggan 7 Zonas):**
+  - Se corrigió el redondeo para evitar números perdidos:
+    - `Z1 Recuperación:` `< 125 W` (`< 55% FTP`)
+    - `Z2 Resistencia Base:` `125 – 170 W` (`56% – 75% FTP`)
+    - `Z3 Tempo:` `171 – 203 W` (`76% – 90% FTP`)
+    - `Z4 Umbral FTP:` `204 – 237 W` (`91% – 105% FTP`)
+    - `Z5 VO2max:` `238 – 271 W` (`106% – 120% FTP`)
+    - `Z6 Cap. Anaeróbica:` `272 – 339 W` (`121% – 150% FTP`)
+    - `Z7 Neuromuscular:` `> 339 W` (`> 150% FTP`)
+  - Columna explícita de `% FTP` integrada junto a los vatios en `tabular-nums font-mono`.
+- **Cierre de Brecha Z4-Z5 en Natación (CSS 2:10 / 100m):**
+  - Se suprimió el salto de 11 segundos en [`runningWorkoutAdapter.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/runningWorkoutAdapter.ts) implementando offsets continuos:
+    - `Z1 Suave / Técnica:` `> 2:35 /100m` (`CSS + 25s+`) [Gris]
+    - `Z2 Resistencia Base:` `2:20 – 2:34 /100m` (`CSS + 10s a + 24s`) [Azul]
+    - `Z3 Tempo / Crucero:` `2:12 – 2:19 /100m` (`CSS + 2s a + 9s`) [Verde]
+    - `Z4 Umbral CSS:` `2:04 – 2:11 /100m` (`CSS - 6s a + 1s`) [Ámbar]
+    - `Z5 Sprint / VO2max:` `< 2:04 /100m` (`< CSS - 6s`) [Rojo]
+- **Calculadora de Parciales de Nado (`SwimPacingAccordion.tsx`):**
+  - Acordeón colapsable cerrado por defecto (`collapsed: true`): `[ ▾ Calculadora de Parciales y Ritmos de Paso ]` con distancias estándar de 50m a 1500m.
+
+### 127.5. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/profile/AthleteBiometricsBar.tsx`: 64 LOC ($\le 350$) ✅.
+  - `src/components/profile/SportContextSelector.tsx`: 47 LOC ($\le 350$) ✅.
+  - `src/components/profile/SwimPacingAccordion.tsx`: 77 LOC ($\le 350$) ✅.
+  - `src/components/profile/ContextualThresholdsGrid.tsx`: 275 LOC ($\le 350$) ✅.
+  - `src/components/profile/DynamicZonesTable.tsx`: 234 LOC ($\le 350$) ✅.
+  - `src/components/profile/AthleteZonesTab.tsx`: 245 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: 349 LOC ($\le 350$) ✅.
+  - `src/lib/physiology/runningWorkoutAdapter.ts`: 350 LOC ($\le 350$) ✅.
+
+
 
 

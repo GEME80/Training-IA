@@ -60,17 +60,20 @@ export function parseSwimPaceToSeconds(paceStr?: string): number {
 }
 
 /**
- * Calcula dinámicamente las 5 zonas de natación basadas en CSS (Jan Olbrecht / Joe Friel)
+ * Calcula dinámicamente las 5 zonas de natación basadas en CSS (Jan Olbrecht / Joe Friel / Swim Pacing continuo)
  */
 export function calculateSwimCssZones(cssSec: number = 105): SwimZoneItem[] {
   const css = cssSec > 0 ? cssSec : 105;
-  const [z1S, z1E, z2E, z3E, z4E, z5E] = [Math.round(css / 0.65), Math.round(css / 0.75), Math.round(css / 0.85), Math.round(css / 0.94), Math.round(css / 1.05), Math.round(css / 1.15)];
+  const [z1T, z2Min, z2Max, z3Min, z3Max, z4Min, z4Max, z5Max] = [
+    css + 25, css + 10, css + 24, css + 2, css + 9, Math.max(1, css - 6), css + 1, Math.max(1, css - 6)
+  ];
+
   return [
-    { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-600 dark:text-slate-400", pct: "< 75% CSS", range: `${formatSwimPace(z1E)} - ${formatSwimPace(z1S)} /100m` },
-    { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "75 - 85% CSS", range: `${formatSwimPace(z2E)} - ${formatSwimPace(z1E)} /100m` },
-    { id: "Z3", name: "Tempo / Crucero", nameColor: "text-teal-600 dark:text-teal-400", pct: "85 - 94% CSS", range: `${formatSwimPace(z3E)} - ${formatSwimPace(z2E)} /100m` },
-    { id: "Z4", name: "Umbral CSS", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "95 - 105% CSS", range: `${formatSwimPace(z4E)} - ${formatSwimPace(z3E)} /100m` },
-    { id: "Z5", name: "Sprint / VO2max", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 105% CSS", range: `< ${formatSwimPace(z5E)} /100m` },
+    { id: "Z1", name: "Suave / Técnica", nameColor: "text-slate-500 dark:text-slate-400", pct: "CSS + 25s+", range: `> ${formatSwimPace(z1T)} /100m` },
+    { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "CSS + 10s a + 24s", range: `${formatSwimPace(z2Min)} – ${formatSwimPace(z2Max)} /100m` },
+    { id: "Z3", name: "Tempo / Crucero", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "CSS + 2s a + 9s", range: `${formatSwimPace(z3Min)} – ${formatSwimPace(z3Max)} /100m` },
+    { id: "Z4", name: "Umbral CSS", nameColor: "text-amber-500 dark:text-amber-400", pct: "CSS - 6s a + 1s", range: `${formatSwimPace(z4Min)} – ${formatSwimPace(z4Max)} /100m` },
+    { id: "Z5", name: "Sprint / VO2max", nameColor: "text-rose-600 dark:text-rose-400", pct: "< CSS - 6s", range: `< ${formatSwimPace(z5Max)} /100m` },
   ];
 }
 
@@ -344,4 +347,3 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
   }
   return { ...item, workoutName: adaptedName || item.workoutName, workoutDoc: adaptedDoc, powerTarget: adaptedTarget || item.powerTarget, justification: adaptedJust, tss: adaptedTss };
 }
-

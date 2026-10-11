@@ -172,25 +172,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   };
 
   const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => {
-    let pSec = runThresholdPaceSecPerKm;
-    let pStr = runThresholdPaceStr;
-    let sSec = swimCssSecPer100m;
-    let sStr = swimCssStr;
-    let rFtp = runFtp;
-    let bFtp = bikeFtp;
-    let hLthr = lthr;
+    let pSec = runThresholdPaceSecPerKm, pStr = runThresholdPaceStr;
+    let sSec = swimCssSecPer100m, sStr = swimCssStr;
+    let rFtp = runFtp, bFtp = bikeFtp, hLthr = lthr;
 
-    if (metric === "RUN_PACE") {
-      pStr = String(val); pSec = parsePaceToSeconds(pStr); setRunThresholdPaceStr(pStr); setRunThresholdPaceSecPerKm(pSec);
-    } else if (metric === "RUN_FTP") {
-      rFtp = Number(val); setRunFtp(rFtp);
-    } else if (metric === "BIKE_FTP") {
-      bFtp = Number(val); setBikeFtp(bFtp);
-    } else if (metric === "LTHR") {
-      hLthr = Number(val); setLthr(hLthr);
-    } else if (metric === "SWIM_CSS") {
-      sStr = String(val); sSec = parseSwimPaceToSeconds(sStr); setSwimCssStr(sStr); setSwimCssSecPer100m(sSec);
-    }
+    if (metric === "RUN_PACE") { pStr = String(val); pSec = parsePaceToSeconds(pStr); setRunThresholdPaceStr(pStr); setRunThresholdPaceSecPerKm(pSec); }
+    else if (metric === "RUN_FTP") { rFtp = Number(val); setRunFtp(rFtp); }
+    else if (metric === "BIKE_FTP") { bFtp = Number(val); setBikeFtp(bFtp); }
+    else if (metric === "LTHR") { hLthr = Number(val); setLthr(hLthr); }
+    else if (metric === "SWIM_CSS") { sStr = String(val); sSec = parseSwimPaceToSeconds(sStr); setSwimCssStr(sStr); setSwimCssSecPer100m(sSec); }
 
     await onSave({
       runFtp: rFtp, bikeFtp: bFtp, lthr: hLthr, restingHR, maxHR,
@@ -208,12 +198,9 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 dark:border-slate-800 pb-2 sm:pb-3">
         <div>
           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
-            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 dark:text-purple-400" />
             Perfil del Atleta & Fisiología
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none">
-            Control de umbrales, biometría, matriz de disponibilidad y sincronización Intervals.icu.
-          </p>
         </div>
         {successMessage && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold font-mono animate-fadeIn">
@@ -230,7 +217,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           onClick={() => setActiveTab("zones")}
           className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "zones"
-              ? "bg-amber-500 text-slate-950 font-black shadow-xs"
+              ? "bg-purple-600 text-white font-black shadow-xs"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >

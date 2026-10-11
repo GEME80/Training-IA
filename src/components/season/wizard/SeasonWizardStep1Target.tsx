@@ -117,7 +117,7 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
 
             <button
               type="button"
-              onClick={() => setPathChoice("norace")}
+              onClick={() => handleChooseNoRace("maintenance")}
               className="group p-5 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 text-left hover:border-emerald-500 hover:shadow-md transition cursor-pointer"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mb-3">

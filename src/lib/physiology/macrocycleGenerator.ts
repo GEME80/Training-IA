@@ -135,7 +135,8 @@ export function generateCustomMacrocycleBlueprint(
     customGoal: config.customGoal,
   });
 
-  const isEventDriven = def.category === "RACE_TARGET";
+  const isMaintenancePlan = !config.primaryRace?.date || def.distanceType === "maintenance" || def.distanceType === "base_building" || config.distanceType === "maintenance" || config.distanceType === "base_building";
+  const isEventDriven = Boolean(config.primaryRace?.date) && !isMaintenancePlan;
   const isConservative = config.periodization === "2:1" || config.periodization === "CONSERVADOR";
   const recoveryModulo = isConservative ? 3 : 4;
 
@@ -236,7 +237,7 @@ export function generateCustomMacrocycleBlueprint(
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "IMPACTO_CHOQUE";
       microLabel = isRecoveryWeek ? `Asimilación (${isConservative ? "2:1" : "3:1"})` : "🔥 Fondo Cumbre Clave";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-orange-500/25 text-orange-300 border-orange-500/40";
-    } else if (weekNumber > baseEndWeek || (hasGoodFitness && countdown <= 9)) {
+    } else if (weekNumber > baseEndWeek || (isEventDriven && hasGoodFitness && countdown <= 9)) {
       phase = "BUILD";
       phaseLabel = "Construcción Específica & Umbral";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
@@ -304,7 +305,6 @@ export function generateCustomMacrocycleBlueprint(
   if (currentMonday.getTime() < startMonday.getTime()) currentWeekIndex = 0;
   else if (currentMonday.getTime() > new Date(weeks[weeks.length - 1].startDate).getTime()) currentWeekIndex = weeks.length - 1;
 
-  const isMaintenancePlan = !isEventDriven || def.distanceType === "maintenance" || def.distanceType === "base_building";
   const primaryRace: TargetRace | null = isMaintenancePlan ? null : config.primaryRace || (isEventDriven ? {
     id: `race-${Date.now()}`, name: config.customGoal || def.title,
     date: weeks[weeks.length - 1]?.endDate || formatDate(now),

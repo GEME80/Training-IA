@@ -105,6 +105,10 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
     }
   }, [weeklyAvailability]);
 
+  const isStep1Valid = Boolean((primaryRace && primaryRace.name && primaryRace.date) || targetDistance === "maintenance" || targetDistance === "base_building" || targetDistance === "general_fitness");
+  const isStep2Valid = Object.values(localWeeklyAvailability || {}).some((discs: any) => Array.isArray(discs) && discs.some((d) => d && d !== "Descanso"));
+  const isStep3Valid = Boolean(runningTrainingMode);
+
   const handleGenerateAI = async () => {
     setIsGeneratingPlan(true);
     setCurrentStep(4);
@@ -279,10 +283,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           runningTrainingMode={runningTrainingMode}
           onChangeRunningTrainingMode={(newMode) => {
             setRunningTrainingMode(newMode);
-            try {
-              userStorage.setItem("running_training_mode", newMode);
-              userStorage.setItem("has_running_power_meter", String(newMode === "POWER"));
-            } catch {}
+            try { userStorage.setItem("running_training_mode", newMode); userStorage.setItem("has_running_power_meter", String(newMode === "POWER")); } catch {}
             if (onPersistRunningMode) onPersistRunningMode(newMode).catch(() => {});
           }}
           periodization={periodization} onChangePeriodization={setPeriodization}
@@ -324,17 +325,19 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
               if (currentStep === 3) handleGenerateAI();
               else setCurrentStep((prev) => (prev + 1) as any);
             }}
-            disabled={currentStep === 3 && (isGeneratingPlan || isGenerating || !runningTrainingMode)}
+            disabled={currentStep === 1 ? !isStep1Valid : currentStep === 2 ? !isStep2Valid : (isGeneratingPlan || isGenerating || !isStep3Valid)}
             className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
           >
             <span>
-              {currentStep === 3
-                ? isGeneratingPlan || isGenerating
+              {currentStep === 1
+                ? (isStep1Valid ? "Siguiente" : "Selecciona tu objetivo")
+                : currentStep === 2
+                ? (isStep2Valid ? "Siguiente" : "Configura al menos 1 día")
+                : (isGeneratingPlan || isGenerating
                   ? "Head Coach IA Periodizando..."
-                  : !runningTrainingMode
+                  : !isStep3Valid
                   ? "Selecciona Potencia o Ritmo"
-                  : "Generar Macrociclo con Head Coach IA"
-                : "Siguiente"}
+                  : "Generar Macrociclo con Head Coach IA")}
             </span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>

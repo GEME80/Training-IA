@@ -7100,4 +7100,57 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
   - `src/lib/ai/knowledge/triathlon1406Model.ts`: 292 LOC.
   - `src/lib/ai/knowledge/cyclingSpecialtyModels.ts`: 344 LOC.
 
+---
+
+## 106. BLINDAJE ANTI-COMPETICIÓN Y VALIDACIÓN ESTRICTA DEL WIZARD DE TEMPORADA (v5.30)
+
+### 106.1. Diagnóstico de Causa Raíz de la "Competición 10K Fantasma"
+El usuario auditó minuciosamente el plan generado para la atleta Silvia Rey (cuyo objetivo era Mantenimiento/Salud) y detectó un error metodológico crítico: en la última semana, el sistema le prescribió una **Competición Oficial de 10K** (`🏆 Competición Oficial: 10K Ruta`). Adicionalmente, el usuario instruyó: *"o que no deje continuar o generar el plan si falta algún dato. Revisa qué es lo mejor para no hacer flujos tan complejos"*.
+
+La investigación del código reveló una cadena de 4 causas interconectadas:
+1. **Wizard Paso 1 (`SeasonWizardStep1Target.tsx`):** Al hacer clic en la tarjeta *"Mantenimiento o Base Building"*, el handler ejecutaba `setPathChoice("norace")` pero **no asignaba** inmediatamente `targetDistance = "maintenance"`, manteniendo el valor residual previo (`"42k"`).
+2. **Knowledge Base Fallback (`src/lib/ai/knowledge/index.ts`):** En `resolveTrainingModel`, cuando los parámetros no coincidían explícitamente con ninguna distancia de carrera, existía un fallback general que retornaba `TEN_K_ROAD_MODEL` en lugar del modelo base de longevidad y salud.
+3. **Trigger de Competición en Long Run (`src/lib/ai/knowledge/index.ts`):** `calculateProgressiveLongRun` disparaba el entrenamiento de competición si `countdown === 1` y el modelo no era de deporte general, inyectando los 10 km a ritmo de carrera.
+4. **Bandera de Evento en Generador (`macrocycleGenerator.ts`):** `isEventDriven` se evaluaba como `def.category === "RACE_TARGET"`. Dado que la definición por omisión de la librería era un maratón, `isEventDriven` resultaba `true`, provocando que en `countdown === 1` se inyectara `phase = "RACE_WEEK"` y `microType = "COMPETICION"`.
+
+### 106.2. Soluciones Implementadas y Blindaje Metodológico
+
+1. **Selección Inmediata y Flujo Simplificado en Paso 1 (`SeasonWizardStep1Target.tsx` - 343 LOC):**
+   - Al hacer clic en la tarjeta principal de *"Mantenimiento o Base Building"*, se invoca inmediatamente `handleChooseNoRace("maintenance")`, configurando en un solo clic:
+     * `targetDistance = "maintenance"`
+     * `primaryRace = null`
+     * `planTitle = "Mantenimiento Adaptativo & Salud"`
+     * `weeksCount = 8`
+   - El atleta entra directamente con su objetivo fijado sin clics confusos ni estados ambiguos.
+
+2. **Validación Estricta sin Fricción en Botón de Navegación (`SeasonAIGenerator.tsx` - 349 LOC):**
+   - El botón *"Siguiente"* se bloquea dinámicamente si falta algún dato fundamental, con etiquetas explicativas en tiempo real:
+     * **Paso 1:** `isStep1Valid`: Requiere carrera con nombre y fecha, o un objetivo sin carrera (`maintenance`, `base_building`, `general_fitness`). Etiqueta si está bloqueado: *"Selecciona tu objetivo"*.
+     * **Paso 2:** `isStep2Valid`: Requiere que al menos 1 día de la matriz semanal tenga una disciplina activa distinta a Descanso. Etiqueta si está bloqueado: *"Configura al menos 1 día"*.
+     * **Paso 3:** `isStep3Valid`: Requiere haber seleccionado el modo de carrera (Potencia o Ritmo). Etiqueta si está bloqueado: *"Selecciona Potencia o Ritmo"*.
+
+3. **Fallback Seguro a Longevidad y Salud (`src/lib/ai/knowledge/index.ts` - 348 LOC):**
+   - El fallback de `resolveTrainingModel` ahora retorna **estrictamente** `BASE_LONGEVITY_MODEL`, erradicando cualquier asignación involuntaria a 10K.
+   - En `calculateProgressiveLongRun`, la fase de competición oficial requiere estrictamente `phase === "RACE_WEEK"`. Una semana final de un plan de mantenimiento jamás disparará una tirada de competición.
+
+4. **Desactivación de Event-Driven para Planes de Salud (`src/lib/physiology/macrocycleGenerator.ts` - 336 LOC):**
+   - `isMaintenancePlan` se fija si no hay `primaryRace?.date` o si el objetivo es `maintenance` / `base_building`.
+   - `isEventDriven` es estrictamente `false` para todo plan de mantenimiento, garantizando que:
+     * Las semanas finales sean fases regulares de asimilación o consolidación (`BUILD` o `BASE`), con microciclos `CARGA` o `DESCARGA_ASIMILACION`.
+     * `primaryRace` se mantenga en `null`.
+     * Cero semanas de `RACE_WEEK`, cero microciclos `COMPETICION` y cero tiradas con trofeo.
+
+### 106.3. Certificación de Calidad y Cumplimiento
+- **Simulación Fisiológica de Verificación:** Script con el perfil de Silvia Rey ejecutado con éxito total:
+  - 8 semanas de mantenimiento generadas: W1 Carga Base, W2 Test Control, W3 Descarga 2:1, W4 Carga Base, W5 Construcción & Umbral, W6 Asimilación 2:1, W7 Construcción & Umbral, W8 Construcción & Umbral.
+  - **Cero** competiciones, **cero** menciones a 10K.
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/components/season/wizard/SeasonWizardStep1Target.tsx`: 343 LOC.
+  - `src/components/season/SeasonAIGenerator.tsx`: 349 LOC.
+  - `src/lib/ai/knowledge/index.ts`: 348 LOC.
+  - `src/lib/physiology/macrocycleGenerator.ts`: 336 LOC.
+
+
 

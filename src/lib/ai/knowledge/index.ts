@@ -116,13 +116,13 @@ export function resolveTrainingModel(params: {
     return CYCLING_GRAN_FONDO_MODEL;
   }
 
-  // 6. Salud / Longevidad / Mantenimiento
-  if (/salud|manten|longev|maintenance/i.test(combined)) {
+  // 6. Salud / Longevidad / Mantenimiento / Base
+  if (/salud|manten|longev|maintenance|base/i.test(combined)) {
     return BASE_LONGEVITY_MODEL;
   }
 
-  // 7. Fallback seguro: Si no hay distancia o carrera especificada, base 10K en ruta
-  return TEN_K_ROAD_MODEL;
+  // 7. Fallback seguro: Si no hay distancia o carrera especificada, base de longevidad y salud aeróbica
+  return BASE_LONGEVITY_MODEL;
 }
 
 /**
@@ -171,9 +171,8 @@ export function calculateProgressiveLongRun(
   const scaledStartMins = Math.round(rules.startMinutes * safeVolumeFactor);
   const scaledPeakMins = Math.min(maxCapMins, levelMaxMins);
 
-  // 1. Fase de Competición Oficial
-  const isMoment = model.sportCategory === "General" || model.modelId === "BASE_LONGEVITY" || model.modelId === "BASE_GPP";
-  if (phase === "RACE_WEEK" || (countdown === 1 && !isMoment && phase !== "MAINTENANCE" && phase !== "RECOVERY")) {
+  // 1. Fase de Competición Oficial (solo si es estrictamente RACE_WEEK)
+  if (phase === "RACE_WEEK") {
     const isTri = model.sportCategory === "Triathlon";
     const raceDist = isTri
       ? (model.modelId === "TRIATHLON_SHORT" ? 10 : model.modelId === "TRIATHLON_70_3" ? 21.1 : 42.2)

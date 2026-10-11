@@ -76,8 +76,7 @@ export class MacrocycleAIEngine {
       startDate,
       weeksCount: requestedWeeks,
       customGoal: customGoalTitle,
-      periodization: (config.periodization as any) || "3:1",
-      primaryRace: (config.hasRace && config.raceName) ? {
+      primaryRace: (!isMaintenanceOrMoment && config.hasRace && config.raceName && config.raceDate) ? {
         id: `race-${Date.now()}`,
         name: config.raceName || "Competición Objetivo",
         date: config.raceDate || "",

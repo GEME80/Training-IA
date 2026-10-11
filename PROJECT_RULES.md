@@ -793,3 +793,37 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
    - Si un atleta entrena en modo `PACE` o tiene `hasRunningPowerMeter === false` (o atleta Georg Schmitt `i729730`), el parámetro `runFtp` debe forzarse a $0$ en telemetría y dashboard.
    - La tarjeta visible `strydCp` ("Potencia Run 400W") debe conmutar automáticamente a `runPace` (**"Ritmo Carrera: 4:45 min/km"**), erradicando cualquier residuo de 400W en la interfaz.
 
+---
+
+## 🧘 21. LEYES DE GOBERNANZA METODOLÓGICA PARA FASES DE BASE Y MANTENIMIENTO (v5.32)
+
+1. **Ley de la Naturaleza No Competitiva (Erradicación de Fases `BUILD` Forzadas):**
+   - Para todo macrociclo sin carrera objetivo declarada (`distanceType === "maintenance"`, `"base_building"` o `!isEventDriven`), **queda terminantemente prohibido inyectar fases `BUILD` de umbral láctico competitivo o semanas `RACE_WEEK` / `COMPETICION`**.
+   - El macrociclo se estructura exclusivamente en dos fases orgánicas de desarrollo aeróbico:
+     * **Primera Mitad:** `BASE_1` (*Base Aeróbica I: Salud, Capilarización y Adaptación Funcional*).
+     * **Segunda Mitad:** `BASE_2` (*Base Aeróbica II: Consolidación, Cuestas Neuromusculares y Potencia Submáxima*).
+   - En planes de salud y mantenimiento, `buildWeeksCount` debe ser estrictamente $0$.
+
+2. **Ley de la Calidad Neuromuscular Aláctica (Prohibición de Series Agónicas de Umbral):**
+   - En planes de Base y Mantenimiento, la sesión de calidad semanal (`selectQualityWorkout` / `linearProgressionEngine`) debe guiarse estrictamente por los principios de **Arthur Lydiard, Dr. Stephen Seiler y Dr. Peter Attia**:
+     * **Cuestas Cortas:** 8 a 10 repeticiones de 100m al 95-105% CP con descanso completo caminando/trotando (fuerza elástica de sóleo/tobillo sin acumulación de lactato).
+     * **Zancada y Cadencia:** 8 repeticiones de 200m fluidas con descanso completo.
+     * **Fartlek Continuo Aeróbico:** Intervalos lúdicos en Z2/Z3 suave (ej. $5\times 2\text{m Z3}$ con $2\text{m Z2}$) o pirámides continuas.
+     * **Descarga (2:1 o 3:1):** Soltura neuromuscular de $4\times 100\text{m}$ al $105\%$ CP (30-35 min totales).
+   - Queda estrictamente prohibido prescribir series agónicas de $6\times 1000\text{m}$, bloques de $4\times 2000\text{m}$ a umbral o intervalos de asfalto de maratón ($3\times 4\text{km}$ o $4\times 4\text{km}$).
+
+3. **Ley de Dosificación Fisiológica de la Tirada Larga en Zona 2 (Attia / San Millán):**
+   - La tirada dominical para atletas de **Salud y Longevidad** responde a la dosis celular óptima de biogénesis mitocondrial en Zona 2 ($VT_1$ / LT1 conversacional):
+     * Rango metodológico estricto: **40 a 55 minutos** (máximo 60 min para atletas avanzados).
+     * Topes según CTL del atleta (`athleteLevelCaps`):
+       - `BEGINNER` (CTL $\le 35$): 40 a 50 min / 6 a 8 km.
+       - `INTERMEDIATE` (CTL $\le 65$): 45 a 55 min / 8 a 10 km.
+       - `ADVANCED_ELITE`: 50 a 60 min / 10 a 12 km.
+     * Para **Base Building (GPP)**: rango de **45 a 65 minutos** (máximo 70 min para atletas avanzados con alto CTL).
+   - Queda prohibido programar fondos de 90 a 100 minutos (1h30 a 1h40) para atletas en planes de salud o base.
+
+4. **Ley de Universalidad para Cualquier Atleta Futuro:**
+   - Todo nuevo generador, wizard, prompt de IA o módulo que compute macrociclos DEBE resolver los parámetros a partir de la fuente viva del atleta (CTL, disponibilidad semanal, modo de prescripción y objetivo sin carrera).
+   - Si no existe fecha de carrera o el objetivo es de salud/base, `primaryRace` DEBE permanecer como `null`, garantizando que ningún atleta experimente una competición fantasma ni sobrecargas articulares lesivas.
+
+

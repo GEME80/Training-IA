@@ -10,7 +10,7 @@ import { AthleteProfile, AthleteWellness, DailyExecutedMap, CalendarEvent } from
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap } from "@/lib/gemini/engine";
 import { buildHistoricalBlueprint } from "@/lib/physiology/historicalCalendarWeeks";
-import { parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
+import { parsePaceToSeconds, resolveRunningMode } from "@/lib/physiology/runningWorkoutAdapter";
 import { MacrocycleUpgradeCard } from "./MacrocycleUpgradeCard";
 import { MacrocycleUpgradeProposal } from "@/lib/physiology/ctlPotentialEngine";
 import { AthleteBillingBanner } from "./AthleteBillingBanner";
@@ -182,7 +182,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
                 dailyExecutedActivities={dailyExecutedActivities}
                 calendarEvents={calendarEvents}
                 runningOpts={{
-                  mode: (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE" || profile.runningTrainingMode === "HYBRID" || !profile.run_ftp) ? "PACE" : "POWER",
+                  mode: resolveRunningMode(profile, effectiveBlueprint?.runningTrainingMode),
                   thresholdPaceSec: profile.runThresholdPaceSecPerKm || parsePaceToSeconds(profile.runThresholdPaceStr || "4:45"),
                   thresholdPaceStr: profile.runThresholdPaceStr || "4:45",
                   lthr: profile.lthr || 163,

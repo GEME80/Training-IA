@@ -72,7 +72,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   const userStorage = React.useMemo(() => getUserStorage(user?.uid), [user?.uid]);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
-  const [runningTrainingMode, setRunningTrainingMode] = useState<"POWER" | "PACE">(() => initialRunningMode || (runFtp > 0 ? "POWER" : "PACE"));
+  const [runningTrainingMode, setRunningTrainingMode] = useState<"POWER" | "PACE" | null>(() => initialRunningMode || null);
 
   const [planTitle, setPlanTitle] = useState(() => {
     if (primaryRace) return `Macrociclo para ${primaryRace.name} (${(primaryRace.distance || "").toUpperCase()})`;
@@ -138,14 +138,14 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             athleteId, apiKey: storedApiKey, runFtp, bikeFtp,
-            runningTrainingMode,
+            runningTrainingMode: runningTrainingMode || undefined,
             weightKg, heightCm, birthDate, gender, restingHR, maxHR, lthr, historicalMetrics,
             wizardConfig: {
               targetDistance: distType, weeksCount, startDate, hasRace: !!primaryRace,
               raceName: primaryRace?.name || planTitle, raceDate: primaryRace?.date || "", raceDistance: distType,
               raceGoal: primaryRace?.goalTarget || "Pico de forma óptimo",
               trainingApproach, periodization, customPrompt: customPromptText,
-              runningTrainingMode,
+              runningTrainingMode: runningTrainingMode || undefined,
               weeklyAvailability: localWeeklyAvailability, historicalMetrics,
             },
           }),
@@ -171,7 +171,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
         distanceType: distType, startDate, weeksCount,
         customGoal: `${planTitle}. Enfoque: ${trainingApproach}.`,
         periodization: periodization as any, primaryRace: primaryRace || undefined,
-        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, runningTrainingMode, weeklyAvailability: localWeeklyAvailability, historicalMetrics },
+        athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, runningTrainingMode: runningTrainingMode || undefined, weeklyAvailability: localWeeklyAvailability, historicalMetrics },
       });
 
       setGeneratedBlueprint(bp);
@@ -320,10 +320,18 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
               if (currentStep === 3) handleGenerateAI();
               else setCurrentStep((prev) => (prev + 1) as any);
             }}
-            disabled={currentStep === 3 && (isGeneratingPlan || isGenerating)}
+            disabled={currentStep === 3 && (isGeneratingPlan || isGenerating || !runningTrainingMode)}
             className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-md flex items-center space-x-1.5"
           >
-            <span>{currentStep === 3 ? (isGeneratingPlan || isGenerating ? "Head Coach IA Periodizando..." : "Generar Macrociclo con Head Coach IA") : "Siguiente"}</span>
+            <span>
+              {currentStep === 3
+                ? isGeneratingPlan || isGenerating
+                  ? "Head Coach IA Periodizando..."
+                  : !runningTrainingMode
+                  ? "Selecciona Potencia o Ritmo"
+                  : "Generar Macrociclo con Head Coach IA"
+                : "Siguiente"}
+            </span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>

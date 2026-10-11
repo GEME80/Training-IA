@@ -121,6 +121,16 @@ export async function POST(req: NextRequest) {
         targetRaces,
         seasonPlans,
       });
+
+      if (runningTrainingMode === "POWER" || runningTrainingMode === "PACE") {
+        const { updateActiveMacrocycleRunningMode } = await import("@/lib/db/macrocycles");
+        await updateActiveMacrocycleRunningMode(
+          intervalsAthleteId || uid,
+          runningTrainingMode,
+          uid,
+          runFtp !== undefined && runFtp !== null ? Number(runFtp) : undefined
+        ).catch(() => {});
+      }
     } catch (dbErr) {
       console.warn("Aviso: Guardado en Firestore omitido en modo local:", dbErr);
     }

@@ -186,3 +186,38 @@ export async function deleteActiveMacrocycleFromFirestore(
     return false;
   }
 }
+
+/**
+ * Actualiza reactivamente la modalidad de carrera (POWER/PACE) en el macrociclo activo.
+ */
+export async function updateActiveMacrocycleRunningMode(
+  athleteIdentifier: string,
+  newMode: "POWER" | "PACE",
+  uid?: string,
+  runFtp?: number
+): Promise<boolean> {
+  if (!adminDb) return false;
+  try {
+    const active = await getActiveMacrocycleFromFirestore(athleteIdentifier, uid);
+    if (!active) return false;
+
+    const candidates = Array.from(new Set([athleteIdentifier, uid, active.uid, active.athleteId].filter(Boolean) as string[]));
+    const now = new Date().toISOString();
+    const updatedBlueprint: MacrocycleBlueprint = {
+      ...active.blueprint,
+      runningTrainingMode: newMode,
+      ...(runFtp !== undefined && runFtp > 0 ? { runFtpAtCreation: runFtp } : {}),
+    };
+
+    for (const id of candidates) {
+      await adminDb.collection("users").doc(id).collection("macrocycles").doc(active.id).set(
+        { blueprint: updatedBlueprint, updatedAt: now },
+        { merge: true }
+      ).catch(() => {});
+    }
+    return true;
+  } catch (err) {
+    console.warn("Aviso al actualizar modo en macrociclo activo:", err);
+    return false;
+  }
+}

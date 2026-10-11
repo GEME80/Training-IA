@@ -21,11 +21,15 @@ export interface SwimZoneItem {
  * Atletas con Stryd CP o modo explícito POWER -> "POWER" (blindado).
  * Atletas sin potenciómetro o modo HYBRID previo -> "PACE" (100% por ritmo).
  */
-export function resolveRunningMode(profile?: RunningProfileMetrics | null): RunningTrainingMode {
-  if (!profile) return "POWER";
-  if (profile.hasRunningPowerMeter === true || profile.runningTrainingMode === "POWER") return "POWER";
-  if (profile.hasRunningPowerMeter === false || profile.runningTrainingMode === "PACE" || profile.runningTrainingMode === "HYBRID") return "PACE";
-  const effFtp = profile.runFtp ?? profile.run_ftp ?? 0;
+export function resolveRunningMode(
+  profile?: RunningProfileMetrics | null,
+  blueprintMode?: RunningTrainingMode
+): RunningTrainingMode {
+  if (profile?.hasRunningPowerMeter === false || profile?.runningTrainingMode === "PACE" || profile?.runningTrainingMode === "HYBRID") return "PACE";
+  if (profile?.hasRunningPowerMeter === true || profile?.runningTrainingMode === "POWER") return "POWER";
+  if (blueprintMode === "PACE") return "PACE";
+  if (blueprintMode === "POWER") return "POWER";
+  const effFtp = profile?.runFtp ?? profile?.run_ftp ?? 0;
   return effFtp > 0 ? "POWER" : "PACE";
 }
 

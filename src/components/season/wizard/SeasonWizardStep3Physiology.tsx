@@ -14,7 +14,7 @@ interface SeasonWizardStep3PhysiologyProps {
   gender?: "M" | "F" | "OTHER";
   restingHR?: number;
   maxHR?: number;
-  runningTrainingMode?: "POWER" | "PACE";
+  runningTrainingMode?: "POWER" | "PACE" | null;
   onChangeRunningTrainingMode?: (mode: "POWER" | "PACE") => void;
   periodization: "2:1" | "3:1" | "CONTINUO";
   onChangePeriodization: (p: "2:1" | "3:1" | "CONTINUO") => void;
@@ -35,7 +35,7 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
   gender,
   restingHR,
   maxHR,
-  runningTrainingMode = "POWER",
+  runningTrainingMode,
   onChangeRunningTrainingMode,
   periodization,
   onChangePeriodization,
@@ -111,9 +111,16 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
 
       {/* 2. MODALIDAD DE PRESCRIPCIÓN DE RUNNING (POTENCIA STRYD VS RITMO DE PASO) */}
       <div className="space-y-2">
-        <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
-          Prescripción de Carrera: Potencia Stryd o Ritmo de Paso
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="block text-[10px] font-mono font-bold text-slate-500 uppercase">
+            Prescripción de Carrera: Potencia Stryd o Ritmo de Paso <span className="text-amber-500">*</span>
+          </label>
+          {!runningTrainingMode && (
+            <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+              ⚠️ Selección requerida
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div
@@ -130,7 +137,7 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
                 Potencia Stryd (CP {runFtp > 0 ? `${runFtp}W` : "Vatios"})
               </h4>
               <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold text-[9px]">
-                {runFtp > 0 ? "Stryd CP" : "Potenciómetro"}
+                {runFtp > 0 ? "⚡ Sugerido Stryd" : "Potenciómetro"}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
@@ -152,7 +159,7 @@ export const SeasonWizardStep3Physiology: React.FC<SeasonWizardStep3PhysiologyPr
                 Ritmo de Paso (min/km)
               </h4>
               <span className="px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-700 dark:text-sky-300 font-mono font-bold text-[9px]">
-                Ritmo Umbral
+                {runFtp > 0 ? "Ritmo Umbral" : "⏱️ Sugerido GPS"}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">

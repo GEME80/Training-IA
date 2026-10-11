@@ -10,6 +10,7 @@ import { PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { useMacrocycleUpgrade } from "@/hooks/useMacrocycleUpgrade";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { hydrateWeekPlanFromEvents } from "@/lib/intervals/calendarHydration";
+import { resolveRunningMode } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface AthleteDashboardViewRouterProps {
   activeNavSection: AthleteSidebarNavSection;
@@ -53,14 +54,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
     isReadOnly,
   });
 
-  const effectiveRunningMode =
-    season.blueprint?.runningTrainingMode ||
-    ((telemetry.profile.hasRunningPowerMeter === false ||
-      telemetry.profile.runningTrainingMode === "PACE" ||
-      telemetry.profile.runningTrainingMode === "HYBRID" ||
-      !telemetry.profile.run_ftp)
-      ? ("PACE" as const)
-      : ("POWER" as const));
+  const effectiveRunningMode = resolveRunningMode(telemetry.profile, season.blueprint?.runningTrainingMode);
 
   const runningOpts = {
     mode: effectiveRunningMode,

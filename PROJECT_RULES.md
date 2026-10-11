@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v4.07)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.25)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,116 +8,42 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Auditor Líder del Sistema SGEA (v5.10).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.25).
 
-Contexto Actual del Proyecto:
-- Versión 5.10: Modernización Integral de Macrociclos (Fases 1 a 4), Fuente Canónica Intervals.icu (`m` vs `mtr`), Motor Paramétrico de Intervalos Métricos de Pista (`metricIntervalEngine.ts`), Buffer Anti-Monotonía de 5 semanas, Sincronización Automática Diferida al 12-Oct y Notificaciones In-App (`RecalibrationNoticeBanner`):
-  * Principio de Fuente Canónica & Sintaxis Intervals.icu: Emisión directa y nativa de `mtr` para metros de distancia (ej. `- 400mtr 102% Pace`, `- 1000mtr 95% CP`) y `m`/`s` para minutos/segundos de duración (ej. `- 10m 74% Pace`, `- 1m30s 55% Pace`). Erradicación de heurísticas de adivinanza regex en `workoutSyntaxSanitizer.ts` (83 LOC).
-  * Motor Paramétrico Métrico (`metricIntervalEngine.ts`): Generación algorítmica de series de pista (200m a 3000m) y descansos cronometrados por tiempo, calculando duración y TSS dinámicamente según ritmo umbral o Stryd CP sin código quemado. Integrado con `macrocycleTemplateHelpers.ts` para un mix balanceado (pista por distancia `mtr` vs fondos por tiempo `m`).
-  * Biblioteca Multi-Sport de 113+ Sesiones Únicas & Sobrecarga Paramétrica (`workoutProgressionEngine.ts`): Progresión matemática de repeticiones ($4x \to 5x \to 6x \to 3x$ deload) y ventana deslizante de exclusión LRU de 5 semanas con cero repeticiones consecutivas.
-  * Sincronización Diferida y Blindaje del Fin de Semana (`useAutoIntervalsSync.ts`): Cero alteraciones en las sesiones planificadas de viernes a domingo; activación automática transparente de las nuevas sesiones a partir del lunes 12 de octubre (`fromDate = 2026-10-12`).
-  * Notificaciones In-App (`RecalibrationNoticeBanner.tsx`): Banner interactivo en el Dashboard que informa al atleta sobre las mejoras y adaptaciones del plan con botón de descarte.
-- Las Fases 1 (Modularización UI < 350 LOC), 2 (Custom Hooks, AthleteDashboard < 160 LOC, Zod), 3 (Capa de Servicios, Rutas API <= 30 LOC, FinOps y SWR) y 4 (Escalabilidad Universal Multi-Deporte, Motor Anti-Repetición Coprimo y 100% Stryd Compliance) fueron COMPLETADAS AL 100% con 0 errores de compilación (`npm run build` exit code 0).
-- Versión 4.05: Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata:
-  * Telemetría Rápida sin Mapas GPS: Carga ultra-ligera de telemetría multi-serie (Ritmo cian, Potencia púrpura, FC rosa, Altitud slate) en `ActivityTelemetryChart`, sin descargas de stream pesado de mapas.
-  * Prescripción Plegable & Ocultamiento de Movilidad: Prescripción estructurada replegada en acordeón modular compacto y calentamiento dinámico oculto en sesiones ya ejecutadas.
-  * Distribución de Zonas Fisiológicas SSOT (`ActivityZoneDistribution`): Mapeo 1:1 con `AthleteZonesViewer`: Stryd Running Power (5Z: Fácil, Moderado, Umbral, Intervalo, Repetición), LTHR (7Z: Recovery, Aerobic, Tempo, SubThreshold, SuperThreshold, Aerobic Capacity, Anaerobic), Jack Daniels (6Z) y Coggan Cycling (7Z), con ingesta directa de `icu_zone_times`, `icu_hr_zone_times`, `icu_hr_zones`, `icu_pace_zone_times` y barra apilada 100% calibrada.
-  * Regla Head Coach de Entrada Directa a Pico (Peak Canova): Para atletas próximos a competencia (<= 4 a 6 semanas) con base previa, el motor omite el mantenimiento y activa de inmediato la Fase de Pico con series a ritmo específico y posterior Tapering.
-- Versión 4.04: Integración Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia:
-  * Sistema Bre-B Interoperable: Adopción del estándar de pagos inmediatos entre entidades bancarias de Colombia (Bancolombia, Nequi, Daviplata, Scotiabank, etc.) vía QR y Llave Bre-B.
-  * Consola Administrativa (`AdminPlansTab`): Configuración de cuenta BBVA Colombia del coach Germán Morales, Llave Bre-B tipada, titular, número de cuenta y QR interactivo.
-  * Portal del Atleta (`AthleteBreBPaymentModal` & `AthleteBillingBanner`): Botón [ Pagar con Bre-B / BBVA ], modal con copiado de llave en 1 clic y reporte de referencia.
-  * Gestión Reversible en Consola (`AdminBillingTable`): Botón [ ↺ Revertir a Pendiente ] para deshacer pagos erróneos de inmediato y [ ✓ Aprobar Pago ].
-  * Sincronización SSOT en Homepage (`LandingPricingSection`): Precios dinámicos y badges de confianza Bre-B (BBVA).
-  * Arquitectura Resiliente Backend: Migración a adminDb con fallback in-memory y reglas Firestore actualizadas, erradicando por completo errores 500.
-- Versión 4.02: Módulo Financiero de Cobro & Facturación a Atletas (MRR), Control de Pagos 1-Clic, Radar Fisiológico del Escuadrón y FinOps:
-  * Control Comercial y Cobro Mensual: Seguimiento en tiempo real de MRR proyectado, total recaudado en el mes, saldo pendiente/en mora y tasa de cobro %.
-  * Tabla Interactiva de Pagos (`AdminBillingTable`): Registro de pago en 1 clic ([ Marcar Pagado ] / [ Al día ]), filtros por estado (Todos, Al Día, Pendientes) y soporte multi-moneda (USD, COP, EUR).
-  * Radar Fisiológico y Competencias del Escuadrón (`AdminSquadAthleticRadar`): Desglose del equipo por modalidad (Stryd Power vs Daniels Pace vs Bike FTP), promedios de CP y FTP, y radar de carreras con cuenta regresiva en semanas (W-X).
-  * Edición Comercial en Modal (`AdminUserEditBillingSection`): Configuración de precio mensual, moneda, día de corte, método de pago y objetivo deportivo en la ficha del atleta.
-  * FinOps Discreto: Métricas de tokens Gemini degradadas a barra inferior compacta para auditoría técnica de infraestructura.
-- Versión 4.01: Consola de Administración Widescreen, Despliegue Espacioso de Atletas, Tarjetas KPI y Erradicación de Recortes en Tabla:
-  * Widescreen Canvas (max-w-[1720px]): Eliminación del contenedor restrictivo max-w-7xl (1280px); canvas fluido con generoso padding interior (p-6 a p-10) en desktop.
-  * Tarjetas KPI de Resumen Ejecutivo: 4 tarjetas superiores en Gestión de Atletas (Total, Activos con %, Pendientes con alerta en ámbar, y Conectados a Intervals.icu).
-  * Filtros y Búsqueda Espaciosa: Buscador con botón de limpieza (✕), selector de rol, filtro de conexión con Intervals.icu y botón de refresco live (🔄).
-  * Tabla de Gestión Panorámica sin Recortes: Filas con padding amplio (py-4 px-6), avatares grandes (h-11 w-11), chips fisiológicos precisos (⏱️ 4:45/km para Daniels, ⚡ 336W para Stryd, 🚴 228W para bici) y columna de acciones (min-w-[340px]) garantizando cero recortes de botones.
-- Versión 4.00: Curvas de Rendimiento Multi-Disciplina, Mejores Esfuerzos de Ritmo hasta 42K (Maratón), Armonización Fisiológica, Purga Universal de Competiciones y Ergonomía Móvil Extrema (Grid 3x2):
-  * Ergonomía Móvil Extrema (Ahorro > 60% viewport): Grid 3x2 ultra-compacto en AthleteProfileHeroCard (~155px), bio en una línea con switch de modalidad, tabs responsivas en AthleteDashboardOverview (grid-cols-2), eliminación de badges redundantes en HeadCoachHeader y botones compactos en HeadCoachWeekSelector.
-  * Curvas de Rendimiento Multi-Disciplina e Ingesta Real: Pestaña "Todos los Deportes" eliminada. Especialización limpia para Ciclismo (MMP W y W/kg), Carrera (Potencia Stryd y Ritmo Daniels) y Natación (CSS). Ingesta real desde API Intervals.icu.
-  * Tabla de Mejores Esfuerzos por Ritmo (`PaceBestEffortsTable`) & Extensión 42.2K: Tiempos netos y min/km desacoplados de potencia, cubriendo desde 400m hasta Maratón completo (42.2K) con diseño responsivo.
-  * Persistencia & Armonización de Umbrales: Persistencia reactiva del CSS de Natación en Firestore/API/UI (erradicado 1:45 fijo) y FTP de Ciclismo consolidado en 228W como SSOT para Germán Morales.
-  * Purga Universal de Competiciones (`isWorkoutSession`): Eliminación del círculo flotante en SeasonCurveChart, deduplicación de carreras primarias (`isSameRace`) y filtrado estricto de sesiones de entrenamiento camufladas en carreras para todos los atletas (ej. George Schmitt).
-- Versión 3.99: Universalidad Fisiológica Multi-Atleta, Rigor Matemático Inverso en % Pace y Renderizado de Ritmos Dinámicos en Detalle de Sesión:
-  * Universalidad y Reactividad Total: Sistema multi-atleta dinámico sin ataduras estáticas; conmuta automáticamente entre Carrera por Potencia Stryd (POWER), Carrera por Ritmo Jack Daniels (PACE), Ciclismo por FTP (BIKE) y Natación por CSS (SWIM) según el perfil de Firestore.
-  * Insignias Vivas en Zonas y Perfil: Activación de 'ACTIVA RITMO' en verde esmeralda y atenuación de potencia (CP/FTP) para corredores de ritmo. Preservación estricta de 'ACTIVA RUN' y cálculo de vatios en tiempo real para corredores con Stryd (ej. Germán Morales, 336W).
-  * Fisiología y Matemática Inversa en % Pace: El ritmo (P) es el inverso de la velocidad (P = 1/v). La intensidad en carrera se calcula rigurosamente como Pace_target = Pace_umbral / (% / 100). Un menor porcentaje representa ritmos más lentos y de recuperación (ej. con umbral 4:45/km: 60% = 7:55/km, 74% = 6:25/km, 110% = 4:19/km). Cero multiplicaciones lineales destructivas.
-  * Visualización en Vivo en WorkoutDetailModal: Traducción textual en vivo que calcula y muestra el ritmo equivalente en min/km entre paréntesis en cada paso (ej. '- 10m 60% Pace (~7:55/km)'), adaptando título y badges ('Prescripción Estructurada (Ritmo)' y 'Calculado a tu Ritmo Umbral').
-- Versión 3.95: Motor de Potencial Fisiológico Bietápico (CTL Potential Engine) & Gobernanza de Upgrades con Soberanía del Atleta:
-  * Motor Bietápico (`ctlPotentialEngine.ts`): Reconquista rápida de memoria biológica (+3.2 a +3.8 CTL/sem) + Expansión segura hacia nuevo récord personal (+1.8 CTL/sem), eliminando el techo artificial Math.min(histPeak, attainableCtl).
-  * Principio de No-Degradación Fisiológica: Semanas de descarga (deload 3:1 o 2:1) o baches de bajo TSS nunca reducen la meta cumbre de CTL ni degradan el macrociclo. Cero alarmas de penalización tras semanas de asimilación.
-  * Filtro de Mal Día & Freeze Window: Caídas de test > -5% catalogadas como atípicas (sin deprimir el plan maestro); a <= 4 semanas de la carrera, incremento de CTL/volumen congelado por Tapering.
-  * UI de Upgrade Soberano (`MacrocycleUpgradeCard.tsx`): Card en Dashboard con acordeón día por día de impacto real y botones equivalentes: [Aceptar y Optimizar Plan] vs [Continuar con el Plan Actual] (fallback por defecto).
-- Versión 3.82: Rediseño UX/UI de Mi Temporada & Planificación Estilo Stryd (Palladino) y Sincronización Bidireccional de Matriz Deportiva:
-  * Gráfica Compacta con Fases Inferiores Integradas (`SeasonCurveChart` - 125px): Altura reducida y banda de fases (*Base*, *Construcción*, *Pico*, *Tapering*, *Competición*) ubicada directamente bajo el eje X temporal, eliminando cajas flotantes y botones innecesarios para desplegar la curva.
-  * Tooltip Luminoso y Elegante: Tarjeta con fondo glass (`backdrop-blur-md`), borde esmeralda y tipografía de alto contraste legible en modo claro y oscuro, erradicando el cuadro negro anterior.
-  * Desglose Fisiológico por Fases (`MacrocyclePhaseBreakdown`): Módulo educativo que detalla objetivos de cada etapa (Base, Construcción, Pico, Tapering), TSS promedio semanal y duración de la tirada pico.
-  * Layout Panorámico de 2 Columnas: Macrociclo activo y diseñador en la columna izquierda (7 cols), y panel **Mis Competiciones & Objetivos siempre visible** en la columna derecha (5 cols) para registro directo de carreras.
-  * Depuración de Carreras (`SeasonRacesTab`): Eliminación definitiva de "Mantenimiento" en el formulario de competiciones, restringiendo a distancias y modalidades de carrera reales.
-  * Sincronización Bidireccional de Matriz Deportiva (SSOT): Persistencia unificada y reactiva de la disponibilidad semanal entre el Perfil del Atleta y el Diseñador de Macrociclos vía `POST /api/profile` y Firestore.
-- Versión 3.81: Modo Auditoría de Atleta en Solo Lectura (Impersonation Seguro) con Aislamiento en Memoria:
-  * Inspección Fidedigna 1-Clic: Botón "Ver como atleta" en la consola de administración (`AdminUsersTable` y `AdminUserCardMobile`), permitiendo al administrador inspeccionar el Home exacto de cualquier atleta registrado.
-  * Aislamiento Total en Memoria Volátil (`createReadOnlyMemoryStorage`): Cero escrituras o mutaciones en el `localStorage` del administrador, previniendo contaminación de sesiones o solapamiento de claves locales.
-  * Banner Superior Fijo de Seguridad (`AdminImpersonationBanner`): Franja visual persistente de alta prioridad que identifica al atleta auditado, sus métricas de referencia y botón de retorno inmediato a la consola de administración.
-  * Blindaje Contra Mutaciones: Prohibición estricta de escrituras en Firestore (`/api/profile`, `/api/macrocycles`) y cancelaciones automáticas con alerta en subidas a Intervals.icu (`/api/sync-intervals`).
-- Versión 3.80: Onboarding Interactivo, Coherencia Temporal Fisiológica y Calendario Continuo sin Planes Fantasma:
-  * Onboarding Asistido para Intervals.icu: Bifurcación entre nuevos atletas y usuarios existentes (`OnboardingPathSelector`), con guía paso a paso interactiva para creación gratuita de cuenta, vinculación de relojes deportivos (Garmin, Coros, Polar, Strava, Apple Watch) y obtención de credenciales (`OnboardingIntervalsGuide`).
-  * Sala de Espera Activa (Pre-Aprobación): En estado `pending`, `RestrictedAccessView` ofrece una tarjeta para que el usuario adelante la creación de su cuenta de telemetría y reloj deportivo antes de la aprobación del admin.
-  * Preservación y Auto-Sanación de Credenciales: `syncUserFromGoogleAuth` transfiere y auto-sana `encryptedApiKey`, peso y biometría desde documentos `preauth_...` al primer login con Google Auth, erradicando falsos banners de configuración de perfil.
-  * Calendario Anual Continuo de 52 Semanas (Sin Planes Fantasma): Si el atleta no tiene macrociclo activo, el sistema genera la línea de tiempo anual completa ("52 semanas · Año completo") con auto-scroll a la semana actual. Las semanas sin plan permanecen como *"Disponibles / Sin Plan"* con 0 TSS (erradicando planes ficticios de maratón), y los entrenamientos reales de Intervals.icu se renderizan directamente en sus días correspondientes con estilo de sesión completada (checkmark `✓`, distancia, tiempo, TSS, vatios, pulso).
-  * Ergonomía y Claridad Móvil Total (`AthleteMobileAgendaView` & `AthleteMobileDayStrip`): Fechas determinísticas en los 7 días con números grandes legibles, detección y auto-centrado de "Hoy", banner informativo explícito (`📅 Domingo, 27 de Sep · [HOY] · ⚡ 102 TSS`) y feed semanal con entrenamientos reales (`✓ Listo`, tiempo, distancia y TSS).
-  * Coherencia Temporal Fisiológica del Head Coach (Detección de Hoy, Cierre de Semana y Proyección a Próxima Semana):
-    * Detección de Sesión Ejecutada de Hoy (hasTrainedToday): Prohibido prescribir o recortar sesiones ya realizadas en el día de hoy.
-    * Cierre de Semana y Validación de Fatiga (isWeekCompleted): Si la semana está terminada (ej. Domingo post-tirada larga), prohibido proponer cambios a la semana cerrada. Se valida la fatiga aguda (ATL/TSB) como respuesta biológica normal a la sobrecarga, se dan pautas de recuperación para hoy y se orienta la adaptación hacia la Próxima Semana.
-    * Smart Action "Planificar Próxima Semana": Conmutación automática hacia la semana siguiente en la interfaz sin tocar la semana concluida.
-- Versiones 3.78 - 3.79: Reingeniería Fisiológica y Visual del Head Coach (Intervalos Reales, Desglose Estructurado y Protección de Fin de Semana):
-  * Visualización Fidedigna de Intervalos y Cero Mocks (v3.79): Sustitución del mock genérico de 3 barras por el componente oficial `WorkoutChart` renderizando `item.workoutDoc`. Visualización auténtica de zonas de vatios/ritmo, descansos y series reales con paridad 100% con el calendario.
-  * Tarjetas Especializadas de Gym & Desglose Desplegado (v3.79): Sesiones de fortalecimiento sin falsos gráficos de potencia; despliegue enriquecido con Rondas, Descanso y Ejercicios específicos (Hip Thrust, Drop Jumps, etc.).
-  * Desglose Estructurado Aeróbico (v3.79): Al expandir tarjetas de Carrera o Ciclismo, visualización nítida de Calentamiento (⏱️), Bloque Principal (⚡), Enfriamiento (🧊) y Justificación Fisiológica (💡).
-  * Lógica Inteligente de Fin de Semana (Cero Repetición y Cero Sobrecarga - v3.79): Un único fondo largo por fin de semana; asignación automática de Ciclismo de Soltura/Asimilación metabólica (Z1 suave) en lugar de duplicar fondos en sábado y domingo.
-  * Reingeniería UX del Head Coach (v3.78): Saludo directo y humano ("Hola Germán, ¿en qué te puedo ayudar hoy?"), eliminación de propuesta intrusiva en caso de continuidad, protocolo de consentimiento previo antes de modificar semanas y formateo visual de veredictos sin etiquetas en texto crudo.
-- Versiones 3.72 - 3.77: Consola de Administración, Visor Metodológico de Macrociclos, Inspector Científico y Tests Fisiológicos:
-  * Suite de Ciencia & Modelos Metodológicos Interactivos (v3.77): Tarjetas interactivas (`AdminScientificModelCard`) y modal de inspección fisiológica (`AdminScientificModelDetailModal`, `AdminScientificModelPhasesSection`, `AdminScientificModelDynamicsSection`) con desglose de 4 fases (Base/Build/Peak/Taper) con TSS y zonas, dinámica Banister (rampas de CTL y deload %), progresión de tirada larga con caps de tiempo y mitigación articular por biotipo.
-  * Inspector de Protocolos y Tests de Campo (v3.77): Tarjetas (`AdminFieldTestCard`) y modal (`AdminFieldTestDetailModal`) para Stryd CP (3/9 min y 20m TT), Ciclismo FTP (20m y Ramp Test), Natación CSS (400m/200m) y VAM 5K con sintaxis estructurada para Intervals.icu, criterios de validez y algoritmo de calibración automática.
-  * Visor y Editor Funcional de Programas Deportivos (v3.76): Clic directo en tarjetas para inspección metodológica completa y edición interactiva (`AdminProgramCard`, `AdminProgramDetailModal`, `AdminProgramDetailViewSection`, `AdminProgramDetailEditSection`) con persistencia hacia `/api/admin/programs`.
-  * Centro de Control Administrativo & Gestión de Atletas (v3.72-v3.75): Invitación de atletas, pre-autorización con credenciales seguras, columna viva de conexión con Intervals.icu (🟢 OK, 🟡 Falta API Key, ⚪ No vinculado), calibración de biometría y soporte al atleta con diseño responsivo optimizado sin desbordamientos flexbox.
-  * Tests Periódicos de FTP en Ciclismo & Calibración Automática (v3.71): Programación sistemática de microciclos 'TEST_CONTROL' (Semana 2 y 7) en cualquier plan con ciclismo; prescripción estructurada de BIKE_TEST_20M_FTP; detección automática de ejecuciones de test en Intervals.icu y calibración síncrona bidireccional de bikeFtp en Firestore e Intervals.icu recalculando zonas y TSS.
-  * Calibración Universal de Potencia (v3.68-v3.70): Erradicación de métricas quemadas. Vatios calculados dinámicamente según CP/FTP del atleta autenticado (probado con Stryd 275W y 336W), preservados durante hidratación de calendario y con tooltips interactivos de vatios en gráficas.
-  * Integridad Matemática de Resumen Semanal (v3.70): Erradicación del 100% histórico forzado. Cálculo real de TSS Planificado vs. Ejecutado (`AthleteCalendarWeekRow`) y porcentaje fidedigno de cumplimiento por disciplina.
-  * Desacople Sticky en Cabecera & Ventana Estricta de 52 Semanas (v3.69): Cabecera de usuario en `top-0 z-40` y calendario en `top-[49px] z-30` eliminando solapamiento de avatar. Calendario rodante acotado a exactamente 52 semanas (1 año).
-  * Feedback Interactivo de Sincronización (v3.69): Botones 'Sync 3 sem' y 'Esta sem' con spinner animado (`animate-spin`) y estado 'Sincronizando...'.
-  * Deduplicación Inteligente en Calendario (v3.67): `calendarHydration.ts` previene tarjetas repetidas y preserva calentamiento dinámico y nutrición.
-  * Protocolo Maestro de Eficiencia de Tokens (FinOps): micro-lecturas quirúrgicas <= 20-30 líneas, conteo LOC vía CLI (wc -l), grep_search focalizado, respuestas ejecutivas ultra-densas sin verborrea, compresión extrema de telemetría (contextCondenser.ts -70%), límites estrictos de max_output_tokens (600-1200) y cero consultas/lecturas redundantes.
-  * Modal Perfil del Atleta Minimalista: Persistencia bidireccional síncrona con Intervals.icu para Peso, Stryd CP, FTP, LTHR, Max HR y Resting HR resolviendo API Keys cifradas en Firestore sin condiciones de carrera.
-  * Ergonomía Responsive Móvil & Plegado de Métricas: En móvil, las tarjetas fisiológicas se pliegan a un carrusel compacto de pills de 36px con toggle 'Ver (6)' / 'Plegar', liberando más del 75% del viewport vertical; controles de calendario compactos.
-  * Visualización Dual Móvil Día vs. Agenda Semanal: Toggle en móvil entre vista de detalle diario (con swipe táctil) y feed continuo semanal estilo TrainingPeaks.
-  * Main Sticky Header Maestro de 4 Bloques con fondo 100% sólido opaco y scroll-margin de 280px en desktop.
-  * Periodización Dinámica de Tiradas Largas (Canova, Pfitzinger & Daniels): prohibición de fondos planos monótonos dominicales; alternancia de 4 tipologías.
-  * Calendario Unificado Anual (Scroll Continuo Estilo Intervals.icu): un único flujo vertical (semanas futuras arriba, semana actual anclada, historial ejecutado de 52 semanas hacia abajo).
-  * Tarjetas de Sesión Minimalistas: 3 zonas (Header, Título, Footer con pista de expansión). Carrera/Ciclismo con gráfica WorkoutChart; Fuerza con descripción concisa (<= 60 chars).
-  * Sincronización Tri-Semanal (2:1): despacho en bloques fisiológicos de 3 semanas (2 carga + 1 descarga) a Intervals.icu con recalibración continua.
-  * Persistencia Explícita de Matriz de Disponibilidad: guardado manual seguro y botón de restablecimiento a Matriz Canónica anti-colisiones.
-  * Respeto de Max CTL Histórico: macrociclos dimensionados tomando el pico real de fitness histórico del atleta sin topes artificiales.
-- La arquitectura frontend está modularizada (< 350 líneas por archivo) en: `src/components/admin/`, `profile/`, `season/`, `dashboard/` y `macrocycle/`, operada por Custom Hooks en `src/hooks/` (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`).
-- El backend desacopla su lógica en `src/lib/services/` (`telemetryService.ts`, `intervalsSyncService.ts`, `macrocycleApiService.ts`), con controladores API delgados (<= 30-71 LOC) y validación declarativa con Zod en `src/lib/validation/schemas.ts`.
-- Capa de Ciencia Deportiva: 18 modelos fisiológicos modulares (< 350 LOC cada uno) en `src/lib/ai/knowledge/` (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Sprint/Olímpico/70.3/140.6) con rotación anti-repetición de paso coprimo gcd(L, s) = 1, desambiguación jerárquica de running vs ciclismo, y soporte para Maratón Cruzado (Run + Bike).
-- Gobernanza FinOps: Compresor de contexto en `src/lib/ai/contextCondenser.ts` (-70% tokens en prompts Gemini) y persistencia con Dirty Checking y caché SWR (3 min TTL).
+Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.25: Reingeniería Integral de Macrociclos, SSOT Fisiológico en Wizard UI, Elección Obligatoria de Potencia vs Ritmo, Helper Canónico `resolveRunningMode`, Sincronización Reactiva Atómica al Macrociclo Activo y Modal de Confirmación Fisiológica:
+  * Arquitectura Híbrida de Macrociclos (Motor Determinista + Gemini IA): Separación estricta de responsabilidades. El Motor Determinista (`macrocycleGenerator.ts`, `linearProgressionEngine.ts`, `metricIntervalEngine.ts`) gobierna la fisiología inviolable: modelo Banister (CTL/ATL/TSB, ramp rate seguro de +5 a +8 TSS/sem), periodización 3:1 (3 semanas de sobrecarga progresiva + 1 semana de descarga del 25-30% en volumen y TSS), y rotación matemática coprima anti-monotonía (gcd(L, s) = 1) con sobrecarga en el bloque principal. Gemini IA actúa como Head Coach Estratégico para modular el enfoque de las fases (Base, Construcción, Pico, Tapering) según historial (365d), tiempo objetivo y perfil biológico.
+  * Wizard UI como Única Fuente de Verdad (SSOT): Paso 1 (Objetivo: Carrera oficial con meta de tiempo dinámica vs Mantenimiento/Base); Paso 2 (Disciplinas y Matriz Semanal interactiva inmutable: Solo Running puro 0 bici/0 natación, Solo Ciclismo, o Entrenamiento Cruzado Running + Ciclismo + Fuerza); Paso 3 (Fisiología y Periodización: elección obligatoria y explícita de Potencia Stryd vs Ritmo Jack Daniels antes de generar el plan; no se asumen valores por defecto ambiguos).
+  * Helper Canónico SSOT (`resolveRunningMode` en `runningWorkoutAdapter.ts`): Resuelve el modo canónico con precedencia estricta del perfil del atleta (`profile.runningPrescriptionMode`) sobre el blueprint del macrociclo, garantizando coherencia reactiva en todo el sistema (`AthleteDashboardOverview`, `AthleteDashboardViewRouter`, `calendarHydration`, `intervalsSyncService`).
+  * Sincronización Reactiva Atómica al Macrociclo Activo (`updateActiveMacrocycleRunningMode` en `macrocycles.ts`): Al guardar el perfil en `/api/profile`, si el atleta conmuta su modo de carrera (Ritmo <-> Potencia), el macrociclo activo en Firestore muta atómicamente su `runningPrescriptionMode`, su `runFtp` y la telemetría asociada sin requerir regenerar la temporada desde cero.
+  * Modal de Confirmación Fisiológica (`RunningModeConfirmModal.tsx`): Previene transiciones accidentales de métricas en el perfil del atleta, explicando el impacto biomecánico (W / % CP vs min/km) y solicitando confirmación explícita del deportista.
+  * Prescripción Fisiológica 100% Pura (Cero Fugas de Métrica):
+    - Modo POTENCIA (Stryd): 100% vatios (W) y % CP en `powerTarget` y bloques de carrera en `workoutDoc`. Cero menciones a min/km o ritmos.
+    - Modo RITMO (Jack Daniels): 100% min/km y % Pace calculados con matemática inversa fisiológica (Pace = Umbral / (% / 100)). Cero menciones a vatios o Stryd.
+  * Sintaxis Canónica Universal Intervals.icu & Garmin:
+    - `m` y `s` reservados exclusivamente para duración temporal (ej. `- 10m 70% CP`, `- 1m30s 55% Pace`).
+    - `mtr` reservado exclusivamente para distancia métrica en series de pista (ej. `- 400mtr 102% Pace`, `- 1000mtr 95% CP`). Prohibido usar `m` para metros.
+  * Zero Hardcoding en Tiempos de Carrera: Tiempos objetivos (ej. 3h05, 3h45, 1h25, 39:00) se procesan dinámicamente mediante `parseGoalTimeToMinutes()`. No existen valores de tiempo ni ritmos quemados en el código de producción.
+  * Purga y Sincronización Limpia de Horizonte Completo en Intervals.icu: Borrado quirúrgico exclusivamente de eventos con prefijo de la plataforma (`[PULSE AI]`) en el horizonte completo del plan (hasta 1 año), eliminando duplicados obsoletos y respetando eventos ejecutados reales (`icu_training_load`).
+  * Modularidad y Build de Producción Limpio: 100% de los archivos `.ts`/`.tsx` cumplen estrictamente el límite de $\le 350$ líneas de código por archivo. `npm run build` compila con código de salida 0 (21/21 rutas Next.js limpias).
+- Versión 5.10: Motor de Intervalos Métricos de Pista (`metricIntervalEngine.ts`), Buffer Anti-Monotonía de 5 semanas, Sincronización Diferida y Banners In-App.
+- Versión 4.05: Telemetría de Alta Velocidad, Zonas Fisiológicas SSOT y Periodización Competitiva Inmediata (Peak Canova).
+- Versión 4.04: Integración Nacional Bre-B (Banco de la República) y Pagos Directos BBVA Colombia.
+- Versión 4.02: Módulo Financiero MRR, Control de Pagos 1-Clic, Radar Fisiológico del Escuadrón y FinOps.
+- Versión 4.01: Consola de Administración Widescreen, Canvas 1720px y Erradicación de Recortes.
+- Versión 4.00: Curvas de Rendimiento Multi-Disciplina, Mejores Esfuerzos hasta 42K y Ergonomía Móvil Grid 3x2.
+- Versión 3.99: Universalidad Fisiológica Multi-Atleta y Matemática Inversa en % Pace.
+- Versión 3.95: Motor de Potencial Fisiológico Bietápico (`ctlPotentialEngine.ts`) & Gobernanza de Upgrades con Soberanía del Atleta.
+- Versión 3.82: Rediseño UX/UI de Mi Temporada & Planificación Estilo Stryd (Palladino).
+- Versión 3.81: Modo Auditoría de Atleta en Solo Lectura (Impersonation Seguro) con Aislamiento en Memoria Volátil.
+- Versión 3.80: Onboarding Interactivo, Calendario Continuo Anual de 52 Semanas y Coherencia Temporal Fisiológica del Head Coach.
 
 Tu Misión en esta Sesión:
-Ayudar a organizar, diseñar e implementar una ARQUITECTURA SÓLIDA, MODULAR Y ESCALABLE para los Agentes de IA del SGEA:
-1. Agente Head Coach Fisiológico On-Demand (Adaptación de microciclos y chat interactivo en `/api/headcoach/chat`).
-2. Agente Diseñador de Macrociclos y Periodización IA (Generación de planes rectores de temporada en `/api/macrocycles/generate-ai`).
-3. Agente Evaluador y Diagnóstico de Carga (Análisis de fatiga aguda, desacoplamiento aeróbico EF y HRV en `/api/evaluate`).
-4. Centralización de Prompts Maestros, Inyección Dinámica de Contexto Fisiológico y Gestión de Modelos Gemini.
+Ayudar a operar, auditar, evolucionar y mantener la arquitectura del SGEA / Pulse AI con excelencia de Head Coach y Arquitectura de Software:
+1. Agente Head Coach Fisiológico On-Demand (Adaptación de microciclos, chat interactivo y respeto al atleta en `/api/headcoach/chat`).
+2. Agente Diseñador de Macrociclos y Periodización IA (Generación, progresión lineal, anti-monotonía y calibración reactiva en `/api/macrocycles/generate-ai`).
+3. Agente Evaluador y Diagnóstico de Carga (Análisis de fatiga aguda, desacoplamiento aeróbico EF, ramp rate y TSB en `/api/evaluate`).
+4. Centralización de Prompts Maestros, Inyección Dinámica de Contexto Fisiológico y Gobernanza FinOps.
 
 Leyes Inviolables de Gobernanza:
 1. Fuente Única de Verdad: Intervals.icu es la ÚNICA fuente para telemetría deportiva. Firestore almacena perfiles con AES-256-GCM y macrociclos activos.
@@ -127,12 +53,12 @@ Leyes Inviolables de Gobernanza:
 5. Modo 100% Manual: Cero cron jobs o Cloud Scheduler en background. Toda invocación es disparada manualmente por el atleta.
 6. Robustez y Resiliencia: NODE_OPTIONS='--max-http-header-size=131072' obligatorio, auto-recuperador en <head> y RootLayout, transpilación de Firebase y límites de error en App Router.
 7. Set de Pruebas Obligatorio: Cuando reciba la orden "Actualiza la bitácora maestra" o "Cierre de tarea", ejecutaré automáticamente `./node_modules/.bin/tsc --noEmit` y `npm run build` antes de documentar el avance en BITACORA_MAESTRA.md.
-8. Cero Datos Quemados y Protocolo SSOT para Agentes: Prohibido terminantemente el uso de mocks o datos quemados de biotipo (peso, altura, CP, FTP, fechas). Toda consulta de atleta se resuelve dinámicamente desde la fuente viva (`TelemetryService.evaluate` o `getAthleteSSOT`).
+8. Cero Datos Quemados y Protocolo SSOT: Prohibido terminantemente el uso de mocks o datos quemados de biotipo (peso, altura, CP, FTP, fechas, metas de tiempo). Toda consulta de atleta se resuelve dinámicamente desde la fuente viva (`TelemetryService.evaluate` o `getAthleteSSOT`).
 9. Aislamiento Multi-Atleta y Borrado Quirúrgico: La purga de eventos en Intervals.icu se restringe estrictamente a prefijos de la plataforma (`[PULSE AI]` y `[SGEA]`) dentro de la ventana de fechas del plan y se ejecuta exclusivamente sobre el `athleteId` autenticado.
 10. Eficiencia Extrema de Tokens (FinOps): Cero lecturas de archivos completos; búsquedas directas con grep_search; micro-lecturas acotadas (<= 20-30 LOC); respuestas concisas y ejecutivas; compresión de telemetría y prompt caching.
 11. Modo Auditoría e Impersonación Segura (Read-Only & Memory Storage): Al inspeccionar el dashboard de un atleta (`isReadOnly = true`), queda estrictamente prohibida cualquier mutación (persistencia a Firestore, sincronización hacia Intervals.icu o escritura en localStorage). Todo estado temporal se maneja exclusivamente en memoria volátil (`createReadOnlyMemoryStorage`) y la sesión del administrador debe preservarse 100% aislada.
 
-Por favor, confirma que leíste PROJECT_RULES.md y BITACORA_MAESTRA.md (Sección 15), resume el estado actual y presenta tu propuesta de arquitectura para los Agentes de IA.
+Por favor, confirma que leíste PROJECT_RULES.md y BITACORA_MAESTRA.md (Secciones 100 y 101), resume el estado actual y presenta tu propuesta o siguientes pasos.
 ```
 
 ---

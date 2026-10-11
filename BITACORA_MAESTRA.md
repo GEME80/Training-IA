@@ -6886,6 +6886,55 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
 - Suite de pruebas de Fase 1: 7/7 casos PASSED (100% Éxito) ✅.
 - Todos los archivos modificados $\le 350$ LOC ✅.
 
+---
+
+## 100. REINGENIERÍA MAESTRA DE MACROCICLOS: SSOT DEL WIZARD, BLINDAJE MULTI-DEPORTE Y PURGA EN VIVO INTERVALS.ICU (v5.24)
+
+### 100.1. Causa Raíz Diagnosticada
+1. **Filtro Destructivo de Ciclismo en Running (`macrocycleTemplates.ts`):** Existía la condición `if (curatedModel.sportCategory === "Running") return d === "Carrera"`, la cual borraba sistemáticamente todo el ciclismo en programas de maratón. Esto provocaba que atletas con "Entrenamiento Cruzado" (Running + Ciclismo + Fuerza) perdieran sus sesiones de bici en martes, jueves y sábados, dejando los jueves con "solo fortalecimiento".
+2. **Degradación Inadvertida a Ritmo (`calendarHydration.ts` e `intervalsSyncService.ts`):** Cuando no existía coincidencia de evento previo en el calendario, el adaptador forzaba automáticamente el modo a `PACE`, transformando sesiones de atletas con Stryd en prescripciones de ritmo `min/km`.
+3. **Purga Truncada a 3 Semanas en Intervals.icu:** El método de sincronización utilizaba `maxPlanDate` (~3 semanas) para la purga preventiva. En atletas con calendarios largos (ej. 20 semanas), las semanas 4 a 20 mantenían sesiones viejas y duplicadas de pruebas anteriores.
+
+### 100.2. Solución Integral Implementada
+1. **Erradicación del Filtro Destructivo (`macrocycleTemplates.ts` - 344 LOC):**
+   - La matriz semanal interactiva del Wizard (`weeklyAvailability`) se consolidó como la **Única Fuente de Verdad (SSOT)**.
+   - Si el atleta asigna Fuerza y Ciclismo a un día, ambas sesiones se generan fielmente sin sobreescrituras.
+   - En "Solo Running", se garantiza 100% de pureza (0 ciclismo, 0 natación).
+2. **Protección Bidireccional de Modo (`calendarHydration.ts` - 312 LOC & `intervalsSyncService.ts` - 265 LOC):**
+   - El adaptador preserva el modo `POWER` con Stryd (vatios y % CP) en cualquier circunstancia donde el atleta o el blueprint estén en potencia.
+3. **Extensión del Horizonte de Purga y Sincronización:**
+   - La ventana de purga se expandió a la duración total del plan (`defaultHorizon`, hasta 1 año), eliminando los 180 eventos huérfanos/mezclados.
+4. **Verificación Forense en Vivo (`i442091` - Germán Morales):**
+   - Purgados 180 eventos obsoletos y creados 180 eventos limpios (60 Ride, 60 Run, 60 WeightTraining).
+   - 0 fugas de ritmo en running (100% de 60 sesiones en vatios y % CP).
+   - Jueves comprobado con Fuerza de Tobillos (35m) y Ciclismo Sweetspot (2x 15m @ 88-90% FTP).
+   - Periodización 3:1 confirmada en semanas 4, 8, 12 y 16 con descenso del 30% en TSS.
+
+---
+
+## 101. ELECCIÓN OBLIGATORIA DE POTENCIA VS RITMO Y TRANSICIÓN REACTIVA CON CONFIRMACIÓN FISIOLÓGICA (v5.25)
+
+### 101.1. Principios de Arquitectura y UX Implementados
+1. **Selección Obligatoria en el Wizard (Paso 3 — Fisiología):**
+   - `runningTrainingMode` inicia en `null` si el plan contiene carrera pedestre.
+   - Se erradicó el "fallback silencioso" donde el backend asumía el modo a espaldas del atleta.
+   - El botón inferior de generación permanece deshabilitado (`"Selecciona Potencia o Ritmo para continuar"`) hasta que el atleta haga clic explícito en ⚡ **Potencia Stryd** o ⏱️ **Ritmo (Pace)**.
+   - Badges inteligentes: Muestra sugerencia contextual (`⚡ Sugerido Stryd` si detecta sensor / `⏱️ Sugerido GPS` si no tiene), pero exige confirmación activa.
+2. **Helper Puro SSOT (`runningWorkoutAdapter.ts` - 347 LOC):**
+   - Consolidado `resolveRunningMode(profile, blueprintMode)`: da precedencia a la preferencia explícita del perfil sobre el blueprint histórico.
+   - Erradicados 6 ternarios duplicados en la UI (`AthleteDashboardViewRouter.tsx`, `AthleteDashboardOverview.tsx`).
+3. **Propagación Reactiva al Macrociclo Activo (`macrocycles.ts` - 223 LOC & `profile/route.ts` - 214 LOC):**
+   - Cuando un atleta compra un Stryd (o si su sensor falla y vuelve a ritmo) y actualiza su perfil, `POST /api/profile` ejecuta `updateActiveMacrocycleRunningMode()`.
+   - El blueprint activo en Firestore se actualiza atómicamente sin obligar al atleta a borrar y regenerar su temporada.
+4. **Modal de Confirmación Fisiológica (`RunningModeConfirmModal.tsx` - 74 LOC):**
+   - En [`AthletePhysiologyView.tsx`](./src/components/dashboard/AthletePhysiologyView.tsx), cambiar el toggle de modo abre un modal que advierte al atleta sobre la transformación de unidades en sus semanas futuras y le recuerda sincronizar a Intervals.icu.
+   - Cero mutaciones accidentales por clics involuntarios.
+
+### 101.2. Certificación de Calidad
+- `npm run build`: 21/21 rutas compiladas con Código 0 ✅.
+- Suite de pruebas de transición de modo: **6/6 casos PASSED (100% Éxito) ✅**.
+- Todos los archivos modificados estrictamente $\le 350$ LOC ✅.
+
 
 
 

@@ -276,9 +276,11 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
 
         {/* ── COLUMNAS 2–8: 7 DÍAS DE LA SEMANA ── */}
         {(() => {
-          const dayItemsMap: Record<string, PlanItem[]> = {};
-          daysOfWeek.forEach((d) => (dayItemsMap[d] = []));
-          weekPlan.forEach((item) => { if (dayItemsMap[item.day]) dayItemsMap[item.day].push(item); });
+          const dayItemsMap: Record<string, PlanItem[]> = {}, weekDateSet = new Set(weekDates);
+          weekPlan.forEach((item) => {
+            if ((!item.date || weekDateSet.has(item.date)) && dayItemsMap[item.day]) dayItemsMap[item.day].push(item);
+            else if (!item.date || weekDateSet.has(item.date)) dayItemsMap[item.day] = [item];
+          });
           return daysOfWeek.map((dayName, dIdx) => (
             <AthleteCalendarDayColumn
               key={dayName}

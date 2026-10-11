@@ -7473,6 +7473,39 @@ El usuario reportó dos requerimientos críticos:
 
 ---
 
+## 115. CORRECCIÓN DE AISLAMIENTO TEMPORAL DEL OVERLAY DE CARRERA OBJETIVO Y FILTRADO POR FECHA DE SEMANA (v5.39)
+
+### 115.1. Diagnóstico y Causa Raíz
+El usuario reportó un bug crítico visual en su dashboard personal:
+*"en el cambio veo un error que ahora en el plan de german morales todos los domingos tengo una competencia de Ironman"*
+
+**Causas Raíz Detectadas:**
+1. **Inyección Sin Acotación de Fechas en `raceDayOverlay.ts`:**
+   - En `applyRaceDaysToPlan`, la comprobación `opts.primaryRaceDate` evaluaba si la carrera primaria existía en `races`, pero **no comprobaba si `opts.primaryRaceDate` caía dentro de los límites de la semana actual (`minDate <= primaryRaceDate <= maxDate`)**.
+   - Como `applyRaceDaysToPlan` se llama para cada semana del macrociclo de manera independiente, la carrera objetivo A (`🏆 COMPETICIÓN OBJETIVO: Ironman...`) era inyectada al array de retorno de **todas las 52 semanas del año**.
+2. **Mapeo Ciego por Día de la Semana en `AthleteCalendarWeekRow.tsx`:**
+   - En la fila semanal del calendario, `dayItemsMap` agrupaba las sesiones exclusivamente por `item.day` (`weekPlan.forEach(item => dayItemsMap[item.day].push(item))`).
+   - Al recibir el item inyectado con `day: "Domingo"`, lo colocaba en la columna del domingo de cada semana aunque su fecha (`item.date`) fuera meses posterior.
+
+### 115.2. Solución Implementada
+1. **Acotación Estricta de Límites en `src/lib/physiology/raceDayOverlay.ts` (222 LOC):**
+   - El cálculo de `minDate` y `maxDate` se ejecuta ahora de forma preliminar al inicio de la función.
+   - La inyección atómica de la carrera primaria ahora exige estrictamente:
+     `opts.primaryRaceDate >= minDate && opts.primaryRaceDate <= maxDate && r.date === opts.primaryRaceDate`.
+   - Si la carrera no cae en los 7 días de la semana evaluada, el plan semanal jamás es modificado ni recibe la carrera.
+2. **Filtrado por Rango de Fecha en `src/components/dashboard/AthleteCalendarWeekRow.tsx` (349 LOC):**
+   - Se implementó `weekDateSet = new Set(weekDates)`. Un entrenamiento solo se asigna a las columnas si `!item.date || weekDateSet.has(item.date)`.
+   - Si un item pertenece a otra fecha o semana, es descartado de inmediato.
+3. **Refinamiento en `src/lib/intervals/calendarHydration.ts` (337 LOC):**
+   - El emparejamiento con `dayFallback` ahora exige coincidencia con `/COMPETICI[ÓO]N/i` y verificación exacta de `rInfo.date === dateStr`.
+
+### 115.3. Certificación de Calidad y Cumplimiento
+- **Prueba de Aislamiento:** Validado que en semanas ordinarias (ej. Semana 1 y 2 de German Morales) el domingo conserva su rodaje largo aeróbico normal y **cero tarjetas de Ironman** (`PASS`).
+- **Semana de Carrera:** La semana que contiene el `primaryRaceDate` (Semana 8 / 29 Nov) sigue inyectando de forma atómica y exclusiva la tarjeta dorada de competición (`PASS`).
+- **TypeScript:** `npx tsc --noEmit` completado con código 0 ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** Todos los archivos modificados $\le 350$ LOC ✅.
+
 ## 114. REDISEÑO DE ÉLITE DE LA CABECERA Y HUD DE RESULTADOS DE ENTRENAMIENTO (v5.38)
 
 ### 114.1. Diagnóstico de UX / UI y Requerimiento

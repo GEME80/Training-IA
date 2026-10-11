@@ -204,14 +204,14 @@ export function hydrateWeekPlanFromEvents(
 
     dayEvts.forEach((evt) => {
       if (isRaceCalendarEvent(evt)) {
-        const matchingRace = dayFallback.find((p) => /COMPETICI/i.test(p.workoutName || "") || p.activityType === "Triatlón");
+        const matchingRace = dayFallback.find((p) => /COMPETICI[ÓO]N/i.test(p.workoutName || ""));
         if (matchingRace) {
           hydratedItems.push({ ...matchingRace, id: evt.id ? String(evt.id) : undefined, date: dateStr, formattedDate, day });
           seenDisciplines.add(matchingRace.discipline);
           return;
         }
         const rInfo = raceInfoFromEvent(evt);
-        if (rInfo && (rInfo.priority === "A" || (opts?.primaryRaceDate && dateStr === opts.primaryRaceDate))) {
+        if (rInfo && (rInfo.date === dateStr && (rInfo.priority === "A" || (opts?.primaryRaceDate && dateStr === opts.primaryRaceDate)))) {
           const raceItem = buildRaceDayItem(rInfo, opts?.bikeFtp, opts?.runFtp);
           hydratedItems.push({ ...raceItem, id: evt.id ? String(evt.id) : undefined, date: dateStr, formattedDate, day });
           seenDisciplines.add(raceItem.discipline);

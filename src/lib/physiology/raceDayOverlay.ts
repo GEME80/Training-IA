@@ -167,9 +167,15 @@ export function applyRaceDaysToPlan(
   opts: { bikeFtp?: number; runFtp?: number; primaryRaceDate?: string } = {}
 ): PlanItem[] {
   let result = [...plan];
-  if (opts.primaryRaceDate) {
+  const allDates = plan.map((p) => p.date).filter(Boolean) as string[];
+  if (allDates.length === 0) return plan;
+  const sortedDates = [...allDates].sort();
+  const minDate = sortedDates[0];
+  const maxDate = shiftDate(minDate, 6);
+
+  if (opts.primaryRaceDate && opts.primaryRaceDate >= minDate && opts.primaryRaceDate <= maxDate) {
     const hasAInPlan = result.some((p) => p.date === opts.primaryRaceDate && /COMPETICI/i.test(p.workoutName || ""));
-    const primaryRace = races.find((r) => r.date === opts.primaryRaceDate || r.priority === "A");
+    const primaryRace = races.find((r) => r.date === opts.primaryRaceDate);
     if (!hasAInPlan && primaryRace) {
       result = result.filter((p) => p.date !== opts.primaryRaceDate);
       result.push(buildRaceDayItem({ ...primaryRace, priority: "A" }, opts.bikeFtp, opts.runFtp));
@@ -187,11 +193,6 @@ export function applyRaceDaysToPlan(
     const sanitized = /giro|rigo|gran\s*fondo/i.test(r.name) && r.priority === "A" ? { ...r, priority: "B" as const } : r;
     if (!raceByDate.has(sanitized.date)) raceByDate.set(sanitized.date, sanitized);
   });
-  const allDates = plan.map((p) => p.date).filter(Boolean) as string[];
-  if (allDates.length === 0) return plan;
-  const sortedDates = [...allDates].sort();
-  const minDate = sortedDates[0];
-  const maxDate = shiftDate(minDate, 6);
 
   raceByDate.forEach((race, date) => {
     const isAObjective = (p: PlanItem) => p.date === date && /COMPETICI[ÓO]N OBJETIVO/i.test(p.workoutName || "");

@@ -1,9 +1,21 @@
-# ⚡ SGEA Pro (v5.34) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.49) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🛡️ **Blindaje Fisiológico Multi-Atleta & Aislamiento de Competiciones (v5.49):**
+  - **Aislamiento Temporal Estricto de Carrera Objetivo (`raceDayOverlay.ts`):** Validación estricta que exige que la fecha de la prueba caiga dentro de los 7 días de la semana evaluada (`minDate <= primaryRaceDate <= maxDate`). Erradicación total de fallbacks ciegos por prioridad (`|| r.priority === 'A'`), eliminando la contaminación cruzada de carreras demo (ej. Ironman en planes de maratón).
+  - **Aislamiento de Calendario por Conjunto de Fechas (`AthleteCalendarWeekRow.tsx`):** Indexación de items semanales vía `weekDateSet`, descartando eventos que no pertenezcan al rango de la fila.
+  - **Freeze Window de Tests Pre-Competición A:** Prohibición absoluta de tests de campo al fallo a $\le 4$ semanas de la carrera principal, protegiendo la fase de Tapering y garantizando frescura neuromuscular ($TSB > +5$).
+  - **Salvaguardas de Triatlón en Macrociclos (`macrocycleTemplateHelpers.ts`):** Erradicación de bloques específicos de maratón ($3\times 4\text{km}$, $2\times 6\text{km}$) en triatletas (70.3 y olímpico), acotando series a $\le 2\text{km}$ y fartleks para no comprometer el ciclismo.
+
+- 📱 **Evolución Móvil de Alto Impacto: "Actual vs. Plan" y Scrubber HUD (v5.48):**
+  - **Micro-Tarjetas de Cumplimiento (`PlannedVsActualProgress.tsx`):** Vista de progreso compacto en 2 columnas: seguimiento de carga TSS (`XXX / YYY TSS` con barra y badge de cumplimiento) y volumen horario (`X.X / Y.Y hrs`).
+  - **Selector Rápido de Rango PMC:** Píldoras compactas `[ 30D | 90D | 6M | 1 Año ]` con reactividad instantánea.
+  - **Scrubber HUD Interactivo:** Fila de telemetría dinámica al deslizar el dedo (Fecha, CTL, ATL, TSB con colores biológicos).
+  - **Footer Desencajonado (`PMCInsightFooter.tsx`):** Eliminación de cajas grises rígidas, con insight ejecutivo en 2 líneas y acordeón progresivo.
 
 - 🏆 **Pacing Plan a Potencia en Competición Oficial & Pureza del Cronómetro (v5.34):**
   - **Cero Warmup/Cooldown en el Reloj:** El archivo de entrenamiento estructurado de carrera arranca exactamente en el Km 0.0 con el pistoletazo de salida y culmina al cruzar la meta. Erradicación de pasos forzados de calentamiento o caminata post-meta que distorsionen el tiempo neto oficial, el ritmo medio y los récords en Garmin / Stryd / Intervals.icu.

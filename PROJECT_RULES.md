@@ -8,9 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.25).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.49).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.49: Blindaje Fisiológico Multi-Atleta, Aislamiento Temporal Estricto de Carrera Objetivo Primaria, Erradicación de Fallbacks Ciegos por Prioridad, Salvaguardas de Triatlón y Optimización de Evolución Móvil (Actual vs Plan):
+  * Aislamiento Temporal Estricto de Carrera (`raceDayOverlay.ts`): Validación acotada a la ventana semanal `minDate <= opts.primaryRaceDate && opts.primaryRaceDate <= maxDate` y coincidencia exacta de fecha `r.date === opts.primaryRaceDate`. Prohibición absoluta de `|| r.priority === "A"` para evitar contaminar planes de maratón con residuos de triatlón/Ironman.
+  * Aislamiento por Fecha en Fila Semanal (`AthleteCalendarWeekRow.tsx`): Filtrado estricto por `weekDateSet = new Set(weekDates)`.
+  * Freeze Window de Tests Pre-Carrera (`macrocycleTemplates.ts`): Prohibición de tests de campo al fallo a $\le 4$ semanas de la competición A.
+  * Purga de Bloques Extensos de Maratón en Triatlón (`macrocycleTemplateHelpers.ts`): Acotamiento de series en triatlón olímpico y 70.3 a $\le 2\text{km}$ y fartleks, erradicando bloques de 4km/6km.
 - Versión 5.25: Reingeniería Integral de Macrociclos, SSOT Fisiológico en Wizard UI, Elección Obligatoria de Potencia vs Ritmo, Helper Canónico `resolveRunningMode`, Sincronización Reactiva Atómica al Macrociclo Activo y Modal de Confirmación Fisiológica:
   * Arquitectura Híbrida de Macrociclos (Motor Determinista + Gemini IA): Separación estricta de responsabilidades. El Motor Determinista (`macrocycleGenerator.ts`, `linearProgressionEngine.ts`, `metricIntervalEngine.ts`) gobierna la fisiología inviolable: modelo Banister (CTL/ATL/TSB, ramp rate seguro de +5 a +8 TSS/sem), periodización 3:1 (3 semanas de sobrecarga progresiva + 1 semana de descarga del 25-30% en volumen y TSS), y rotación matemática coprima anti-monotonía (gcd(L, s) = 1) con sobrecarga en el bloque principal. Gemini IA actúa como Head Coach Estratégico para modular el enfoque de las fases (Base, Construcción, Pico, Tapering) según historial (365d), tiempo objetivo y perfil biológico.
   * Wizard UI como Única Fuente de Verdad (SSOT): Paso 1 (Objetivo: Carrera oficial con meta de tiempo dinámica vs Mantenimiento/Base); Paso 2 (Disciplinas y Matriz Semanal interactiva inmutable: Solo Running puro 0 bici/0 natación, Solo Ciclismo, o Entrenamiento Cruzado Running + Ciclismo + Fuerza); Paso 3 (Fisiología y Periodización: elección obligatoria y explícita de Potencia Stryd vs Ritmo Jack Daniels antes de generar el plan; no se asumen valores por defecto ambiguos).
@@ -852,5 +857,24 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 4. **Ley de Filtrado de Notas Nutricionales en el Analizador de Intervalos:**
    - En el analizador de sintaxis (`workoutDocParser`), las líneas de notas de nutrición, hidratación o consejos tácticos que no expresan distancias ni duraciones fraccionadas jamás deben computar como intervalos de tiempo ni dibujar barras espurias en la gráfica de zonas.
 
+---
 
+## 🛡️ 23. LEYES DE AISLAMIENTO TEMPORAL ESTRICTO DE CARRERAS Y BLINDAJE DE TRIATLÓN (v5.49)
 
+1. **Ley de Aislamiento Temporal Estricto de Carrera Objetivo Primaria (`raceDayOverlay.ts`):**
+   - La inyección de la tarjeta de competición oficial solo puede realizarse si la fecha de la carrera objetivo cae estrictamente dentro de la ventana de 7 días de la semana evaluada: `minDate <= opts.primaryRaceDate && opts.primaryRaceDate <= maxDate`.
+   - Queda terminantemente prohibido inyectar la tarjeta de carrera oficial fuera de su semana real.
+
+2. **Ley de Prohibición Absoluta de Fallbacks Ciegos por Prioridad:**
+   - En todo selector u overlay de competiciones, queda estrictamente prohibida la condición `|| r.priority === "A"` o cualquier fallback ciego que asocie una carrera residual del storage sin validar fecha exacta (`r.date === opts.primaryRaceDate`).
+   - Cada atleta es una entidad biológica y de datos completamente aislada; los residuos de pruebas de otros atletas jamás deben infiltrarse en el calendario de un deportista real.
+
+3. **Ley de Aislamiento por Conjunto de Fechas Semanales en UI (`AthleteCalendarWeekRow.tsx`):**
+   - El renderizado de items en la fila del calendario semanal debe validar la pertenencia estricta mediante `weekDateSet = new Set(weekDates)`. Eventos huérfanos o con fechas fuera del vector semanal deben ser descartados inmediatamente del renderizado.
+
+4. **Ley de Freeze Window Pre-Competición A en Macrociclos (`macrocycleTemplates.ts`):**
+   - A falta de $\le 4$ semanas para una competición A, queda prohibido programar tests de campo al fallo (5K all-out, 20m FTP test). Las semanas de Tapering y Pico se reservan exclusivamente para estímulos a ritmo objetivo, afinamiento neuromuscular y frescura ($TSB > +5$).
+
+5. **Ley de Protección Fisiológica de Triatlón (Prohibición de Bloques Extensos de Maratón):**
+   - En macrociclos de triatlón (`triathlon_short`, `triathlon_70_3`), las sesiones fraccionadas de carrera a pie quedan restringidas a distancias submáximas ($\le 2\text{km}$) o fartleks progresivos.
+   - Queda prohibido programar bloques específicos de maratón ($3\times 4\text{km}$, $2\times 6\text{km}$) en triatletas, protegiendo la fatiga neuromuscular y garantizando la asimilación del volumen ciclista.

@@ -7938,4 +7938,40 @@ Esto causaba que:
   - `src/components/dashboard/AthleteDashboardOverview.tsx`: 254 LOC ($\le 350$) ✅.
   - `src/lib/physiology/pmcEngine.ts`: 268 LOC ($\le 350$) ✅.
 
+---
+
+## 125. BLINDAJE FISIOLÓGICO MULTI-ATLETA: AISLAMIENTO TEMPORAL ESTRICTO DE CARRERAS, ERRADICACIÓN DE FALLBACKS CIEGOS Y SALVAGUARDAS DE TRIATLÓN (v5.49)
+
+### 125.1. Contexto y Diagnóstico de la Auditoría Fisiológica
+- **Auditoría Crítica de Temporadas:** Al auditar los macrociclos de atletas como Juan Pablo Vásquez (Running/Maratón) y Georg Schmitt (Triatlón 70.3), se identificaron inconsistencias metodológicas:
+  1. **Fuga Cruzada de Carrera A (Ironman Fantasma en Germán Morales):** En el plan de Maratón Tokio de Germán Morales, todos los domingos del año aparecía indebidamente la tarjeta `COMPETICIÓN: Ironman 70.3 Cartagena`.
+  2. **Bloques Extensos de Maratón en Triatlón:** El generador de plantillas inyectaba series extensas de asfalto (`3x 4km`, `2x 6km`) en triatletas de media distancia, violando el principio de fatiga neuromuscular combinada ciclismo-carrera.
+  3. **Tests de Campo al Fallo en Tapering:** Se programaban tests de campo al fallo a falta de 2-3 semanas de la carrera A, vulnerando el descanso necesario para la supercompensación.
+
+### 125.2. Causa Raíz y Solución Arquitectónica
+1. **Erradicación de Fallback Ciego por Prioridad (`raceDayOverlay.ts`):**
+   - **Causa Raíz:** La expresión `const primaryRace = races.find((r) => r.date === opts.primaryRaceDate || r.priority === "A");` contenía una disyunción ciega (`|| r.priority === "A"`). Cuando un atleta demo (Georg Schmitt) dejaba una carrera tipo "A" en el storage, al evaluar a Germán Morales para una fecha distinta, `r.date === opts.primaryRaceDate` evaluaba falso pero `r.priority === "A"` evaluaba verdadero. Además, no se verificaba si la fecha caía dentro de la semana actual.
+   - **Solución:** Se implementó una doble validación matemática estricta:
+     - Verificación de pertenencia a la semana: `minDate <= opts.primaryRaceDate && opts.primaryRaceDate <= maxDate`.
+     - Coincidencia exacta de fecha: `r.date === opts.primaryRaceDate` (eliminando cualquier fallback por prioridad sin fecha).
+2. **Aislamiento por Fecha en Fila Semanal (`AthleteCalendarWeekRow.tsx`):**
+   - Creación de un conjunto indexado `weekDateSet = new Set(weekDates)`.
+   - Se filtran los items para garantizar que solo se rendericen eventos cuya fecha coincida estrictamente con los días de esa semana específica.
+3. **Hidratación Fidedigna en Calendario (`calendarHydration.ts`):**
+   - Matching de carrera acotado a coincidencia exacta de fecha (`rInfo.date === dateStr`) y expresión regular `/COMPETICI[ÓO]N/i`, suprimiendo duplicidades espurias.
+4. **Freeze Window de Tests Pre-Competición (`macrocycleTemplates.ts`):**
+   - A falta de $\le 4$ semanas para la competición A, queda terminantemente prohibido programar tests de campo al fallo (5K all-out, 20m FTP test), sustituyéndolos por entrenamientos de ritmo objetivo y frescura biológica ($TSB > +5$).
+5. **Purga de Bloques Extensos de Maratón en Triatlón (`macrocycleTemplateHelpers.ts`):**
+   - Para modalidades `triathlon_short` y `triathlon_70_3`, las series de carrera a pie se acotan a distancias submáximas ($\le 2\text{km}$ o fartleks progresivos), erradicando repeticiones de $4\text{km}$ o $6\text{km}$ que comprometen la asimilación del pedaleo.
+
+### 125.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/lib/physiology/raceDayOverlay.ts`: 222 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteCalendarWeekRow.tsx`: 349 LOC ($\le 350$) ✅.
+  - `src/lib/intervals/calendarHydration.ts`: 337 LOC ($\le 350$) ✅.
+  - `src/lib/physiology/macrocycleTemplates.ts`: 348 LOC ($\le 350$) ✅.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 334 LOC ($\le 350$) ✅.
+
 

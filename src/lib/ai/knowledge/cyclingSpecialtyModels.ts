@@ -13,6 +13,7 @@ import {
   BIKE_MICROBURSTS_15_15,
   BIKE_THRESHOLD_TT_SIMULATION,
 } from "./workoutPools/cyclingIntervalPool";
+import { BIKE_OUTDOOR_REGENERATIVO_CAFE } from "./workoutPools/cyclingOutdoorPool";
 
 /**
  * Modelo Científico para Ciclismo — Escalada y Puertos (Hunter Allen)
@@ -142,12 +143,20 @@ export const CYCLING_CLIMBING_MODEL: CuratedTrainingModel = {
       BIKE_SEILER_4X8_THRESHOLD,
     ],
     recoveryAerobicWorkouts: [
+      BIKE_OUTDOOR_REGENERATIVO_CAFE,
       {
-        name: "Pedaleo Suave de Recuperación (35m)",
+        name: "Ciclismo Suave Z1 de Recuperación (35m)",
         powerTarget: "52% FTP",
-        justification: "Mueve las piernas con mínimo estrés.",
-        workoutDoc: "Main\n- 35m 52% FTP",
+        justification: "Recuperación pasiva activa sin tensión muscular.",
+        workoutDoc: "Warmup\n- 5m 45% FTP\n\nMain\n- 25m 52% FTP\n\nCooldown\n- 5m 40% FTP",
         durationMin: 35,
+      },
+      {
+        name: "Pedaleo Suave de Soltura Articular (40m Z1)",
+        powerTarget: "50% FTP",
+        justification: "Lavado muscular y retorno venoso sin elevación del pulso.",
+        workoutDoc: "Main\n- 40m 50% FTP",
+        durationMin: 40,
       },
     ],
     strengthWorkouts: [
@@ -293,12 +302,20 @@ export const CYCLING_CRITERIUM_MODEL: CuratedTrainingModel = {
       BIKE_THRESHOLD_TT_SIMULATION,
     ],
     recoveryAerobicWorkouts: [
+      BIKE_OUTDOOR_REGENERATIVO_CAFE,
       {
         name: "Recuperación Activa en Bicicleta (35m)",
         powerTarget: "50% FTP",
         justification: "Favorece el descanso muscular.",
         workoutDoc: "Main\n- 35m 50% FTP",
         durationMin: 35,
+      },
+      {
+        name: "Ciclismo Regenerativo y Soltura de Cadencia (30m)",
+        powerTarget: "52% FTP",
+        justification: "Oxigenación de fibras rápidas sin lactato.",
+        workoutDoc: "Main\n- 30m 52% FTP (95-100 rpm)",
+        durationMin: 30,
       },
     ],
     strengthWorkouts: [

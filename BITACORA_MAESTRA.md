@@ -7063,3 +7063,41 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
   - `src/lib/ai/knowledge/athleteMomentsSpecializedModels.ts`: 255 LOC.
   - `src/lib/ai/knowledge/athleteMomentsModels.ts`: 221 LOC.
 
+---
+
+## 105. UNIVERSALIZACIÓN ABSOLUTA DE LA BIBLIOTECA DE ENTRENAMIENTOS PARA EL 100% DE LOS PLANES Y DISCIPLINAS (v5.29)
+
+### 105.1. Diagnóstico y Cobertura Multi-Modelo
+- El usuario ordenó explícitamente: *"hay que revisar que siempre se use la librería que creamos para todos los planes"*.
+- Auditoría profunda reveló que mientras los modelos de Maratón, 21K, 10K, 5K y Longevidad ya estaban conectados parcialmente, otros modelos como Trail Running (`trailModel.ts`), Triatlón Sprint/Olímpico (`triathlonShortModel.ts`), Triatlón 140.6 (`triathlon1406Model.ts`), Ciclismo Gran Fondo y Criterium (`cyclingSpecialtyModels.ts`) aún tenían arrays locales reducidos.
+- Adicionalmente, el motor de prescripción central en `macrocycleTemplateHelpers.ts` no garantizaba que cuando un plan ejecutara Calidad Secundaria (`TEMPO_FARTLEK`) o semanas pares de Calidad Curada, pudiera recurrir al catálogo universal de la biblioteca si el modelo específico carecía de dichas sesiones.
+
+### 105.2. Arquitectura de Integración Universal
+1. **Calidad Secundaria Universal (`TEMPO_FARTLEK`) en `macrocycleTemplateHelpers.ts` (323 LOC):**
+   - Para **CUALQUIER** plan (5K, 10K, 21K, 42K, Trail, Triatlón, Base o Mantenimiento), la sesión de calidad secundaria entre semana se nutre de la biblioteca unificada:
+     `ALL_RUNNING_TEMPO_WORKOUTS` (8 sesiones) + `ALL_RUNNING_FARTLEK_WORKOUTS` (7 sesiones) + sesiones específicas del modelo.
+   - Rotación coprima anti-repetición y memoria biológica de 5 semanas garantizan variedad absoluta sin monotonía.
+2. **Calidad Curada en Pista y Métrica en Semanas Pares (`macrocycleTemplateHelpers.ts`):**
+   - En semanas pares de calidad principal, el motor fusiona las series del modelo con `ALL_RUNNING_DISTANCE_WORKOUTS` (9 sesiones métricas: 400m, 800m, 1000m, escalera 200-800, piramidal, milla 1600m).
+3. **Fusión Universal de Rodajes Aeróbicos en `macrocycleTemplates.ts` (344 LOC):**
+   - En todos los días de carrera aeróbica, si el modelo tiene pocas sesiones, se fusiona atómicamente con `ALL_RUNNING_AEROBIC_WORKOUTS` (12 sesiones), eliminando duplicados y garantizando un mínimo de 10+ opciones distintas de rodaje.
+4. **Fusión Universal de Ciclismo Entre Semana en `macrocycleTemplates.ts`:**
+   - Si un atleta incluye ciclismo entre semana en cualquier plan, se nutre directamente de `ALL_CYCLING_INTERVAL_WORKOUTS` (14 sesiones de Coggan, Rønnestad, Seiler, SweetSpot y TT).
+5. **Actualización Directa de Modelos Específicos:**
+   - `src/lib/ai/knowledge/trailModel.ts` (267 LOC): Conectado directamente a `ALL_RUNNING_AEROBIC_WORKOUTS`.
+   - `src/lib/ai/knowledge/triathlonShortModel.ts` (284 LOC): Conectado directamente a `ALL_RUNNING_AEROBIC_WORKOUTS`.
+   - `src/lib/ai/knowledge/triathlon1406Model.ts` (292 LOC): Conectado directamente a `ALL_RUNNING_AEROBIC_WORKOUTS`.
+   - `src/lib/ai/knowledge/cyclingSpecialtyModels.ts` (344 LOC): Enriquecido con `BIKE_OUTDOOR_REGENERATIVO_CAFE` y sesiones de recuperación en Gran Fondo y Criterium.
+
+### 105.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js estáticas y dinámicas validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 323 LOC.
+  - `src/lib/physiology/macrocycleTemplates.ts`: 344 LOC.
+  - `src/lib/ai/knowledge/trailModel.ts`: 267 LOC.
+  - `src/lib/ai/knowledge/triathlonShortModel.ts`: 284 LOC.
+  - `src/lib/ai/knowledge/triathlon1406Model.ts`: 292 LOC.
+  - `src/lib/ai/knowledge/cyclingSpecialtyModels.ts`: 344 LOC.
+
+

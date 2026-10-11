@@ -3,6 +3,7 @@ import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_RAMP } from "../ai/knowledge";
 import { ALL_RUNNING_AEROBIC_WORKOUTS } from "../ai/knowledge/workoutPools/runningAerobicPool";
+import { ALL_CYCLING_INTERVAL_WORKOUTS } from "../ai/knowledge/workoutPools/cyclingIntervalPool";
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool"; import { selectStrengthWorkout } from "./strengthWorkoutPool";
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"; import { resolveWorkoutAddons } from "./workoutEnhancers";
@@ -217,7 +218,8 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const bikeVars = curatedModel.workoutVariations.bikeMidWeekWorkouts || [];
+        const modelBikes = curatedModel.workoutVariations.bikeMidWeekWorkouts || [];
+        const bikeVars = modelBikes.length >= 8 ? modelBikes : [...modelBikes, ...ALL_CYCLING_INTERVAL_WORKOUTS.filter((w) => !modelBikes.some((m) => m.name === w.name))];
         const bStride = getCoprimeStride(bikeVars.length, 3);
         const bIdx = ((weekNumber - 1) * bStride + (bikeCount - 1)) % (bikeVars.length || 1);
         const selBikeRaw = memory.selectDiverseCandidate(bikeVars, bIdx);
@@ -311,7 +313,7 @@ export function generateWeekTemplate(
         }
 
         const modelRec = curatedModel.workoutVariations.recoveryAerobicWorkouts || [];
-        const recVars = modelRec.length >= 3 ? modelRec : ALL_RUNNING_AEROBIC_WORKOUTS;
+        const recVars = modelRec.length >= 10 ? modelRec : [...modelRec, ...ALL_RUNNING_AEROBIC_WORKOUTS.filter((w) => !modelRec.some((m) => m.name === w.name))];
         const rStride = getCoprimeStride(recVars.length, 2);
         const recIdx = ((weekNumber - 1) * rStride + (runCount - 1)) % (recVars.length || 1);
         const recW = memory.selectDiverseCandidate(recVars, recIdx);

@@ -1,5 +1,6 @@
 import { CuratedTrainingModel } from "./types";
 import { BIKE_TEST_RAMP, RUN_TEST_5K_VAM, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
 
 /**
  * Modelo Científico para Triatlón — Distancia Corta (Sprint y Olímpico)
@@ -256,50 +257,7 @@ export const TRIATHLON_SHORT_MODEL: CuratedTrainingModel = {
         durationMin: 45,
       },
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Suave Aeróbica Z1-Z2 (35m)",
-        powerTarget: "68% CP",
-        justification: "Oxigenación muscular sin impacto excesivo tras las sesiones intensas.",
-        workoutDoc: "Calentamiento\n- 8m 60% CP\n\nCarrera Cómoda\n- 22m 68% CP\n\nEnfriamiento\n- 5m 55% CP",
-        durationMin: 35,
-      },
-      {
-        name: "Carrera Continua Z2 + 4 Strides (40m)",
-        powerTarget: "70% CP + Strides @ 100% CP",
-        justification: "Reactividad neuromuscular ligera y soltura de piernas.",
-        workoutDoc: "Calentamiento\n- 10m 62% CP\n\nCarrera Principal\n- 22m 70% CP\n\n4x\n- 20s 100% CP\n- 40s 55% CP\n\nEnfriamiento\n- 4m 55% CP",
-        durationMin: 40,
-      },
-      {
-        name: "Trote Regenerativo en Césped (30m @ 65% CP)",
-        powerTarget: "65% CP",
-        justification: "Descarga de impacto articular sobre superficie blanda.",
-        workoutDoc: "Warmup\n- 5m Caminata y trote suave 55% CP\n\nMain\n- 20m 65% CP\n\nCooldown\n- 5m Caminata suave",
-        durationMin: 30,
-      },
-      {
-        name: "Carrera Aeróbica Ligera con Cambios Suaves (35m @ 68-75% CP)",
-        powerTarget: "68-75% CP",
-        justification: "Variabilidad de apoyo sin elevar lactato.",
-        workoutDoc: "Warmup\n- 10m 65% CP\n\n5x\n- 2m 75% CP\n- 2m 65% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 35,
-      },
-      {
-        name: "Carrera Progresiva de Soltura Z1 a Z2 (35m)",
-        powerTarget: "64-74% CP",
-        justification: "Activación circulatoria progresiva y relajación de hombros.",
-        workoutDoc: "Warmup\n- 10m 62% CP\n\nMain\n- 15m 70% CP\n- 5m 74% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 35,
-      },
-      {
-        name: "Trote Corto de Oxigenación y Movilidad (25m @ 64% CP)",
-        powerTarget: "64% CP",
-        justification: "Lavado neuromuscular activo entre días de calidad.",
-        workoutDoc: "Warmup\n- 5m 55% CP\n\nMain\n- 15m 64% CP\n\nCooldown\n- 5m Caminata y movilidad",
-        durationMin: 25,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Fuerza de Hombros, Cadera y Core para Triatlón",

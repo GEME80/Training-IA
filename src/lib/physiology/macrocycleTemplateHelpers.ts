@@ -7,6 +7,9 @@ import { interpolateWorkoutTarget } from "./runningWorkoutAdapter";
 import { resolveFridayWorkout, FridayWorkoutParams } from "./fridayWorkoutResolver";
 import { generateMetricRunningWorkout } from "./metricIntervalEngine";
 import { generateLinearRunningWorkout } from "./linearProgressionEngine";
+import { ALL_RUNNING_FARTLEK_WORKOUTS } from "../ai/knowledge/workoutPools/runningFartlekPool";
+import { ALL_RUNNING_TEMPO_WORKOUTS } from "../ai/knowledge/workoutPools/runningTempoPool";
+import { ALL_RUNNING_DISTANCE_WORKOUTS } from "../ai/knowledge/workoutPools/runningDistancePool";
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a), y = Math.abs(b);
@@ -71,10 +74,15 @@ export function selectQualityWorkout(
     };
   }
 
-  if (opts?.workoutType === "TEMPO_FARTLEK" && phaseList.length > 0) {
-    const stride = getCoprimeStride(phaseList.length, 3);
-    const qIdx = ((weekNumber - 1) * stride + 1) % phaseList.length;
-    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(phaseList, qIdx) : phaseList[qIdx];
+  if (opts?.workoutType === "TEMPO_FARTLEK") {
+    const tempoPool = [
+      ...phaseList.filter((w) => /tempo|fartlek|umbral|cruise/i.test(w.name)),
+      ...ALL_RUNNING_TEMPO_WORKOUTS,
+      ...ALL_RUNNING_FARTLEK_WORKOUTS,
+    ];
+    const stride = getCoprimeStride(tempoPool.length, 3);
+    const qIdx = ((weekNumber - 1) * stride + 1) % tempoPool.length;
+    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(tempoPool, qIdx) : tempoPool[qIdx];
     const progressed = applyParametricProgression(candidate, { weekNumber, phase, isRecovery: false });
     return {
       name: progressed.name,
@@ -84,11 +92,12 @@ export function selectQualityWorkout(
     };
   }
 
-  const useCurated = weekNumber % 2 === 0 && phaseList.length > 0;
+  const useCurated = weekNumber % 2 === 0;
   if (useCurated) {
-    const stride = getCoprimeStride(phaseList.length, 2);
-    const qIdx = ((weekNumber - 1) * stride) % phaseList.length;
-    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(phaseList, qIdx) : phaseList[qIdx];
+    const curatedQualityPool = phaseList.length > 0 ? [...phaseList, ...ALL_RUNNING_DISTANCE_WORKOUTS] : ALL_RUNNING_DISTANCE_WORKOUTS;
+    const stride = getCoprimeStride(curatedQualityPool.length, 2);
+    const qIdx = ((weekNumber - 1) * stride) % curatedQualityPool.length;
+    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(curatedQualityPool, qIdx) : curatedQualityPool[qIdx];
     const progressed = applyParametricProgression(candidate, { weekNumber, phase, isRecovery: false });
     return {
       name: progressed.name,

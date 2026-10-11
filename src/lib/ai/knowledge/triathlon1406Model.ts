@@ -1,5 +1,6 @@
 import { CuratedTrainingModel } from "./types";
 import { BIKE_TEST_RAMP, RUN_TEST_STRYD_3_9, SWIM_TEST_CSS_400_200 } from "./testingProtocols";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
 
 /**
  * Modelo Científico para Triatlón — Larga Distancia (Full IRONMAN 140.6)
@@ -264,50 +265,7 @@ export const TRIATHLON_140_6_MODEL: CuratedTrainingModel = {
         durationMin: 45,
       },
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Carrera Continua Aeróbica de Soltura (45m @ 68% CP)",
-        powerTarget: "68% CP",
-        justification: "Oxigenación celular y soltura muscular suave.",
-        workoutDoc: "Calentamiento\n- 10m 60% CP\n\nCarrera Continua\n- 30m 68% CP\n\nEnfriamiento\n- 5m 55% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Carrera Continua Z2 + 4 Strides Ligeros (50m)",
-        powerTarget: "70% CP + Strides @ 100% CP",
-        justification: "Mantiene la elasticidad del tendón de Aquiles sin fatiga glucogénica.",
-        workoutDoc: "Calentamiento\n- 12m 60% CP\n\nCarrera Cómoda\n- 30m 70% CP\n\n4x\n- 20s 100% CP\n- 40s 55% CP\n\nEnfriamiento\n- 4m 55% CP",
-        durationMin: 50,
-      },
-      {
-        name: "Trote Regenerativo en Terreno Blando (35m @ 64% CP)",
-        powerTarget: "64% CP",
-        justification: "Descarga de impacto sobre articulaciones.",
-        workoutDoc: "Warmup\n- 5m 55% CP\n\nMain\n- 25m 64% CP\n\nCooldown\n- 5m Caminata",
-        durationMin: 35,
-      },
-      {
-        name: "Carrera Aeróbica Fácil por Sensaciones (40m @ 68% CP)",
-        powerTarget: "68% CP",
-        justification: "Carrera relajada con respiración nasal cómoda.",
-        workoutDoc: "Warmup\n- 10m 62% CP\n\nMain\n- 25m 68% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 40,
-      },
-      {
-        name: "Carrera Continua Progresiva Suave Z1-Z2 (45m de 62% a 72% CP)",
-        powerTarget: "62-72% CP",
-        justification: "Activación mitocondrial progresiva.",
-        workoutDoc: "Warmup\n- 10m 60% CP\n\nMain\n- 25m 68% CP\n- 5m 72% CP\n\nCooldown\n- 5m 55% CP",
-        durationMin: 45,
-      },
-      {
-        name: "Trote Corto de Oxigenación y Descarga (30m @ 62% CP)",
-        powerTarget: "62% CP",
-        justification: "Lavado muscular tras salidas largas de ciclismo.",
-        workoutDoc: "Warmup\n- 5m 55% CP\n\nMain\n- 20m 62% CP\n\nCooldown\n- 5m 50% CP",
-        durationMin: 30,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Fuerza Estructural y Estabilidad de Core para Larga Distancia",

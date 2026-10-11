@@ -1,5 +1,6 @@
 import { CuratedTrainingModel } from "./types";
 import { RUN_TEST_5K_VAM, RUN_TEST_20M_TT } from "./testingProtocols";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
 
 /**
  * Modelo Científico para Trail Running y Ultradistancia de Montaña (Kilian Jornet + Canova aplicado a D+)
@@ -238,43 +239,7 @@ export const TRAIL_ULTRA_MODEL: CuratedTrainingModel = {
         durationMin: 40,
       },
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Trote Regenerativo en Césped / Blando (40m)",
-        powerTarget: "68% CP",
-        justification: "Oxigenación miofascial sobre superficie amortiguada.",
-        workoutDoc: "Warmup\n- 10m 60% FTP\n\nMain\n- 25m 68% FTP\n\nCooldown\n- 5m 55% FTP",
-        durationMin: 40,
-      },
-      {
-        name: "Carrera Suave en Llano de Lavado Láctico (30m)",
-        powerTarget: "65% CP",
-        justification: "Favorece la eliminación de microinflamación excéntrica.",
-        workoutDoc: "Main\n- 30m 65% FTP",
-        durationMin: 30,
-      },
-      {
-        name: "Caminata Dinámica en Llano y Movilidad de Cadera (35m)",
-        powerTarget: "55% CP",
-        justification: "Estimulación del sistema linfático sin fatiga osteomuscular.",
-        workoutDoc: "Main\n- 35m 55% FTP",
-        durationMin: 35,
-      },
-      {
-        name: "Trote Muy Ligero Regenerativo (35m en Z1 suave)",
-        powerTarget: "66% CP",
-        justification: "Activación parasimpática y relajación profunda.",
-        workoutDoc: "Main\n- 35m 66% FTP",
-        durationMin: 35,
-      },
-      {
-        name: "Descarga Neuromuscular de Piernas (30m)",
-        powerTarget: "64% CP",
-        justification: "Recuperación biológica activa protegiendo tendones de Aquiles.",
-        workoutDoc: "Main\n- 30m 64% FTP",
-        durationMin: 30,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Fuerza Excéntrica de Cuádriceps & Propiocepción de Tobillo",

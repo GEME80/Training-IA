@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import { CalendarDays, Compass } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
@@ -45,22 +45,11 @@ function getWeekOfYear(dateStr: string): number {
  * Scroll continuo: ↑ Plan Futuro | ── Semana Actual ── | ↓ Histórico
  */
 export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps> = ({
-  blueprint,
-  selectedMacroWeekIdx,
-  onSelectWeek,
-  runFtp = 0,
-  bikeFtp = 0,
-  weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY,
-  weeklyExecutedTss = 0,
-  dailyExecutedActivities = {},
-  calendarEvents = [],
-  runningOpts,
-  onOpenAICoach,
-  onSyncWeekToIntervals,
-  onSyncTriweeklyBlock,
-  onSelectWorkoutModal,
-  dashboardHeaderSlot,
-  stickyTopSlot,
+  blueprint, selectedMacroWeekIdx, onSelectWeek, runFtp = 0, bikeFtp = 0,
+  weeklyAvailability = DEFAULT_WEEKLY_AVAILABILITY, weeklyExecutedTss = 0,
+  dailyExecutedActivities = {}, calendarEvents = [], runningOpts, onOpenAICoach,
+  onSyncWeekToIntervals, onSyncTriweeklyBlock, onSelectWorkoutModal,
+  dashboardHeaderSlot, stickyTopSlot,
 }) => {
   const currentWeekRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -71,43 +60,25 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const isRealPlan = Boolean(blueprint && blueprint.id !== "historical-timeline-blueprint" && !(blueprint as any).isHistoricalOnly);
   const maxHistoricalWeeks = isRealPlan ? Math.max(0, 52 - blueprintWeeks.length) : 0;
   const historicalWeeks = useMemo(
-    () =>
-      isRealPlan
-        ? buildHistoricalCalendarWeeks({
-            blueprintStartDate: blueprint.startDate || currentMonStr,
-            dailyExecutedActivities,
-            maxWeeksBack: maxHistoricalWeeks,
-          })
-        : [],
+    () => isRealPlan ? buildHistoricalCalendarWeeks({ blueprintStartDate: blueprint.startDate || currentMonStr, dailyExecutedActivities, maxWeeksBack: maxHistoricalWeeks }) : [],
     [blueprint.startDate, currentMonStr, dailyExecutedActivities, maxHistoricalWeeks, isRealPlan]
   );
 
   // Semana actual del blueprint (puede coincidir fecha)
   const currentBlueprintWeek = useMemo(
-    () =>
-      blueprintWeeks.find(
-        (w) =>
-          w.startDate === currentMonStr ||
-          (w.startDate <= todayStr && todayStr <= w.endDate)
-      ),
+    () => blueprintWeeks.find((w) => w.startDate === currentMonStr || (w.startDate <= todayStr && todayStr <= w.endDate)),
     [blueprintWeeks, currentMonStr, todayStr]
   );
 
-  // Semanas futuras: posteriores a la semana actual, en orden ascendente (próxima primero)
-  // Blindaje estricto: si NO hay plan activo (isRealPlan === false), CERO semanas futuras.
   const futureWeeks = useMemo(() => {
     if (!isRealPlan) return [];
     const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
-    return blueprintWeeks
-      .filter((w) => w.startDate > cutoff)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate));
+    return blueprintWeeks.filter((w) => w.startDate > cutoff).sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [blueprintWeeks, currentBlueprintWeek, currentMonStr, isRealPlan]);
 
   const pastWeeks = useMemo(() => {
     const cutoff = currentBlueprintWeek?.startDate || currentMonStr;
-    const fromBp = blueprintWeeks
-      .filter((w) => w.startDate < cutoff)
-      .sort((a, b) => b.startDate.localeCompare(a.startDate));
+    const fromBp = blueprintWeeks.filter((w) => w.startDate < cutoff).sort((a, b) => b.startDate.localeCompare(a.startDate));
     return [...fromBp, ...historicalWeeks];
   }, [blueprintWeeks, currentBlueprintWeek, currentMonStr, historicalWeeks]);
 
@@ -137,9 +108,24 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   const dayHeaders = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
   const gridTemplate = "grid-cols-[160px_repeat(7,minmax(0,1fr))]";
 
-  // Vista móvil: agenda de la semana activa
-  const activeWeekForAgenda = blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
-  const rawActiveWeekPlan = isRealPlan && activeWeekForAgenda
+  // Cronología unificada para móvil: Historial (pasado) -> Semanas del Macrociclo (presente/futuro)
+  const chronologicalHistoricalWeeks = useMemo(() => [...historicalWeeks].reverse(), [historicalWeeks]);
+  const mobileTimelineWeeks = useMemo(
+    () => (chronologicalHistoricalWeeks.length > 0 ? [...chronologicalHistoricalWeeks, ...blueprintWeeks] : blueprintWeeks),
+    [chronologicalHistoricalWeeks, blueprintWeeks]
+  );
+  const initialMobileIdx = useMemo(() => {
+    const todayIdx = mobileTimelineWeeks.findIndex((w) => w.startDate === currentMonStr || (w.startDate <= todayStr && todayStr <= w.endDate));
+    return todayIdx >= 0 ? todayIdx : chronologicalHistoricalWeeks.length + (blueprintWeeks.length > 0 ? resolveCurrentWeekIndex(blueprintWeeks) : 0);
+  }, [mobileTimelineWeeks, currentMonStr, todayStr, chronologicalHistoricalWeeks.length, blueprintWeeks]);
+
+  const [mobileWeekIdx, setMobileWeekIdx] = useState<number>(initialMobileIdx);
+  useEffect(() => { setMobileWeekIdx(initialMobileIdx); }, [initialMobileIdx]);
+
+  // Vista móvil: agenda de la semana activa en el timeline completo
+  const activeWeekForAgenda = mobileTimelineWeeks[mobileWeekIdx] || blueprintWeeks[selectedMacroWeekIdx] || blueprintWeeks[0];
+  const isHistoricalActive = Boolean((activeWeekForAgenda as any)?.isHistorical || activeWeekForAgenda?.weekNumber <= 0);
+  const rawActiveWeekPlan = isRealPlan && !isHistoricalActive && activeWeekForAgenda
     ? generateWeekTemplate(
         activeWeekForAgenda, runFtp, bikeFtp, effectiveAvailability,
         (blueprint.distanceType || blueprint.primaryRace?.distance) as any, blueprint.athleteCtlAtCreation,
@@ -193,11 +179,10 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
           <button
             type="button"
             onClick={() => {
-              if (currentWeekRef.current) {
-                currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
+              if (currentWeekRef.current) currentWeekRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
               const curIdx = blueprint.weeks ? resolveCurrentWeekIndex(blueprint.weeks) : 0;
               onSelectWeek(curIdx);
+              setMobileWeekIdx(initialMobileIdx);
             }}
             className="flex items-center space-x-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20 transition cursor-pointer"
             title="Ir a la semana actual"
@@ -229,6 +214,13 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
       <div className="md:hidden mt-3">
         <AthleteMobileAgendaView
           blueprint={blueprint}
+          timelineWeeks={mobileTimelineWeeks}
+          activeTimelineWeekIdx={mobileWeekIdx}
+          onSelectTimelineWeek={(idx) => {
+            setMobileWeekIdx(idx);
+            const bpIdx = idx - chronologicalHistoricalWeeks.length;
+            if (bpIdx >= 0 && bpIdx < blueprintWeeks.length) onSelectWeek(bpIdx);
+          }}
           selectedMacroWeekIdx={selectedMacroWeekIdx}
           onSelectWeek={onSelectWeek}
           todayStr={todayStr}

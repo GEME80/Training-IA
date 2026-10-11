@@ -7817,4 +7817,36 @@ Para erradicar el antipatrón de visualización donde el estado colapsado (peek 
   - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$) ✅.
 
+---
+
+## 122. NAVEGACIÓN HISTÓRICA COMPLETA EN LA VISTA MÓVIL (AGENDA Y EJERCICIOS PASADOS) (v5.46)
+
+### 122.1. Diagnóstico del Problema en Dispositivos Móviles
+En la interfaz móvil del atleta, la vista de agenda diaria (`AthleteMobileAgendaView`) estaba restringida exclusivamente a las semanas del macrociclo (`blueprint.weeks`), con el control de navegación semanal hacia atrás bloqueado en la primera semana del plan (`disabled={selectedMacroWeekIdx === 0}`).
+Esto causaba que:
+1. El usuario en smartphone no pudiera navegar hacia semanas anteriores a la fecha de inicio del macrociclo activo.
+2. Todo el historial de sesiones y entrenamientos ejecutados sincronizados desde Intervals.icu previo al macrociclo quedara oculto e inaccesible en móvil (a pesar de que en la cuadrícula de escritorio de año completo sí se calculaba).
+
+### 122.2. Solución e Implementación Técnica
+1. **Unificación Cronológica del Timeline Móvil (`AthleteContinuousCalendar.tsx` - 333 LOC):**
+   - Se procesan las semanas históricas computadas (`historicalWeeks`) en orden cronológico ascendente (`chronologicalHistoricalWeeks = [...historicalWeeks].reverse()`).
+   - Se crea el timeline unificado para móvil: `mobileTimelineWeeks = [...chronologicalHistoricalWeeks, ...blueprintWeeks]`.
+   - Se calcula el índice inicial para móvil posicionando al atleta en la semana actual (`Hoy`) sin perder la referencia del macrociclo.
+   - En semanas históricas, se inhibe la generación de plantillas teóricas de prescripción futura (`rawActiveWeekPlan = []`) y se hidratan las actividades ejecutadas directamente desde `dailyExecutedActivities` y `calendarEvents`.
+   - El botón maestro **Hoy** resetea el índice al presente tanto en escritorio como en la agenda móvil.
+
+2. **Navegación Desacoplada y Badge de Historial (`AthleteMobileAgendaView.tsx` - 329 LOC):**
+   - Se agregaron las props opcionales `timelineWeeks`, `activeTimelineWeekIdx` y `onSelectTimelineWeek`.
+   - La navegación previa/siguiente utiliza `activeIdx`, permitiendo retroceder de manera continua hasta la semana más antigua del historial (`disabled={activeIdx === 0}`).
+   - Cuando se visualiza una semana previa al macrociclo, la cabecera móvil muestra el badge `Historial`, el rango de fechas real de la semana y el resumen de `Carga Real: X TSS`.
+   - Tanto la vista semanal (`feed`) como la vista diaria (`tabs`) renderizan todas las actividades ejecutadas (`AthleteMobileExtraCard` y `MobileWeekFeedItem`), permitiendo abrir el detalle de sesión completo (Bottom Sheet / telemetría) con un solo tap.
+
+### 122.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 329 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteContinuousCalendar.tsx`: 333 LOC ($\le 350$) ✅.
+
+
 

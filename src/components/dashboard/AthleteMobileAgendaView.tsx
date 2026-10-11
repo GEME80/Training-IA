@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
-import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
+import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { getMondayOfWeekStr } from "@/lib/dateUtils";
 import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
 import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
@@ -15,6 +15,9 @@ import { dayShortNames, getWeekDates, formatDayMonthShort } from "./athleteMobil
 
 interface AthleteMobileAgendaViewProps {
   blueprint: MacrocycleBlueprint;
+  timelineWeeks?: MacrocycleWeek[];
+  activeTimelineWeekIdx?: number;
+  onSelectTimelineWeek?: (idx: number) => void;
   selectedMacroWeekIdx: number;
   onSelectWeek: (idx: number) => void;
   todayStr: string;
@@ -26,6 +29,9 @@ interface AthleteMobileAgendaViewProps {
 
 export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = ({
   blueprint,
+  timelineWeeks,
+  activeTimelineWeekIdx,
+  onSelectTimelineWeek,
   selectedMacroWeekIdx,
   onSelectWeek,
   todayStr,
@@ -34,10 +40,28 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
   onSelectWorkoutModal,
   onOpenAICoach,
 }) => {
-  const weeks = blueprint.weeks || [];
-  const currentWeek = weeks[selectedMacroWeekIdx] || weeks[0];
+  const weeks = timelineWeeks && timelineWeeks.length > 0 ? timelineWeeks : (blueprint.weeks || []);
+  const activeIdx = activeTimelineWeekIdx !== undefined ? activeTimelineWeekIdx : selectedMacroWeekIdx;
+  const currentWeek = weeks[activeIdx] || weeks[0];
   const currentMonStr = getMondayOfWeekStr();
-  const isCurrentWeek = currentWeek?.startDate === currentMonStr;
+  const isCurrentWeek = currentWeek?.startDate === currentMonStr || (currentWeek?.startDate <= todayStr && todayStr <= currentWeek?.endDate);
+  const isHistorical = Boolean((currentWeek as any)?.isHistorical || currentWeek?.weekNumber <= 0);
+
+  const handlePrevWeek = () => {
+    if (onSelectTimelineWeek) {
+      onSelectTimelineWeek(Math.max(0, activeIdx - 1));
+    } else {
+      onSelectWeek(Math.max(0, selectedMacroWeekIdx - 1));
+    }
+  };
+
+  const handleNextWeek = () => {
+    if (onSelectTimelineWeek) {
+      onSelectTimelineWeek(Math.min(weeks.length - 1, activeIdx + 1));
+    } else {
+      onSelectWeek(Math.min(weeks.length - 1, selectedMacroWeekIdx + 1));
+    }
+  };
 
   // 1. Asignar determinísticamente los 7 días de la semana con fechas reales YYYY-MM-DD
   const daysMap = useMemo(() => {
@@ -134,9 +158,9 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
       <div className="flex items-center justify-between bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-xs">
         <button
           type="button"
-          disabled={selectedMacroWeekIdx === 0}
-          onClick={() => onSelectWeek(Math.max(0, selectedMacroWeekIdx - 1))}
-          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800"
+          disabled={activeIdx === 0}
+          onClick={handlePrevWeek}
+          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           aria-label="Semana Anterior"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -145,12 +169,18 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
         <div className="text-center px-1 flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-center gap-1">
             <span className="text-xs font-black text-slate-900 dark:text-white">
-              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
+              {isHistorical
+                ? `Historial • ${weekRangeLabel}`
+                : blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
                 ? isCurrentWeek ? "Semana Actual" : `Semana ${weekRangeLabel}`
-                : `Semana ${selectedMacroWeekIdx + 1} de ${weeks.length}`}
+                : `Semana ${currentWeek?.weekNumber || activeIdx + 1} de ${blueprint.weeks?.length || weeks.length}`}
             </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-              {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Sin Plan Activo" : (currentWeek?.phase || "Base")}
+            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full border font-mono ${
+              isHistorical
+                ? "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30"
+                : "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20"
+            }`}>
+              {isHistorical ? "Historial" : (blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Sin Plan Activo" : (currentWeek?.phase || "Base"))}
             </span>
             {isCurrentWeek && (
               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 uppercase">
@@ -159,12 +189,14 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             )}
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[240px] mx-auto">
-            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
+            {isHistorical
+              ? (currentWeek?.focusDescription || "Entrenamientos ejecutados en Intervals.icu")
+              : blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
               ? weekRangeLabel ? `Rango: ${weekRangeLabel}` : "Historial de entrenamientos registrados en Intervals.icu"
               : (currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica")}
           </p>
           <div className="text-[10px] font-mono text-slate-500 mt-0.5">
-            {blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly || weekPlannedTss === 0 ? (
+            {isHistorical || blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly || weekPlannedTss === 0 ? (
               <>Carga Real: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> TSS</>
             ) : (
               <>Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS</>
@@ -174,9 +206,9 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
 
         <button
           type="button"
-          disabled={selectedMacroWeekIdx >= weeks.length - 1}
-          onClick={() => onSelectWeek(Math.min(weeks.length - 1, selectedMacroWeekIdx + 1))}
-          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800"
+          disabled={activeIdx >= weeks.length - 1}
+          onClick={handleNextWeek}
+          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           aria-label="Semana Siguiente"
         >
           <ChevronRight className="h-5 w-5" />

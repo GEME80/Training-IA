@@ -129,9 +129,9 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   }, []);
 
   const effectiveAvailability = resolveEffectiveAvailability(
-    weeklyAvailability && !isLegacyAvailability(weeklyAvailability)
-      ? weeklyAvailability
-      : ((blueprint.availabilitySnapshot as any) || weeklyAvailability)
+    (blueprint?.availabilitySnapshot && !isLegacyAvailability(blueprint.availabilitySnapshot as any))
+      ? (blueprint.availabilitySnapshot as any)
+      : weeklyAvailability
   );
 
   const dayHeaders = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];

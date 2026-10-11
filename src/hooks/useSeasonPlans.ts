@@ -48,12 +48,10 @@ export function useSeasonPlans({
 
   const [selectedMacroWeekIdx, setSelectedMacroWeekIdx] = useState<number>(() => {
     try {
-      if (typeof window !== "undefined") {
-        const saved = userStorage.getItem("active_blueprint") || localStorage.getItem("sgea_active_blueprint");
-        if (saved) {
-          const bp = JSON.parse(saved);
-          if (bp?.weeks && Array.isArray(bp.weeks)) return resolveCurrentWeekIndex(bp.weeks);
-        }
+      const saved = userStorage.getItem("active_blueprint") || (typeof window !== "undefined" ? localStorage.getItem("sgea_active_blueprint") : null);
+      if (saved) {
+        const bp = JSON.parse(saved);
+        if (bp?.weeks && Array.isArray(bp.weeks)) return resolveCurrentWeekIndex(bp.weeks);
       }
     } catch {}
     return 0;
@@ -64,26 +62,13 @@ export function useSeasonPlans({
   );
   const [macrocyclePhase, setMacrocyclePhase] = useState<MacrocyclePhaseInfo | null>(() => calculateMacrocyclePhase([]));
 
-  const activePlanItem = useMemo(() => {
-    return seasonPlans.find((p) => calculatePlanStatus(p.startDate, p.endDate) === "ACTIVE") || seasonPlans[0] || null;
-  }, [seasonPlans]);
-
-  const upcomingPlanItem = useMemo(() => {
-    return seasonPlans.find((p) => calculatePlanStatus(p.startDate, p.endDate) === "UPCOMING") || null;
-  }, [seasonPlans]);
-
-  const currentlyViewedPlan = useMemo(() => {
-    return seasonPlans.find((p) => p.id === viewingPlanId) || activePlanItem;
-  }, [seasonPlans, viewingPlanId, activePlanItem]);
-
+  const activePlanItem = useMemo(() => seasonPlans.find((p) => calculatePlanStatus(p.startDate, p.endDate) === "ACTIVE") || seasonPlans[0] || null, [seasonPlans]);
+  const upcomingPlanItem = useMemo(() => seasonPlans.find((p) => calculatePlanStatus(p.startDate, p.endDate) === "UPCOMING") || null, [seasonPlans]);
+  const currentlyViewedPlan = useMemo(() => seasonPlans.find((p) => p.id === viewingPlanId) || activePlanItem, [seasonPlans, viewingPlanId, activePlanItem]);
   const primaryARace = useMemo(() => targetRaces.find((r) => r.priority === "A") || null, [targetRaces]);
 
-  const blueprint = seasonPlans.length > 0
-    ? (currentlyViewedPlan?.blueprint || macrocyclePhase?.blueprint || null)
-    : (macrocyclePhase?.blueprint || null);
-
-  const isMaintenanceCycle = blueprint?.mode === "PRE_SEASON_MAINTENANCE" || blueprint?.mode === "GENERAL_MAINTENANCE" ||
-    (!blueprint?.primaryRace && !primaryARace) || (Boolean(blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento")) && !blueprint?.primaryRace && !primaryARace);
+  const blueprint = seasonPlans.length > 0 ? (currentlyViewedPlan?.blueprint || macrocyclePhase?.blueprint || null) : (macrocyclePhase?.blueprint || null);
+  const isMaintenanceCycle = blueprint?.mode === "PRE_SEASON_MAINTENANCE" || blueprint?.mode === "GENERAL_MAINTENANCE" || (!blueprint?.primaryRace && !primaryARace) || (Boolean(blueprint?.cycleTitle?.toLowerCase().includes("mantenimiento")) && !blueprint?.primaryRace && !primaryARace);
 
   const primaryRace = blueprint?.primaryRace || primaryARace || null;
   const weeks = blueprint?.weeks || [];
@@ -113,16 +98,19 @@ export function useSeasonPlans({
     userStorage.setJSON("target_races", updatedRaces);
     userStorage.setJSON("active_blueprint", syncedBlueprint);
 
+    if (syncedBlueprint.availabilitySnapshot && Object.keys(syncedBlueprint.availabilitySnapshot).length > 0) {
+      const resolvedAvail = resolveEffectiveAvailability(syncedBlueprint.availabilitySnapshot as any);
+      setWeeklyAvailability(resolvedAvail);
+      userStorage.setJSON("weekly_availability", resolvedAvail);
+    }
+
     const todayStr = new Date().toISOString().split("T")[0];
     const sDate = syncedBlueprint.startDate || todayStr;
     const eDate = syncedBlueprint.weeks?.[syncedBlueprint.weeks.length - 1]?.endDate || todayStr;
 
     const resolvedGoalType =
       syncedBlueprint.mode === "GENERAL_MAINTENANCE" || syncedBlueprint.mode === "PRE_SEASON_MAINTENANCE"
-        ? "MAINTENANCE"
-        : syncedBlueprint.distanceType
-        ? syncedBlueprint.distanceType.toUpperCase()
-        : "CUSTOM_MACROCYCLE";
+        ? "MAINTENANCE" : syncedBlueprint.distanceType ? syncedBlueprint.distanceType.toUpperCase() : "CUSTOM_MACROCYCLE";
 
     const newPlanItem: SeasonPlanItem = {
       id: "plan-" + Date.now(), planName: syncedBlueprint.cycleTitle, goalType: resolvedGoalType,
@@ -146,7 +134,11 @@ export function useSeasonPlans({
         body: JSON.stringify({ athleteId: profileId, uid: user?.uid, blueprint: syncedBlueprint, primaryRace: primaryTargetRace || syncedBlueprint.primaryRace, source }),
       });
       if (user?.uid) {
-        persistProfileField(user.uid, user.email || userProfile?.email || "", { seasonPlans: updatedPlans }, isReadOnly).catch(() => {});
+        const profileUpdates: any = { seasonPlans: updatedPlans };
+        if (syncedBlueprint.availabilitySnapshot && Object.keys(syncedBlueprint.availabilitySnapshot).length > 0) {
+          profileUpdates.weeklyAvailability = resolveEffectiveAvailability(syncedBlueprint.availabilitySnapshot as any);
+        }
+        persistProfileField(user.uid, user.email || userProfile?.email || "", profileUpdates, isReadOnly).catch(() => {});
       }
     } catch (e) {
       console.warn("Aviso al persistir macrociclo en Firestore:", e);

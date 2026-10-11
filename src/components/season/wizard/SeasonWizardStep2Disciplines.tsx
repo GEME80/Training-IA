@@ -50,20 +50,18 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
 
   const handleSelectMainSport = (sport: MainSportKey) => {
     let newAppr = "Solo Running";
-    if (sport === "running") newAppr = trainingApproach === "Solo Running" ? "Solo Running" : "Entrenamiento Cruzado";
-    else if (sport === "cycling") newAppr = trainingApproach === "Solo Ciclismo" ? "Solo Ciclismo" : "Ciclismo Cruzado";
+    if (sport === "running") newAppr = trainingApproach.includes("Cruzado") ? "Entrenamiento Cruzado" : "Solo Running";
+    else if (sport === "cycling") newAppr = "Solo Ciclismo";
     else if (sport === "triathlon") newAppr = "Triatlón";
     else if (sport === "trail") newAppr = "Trail Running";
 
     onChangeTrainingApproach(newAppr);
-    const hasCustomMatrix = weeklyAvailability && Object.keys(weeklyAvailability).length >= 3;
-    if (!hasCustomMatrix) applyDefaultMatrixForApproach(newAppr);
+    applyDefaultMatrixForApproach(newAppr);
   };
 
   const handleSelectSubVariant = (variant: string) => {
     onChangeTrainingApproach(variant);
-    const hasCustomMatrix = weeklyAvailability && Object.keys(weeklyAvailability).length >= 3;
-    if (!hasCustomMatrix) applyDefaultMatrixForApproach(variant);
+    applyDefaultMatrixForApproach(variant);
   };
 
   const toggleDayDiscipline = (day: string, discId: DisciplineType) => {

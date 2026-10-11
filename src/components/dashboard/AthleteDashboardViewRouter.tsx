@@ -212,7 +212,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
                   season.selectedWeek,
                   telemetry.profile.run_ftp,
                   telemetry.profile.bike_ftp,
-                  resolveEffectiveAvailability((season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability),
+                  resolveEffectiveAvailability((season.blueprint?.availabilitySnapshot as any) || (season.macrocyclePhase?.blueprint?.availabilitySnapshot as any) || season.weeklyAvailability),
                   (season.macrocyclePhase?.blueprint?.distanceType || season.primaryRace?.distance) as any,
                   telemetry.profile.ctl,
                   season.blueprint?.primaryRace?.date || season.primaryRace?.date || undefined,

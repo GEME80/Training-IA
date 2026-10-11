@@ -113,6 +113,12 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
         athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, weeklyAvailability, historicalMetrics, runningTrainingMode },
       });
 
+      if (blueprint.availabilitySnapshot && onPersistAvailability) {
+        onPersistAvailability(blueprint.availabilitySnapshot as any).catch(() => {});
+      }
+      if (blueprint.runningTrainingMode && blueprint.runningTrainingMode !== "HYBRID" && onPersistRunningMode) {
+        onPersistRunningMode(blueprint.runningTrainingMode).catch(() => {});
+      }
       if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
       const lastWeek = blueprint.weeks[blueprint.weeks.length - 1];
       const newPlanItem: SeasonPlanItem = {
@@ -129,6 +135,12 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
   };
 
   const handleApplyDirectBlueprint = (blueprint: MacrocycleBlueprint, title: string) => {
+    if (blueprint.availabilitySnapshot && onPersistAvailability) {
+      onPersistAvailability(blueprint.availabilitySnapshot as any).catch(() => {});
+    }
+    if (blueprint.runningTrainingMode && blueprint.runningTrainingMode !== "HYBRID" && onPersistRunningMode) {
+      onPersistRunningMode(blueprint.runningTrainingMode).catch(() => {});
+    }
     if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
     const lastWeek = blueprint.weeks[blueprint.weeks.length - 1];
     const newPlanItem: SeasonPlanItem = {

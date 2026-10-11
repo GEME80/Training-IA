@@ -6966,15 +6966,50 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
 - `npm run build`: 21/21 rutas Next.js compiladas con Código 0 ✅.
 - Conteo estricto de líneas: Todos los archivos modificados $\le 350$ LOC ✅.
 
+---
 
+## 103. ERRADICACIÓN DE CICLISMO FANTASMA, PRECEDENCIA SSOT DEL SNAPSHOT DE DISPONIBILIDAD Y COHERENCIA REACTIVA EN VISTA MÓVIL (v5.27)
 
+### 103.1. Diagnóstico y Causas Raíz Identificadas
+1. **Bloqueo de Matrices por Defecto en el Wizard (`SeasonWizardStep2Disciplines.tsx`):**
+   - En `handleSelectMainSport` y `handleSelectSubVariant`, existía la condición `if (!hasCustomMatrix) applyDefaultMatrixForApproach(variant)`.
+   - Dado que `weeklyAvailability` siempre contenía 7 días (sea por valores del perfil o por inicialización global), la condición evaluaba a `false`.
+   - Como consecuencia, cuando un atleta seleccionaba "Solo Running", el preset por defecto (0 ciclismo, 0 natación) **nunca se aplicaba**, conservando las disciplinas residuales de ciclismo de sesiones o perfiles anteriores.
+2. **Inversión de Precedencia en el Calendario Continuo (`AthleteContinuousCalendar.tsx:131`):**
+   - El helper `effectiveAvailability` evaluaba `weeklyAvailability` (del perfil) antes que `blueprint.availabilitySnapshot`.
+   - Si el perfil del deportista tenía guardado ciclismo del pasado, el calendario ignoraba el `availabilitySnapshot` congelado en el blueprint del plan recién diseñado y generaba entrenamientos con la matriz obsoleta del perfil.
+3. **Ausencia de Persistencia al Aplicar el Macrociclo (`useSeasonPlans.ts` & `AthleteSeasonStudioView.tsx`):**
+   - Cuando el usuario pulsaba "Activar este Macrociclo en Mi Calendario", `handleApplyDirectBlueprint` y `handleApplyMacrocycle` guardaban el blueprint pero **no actualizaban ni persistían `weeklyAvailability`** al estado del hook ni al perfil de Firestore (`/api/profile`).
+   - Al navegar a "Perfil del Atleta / Fisiología y Zonas", la matriz desplegada permanecía desincronizada con la del plan activo.
+4. **Desconexión en Vista Móvil (`AthleteMobileAgendaView.tsx`):**
+   - La agenda diaria móvil consume `activeWeekPlan` generado por `AthleteContinuousCalendar`.
+   - Debido a la inversión de precedencia en `effectiveAvailability`, las sesiones mostradas en el selector diario móvil desplegaban entrenamientos de ciclismo fantasma en lugar de las sesiones de carrera y fuerza diseñadas.
 
+### 103.2. Solución Arquitectónica Implementada
+1. **Aplicación Incondicional de Presets Deportivos (`SeasonWizardStep2Disciplines.tsx` - 235 LOC):**
+   - Erradicada la condición bloqueante `hasCustomMatrix`.
+   - Al seleccionar un enfoque o variante (ej. "Solo Running", "Entrenamiento Cruzado", "Solo Ciclismo"), se aplica de inmediato y de forma determinista `applyDefaultMatrixForApproach(newAppr)`, garantizando una matriz con 0 ciclismo y 0 natación al elegir "Solo Running".
+2. **SSOT de Disponibilidad con Precedencia Absoluta del Blueprint (`AthleteContinuousCalendar.tsx` - 342 LOC):**
+   - Reconfigurado `effectiveAvailability` para que si `blueprint?.availabilitySnapshot` existe y no es legacy, **tenga prioridad absoluta** sobre cualquier matriz residual del perfil.
+   - Aplica de forma idéntica tanto a la cuadrícula de escritorio como a la agenda móvil `AthleteMobileAgendaView`.
+3. **Sincronización y Persistencia Atómica al Activar el Plan (`useSeasonPlans.ts` - 341 LOC & `AthleteSeasonStudioView.tsx` - 285 LOC):**
+   - En `useSeasonPlans.ts` (`handleApplyMacrocycle`):
+     - Si `syncedBlueprint.availabilitySnapshot` existe, actualiza inmediatamente `weeklyAvailability` en memoria (`setWeeklyAvailability`), en almacenamiento local (`userStorage.setJSON`) y persiste atómicamente a Firestore vía `persistProfileField(..., { weeklyAvailability: ... })`.
+   - En `AthleteSeasonStudioView.tsx` (`handleApplyDirectBlueprint` y `handleGenerateAIPlan`):
+     - Invocados de forma reactiva `onPersistAvailability` y `onPersistRunningMode` para asegurar sincronía 100% bidireccional entre Temporada, Perfil y Calendario.
+4. **Propagación del Blueprint en el Wizard (`SeasonAIGenerator.tsx` - 346 LOC):**
+   - `trainingApproach` inicializa deterministamente en "Solo Running" si la matriz no contiene ciclismo.
+   - En `handleGenerateAI` y `handleApplyMacrocycle`, se inyectan explícitamente `availabilitySnapshot` y `runningTrainingMode` en el blueprint final antes de delegarlo al estudio.
+5. **Precedencia en el Enrutador del Dashboard (`AthleteDashboardViewRouter.tsx` - 346 LOC):**
+   - Priorizado `season.blueprint?.availabilitySnapshot` como primera fuente de verdad para la hidratación del plan semanal.
 
-
-
-
-
-
-
-
-
+### 103.3. Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js estáticas y dinámicas validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `AthleteContinuousCalendar.tsx`: 342 LOC.
+  - `AthleteDashboardViewRouter.tsx`: 346 LOC.
+  - `AthleteSeasonStudioView.tsx`: 285 LOC.
+  - `SeasonAIGenerator.tsx`: 346 LOC.
+  - `SeasonWizardStep2Disciplines.tsx`: 235 LOC.
+  - `useSeasonPlans.ts`: 341 LOC.

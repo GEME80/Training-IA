@@ -56,7 +56,15 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
   const [startDateMode, setStartDateMode] = useState<"CURRENT_WEEK" | "NEXT_WEEK" | "CUSTOM">("CURRENT_WEEK");
   const [customStartDate, setCustomStartDate] = useState<string>("");
 
-  const [trainingApproach, setTrainingApproach] = useState<string>("Entrenamiento Cruzado");
+  const [trainingApproach, setTrainingApproach] = useState<string>(() => {
+    if (weeklyAvailability) {
+      const hasBike = Object.values(weeklyAvailability).some((discs: any) =>
+        Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d))
+      );
+      if (hasBike) return "Entrenamiento Cruzado";
+    }
+    return "Solo Running";
+  });
   const [periodization, setPeriodization] = useState<"2:1" | "3:1" | "CONTINUO">("3:1");
   const [customPromptText, setCustomPromptText] = useState("");
   const [localWeeklyAvailability, setLocalWeeklyAvailability] = useState<WeeklyAvailabilityMap>(weeklyAvailability || {});
@@ -128,7 +136,12 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
         if (res.ok) {
           const data = await res.json();
           if (data.aiResult?.blueprint) {
-            setGeneratedBlueprint(data.aiResult.blueprint);
+            const bp: MacrocycleBlueprint = {
+              ...data.aiResult.blueprint,
+              availabilitySnapshot: localWeeklyAvailability,
+              runningTrainingMode: runningTrainingMode || data.aiResult.blueprint.runningTrainingMode,
+            };
+            setGeneratedBlueprint(bp);
             setAiNotes(data.aiResult.reasoningNotes || [
               `Periodización adaptada al objetivo ${planTitle} (${weeksCount} semanas).`,
               `Ratio ${periodization === "2:1" ? "Preventivo (2:1)" : "Estándar (3:1)"} con asimilación biológica programada.`,
@@ -147,6 +160,8 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
         periodization: periodization as any, primaryRace: primaryRace || undefined,
         athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, runningTrainingMode: runningTrainingMode || undefined, weeklyAvailability: localWeeklyAvailability, historicalMetrics },
       });
+      bp.availabilitySnapshot = localWeeklyAvailability;
+      bp.runningTrainingMode = runningTrainingMode || undefined;
 
       setGeneratedBlueprint(bp);
       setAiNotes([
@@ -161,7 +176,14 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
 
   const handleApplyMacrocycle = () => {
     if (generatedBlueprint && onApplyDirectBlueprint) {
-      onApplyDirectBlueprint(generatedBlueprint, planTitle);
+      const finalBp: MacrocycleBlueprint = {
+        ...generatedBlueprint,
+        availabilitySnapshot: localWeeklyAvailability,
+        runningTrainingMode: runningTrainingMode || generatedBlueprint.runningTrainingMode,
+      };
+      if (onPersistAvailability) onPersistAvailability(localWeeklyAvailability as any).catch(() => {});
+      if (runningTrainingMode && onPersistRunningMode) onPersistRunningMode(runningTrainingMode).catch(() => {});
+      onApplyDirectBlueprint(finalBp, planTitle);
     }
   };
 

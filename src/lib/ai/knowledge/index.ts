@@ -151,7 +151,9 @@ export function calculateProgressiveLongRun(
   isPeakBlock: boolean;
 } {
   const rules = model.longRunRules;
-  const maxCapMins = model.maxLongRunMinutesCap || 150; // Cap estricto por defecto (150m / 2h30m)
+  const isMaintenanceOrBase = model.modelId === "BASE_LONGEVITY" || model.modelId === "BASE_GPP" || model.sportCategory === "General";
+  const defaultCap = isMaintenanceOrBase ? 65 : 150;
+  const maxCapMins = model.maxLongRunMinutesCap || defaultCap;
 
   // Determinar límites por Nivel de Atleta (Debutante vs Intermedio vs Élite)
   let levelMaxKm = rules.peakKm;
@@ -161,7 +163,7 @@ export function calculateProgressiveLongRun(
     const { BEGINNER: beg, INTERMEDIATE: inter, ADVANCED_ELITE: elite } = model.athleteLevelCaps;
     const caps = athleteCtl < (beg.ctlThresholdMax || 35) ? beg : athleteCtl <= (inter.ctlThresholdMax || 65) ? inter : elite;
     levelMaxKm = caps.maxLongRunKm;
-    levelMaxMins = caps.maxLongRunMinutes;
+    levelMaxMins = Math.min(caps.maxLongRunMinutes, maxCapMins);
   }
 
   // Aplicar factor de escala al arranque respetando los caps fisiológicos del nivel del atleta

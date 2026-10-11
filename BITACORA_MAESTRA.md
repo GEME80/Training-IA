@@ -7152,5 +7152,59 @@ La investigación del código reveló una cadena de 4 causas interconectadas:
   - `src/lib/ai/knowledge/index.ts`: 348 LOC.
   - `src/lib/physiology/macrocycleGenerator.ts`: 336 LOC.
 
+---
+
+## 107. CALIBRACIÓN FISIOLÓGICA DE DURACIONES: LÍMITES ESTRICTOS PARA PLANES DE BASE Y MANTENIMIENTO (v5.31)
+
+### 107.1. Diagnóstico de Causa Raíz: Entrenamientos Excesivos de 1h30m a 1h57m en Fase Base
+El usuario reportó con precisión de Head Coach: *"he generado una nueva temporada para Silvia y ha mejorado pero pone entrenamientos de una hora y media y de 1:40 min para base? Eso no está bien"*.
+
+La auditoría del motor reveló dos fuentes críticas de duración desmedida para planes de Salud y Base:
+1. **Inyección de Bloques de Maratón entre semana (`macrocycleTemplateHelpers.ts`):** En semanas pares de calidad curada (`useCurated`), el motor tomaba sesiones de `ALL_RUNNING_DISTANCE_WORKOUTS` sin filtrar por distancia objetivo. En la Semana 4 inyectó `Intervalos Extensivos de Asfalto Canova (3x 4km)`, que con la progresión paramétrica escaló a `4x 4km` con **117 minutos (1h57m)**.
+2. **Parámetros desproporcionados en el modelo de Base (`athleteMomentsModels.ts`):** `BASE_GPP_MODEL` tenía configurado `peakMinutes: 100` (1h40m) sin `maxLongRunMinutesCap` ni `athleteLevelCaps`. En semanas 7, 8 y 10 generaba fondos de 90 a 100 minutos (1h30 a 1h40).
+3. **Ausencia de Caps por CTL en Longevidad (`longevityModel.ts`):** `BASE_LONGEVITY_MODEL` no definía `athleteLevelCaps`, impidiendo que el motor modulara el volumen para atletas con CTL moderado/bajo (< 35 CTL como Silvia Rey).
+
+### 107.2. Soluciones Implementadas y Blindaje Fisiológico
+
+1. **Filtro Estricto de Calidad Entre Semana (`macrocycleTemplateHelpers.ts` - 328 LOC):**
+   - Para planes de `maintenance`, `base_building` o modelos `BASE_LONGEVITY`/`BASE_GPP`, el catálogo de calidad de distancia se filtra de forma estricta:
+     - Máximo 55 minutos (`(w.durationMin || 0) <= 55`).
+     - Exclusión total de bloques extensivos de asfalto (`!w.name.includes("4km")` y `!w.name.includes("Maratón")`).
+   - Las sesiones de calidad entre semana quedan acotadas entre 40 y 55 minutos (ej. 8x 400m, 6x 800m, 5x 1000m, escalera 200-800m).
+
+2. **Cap Fisiológico Absoluto para Longevidad y Base (`src/lib/ai/knowledge/index.ts` - 350 LOC):**
+   - En `calculateProgressiveLongRun`:
+     ```ts
+     const isMaintenanceOrBase = model.modelId === "BASE_LONGEVITY" || model.modelId === "BASE_GPP" || model.sportCategory === "General";
+     const defaultCap = isMaintenanceOrBase ? 65 : 150;
+     const maxCapMins = model.maxLongRunMinutesCap || defaultCap;
+     ```
+   - Para todo plan de base o longevidad, la tirada dominical tiene un tope estricto e infranqueable de **65 minutos**.
+
+3. **Reconfiguración de `BASE_GPP_MODEL` (`athleteMomentsModels.ts` - 228 LOC):**
+   - `maxLongRunMinutesCap: 65`.
+   - `athleteLevelCaps`:
+     * `BEGINNER` (CTL $\le 35$): máx. 55 min / 10 km.
+     * `INTERMEDIATE` (CTL $\le 65$): máx. 65 min / 12 km.
+     * `ADVANCED_ELITE`: máx. 70 min / 14 km.
+   - `longRunRules`: `startKm: 8`, `peakKm: 12`, `startMinutes: 45`, `peakMinutes: 65`.
+
+4. **Reconfiguración de `BASE_LONGEVITY_MODEL` (`longevityModel.ts` - 160 LOC):**
+   - Añadidos `maxLongRunMinutesCap: 65` y `athleteLevelCaps` con idénticos límites de protección musculoesquelética.
+
+### 107.3. Certificación de Calidad y Cumplimiento
+- **Simulación Fisiológica de Verificación (Silvia Rey - Mantenimiento 8 Semanas):**
+  - **Tiradas Dominicales:** W1 (40m / 7km), W2 (44m / 7km), W3 (35m Descarga), W4 (51m / 9km), W5 (55m / 10km), W6 (40m Asimilación), W7 (50m / 9km), W8 (55m / 10km).
+  - **Entrenamientos entre semana:** Martes entre 32 y 55 min (máx. 63m en pico de series), Jueves entre 30 y 45 min Z2 pura.
+  - **Sesiones $\ge 75$ min en todo el plan:** **0 (CERO)**.
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/ai/knowledge/longevityModel.ts`: 160 LOC.
+  - `src/lib/ai/knowledge/athleteMomentsModels.ts`: 228 LOC.
+  - `src/lib/ai/knowledge/index.ts`: 350 LOC.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 328 LOC.
+
+
 
 

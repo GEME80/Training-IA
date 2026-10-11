@@ -69,6 +69,12 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
   mandatoryTests: [
     { ...RUN_TEST_STRYD_3_9, testName: "Test 3/9m de Control Submáximo", recommendedWeekIndex: 2 },
   ],
+  maxLongRunMinutesCap: 65,
+  athleteLevelCaps: {
+    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 10, maxLongRunMinutes: 55, tssScaleFactor: 0.85 },
+    INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 12, maxLongRunMinutes: 65, tssScaleFactor: 1.0 },
+    ADVANCED_ELITE: { ctlThresholdMax: 999, maxLongRunKm: 14, maxLongRunMinutes: 70, tssScaleFactor: 1.1 },
+  },
   longRunRules: {
     startKm: 8,
     peakKm: 12,

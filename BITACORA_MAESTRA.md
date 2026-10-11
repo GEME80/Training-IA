@@ -7253,6 +7253,26 @@ La auditoría evidenció que el problema de fondo radicaba en forzar la estructu
   - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 328 LOC.
   - `src/lib/ai/knowledge/index.ts`: 350 LOC.
 
+---
+
+## 109. LIMPIEZA VISUAL DEL DASHBOARD: ELIMINACIÓN DEL BANNER TEMPORAL DE MOTOR MACROCICLO V5.0 (v5.33)
+
+### 109.1. Diagnóstico y Petición del Usuario
+El usuario solicitó retirar un espacio no deseado en la parte superior del dashboard: *"quita este espacio de mi dashboard que no tiene sentido"*, adjuntando captura del banner:
+`🔄 Motor Macrociclo v5.0 Activación: Lunes 12 Oct — Tus entrenamientos incorporan el nuevo mix de series de pista por distancia... [✓ Entendido]`.
+
+### 109.2. Acción Realizada
+- En [`src/components/dashboard/AthleteDashboardOverview.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteDashboardOverview.tsx) (254 LOC):
+  - Eliminado el componente `<RecalibrationNoticeBanner athleteId={profile.id} />`.
+  - Removido el import no utilizado de `RecalibrationNoticeBanner`.
+- El dashboard queda completamente limpio y despejado, conectando directamente con las métricas y el calendario continuo del atleta sin elementos obsoletos.
+
+### 109.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** `AthleteDashboardOverview.tsx` en 254 LOC ($\le 350$ LOC) ✅.
+
+
 
 
 

@@ -14,7 +14,6 @@ import { parsePaceToSeconds, resolveRunningMode } from "@/lib/physiology/running
 import { MacrocycleUpgradeCard } from "./MacrocycleUpgradeCard";
 import { MacrocycleUpgradeProposal } from "@/lib/physiology/ctlPotentialEngine";
 import { AthleteBillingBanner } from "./AthleteBillingBanner";
-import { RecalibrationNoticeBanner } from "./RecalibrationNoticeBanner";
 
 interface AthleteDashboardOverviewProps {
   physioStatus: PhysiologicalStatus | null;
@@ -138,9 +137,6 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
             billingCycleDay={profile.billingCycleDay}
             paymentReference={profile.paymentReference}
           />
-
-          {/* Banner de Aviso de Recalibración / Modernización */}
-          <RecalibrationNoticeBanner athleteId={profile.id} />
 
           {/* Tarjeta de Oportunidad de Upgrade Fisiológico con Elección Soberana */}
           {upgradeProposal && onAcceptUpgrade && (

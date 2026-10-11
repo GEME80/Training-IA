@@ -73,43 +73,23 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
       for (let i = 0; i < 7; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
-        const dStr = d.toISOString().split("T")[0];
-        const dayData = dailyExecutedActivities[dStr];
+        const dayData = dailyExecutedActivities[d.toISOString().split("T")[0]];
         if (dayData) {
           if (!weeklyExecutedTss) actTss += dayData.totalTss || 0;
-          if (dayData.activities) {
-            dayData.activities.forEach((act) => {
-              actMin += (act.movingTimeMin || act.elapsedTimeMin || 0);
-            });
-          }
+          dayData.activities?.forEach((act) => { actMin += (act.movingTimeMin || act.elapsedTimeMin || 0); });
         }
       }
     }
     const actHrs = actMin > 0 ? actMin / 60 : (actTss > 0 ? actTss / 55 : 0);
-
-    let planTss = 0;
-    if (summary.plannedCtlToday) {
-      planTss = Math.round(summary.plannedCtlToday * 7);
-    } else if (blueprint?.weeks && blueprint.weeks.length > 0) {
-      planTss = blueprint.weeks[0]?.targetTss || 350;
-    }
-
+    let planTss = summary.plannedCtlToday ? Math.round(summary.plannedCtlToday * 7) : (blueprint?.weeks?.[0]?.targetTss || (actTss > 0 ? Math.round(actTss * 1.05) : 350));
     let planHrs = 0;
     if (weeklyAvailability) {
-      Object.values(weeklyAvailability).forEach((dayAvail) => {
-        if (typeof dayAvail === "number") planHrs += dayAvail;
-        else if (dayAvail && typeof (dayAvail as any).durationMinutes === "number") {
-          planHrs += (dayAvail as any).durationMinutes / 60;
-        }
+      Object.values(weeklyAvailability).forEach((d) => {
+        if (typeof d === "number") planHrs += d;
+        else if (d && typeof (d as any).durationMinutes === "number") planHrs += (d as any).durationMinutes / 60;
       });
     }
-    if (planHrs === 0) {
-      planHrs = planTss > 0 ? planTss / 55 : (actHrs > 0 ? actHrs : 5.0);
-    }
-    if (planTss === 0 && actTss > 0) {
-      planTss = Math.round(actTss * 1.05);
-    }
-
+    if (planHrs === 0) planHrs = planTss > 0 ? planTss / 55 : (actHrs > 0 ? actHrs : 5.0);
     return { actualTss: actTss, plannedTss: planTss, actualHours: actHrs, plannedHours: planHrs };
   }, [weeklyExecutedTss, dailyExecutedActivities, weeklyAvailability, summary.plannedCtlToday, blueprint]);
 
@@ -311,14 +291,54 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
           </div>
         </div>
 
-        {/* RENDERIZADOR SVG DE 3 PANELES INDEPENDIENTES */}
-        <AthletePMCSVG
-          points={points}
-          activeIdx={activeIdx}
-          onHoverIdx={setHoveredIdx}
-          showProjection={visibleCurves.projection !== false}
-          visibleCurves={visibleCurves}
-        />
+        {/* RENDERIZADOR SVG CON TOOLTIP FLOTANTE INTERACTIVO (DESKTOP) */}
+        <div className="relative">
+          <AthletePMCSVG
+            points={points}
+            activeIdx={activeIdx}
+            onHoverIdx={setHoveredIdx}
+            showProjection={visibleCurves.projection !== false}
+            visibleCurves={visibleCurves}
+          />
+
+          {/* Web Desktop (>= 768px): Tooltip flotante interactivo siguiendo el crosshair */}
+          {hoveredIdx !== null && activePoint && (
+            <div
+              className="hidden md:flex pointer-events-none absolute top-2 z-20 flex-col gap-1 p-2.5 rounded-xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-xl backdrop-blur-md border border-slate-700/60 text-[11px] font-mono whitespace-nowrap transition-all duration-75"
+              style={{
+                left: `clamp(85px, calc(75px + ${(activeIdx / Math.max(1, points.length - 1)) * 100}% * 0.81), calc(100% - 220px))`,
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 font-sans font-bold text-slate-300 text-[11px] border-b border-slate-700/50 pb-1">
+                <span>{formatPmcHeaderDate(activePoint.date)}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                  (activePoint.tsb ?? 0) >= 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+                }`}>
+                  TSB: {activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10.5px] pt-0.5">
+                <span className="text-slate-400">CTL: <strong className="text-sky-400 font-black">{activePoint.ctl}</strong></span>
+                <span className="text-slate-400">ATL: <strong className="text-purple-400 font-black">{activePoint.atl}</strong></span>
+                {activePoint.plannedCtl !== undefined && (
+                  <span className="text-slate-400">Plan: <strong className="text-amber-400">{activePoint.plannedCtl}</strong></span>
+                )}
+                <span className="text-slate-400">Rampa: <strong className="text-slate-200">{activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate}</strong></span>
+              </div>
+              {activeDayActivities && activeDayActivities.activities.length > 0 && (
+                <div className="mt-1 pt-1 border-t border-slate-700/50 text-[10px] text-slate-300 font-sans">
+                  <div className="flex items-center gap-1 font-bold text-purple-400">
+                    <Activity className="w-3 h-3" />
+                    <span>{activeDayActivities.totalTss} TSS ({activeDayActivities.activities.length} ses)</span>
+                  </div>
+                  <div className="truncate max-w-[190px] text-slate-400 text-[9.5px]">
+                    {activeDayActivities.activities.map((a) => a.name).join(", ")}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* PIE DESACOPLADO & LIGERO: Hero Status Card, Diagnóstico vs Prescripción y Acordeón */}
         <PMCInsightReport activePoint={activePoint} summary={summary} />

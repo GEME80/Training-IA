@@ -65,11 +65,11 @@ export const ExecutedSessionMetricsTable: React.FC<ExecutedSessionMetricsTablePr
       visible: Boolean(activity.watts),
     },
     {
-      label: "Cardio (HR)",
+      label: "Frecuencia Cardíaca",
       min: rawAny.minHeartrate ? `${rawAny.minHeartrate}` : activity.heartrate ? `${Math.max(45, activity.heartrate - 35)}` : "—",
       avg: activity.heartrate ? `${activity.heartrate}` : "—",
       max: activity.maxHeartrate ? `${activity.maxHeartrate}` : activity.heartrate ? `${Math.round(activity.heartrate * 1.15)}` : "—",
-      unit: "bpm",
+      unit: "ppm",
       visible: Boolean(activity.heartrate),
     },
     {
@@ -99,85 +99,67 @@ export const ExecutedSessionMetricsTable: React.FC<ExecutedSessionMetricsTablePr
   ];
 
   return (
-    <div className="rounded-2xl p-2.5 sm:p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-2 shadow-2xs font-sans">
+    <div className="space-y-3 font-sans text-slate-900 dark:text-white">
       {/* Header Minimalista de la Sesión */}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Activity className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
-            Resumen de Sesión
-          </span>
+          <Activity className="h-4 w-4 text-purple-500 shrink-0" />
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
+            {activity.name || "Resumen Fisiológico de la Sesión"}
+          </h4>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 shrink-0">
           <span className="truncate max-w-[120px]">{activity.deviceName || "Intervals Sync"}</span>
           <button
             type="button"
             onClick={() => setShowGlossary(!showGlossary)}
-            className="text-slate-400 hover:text-emerald-500 transition cursor-pointer"
+            className="text-slate-400 hover:text-purple-500 transition cursor-pointer"
             title="Glosario técnico"
           >
-            <HelpCircle className="h-3 w-3" />
+            <HelpCircle className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Hero 3 Macro KPIs: Barra Compacta Unificada */}
-      <div className="flex items-center justify-around py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 text-center">
-        <div>
-          <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Duración</span>
-          <span className="text-sm font-black font-mono text-slate-900 dark:text-white leading-tight">{durationStr}</span>
-        </div>
-        <div className="h-5 w-px bg-slate-200 dark:bg-slate-700/60" />
-        <div>
-          <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Distancia</span>
-          <span className="text-sm font-black font-mono text-slate-900 dark:text-white leading-tight">{distStr}</span>
-        </div>
-        <div className="h-5 w-px bg-slate-200 dark:bg-slate-700/60" />
-        <div>
-          <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Carga</span>
-          <span className="text-sm font-black font-mono text-amber-600 dark:text-amber-400 leading-tight">⚡ {tssLabel}</span>
-        </div>
-      </div>
-
-      {/* Métricas Avanzadas: Grid de 4 Columnas Compacto (TrainingPeaks Style) */}
-      <div className="grid grid-cols-4 gap-1.5 text-center font-mono text-[11px] py-0.5">
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+      {/* Métricas Avanzadas: Grid de 4 Columnas x 2 Filas (HUD Compacto) */}
+      <div className="grid grid-cols-4 gap-1.5 text-center font-mono text-[11px]">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">NP</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{npWatts}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{npWatts}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">IF</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{ifFactor}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{ifFactor}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">VI</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{viIndex}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{viIndex}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">Pw:Hr</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{pwHr}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{pwHr}</span>
         </div>
 
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">Trabajo</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{workKj}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{workKj}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">EF</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{efFactor}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{efFactor}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">W/kg</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{wKg}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{wKg}</span>
         </div>
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-lg py-1 px-1 border border-slate-100/60 dark:border-slate-800/40">
+        <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-xl py-1.5 px-1 border border-slate-100/80 dark:border-slate-800/60">
           <span className="text-[8.5px] uppercase text-slate-400 block font-sans font-bold">Desnivel</span>
-          <span className="font-bold text-slate-900 dark:text-white leading-tight">{elevGain}</span>
+          <span className="font-bold text-slate-900 dark:text-white leading-tight tabular-nums">{elevGain}</span>
         </div>
       </div>
 
-      {/* Tabla Canónica de Fisiología: Mín. | Prom. | Máx. (Ultra Compacta) */}
-      <div className="border-t border-slate-100 dark:border-slate-800/80 pt-1.5 space-y-0.5">
+      {/* Tabla Canónica de Variables de Sensores: Mín. | Prom. | Máx. (tabular-nums) */}
+      <div className="border-t border-slate-100 dark:border-slate-800/80 pt-2 space-y-1">
         <div className="grid grid-cols-5 text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider pb-1 text-right">
           <span className="text-left font-sans">Métrica</span>
           <span>Mín.</span>
@@ -187,11 +169,11 @@ export const ExecutedSessionMetricsTable: React.FC<ExecutedSessionMetricsTablePr
         </div>
 
         {physRows.filter((r) => r.visible).map((row, rIdx) => (
-          <div key={rIdx} className="grid grid-cols-5 text-[11px] font-mono py-0.5 text-right items-center hover:bg-slate-50/50 dark:hover:bg-slate-800/20 rounded-sm">
-            <span className="text-left font-sans text-slate-600 dark:text-slate-300 font-medium truncate">{row.label}</span>
-            <span className="text-slate-400 dark:text-slate-500">{row.min}</span>
-            <span className="font-bold text-slate-900 dark:text-white">{row.avg}</span>
-            <span className="text-slate-400 dark:text-slate-500">{row.max}</span>
+          <div key={rIdx} className="grid grid-cols-5 text-[11px] font-mono py-1 text-right items-center hover:bg-slate-50/50 dark:hover:bg-slate-800/20 rounded-md">
+            <span className="text-left font-sans text-slate-700 dark:text-slate-200 font-medium truncate">{row.label}</span>
+            <span className="text-slate-400 dark:text-slate-500 tabular-nums">{row.min}</span>
+            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{row.avg}</span>
+            <span className="text-slate-400 dark:text-slate-500 tabular-nums">{row.max}</span>
             <span className="text-center text-[9.5px] text-slate-400 font-sans">{row.unit}</span>
           </div>
         ))}

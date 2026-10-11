@@ -3,6 +3,7 @@ import React from "react";
 export interface TelemetrySamplePoint {
   sampleIdx: number;
   timeSec: number;
+  distanceKm?: number;
   hr?: number;
   watts?: number;
   alt?: number;
@@ -33,6 +34,8 @@ export function buildSampledData(
   wattsArray: number[],
   altArray: number[],
   velocityArray: number[] = [],
+  distanceArray: number[] = [],
+  summaryDistanceKm?: number,
   maxSamples = 200
 ): TelemetrySamplePoint[] {
   const total = timeArray.length;
@@ -49,6 +52,15 @@ export function buildSampledData(
     const rawA = altArray[i];
     const validA = typeof rawA === "number" && !isNaN(rawA) ? rawA : undefined;
 
+    // Distancia: Si viene en metros en stream distance, convertir a km. Si no, interpolar con summaryDistanceKm.
+    const rawDistM = distanceArray[i];
+    let distKm: number | undefined = undefined;
+    if (typeof rawDistM === "number" && !isNaN(rawDistM) && rawDistM >= 0) {
+      distKm = Math.round((rawDistM / 1000) * 100) / 100;
+    } else if (typeof summaryDistanceKm === "number" && summaryDistanceKm > 0 && total > 1) {
+      distKm = Math.round(((i / (total - 1)) * summaryDistanceKm) * 100) / 100;
+    }
+
     // velocity_smooth viene en m/s desde Intervals.icu
     const rawV = velocityArray[i];
     let validPaceSec: number | undefined = undefined;
@@ -61,6 +73,7 @@ export function buildSampledData(
     result.push({
       sampleIdx: sIdx++,
       timeSec: timeArray[i] ?? i,
+      distanceKm: distKm,
       hr: validHr,
       watts: validW,
       alt: validA,
@@ -246,6 +259,76 @@ export function TargetWorkZoneOverlay({
       >
         🎯 {targetBandY.label}
       </text>
+    </g>
+  );
+}
+
+export type XAxisMode = "TIME" | "DISTANCE";
+
+export interface XAxisTick {
+  x: number;
+  label: string;
+}
+
+export function getXAxisTicks(
+  sampledData: TelemetrySamplePoint[],
+  mode: XAxisMode,
+  getX: (idx: number) => number
+): XAxisTick[] {
+  const len = sampledData.length;
+  if (len === 0) return [];
+  const fractions = [0, 0.25, 0.5, 0.75, 1];
+
+  return fractions.map((pct) => {
+    const idx = Math.min(len - 1, Math.round(pct * (len - 1)));
+    const pt = sampledData[idx];
+    const x = getX(idx);
+    let label = "";
+
+    if (mode === "DISTANCE") {
+      const d = pt.distanceKm ?? 0;
+      label = `${d >= 10 ? d.toFixed(1) : d.toFixed(1)} km`;
+    } else {
+      label = formatSec(pt.timeSec);
+    }
+
+    return { x, label };
+  });
+}
+
+export function XAxisMarkers({
+  ticks,
+  y,
+}: {
+  ticks: XAxisTick[];
+  y: number;
+}) {
+  return (
+    <g className="x-axis-markers">
+      {ticks.map((t, i) => {
+        const anchor = i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle";
+        return (
+          <React.Fragment key={i}>
+            <line
+              x1={t.x}
+              y1={y - 10}
+              x2={t.x}
+              y2={y - 5}
+              stroke="currentColor"
+              className="text-slate-300 dark:text-slate-700"
+              strokeWidth="0.8"
+            />
+            <text
+              x={t.x}
+              y={y + 3}
+              textAnchor={anchor}
+              className="fill-slate-400 dark:fill-slate-500 font-mono text-[9px] font-semibold"
+            >
+              {t.label}
+            </text>
+          </React.Fragment>
+        );
+      })}
     </g>
   );
 }

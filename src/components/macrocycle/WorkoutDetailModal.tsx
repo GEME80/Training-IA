@@ -187,73 +187,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
             <div className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-3 space-y-3">
               {activeTab === "RESUMEN" && (
                 <div className="space-y-3">
-                  {isExecuted ? (
-                    displayActivities.map((rawAct, aIdx) => {
-                      const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
-                      return act.id ? (
-                        <ActivityZoneDistribution
-                          key={aIdx}
-                          activity={act}
-                          discipline={workout.discipline}
-                          runningTrainingMode={runningTrainingMode}
-                          hasRunningPowerMeter={hasRunningPowerMeter}
-                          runFtp={effRunFtp}
-                          bikeFtp={effBikeFtp}
-                          thresholdPaceSec={thresholdPaceSec}
-                          thresholdPaceStr={thresholdPaceStr}
-                          maxHeartrate={act.maxHeartrate || effMaxHR}
-                          lthr={effLthr}
-                        />
-                      ) : null;
-                    })
-                  ) : (
-                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
-                      Sesión pendiente de ejecución. Consulta la pestaña <strong>Detalle</strong> para la prescripción del plan.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "EVOLUCION" && (
-                <div className="space-y-3">
-                  {isExecuted ? (
-                    displayActivities.map((rawAct, aIdx) => {
-                      const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
-                      return act.id ? (
-                        <ActivityTelemetryChart
-                          key={aIdx}
-                          activityId={act.id}
-                          athleteId={effAthleteId}
-                          apiKey={effApiKey}
-                          email={effEmail}
-                          uid={effUid}
-                          targetRange={parsedTargetRange}
-                          summaryStats={{
-                            heartrate: act.heartrate,
-                            maxHeartrate: act.maxHeartrate,
-                            watts: act.watts,
-                            weightedWatts: act.weightedWatts,
-                            distanceKm: act.distanceKm,
-                            movingTimeMin: act.movingTimeMin,
-                            paceStr: act.paceStr,
-                            elevationGainM: act.elevationGainM,
-                          }}
-                          onMetricsDiscovered={(m) => {
-                            if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
-                          }}
-                        />
-                      ) : null;
-                    })
-                  ) : (
-                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
-                      Gráfica de series temporales no disponible para sesiones planificadas aún no ejecutadas.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "DETALLE" && (
-                <div className="space-y-3">
                   {isExecuted &&
                     displayActivities.map((rawAct, aIdx) => {
                       const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
@@ -303,6 +236,73 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                   )}
                 </div>
               )}
+
+              {activeTab === "DISTRIBUCION" && (
+                <div className="space-y-3">
+                  {isExecuted ? (
+                    displayActivities.map((rawAct, aIdx) => {
+                      const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
+                      return act.id ? (
+                        <ActivityZoneDistribution
+                          key={aIdx}
+                          activity={act}
+                          discipline={workout.discipline}
+                          runningTrainingMode={runningTrainingMode}
+                          hasRunningPowerMeter={hasRunningPowerMeter}
+                          runFtp={effRunFtp}
+                          bikeFtp={effBikeFtp}
+                          thresholdPaceSec={thresholdPaceSec}
+                          thresholdPaceStr={thresholdPaceStr}
+                          maxHeartrate={act.maxHeartrate || effMaxHR}
+                          lthr={effLthr}
+                        />
+                      ) : null;
+                    })
+                  ) : (
+                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
+                      Sesión pendiente de ejecución. Consulta la pestaña <strong>Resumen</strong> para la prescripción del plan.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "EVOLUCION" && (
+                <div className="space-y-3">
+                  {isExecuted ? (
+                    displayActivities.map((rawAct, aIdx) => {
+                      const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
+                      return act.id ? (
+                        <ActivityTelemetryChart
+                          key={aIdx}
+                          activityId={act.id}
+                          athleteId={effAthleteId}
+                          apiKey={effApiKey}
+                          email={effEmail}
+                          uid={effUid}
+                          targetRange={parsedTargetRange}
+                          summaryStats={{
+                            heartrate: act.heartrate,
+                            maxHeartrate: act.maxHeartrate,
+                            watts: act.watts,
+                            weightedWatts: act.weightedWatts,
+                            distanceKm: act.distanceKm,
+                            movingTimeMin: act.movingTimeMin,
+                            paceStr: act.paceStr,
+                            elevationGainM: act.elevationGainM,
+                          }}
+                          onMetricsDiscovered={(m) => {
+                            if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
+                          }}
+                        />
+                      ) : null;
+                    })
+                  ) : (
+                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
+                      Gráfica de series temporales no disponible para sesiones planificadas aún no ejecutadas.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -315,7 +315,10 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
           {snapPoint === "PEEK" ? (
             <button
               type="button"
-              onClick={() => setSnapPoint("EXPANDED")}
+              onClick={() => {
+                setSnapPoint("EXPANDED");
+                setActiveTab("RESUMEN");
+              }}
               className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-purple-500/20 active:scale-[0.99]"
             >
               <Maximize2 className="h-3.5 w-3.5" />

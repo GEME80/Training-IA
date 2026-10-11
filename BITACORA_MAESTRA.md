@@ -7703,5 +7703,41 @@ En apego al prompt formal de diseño ergonómico para estadísticas deportivas:
   - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 346 LOC ($\le 350$).
   - `src/components/macrocycle/telemetryChartHelpers.tsx`: 252 LOC ($\le 350$).
 
+---
 
+## 120. REORGANIZACIÓN DE PESTAÑAS, TIEMPO EN ZONAS (TiZ) COMPLETO Y SELECTOR DE DOMINIO EJE X (TIEMPO / DISTANCIA) EN TELEMETRÍA (v5.44)
 
+### 120.1. Objetivos y Cambios Implementados
+Siguiendo las mejores prácticas de análisis de deportes de resistencia (Intervals.icu / TrainingPeaks / WKO5) y eliminando fricciones ergonómicas de la UI:
+
+1. **Reestructuración de Pestañas (`WorkoutSegmentedTabs.tsx` y `WorkoutDetailModal.tsx`):**
+   - **Tab 1: `Resumen`:**
+     * Concentra el cuadro de mando fisiológico consolidado (`ExecutedSessionMetricsTable.tsx`).
+     * Micro-rejilla HUD de índices avanzados (NP, IF, VI, Pw:Hr, EF, W/kg) y tabla de variables de sensores con alineación derecha y tipografía mono (`tabular-nums`: Potencia, FC en ppm, Cadencia rpm, Ritmo / Velocidad).
+     * Prescripción original del entrenamiento estructurado (`PlannedWorkoutPrescription.tsx`) y bloques de nutrición/movilidad.
+     * Eliminado el efecto matrioshka (wrappers redundantes con bordes dentro del sheet).
+   - **Tab 2: `Distribución` (`ActivityZoneDistribution.tsx`):**
+     * Desglose completo de Tiempo en Zonas (TiZ) de Z1 a Z6/Z7 sin filtros ni acordeones colapsables.
+     * Muestra explícita de zonas al 0% con carril neutro tenue de fondo y tiempo exacto formateado en mono: `0:00 (0%)`.
+     * Eliminado el contenedor interno con borde/sombra para flujo visual continuo de borde a borde.
+   - **Tab 3: `Evolución` (`ActivityTelemetryChart.tsx` & `telemetryChartHelpers.tsx`):**
+     * Selector interactivo de dominio de eje X en cabecera: `[ ⏱️ Tiempo ]` vs `[ 📍 Distancia ]`.
+     * Marcas explícitas del eje X renderizadas directamente sobre el SVG canvas con tipografía mono visible (`text-[9px] font-mono fill-slate-400`).
+     * Scrubber HUD dinámico mejorado: refleja tanto el tiempo como la distancia recorrida (`⏱️ mm:ss · 📍 X.X km`) en hover/touch.
+     * Soporte de stream `distance` nativo e interpolación proporcional por GPS/velocidad.
+
+2. **Navegación Fluida Peek -> Expanded:**
+   - Al pulsar el CTA `[ ↗ Ver Análisis Completo ]` desde el estado colapsado (Peek 38%), el sheet se expande directamente al 90vh posicionándose por defecto en la pestaña **Resumen**.
+
+### 120.2. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/macrocycle/WorkoutSegmentedTabs.tsx`: 64 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 201 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 310 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 350 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 350 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/telemetryChartHelpers.tsx`: 335 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$) ✅.

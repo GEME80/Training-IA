@@ -89,7 +89,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
   }, [weekPlan, daysMap, dailyExecutedActivities]);
 
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(todayDayIdx);
-  const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  const [viewMode, setViewMode] = useState<"day" | "week">("week");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Sincronizar el día seleccionado cuando cambia la semana

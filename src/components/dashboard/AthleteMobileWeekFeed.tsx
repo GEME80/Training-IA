@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, X, Moon, ChevronRight } from "lucide-react";
+import { Check, X, Moon, ChevronRight, Footprints, Bike, Dumbbell, Waves, Activity } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedActivity } from "@/lib/intervals/types";
 import { formatDayNumber } from "./athleteMobileHelpers";
@@ -27,6 +27,14 @@ function resolveDiscipline(actType?: string): string {
   return actType;
 }
 
+function getDisciplineIcon(disc: string) {
+  if (disc === "Carrera") return <Footprints className="h-3.5 w-3.5 text-amber-500" />;
+  if (disc === "Ciclismo") return <Bike className="h-3.5 w-3.5 text-sky-400" />;
+  if (disc === "Natación" || disc === "Natacion") return <Waves className="h-3.5 w-3.5 text-cyan-400" />;
+  if (disc === "Fuerza") return <Dumbbell className="h-3.5 w-3.5 text-purple-400" />;
+  return <Activity className="h-3.5 w-3.5 text-slate-400" />;
+}
+
 export const MobileWeekFeedItem: React.FC<MobileWeekFeedItemProps> = ({
   dayName,
   dateStr,
@@ -35,6 +43,7 @@ export const MobileWeekFeedItem: React.FC<MobileWeekFeedItemProps> = ({
   isToday,
   isPast,
   onSelectDay,
+  onSelectWorkoutModal,
 }) => {
   const executedActs = dailyExecuted?.activities || [];
   const primaryItem = items[0];
@@ -46,17 +55,48 @@ export const MobileWeekFeedItem: React.FC<MobileWeekFeedItemProps> = ({
   const primaryAct = executedActs[0];
   const disciplineLabel = primaryItem?.discipline || resolveDiscipline(primaryAct?.type);
 
+  const handleCardClick = () => {
+    if (primaryItem) {
+      onSelectWorkoutModal(primaryItem);
+    } else if (executedActs.length > 0) {
+      const act = executedActs[0];
+      const disc = resolveDiscipline(act.type);
+      const safeDiscipline: PlanItem["discipline"] =
+        disc === "Carrera" || disc === "Ciclismo" || disc === "Fuerza" || disc === "Descanso"
+          ? disc
+          : disc === "Natación"
+          ? "Natacion"
+          : "Carrera";
+
+      onSelectWorkoutModal({
+        id: `extra-${act.id}`,
+        day: dayName,
+        date: dateStr,
+        formattedDate: dateStr.slice(5),
+        discipline: safeDiscipline,
+        workoutName: act.name,
+        tss: act.tss || 0,
+        durationMinutes: act.movingTimeMin || 45,
+        action: "MANTENER",
+        justification: `Actividad ejecutada en Intervals.icu (${act.name}).`,
+        workoutDoc: act.name,
+      });
+    } else {
+      onSelectDay();
+    }
+  };
+
   return (
     <div
-      onClick={onSelectDay}
+      onClick={handleCardClick}
       className={`p-3 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between gap-3 touch-bounce ${
         isToday
-          ? "border-emerald-500/50 ring-1 ring-emerald-500/20 bg-emerald-50/25 dark:bg-emerald-950/20"
+          ? "border-emerald-500/60 ring-1 ring-emerald-500/25 bg-emerald-50/30 dark:bg-emerald-950/20"
           : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
       }`}
     >
       {/* Columna Día: Nombre y Número */}
-      <div className="flex items-center gap-2.5 min-w-[55px] shrink-0">
+      <div className="flex items-center gap-2.5 min-w-[52px] shrink-0">
         <div
           className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl font-mono ${
             isToday
@@ -79,11 +119,12 @@ export const MobileWeekFeedItem: React.FC<MobileWeekFeedItemProps> = ({
         ) : (
           <div>
             <div className="flex items-center gap-1.5 truncate">
+              <span className="shrink-0">{getDisciplineIcon(disciplineLabel)}</span>
               <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                 {primaryItem ? primaryItem.workoutName.replace(/\[.*?\]\s*/g, "") : primaryAct?.name || "Actividad"}
               </span>
               {executedActs.length > 1 && (
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 shrink-0">
                   +{executedActs.length - 1}
                 </span>
               )}

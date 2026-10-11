@@ -124,8 +124,8 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-5 shadow-2xl space-y-3.5 max-h-[88dvh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
           <div className="flex items-center space-x-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
@@ -172,7 +172,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         </div>
 
         {isExecuted && (
-          <div className="rounded-2xl p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 space-y-3 shadow-xs">
+          <div className="rounded-2xl p-3 sm:p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 space-y-2.5 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-900 dark:text-emerald-300">
                 <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -195,28 +195,27 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
                 const metricItems = buildTelemetryMetricItems(act, workout.discipline);
 
                 return (
-                  <div key={aIdx} className="rounded-xl bg-white dark:bg-slate-900/90 p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-black text-slate-900 dark:text-white truncate max-w-[260px]">{act.name}</span>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">{act.deviceName || "Intervals Sync"}</span>
+                  <div key={aIdx} className="rounded-2xl bg-white dark:bg-slate-900/90 p-3 sm:p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-2.5">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-black text-slate-900 dark:text-white truncate flex-1">{act.name}</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0">{act.deviceName || "Intervals Sync"}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-[11px] pt-1.5 border-t border-slate-100 dark:border-slate-800">
                       {metricItems.map((item) => {
                         const isExpanded = showAllHelp || activeHelpId === item.id;
                         return (
-                          <div key={item.id} className="bg-slate-50/90 dark:bg-slate-800/50 p-2 rounded-lg relative flex flex-col justify-between border border-slate-100 dark:border-slate-800 transition shadow-2xs">
+                          <div
+                            key={item.id}
+                            onClick={() => setActiveHelpId(activeHelpId === item.id ? null : item.id)}
+                            className="bg-slate-50/90 dark:bg-slate-800/60 p-2 sm:p-2.5 rounded-xl relative flex flex-col justify-between border border-slate-100 dark:border-slate-800/80 transition shadow-2xs cursor-pointer hover:border-emerald-300"
+                          >
                             <div>
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="text-[9px] text-slate-400 uppercase block font-sans font-bold truncate">{item.label}</span>
-                                <button type="button" onClick={() => setActiveHelpId(activeHelpId === item.id ? null : item.id)} className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 p-0.5 transition cursor-pointer shrink-0" title={`¿Qué significa ${item.label}?`}>
-                                  <HelpCircle className="h-2.5 w-2.5" />
-                                </button>
-                              </div>
-                              <strong className={`${item.colorClass} block font-bold text-xs mt-0.5`}>{item.value}</strong>
+                              <span className="text-[9.5px] text-slate-400 uppercase block font-sans font-bold tracking-tight truncate">{item.label}</span>
+                              <strong className={`${item.colorClass} block font-bold text-xs sm:text-sm mt-0.5 truncate`}>{item.value}</strong>
                               {item.subtext && <span className="text-[9px] text-slate-500 block truncate font-mono mt-0.5">{item.subtext}</span>}
                             </div>
-                            {isExpanded && <div className="text-[9px] text-slate-700 dark:text-slate-300 bg-emerald-50/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/70 leading-snug font-sans mt-1.5 animate-fadeIn">{item.athleteExplanation}</div>}
+                            {isExpanded && <div className="text-[9px] text-slate-700 dark:text-slate-300 bg-emerald-50 dark:bg-slate-900 p-1.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/70 leading-snug font-sans mt-1.5 animate-fadeIn">{item.athleteExplanation}</div>}
                           </div>
                         );
                       })}

@@ -74,14 +74,14 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
   }, [blueprint, dailyExecutedActivities, profile]);
 
   const dashboardHeader = (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
       <div>
         <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
           <LayoutDashboard className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
           Mi Dashboard
         </h2>
-        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-none">
-          Métricas de tu condición física en vivo, estado de forma y calendario de entrenamientos.
+        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+          Condición física, estado de forma y calendario de entrenamientos.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
           }`}
         >
           <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-          <span className="truncate">Resumen & Calendario</span>
+          <span className="truncate">Resumen & Plan</span>
         </button>
         <button
           type="button"
@@ -109,7 +109,7 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
           }`}
         >
           <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-          <span className="truncate">Estado de Forma & Evolución</span>
+          <span className="truncate">Evolución & PMC</span>
         </button>
       </div>
     </div>

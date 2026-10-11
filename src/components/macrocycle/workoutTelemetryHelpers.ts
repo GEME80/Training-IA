@@ -76,7 +76,7 @@ export function buildTelemetryMetricItems(
   return [
     {
       id: "pace",
-      label: isRide ? "VELOCIDAD" : "RITMO / GAP",
+      label: isRide ? "Velocidad" : "Ritmo (GAP)",
       value: paceValue,
       subtext: paceSub,
       colorClass: "text-slate-800 dark:text-slate-200",
@@ -87,7 +87,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "power",
-      label: "POTENCIA (W)",
+      label: "Potencia (W)",
       value: act.watts ? `${act.watts}W` : "—",
       subtext: act.weightedWatts ? `NP ${act.weightedWatts}W` : undefined,
       colorClass: "text-amber-600 dark:text-amber-400",
@@ -97,7 +97,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "hr",
-      label: "CARDIO (FC)",
+      label: "Cardio (FC)",
       value: act.heartrate ? `${act.heartrate} bpm` : "—",
       subtext: act.maxHeartrate ? `Máx ${act.maxHeartrate} bpm` : undefined,
       colorClass: "text-rose-600 dark:text-rose-400",
@@ -107,7 +107,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "ef",
-      label: "EFICIENCIA / D%",
+      label: "Eficiencia / D%",
       value: efFormatted || (act.movingTimeMin ? `${act.movingTimeMin}m` : "—"),
       subtext: decFormatted,
       colorClass: "text-cyan-600 dark:text-cyan-400",
@@ -118,7 +118,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "cadence",
-      label: isRide ? "CADENCIA (RPM)" : "CADENCIA / PASO",
+      label: isRide ? "Cadencia (rpm)" : "Cadencia (spm)",
       value: cadValue,
       subtext: cadSub,
       colorClass: "text-indigo-600 dark:text-indigo-400",
@@ -129,7 +129,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "elevation",
-      label: "DESNIVEL / CALORÍAS",
+      label: "Desnivel / Cal",
       value: elevValue,
       subtext: act.calories ? `${act.calories} kcal` : undefined,
       colorClass: "text-emerald-600 dark:text-emerald-400",
@@ -139,8 +139,8 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "duration",
-      label: "DURACIÓN REAL",
-      value: `${act.movingTimeMin} min (${act.distanceKm || 0} km)`,
+      label: "Duración Real",
+      value: `${act.movingTimeMin}m${act.distanceKm ? ` (${act.distanceKm}k)` : ""}`,
       subtext: act.intensityPercent ? `Intensidad ${act.intensityPercent}%` : undefined,
       colorClass: "text-slate-800 dark:text-slate-200",
       badgeType: "duration",
@@ -149,7 +149,7 @@ export function buildTelemetryMetricItems(
     },
     {
       id: "rpe",
-      label: "SENSACIÓN / RPE",
+      label: "Sensación / RPE",
       value: act.rpe ? `RPE ${act.rpe}/10` : "RPE 4/10",
       subtext: act.feel ? `Sensación: ${act.feel}` : "Sensación: Óptima",
       colorClass: "text-amber-600 dark:text-amber-400",

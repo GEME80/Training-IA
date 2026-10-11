@@ -214,10 +214,14 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
       ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
       : "grid-cols-2 sm:grid-cols-5";
 
+  const maxPercent = useMemo(() => {
+    return Math.max(...activeZones.map((z) => z.percent), 1);
+  }, [activeZones]);
+
   return (
-    <div className="rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-3 shadow-xs">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-        <div className="flex items-center gap-2">
+    <div className="rounded-2xl p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-2.5 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
             Distribución de Zonas ({resolvedZoneType === "WATTS" ? (isRun ? "Potencia Stryd" : "Potencia FTP") : resolvedZoneType === "PACE" ? "Ritmo Daniels" : "FC LTHR"})
@@ -262,40 +266,59 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
       </div>
 
       {/* Barra Horizontal Apilada de Zonas */}
-      <div className="space-y-1.5">
-        <div className="w-full h-4.5 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 p-0.5 shadow-inner">
-          {activeZones.map((z) => {
-            if (z.seconds <= 0) return null;
-            const widthPct = (z.seconds / totalTime) * 100;
-            return (
-              <div
-                key={z.id}
-                style={{ width: `${widthPct}%` }}
-                className={`h-full ${z.bgClass} first:rounded-l-full last:rounded-r-full transition-all duration-500 hover:brightness-110`}
-                title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)} [${z.rangeLabel}]`}
-              />
-            );
-          })}
-        </div>
+      <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 p-0.5 shadow-inner">
+        {activeZones.map((z) => {
+          if (z.seconds <= 0) return null;
+          const widthPct = (z.seconds / totalTime) * 100;
+          return (
+            <div
+              key={z.id}
+              style={{ width: `${widthPct}%` }}
+              className={`h-full ${z.bgClass} first:rounded-l-full last:rounded-r-full transition-all duration-500 hover:brightness-110`}
+              title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)} [${z.rangeLabel}]`}
+            />
+          );
+        })}
+      </div>
 
-        {/* Desglose en tarjetas por Zona */}
-        <div className={`grid ${gridColsClass} gap-2 pt-1`}>
-          {activeZones.map((z) => (
-            <div key={z.id} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex flex-col justify-between space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono font-black px-1.5 py-0.2 rounded text-slate-950" style={{ backgroundColor: z.color }}>
+      {/* Gráfica de Columnas Verticales de Zonas Fisiológicas */}
+      <div className="h-44 sm:h-48 flex items-end justify-between gap-1 sm:gap-2.5 p-2 sm:p-3 rounded-2xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+        {activeZones.map((z) => {
+          const barHeightPct = z.percent > 0 ? Math.max(10, Math.round((z.percent / maxPercent) * 100)) : 4;
+          return (
+            <div key={z.id} className="flex-1 flex flex-col items-center h-full justify-end group min-w-0">
+              {/* Porcentaje de Zona Arriba */}
+              <span className="text-[10px] sm:text-xs font-mono font-black text-slate-700 dark:text-slate-200 mb-1">
+                {z.percent}%
+              </span>
+
+              {/* Columna Vertical de Altura Proporcional */}
+              <div className="w-full max-w-[42px] h-[72px] sm:h-[84px] flex items-end justify-center bg-slate-200/40 dark:bg-slate-800/40 rounded-t-lg p-0.5">
+                <div
+                  style={{ height: `${barHeightPct}%`, backgroundColor: z.color }}
+                  className="w-full rounded-t-md transition-all duration-500 group-hover:brightness-110 shadow-xs"
+                  title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)} [${z.rangeLabel}]`}
+                />
+              </div>
+
+              {/* Base de la Columna: Badge, Tiempo y Rango */}
+              <div className="mt-1.5 text-center w-full min-w-0">
+                <span
+                  className="inline-block px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-mono font-black text-slate-950 shadow-2xs"
+                  style={{ backgroundColor: z.color }}
+                >
                   {z.id}
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">{z.percent}%</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate block">{z.name}</span>
-                <span className="text-xs font-mono font-bold text-slate-900 dark:text-white block mt-0.5">{formatZoneTime(z.seconds)}</span>
-                <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 block truncate mt-0.5">{z.rangeLabel}</span>
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 block mt-0.5 truncate">
+                  {formatZoneTime(z.seconds)}
+                </span>
+                <span className="text-[8px] font-mono text-slate-500 dark:text-slate-400 block truncate hidden xs:block">
+                  {z.rangeLabel}
+                </span>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );

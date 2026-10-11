@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { AlertTriangle, SlidersHorizontal, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, SlidersHorizontal, Check, X } from "lucide-react";
 import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { DEFAULT_VISIBLE_METRICS, AVAILABLE_METRIC_INDICATORS } from "@/lib/intervals/types";
 import {
@@ -44,7 +44,6 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
   swimCssStr = "1:45",
 }) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const activeMetrics = useMemo(() => {
     const base = visibleMetrics && visibleMetrics.length > 0 ? visibleMetrics : DEFAULT_VISIBLE_METRICS;
     const isPaceMode = !runFtp || runFtp <= 0;
@@ -94,23 +93,13 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
         </div>
       )}
 
-      {/* Barra de Título & Personalización Responsiva */}
+      {/* Barra de Título Minimalista & Personalización */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
-          Tu Estado de Rendimiento y Recuperación
+          Condición Física & Carga
         </span>
 
         <div className="flex items-center gap-2">
-          {/* Botón Acordeón exclusivo para Móvil (< md) */}
-          <button
-            type="button"
-            onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-            className="flex md:hidden items-center space-x-1 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition shadow-2xs cursor-pointer"
-          >
-            <span>{isMobileExpanded ? "Plegar" : `Ver (${activeMetrics.length})`}</span>
-            {isMobileExpanded ? <ChevronUp className="h-3 w-3 text-sky-500" /> : <ChevronDown className="h-3 w-3 text-sky-500" />}
-          </button>
-
           {onToggleMetric && (
             <div className="relative">
               <button
@@ -186,36 +175,30 @@ export const PhysiologicalCards: React.FC<PhysiologicalCardsProps> = ({
         </div>
       </div>
 
-      {/* Vista Compacta Horizontal Exclusiva para Móvil (< md) cuando no está expandido */}
-      {!isMobileExpanded && (
-        <div className="flex md:hidden items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
-          {activeMetrics.map((metricId) => {
-            const cfg = metricConfigs[metricId];
-            if (!cfg) return null;
-            const Icon = cfg.icon;
+      {/* Vista Compacta Horizontal Exclusiva para Móvil (< md) */}
+      <div className="flex md:hidden items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
+        {activeMetrics.map((metricId) => {
+          const cfg = metricConfigs[metricId];
+          if (!cfg) return null;
+          const Icon = cfg.icon;
 
-            return (
-              <div
-                key={metricId}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shrink-0 font-mono text-[11px] shadow-2xs"
-              >
-                <Icon className={`h-3 w-3 ${cfg.iconColor}`} />
-                <span className={`font-bold ${cfg.badgeColor}`}>{cfg.badge}</span>
-                <strong className={`font-black ${cfg.valueColor || "text-slate-900 dark:text-white"}`}>
-                  {cfg.value}
-                </strong>
-              </div>
-            );
-          })}
-        </div>
-      )}
+          return (
+            <div
+              key={metricId}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shrink-0 font-mono text-[11px] shadow-2xs"
+            >
+              <Icon className={`h-3 w-3 ${cfg.iconColor}`} />
+              <span className={`font-bold ${cfg.badgeColor}`}>{cfg.badge}</span>
+              <strong className={`font-black ${cfg.valueColor || "text-slate-900 dark:text-white"}`}>
+                {cfg.value}
+              </strong>
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Grid Dinámico Responsivo: Siempre visible en desktop (md:grid), y en móvil si está expandido */}
-      <div
-        className={`${
-          isMobileExpanded ? "grid" : "hidden md:grid"
-        } grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-2.5`}
-      >
+      {/* Grid Dinámico Responsivo: Desktop (md:grid) */}
+      <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-2.5">
         {activeMetrics.map((metricId) => {
           const cfg = metricConfigs[metricId];
           if (!cfg) return null;

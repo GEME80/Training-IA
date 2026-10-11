@@ -7322,3 +7322,61 @@ El usuario auditó la tarjeta de competición generada para el día de carrera (
 
 
 
+
+
+---
+
+## 111. REINGENIERÍA UX/UI Y DISEÑO RESPONSIVE MÓVIL: DESCOMPRESIÓN DEL DASHBOARD, FEED VERTICAL SEMANAL Y GRÁFICAS DE COLUMNAS DE ZONAS (v5.35)
+
+### 111.1. Diagnóstico y Petición del Usuario
+El usuario solicitó una revisión exhaustiva de ergonomía móvil basada en capturas de pantalla de la aplicación viva:
+*"en mi dashboard se ve muy pesada toda esa informacion. se podria quitar el ver (6). el texto debajo de mi dashboard dejar como un titulo minimalista para los indicadores. en el selector de calendario mejoremos la experiencia deberiamos dejar semana a semana y que se muestre todo el plan de la semana sin tener que colocar la cabecera de los dias. que se vea mas en vertical revisalo como experto de UX/UI. cuando tenemos un entrenamiento terminado las tarjetas son muy grandes no es facil navegar y se sale la informacion de los campos. podemos mejorar la distribucion de zonas para que no sean tarjetas si no graficas de columnas verticales con los porcentajes de cada zona."*
+
+### 111.2. Acciones Realizadas
+
+1. **Descompresión y Minimalismo en el Dashboard Superior:**
+   - En [`src/components/PhysiologicalCards.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/PhysiologicalCards.tsx) (210 LOC):
+     * Eliminado el botón redundante `Ver (6)` y el estado `isMobileExpanded`.
+     * Título superior simplificado de `TU ESTADO DE RENDIMIENTO Y RECUPERACIÓN` al minimalista y sobrio: `Condición Física & Carga`.
+     * En móvil (`< md`), se renderiza permanentemente una cinta horizontal fluida de chips métricos de alto contraste, evitando ocupar el 50% de la pantalla con tarjetas cuadradas expandidas.
+   - En [`src/components/dashboard/AthleteDashboardOverview.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteDashboardOverview.tsx) (253 LOC):
+     * Subtítulo compactado y etiquetas de pestañas concisas (`Resumen & Plan` vs `Evolución & PMC`), eliminando el texto largo que añadía peso visual en móvil.
+
+2. **Feed Vertical Semanal de Entrenamientos Móvil (Semana a Semana):**
+   - En [`src/components/dashboard/AthleteMobileAgendaView.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteMobileAgendaView.tsx) (297 LOC):
+     * Modo por defecto configurado a `viewMode = "week"` (feed continuo vertical de Lunes a Domingo).
+     * Eliminada la obligatoriedad de pulsar los 7 botoncitos horizontales día a día.
+     * Selector superior ergonómico semana a semana: `< Semana X (Rango Fechas) | Carga TSS >`.
+   - En [`src/components/dashboard/AthleteMobileWeekFeed.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteMobileWeekFeed.tsx) (161 LOC):
+     * Cada día de la semana muestra de un vistazo su icono de disciplina (`Carrera`, `Ciclismo`, `Natación`, `Fuerza`), nombre de la sesión, duración/km, TSS y badge de estado (`Listo`, `Plan`, `Rest`).
+     * Toque directo e intuitivo: pulsar sobre la sesión abre directamente el [`WorkoutDetailModal`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx).
+
+3. **Gráfica de Columnas Verticales para Distribución de Zonas Fisiológicas:**
+   - En [`src/components/macrocycle/ActivityZoneDistribution.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ActivityZoneDistribution.tsx) (325 LOC):
+     * Erradicado el grid de 5 a 7 tarjetas rectangulares blancas que obligaban a hacer scroll vertical de más de 400px.
+     * Implementada una gráfica de columnas verticales tipo ecualizador fisiológico:
+       - Altura de columna proporcional al porcentaje de tiempo acumulado (`barHeightPct`).
+       - Encima de cada columna: porcentaje exacto en negrita (ej. `62%`, `36%`).
+       - Barra estilizada con el color canónico de la zona (`Z1` azul cielo, `Z2` verde esmeralda, `Z3` ámbar, `Z4` naranja, `Z5` rojo).
+       - Debajo de la columna: badge de zona, tiempo en minutos/segundos y rango de vatios o ritmo.
+     * Altura total contenida en ~160px con lectura visual instantánea.
+
+4. **Compactación y Ergonomía del Modal de Sesión Ejecutada:**
+   - En [`src/components/macrocycle/WorkoutDetailModal.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx) (293 LOC):
+     * Padding adaptativo móvil `p-3.5 sm:p-5`, bordes redondeados `rounded-3xl` y altura máxima dinámica `max-h-[88dvh]`.
+     * Grid de telemetría compactado en `4x2`, eliminando botones de interrogación duplicados en cada celda en favor del botón maestro `¿Qué significa cada métrica?`.
+     * El nombre de la actividad (`act.name`) cuenta con flexbox adaptativo (`flex-1 truncate`), previniendo recortes bruscos.
+   - En [`src/components/macrocycle/workoutTelemetryHelpers.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/workoutTelemetryHelpers.ts) (161 LOC):
+     * Etiquetas acortadas y libres de truncamientos (`Ritmo (GAP)`, `Potencia (W)`, `Cardio (FC)`, `Eficiencia / D%`, `Cadencia`, `Desnivel / Cal`, `Duración Real`, `Sensación / RPE`).
+
+### 111.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/components/PhysiologicalCards.tsx`: 210 LOC.
+  - `src/components/dashboard/AthleteDashboardOverview.tsx`: 253 LOC.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 297 LOC.
+  - `src/components/dashboard/AthleteMobileWeekFeed.tsx`: 161 LOC.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 325 LOC.
+  - `src/components/macrocycle/workoutTelemetryHelpers.ts`: 161 LOC.
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 293 LOC.

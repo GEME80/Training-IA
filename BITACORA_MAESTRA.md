@@ -7741,3 +7741,44 @@ Siguiendo las mejores prácticas de análisis de deportes de resistencia (Interv
   - `src/components/macrocycle/telemetryChartHelpers.tsx`: 335 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$) ✅.
+
+---
+
+## 121. DESACOPLAMIENTO RESPONSIVO COMPLETO: MOBILE BOTTOM SHEET VS. DESKTOP MODAL DIALOG (v5.45)
+
+### 121.1. Arquitectura y Solución Técnica
+Para erradicar el antipatrón de visualización donde el estado colapsado (peek 38%) del bottom sheet móvil aparecía flotando en la base de pantallas de escritorio, se implementó una arquitectura bifurcada y limpia:
+
+1. **Orquestador / Switcher Responsivo (`WorkoutDetailModal.tsx` - 80 LOC):**
+   - Implementa `useIsDesktop(768)` escuchando activamente `window.matchMedia("(min-width: 768px)")`.
+   - Utiliza el hook modular [`useWorkoutDetailData.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/useWorkoutDetailData.tsx) (186 LOC) para computar de forma centralizada todos los datos fisiológicos (`effFtp`, `isRunPace`, `displayActivities`, `parsedTargetRange`, etc.).
+   - Delega limpiamente a:
+     * `WorkoutBottomSheetMobile` en resoluciones `< 768px`.
+     * `WorkoutDialogDesktop` en resoluciones `≥ 768px`.
+
+2. **Modal Dialog Centrado de Escritorio (`WorkoutDialogDesktop.tsx` - 284 LOC):**
+   - **Posicionamiento:** Centrado exacto en pantalla (`fixed inset-0 z-50 flex items-center justify-center p-6`) con backdrop `bg-slate-900/60 backdrop-blur-sm`.
+   - **Dimensiones:** `max-w-4xl max-h-[86vh]`, bordes redondeados `rounded-2xl` y sombra profunda `shadow-2xl`.
+   - **Interacción y Accesibilidad:** Sin drag handle móvil. Cierre rápido mediante botón `✕`, clic fuera del modal y escucha de tecla `Escape`.
+   - **Acceso Directo Sin Peek:** Abre inmediatamente en la pestaña **Resumen**, mostrando la fila de 3 `StatCards` maestras (TSS, Eficacia, Volumen) y acceso sin fricción a **Distribución** y **Evolución**.
+   - **Footer Desktop:** Barra inferior sutil con botón `[ Cerrar ]`.
+
+3. **Bottom Sheet Móvil Preservado (`WorkoutBottomSheetMobile.tsx` - 266 LOC):**
+   - Mantiene la experiencia nativa de smartphone: Estado Peek inicial (38% / 345px) con resumen ejecutivo de 3 segundos, manija de arrastre táctil (*drag handle*) y botón sticky CTA `[ ↗ Ver Análisis Completo ]` adaptado a áreas seguras (`safe-area-inset-bottom`), expandible fluidamente a 90vh.
+
+### 121.2. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 80 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 266 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutDialogDesktop.tsx`: 284 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/useWorkoutDetailData.tsx`: 186 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutSegmentedTabs.tsx`: 64 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 201 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 310 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 350 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/telemetryChartHelpers.tsx`: 335 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$) ✅.
+

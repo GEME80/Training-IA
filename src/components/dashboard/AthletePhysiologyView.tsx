@@ -78,6 +78,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   }, [birthDate]);
 
+  const [isSavingAvailability, setIsSavingAvailability] = useState<boolean>(false);
+
   const showNotification = (msg: string) => {
     setSuccessMessage(msg);
     setTimeout(() => setSuccessMessage(null), 3000);
@@ -96,10 +98,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   };
 
   const handleSaveAvailability = async (mapToSave: WeeklyAvailabilityMap) => {
-    setWeeklyAvailability(mapToSave);
-    if (onUpdateAvailability) await onUpdateAvailability(mapToSave);
-    else await onSave({ weeklyAvailability: mapToSave });
-    showNotification("Matriz semanal guardada con éxito.");
+    setIsSavingAvailability(true);
+    try {
+      setWeeklyAvailability(mapToSave);
+      if (onUpdateAvailability) await onUpdateAvailability(mapToSave);
+      else await onSave({ weeklyAvailability: mapToSave });
+      showNotification("Matriz semanal guardada con éxito en la base de datos.");
+    } finally {
+      setIsSavingAvailability(false);
+    }
   };
 
   const handleResetCanonical = async () => {
@@ -107,10 +114,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Ciclismo"], Jueves: ["Fuerza"],
       Viernes: ["Carrera", "Fuerza"], Sábado: ["Ciclismo"], Domingo: ["Carrera"],
     };
-    setWeeklyAvailability(canonical);
-    if (onUpdateAvailability) await onUpdateAvailability(canonical);
-    else await onSave({ weeklyAvailability: canonical });
-    showNotification("Matriz restablecida a la configuración recomendada.");
+    setIsSavingAvailability(true);
+    try {
+      setWeeklyAvailability(canonical);
+      if (onUpdateAvailability) await onUpdateAvailability(canonical);
+      else await onSave({ weeklyAvailability: canonical });
+      showNotification("Matriz restablecida a la configuración recomendada.");
+    } finally {
+      setIsSavingAvailability(false);
+    }
   };
 
   const handleSaveBio = async (bioData: { displayName: string; birthDate?: string; gender?: "M" | "F" | "OTHER"; weightKg?: number; heightCm?: number }) => {
@@ -302,6 +314,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           <ProfileAvailabilityTab
             weeklyAvailability={weeklyAvailability} onToggleDayDiscipline={handleToggleDayDiscipline}
             onSaveAvailability={handleSaveAvailability} onResetToCanonical={handleResetCanonical}
+            isSaving={isSavingAvailability}
           />
         </div>
       )}

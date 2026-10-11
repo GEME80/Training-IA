@@ -6935,6 +6935,38 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
 - Suite de pruebas de transición de modo: **6/6 casos PASSED (100% Éxito) ✅**.
 - Todos los archivos modificados estrictamente $\le 350$ LOC ✅.
 
+---
+
+## 102. SINCRONIZACIÓN BIDIRECCIONAL PERFIL <-> WIZARD DE TEMPORADA Y FEEDBACK REACTIVO DE GUARDADO (v5.26)
+
+### 102.1. Causa Raíz Diagnosticada
+1. **Desconexión Perfil -> Wizard:** Al ingresar un nuevo atleta o recurrente a "Mi Temporada" desde el Dashboard, el Wizard (`SeasonAIGenerator.tsx`) no hidrataba reactivamente la matriz deportiva ni el modo de carrera guardados en Firestore/userStorage, dejando los datos en blanco o desfasados.
+2. **Desconexión Wizard -> Perfil:** Al diligenciar el Paso 2 (Matriz deportiva) o el Paso 3 (Potencia Stryd vs. Ritmo) dentro del Wizard de Mi Temporada, la selección solo se almacenaba en memoria volátil del componente sin persistir al perfil del atleta en `/api/profile`, dejando el perfil desincronizado.
+3. **Ausencia de Feedback y Estado en "Guardar Matriz":** En la pestaña de Disponibilidad del Perfil del Atleta (`AthletePhysiologyView.tsx`), `handleSaveAvailability` carecía de gestión de estado `isSaving`. Al pulsar el botón, no se mostraba indicador de carga ni feedback visual de confirmación inmediata.
+
+### 102.2. Solución Integral Implementada
+1. **Precarga Reactiva Fisiológica en el Wizard (`SeasonAIGenerator.tsx` - 324 LOC):**
+   - Incorporado hook reactivo `useEffect` para sincronizar `runningTrainingMode` y `localWeeklyAvailability` inmediatamente al recibir las props vivas del perfil.
+   - Eliminados ternarios destructivos en `AthleteDashboardViewRouter.tsx:144` que sobreescribían el modo del perfil.
+2. **Persistencia Atómica Inmediata desde el Wizard (`AthleteDashboardViewRouter.tsx` - 346 LOC & `AthleteSeasonStudioView.tsx` - 272 LOC):**
+   - Implementado callback canónico `handlePersistRunningMode(mode)` y enrutado a través de `AthleteSeasonStudioView` hasta `SeasonAIGenerator`.
+   - Al seleccionar Potencia Stryd o Ritmo en el Paso 3, se actualiza atómicamente el `userStorage`, `telemetry.profile` y se persiste de inmediato en Firestore vía `POST /api/profile`.
+   - Al editar la matriz deportiva en el Paso 2, se persiste de forma continua mediante `onPersistAvailability`.
+3. **Feedback Visual Reactivo en Guardado de Matriz (`AthletePhysiologyView.tsx` - 349 LOC):**
+   - Incorporado estado `isSavingAvailability` y conectado a `ProfileAvailabilityTab.tsx`.
+   - Al pulsar "Guardar Matriz de Disponibilidad":
+     - Botón muestra estado activo con spinner `Loader2` y texto *"Guardando en BD..."*.
+     - Se deshabilita para evitar peticiones duplicadas.
+     - Al confirmar persistencia en backend, se despliega badge animado *"¡Matriz Guardada en BD!"* y aviso flotante de éxito.
+4. **Claridad en Banner de Onboarding (`AthleteDashboardOverview.tsx` - 258 LOC):**
+   - Texto clarificado para guiar al deportista en 3 pasos asistidos por el Head Coach IA sin requerir pasos previos redundantes.
+
+### 102.3. Certificación de Calidad
+- `./node_modules/.bin/tsc --noEmit`: Código de salida 0 (0 errores) ✅.
+- `npm run build`: 21/21 rutas Next.js compiladas con Código 0 ✅.
+- Conteo estricto de líneas: Todos los archivos modificados $\le 350$ LOC ✅.
+
+
 
 
 

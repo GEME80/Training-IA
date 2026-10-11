@@ -18,61 +18,35 @@ import {
 } from "./wizard/seasonWizardHelpers";
 
 interface SeasonAIGeneratorProps {
-  athleteId?: string;
-  weeklyAvailability?: WeeklyAvailabilityMap;
-  primaryRace?: TargetRace | null;
-  targetRaces?: TargetRace[];
-  onSelectPrimaryRace?: (race: TargetRace | null) => void;
-  onAddNewRace?: (race: TargetRace) => void;
-  ctl?: number;
-  runFtp?: number;
-  bikeFtp?: number;
-  lthr?: number;
-  weightKg?: number;
-  heightCm?: number;
-  birthDate?: string;
-  gender?: "M" | "F" | "OTHER";
-  restingHR?: number;
-  maxHR?: number;
-  historicalMetrics?: PMCHistoricalSummary;
+  athleteId?: string; weeklyAvailability?: WeeklyAvailabilityMap; primaryRace?: TargetRace | null;
+  targetRaces?: TargetRace[]; onSelectPrimaryRace?: (race: TargetRace | null) => void;
+  onAddNewRace?: (race: TargetRace) => void; ctl?: number; runFtp?: number; bikeFtp?: number; lthr?: number;
+  weightKg?: number; heightCm?: number; birthDate?: string; gender?: "M" | "F" | "OTHER";
+  restingHR?: number; maxHR?: number; historicalMetrics?: PMCHistoricalSummary;
   runningTrainingMode?: "POWER" | "PACE";
   onGenerateAIPlan: (userPrompt: string, weeksCount: number, primaryDiscipline: string) => Promise<void>;
   onApplyDirectBlueprint?: (blueprint: MacrocycleBlueprint, planTitle: string) => void;
-  onNavigateToProfile?: () => void;
-  onPersistAvailability?: (map: Record<string, string[]>) => Promise<void>;
-  isGenerating: boolean;
+  onNavigateToProfile?: () => void; onPersistAvailability?: (map: Record<string, string[]>) => Promise<void>;
+  onPersistRunningMode?: (mode: "POWER" | "PACE") => Promise<void>; isGenerating: boolean;
 }
 
 export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
-  athleteId,
-  weeklyAvailability,
-  primaryRace,
-  targetRaces = [],
-  onSelectPrimaryRace,
-  onAddNewRace,
-  ctl = 0,
-  runFtp = 0,
-  bikeFtp = 0,
-  lthr = 0,
-  weightKg,
-  heightCm,
-  birthDate,
-  gender,
-  restingHR,
-  maxHR,
-  historicalMetrics,
-  runningTrainingMode: initialRunningMode,
-  onGenerateAIPlan,
-  onApplyDirectBlueprint,
-  onNavigateToProfile,
-  onPersistAvailability,
-  isGenerating,
+  athleteId, weeklyAvailability, primaryRace, targetRaces = [], onSelectPrimaryRace, onAddNewRace,
+  ctl = 0, runFtp = 0, bikeFtp = 0, lthr = 0, weightKg, heightCm, birthDate, gender, restingHR, maxHR,
+  historicalMetrics, runningTrainingMode: initialRunningMode, onGenerateAIPlan, onApplyDirectBlueprint,
+  onNavigateToProfile, onPersistAvailability, onPersistRunningMode, isGenerating,
 }) => {
   const { user } = useAuth();
   const userStorage = React.useMemo(() => getUserStorage(user?.uid), [user?.uid]);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
   const [runningTrainingMode, setRunningTrainingMode] = useState<"POWER" | "PACE" | null>(() => initialRunningMode || null);
+
+  React.useEffect(() => {
+    if (initialRunningMode && !runningTrainingMode) {
+      setRunningTrainingMode(initialRunningMode);
+    }
+  }, [initialRunningMode, runningTrainingMode]);
 
   const [planTitle, setPlanTitle] = useState(() => {
     if (primaryRace) return `Macrociclo para ${primaryRace.name} (${(primaryRace.distance || "").toUpperCase()})`;
@@ -280,7 +254,15 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
         <SeasonWizardStep3Physiology
           ctl={ctl} runFtp={runFtp} bikeFtp={bikeFtp} lthr={lthr}
           weightKg={weightKg} heightCm={heightCm} birthDate={birthDate} gender={gender} restingHR={restingHR} maxHR={maxHR}
-          runningTrainingMode={runningTrainingMode} onChangeRunningTrainingMode={setRunningTrainingMode}
+          runningTrainingMode={runningTrainingMode}
+          onChangeRunningTrainingMode={(newMode) => {
+            setRunningTrainingMode(newMode);
+            try {
+              userStorage.setItem("running_training_mode", newMode);
+              userStorage.setItem("has_running_power_meter", String(newMode === "POWER"));
+            } catch {}
+            if (onPersistRunningMode) onPersistRunningMode(newMode).catch(() => {});
+          }}
           periodization={periodization} onChangePeriodization={setPeriodization}
           customPromptText={customPromptText} onChangeCustomPromptText={setCustomPromptText}
           onGeneratePlan={handleGenerateAI} isGenerating={isGeneratingPlan || isGenerating}

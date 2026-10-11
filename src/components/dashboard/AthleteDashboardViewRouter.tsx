@@ -128,6 +128,31 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         });
       } catch { /* silent fail — localStorage already saved */ }
     };
+
+    const handlePersistRunningMode = async (mode: "POWER" | "PACE") => {
+      try {
+        userStorage.setItem("running_training_mode", mode);
+        userStorage.setItem("has_running_power_meter", String(mode === "POWER"));
+        telemetry.setProfile((prev: any) => ({
+          ...prev,
+          runningTrainingMode: mode,
+          hasRunningPowerMeter: mode === "POWER",
+        }));
+        await fetch("/api/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uid: user?.uid || "",
+            email: user?.email || userProfile?.email || "",
+            runningTrainingMode: mode,
+            hasRunningPowerMeter: mode === "POWER",
+          }),
+        });
+      } catch { /* silent fail */ }
+    };
+
+    const effectiveStudioRunningMode = telemetry.profile.runningTrainingMode || (userProfile?.runningTrainingMode as "POWER" | "PACE" | undefined);
+
     return (
       <AthleteSeasonStudioView
         athleteId={telemetry.profile.id}
@@ -141,7 +166,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         gender={telemetry.profile.gender}
         restingHR={telemetry.profile.restingHR}
         maxHR={telemetry.profile.maxHR}
-        runningTrainingMode={telemetry.profile.runningTrainingMode === "PACE" ? "PACE" : ((telemetry.profile.run_ftp || 0) > 0 ? "POWER" : "PACE")}
+        runningTrainingMode={effectiveStudioRunningMode}
         weeklyAvailability={season.weeklyAvailability}
         historicalMetrics={telemetry.historicalSummary}
         targetRaces={season.targetRaces}
@@ -153,6 +178,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           season.handleApplyMacrocycle(newBlueprint, undefined, "WIZARD_CUSTOM", options)
         }
         onPersistAvailability={handlePersistAvailability}
+        onPersistRunningMode={handlePersistRunningMode}
         onNavigateToDashboard={() => onNavigateTo("dashboard")}
         onOpenHeadCoach={() => onNavigateTo("head_coach")}
       />
@@ -213,36 +239,24 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
 
   if (activeNavSection === "physiology") {
     const suggestedBikeFtp = telemetry.recentFtpCalibration ? {
-      id: telemetry.recentFtpCalibration.activityId || "bike-ftp",
-      metric: "BIKE_FTP" as const,
-      activityName: telemetry.recentFtpCalibration.activityName || "Test FTP Ciclismo",
-      date: telemetry.recentFtpCalibration.date,
-      currentValue: `${telemetry.recentFtpCalibration.previousFtp}W`,
-      suggestedValue: `${telemetry.recentFtpCalibration.newFtp}W`,
-      deltaLabel: `${telemetry.recentFtpCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentFtpCalibration.deltaWatts}W`,
-      message: telemetry.recentFtpCalibration.message,
+      id: telemetry.recentFtpCalibration.activityId || "bike-ftp", metric: "BIKE_FTP" as const,
+      activityName: telemetry.recentFtpCalibration.activityName || "Test FTP Ciclismo", date: telemetry.recentFtpCalibration.date,
+      currentValue: `${telemetry.recentFtpCalibration.previousFtp}W`, suggestedValue: `${telemetry.recentFtpCalibration.newFtp}W`,
+      deltaLabel: `${telemetry.recentFtpCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentFtpCalibration.deltaWatts}W`, message: telemetry.recentFtpCalibration.message,
     } : null;
 
     const suggestedRunPace = telemetry.recentPaceCalibration ? {
-      id: telemetry.recentPaceCalibration.activityId || "run-pace",
-      metric: "RUN_PACE" as const,
-      activityName: telemetry.recentPaceCalibration.activityName || "Test Ritmo Running",
-      date: telemetry.recentPaceCalibration.date,
-      currentValue: telemetry.recentPaceCalibration.previousPaceStr,
-      suggestedValue: telemetry.recentPaceCalibration.newPaceStr,
-      deltaLabel: `${(telemetry.recentPaceCalibration.deltaSec ?? 0) < 0 ? "" : "+"}${telemetry.recentPaceCalibration.deltaSec ?? 0}s/km`,
-      message: telemetry.recentPaceCalibration.message,
+      id: telemetry.recentPaceCalibration.activityId || "run-pace", metric: "RUN_PACE" as const,
+      activityName: telemetry.recentPaceCalibration.activityName || "Test Ritmo Running", date: telemetry.recentPaceCalibration.date,
+      currentValue: telemetry.recentPaceCalibration.previousPaceStr, suggestedValue: telemetry.recentPaceCalibration.newPaceStr,
+      deltaLabel: `${(telemetry.recentPaceCalibration.deltaSec ?? 0) < 0 ? "" : "+"}${telemetry.recentPaceCalibration.deltaSec ?? 0}s/km`, message: telemetry.recentPaceCalibration.message,
     } : null;
 
     const suggestedRunFtp = telemetry.recentRunPowerCalibration ? {
-      id: telemetry.recentRunPowerCalibration.activityId || "run-power",
-      metric: "RUN_FTP" as const,
-      activityName: telemetry.recentRunPowerCalibration.activityName || "Potencia de Carrera",
-      date: telemetry.recentRunPowerCalibration.date,
-      currentValue: `${telemetry.recentRunPowerCalibration.previousWatts}W`,
-      suggestedValue: `${telemetry.recentRunPowerCalibration.newWatts}W`,
-      deltaLabel: `${telemetry.recentRunPowerCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentRunPowerCalibration.deltaWatts}W`,
-      message: telemetry.recentRunPowerCalibration.message,
+      id: telemetry.recentRunPowerCalibration.activityId || "run-power", metric: "RUN_FTP" as const,
+      activityName: telemetry.recentRunPowerCalibration.activityName || "Potencia de Carrera", date: telemetry.recentRunPowerCalibration.date,
+      currentValue: `${telemetry.recentRunPowerCalibration.previousWatts}W`, suggestedValue: `${telemetry.recentRunPowerCalibration.newWatts}W`,
+      deltaLabel: `${telemetry.recentRunPowerCalibration.deltaWatts > 0 ? "+" : ""}${telemetry.recentRunPowerCalibration.deltaWatts}W`, message: telemetry.recentRunPowerCalibration.message,
     } : null;
 
     return (
@@ -277,15 +291,13 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         suggestedRunFtp={suggestedRunFtp}
         onApplySuggestion={async (sug) => {
           if (sug.metric === "BIKE_FTP") {
-            const numVal = parseInt(String(sug.suggestedValue), 10);
-            await telemetry.handleSaveSettings({ bikeFtp: numVal });
+            await telemetry.handleSaveSettings({ bikeFtp: parseInt(String(sug.suggestedValue), 10) });
             telemetry.setRecentFtpCalibration(null);
           } else if (sug.metric === "RUN_PACE") {
             await telemetry.handleSaveSettings({ runThresholdPaceStr: String(sug.suggestedValue) });
             telemetry.setRecentPaceCalibration(null);
           } else if (sug.metric === "RUN_FTP") {
-            const numVal = parseInt(String(sug.suggestedValue), 10);
-            await telemetry.handleSaveSettings({ runFtp: numVal });
+            await telemetry.handleSaveSettings({ runFtp: parseInt(String(sug.suggestedValue), 10) });
             telemetry.setRecentRunPowerCalibration(null);
           }
         }}

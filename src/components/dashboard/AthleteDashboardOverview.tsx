@@ -219,10 +219,10 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
               </div>
               <div className="max-w-md mx-auto space-y-1.5">
                 <h3 className="text-base font-black text-slate-900 dark:text-white">
-                  Sin Plan de Entrenamiento Activo
+                  Diseña tu Temporada de Entrenamiento
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Actualmente no tienes ningún macrociclo en ejecución. Diseña un plan a medida con el Head Coach IA o selecciona un programa de la biblioteca para llenar tu calendario.
+                  Configura tu objetivo de carrera, tus disciplinas semanales y tu preferencia de Potencia o Ritmo en 3 sencillos pasos asistidos por el Head Coach IA.
                 </p>
               </div>
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">

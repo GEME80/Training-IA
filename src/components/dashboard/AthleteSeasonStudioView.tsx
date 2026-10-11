@@ -24,6 +24,7 @@ interface AthleteSeasonStudioViewProps {
   onSaveSeasonPlans: (plans: SeasonPlanItem[]) => void;
   onApplyPlan?: (newBlueprint: MacrocycleBlueprint, options?: { mode: "CHAIN" | "REPLACE" }) => void;
   onPersistAvailability?: (map: Record<string, string[]>) => Promise<void>;
+  onPersistRunningMode?: (mode: "POWER" | "PACE") => Promise<void>;
   onNavigateToDashboard?: () => void;
   onNavigateToProfile?: () => void;
   onOpenHeadCoach?: () => void;
@@ -33,7 +34,7 @@ interface AthleteSeasonStudioViewProps {
 export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = ({
   athleteId, runFtp = 0, bikeFtp = 0, lthr = 0, ctl = 0, weightKg, heightCm, birthDate,
   gender, restingHR, maxHR, runningTrainingMode, weeklyAvailability, historicalMetrics, targetRaces, seasonPlans,
-  onSaveTargetRaces, onSaveSeasonPlans, onApplyPlan, onPersistAvailability,
+  onSaveTargetRaces, onSaveSeasonPlans, onApplyPlan, onPersistAvailability, onPersistRunningMode,
   onNavigateToDashboard, onNavigateToProfile, onOpenHeadCoach, onDeleteActivePlan,
 }) => {
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
@@ -237,6 +238,7 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
                     onApplyDirectBlueprint={handleApplyDirectBlueprint}
                     onNavigateToProfile={onNavigateToProfile}
                     onPersistAvailability={onPersistAvailability}
+                    onPersistRunningMode={onPersistRunningMode}
                     isGenerating={isGeneratingAI}
                   />
                 </div>

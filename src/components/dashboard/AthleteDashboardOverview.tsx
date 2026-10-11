@@ -243,8 +243,9 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
             wellnessHistory={wellnessHistory}
             blueprint={blueprint}
             athleteName={profile.name}
-            onRefresh={onRefreshTelemetry}
-            isRefreshing={isRefreshingTelemetry}
+            weeklyExecutedTss={weeklyExecutedTss}
+            dailyExecutedActivities={dailyExecutedActivities}
+            weeklyAvailability={weeklyAvailability}
           />
         </div>
       )}

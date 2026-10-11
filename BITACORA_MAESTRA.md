@@ -7897,3 +7897,45 @@ Esto causaba que:
   - `src/components/dashboard/pmc/PMCInsightsCard.tsx`: 171 LOC ($\le 350$) ✅.
   - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 182 LOC ($\le 350$) ✅.
 
+---
+
+## 124. OPTIMIZACIÓN DE VISTA EVOLUCIÓN MÓVIL: ACTUAL VS. PLAN, RANGOS 30D/90D/6M/1A, SCRUBBER HUD Y REMOCIÓN DE SYNC MANUAL (v5.48)
+
+### 124.1. Cabecera Móvil: Seguimiento "Actual vs. Plan" (`PlannedVsActualProgress.tsx`)
+- **Micro-Tarjetas de Cumplimiento (Máximo 46px de alto total):**
+  - Se creó [`PlannedVsActualProgress.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/pmc/PlannedVsActualProgress.tsx) (109 LOC) en rejilla horizontal `grid grid-cols-2 gap-2`:
+    - **Tarjeta 1 (Carga TSS):** Valor `XXX / YYY TSS` en `tabular-nums font-semibold text-xs`, micro-barra lineal de progreso de 4px (`h-1 rounded-full`) y badge dinámico de cumplimiento (`92% En plan`).
+    - **Tarjeta 2 (Volumen / Horas):** Valor `X.X / Y.Y hrs` con tipografía mono y barra proporcional de progreso.
+  - En Web Desktop (`>= 768px`) se mantienen intactas las 4 tarjetas KPI tradicionales de análisis anual (`AthletePMCKpiCards.tsx`).
+
+### 124.2. Gráfica PMC, Rangos 30D/90D/6M/1A, Scrubber HUD y Retiro de Sync
+- **Eliminación del Botón Sincronizar:**
+  - Se retiró todo trigger o botón manual de recarga/sync en la cabecera del gráfico, alineado a la arquitectura de ingesta 100% automática en segundo plano.
+- **Selector de Rangos Temporales Compacto:**
+  - Selector horizontal segmentado de baja altura (32px): `[ 30D | 90D | 6M | 1 Año ]` con estilo de marca primario (`bg-purple-600 text-white`) en la píldora activa.
+  - Soporte nativo incorporado en [`pmcEngine.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/pmcEngine.ts) (268 LOC) para `PMCTimeframe = "30d" | "90d" | "3m" | "6m" | "1y"`.
+- **Eliminación de Checkboxes Tradicionales en Móvil:**
+  - Se retiraron del flujo táctil móvil los controles tipo formulario ("Proyección a Carrera"), manteniendo el canvas limpio.
+- **Tira de Telemetría Dinámica (Scrubber HUD):**
+  - Fila plana directamente previa al canvas SVG que actualiza en tiempo real al arrastrar el dedo:
+    - Fecha puntual en formato corto.
+    - `Fitness (CTL): XX` (azul), `Fatiga (ATL): XX` (morado), `Forma (TSB): XX` (esmeralda/ámbar según zona).
+
+### 124.3. Aligeramiento Inferior Desencajonado (`PMCInsightFooter.tsx`)
+- **Erradicación de Contenedor Gris y Cajas Rígidas:**
+  - Se reemplazó el contenedor pesado y las 4 cajas cuadradas por [`PMCInsightFooter.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/pmc/PMCInsightFooter.tsx) (124 LOC):
+    - **Hero Status Chip:** Badge dinámico (`🟢 Fresco / Óptimo (> 0 TSB)`, `🟡 Sobrecarga Productiva (-10 a -30 TSB)`, `🔴 Fatiga Crítica / Riesgo (< -30 TSB)`) e indicador de rampa semanal (`Rampa: +X.X /sem`).
+    - **Insight Ejecutivo:** Máximo 2 líneas de texto plano sintetizando la adaptación biológica.
+    - **Acordeón Colapsable:** `[ ▾ Ver desglose fisiológico completo ]` cerrado por defecto para no invadir el viewport.
+
+### 124.4. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/dashboard/pmc/PlannedVsActualProgress.tsx`: 109 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/PMCInsightFooter.tsx`: 124 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 278 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteDashboardOverview.tsx`: 254 LOC ($\le 350$) ✅.
+  - `src/lib/physiology/pmcEngine.ts`: 268 LOC ($\le 350$) ✅.
+
+

@@ -36,7 +36,7 @@ export interface PMCHistoricalSummary {
   raceDate?: string;
 }
 
-export type PMCTimeframe = "3m" | "6m" | "1y";
+export type PMCTimeframe = "30d" | "90d" | "3m" | "6m" | "1y";
 
 /**
  * Computa la síntesis histórica de 365 días en memoria (< 150 bytes para la IA, $0 en Firestore)
@@ -112,7 +112,7 @@ export function generatePMCSeries(
   // 1. Filtrar histórico según ventana temporal seleccionada
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const daysBack = timeframe === "3m" ? 90 : timeframe === "6m" ? 180 : 365;
+  const daysBack = timeframe === "30d" ? 30 : (timeframe === "90d" || timeframe === "3m") ? 90 : timeframe === "6m" ? 180 : 365;
   const cutoffDate = new Date(today);
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
   const cutoffStr = cutoffDate.toISOString().split("T")[0];

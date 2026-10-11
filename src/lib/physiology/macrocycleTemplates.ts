@@ -2,6 +2,7 @@ import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDis
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_RAMP } from "../ai/knowledge";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "../ai/knowledge/workoutPools/runningAerobicPool";
 import { resolveVolumeScaleFactor } from "./macrocycleGenerator";
 import { selectSwimWorkout } from "./swimWorkoutPool"; import { selectStrengthWorkout } from "./strengthWorkoutPool";
 import { resolveSpecializedStrengthWorkout } from "./specializedStrengthCoaches"; import { resolveWorkoutAddons } from "./workoutEnhancers";
@@ -279,17 +280,15 @@ export function generateWeekTemplate(
         }
 
         const isAdj = day === "Sábado" && longRunDay === "Domingo";
-        const isEligibleQuality = runCount === 1 && day !== longRunDay && !isAdj;
+        const totalRunDays = days.filter((d) => getDayDisciplines(safeAvailability, d).includes("Carrera")).length;
+        const isPrimaryQuality = runCount === 1 && day !== longRunDay && !isAdj;
+        const isSecondaryQuality = totalRunDays >= 4 && runCount === 3 && day !== longRunDay && !isAdj && !isRecovery;
 
-        if (isEligibleQuality) {
+        if (isPrimaryQuality || isSecondaryQuality) {
           let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, {
-            isRecovery,
-            memoryBuffer: memory,
-            mode: (runningOpts?.mode as any),
-            thresholdPaceSec: runningOpts?.thresholdPaceSec,
-            microcycleType: week.microcycleType,
-            stagedRacePaceSec: (week as any).stagedRacePaceSec || runningOpts?.stagedRacePaceSec,
-            distanceType: distanceType || curatedModel.modelId,
+            isRecovery, memoryBuffer: memory, mode: (runningOpts?.mode as any), thresholdPaceSec: runningOpts?.thresholdPaceSec,
+            microcycleType: week.microcycleType, stagedRacePaceSec: (week as any).stagedRacePaceSec || runningOpts?.stagedRacePaceSec,
+            distanceType: distanceType || curatedModel.modelId, workoutType: isSecondaryQuality ? "TEMPO_FARTLEK" : "INTERVALS",
           });
           const isRunningProgram = curatedModel.sportCategory === "Running";
           if (isRunningProgram && (q.name.toLowerCase().includes("brick") || q.workoutDoc.toLowerCase().includes("transición"))) {
@@ -297,8 +296,7 @@ export function generateWeekTemplate(
             const nonBrick = phaseList.find((v) => !v.name.toLowerCase().includes("brick")) || phaseList[0];
             if (nonBrick) q = applyParametricProgression({ name: nonBrick.name, powerTarget: interpolatePowerTarget(nonBrick.powerTarget, runFtp, bikeFtp), justification: nonBrick.justification, workoutDoc: nonBrick.workoutDoc }, { weekNumber, phase, isRecovery });
           }
-          usedRunWorkoutNames.add(q.name);
-          memory.record(q.name);
+          usedRunWorkoutNames.add(q.name); memory.record(q.name);
           const isBrick = !isRunningProgram && q.name.toLowerCase().includes("brick");
           const parsedQ = parseWorkoutDoc(q.workoutDoc, "Carrera");
           const dur = isBrick ? 85 : (q.durationMin || parsedQ.totalMins || 50), tss = isBrick ? 85 : (q.tss || parsedQ.estimatedTss || 55);
@@ -312,12 +310,12 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const recVars = curatedModel.workoutVariations.recoveryAerobicWorkouts || [];
+        const modelRec = curatedModel.workoutVariations.recoveryAerobicWorkouts || [];
+        const recVars = modelRec.length >= 3 ? modelRec : ALL_RUNNING_AEROBIC_WORKOUTS;
         const rStride = getCoprimeStride(recVars.length, 2);
         const recIdx = ((weekNumber - 1) * rStride + (runCount - 1)) % (recVars.length || 1);
         const recW = memory.selectDiverseCandidate(recVars, recIdx);
-        usedRunWorkoutNames.add(recW.name);
-        memory.record(recW.name);
+        usedRunWorkoutNames.add(recW.name); memory.record(recW.name);
         const dur = phase === "TAPER" || isRecovery ? 35 : (recW.durationMin || 40);
 
         result.push({

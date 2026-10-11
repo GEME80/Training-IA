@@ -1,5 +1,20 @@
 import { CuratedTrainingModel } from "./types";
 import { RUN_TEST_STRYD_3_9 } from "./testingProtocols";
+import { ALL_RUNNING_AEROBIC_WORKOUTS } from "./workoutPools/runningAerobicPool";
+import {
+  RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
+  RUN_PIRAMIDE_CONTINUA_Z2_Z3,
+  RUN_FARTLEK_SUECO_PIRAMIDAL,
+} from "./workoutPools/runningFartlekPool";
+import {
+  RUN_TEMPO_CONTINUO_30M,
+  RUN_TEMPO_PROGRESIVO_CANOVA,
+  RUN_TEMPO_ALTERNANCIAS_3X_8M,
+} from "./workoutPools/runningTempoPool";
+import {
+  RUN_DISTANCE_REPETICIONES_12X_200M,
+  RUN_DISTANCE_ESCALERA_200_800,
+} from "./workoutPools/runningDistancePool";
 
 export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
   modelId: "BASE_LONGEVITY",
@@ -67,14 +82,16 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
   workoutVariations: {
     qualityWorkouts: {
       base: [
-        {
-          name: "Carrera Continua Progresiva Z1-Z2 con 4 Strides (45m)",
-          powerTarget: "72% CP + 110% CP",
-          justification: "Estímulo de reactividad de sóleo sin acumular fatiga residual.",
-          workoutDoc: "Warmup\n- 10m 65% FTP\n\nMain\n- 25m 72% FTP\n\n4x\n- 20s 110% FTP\n- 40s 55% FTP\n\nCooldown\n- 5m 60% FTP",
-        },
+        RUN_FARTLEK_CUESTAS_NEUROMUSCULAR,
+        RUN_PIRAMIDE_CONTINUA_Z2_Z3,
+        RUN_FARTLEK_SUECO_PIRAMIDAL,
+        RUN_TEMPO_CONTINUO_30M,
+        RUN_TEMPO_PROGRESIVO_CANOVA,
+        RUN_DISTANCE_REPETICIONES_12X_200M,
       ],
       build: [
+        RUN_DISTANCE_ESCALERA_200_800,
+        RUN_TEMPO_ALTERNANCIAS_3X_8M,
         {
           name: "Fartlek Suave de Ritmo Aeróbico Z3 (45m)",
           powerTarget: "82% CP",
@@ -108,15 +125,7 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
         durationMin: 50,
       },
     ],
-    recoveryAerobicWorkouts: [
-      {
-        name: "Caminata Rápida / Trote Suave Z1 (35m)",
-        powerTarget: "60% CP",
-        justification: "Salud articular y recuperación activa.",
-        workoutDoc: "Warmup\n- 5m 55% FTP\n\nMain\n- 25m 60% FTP\n\nCooldown\n- 5m 50% FTP",
-        durationMin: 35,
-      },
-    ],
+    recoveryAerobicWorkouts: ALL_RUNNING_AEROBIC_WORKOUTS,
     strengthWorkouts: [
       {
         name: "Fuerza Funcional Sóleo, Pliometría & Core para Longevidad",

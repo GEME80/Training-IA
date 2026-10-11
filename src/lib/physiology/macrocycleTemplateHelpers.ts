@@ -27,12 +27,12 @@ export function buildRestDay(day: string, dateStr: string, formattedDate: string
 
 export function interpolatePowerTarget(
   rawTarget: string, runFtp?: number, bikeFtp?: number,
-  opts?: { discipline?: string; mode?: "POWER" | "HYBRID"; thresholdPaceSec?: number; lthr?: number; isQuality?: boolean; }
+  opts?: { discipline?: string; mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; lthr?: number; isQuality?: boolean; }
 ): string {
   if (!rawTarget) return rawTarget;
   return interpolateWorkoutTarget(rawTarget, {
     runFtp, bikeFtp, discipline: opts?.discipline || (bikeFtp && !runFtp ? "Ciclismo" : "Carrera"),
-    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "HYBRID"),
+    mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
     thresholdPaceSec: opts?.thresholdPaceSec, lthr: opts?.lthr, isQuality: opts?.isQuality,
   });
 }
@@ -52,27 +52,62 @@ export function selectQualityWorkout(
     microcycleType?: string;
     stagedRacePaceSec?: number;
     distanceType?: string;
+    workoutType?: "INTERVALS" | "TEMPO_FARTLEK";
   }
 ): { name: string; powerTarget: string; justification: string; workoutDoc: string; durationMin?: number; tss?: number } {
+  const normPhase = (phase || "BASE").toLowerCase() as "base" | "build" | "peak" | "taper";
+  const phaseList = curatedModel.workoutVariations?.qualityWorkouts?.[normPhase] || [];
+
+  if (opts?.isRecovery) {
+    const linear = generateLinearRunningWorkout({
+      phase, weekNumber, isRecovery: true,
+      mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
+      runFtp, bikeFtp, thresholdPaceSec: opts?.thresholdPaceSec,
+      stagedRacePaceSec: opts?.stagedRacePaceSec, distanceType: opts?.distanceType,
+    });
+    return {
+      name: linear.name, powerTarget: linear.powerTarget, justification: linear.justification,
+      workoutDoc: linear.workoutDoc, durationMin: linear.durationMinutes, tss: linear.tss,
+    };
+  }
+
+  if (opts?.workoutType === "TEMPO_FARTLEK" && phaseList.length > 0) {
+    const stride = getCoprimeStride(phaseList.length, 3);
+    const qIdx = ((weekNumber - 1) * stride + 1) % phaseList.length;
+    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(phaseList, qIdx) : phaseList[qIdx];
+    const progressed = applyParametricProgression(candidate, { weekNumber, phase, isRecovery: false });
+    return {
+      name: progressed.name,
+      powerTarget: interpolatePowerTarget(progressed.powerTarget, runFtp, bikeFtp, { mode: opts?.mode }),
+      justification: progressed.justification,
+      workoutDoc: progressed.workoutDoc,
+    };
+  }
+
+  const useCurated = weekNumber % 2 === 0 && phaseList.length > 0;
+  if (useCurated) {
+    const stride = getCoprimeStride(phaseList.length, 2);
+    const qIdx = ((weekNumber - 1) * stride) % phaseList.length;
+    const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(phaseList, qIdx) : phaseList[qIdx];
+    const progressed = applyParametricProgression(candidate, { weekNumber, phase, isRecovery: false });
+    return {
+      name: progressed.name,
+      powerTarget: interpolatePowerTarget(progressed.powerTarget, runFtp, bikeFtp, { mode: opts?.mode }),
+      justification: progressed.justification,
+      workoutDoc: progressed.workoutDoc,
+    };
+  }
+
   const linear = generateLinearRunningWorkout({
-    phase,
-    weekNumber,
-    isRecovery: opts?.isRecovery,
+    phase, weekNumber, isRecovery: false,
     mode: opts?.mode || (runFtp && runFtp > 0 ? "POWER" : "PACE"),
-    runFtp,
-    bikeFtp,
-    thresholdPaceSec: opts?.thresholdPaceSec,
-    stagedRacePaceSec: opts?.stagedRacePaceSec,
-    distanceType: opts?.distanceType,
+    runFtp, bikeFtp, thresholdPaceSec: opts?.thresholdPaceSec,
+    stagedRacePaceSec: opts?.stagedRacePaceSec, distanceType: opts?.distanceType,
   });
 
   return {
-    name: linear.name,
-    powerTarget: linear.powerTarget,
-    justification: linear.justification,
-    workoutDoc: linear.workoutDoc,
-    durationMin: linear.durationMinutes,
-    tss: linear.tss,
+    name: linear.name, powerTarget: linear.powerTarget, justification: linear.justification,
+    workoutDoc: linear.workoutDoc, durationMin: linear.durationMinutes, tss: linear.tss,
   };
 }
 

@@ -7013,3 +7013,53 @@ Para erradicar de raíz cualquier ambigüedad entre duraciones y distancias:
   - `SeasonAIGenerator.tsx`: 346 LOC.
   - `SeasonWizardStep2Disciplines.tsx`: 235 LOC.
   - `useSeasonPlans.ts`: 341 LOC.
+
+---
+
+## 104. ACTIVACIÓN INTEGRAL DE LA BIBLIOTECA DE ENTRENAMIENTOS, ERRADICACIÓN DE MONOTONÍA Y PERIODIZACIÓN FISIOLÓGICA BALANCEADA (v5.28)
+
+### 104.1. Diagnóstico y Causas Raíz Identificadas
+1. **Catálogos Hardcoded de 1 Solo Elemento en Modelos Base/Longevidad:**
+   - En `longevityModel.ts` y `athleteMomentsModels.ts`, el array `recoveryAerobicWorkouts` contenía un único objeto quemado (`"Caminata Rápida / Trote Suave Z1 (35m)"` o `"Trote Suave Regenerativo (40m)"`).
+   - Al generar un plan de mantenimiento o base (ej. Silvia Rey con 4 días de carrera: Lunes, Martes, Miércoles, Domingo), tanto el Martes como el Miércoles recibían exactamente la misma sesión idéntica repetida durante las 16 semanas.
+2. **Desconexión de la Biblioteca de Entrenamientos:**
+   - La plataforma contaba con un rico repositorio en `src/lib/ai/knowledge/workoutPools/` (`runningAerobicPool.ts`, `runningFartlekPool.ts`, `runningTempoPool.ts`, `runningDistancePool.ts`, `metricIntervalEngine.ts`), pero los modelos de mantenimiento/GPP no los importaban ni utilizaban.
+3. **Monopolio Exclusivo de Calidad Lineal en `selectQualityWorkout`:**
+   - En `macrocycleTemplateHelpers.ts`, `selectQualityWorkout` llamaba únicamente a `generateLinearRunningWorkout` (series progresivas de VO2max o umbral), ignorando por completo el catálogo curado de calidad (`qualityWorkouts.base` / `build`) y los Fartleks/Tempos.
+4. **Ausencia de Calidad Secundaria en Microciclos de 4+ Días de Carrera:**
+   - En `macrocycleTemplates.ts`, solo el primer día de carrera (`runCount === 1`) era elegible para calidad.
+   - Si un atleta corría 3 días entre semana (ej. Lun, Mar, Mié) más la tirada larga el domingo:
+     - Lunes: Calidad Principal.
+     - Martes: Rodaje Aeróbico Z2.
+     - Miércoles: Forzado a Rodaje Aeróbico Z2 idéntico (creando dos rodajes lentos consecutivos monótonos en lugar de un estímulo de sub-umbral, fartlek o tempo).
+5. **Incumplimiento de Modularidad en `athleteMomentsModels.ts`:**
+   - El archivo acumulaba 493 LOC, superando el límite estricto de $\le 350$ LOC.
+
+### 104.2. Solución Arquitectónica Implementada
+1. **Conexión Integral del Pool Aeróbico (`ALL_RUNNING_AEROBIC_WORKOUTS`):**
+   - En `longevityModel.ts`, `athleteMomentsModels.ts` y `athleteMomentsSpecializedModels.ts`, `recoveryAerobicWorkouts` se alimenta de los 12 entrenamientos del catálogo aeróbico (Lydiard, Seiler, Maffetone, billat, etc.).
+   - Rotación matemática coprima con memoria anti-monotonía de 5 semanas (`AntiMonotonyMemoryBuffer`) garantizando que dos días consecutivos o dos semanas sucesivas no repitan la misma sesión.
+2. **Desdoblamiento de Calidad: Principal (Pista/Series) vs Secundaria (Tempo/Fartlek):**
+   - En `macrocycleTemplates.ts`, cuando un atleta tiene 4 o más días de carrera a la semana:
+     - `runCount === 1` (ej. Lunes): Calidad Principal (`workoutType: "INTERVALS"`), alternando series lineales con el catálogo curado.
+     - `runCount === 2` (ej. Martes): Base Aeróbica Z2 pura rotativa desde `ALL_RUNNING_AEROBIC_WORKOUTS`.
+     - `runCount === 3` (ej. Miércoles): Calidad Secundaria (`workoutType: "TEMPO_FARTLEK"`), inyectando sesiones de sub-umbral, Cruise Intervals Daniels, Fartlek Monegetti, Fartlek Sueco Piramidal o Progresivo Canova.
+     - `runCount === 4` (ej. Domingo): Tirada Larga Progresiva (`Long Run`).
+3. **Alternancia y Variedad Paramétrica en `selectQualityWorkout` (`macrocycleTemplateHelpers.ts`):**
+   - En semanas pares se selecciona un entrenamiento curado del catálogo con progresión paramétrica y stride coprimo `gcd(stride, length) === 1`.
+   - En semanas impares se prescribe progresión lineal determinista o por pista métrica.
+   - En modo `TEMPO_FARTLEK`, selecciona específicamente del catálogo de fartlek y tempo sin sobrecargar con repeticiones de pista anaeróbicas.
+4. **Modularización Estricta de Modelos Especializados:**
+   - Creado `src/lib/ai/knowledge/athleteMomentsSpecializedModels.ts` (255 LOC) con `SPEED_BLOCK_MODEL`, `POST_RACE_DELOAD_MODEL` e `INJURY_REHAB_MODEL`.
+   - `athleteMomentsModels.ts` reducido a 221 LOC conteniendo `BASE_GPP_MODEL` y `GENERAL_BUILD_MODEL` y reexportando los modelos especializados para compatibilidad 100%.
+
+### 104.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js estáticas y dinámicas validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/ai/knowledge/longevityModel.ts`: 153 LOC.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 315 LOC.
+  - `src/lib/physiology/macrocycleTemplates.ts`: 342 LOC.
+  - `src/lib/ai/knowledge/athleteMomentsSpecializedModels.ts`: 255 LOC.
+  - `src/lib/ai/knowledge/athleteMomentsModels.ts`: 221 LOC.
+

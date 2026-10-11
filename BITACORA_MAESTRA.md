@@ -7471,3 +7471,46 @@ El usuario reportó dos requerimientos críticos:
   - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 334 LOC.
   - `src/lib/physiology/raceDayOverlay.ts`: 223 LOC.
 
+---
+
+## 114. REDISEÑO DE ÉLITE DE LA CABECERA Y HUD DE RESULTADOS DE ENTRENAMIENTO (v5.38)
+
+### 114.1. Diagnóstico de UX / UI y Requerimiento
+El usuario envió una captura en pantalla de smartphone indicando:
+*"se ve muy mal revisa un rediseño de esta cabecera"*
+
+**Análisis de la Captura y Defectos Detectados:**
+1. **Cabecera Saturada y Desordenada:**
+   - La cabecera del modal acumulaba 4 badges flotando sin jerarquía (`Domingo • 11 Oct`, `Carrera`, `⚡ 71 TSS`, `⏱️ 68m`) repartidos en dos líneas forzadas.
+   - El icono de zapatillas `h-10 w-10` quedaba centrado verticalmente con todo el bloque de texto en una caja lateral desalineada.
+   - El botón de cierre `X` quedaba flotando a mitad de altura empujado por el texto.
+   - El objetivo de entrenamiento aparecía como una caja amarilla pesada y chillona que parecía una advertencia de error.
+2. **Tarjeta de Datos Oscura Desentonada:**
+   - El contenedor HUD usaba un fondo negro/gris muy oscuro `bg-slate-900` dentro de un modal claro, luciendo como un parche tosco.
+   - En móviles, el nombre de la actividad se truncaba drásticamente a 3 caracteres (`B..`) debido a restricciones de ancho.
+   - Las 4 tarjetas y las 4 píldoras inferiores tenían tonos grises oscuros de bajo contraste.
+
+### 114.2. Solución Implementada
+
+1. **Rediseño Arquitectónico de la Cabecera en [`src/components/macrocycle/WorkoutDetailModal.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx) (289 LOC):**
+   - **Barra de Navegación Superior:**
+     - A la izquierda: Micro-badge de disciplina (`Carrera` en verde esmeralda con icono `h-8 w-8`) + Fecha estilizada (`Domingo • 11 Oct`).
+     - A la derecha: Botón de cierre circular `X` (`h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200`) anclado de forma fija y ergonómica en la esquina superior derecha.
+   - **Hero de la Sesión:**
+     - Título en tipografía de alto impacto `text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug`.
+     - Franja técnica de metadatos en una sola línea sutil: `⏱️ 68 min` • `⚡ 71 TSS` • `🎯 Objetivo: 269–279W (80–83% CP) • Z2 Base`.
+     - Erradicada la caja amarilla chillona en favor de una pastilla de precisión técnica.
+
+2. **Refinamiento Estético del HUD en [`src/components/macrocycle/ExecutedWorkoutHud.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ExecutedWorkoutHud.tsx) (166 LOC):**
+   - **Adaptación Armónica Light/Dark Mode:** Fondo suave `bg-slate-50/90 dark:bg-slate-950/60` con borde limpio `border-slate-200/90 dark:border-slate-800`.
+   - **Cero Truncamientos:** El nombre de la actividad (`activity.name`) cuenta con su fila dedicada completa, mostrando el título completo (ej. `Tirada Larga Aeróbica Z2`) junto al badge de carga `⚡ 56 / 71 TSS`.
+   - Dispositivo GPS y sensor (`Garmin Forerunner 970`) en subtítulo discreto con botón de ayuda `¿Qué significa cada dato?`.
+   - **Tarjetas "Big 4" de Alto Rendimiento:** Fondos blancos limpios (`bg-white dark:bg-slate-900 border border-slate-200/80`), con números grandes y colores atléticos vivos (Cian para Ritmo, Ámbar para Potencia, Rosa para Cardio, Esmeralda para Volumen).
+   - **Cinta de Métricas Secundarias:** Chips sutiles y limpios para EF, Cadencia, Desnivel y RPE.
+
+### 114.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 289 LOC.
+  - `src/components/macrocycle/ExecutedWorkoutHud.tsx`: 166 LOC.

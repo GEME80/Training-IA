@@ -7566,3 +7566,29 @@ Tras la aprobación del diseño, se ejecutaron las siguientes soluciones técnic
   - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 322 LOC.
   - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 227 LOC.
   - `src/components/macrocycle/telemetryChartHelpers.ts`: 174 LOC.
+
+---
+
+## 116. RESOLUCIÓN DE ERROR CRÍTICO REACT #310: PURGA DE HOOKS CONDICIONALES EN MODALES Y VISTAS DE ZONAS (v5.40)
+
+### 116.1. Diagnóstico y Causa Raíz
+El usuario reportó un crash en tiempo de ejecución capturado por el Error Boundary:
+`Error: Minified React error #310; visit https://react.dev/errors/310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. at Object.aq [as useMemo] ... at eK (page-e776d48e248bb395.js...)`
+
+**Causa Raíz:**
+El error `#310` de React corresponde a una **violación de las Rules of Hooks ("Rendered fewer / more hooks than during previous render")**:
+1. En [`src/components/macrocycle/WorkoutDetailModal.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx), existía un early return `if (!workout) return null;` en la línea 47, mientras que en la línea 124 se invocaba `useMemo` para `parsedTargetRange`. Cuando el modal pasaba de cerrado a abierto, la cantidad de hooks cambiaba dinámicamente, rompiendo la reconciliación del Virtual DOM.
+2. En [`src/components/macrocycle/ActivityZoneDistribution.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ActivityZoneDistribution.tsx), existía un early return `if (totalTime === 0) return null;` seguido de dos invocaciones a `useMemo` para `maxSeconds` y `thresholdLabel`.
+
+### 116.2. Solución Implementada
+1. En `WorkoutDetailModal.tsx`:
+   - Se convirtió la lógica de parseo del target a una función pura regular `parseTargetWorkRange()` ejecutada sincrónicamente en render sin `useMemo`.
+   - Se removió el import `useMemo`. Todos los hooks (`useAuth`, `useState`) se encuentran invariablemente en el encabezado del componente antes de cualquier condición de salida.
+2. En `ActivityZoneDistribution.tsx`:
+   - Se convirtieron `maxSeconds` y `thresholdLabel` a cálculos directos de render (`Math.max` y condición ternaria pura), eliminando los dos `useMemo` condicionales.
+   - Todos los hooks (`useState`, `useMemo` de series) se evalúan incondicionalmente en cada render.
+
+### 116.3. Certificación de Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** Todos los componentes $\le 350$ LOC ✅.

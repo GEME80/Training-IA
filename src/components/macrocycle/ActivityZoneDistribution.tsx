@@ -208,22 +208,13 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
   const totalTime = activeZones.reduce((a, b) => a + b.seconds, 0);
   if (totalTime === 0) return null;
 
-  const gridColsClass =
-    activeZones.length === 7
-      ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-7"
-      : activeZones.length === 6
-      ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
-      : "grid-cols-2 sm:grid-cols-5";
-
-  const maxSeconds = useMemo(() => {
-    return Math.max(...activeZones.map((z) => z.seconds), 1);
-  }, [activeZones]);
-
-  const thresholdLabel = useMemo(() => {
-    if (resolvedZoneType === "WATTS") return `Umbral ${effFtp > 0 ? `${effFtp} W` : "—"}`;
-    if (resolvedZoneType === "PACE") return `Umbral ${thresholdPaceStr || "—"}`;
-    return `Umbral LTHR ${lthr > 0 ? `${lthr} bpm` : "—"}`;
-  }, [resolvedZoneType, effFtp, thresholdPaceStr, lthr]);
+  const maxSeconds = Math.max(...activeZones.map((z) => z.seconds), 1);
+  const thresholdLabel =
+    resolvedZoneType === "WATTS"
+      ? `Umbral ${effFtp > 0 ? `${effFtp} W` : "—"}`
+      : resolvedZoneType === "PACE"
+      ? `Umbral ${thresholdPaceStr || "—"}`
+      : `Umbral LTHR ${lthr > 0 ? `${lthr} bpm` : "—"}`;
 
   return (
     <div className="rounded-2xl p-3 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-3 shadow-2xs">

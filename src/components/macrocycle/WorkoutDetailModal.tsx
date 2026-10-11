@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Check, X, Footprints, Bike, Dumbbell, Waves, Moon, Zap, Timer } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
@@ -121,7 +121,7 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
   }
 
-  const parsedTargetRange = useMemo<TargetWorkRange | undefined>(() => {
+  const parseTargetWorkRange = (): TargetWorkRange | undefined => {
     const raw = displayTarget || workout.powerTarget || (workout as any).paceTarget || "";
     if (!raw) return undefined;
     const wMatch = raw.match(/(\d{2,4})\s*[-–—]\s*(\d{2,4})\s*W/i);
@@ -138,7 +138,8 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
       return { min: Math.min(p1, p2), max: Math.max(p1, p2), type: "PACE", label: `${pMatch[1]}:${pMatch[2]}–${pMatch[3]}:${pMatch[4]}` };
     }
     return undefined;
-  }, [displayTarget, workout.powerTarget, (workout as any).paceTarget]);
+  };
+  const parsedTargetRange = parseTargetWorkRange();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">

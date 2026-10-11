@@ -7380,3 +7380,54 @@ El usuario solicitó una revisión exhaustiva de ergonomía móvil basada en cap
   - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 325 LOC.
   - `src/components/macrocycle/workoutTelemetryHelpers.ts`: 161 LOC.
   - `src/components/macrocycle/WorkoutDetailModal.tsx`: 293 LOC.
+
+---
+
+## 112. REDISEÑO DEPORTIVO DE ALTA PRECISIÓN: HUD TÉCNICO MINIMALISTA Y TELEMETRÍA PROTAGÓNICA CON TOUCH SCRUBBING (v5.36)
+
+### 112.1. Diagnóstico de UX Deportiva y Requerimiento
+El usuario solicitó una revisión con mentalidad de diseño de software deportivo pro (estilo Garmin Connect, Strava Pro, TrainingPeaks, WKO5):
+*"revisemos como se muestran los resultados de un entrenamiento las primeras tarjetas muy densas. se requiere ver la informacion pero podriamos quitar las tarjetas y que se muestren de otra manera mas organizada. la grafica debe ser lo mas importante y no se ve casi tiene mas espacio la targeta de datos. la distribucion quedo mejor. analiza toda esta tarjeta y actua como un experto en diseño deportivo y analiza que mas cambios se pueden hacer para que sea minimalista y eficiente con lo que quiere ver un deportista."*
+
+**Causas Raíz Detectadas:**
+1. **Sobrecarga de Contenedores y Cajas:** En el modal de sesión ejecutada existían 3 capas de bordes verdes anidados y 8 tarjetas cuadradas voluminosas que consumían más de 400px verticales. En smartphones, empujaban la gráfica interactiva fuera del viewport.
+2. **Falta de Gestos Táctiles en la Gráfica:** El elemento SVG de telemetría solo escuchaba eventos de ratón (`onMouseMove`). En móviles era imposible arrastrar el dedo para hacer "scrubbing" segundo a segundo a lo largo de la ruta o serie.
+3. **Falta de Jerarquía:** La gráfica de ritmo/potencia/pulso es el elemento más valioso para un atleta tras completar un entreno, pero estaba subordinada visualmente al grid estático de datos.
+
+### 112.2. Solución Implementada
+
+1. **Creación del HUD Deportivo Técnico [`src/components/macrocycle/ExecutedWorkoutHud.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ExecutedWorkoutHud.tsx) (161 LOC):**
+   - Elimina las 8 tarjetas blancas pesadas y los marcos anidados.
+   - Implementa un **Performance Strip / HUD Deportivo** minimalista en fondo pizarra de alto contraste:
+     - **Cabecera técnica:** Nombre de la sesión sincronizada, dispositivo GPS/sensor y chip de carga `⚡ TSS ejecutado vs planeado`.
+     - **Fila Principal (Big 4 del Deportista):** 4 columnas limpias de lectura instantánea:
+       1. **Ritmo / Velocidad:** Valor destacado en cian (`4:25/km` o `32.4 km/h`) + subtexto GAP.
+       2. **Potencia (W):** Valor destacado en ámbar (`245W`) + subtexto NP.
+       3. **Cardio (FC):** Valor destacado en rosa (`152 bpm`) + subtexto FC Máx.
+       4. **Volumen:** Valor destacado en esmeralda (`12.5k • 52m`).
+     - **Fila Secundaria de Eficiencia y Fisiología:** Chips horizontales discretos para Cadencia (`rpm` / `spm`), Eficiencia (`EF`) y Deriva Cardíaca (`D%`), Desnivel positivo y Sensación de esfuerzo (`RPE`).
+     - **Glosario Pedagógico Bajo Demanda:** Botón sutil `ℹ️ Glosario` que abre explicaciones fisiológicas sin estorbar la pantalla.
+
+2. **Protagónico y Touch Scrubbing en [`src/components/macrocycle/ActivityTelemetryChart.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ActivityTelemetryChart.tsx) (335 LOC):**
+   - Altura de gráfico aumentada de 220px a 240px para otorgarle el protagonismo visual absoluto del modal.
+   - **Soporte Táctil Nativo (`onTouchStart`, `onTouchMove`, `onTouchEnd`):** El atleta ahora puede deslizar su dedo sobre la gráfica en cualquier smartphone (iPhone/Android) para activar la línea guía vertical y consultar segundo a segundo el ritmo, pulsaciones, vatios y altitud en ese punto exacto.
+   - **Scrubber HUD Superior:** Barra de telemetría en tiempo real de alto contraste con indicadores de color dedicados (Cian para ritmo, Rosa para cardio, Púrpura para potencia, Pizarra para altitud).
+   - Estricto respeto del límite de líneas de código ($335 \le 350$ LOC).
+
+3. **Reorganización en [`src/components/macrocycle/WorkoutDetailModal.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx) (272 LOC):**
+   - Reemplazado el bloque pesado por `<ExecutedWorkoutHud />`.
+   - Flujo visual de élite:
+     1. Cabecera y objetivo.
+     2. HUD técnico ultracompacto (~75px de alto).
+     3. Gráfica de telemetría como hero visual protagónico.
+     4. Distribución de zonas en columnas verticales.
+     5. Prescripción de entrenamiento para comparación.
+
+### 112.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 272 LOC.
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 335 LOC.
+  - `src/components/macrocycle/ExecutedWorkoutHud.tsx`: 161 LOC.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 325 LOC.

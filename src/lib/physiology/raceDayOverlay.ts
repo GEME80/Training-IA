@@ -166,19 +166,27 @@ export function applyRaceDaysToPlan(
   races: RaceDayInfo[],
   opts: { bikeFtp?: number; runFtp?: number; primaryRaceDate?: string } = {}
 ): PlanItem[] {
+  let result = [...plan];
+  if (opts.primaryRaceDate) {
+    const hasAInPlan = result.some((p) => p.date === opts.primaryRaceDate && /COMPETICI/i.test(p.workoutName || ""));
+    const primaryRace = races.find((r) => r.date === opts.primaryRaceDate || r.priority === "A");
+    if (!hasAInPlan && primaryRace) {
+      result = result.filter((p) => p.date !== opts.primaryRaceDate);
+      result.push(buildRaceDayItem({ ...primaryRace, priority: "A" }, opts.bikeFtp, opts.runFtp));
+    }
+  }
+
   const secondary = races.filter((r) => {
     if (opts.primaryRaceDate && r.date === opts.primaryRaceDate) return false;
     return r.priority !== "A" || Boolean(r.name && /giro|rigo|gran\s*fondo/i.test(r.name));
   });
-  if (secondary.length === 0 || plan.length === 0) return plan;
-  const planDates = new Set(plan.map((p) => p.date).filter(Boolean));
+  if (secondary.length === 0 || result.length === 0) return result;
+  const planDates = new Set(result.map((p) => p.date).filter(Boolean));
   const raceByDate = new Map<string, RaceDayInfo>();
   secondary.forEach((r) => {
     const sanitized = /giro|rigo|gran\s*fondo/i.test(r.name) && r.priority === "A" ? { ...r, priority: "B" as const } : r;
     if (!raceByDate.has(sanitized.date)) raceByDate.set(sanitized.date, sanitized);
   });
-
-  let result = [...plan];
   const allDates = plan.map((p) => p.date).filter(Boolean) as string[];
   if (allDates.length === 0) return plan;
   const sortedDates = [...allDates].sort();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, X, Footprints, Bike, Dumbbell, Waves, Moon, HelpCircle, Zap, Timer } from "lucide-react";
+import { Check, X, Footprints, Bike, Dumbbell, Waves, Moon, Zap, Timer } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
@@ -10,7 +10,7 @@ import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
 import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
-import { buildTelemetryMetricItems } from "./workoutTelemetryHelpers";
+import { ExecutedWorkoutHud } from "./ExecutedWorkoutHud";
 import { formatPace, parsePaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface WorkoutDetailModalProps {
@@ -42,8 +42,6 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   const effLthr = typeof lthr === "number" && lthr > 0 ? lthr : (userProfile?.lthr || 0);
   const effMaxHR = typeof maxHR === "number" && maxHR > 0 ? maxHR : (userProfile?.maxHR || 0);
 
-  const [activeHelpId, setActiveHelpId] = useState<string | null>(null);
-  const [showAllHelp, setShowAllHelp] = useState<boolean>(false);
   const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
 
   if (!workout) return null;
@@ -172,81 +170,62 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
         </div>
 
         {isExecuted && (
-          <div className="rounded-2xl p-3 sm:p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 space-y-2.5 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-900 dark:text-emerald-300">
-                <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                Datos Reales del Entrenamiento (Intervals.icu)
-              </span>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setShowAllHelp(!showAllHelp)} className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200/60 dark:hover:bg-emerald-900/80 flex items-center gap-1 cursor-pointer bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-lg border border-emerald-300/80 transition" title="Mostrar u ocultar guía">
-                  <HelpCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                  {showAllHelp ? "Ocultar Guía" : "¿Qué significa cada métrica?"}
-                </button>
-                <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-lg border border-emerald-300/80">
-                  {isExtraActivity ? `⚡ Carga: ${executedTss} TSS` : `⚡ Carga: ${executedTss} / ${plannedTss} TSS`}
-                </span>
-              </div>
-            </div>
+          <div className="space-y-3">
+            {displayActivities.map((rawAct, aIdx) => {
+              const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
 
-            <div className="space-y-3">
-              {displayActivities.map((rawAct, aIdx) => {
-                const act = discoveredWatts[rawAct.id] && !rawAct.watts ? { ...rawAct, watts: discoveredWatts[rawAct.id] } : rawAct;
-                const metricItems = buildTelemetryMetricItems(act, workout.discipline);
+              return (
+                <div key={aIdx} className="space-y-3">
+                  <ExecutedWorkoutHud
+                    activity={act}
+                    discipline={workout.discipline}
+                    isExtraActivity={isExtraActivity}
+                    executedTss={executedTss}
+                    plannedTss={plannedTss}
+                  />
 
-                return (
-                  <div key={aIdx} className="rounded-2xl bg-white dark:bg-slate-900/90 p-3 sm:p-3.5 border border-emerald-200 dark:border-emerald-800/60 font-mono space-y-2.5">
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="font-black text-slate-900 dark:text-white truncate flex-1">{act.name}</span>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0">{act.deviceName || "Intervals Sync"}</span>
+                  {act.id && (
+                    <div className="space-y-3">
+                      <ActivityTelemetryChart
+                        activityId={act.id}
+                        athleteId={effAthleteId}
+                        apiKey={effApiKey}
+                        email={effEmail}
+                        uid={effUid}
+                        summaryStats={{
+                          heartrate: act.heartrate,
+                          maxHeartrate: act.maxHeartrate,
+                          watts: act.watts,
+                          weightedWatts: act.weightedWatts,
+                          distanceKm: act.distanceKm,
+                          movingTimeMin: act.movingTimeMin,
+                          paceStr: act.paceStr,
+                          elevationGainM: act.elevationGainM,
+                        }}
+                        onMetricsDiscovered={(m) => {
+                          if (m.avgWatts && !rawAct.watts) {
+                            setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
+                          }
+                        }}
+                      />
+
+                      <ActivityZoneDistribution
+                        activity={act}
+                        discipline={workout.discipline}
+                        runningTrainingMode={runningTrainingMode}
+                        hasRunningPowerMeter={hasRunningPowerMeter}
+                        runFtp={effRunFtp}
+                        bikeFtp={effBikeFtp}
+                        thresholdPaceSec={thresholdPaceSec}
+                        thresholdPaceStr={thresholdPaceStr}
+                        maxHeartrate={act.maxHeartrate || effMaxHR}
+                        lthr={effLthr}
+                      />
                     </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-[11px] pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                      {metricItems.map((item) => {
-                        const isExpanded = showAllHelp || activeHelpId === item.id;
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => setActiveHelpId(activeHelpId === item.id ? null : item.id)}
-                            className="bg-slate-50/90 dark:bg-slate-800/60 p-2 sm:p-2.5 rounded-xl relative flex flex-col justify-between border border-slate-100 dark:border-slate-800/80 transition shadow-2xs cursor-pointer hover:border-emerald-300"
-                          >
-                            <div>
-                              <span className="text-[9.5px] text-slate-400 uppercase block font-sans font-bold tracking-tight truncate">{item.label}</span>
-                              <strong className={`${item.colorClass} block font-bold text-xs sm:text-sm mt-0.5 truncate`}>{item.value}</strong>
-                              {item.subtext && <span className="text-[9px] text-slate-500 block truncate font-mono mt-0.5">{item.subtext}</span>}
-                            </div>
-                            {isExpanded && <div className="text-[9px] text-slate-700 dark:text-slate-300 bg-emerald-50 dark:bg-slate-900 p-1.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/70 leading-snug font-sans mt-1.5 animate-fadeIn">{item.athleteExplanation}</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {act.id && (
-                      <div className="space-y-3 pt-1">
-                        <ActivityTelemetryChart
-                          activityId={act.id} athleteId={effAthleteId} apiKey={effApiKey} email={effEmail} uid={effUid}
-                          summaryStats={{ heartrate: act.heartrate, maxHeartrate: act.maxHeartrate, watts: act.watts, weightedWatts: act.weightedWatts, distanceKm: act.distanceKm, movingTimeMin: act.movingTimeMin, paceStr: act.paceStr, elevationGainM: act.elevationGainM }}
-                          onMetricsDiscovered={(m) => { if (m.avgWatts && !rawAct.watts) setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! })); }}
-                        />
-
-                        <ActivityZoneDistribution
-                          activity={act}
-                          discipline={workout.discipline}
-                          runningTrainingMode={runningTrainingMode}
-                          hasRunningPowerMeter={hasRunningPowerMeter}
-                          runFtp={effRunFtp}
-                          bikeFtp={effBikeFtp}
-                          thresholdPaceSec={thresholdPaceSec}
-                          thresholdPaceStr={thresholdPaceStr}
-                          maxHeartrate={act.maxHeartrate || effMaxHR}
-                          lthr={effLthr}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

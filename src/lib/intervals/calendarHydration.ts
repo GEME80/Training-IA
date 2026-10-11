@@ -7,6 +7,7 @@ import {
   isRaceCalendarEvent,
   raceInfoFromEvent,
   raceInfoFromTarget,
+  buildRaceDayItem,
   applyRaceDaysToPlan,
   RaceDayInfo,
 } from "../physiology/raceDayOverlay";
@@ -203,7 +204,19 @@ export function hydrateWeekPlanFromEvents(
 
     dayEvts.forEach((evt) => {
       if (isRaceCalendarEvent(evt)) {
-        // Eventos de competición oficial se sobreponen atómicamente por raceDayOverlay
+        const matchingRace = dayFallback.find((p) => /COMPETICI/i.test(p.workoutName || "") || p.activityType === "Triatlón");
+        if (matchingRace) {
+          hydratedItems.push({ ...matchingRace, id: evt.id ? String(evt.id) : undefined, date: dateStr, formattedDate, day });
+          seenDisciplines.add(matchingRace.discipline);
+          return;
+        }
+        const rInfo = raceInfoFromEvent(evt);
+        if (rInfo && (rInfo.priority === "A" || (opts?.primaryRaceDate && dateStr === opts.primaryRaceDate))) {
+          const raceItem = buildRaceDayItem(rInfo, opts?.bikeFtp, opts?.runFtp);
+          hydratedItems.push({ ...raceItem, id: evt.id ? String(evt.id) : undefined, date: dateStr, formattedDate, day });
+          seenDisciplines.add(raceItem.discipline);
+          return;
+        }
         return;
       }
       const disc = resolveDiscipline(evt.type, evt.name);
@@ -292,6 +305,17 @@ export function hydrateWeekPlanFromEvents(
         isRestDay: false, mobilityWarmup: matchingFallback?.mobilityWarmup, fuelingStrategy: matchingFallback?.fuelingStrategy,
       });
     });
+
+    if (hydratedItems.filter((p) => p.date === dateStr).length === 0) {
+      if (dayFallback.length > 0) {
+        hydratedItems.push(...dayFallback);
+      } else {
+        hydratedItems.push({
+          day, date: dateStr, formattedDate, discipline: "Descanso", workoutName: "Descanso Pasivo",
+          action: "MANTENER", durationMinutes: 0, tss: 0, justification: "Día de asimilación biológica.", isRestDay: true,
+        });
+      }
+    }
   }
 
   const overlaidItems = applyRaceDaysToPlan(hydratedItems, detectedRaces, {

@@ -117,8 +117,8 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   const hasAlt = validAlts.length > 5;
 
   const chartWidth = 600;
-  const chartHeight = 220;
-  const padding = { left: 35, right: 15, top: 20, bottom: 30 };
+  const chartHeight = 240;
+  const padding = { left: 35, right: 15, top: 16, bottom: 28 };
   const { plotW, plotH, getX, getHrY, getWattsY, getAltY, getPaceY } = useMemo(
     () => createScaleHelpers({ totalSamples: sampledData.length, chartWidth, chartHeight, padding, minHr, maxHr, minAlt, maxAlt, maxWatts, minPaceSec, maxPaceSec }),
     [sampledData.length, minHr, maxHr, minAlt, maxAlt, maxWatts, minPaceSec, maxPaceSec]
@@ -134,11 +134,11 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     return altPoints.length ? `${altPath} L ${getX(altPoints[altPoints.length - 1].sampleIdx)} ${padding.top + plotH} L ${getX(altPoints[0].sampleIdx)} ${padding.top + plotH} Z` : "";
   }, [altPath, altPoints, getX, padding.top, plotH]);
 
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const updateHoverFromClientX = (clientX: number) => {
     if (!svgRef.current || sampledData.length === 0) return;
     const rect = svgRef.current.getBoundingClientRect();
     const scale = chartWidth / rect.width;
-    const relativeX = Math.max(0, Math.min(plotW, (e.clientX - rect.left) * scale - padding.left));
+    const relativeX = Math.max(0, Math.min(plotW, (clientX - rect.left) * scale - padding.left));
     const idx = Math.round((relativeX / plotW) * (sampledData.length - 1));
     setHoverIndex(idx >= 0 && idx < sampledData.length ? idx : null);
   };
@@ -175,12 +175,12 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   ];
 
   return (
-    <div className="rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-3 shadow-xs">
+    <div className="rounded-2xl p-3 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-2.5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-2">
           <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Gráfica de la Sesión ({formatSec(timeArray[timeArray.length - 1] || 0)})
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            Telemetría de Carrera / Ruta ({formatSec(timeArray[timeArray.length - 1] || 0)})
           </span>
           {activeMetric === "ALL" && (
             <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pl-2 border-l border-slate-200 dark:border-slate-700">
@@ -210,34 +210,56 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
         </div>
       </div>
 
-      {/* Tooltip Dinámico Superior */}
-      <div className="flex flex-wrap items-center gap-3.5 text-xs font-mono bg-slate-50 dark:bg-slate-950/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
-        <span className="text-slate-600 dark:text-slate-400 font-bold">⏱️ {hoveredData ? formatSec(hoveredData.timeSec) : "Pasa el cursor..."}</span>
-        {hasPace && (
-          <span className="text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
-            <Timer className="h-3 w-3" />
-            {hoveredData?.paceStr ? hoveredData.paceStr : summaryStats?.paceStr ? `Ritmo: ${summaryStats.paceStr}` : "—"}
+      {/* Tooltip Dinámico Superior (Scrubber HUD) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono bg-slate-50 dark:bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[38px]">
+        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold">
+          <span>⏱️ {hoveredData ? formatSec(hoveredData.timeSec) : "00:00"}</span>
+          {!hoveredData && (
+            <span className="text-[10px] font-sans font-normal text-slate-400 hidden sm:inline">
+              (Arrastra sobre la gráfica para ver cada punto)
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {hasPace && (
+            <span className="text-cyan-600 dark:text-cyan-400 font-bold flex items-center gap-1">
+              <Timer className="h-3 w-3" />
+              {hoveredData?.paceStr ? hoveredData.paceStr : summaryStats?.paceStr ? `Prom: ${summaryStats.paceStr}` : "—"}
+            </span>
+          )}
+          <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+            <Heart className="h-3 w-3" />
+            {hoveredData ? (hoveredData.hr !== undefined ? `${hoveredData.hr} bpm` : "—") : (summaryStats?.heartrate ? `Prom: ${summaryStats.heartrate} bpm` : "—")}
           </span>
-        )}
-        <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-          <Heart className="h-3 w-3" />
-          {hoveredData ? (hoveredData.hr !== undefined ? `${hoveredData.hr} bpm` : "Sin señal") : (summaryStats?.heartrate ? `Media: ${summaryStats.heartrate} bpm` : "—")}
-        </span>
-        {hasWatts && (
-          <span className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
-            <Zap className="h-3 w-3" />
-            {hoveredData?.watts !== undefined ? `${hoveredData.watts} W` : summaryStats?.watts ? `Media: ${summaryStats.watts}W` : streamAvgWatts ? `Media: ${streamAvgWatts}W` : (summaryStats?.weightedWatts ? `NP: ${summaryStats.weightedWatts}W` : "—")}
+          {hasWatts && (
+            <span className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              {hoveredData?.watts !== undefined ? `${hoveredData.watts} W` : summaryStats?.watts ? `Prom: ${summaryStats.watts}W` : streamAvgWatts ? `Prom: ${streamAvgWatts}W` : (summaryStats?.weightedWatts ? `NP: ${summaryStats.weightedWatts}W` : "—")}
+            </span>
+          )}
+          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <Mountain className="h-3 w-3" />
+            {hoveredData?.alt !== undefined ? `${Math.round(hoveredData.alt)} m` : (summaryStats?.elevationGainM ? `+${summaryStats.elevationGainM}m` : "—")}
           </span>
-        )}
-        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-          <Mountain className="h-3 w-3" />
-          {hoveredData?.alt !== undefined ? `${Math.round(hoveredData.alt)} m` : (summaryStats?.elevationGainM ? `+${summaryStats.elevationGainM}m` : "—")}
-        </span>
+        </div>
       </div>
 
-      {/* SVG Canvas Gráfico */}
-      <div className="relative w-full overflow-hidden">
-        <svg ref={svgRef} viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto cursor-crosshair select-none" onMouseMove={handleMouseMove} onMouseLeave={() => setHoverIndex(null)}>
+      {/* SVG Canvas Gráfico con soporte Touch Nativo */}
+      <div className="relative w-full overflow-hidden touch-none select-none">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          className="w-full h-auto cursor-crosshair"
+          onMouseMove={(e) => updateHoverFromClientX(e.clientX)}
+          onMouseLeave={() => setHoverIndex(null)}
+          onTouchStart={(e) => {
+            if (e.touches && e.touches.length > 0) updateHoverFromClientX(e.touches[0].clientX);
+          }}
+          onTouchMove={(e) => {
+            if (e.touches && e.touches.length > 0) updateHoverFromClientX(e.touches[0].clientX);
+          }}
+          onTouchEnd={() => setHoverIndex(null)}
+        >
           <defs>
             <linearGradient id="hrGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.25" />
@@ -261,10 +283,9 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
           )}
 
           {(activeMetric === "ALL" || activeMetric === "PACE") &&
-            paceSegments.map((seg, sIdx) => {
-              const pD = seg.map((pt, j) => `${j === 0 ? "M" : "L"} ${getX(pt.sampleIdx)} ${getPaceY(pt.val)}`).join(" ");
-              return <path key={`p-seg-${sIdx}`} d={pD} fill="none" stroke="#06b6d4" strokeWidth="2.0" />;
-            })}
+            paceSegments.map((seg, sIdx) => (
+              <path key={`p-${sIdx}`} d={seg.map((pt, j) => `${j === 0 ? "M" : "L"} ${getX(pt.sampleIdx)} ${getPaceY(pt.val)}`).join(" ")} fill="none" stroke="#06b6d4" strokeWidth="2.0" />
+            ))}
 
           {(activeMetric === "ALL" || activeMetric === "HEARTRATE") && hrSegments.length > 0 && (
             <>
@@ -272,17 +293,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
                 if (sIdx === hrSegments.length - 1) return null;
                 const nextSeg = hrSegments[sIdx + 1];
                 return (
-                  <line
-                    key={`hr-gap-${sIdx}`}
-                    x1={getX(seg[seg.length - 1].sampleIdx)}
-                    y1={getHrY(seg[seg.length - 1].val)}
-                    x2={getX(nextSeg[0].sampleIdx)}
-                    y2={getHrY(nextSeg[0].val)}
-                    stroke="#f43f5e"
-                    strokeWidth="1.2"
-                    strokeDasharray="3,3"
-                    strokeOpacity="0.5"
-                  />
+                  <line key={`hr-gap-${sIdx}`} x1={getX(seg[seg.length - 1].sampleIdx)} y1={getHrY(seg[seg.length - 1].val)} x2={getX(nextSeg[0].sampleIdx)} y2={getHrY(nextSeg[0].val)} stroke="#f43f5e" strokeWidth="1.2" strokeDasharray="3,3" strokeOpacity="0.5" />
                 );
               })}
               {hrSegments.map((seg, sIdx) => {
@@ -299,10 +310,9 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
           )}
 
           {(activeMetric === "ALL" || activeMetric === "WATTS") &&
-            wattsSegments.map((seg, sIdx) => {
-              const pD = seg.map((pt, j) => `${j === 0 ? "M" : "L"} ${getX(pt.sampleIdx)} ${getWattsY(pt.val)}`).join(" ");
-              return <path key={`w-seg-${sIdx}`} d={pD} fill="none" stroke="#a855f7" strokeWidth="1.8" />;
-            })}
+            wattsSegments.map((seg, sIdx) => (
+              <path key={`w-${sIdx}`} d={seg.map((pt, j) => `${j === 0 ? "M" : "L"} ${getX(pt.sampleIdx)} ${getWattsY(pt.val)}`).join(" ")} fill="none" stroke="#a855f7" strokeWidth="1.8" />
+            ))}
 
           {hoverIndex !== null && (
             <>

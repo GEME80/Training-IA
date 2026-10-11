@@ -44,9 +44,12 @@ export function generateWeekTemplate(
 
   const curatedModel = resolveCuratedModelForWeek(distanceType, week.focusDescription, safeAvailability);
   const volumeScaleFactor = resolveVolumeScaleFactor(athleteCtl);
-  const scheduledTests = [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
+  const isFreezeWindow = hasTargetRace && countdown <= 4;
+  const scheduledTests = isFreezeWindow
+    ? []
+    : [...curatedModel.mandatoryTests.filter((t) => t.recommendedWeekIndex === weekNumber)];
   const hasCycling = Object.values(safeAvailability).some((discs: any) => Array.isArray(discs) && discs.some((d: string) => /ciclismo|bike|ride/i.test(d)));
-  const isFtpTestWk = !isRaceWeek && hasCycling && ((microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) || (weekNumber === 7 && totalWeeks >= 9));
+  const isFtpTestWk = !isRaceWeek && !isFreezeWindow && hasCycling && ((microcycleType === "TEST_CONTROL" && /ftp/i.test(week.focusDescription || "")) || (weekNumber === 7 && totalWeeks >= 9));
   if (isFtpTestWk && !scheduledTests.some((t) => t.sport === "Ride")) scheduledTests.push({ ...BIKE_TEST_RAMP, recommendedWeekIndex: weekNumber });
   if (isRaceWeek || scheduledTests.length > 1) scheduledTests.splice(isRaceWeek ? 0 : 1);
   const raceGoal = (week as any).raceGoal || runningOpts?.raceGoal;

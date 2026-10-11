@@ -95,10 +95,15 @@ export function selectQualityWorkout(
   const useCurated = weekNumber % 2 === 0;
   if (useCurated) {
     const isMaintOrBase = opts?.distanceType === "maintenance" || opts?.distanceType === "base_building" || curatedModel.modelId === "BASE_LONGEVITY" || curatedModel.modelId === "BASE_GPP";
-    const filteredDist = isMaintOrBase
-      ? ALL_RUNNING_DISTANCE_WORKOUTS.filter((w) => (w.durationMin || 0) <= 55 && !w.name.includes("4km") && !w.name.includes("Maratón"))
-      : ALL_RUNNING_DISTANCE_WORKOUTS;
-    const curatedQualityPool = phaseList.length > 0 ? [...phaseList, ...filteredDist] : filteredDist;
+    const isTriathlon = curatedModel.sportCategory === "Triathlon" || opts?.distanceType?.startsWith("triathlon_");
+    const isShortTri = curatedModel.modelId === "TRIATHLON_SHORT" || opts?.distanceType === "triathlon_short";
+    let filteredDist = ALL_RUNNING_DISTANCE_WORKOUTS;
+    if (isMaintOrBase) {
+      filteredDist = ALL_RUNNING_DISTANCE_WORKOUTS.filter((w) => (w.durationMin || 0) <= 55 && !w.name.includes("4km") && !w.name.includes("Maratón"));
+    } else if (isTriathlon) {
+      filteredDist = ALL_RUNNING_DISTANCE_WORKOUTS.filter((w) => !w.name.includes("4km") && !w.name.includes("Maratón") && (!isShortTri || (w.durationMin || 0) <= 50));
+    }
+    const curatedQualityPool = isTriathlon && phaseList.length > 0 ? phaseList : (phaseList.length > 0 ? [...phaseList, ...filteredDist] : filteredDist);
     const stride = getCoprimeStride(curatedQualityPool.length, 2);
     const qIdx = ((weekNumber - 1) * stride) % curatedQualityPool.length;
     const candidate = opts?.memoryBuffer ? opts.memoryBuffer.selectDiverseCandidate(curatedQualityPool, qIdx) : curatedQualityPool[qIdx];

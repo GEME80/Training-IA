@@ -7663,4 +7663,45 @@ En respuesta a la propuesta de rediseño estructural del deportista para elimina
   - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 346 LOC ($\le 350$).
   - `src/components/macrocycle/telemetryChartHelpers.tsx`: 252 LOC ($\le 350$).
 
+---
+
+## 119. REFACTORIZACIÓN COMPLETA DE UI: SPORTS STATS BOTTOM SHEET (SNAP POINTS PEEK 38% / EXPANDED 90%, STATCARD, METRICBAR Y STICKY FOOTER) (v5.43)
+
+### 119.1. Cumplimiento Estricto de la Especificación de Refactorización
+En apego al prompt formal de diseño ergonómico para estadísticas deportivas:
+1. **Arquitectura de Snap Points Estrictos:**
+   - **Estado 1: Peek / Compacto (`snapPoint: 38%` / `345px` - `overflow: hidden` estricto):**
+     * Manija táctil de arrastre (*drag handle*) y botón de cierre (*✕*).
+     * Cabecera con título de sesión y duración (ej. "Fondo Resistencia Z2 • 45 mins").
+     * Grid horizontal de 3 tarjetas KPI maestras ([`StatCard.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/StatCard.tsx) - 56 LOC): Carga TSS, Eficacia/Objetivo y Volumen con badges e indicadores.
+     * Una única fila destacada de progreso general ([`MetricBar.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/MetricBar.tsx) - 62 LOC): Zona objetivo o cumplimiento del plan con barra de progreso y carril tenue de escala.
+     * **Sticky Footer CTA:** Botón principal de acción morado primario `[ ↗ Ver Análisis Completo ]` con soporte de áreas seguras (`safe-area-inset-bottom`). Cero scroll interno y ningún elemento cortado.
+   - **Estado 2: Expandido (`snapPoint: 90%` / `90vh`):**
+     * Activado al arrastrar hacia arriba o al pulsar "Ver Análisis Completo".
+     * Control segmentado de 3 pestañas especializadas ([`WorkoutSegmentedTabs.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutSegmentedTabs.tsx) - 64 LOC):
+       - **Tab 1 ("Resumen"):** Desglose de Top métricas/zonas activas con fondo tenue de escala y acordeón colapsable para zonas en 0%.
+       - **Tab 2 ("Evolución"):** Gráfico interactivo de series de tiempo/dinámica con franja sombreada de objetivo y scrubber táctil HUD.
+       - **Tab 3 ("Detalle"):** Tabla completa categorizada de estadísticas fisiológicas (`ExecutedSessionMetricsTable`), prescripción original y notas.
+     * Scroll vertical natural habilitado exclusivamente dentro del contenedor de la pestaña activa.
+
+2. **Reglas de Ergonomía Móvil y Jerarquía Visual:**
+   - **Backdrop & Focus:** Fondo oscurecido con `background: rgba(0, 0, 0, 0.45)` y `backdrop-filter: blur(4px)`.
+   - **Sticky Footer con Safe Area Inset:** `padding-bottom: max(14px, env(safe-area-inset-bottom))` para compatibilidad nativa con Home Indicator de iOS y barras Android.
+   - **Jerarquía Cromática:** Color morado primario (`bg-purple-600`) reservado exclusivamente para el CTA principal y estados activos de navegación; tonos neutros y secundarios para carriles de fondo.
+
+### 119.2. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 347 LOC ($\le 350$).
+  - `src/components/macrocycle/WorkoutBottomSheetHero.tsx`: 146 LOC ($\le 350$).
+  - `src/components/macrocycle/WorkoutSegmentedTabs.tsx`: 64 LOC ($\le 350$).
+  - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$).
+  - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$).
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 335 LOC ($\le 350$).
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 219 LOC ($\le 350$).
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 346 LOC ($\le 350$).
+  - `src/components/macrocycle/telemetryChartHelpers.tsx`: 252 LOC ($\le 350$).
+
+
 

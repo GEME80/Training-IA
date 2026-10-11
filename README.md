@@ -1,9 +1,23 @@
-# ⚡ SGEA Pro (v4.07) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.34) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🏆 **Pacing Plan a Potencia en Competición Oficial & Pureza del Cronómetro (v5.34):**
+  - **Cero Warmup/Cooldown en el Reloj:** El archivo de entrenamiento estructurado de carrera arranca exactamente en el Km 0.0 con el pistoletazo de salida y culmina al cruzar la meta. Erradicación de pasos forzados de calentamiento o caminata post-meta que distorsionen el tiempo neto oficial, el ritmo medio y los récords en Garmin / Stryd / Intervals.icu.
+  - **Protocolos Tácticos Fuera de Cronómetro:** Activación previa en seco (30m antes sin gasto glucogénico) y recuperación post-meta estructuradas como guía informativa sin contaminar el cronómetro deportivo.
+  - **Estrategia por Fases a Potencia Stryd (% CP):**
+    * *Maratón (42.2K):* $5\text{km @ } 87\%\text{ CP}$ (salida controlada) $\rightarrow$ $27\text{km @ } 89\%\text{ CP}$ (ritmo crucero aeróbico) $\rightarrow$ $10.2\text{km @ } 91\%\text{ CP}$ (bloque decisivo y vaciado en meta), con nutrición integrada de $60\text{-}80\text{g CHO/h}$.
+    * *Media Maratón (21.1K):* $3\text{km @ } 90\%\text{ CP} \rightarrow 14\text{km @ } 92\%\text{ CP} \rightarrow 4.1\text{km @ } 94\%\text{ CP}$.
+    * *10K / 5K:* Umbral anaeróbico funcional ($96\text{-}100\%\text{ CP}$) y VO2max sostenido ($100\text{-}106\%\text{ CP}$).
+  - **Parser Fisiológico Blindado (`workoutDocParser.ts`):** Las notas de nutrición e hidratación ya no generan intervalos espurios de 5 minutos, garantizando una gráfica de zonas de carrera fidedigna con colores progresivos de esfuerzo.
+
+- 🧘 **Gobernanza Fisiológica Pura para Fases de Base y Mantenimiento (v5.32):**
+  - **Erradicación de Fases BUILD en Planes No Competitivos:** Para planes sin carrera (`maintenance`, `base_building`), el macrociclo se divide estrictamente en dos fases de desarrollo aeróbico orgánico: `BASE_1` (salud, capilarización) y `BASE_2` (consolidación neuromuscular), con $0$ semanas de `BUILD` agónico ni semanas de competición forzadas.
+  - **Calidad Neuromuscular Aláctica (Lydiard / Seiler / Attia):** Progresión de cuestas cortas ($8\text{-}10\times 100\text{m}$), zancada/cadencia ($8\times 200\text{m}$) y fartlek lúdico, prohibiendo series agónicas de $6\times 1000\text{m}$ o bloques de $4\times 4\text{km}$ en planes de salud.
+  - **Dosis Mitocondrial en Zona 2 (Attia / San Millán):** Tiradas dominicales moduladas estrictamente en **40 a 55 minutos** (máx. 60m para élite), eliminando fondos maratonianos de 1h30 a 1h40 en atletas de salud.
 
 - 🏁 **Superposición Fisiológica de Carreras, Carrera por Ritmo & Hidratación Viva en Auditoría Admin (v4.07):**
   - **Inferencia Semántica & Superposición Atómica de Competiciones (`raceDayOverlay.ts`):** Inferencia exacta de disciplina real: pruebas como el *Giro de Rigo* o *Gran Fondos* se clasifican inequívocamente como **Ciclismo puro** (nunca atletismo). El día de la prueba se asigna `🏁 COMPETICIÓN B: Giro de Rigo (Ciclismo)` ($240\text{m}$, $210\text{ TSS}$, $68\text{-}78\%\text{ FTP}$), suprimiendo la tirada a pie y natación simultáneas; la víspera (sábado) se convierte en pedaleo de activación neuromuscular ($35\text{m Z1}$) y el lunes posterior en rodillo regenerativo o descanso pasivo.

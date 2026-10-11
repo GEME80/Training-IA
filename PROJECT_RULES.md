@@ -826,4 +826,31 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
    - Todo nuevo generador, wizard, prompt de IA o módulo que compute macrociclos DEBE resolver los parámetros a partir de la fuente viva del atleta (CTL, disponibilidad semanal, modo de prescripción y objetivo sin carrera).
    - Si no existe fecha de carrera o el objetivo es de salud/base, `primaryRace` DEBE permanecer como `null`, garantizando que ningún atleta experimente una competición fantasma ni sobrecargas articulares lesivas.
 
+---
+
+## 🏆 22. LEYES DE GOBERNANZA PARA COMPETICIÓN OFICIAL Y PACING PLAN A POTENCIA (v5.34)
+
+1. **Ley de Pureza del Cronómetro Oficial (Cero Warmup/Cooldown en el Reloj):**
+   - El entrenamiento estructurado de competición oficial sincronizado a Garmin / Stryd / Intervals.icu debe iniciar **exactamente en el Km 0.0 con el pistoletazo de salida** y finalizar **en el instante exacto de cruzar la meta**.
+   - Queda terminantemente prohibido incluir pasos de temporizador de Warmup (ej. 15m @ 65% CP) o Cooldown (ej. 10m Caminata) dentro del archivo de carrera oficial. Esto erradica que el reloj exija calentar en el corral de salida o distorsione el tiempo neto oficial, el ritmo medio y los récords personales post-meta.
+
+2. **Ley de Protocolos Tácticos Fuera de Cronómetro:**
+   - El calentamiento (movilidad articular dinámica, balanceos, activación neuromuscular previa en seco sin desgaste de glucógeno) y la vuelta a la calma (abrigo inmediato, reposición hidroelectrolítica, caminata libre) se prescriben estrictamente como **Protocolos Tácticos Fuera de Cronómetro**.
+   - Estos protocolos actúan como guía metodológica en la tarjeta visual pero nunca generan pasos de temporizador en el dispositivo deportivo.
+
+3. **Ley de Pacing Plan por Fases a Potencia Stryd (% CP):**
+   - Toda competición oficial de carrera a pie prescrita por potencia debe dividirse en una estrategia por fases basada en porcentajes de la Potencia Crítica (Stryd CP):
+     * **Maratón (42.2K):**
+       - *Fase 1 (Km 0 a 5):* `5km @ 87% CP` — Salida controlada para contener la euforia y neutralizar el pico inicial de adrenalina.
+       - *Fase 2 (Km 5 a 32):* `27km @ 89% CP` — Ritmo crucero aeróbico estable y quema eficiente de glucógeno ($60\text{-}80\text{g CHO/h}$).
+       - *Fase 3 (Km 32 a 42.2):* `10.2km @ 91% CP` — Bloque decisivo ante la fatiga para vaciado controlado en meta.
+     * **Media Maratón (21.1K):** `3km @ 90% CP` $\rightarrow$ `14km @ 92% CP` $\rightarrow$ `4.1km @ 94% CP`.
+     * **10K:** `2km @ 96% CP` $\rightarrow$ `6km @ 98% CP` $\rightarrow$ `2km @ 101% CP` (Umbral funcional anaeróbico puro).
+     * **5K:** `1km @ 100% CP` $\rightarrow$ `3km @ 103% CP` $\rightarrow$ `1km @ 106% CP` (VO2max sostenido).
+     * **Ciclismo Gran Fondo:** Salida $68\%$ FTP $\rightarrow$ Crucero $76\%$ FTP $\rightarrow$ Cierre $80\%$ FTP.
+
+4. **Ley de Filtrado de Notas Nutricionales en el Analizador de Intervalos:**
+   - En el analizador de sintaxis (`workoutDocParser`), las líneas de notas de nutrición, hidratación o consejos tácticos que no expresan distancias ni duraciones fraccionadas jamás deben computar como intervalos de tiempo ni dibujar barras espurias en la gráfica de zonas.
+
+
 

@@ -124,49 +124,66 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-5 shadow-2xl space-y-3.5 max-h-[88dvh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              {getDisciplineIcon(workout.discipline)}
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  {workout.day} • {workout.formattedDate || workout.date}
-                </span>
-                <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold border ${getDisciplineBadgeClass(workout.discipline)}`}>
+        {/* Cabecera Pro Minimalista */}
+        <div className="border-b border-slate-100 dark:border-slate-800 pb-3 space-y-2">
+          {/* Top Bar: Icono + Disciplina + Fecha | Botón Cerrar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                {getDisciplineIcon(workout.discipline)}
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <span className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border ${getDisciplineBadgeClass(workout.discipline)} shrink-0`}>
                   {isExtraActivity ? "Actividad Adicional" : workout.discipline}
                 </span>
-                <span className="inline-flex items-center gap-0.5 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-300/80 dark:border-amber-800/80">
-                  ⚡ {plannedTss} TSS
-                </span>
-                <span className="inline-flex items-center gap-0.5 text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                  ⏱️ {workout.durationMinutes || parsedDoc.totalMins || 45}m
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
+                  {workout.day} • {workout.formattedDate || workout.date}
                 </span>
               </div>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
-                {displayTitle}
-              </h4>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
+              aria-label="Cerrar modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Hero de la Sesión: Título + Cinta de Metadatos */}
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+              {displayTitle}
+            </h3>
+
+            {/* Metadatos planificados en franja técnica sutil */}
+            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs font-mono">
+              <span className="text-slate-600 dark:text-slate-400 font-bold inline-flex items-center gap-1">
+                ⏱️ {workout.durationMinutes || parsedDoc.totalMins || 45} min
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-0.5">
+                ⚡ {plannedTss} TSS
+              </span>
               {displayTarget && (
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
                   <span className={`inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border ${
                     isRunPace
                       ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60"
                       : isBike
                       ? "text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60"
-                      : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60"
+                      : "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60"
                   }`}>
-                    {isRunPace ? <Timer className="h-3 w-3 text-emerald-500" /> : <Zap className={`h-3 w-3 ${isBike ? "text-sky-500" : "text-amber-500"}`} />}
-                    Objetivo: {displayTarget}
+                    {isRunPace ? <Timer className="h-3 w-3 text-emerald-500 shrink-0" /> : <Zap className={`h-3 w-3 shrink-0 ${isBike ? "text-sky-500" : "text-amber-500"}`} />}
+                    <span>Objetivo: {displayTarget}</span>
                   </span>
-                </div>
+                </>
               )}
             </div>
           </div>
-
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
-            <X className="h-4 w-4" />
-          </button>
         </div>
 
         {isExecuted && (

@@ -7431,3 +7431,43 @@ El usuario solicitó una revisión con mentalidad de diseño de software deporti
   - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 335 LOC.
   - `src/components/macrocycle/ExecutedWorkoutHud.tsx`: 161 LOC.
   - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 325 LOC.
+
+---
+
+## 113. AUDITORÍA FISIOLÓGICA DE MACROCICLOS (JUAN PABLO VÁSQUEZ & GEORG SCHMITT) Y RESOLUCIÓN ATÓMICA DE TARJETA DE DÍA DE COMPETICIÓN (v5.37)
+
+### 113.1. Diagnóstico y Causa Raíz
+El usuario reportó dos requerimientos críticos:
+1. *"analiza porque la ultima semana pre carrera no le parece la tarjeta del dia de la competencia"* (Semana 9 de Georg Schmitt / Ironman 70.3 Cartagena mostraba el domingo 29 de Noviembre como `11-29` y una tarjeta vacía de descanso con `🌙 -`).
+2. *"ejecutar los cambios en los planes segun la auditoria fisiologica"* (Auditoría de los macrociclos de Juan Pablo Vásquez y Georg Schmitt).
+
+**Causas Raíz Detectadas:**
+1. **Descarte Prematuro en Hidratación del Calendario:** En `src/lib/intervals/calendarHydration.ts`, si Intervals.icu devolvía un evento de carrera (`category: "RACE"` o `type: "Race"`), `isRaceCalendarEvent(evt)` hacía `return;` asumiendo que `raceDayOverlay.ts` lo sobrepondría. Al no haber otros eventos, `hydratedItems` terminaba con 0 elementos para el domingo de la carrera.
+2. **Exclusión de Carrera A en `raceDayOverlay.ts`:** `applyRaceDaysToPlan` filtraba las carreras Tipo A (`r.priority !== "A"`) esperando que ya vinieran en el plan. Al haber sido descartadas en la hidratación, el día quedaba huérfano con 0 items.
+3. **Fallback Huérfano en la UI:** `AthleteCalendarDayColumn.tsx` al no recibir items para ese día tomaba `dateStr.slice(5)` produciendo la etiqueta `"11-29"` y dibujaba el contenedor de día libre con `<Moon />` y `<span>-</span>`.
+4. **Tests al Fallo en Ventana Pre-Carrera:** En `macrocycleTemplates.ts`, se inyectaba Ramp Test al fallo en la semana 7 (a 3 semanas del Ironman 70.3 de Georg Schmitt).
+5. **Contaminación de Series de Maratón en Triatlón:** En `macrocycleTemplateHelpers.ts`, semanas pares combinaban `[...phaseList, ...filteredDist]` con `ALL_RUNNING_DISTANCE_WORKOUTS`, inyectando sesiones Canova de maratón (`RUN_DISTANCE_EXTENSIVO_3X_4KM`) a Juan Pablo Vásquez a 12 días de su triatlón olímpico.
+
+### 113.2. Solución Implementada
+1. **Garantía Atómica de la Tarjeta de Competición en `src/lib/intervals/calendarHydration.ts` (337 LOC):**
+   - Cuando `isRaceCalendarEvent(evt)` es verdadero, empareja directamente el item oficial generado (`🏆 COMPETICIÓN OBJETIVO`), o construye la tarjeta con `buildRaceDayItem` si no existía fallback.
+   - Si tras procesar los eventos de un día `hydratedItems` no tiene elementos para esa fecha, rescata automáticamente `dayFallback`. **Ningún día de carrera vuelve a quedar vacío ni a mostrarse como descanso**.
+2. **Respaldo de Carrera Primaria en `src/lib/physiology/raceDayOverlay.ts` (223 LOC):**
+   - Si `opts.primaryRaceDate` existe y el plan no contiene la tarjeta de competición, se inyecta de forma prioritaria con su pacing específico a potencia.
+3. **Freeze Window de Tests de Campo ($\le 4$ semanas) en `src/lib/physiology/macrocycleTemplates.ts` (348 LOC):**
+   - Se estableció `const isFreezeWindow = hasTargetRace && countdown <= 4;`. Si el atleta está a 4 semanas o menos de su carrera A, se bloquean todos los tests al fallo (`Ramp Test ERG` y `3/9m`), protegiendo el SNC durante el Tapering y afinamiento.
+4. **Purga Fisiológica para Triatlón en `src/lib/physiology/macrocycleTemplateHelpers.ts` (334 LOC):**
+   - Para triatletas (`curatedModel.sportCategory === "Triathlon"` o `triathlon_short` / `triathlon_703`), se priorizan exclusivamente las sesiones de calidad de su propio modelo (`phaseList`) y se filtran rigurosamente series de 4 km y maratón.
+
+### 113.3. Certificación de Calidad y Cumplimiento
+- **Simulación Fisiológica en Memoria:**
+  - Georg Schmitt: Semana 7 libre de tests al fallo (`PASS`); Semana 9 domingo hidrata con éxito `🏆 COMPETICIÓN OBJETIVO: PULSE 70.3 Triathlon Engine (113 km)` con fecha `29 Nov` e `isRestDay: false` (`PASS`).
+  - Juan Pablo Vásquez: Semanas 1 a 6 con cero sesiones de maratón `3x 4km` (`PASS`).
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/intervals/calendarHydration.ts`: 337 LOC.
+  - `src/lib/physiology/macrocycleTemplates.ts`: 348 LOC.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 334 LOC.
+  - `src/lib/physiology/raceDayOverlay.ts`: 223 LOC.
+

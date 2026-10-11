@@ -7730,6 +7730,7 @@ Siguiendo las mejores prácticas de análisis de deportes de resistencia (Interv
    - Al pulsar el CTA `[ ↗ Ver Análisis Completo ]` desde el estado colapsado (Peek 38%), el sheet se expande directamente al 90vh posicionándose por defecto en la pestaña **Resumen**.
 
 ### 120.2. Certificación de Calidad y Modularidad
+- **Commit Git:** `8327d6d` sincronizado en `origin/main` ✅.
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
 - **Ley de Modularidad ($\le 350$ LOC por archivo):**
@@ -7767,6 +7768,7 @@ Para erradicar el antipatrón de visualización donde el estado colapsado (peek 
    - Mantiene la experiencia nativa de smartphone: Estado Peek inicial (38% / 345px) con resumen ejecutivo de 3 segundos, manija de arrastre táctil (*drag handle*) y botón sticky CTA `[ ↗ Ver Análisis Completo ]` adaptado a áreas seguras (`safe-area-inset-bottom`), expandible fluidamente a 90vh.
 
 ### 121.2. Certificación de Calidad y Modularidad
+- **Commit Git:** `d6de9eb` sincronizado en `origin/main` ✅.
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
 - **Ley de Modularidad ($\le 350$ LOC por archivo):**
@@ -7781,4 +7783,5 @@ Para erradicar el antipatrón de visualización donde el estado colapsado (peek 
   - `src/components/macrocycle/telemetryChartHelpers.tsx`: 335 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/StatCard.tsx`: 56 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/MetricBar.tsx`: 62 LOC ($\le 350$) ✅.
+
 

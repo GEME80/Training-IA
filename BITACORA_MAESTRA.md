@@ -7877,11 +7877,23 @@ Esto causaba que:
      - Canvas del gráfico PMC y coordenadas SVG 100% inalteradas.
      - Padding inferior seguro `pb-20 md:pb-6` para evitar que la barra de navegación móvil fija tape el eje temporal.
 
-### 123.3. Certificación de Calidad y Modularidad
+### 123.3. Adición de Rango de Fechas en Selector Semanal (Semana Actual y Siguientes)
+- **Mejora Solicitada:** Extender el patrón visual del historial (`• dd mmm - dd mmm`) a la semana actual y semanas siguientes/futuras sin suprimir los textos actuales ("Semana Actual" o "Semana X de Y"), logrando homogeneidad temporal completa en el selector móvil.
+- **Implementación:**
+  1. En `AthleteMobileAgendaView.tsx` (293 LOC):
+     - `weekTitle`: Conserva íntegramente la etiqueta descriptiva ("Semana Actual", "Semana X de Y", o "Historial").
+     - `weekRangeLabel`: Calcula determinísticamente el rango de lunes a domingo formateado (`dd mmm - dd mmm`).
+     - `weekLabel`: Unifica elegantemente `{weekTitle} • {weekRangeLabel}`.
+  2. En `WeeklyCalendarStrip.tsx` (164 LOC):
+     - Soporta `weekTitle` y `weekRangeLabel` de forma desacoplada: el título en tipografía maestra destacada (`font-black text-slate-900 dark:text-white`) y la fecha en estilo de acompañamiento sutil (`text-[11px] font-semibold text-slate-500 dark:text-slate-400`).
+     - Contenedor flexible con `flex-1 min-w-0 mr-2` y `shrink-0` en controles y métricas TSS para evitar solapamientos o truncamientos en pantallas compactas.
+
+### 123.4. Certificación de Calidad y Modularidad
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
 - **Ley de Modularidad ($\le 350$ LOC por archivo):**
-  - `src/components/dashboard/WeeklyCalendarStrip.tsx`: 153 LOC ($\le 350$) ✅.
-  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 288 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/WeeklyCalendarStrip.tsx`: 164 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 293 LOC ($\le 350$) ✅.
   - `src/components/dashboard/pmc/PMCInsightsCard.tsx`: 171 LOC ($\le 350$) ✅.
   - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 182 LOC ($\le 350$) ✅.
+

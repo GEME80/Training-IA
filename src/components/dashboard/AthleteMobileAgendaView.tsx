@@ -152,19 +152,25 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
     ? `${formatDayMonthShort(currentWeek.startDate)} - ${formatDayMonthShort(currentWeek.endDate)}`
     : "";
 
-  const weekLabel = useMemo(() => {
-    if (isHistorical) return `Historial • ${weekRangeLabel || "Semana"}`;
+  const weekTitle = useMemo(() => {
+    if (isHistorical) return "Historial";
     if (blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly) {
-      return isCurrentWeek ? "Semana Actual" : `Semana • ${weekRangeLabel}`;
+      return isCurrentWeek ? "Semana Actual" : "Semana";
     }
     if (isCurrentWeek) return "Semana Actual";
     return `Semana ${currentWeek?.weekNumber || activeIdx + 1} de ${blueprint.weeks?.length || weeks.length}`;
-  }, [isHistorical, weekRangeLabel, blueprint.id, isCurrentWeek, currentWeek?.weekNumber, activeIdx, blueprint.weeks?.length, weeks.length]);
+  }, [isHistorical, blueprint.id, isCurrentWeek, currentWeek?.weekNumber, activeIdx, blueprint.weeks?.length, weeks.length]);
+
+  const weekLabel = useMemo(() => {
+    return weekRangeLabel ? `${weekTitle} • ${weekRangeLabel}` : weekTitle;
+  }, [weekTitle, weekRangeLabel]);
 
   return (
     <div className="space-y-3 select-none md:hidden animate-fadeIn">
       {/* 1. Tira Semanal Móvil Unificada: Navegación + Resumen TSS + 7 Días L-D */}
       <WeeklyCalendarStrip
+        weekTitle={weekTitle}
+        weekRangeLabel={weekRangeLabel}
         weekLabel={weekLabel}
         weekPlannedTss={weekPlannedTss}
         weekExecutedTss={weekExecutedTss}

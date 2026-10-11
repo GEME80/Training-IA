@@ -7,7 +7,9 @@ import { DailyExecutedMap } from "@/lib/intervals/types";
 import { daySingleLetters, formatDayNumber } from "./athleteMobileHelpers";
 
 interface WeeklyCalendarStripProps {
-  weekLabel: string;
+  weekLabel?: string;
+  weekTitle?: string;
+  weekRangeLabel?: string;
   weekPlannedTss: number;
   weekExecutedTss: number;
   canPrev: boolean;
@@ -27,6 +29,8 @@ interface WeeklyCalendarStripProps {
  */
 export const WeeklyCalendarStrip: React.FC<WeeklyCalendarStripProps> = ({
   weekLabel,
+  weekTitle,
+  weekRangeLabel,
   weekPlannedTss,
   weekExecutedTss,
   canPrev,
@@ -43,24 +47,31 @@ export const WeeklyCalendarStrip: React.FC<WeeklyCalendarStripProps> = ({
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2 select-none">
       {/* 1. Fila Superior de Cabecera: Navegación compacta (Izq) + Resumen TSS (Der) */}
       <div className="flex items-center justify-between px-0.5">
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
           <button
             type="button"
             disabled={!canPrev}
             onClick={onPrevWeek}
-            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
             aria-label="Semana Anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[170px]">
-            {weekLabel}
-          </span>
+          <div className="min-w-0 truncate text-xs flex items-center">
+            <span className="font-black text-slate-900 dark:text-white truncate">
+              {weekTitle || weekLabel}
+            </span>
+            {weekRangeLabel && (
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 ml-1.5 shrink-0">
+                • {weekRangeLabel}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             disabled={!canNext}
             onClick={onNextWeek}
-            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-25 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
             aria-label="Semana Siguiente"
           >
             <ChevronRight className="h-4 w-4" />

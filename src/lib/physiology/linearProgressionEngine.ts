@@ -60,7 +60,7 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
   };
 
   // 1. FASE BASE: Progresión Neuromuscular de Zancada y Cuestas (100mtr -> 200mtr -> 300mtr)
-  if (normPhase.includes("BASE") || normPhase === "MAINTENANCE") {
+  if (normPhase.includes("BASE") || normPhase === "MAINTENANCE" || params.distanceType === "maintenance" || params.distanceType === "base_building") {
     if (isRecovery || mesocycleStep === 4) {
       const warmupM = 15;
       const coolM = 10;

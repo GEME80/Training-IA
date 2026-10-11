@@ -182,8 +182,8 @@ export function generateCustomMacrocycleBlueprint(
     taperWeeksCount = isEventDriven ? Math.min(rawTaper, Math.max(1, Math.floor(effectiveSpecificWeeks * 0.25))) : 0;
     peakWeeksCount = isEventDriven ? Math.max(2, Math.round(effectiveSpecificWeeks * (curatedModel.phaseDistributions.find(p => p.phaseKey === "PEAK")?.percentageDuration || 0.18))) : 0;
     const specificBaseBuild = Math.max(2, effectiveSpecificWeeks - taperWeeksCount - peakWeeksCount);
-    buildWeeksCount = Math.max(1, Math.round(specificBaseBuild * 0.50));
-    base2WeeksCount = Math.max(1, specificBaseBuild - buildWeeksCount);
+    buildWeeksCount = isEventDriven ? Math.max(1, Math.round(specificBaseBuild * 0.50)) : 0;
+    base2WeeksCount = specificBaseBuild - buildWeeksCount;
   }
 
   const gppEndWeek = gppWeeksCount;
@@ -237,21 +237,31 @@ export function generateCustomMacrocycleBlueprint(
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "IMPACTO_CHOQUE";
       microLabel = isRecoveryWeek ? `Asimilación (${isConservative ? "2:1" : "3:1"})` : "🔥 Fondo Cumbre Clave";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-orange-500/25 text-orange-300 border-orange-500/40";
-    } else if (weekNumber > baseEndWeek || (isEventDriven && hasGoodFitness && countdown <= 9)) {
-      phase = "BUILD";
-      phaseLabel = "Construcción Específica & Umbral";
+    } else if (isEventDriven && (weekNumber > baseEndWeek || (hasGoodFitness && countdown <= 9))) {
+      phase = "BUILD"; phaseLabel = "Construcción Específica & Umbral";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
       microLabel = isRecoveryWeek ? `Asimilación (${isConservative ? "2:1" : "3:1"})` : "Construcción & Umbral";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    } else if (!isEventDriven) {
+      const halfWeeks = Math.ceil(totalWeeks / 2);
+      if (weekNumber <= halfWeeks) {
+        phase = "BASE_1"; phaseLabel = "Base Aeróbica I: Salud & Capilarización";
+        microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
+        microLabel = isRecoveryWeek ? `Descarga (${isConservative ? "2:1" : "3:1"})` : "Carga Aeróbica Base";
+        badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
+      } else {
+        phase = "BASE_2"; phaseLabel = "Base Aeróbica II: Consolidación & Potencia Submáxima";
+        microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
+        microLabel = isRecoveryWeek ? `Descarga (${isConservative ? "2:1" : "3:1"})` : "Consolidación de Base";
+        badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
+      }
     } else if (gppWeeksCount > 0 && weekNumber <= gppEndWeek) {
-      phase = "BASE_1";
-      phaseLabel = "Fase 1: Base Aeróbica y Resistencia";
+      phase = "BASE_1"; phaseLabel = "Fase 1: Base Aeróbica y Resistencia";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
       microLabel = isRecoveryWeek ? `Descarga Base (${isConservative ? "2:1" : "3:1"})` : "Base Aeróbica General";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";
     } else {
-      phase = "BASE_2";
-      phaseLabel = "Base Específica & Capilarización";
+      phase = "BASE_2"; phaseLabel = "Base Específica & Capilarización";
       microType = isRecoveryWeek ? "DESCARGA_ASIMILACION" : "CARGA";
       microLabel = isRecoveryWeek ? `Descarga (${isConservative ? "2:1" : "3:1"})` : "Base Específica";
       badgeColor = isRecoveryWeek ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-teal-500/20 text-teal-300 border-teal-500/30";

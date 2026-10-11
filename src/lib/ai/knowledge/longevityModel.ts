@@ -69,21 +69,21 @@ export const BASE_LONGEVITY_MODEL: CuratedTrainingModel = {
   mandatoryTests: [
     { ...RUN_TEST_STRYD_3_9, testName: "Test 3/9m de Control Submáximo", recommendedWeekIndex: 2 },
   ],
-  maxLongRunMinutesCap: 65,
+  maxLongRunMinutesCap: 60,
   athleteLevelCaps: {
-    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 10, maxLongRunMinutes: 55, tssScaleFactor: 0.85 },
-    INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 12, maxLongRunMinutes: 65, tssScaleFactor: 1.0 },
-    ADVANCED_ELITE: { ctlThresholdMax: 999, maxLongRunKm: 14, maxLongRunMinutes: 70, tssScaleFactor: 1.1 },
+    BEGINNER: { ctlThresholdMax: 35, maxLongRunKm: 8, maxLongRunMinutes: 50, tssScaleFactor: 0.85 },
+    INTERMEDIATE: { ctlThresholdMax: 65, maxLongRunKm: 10, maxLongRunMinutes: 55, tssScaleFactor: 1.0 },
+    ADVANCED_ELITE: { ctlThresholdMax: 999, maxLongRunKm: 12, maxLongRunMinutes: 60, tssScaleFactor: 1.1 },
   },
   longRunRules: {
-    startKm: 8,
-    peakKm: 12,
-    startMinutes: 50,
-    peakMinutes: 65,
-    targetIntensityPercentCpOrFtp: "65-72% CP (Estricto control Z2)",
-    description: "Límite estricto de 65 min para evitar sobrecargas articulares o catabolismo miofascial.",
-    taperKmSequence: [8, 6],
-    taperMinutesSequence: [45, 35],
+    startKm: 6,
+    peakKm: 10,
+    startMinutes: 40,
+    peakMinutes: 55,
+    targetIntensityPercentCpOrFtp: "65-72% CP (Estricto control Z2 conversacional)",
+    description: "Zona 2 pura de 40 a 55 min para biogénesis mitocondrial sin estrés adrenal.",
+    taperKmSequence: [6, 5],
+    taperMinutesSequence: [40, 30],
   },
   workoutVariations: {
     qualityWorkouts: {

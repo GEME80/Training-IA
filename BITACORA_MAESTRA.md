@@ -7205,6 +7205,55 @@ La auditoría del motor reveló dos fuentes críticas de duración desmedida par
   - `src/lib/ai/knowledge/index.ts`: 350 LOC.
   - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 328 LOC.
 
+---
+
+## 108. REDISEÑO METODOLÓGICO INTEGRAL DE BASE Y MANTENIMIENTO: ERADICACIÓN DE PARCHES Y PERIODIZACIÓN FISIOLÓGICA PURA (v5.32)
+
+### 108.1. El Fundamento Metodológico: Prescripción Científica vs. Límites Forzados
+El usuario demandó una revisión profunda: *"revisa muy bien la metodología que tenemos para base y mantenimiento, el objetivo no es colocar límites quemados sino que la metodología esté bien creada y sea acertada"*.
+
+La auditoría evidenció que el problema de fondo radicaba en forzar la estructura de macrociclo de un corredor de maratón (división 50% Base / 50% BUILD competitivo) a atletas que buscan **Salud, Longevidad o Construcción de Base Aeróbica**:
+1. **La distorsión del `BUILD` competitivo:** Al llegar a la semana 5 en un plan de 8 o 10 semanas sin carrera, el generador asignaba la fase `BUILD`, y el motor de progresiones (`linearProgressionEngine.ts`) interpretaba que el atleta requería repeticiones de umbral Daniels agónicas (6x 1000m y 4x 2000m), activando innecesariamente la glucólisis y la fatiga del sistema nervioso simpático.
+2. **La distorsión de la Tirada Larga en Longevidad:** En lugar de regirse por la literatura de biogénesis mitocondrial en Zona 2 (Dr. Peter Attia y Dr. Iñigo San Millán), los parámetros base del modelo sobreestimaban la necesidad de volumen dominical.
+
+### 108.2. Nueva Arquitectura Metodológica para Base y Mantenimiento
+
+1. **Fases Puras de Base Aeróbica sin Intrusión Competitiva (`macrocycleGenerator.ts` - 345 LOC):**
+   - Para planes de Mantenimiento y Base (`!isEventDriven`):
+     * **Primera Mitad:** `BASE_1` — *Base Aeróbica I: Salud & Capilarización* (enfoque en biogénesis mitocondrial, densidad capilar y adaptación del tejido conectivo).
+     * **Segunda Mitad:** `BASE_2` — *Base Aeróbica II: Consolidación & Potencia Submáxima* (enfoque en cuestas cortas neuromusculares, reactividad elástica y zancada fluida sin lactato agónico).
+     * **Cero semanas de fase `BUILD` competitiva:** `buildWeeksCount = 0` para todo macrociclo sin carrera objetivo.
+
+2. **Progresión Lineal Adaptada al Objetivo (`linearProgressionEngine.ts` - 306 LOC):**
+   - En planes de `maintenance` y `base_building`, la calidad entre semana ejecuta estrictamente progresiones de base:
+     * **Sem 1:** Cuestas cortas de fuerza elástica (10x 100m con recuperación completa).
+     * **Sem 2:** Zancada fluida y cadencia (8x 200m).
+     * **Sem 3:** Potencia aláctica y soltura (6x 300m o cuestas progresivas).
+     * **Sem 4 (Descarga 2:1 o 3:1):** Soltura neuromuscular técnica (4x 100m suaves @ 105% CP).
+
+3. **Calibración Fisiológica de Longevidad Peter Attia / Seiler (`longevityModel.ts` - 160 LOC):**
+   - La dosis óptima de estímulo cardiovascular en Zona 2 para salud y longevidad se calibra entre **40 y 55 minutos**:
+     * `startMinutes: 40`, `peakMinutes: 55`.
+     * `startKm: 6`, `peakKm: 10`.
+     * `athleteLevelCaps`: Beginner máx. 50m / 8km; Intermediate máx. 55m / 10km; Advanced máx. 60m / 12km.
+   - Tiradas dominicales fluidas, sin sobrecarga adrenal ni inflamación articular.
+
+### 108.3. Certificación de Calidad y Cumplimiento
+- **Simulación Fisiológica de Verificación (Silvia Rey - Mantenimiento 8 Semanas):**
+  - **Estructura:** W1 (Base I Carga), W2 (Base I Evaluación 3/9m), W3 (Base I Descarga 2:1), W4 (Base I Carga), W5 (Base II Consolidación), W6 (Base II Descarga 2:1), W7 (Base II Consolidación), W8 (Base II Consolidación).
+  - **Calidad de Martes:** Cuestas de 100m, test 3/9m, escalera de pista, series cortas de reactividad (duraciones entre 32 y 52 min).
+  - **Tiradas Dominicales:** Progresión ondulante suave entre 30 y 50 minutos (6 a 8 km).
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/physiology/macrocycleGenerator.ts`: 345 LOC.
+  - `src/lib/physiology/linearProgressionEngine.ts`: 306 LOC.
+  - `src/lib/ai/knowledge/longevityModel.ts`: 160 LOC.
+  - `src/lib/ai/knowledge/athleteMomentsModels.ts`: 228 LOC.
+  - `src/lib/physiology/macrocycleTemplateHelpers.ts`: 328 LOC.
+  - `src/lib/ai/knowledge/index.ts`: 350 LOC.
+
+
 
 
 

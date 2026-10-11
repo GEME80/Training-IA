@@ -9,6 +9,7 @@ import { TRAIL_ULTRA_MODEL } from "./trailModel";
 import { BASE_LONGEVITY_MODEL } from "./longevityModel";
 import { BASE_GPP_MODEL, GENERAL_BUILD_MODEL, SPEED_BLOCK_MODEL, POST_RACE_DELOAD_MODEL, INJURY_REHAB_MODEL } from "./athleteMomentsModels";
 import { buildDynamicLongRunStructure } from "./longRunPeriodization";
+import { buildRacePacingPlan } from "@/lib/physiology/racePacingStrategy";
 
 export * from "./types";
 export * from "./testingProtocols";
@@ -180,20 +181,18 @@ export function calculateProgressiveLongRun(
       ? (model.modelId === "TRIATHLON_SHORT" ? 10 : model.modelId === "TRIATHLON_70_3" ? 21.1 : 42.2)
       : (model.targetDistanceKm || 42.2);
     const parsedGoalMins = parseGoalTimeToMinutes(goalTarget);
-    const defaultMins = isTri
-      ? (model.modelId === "TRIATHLON_SHORT" ? 50 : model.modelId === "TRIATHLON_70_3" ? 95 : 210)
-      : model.sportCategory === "Cycling" ? (model.longRunRules.peakMinutes || 240) : (raceDist >= 40 ? 195 : raceDist >= 20 ? 95 : raceDist >= 10 ? 45 : 22);
-    const raceMins = parsedGoalMins && parsedGoalMins > 0 ? parsedGoalMins : defaultMins;
-    const racePower = runFtp && runFtp > 0
-      ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
-      : rules.targetIntensityPercentCpOrFtp;
+    const pacing = buildRacePacingPlan({
+      discipline: model.sportCategory === "Cycling" ? "Ciclismo" : "Carrera",
+      distanceKm: raceDist, sportCategory: model.sportCategory,
+      runFtp, goalTarget, parsedGoalMinutes: parsedGoalMins,
+    });
     const goalSuffix = goalTarget ? ` - Meta: ${goalTarget}` : "";
     return {
       km: Math.round(raceDist * 10) / 10,
-      minutes: raceMins,
+      minutes: pacing.estimatedMinutes,
       workoutName: `🏆 COMPETICIÓN OBJETIVO: ${model.displayName.split("(")[0].trim()} (${raceDist} km${goalSuffix})`,
-      powerTarget: racePower,
-      workoutDoc: `Warmup\n- 15m 65% CP Activación & Movilidad\n\nMain (Competición Oficial)\n- ${raceDist} km @ Ritmo Objetivo de Carrera\n- Control nutricional: 60-80g CHO/h e hidratación\n\nCooldown\n- 10m Caminata de Recuperación`,
+      powerTarget: pacing.powerTarget,
+      workoutDoc: pacing.workoutDoc,
       isPeakBlock: true,
     };
   }

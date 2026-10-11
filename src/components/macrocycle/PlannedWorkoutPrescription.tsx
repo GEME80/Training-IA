@@ -34,9 +34,14 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
 
   const isStrength = discipline === "Fuerza";
   const isSwim = discipline === "Natacion";
+  const isRacePacing = /pacing plan|competición oficial/i.test(cleanDoc);
 
   const sectionTitle = isStrength
     ? "Prescripción de la Sesión de Fuerza"
+    : isRacePacing && isRunPower
+    ? "Pacing Plan Oficial a Potencia (Stryd CP)"
+    : isRacePacing && isRunPace
+    ? "Pacing Plan Oficial a Ritmo"
     : isRunPace
     ? "Prescripción Estructurada (Ritmo)"
     : isRunPower
@@ -106,7 +111,7 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
             <pre className="rounded-xl bg-slate-50 dark:bg-slate-950 p-3.5 font-mono text-xs leading-relaxed text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-pre-wrap max-h-60 overflow-y-auto">
               {cleanDoc.split("\n").map((line) => {
                 if (effectiveFtp > 0 && /%\s*(?:stryd\s*)?(?:ftp|cp)/i.test(line)) {
-                  return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\([^)]*[wW]\))?/gi, (_, p1, p2) => {
+                  return line.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:stryd\s*)?(?:ftp|cp)(?:\s*\(\d+(?:\s*-\s*\d+)?\s*[wW]\))?/gi, (_, p1, p2) => {
                     const n1 = parseInt(p1, 10);
                     const w1 = Math.round((effectiveFtp * n1) / 100);
                     if (p2) {

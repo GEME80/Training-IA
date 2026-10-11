@@ -7272,6 +7272,51 @@ El usuario solicitó retirar un espacio no deseado en la parte superior del dash
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
 - **Modularidad:** `AthleteDashboardOverview.tsx` en 254 LOC ($\le 350$ LOC) ✅.
 
+---
+
+## 110. REDISEÑO FISIOLÓGICO Y ESTRUCTURAL DE LA TARJETA DE COMPETICIÓN: PACING PLAN A POTENCIA Y ERRADICACIÓN DE WARMUP/COOLDOWN EN CRONÓMETRO (v5.34)
+
+### 110.1. Diagnóstico y Causa Raíz
+El usuario auditó la tarjeta de competición generada para el día de carrera (ej. Maratón 42.2K a ritmo 3:05 con Stryd CP 336W):
+*"sin ejecutar nada analiza como estamos dejando la tarjeta de competencia. el warmup o el cooldown se se requiere debe existeri un plan para hacer la competencia a potencia como se ha entrenado."*
+
+**Hallazgos Críticos:**
+1. **Contaminación del Cronómetro Oficial:** Se prescribía un paso de `Warmup: 15m @ 65% CP` y `Cooldown: 10m Caminata`. Al sincronizar con Garmin/Stryd/Intervals.icu:
+   - Al sonar el pistoletazo en el cajón de salida, el reloj exigía correr 15 min de calentamiento antes de iniciar el ritmo de maratón.
+   - Al cruzar la meta, el reloj obligaba a registrar 10 min de caminata, distorsionando el tiempo oficial, ritmo medio neto y récord del atleta.
+2. **Ausencia de Potencia Estructurada en el Main:** El cuerpo del texto decía únicamente `- 42.2 km Ritmo Objetivo de Carrera` sin `% CP` ni vatios por línea. El analizador de intervalos (`workoutDocParser`) caía en un fallback plano de 70% de intensidad (barra verde baja en vez de zona específica 88-92% CP).
+3. **Falsa Detección de Notas Nutricionales como Intervalos:** La línea `- Control nutricional: 60-80g CHO/h` se parseaba erróneamente como un intervalo de 5 minutos al 70%, dibujando una barra espuria en el perfil de zonas.
+
+### 110.2. Arquitectura de Pacing Plan a Potencia Implementada
+1. **Nuevo Módulo Rector [`src/lib/physiology/racePacingStrategy.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/racePacingStrategy.ts) (232 LOC):**
+   - **Cero Warmup/Cooldown en el reloj:** El pistoletazo coincide con el Km 0.0 de la sesión estructurada; cruzar la meta detiene el cronómetro.
+   - **Protocolos Tácticos Fuera de Cronómetro:** Activación en seco (30 min antes) y descompresión post-meta prescritos como guía metodológica, sin crear pasos de temporizador en el dispositivo.
+   - **Estrategia por Fases a Potencia Stryd (% CP):**
+     * **Maratón (42.2K):** `5km @ 87% CP` (Salida controlada y control de euforia) $\rightarrow$ `27km @ 89% CP` (Crucero aeróbico estable) $\rightarrow$ `10.2km @ 91% CP` (Bloque decisivo y vaciado en meta).
+     * **Media Maratón (21.1K):** `3km @ 90% CP` $\rightarrow$ `14km @ 92% CP` $\rightarrow$ `4.1km @ 94% CP`.
+     * **10K:** `2km @ 96% CP` $\rightarrow$ `6km @ 98% CP` $\rightarrow$ `2km @ 101% CP` (Umbral funcional puro).
+     * **5K:** `1km @ 100% CP` $\rightarrow$ `3km @ 103% CP` $\rightarrow$ `1km @ 106% CP` (VO2max sostenido).
+     * **Ciclismo Fondo / Natación CSS:** Estrategias por vatios FTP y CSS sostenido.
+2. **Analizador Fisiológico [`src/lib/physiology/workoutDocParser.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/workoutDocParser.ts) (220 LOC):**
+   - Secciones `Protocolo Pre-Carrera`, `Protocolo Post-Meta` y notas de `Estrategia Nutricional` no computan como intervalos de tiempo ni contaminan la gráfica.
+   - Si una línea carece de distancia o tiempo (`km`, `m`, `s`, `h`), devuelve duración 0 y se omite del perfil.
+3. **Tarjeta Visual [`src/components/macrocycle/PlannedWorkoutPrescription.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/PlannedWorkoutPrescription.tsx) (156 LOC):**
+   - Título adaptativo: **`Pacing Plan Oficial a Potencia (Stryd CP)`** con badge de cálculo de vatios.
+   - Desglose instantáneo de vatios calculados por fase (ej. `292W`, `299W`, `306W` para CP 336W).
+4. **Integración Universal en Modelos y Overlays:**
+   - [`src/lib/ai/knowledge/index.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/ai/knowledge/index.ts) (348 LOC): Fase `RACE_WEEK` utiliza `buildRacePacingPlan`.
+   - [`src/lib/physiology/raceDayOverlay.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/lib/physiology/raceDayOverlay.ts) (213 LOC): Carreras objetivo y secundarias (A/B/C) utilizan el mismo generador.
+
+### 110.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/lib/physiology/racePacingStrategy.ts`: 232 LOC.
+  - `src/lib/physiology/workoutDocParser.ts`: 220 LOC.
+  - `src/lib/ai/knowledge/index.ts`: 348 LOC.
+  - `src/lib/physiology/raceDayOverlay.ts`: 213 LOC.
+  - `src/components/macrocycle/PlannedWorkoutPrescription.tsx`: 156 LOC.
+
 
 
 

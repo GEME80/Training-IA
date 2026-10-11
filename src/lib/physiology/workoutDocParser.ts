@@ -130,7 +130,7 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
       total += parseInt(minsMatch[1], 10);
     }
     if (secsMatch) total += Math.max(0.2, parseInt(secsMatch[1], 10) / 60);
-    return total > 0 ? total : 5;
+    return total > 0 ? total : 0;
   };
 
   const parseIntensity = (raw: string): number => {
@@ -148,11 +148,11 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
   };
 
   for (const line of lines) {
-    if (/activaci[oó]n neuromuscular|estrategia nutricional|pulse fueling/i.test(line)) {
+    if (/activaci[oó]n neuromuscular|estrategia nutricional|pulse fueling|protocolo|consejos|instrucciones/i.test(line)) {
       inIgnoredSection = true;
       continue;
     }
-    if (/^(?:warmup|main|cooldown|calentamiento|principal|series|bloque|enfriamiento|recuperaci[oó]n|interval)/i.test(line)) {
+    if (/^(?:warmup|main|pacing|cooldown|calentamiento|principal|series|bloque|enfriamiento|recuperaci[oó]n|interval|sector)/i.test(line)) {
       inIgnoredSection = false;
     }
     if (inIgnoredSection) {
@@ -174,7 +174,11 @@ export function parseWorkoutDoc(doc?: string, discipline?: string): {
 
     if (line.startsWith("-")) {
       const segText = line.replace(/^-+\s*/, "").trim();
+      if (/estrategia nutricional|control nutricional|hidrataci[oó]n|avituallamiento|cho\/h|detener cron[oó]metro|abrigo/i.test(segText)) {
+        continue;
+      }
       const dur = parseDuration(segText);
+      if (dur <= 0) continue;
       const intensity = parseIntensity(segText);
       const seg: IntervalSegment = {
         durationMins: dur,

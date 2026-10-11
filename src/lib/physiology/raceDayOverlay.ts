@@ -9,6 +9,7 @@
  */
 import { PlanItem, DisciplineType } from "../gemini/types";
 import { CalendarEvent } from "../intervals/types";
+import { buildRacePacingPlan } from "./racePacingStrategy";
 
 export interface RaceDayInfo {
   date: string;
@@ -75,33 +76,50 @@ export function buildRaceDayItem(race: RaceDayInfo, bikeFtp?: number, runFtp?: n
   const { day, formattedDate } = dateMeta(race.date);
   const label = race.priority === "A" ? "🏆 COMPETICIÓN OBJETIVO" : `🏁 COMPETICIÓN ${race.priority}`;
   const base = { id: race.eventId, day, date: race.date, formattedDate, action: "MANTENER" as const, isRestDay: false };
+
+  const distKmMatch = race.name.match(/\b(\d+(?:\.\d+)?)\s*k\b/i);
+  const inferredKm = distKmMatch
+    ? parseFloat(distKmMatch[1])
+    : /marat[oó]n\b/i.test(race.name)
+    ? 42.2
+    : /media\s*marat[oó]n/i.test(race.name)
+    ? 21.1
+    : race.discipline === "Ciclismo"
+    ? 120
+    : 10;
+
+  const pacing = buildRacePacingPlan({
+    discipline: race.discipline,
+    distanceKm: inferredKm,
+    runFtp,
+    bikeFtp,
+  });
+
   if (race.discipline === "Ciclismo") {
-    const lo = bikeFtp ? `${Math.round(bikeFtp * 0.68)}-${Math.round(bikeFtp * 0.78)}W (68-78% FTP)` : "68-78% FTP";
     return {
-      ...base, discipline: "Ciclismo", workoutName: `${label}: ${race.name}`, durationMinutes: 240, tss: 210, powerTarget: lo,
-      justification: `Competición secundaria de ciclismo (Tipo ${race.priority}). Rodar en bloque, controlar vatios en los puertos (≤ 90% FTP) y comer 60-80 g CHO/h. Se usa como estímulo largo de Z2-Z3 dentro del plan 70.3.`,
-      workoutDoc: "Warmup\n- 15m 55% FTP\n\nMain (Ritmo de Competición Controlado)\n- 3h30m 72% FTP\n\nCooldown\n- 10m 50% FTP",
+      ...base, discipline: "Ciclismo", workoutName: `${label}: ${race.name}`, durationMinutes: pacing.estimatedMinutes,
+      tss: Math.round(pacing.estimatedMinutes * 0.95), powerTarget: pacing.powerTarget,
+      justification: `Competición de ciclismo (${inferredKm} km, Tipo ${race.priority}). ${pacing.pacingSummary}`,
+      workoutDoc: pacing.workoutDoc,
     };
   }
   if (race.discipline === "Natacion") {
     return {
-      ...base, discipline: "Natacion", workoutName: `${label}: ${race.name}`, durationMinutes: 60, tss: 60, powerTarget: "Ritmo CSS sostenido",
-      justification: `Competición secundaria de natación (Tipo ${race.priority}). Salida controlada, orientación cada 6-8 brazadas.`,
-      workoutDoc: "Warmup\n- 10m Suave\n\nMain\n- Competición a ritmo CSS sostenido\n\nCooldown\n- 5m Suave",
+      ...base, discipline: "Natacion", workoutName: `${label}: ${race.name}`, durationMinutes: pacing.estimatedMinutes,
+      tss: 60, powerTarget: pacing.powerTarget,
+      justification: `Competición de natación (${inferredKm} km, Tipo ${race.priority}). ${pacing.pacingSummary}`,
+      workoutDoc: pacing.workoutDoc,
     };
   }
-  const runPwr = runFtp && runFtp > 0
-    ? `${Math.round(runFtp * 0.88)}-${Math.round(runFtp * 0.92)}W (88-92% CP • Ritmo Objetivo)`
-    : "88-92% CP (Ritmo Objetivo)";
-  const runDoc = runFtp && runFtp > 0
-    ? `Warmup\n- 12m 74% CP\n\nMain (Competición Oficial)\n- Ritmo Objetivo de Carrera (88-92% CP / ${Math.round(runFtp * 0.90)}W)\n\nCooldown\n- 8m 68% CP`
-    : `Warmup\n- 12m 74% CP\n\nMain (Competición Oficial)\n- Ritmo Objetivo de Carrera\n\nCooldown\n- 8m 68% CP`;
+
+  const raceTss = inferredKm >= 40 ? 250 : inferredKm >= 20 ? 150 : 80;
 
   return {
     ...base, discipline: "Carrera", activityType: race.isTriathlon ? "Triatlón" : undefined, workoutName: `${label}: ${race.name}`,
-    durationMinutes: race.isTriathlon ? 180 : 60, tss: race.isTriathlon ? 200 : 75, powerTarget: runPwr,
-    justification: `Competición secundaria (Tipo ${race.priority}). Usar como test de ritmo y nutrición sin vaciarse.`,
-    workoutDoc: runDoc,
+    durationMinutes: race.isTriathlon ? 180 : pacing.estimatedMinutes,
+    tss: race.isTriathlon ? 200 : raceTss, powerTarget: pacing.powerTarget,
+    justification: `Competición oficial (${inferredKm} km, Tipo ${race.priority}). ${pacing.pacingSummary}`,
+    workoutDoc: pacing.workoutDoc,
   };
 }
 

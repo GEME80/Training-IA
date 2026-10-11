@@ -9,7 +9,7 @@ import { getMondayOfWeekStr } from "@/lib/dateUtils";
 import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
 import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
 import { MobileWeekFeedItem } from "./AthleteMobileWeekFeed";
-import { AthleteMobileDayStrip } from "./AthleteMobileDayStrip";
+import { WeeklyCalendarStrip } from "./WeeklyCalendarStrip";
 import { matchDailyActivities } from "./matchDailyActivities";
 import { dayShortNames, getWeekDates, formatDayMonthShort } from "./athleteMobileHelpers";
 
@@ -113,7 +113,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
   }, [weekPlan, daysMap, dailyExecutedActivities]);
 
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(todayDayIdx);
-  const [viewMode, setViewMode] = useState<"day" | "week">("week");
+  const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Sincronizar el día seleccionado cuando cambia la semana
@@ -152,82 +152,51 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
     ? `${formatDayMonthShort(currentWeek.startDate)} - ${formatDayMonthShort(currentWeek.endDate)}`
     : "";
 
+  const weekLabel = useMemo(() => {
+    if (isHistorical) return `Historial • ${weekRangeLabel || "Semana"}`;
+    if (blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly) {
+      return isCurrentWeek ? "Semana Actual" : `Semana • ${weekRangeLabel}`;
+    }
+    if (isCurrentWeek) return "Semana Actual";
+    return `Semana ${currentWeek?.weekNumber || activeIdx + 1} de ${blueprint.weeks?.length || weeks.length}`;
+  }, [isHistorical, weekRangeLabel, blueprint.id, isCurrentWeek, currentWeek?.weekNumber, activeIdx, blueprint.weeks?.length, weeks.length]);
+
   return (
-    <div className="space-y-3.5 select-none md:hidden animate-fadeIn">
-      {/* 1. Selector de Semana Ergonómico Móvil con Carga Acumulada */}
-      <div className="flex items-center justify-between bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-xs">
-        <button
-          type="button"
-          disabled={activeIdx === 0}
-          onClick={handlePrevWeek}
-          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          aria-label="Semana Anterior"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+    <div className="space-y-3 select-none md:hidden animate-fadeIn">
+      {/* 1. Tira Semanal Móvil Unificada: Navegación + Resumen TSS + 7 Días L-D */}
+      <WeeklyCalendarStrip
+        weekLabel={weekLabel}
+        weekPlannedTss={weekPlannedTss}
+        weekExecutedTss={weekExecutedTss}
+        canPrev={activeIdx > 0}
+        canNext={activeIdx < weeks.length - 1}
+        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNextWeek}
+        daysMap={daysMap}
+        selectedDayIdx={selectedDayIdx}
+        onSelectDay={(idx) => {
+          setSelectedDayIdx(idx);
+          if (viewMode !== "day") setViewMode("day");
+        }}
+        todayStr={todayStr}
+        dailyExecutedActivities={dailyExecutedActivities}
+      />
 
-        <div className="text-center px-1 flex-1 min-w-0">
-          <div className="flex flex-wrap items-center justify-center gap-1">
-            <span className="text-xs font-black text-slate-900 dark:text-white">
-              {isHistorical
-                ? `Historial • ${weekRangeLabel}`
-                : blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
-                ? isCurrentWeek ? "Semana Actual" : `Semana ${weekRangeLabel}`
-                : `Semana ${currentWeek?.weekNumber || activeIdx + 1} de ${blueprint.weeks?.length || weeks.length}`}
-            </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full border font-mono ${
-              isHistorical
-                ? "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30"
-                : "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20"
-            }`}>
-              {isHistorical ? "Historial" : (blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly ? "Sin Plan Activo" : (currentWeek?.phase || "Base"))}
-            </span>
-            {isCurrentWeek && (
-              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 uppercase">
-                Semana Actual
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[240px] mx-auto">
-            {isHistorical
-              ? (currentWeek?.focusDescription || "Entrenamientos ejecutados en Intervals.icu")
-              : blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly
-              ? weekRangeLabel ? `Rango: ${weekRangeLabel}` : "Historial de entrenamientos registrados en Intervals.icu"
-              : (currentWeek?.focusDescription || currentWeek?.phaseLabel || "Construcción Aeróbica")}
-          </p>
-          <div className="text-[10px] font-mono text-slate-500 mt-0.5">
-            {isHistorical || blueprint.id === "historical-timeline-blueprint" || (blueprint as any).isHistoricalOnly || weekPlannedTss === 0 ? (
-              <>Carga Real: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> TSS</>
-            ) : (
-              <>Carga: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{weekExecutedTss}</strong> / {weekPlannedTss} TSS</>
-            )}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          disabled={activeIdx >= weeks.length - 1}
-          onClick={handleNextWeek}
-          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          aria-label="Semana Siguiente"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* 2. Barra de Control de Vista: Toggle [ Día | Semana ] */}
+      {/* 2. Control sutil de vista: Día vs Semana completa */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-          {viewMode === "day" ? "Detalle Diario" : "Agenda Semanal"}
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+          {viewMode === "day"
+            ? `${dayShortNames[selectedDayIdx]} • ${formatDayMonthShort(selectedDayData.date)}`
+            : "Semana Completa"}
         </span>
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700/60 text-[11px] font-bold">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[10px] font-bold">
           <button
             type="button"
             onClick={() => setViewMode("day")}
-            className={`px-2.5 py-1 rounded-lg transition-all ${
+            className={`px-2 py-0.5 rounded-md transition-all ${
               viewMode === "day"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-black"
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
             Día
@@ -235,10 +204,10 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
           <button
             type="button"
             onClick={() => setViewMode("week")}
-            className={`px-2.5 py-1 rounded-lg transition-all ${
+            className={`px-2 py-0.5 rounded-md transition-all ${
               viewMode === "week"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-black"
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
             Semana
@@ -247,22 +216,12 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
       </div>
 
       {viewMode === "day" ? (
-        <>
-          {/* 3. Tira de 7 Días con Número Grande y Banner de Fecha Actual */}
-          <AthleteMobileDayStrip
-            daysMap={daysMap}
-            selectedDayIdx={selectedDayIdx}
-            onSelectDay={setSelectedDayIdx}
-            todayStr={todayStr}
-            dailyExecutedActivities={dailyExecutedActivities}
-          />
-
-          {/* 4. Tarjetas del Día Seleccionado con Swipe Gestual */}
-          <div
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className="space-y-2.5 transition-transform"
-          >
+        /* Tarjetas del Día Seleccionado con Swipe Gestual — Inmediatamente visibles */
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="space-y-2.5 transition-transform"
+        >
             {matchedItems.length === 0 && extraActivities.length === 0 ? (
               <div className="rounded-2xl p-6 bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
                 Día de descanso sin sesiones registradas.
@@ -295,7 +254,6 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
               </>
             )}
           </div>
-        </>
       ) : (
         /* 5. Vista Feed Semanal tipo TrainingPeaks */
         <div className="space-y-2">

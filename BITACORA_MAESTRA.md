@@ -7845,8 +7845,43 @@ Esto causaba que:
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
 - **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
 - **Ley de Modularidad ($\le 350$ LOC por archivo):**
-  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 329 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 288 LOC ($\le 350$) ✅.
   - `src/components/dashboard/AthleteContinuousCalendar.tsx`: 333 LOC ($\le 350$) ✅.
 
+---
 
+## 123. OPTIMIZACIÓN MÓVIL (HOME Y EVOLUCIÓN) CON PROTECCIÓN ESTRICTA DE WEB Y DESIGN SYSTEM (v5.47)
 
+### 123.1. Módulo Home: Tira Semanal Móvil Unificada (`WeeklyCalendarStrip.tsx`)
+- **Problema Abordado:** En móvil (`< 768px`), la vista presentaba dispersión vertical acumulada (selector de semana con 4 líneas, control Día/Semana y tira de días con banner extenso de fecha), lo que desplazaba las sesiones de entrenamiento fuera del primer plano visual.
+- **Solución Implementada:**
+  1. Se creó el componente dedicado [`WeeklyCalendarStrip.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/WeeklyCalendarStrip.tsx) (153 LOC):
+     - **Fila Superior:** Controles de navegación compactos `[ ‹ ] Semana Actual [ › ]` y resumen de volumen `XXX / YYY TSS` alineado a la derecha en tipografía `tabular-nums`.
+     - **Tira de 7 Días Fija (`grid-cols-7 gap-1.5`):** Letras de día (`L`, `M`, `X`, `J`, `V`, `S`, `D`), número de fecha del mes y micro-dot cromático inferior (5px) para cumplimiento (verde: ejecutado, cian: programado, gris: descanso).
+     - **Design System Primario:** Día activo resaltado con `bg-purple-600 text-white font-black shadow-md shadow-purple-600/30`. Micro-pill `Hoy` sutil cuando no está seleccionado.
+  2. Integración en [`AthleteMobileAgendaView.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/AthleteMobileAgendaView.tsx) (288 LOC):
+     - Configuración por defecto en vista de día (`viewMode = "day"`), permitiendo que la primera tarjeta de entrenamiento quede inmediatamente visible al cargar la pantalla sin scroll vertical forzado.
+     - Acceso reactivo instantáneo: tocar cualquier día en la tira actualiza de inmediato las sesiones sin saltos.
+
+### 123.2. Módulo Evolución: Hero Status Card & Acordeón (`PMCInsightsCard.tsx`)
+- **Problema Abordado:** En el gráfico PMC de evolución móvil, el bloque de texto continuo con palabras de múltiples colores saturaba visualmente el viewport y carecía de jerarquía ejecutiva.
+- **Solución Implementada:**
+  1. Se creó [`PMCInsightsCard.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/pmc/PMCInsightsCard.tsx) (171 LOC):
+     - **Hero Status Card (Resumen en 3 segundos):**
+       - Badge dinámico con el color estándar del proyecto según TSB (`🟢 Óptimo`, `🟡 Fatiga Productiva`, `🔵 Mantenimiento`, `🔴 Sobrecarga`).
+       - Insight clave en máximo 2 líneas de texto plano limpio (sin palabras multicolores arbitrarias).
+       - Fila horizontal compacta de 4 métricas con `tabular-nums`: Fitness (CTL - azul), Fatiga (ATL - morado), Forma (TSB - verde/ámbar) y Tasa de Rampa.
+     - **Revelación Progresiva:** Acordeón desplegable colapsado por defecto (`[ ▾ Ver desglose fisiológico completo ]`) que encapsula la base metodológica de Joe Friel / Science2Sport.
+  2. Integración en [`AthletePMCChart.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/dashboard/pmc/AthletePMCChart.tsx) (182 LOC):
+     - Desacoplamiento responsivo estricto: En móvil (`block md:hidden`) se renderiza `PMCInsightsCard`, mientras que en escritorio (`hidden md:block`) se conserva íntegro el formato explicativo original.
+     - Canvas del gráfico PMC y coordenadas SVG 100% inalteradas.
+     - Padding inferior seguro `pb-20 md:pb-6` para evitar que la barra de navegación móvil fija tape el eje temporal.
+
+### 123.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/dashboard/WeeklyCalendarStrip.tsx`: 153 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 288 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/PMCInsightsCard.tsx`: 171 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 182 LOC ($\le 350$) ✅.

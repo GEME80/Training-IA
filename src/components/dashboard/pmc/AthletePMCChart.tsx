@@ -7,6 +7,7 @@ import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generatePMCSeries, PMCTimeframe, PMCDataPoint } from "@/lib/physiology/pmcEngine";
 import { AthletePMCKpiCards } from "./AthletePMCKpiCards";
 import { AthletePMCSVG } from "./AthletePMCSVG";
+import { PMCInsightsCard } from "./PMCInsightsCard";
 
 interface AthletePMCChartProps {
   wellnessHistory: AthleteWellness[];
@@ -53,7 +54,7 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
       <AthletePMCKpiCards summary={summary} targetPoint={points[points.length - 1] || null} />
 
       {/* CONTENEDOR PRINCIPAL ESTILO INTERVALS.ICU */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm space-y-4">
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm space-y-4 pb-20 md:pb-6">
         {/* BARRA SUPERIOR DE PESTAÑAS Y HUD (EXACTO A INTERVALS.ICU) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           {/* Pestañas izquierda */}
@@ -157,8 +158,13 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
           showProjection={showProjection}
         />
 
-        {/* TEXTO EXPLICATIVO FISIOLÓGICO OFICIAL (PIE DE GRÁFICO INTERVALS) */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 space-y-1">
+        {/* EN MOBILE (< 768px): Hero Status Card Ejecutiva + Acordeón Progresivo */}
+        <div className="block md:hidden">
+          <PMCInsightsCard activePoint={activePoint} />
+        </div>
+
+        {/* EN DESKTOP (>= 768px): Texto explicativo fisiológico oficial de Intervals.icu */}
+        <div className="hidden md:block pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 space-y-1">
           <p>
             <strong className="text-sky-500 font-bold">La línea azul muestra la aptitud (CTL).</strong> Esta es una media móvil ponderada exponencialmente de 42 días de su carga de entrenamiento.{" "}
             <strong className="text-purple-500 font-bold">La línea morada muestra la fatiga (ATL).</strong> Se trata de una media móvil ponderada exponencialmente de 7 días. Para ponerse en forma, necesita crear estrés aumentando la carga, manteniendo la línea violeta por encima de la azul.

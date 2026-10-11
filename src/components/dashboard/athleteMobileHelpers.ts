@@ -1,6 +1,7 @@
 import { getMondayOfWeekStr } from "@/lib/dateUtils";
 
 export const dayShortNames = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
+export const daySingleLetters = ["L", "M", "X", "J", "V", "S", "D"];
 export const dayFullNames = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 const monthsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];

@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Check, X, Footprints, Bike, Dumbbell, Waves, Moon, Zap, Timer } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap } from "@/lib/intervals/types";
 import { useAuth } from "@/context/AuthContext";
 import { parseWorkoutDoc } from "../WorkoutChart";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
-import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
+import { ActivityTelemetryChart, TargetWorkRange } from "./ActivityTelemetryChart";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
 import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
-import { ExecutedWorkoutHud } from "./ExecutedWorkoutHud";
+import { ExecutedSessionMetricsTable } from "./ExecutedSessionMetricsTable";
 import { formatPace, parsePaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
 
 interface WorkoutDetailModalProps {
@@ -121,6 +121,25 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
     displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
   }
 
+  const parsedTargetRange = useMemo<TargetWorkRange | undefined>(() => {
+    const raw = displayTarget || workout.powerTarget || (workout as any).paceTarget || "";
+    if (!raw) return undefined;
+    const wMatch = raw.match(/(\d{2,4})\s*[-–—]\s*(\d{2,4})\s*W/i);
+    if (wMatch) return { min: parseInt(wMatch[1], 10), max: parseInt(wMatch[2], 10), type: "WATTS", label: `${wMatch[1]}–${wMatch[2]} W` };
+    const sMatch = raw.match(/(\d{2,4})\s*W/i);
+    if (sMatch) {
+      const w = parseInt(sMatch[1], 10);
+      return { min: Math.round(w * 0.96), max: Math.round(w * 1.04), type: "WATTS", label: `~${w} W` };
+    }
+    const pMatch = raw.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+    if (pMatch) {
+      const p1 = parseInt(pMatch[1], 10) * 60 + parseInt(pMatch[2], 10);
+      const p2 = parseInt(pMatch[3], 10) * 60 + parseInt(pMatch[4], 10);
+      return { min: Math.min(p1, p2), max: Math.max(p1, p2), type: "PACE", label: `${pMatch[1]}:${pMatch[2]}–${pMatch[3]}:${pMatch[4]}` };
+    }
+    return undefined;
+  }, [displayTarget, workout.powerTarget, (workout as any).paceTarget]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-5 shadow-2xl space-y-3.5 max-h-[88dvh] overflow-y-auto">
@@ -193,52 +212,54 @@ export const WorkoutDetailModal: React.FC<WorkoutDetailModalProps> = ({
 
               return (
                 <div key={aIdx} className="space-y-3">
-                  <ExecutedWorkoutHud
+                  {act.id && (
+                    <ActivityTelemetryChart
+                      activityId={act.id}
+                      athleteId={effAthleteId}
+                      apiKey={effApiKey}
+                      email={effEmail}
+                      uid={effUid}
+                      targetRange={parsedTargetRange}
+                      summaryStats={{
+                        heartrate: act.heartrate,
+                        maxHeartrate: act.maxHeartrate,
+                        watts: act.watts,
+                        weightedWatts: act.weightedWatts,
+                        distanceKm: act.distanceKm,
+                        movingTimeMin: act.movingTimeMin,
+                        paceStr: act.paceStr,
+                        elevationGainM: act.elevationGainM,
+                      }}
+                      onMetricsDiscovered={(m) => {
+                        if (m.avgWatts && !rawAct.watts) {
+                          setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
+                        }
+                      }}
+                    />
+                  )}
+
+                  <ExecutedSessionMetricsTable
                     activity={act}
                     discipline={workout.discipline}
                     isExtraActivity={isExtraActivity}
                     executedTss={executedTss}
                     plannedTss={plannedTss}
+                    weightKg={userProfile?.weightKg}
                   />
 
                   {act.id && (
-                    <div className="space-y-3">
-                      <ActivityTelemetryChart
-                        activityId={act.id}
-                        athleteId={effAthleteId}
-                        apiKey={effApiKey}
-                        email={effEmail}
-                        uid={effUid}
-                        summaryStats={{
-                          heartrate: act.heartrate,
-                          maxHeartrate: act.maxHeartrate,
-                          watts: act.watts,
-                          weightedWatts: act.weightedWatts,
-                          distanceKm: act.distanceKm,
-                          movingTimeMin: act.movingTimeMin,
-                          paceStr: act.paceStr,
-                          elevationGainM: act.elevationGainM,
-                        }}
-                        onMetricsDiscovered={(m) => {
-                          if (m.avgWatts && !rawAct.watts) {
-                            setDiscoveredWatts((p) => ({ ...p, [rawAct.id]: m.avgWatts! }));
-                          }
-                        }}
-                      />
-
-                      <ActivityZoneDistribution
-                        activity={act}
-                        discipline={workout.discipline}
-                        runningTrainingMode={runningTrainingMode}
-                        hasRunningPowerMeter={hasRunningPowerMeter}
-                        runFtp={effRunFtp}
-                        bikeFtp={effBikeFtp}
-                        thresholdPaceSec={thresholdPaceSec}
-                        thresholdPaceStr={thresholdPaceStr}
-                        maxHeartrate={act.maxHeartrate || effMaxHR}
-                        lthr={effLthr}
-                      />
-                    </div>
+                    <ActivityZoneDistribution
+                      activity={act}
+                      discipline={workout.discipline}
+                      runningTrainingMode={runningTrainingMode}
+                      hasRunningPowerMeter={hasRunningPowerMeter}
+                      runFtp={effRunFtp}
+                      bikeFtp={effBikeFtp}
+                      thresholdPaceSec={thresholdPaceSec}
+                      thresholdPaceStr={thresholdPaceStr}
+                      maxHeartrate={act.maxHeartrate || effMaxHR}
+                      lthr={effLthr}
+                    />
                   )}
                 </div>
               );

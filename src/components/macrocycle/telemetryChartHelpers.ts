@@ -142,3 +142,33 @@ export function createScaleHelpers(params: {
     },
   };
 }
+
+export interface TargetWorkRange {
+  min: number;
+  max: number;
+  type: "WATTS" | "PACE" | "HR";
+  label: string;
+}
+
+export function computeTargetBandY(
+  targetRange: TargetWorkRange | undefined,
+  activeMetric: string,
+  getWattsY: (val?: number) => number,
+  getPaceY: (val?: number) => number,
+  getHrY: (val?: number) => number
+) {
+  if (!targetRange) return null;
+  if (targetRange.type === "WATTS" && (activeMetric === "ALL" || activeMetric === "WATTS")) {
+    const y1 = getWattsY(targetRange.max), y2 = getWattsY(targetRange.min);
+    return { topY: Math.min(y1, y2), bottomY: Math.max(y1, y2), color: "#a855f7", label: targetRange.label };
+  }
+  if (targetRange.type === "PACE" && (activeMetric === "ALL" || activeMetric === "PACE")) {
+    const y1 = getPaceY(targetRange.min), y2 = getPaceY(targetRange.max);
+    return { topY: Math.min(y1, y2), bottomY: Math.max(y1, y2), color: "#06b6d4", label: targetRange.label };
+  }
+  if (targetRange.type === "HR" && (activeMetric === "ALL" || activeMetric === "HEARTRATE")) {
+    const y1 = getHrY(targetRange.max), y2 = getHrY(targetRange.min);
+    return { topY: Math.min(y1, y2), bottomY: Math.max(y1, y2), color: "#f43f5e", label: targetRange.label };
+  }
+  return null;
+}

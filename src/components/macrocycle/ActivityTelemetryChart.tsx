@@ -7,7 +7,11 @@ import {
   buildContinuousSegments,
   createScaleHelpers,
   formatSec,
+  TargetWorkRange,
+  computeTargetBandY,
 } from "./telemetryChartHelpers";
+
+export type { TargetWorkRange };
 
 interface ActivityTelemetryChartProps {
   activityId: string;
@@ -25,6 +29,7 @@ interface ActivityTelemetryChartProps {
     paceStr?: string;
     elevationGainM?: number;
   };
+  targetRange?: TargetWorkRange;
   onMetricsDiscovered?: (metrics: { avgWatts?: number }) => void;
 }
 
@@ -35,6 +40,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
   uid,
   email,
   summaryStats,
+  targetRange,
   onMetricsDiscovered,
 }) => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,11 +67,8 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
         if (!res.ok) throw new Error("No se pudieron cargar las series temporales");
         const data = await res.json();
         if (isMounted) {
-          if (data.success && data.streams && Object.keys(data.streams).length > 0) {
-            setStreams(data.streams);
-          } else {
-            setError("Esta actividad no tiene series de telemetría detalladas.");
-          }
+          if (data.success && data.streams && Object.keys(data.streams).length > 0) setStreams(data.streams);
+          else setError("Esta actividad no tiene series de telemetría detalladas.");
         }
       } catch (err: unknown) {
         if (isMounted) setError(err instanceof Error ? err.message : "Error al conectar con la telemetría");
@@ -77,11 +80,8 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     return () => { isMounted = false; };
   }, [activityId, athleteId, apiKey, uid, email]);
 
-  const timeArray = streams?.time || [];
-  const hrArray = streams?.raw_heartrate || streams?.heartrate || [];
-  const wattsArray = streams?.watts || [];
-  const altArray = streams?.altitude || [];
-  const velocityArray = streams?.velocity_smooth || [];
+  const timeArray = streams?.time || [], hrArray = streams?.raw_heartrate || streams?.heartrate || [];
+  const wattsArray = streams?.watts || [], altArray = streams?.altitude || [], velocityArray = streams?.velocity_smooth || [];
 
   const sampledData = useMemo(
     () => buildSampledData(timeArray, hrArray, wattsArray, altArray, velocityArray, 200),
@@ -94,10 +94,7 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
 
   const validWatts = useMemo(() => wattsArray.filter((w: number) => typeof w === "number" && !isNaN(w) && w > 0), [wattsArray]);
   const maxWatts = useMemo(() => (validWatts.length ? Math.max(...validWatts, 300) : 400), [validWatts]);
-  const streamAvgWatts = useMemo(() => {
-    if (!validWatts.length) return undefined;
-    return Math.round(validWatts.reduce((a: number, b: number) => a + b, 0) / validWatts.length);
-  }, [validWatts]);
+  const streamAvgWatts = useMemo(() => validWatts.length ? Math.round(validWatts.reduce((a: number, b: number) => a + b, 0) / validWatts.length) : undefined, [validWatts]);
 
   useEffect(() => {
     if (streamAvgWatts && onMetricsDiscovered) onMetricsDiscovered({ avgWatts: streamAvgWatts });
@@ -134,6 +131,11 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     return altPoints.length ? `${altPath} L ${getX(altPoints[altPoints.length - 1].sampleIdx)} ${padding.top + plotH} L ${getX(altPoints[0].sampleIdx)} ${padding.top + plotH} Z` : "";
   }, [altPath, altPoints, getX, padding.top, plotH]);
 
+  const targetBandY = useMemo(
+    () => computeTargetBandY(targetRange, activeMetric, getWattsY, getPaceY, getHrY),
+    [targetRange, activeMetric, getWattsY, getPaceY, getHrY]
+  );
+
   const updateHoverFromClientX = (clientX: number) => {
     if (!svgRef.current || sampledData.length === 0) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -166,38 +168,38 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
     );
   }
 
-  const metricTabs: Array<{ id: "ALL" | "PACE" | "HEARTRATE" | "WATTS" | "ALTITUDE"; label: string; visible: boolean }> = [
+  const metricTabs = [
     { id: "ALL", label: "Todas", visible: true },
     { id: "PACE", label: "Ritmo", visible: hasPace },
     { id: "HEARTRATE", label: "FC", visible: hasHr },
     { id: "WATTS", label: "Potencia", visible: hasWatts },
     { id: "ALTITUDE", label: "Altitud", visible: hasAlt },
-  ];
+  ].filter((t) => t.visible);
 
   return (
     <div className="rounded-2xl p-3 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white space-y-2.5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
+          <Sparkles className="h-3.5 w-3.5 text-cyan-500" />
           <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
             Telemetría de Carrera / Ruta ({formatSec(timeArray[timeArray.length - 1] || 0)})
           </span>
           {activeMetric === "ALL" && (
-            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 pl-2 border-l border-slate-200 dark:border-slate-700">
-              {hasPace && <span className="text-cyan-600 dark:text-cyan-400 flex items-center gap-0.5">● Ritmo</span>}
-              {hasHr && <span className="text-rose-600 dark:text-rose-400 flex items-center gap-0.5">● FC</span>}
-              {hasWatts && <span className="text-purple-600 dark:text-purple-400 flex items-center gap-0.5">● Watts</span>}
-              {hasAlt && <span className="text-slate-500 dark:text-slate-400 flex items-center gap-0.5">▲ Alt</span>}
+            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 pl-2 border-l border-slate-200 dark:border-slate-700">
+              {hasPace && <span className="text-cyan-600 dark:text-cyan-400">● Ritmo</span>}
+              {hasHr && <span className="text-rose-600 dark:text-rose-400">● FC</span>}
+              {hasWatts && <span className="text-purple-600 dark:text-purple-400">● Watts</span>}
+              {hasAlt && <span className="text-slate-400">▲ Alt</span>}
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-1">
-          {metricTabs.filter((t) => t.visible).map((t) => (
+          {metricTabs.map((t) => (
             <button
               key={t.id}
               type="button"
-              onClick={() => setActiveMetric(t.id)}
+              onClick={() => setActiveMetric(t.id as any)}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
                 activeMetric === t.id
                   ? "bg-slate-900 text-white dark:bg-cyan-500 dark:text-slate-950 shadow-xs"
@@ -274,6 +276,18 @@ export const ActivityTelemetryChart: React.FC<ActivityTelemetryChartProps> = ({
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
             <line key={i} x1={padding.left} y1={padding.top + pct * plotH} x2={chartWidth - padding.right} y2={padding.top + pct * plotH} stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeDasharray="3,3" strokeWidth="0.8" />
           ))}
+
+          {/* Franja de Trabajo Objetivo Planificado (Target Zone) */}
+          {targetBandY && (
+            <g className="target-work-zone">
+              <rect x={padding.left} y={targetBandY.topY} width={plotW} height={Math.max(4, targetBandY.bottomY - targetBandY.topY)} fill={targetBandY.color} fillOpacity={0.12} />
+              <line x1={padding.left} y1={targetBandY.topY} x2={chartWidth - padding.right} y2={targetBandY.topY} stroke={targetBandY.color} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.75" />
+              <line x1={padding.left} y1={targetBandY.bottomY} x2={chartWidth - padding.right} y2={targetBandY.bottomY} stroke={targetBandY.color} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.75" />
+              <text x={chartWidth - padding.right - 4} y={targetBandY.topY - 3} textAnchor="end" className="text-[9px] font-mono font-bold fill-slate-500 dark:fill-slate-400">
+                🎯 {targetBandY.label}
+              </text>
+            </g>
+          )}
 
           {(activeMetric === "ALL" || activeMetric === "ALTITUDE") && altPoints.length > 0 && (
             <>

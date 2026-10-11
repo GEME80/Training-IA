@@ -7514,3 +7514,55 @@ El usuario envió una captura en pantalla de smartphone indicando:
 - **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
   - `src/components/macrocycle/WorkoutDetailModal.tsx`: 289 LOC.
   - `src/components/macrocycle/ExecutedWorkoutHud.tsx`: 166 LOC.
+
+---
+
+## 115. ADOPCIÓN DEL ESTÁNDAR TRAININGPEAKS: ZONAS HORIZONTALES, RESUMEN TIPOGRÁFICO ALINEADO Y FRANJA DE TRABAJO OBJETIVO (v5.39)
+
+### 115.1. Diagnóstico y Requerimiento del Usuario
+El usuario solicitó adoptar el estándar visual canónico de **TrainingPeaks Mobile** enviando capturas de referencia:
+*"Sin ejecutar nada, solamente revisa las dos imágenes de cómo muestra la información TrainingPeaks para el tema de distribución de zonas un poco más sutil, más bien haciéndolo horizontal para ocupar menos espacio. Adicionalmente, podemos colocar los datos en texto, pero que estén bien ordenados y que estén con alguna alineación, así le damos más importancia a la gráfica. Y en la gráfica lo que debemos colocar es cuál era el trabajo objetivo."*
+
+Tras la aprobación del diseño, se ejecutaron las siguientes soluciones técnicas:
+
+### 115.2. Solución Implementada
+
+1. **Franja de Trabajo Objetivo en la Gráfica ([`src/components/macrocycle/ActivityTelemetryChart.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ActivityTelemetryChart.tsx) - 349 LOC):**
+   - Prop `targetRange?: TargetWorkRange` integrada en el renderizador SVG.
+   - Cálculo atómico vía [`src/components/macrocycle/telemetryChartHelpers.ts`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/telemetryChartHelpers.ts) (`computeTargetBandY`).
+   - Renderiza un área horizontal translúcida (`fill="#eab308" fillOpacity={0.12}`) con líneas discontinuas límite y badge indicador: `🎯 Objetivo: {label}` (ej. `269–279 W` o `4:30–4:45 /km`).
+   - El atleta contrasta instantáneamente su telemetría real contra la zona prescrita por el entrenador.
+
+2. **Resumen de Métricas Tipográfico Alineado ([`src/components/macrocycle/ExecutedSessionMetricsTable.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ExecutedSessionMetricsTable.tsx) - 227 LOC):**
+   - Reemplaza los bloques de cajas y tarjetas cuadradas por texto limpio y estructurado (Imagen 2 de TrainingPeaks):
+     - **3 Macro KPIs Hero:** `Duración (56:05)` • `Distancia (9.57 km)` • `Carga (⚡ 56 / 71 TSS)`.
+     - **Métricas Avanzadas (2 Columnas con alineación `label` - `valor`):**
+       - Columna 1: `Trabajo (kJ)`, `NP (W)`, `Pw:Hr (Deriva %)`, `Desnivel (+m)`, `W/kg`.
+       - Columna 2: `IF (Factor Intensidad)`, `VI (Variabilidad)`, `EF (Eficiencia)`, `Sensación (RPE)`.
+     - **Tabla Canónica de Fisiología:** `Mín. | Prom. | Máx.` para Potencia, Cardio (HR), Cadencia, Ritmo y Elevación.
+
+3. **Distribución de Zonas Horizontal Sutil ([`src/components/macrocycle/ActivityZoneDistribution.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/ActivityZoneDistribution.tsx) - 322 LOC):**
+   - Sustituye las columnas verticales por un layout horizontal sutil (Imagen 1 de TrainingPeaks):
+     - **Eje Divisor Central:** A la izquierda, nombre de zona (`Zone 1: Fácil`) y rango numérico (`216 - 266 W`) alineados a la derecha.
+     - A la derecha del divisor: Barra horizontal proporcional que crece según el tiempo acumulado, con la duración exacta al final (`31:43`, `21:05`, `0:00`).
+     - Título con indicador de anclaje de umbral: `Umbral 327 W` o `Umbral 3:59 min/km`.
+     - Reduce en un 60% la altura vertical de la sección de zonas.
+
+4. **Orquestación en [`src/components/macrocycle/WorkoutDetailModal.tsx`](file:///Users/germanmorales/Documents/antigravity/IA%20Training/src/components/macrocycle/WorkoutDetailModal.tsx) (310 LOC):**
+   - Extracción reactiva de `parsedTargetRange` desde `displayTarget` y targets de sesión.
+   - Nueva jerarquía visual:
+     1. Cabecera pro minimalista.
+     2. **Gráfica de Telemetría protagónica** (arriba con su franja de trabajo objetivo).
+     3. **Resumen de Métricas Tipográfico** (estilo TrainingPeaks).
+     4. **Distribución de Zonas Horizontal** (estilo TrainingPeaks).
+     5. Prescripción de entrenamiento.
+
+### 115.3. Certificación de Calidad y Cumplimiento
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js validadas) ✅.
+- **Modularidad:** 100% de los archivos modificados $\le 350$ LOC ✅:
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 310 LOC.
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 349 LOC.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 322 LOC.
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 227 LOC.
+  - `src/components/macrocycle/telemetryChartHelpers.ts`: 174 LOC.

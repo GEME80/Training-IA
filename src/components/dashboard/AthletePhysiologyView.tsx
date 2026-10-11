@@ -10,6 +10,7 @@ import { AthleteBioProfileTab } from "../profile/AthleteBioProfileTab";
 import { AthleteIntervalsTab } from "../profile/AthleteIntervalsTab";
 import { ProfileAvailabilityTab } from "../profile/ProfileAvailabilityTab";
 import { QuickThresholdModal, EditableThresholdMetric } from "../profile/QuickThresholdModal";
+import { RunningModeConfirmModal } from "../profile/RunningModeConfirmModal";
 import { AthletePhysiologyViewProps } from "./AthletePhysiologyView.types";
 
 export type AthleteViewTab = "zones" | "profile" | "availability" | "intervals";
@@ -37,8 +38,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [gender, setGender] = useState<"M" | "F" | "OTHER" | undefined>(initialGender);
   const [apiKey, setApiKey] = useState<string>(initialApiKey);
   const [restingHR, setRestingHR] = useState<number | undefined>(initialRestingHR);
-  const [lthr, setLthr] = useState<number | undefined>(initialLthr);
-  const [maxHR, setMaxHR] = useState<number | undefined>(initialMaxHR);
+  const [lthr, setLthr] = useState<number | undefined>(initialLthr); const [maxHR, setMaxHR] = useState<number | undefined>(initialMaxHR);
   const [hasRunningPowerMeter, setHasRunningPowerMeter] = useState<boolean>(initialHasPower ?? (initialRunFtp > 0));
   const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>(initialRunningMode || (initialRunFtp > 0 ? "POWER" : "PACE"));
   const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>(initialThresholdPaceStr || "4:45");
@@ -47,6 +47,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [swimCssSecPer100m, setSwimCssSecPer100m] = useState<number>(initialSwimCssSec || 105);
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(initialAvailability || DEFAULT_WEEKLY_AVAILABILITY);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingModeSwitch, setPendingModeSwitch] = useState<RunningTrainingMode | null>(null);
 
   useEffect(() => {
     if (initialAvailability) setWeeklyAvailability(initialAvailability);
@@ -141,7 +142,12 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     showNotification("Credenciales de Intervals.icu guardadas.");
   };
 
-  const handleToggleRunningMode = async (newMode: RunningTrainingMode) => {
+  const handleToggleRunningMode = (newMode: RunningTrainingMode) => {
+    if (newMode === runningTrainingMode) return;
+    setPendingModeSwitch(newMode);
+  };
+
+  const confirmToggleRunningMode = async (newMode: RunningTrainingMode) => {
     const hasPower = newMode === "POWER";
     setRunningTrainingMode(newMode);
     setHasRunningPowerMeter(hasPower);
@@ -150,7 +156,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       runFtp, bikeFtp, weightKg, heightCm, birthDate, gender, lthr, restingHR, maxHR,
       runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m, displayName: athleteName, weeklyAvailability,
     });
-    showNotification(`Modo cambiado a: ${newMode === "POWER" ? "Potencia Carrera" : "Ritmo (Pace)"}`);
+    showNotification(`Modo actualizado a: ${newMode === "POWER" ? "Potencia Carrera (Stryd)" : "Ritmo (Pace)"}. Semanas adaptadas.`);
   };
 
   const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => {
@@ -163,24 +169,15 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     let hLthr = lthr;
 
     if (metric === "RUN_PACE") {
-      pStr = String(val);
-      pSec = parsePaceToSeconds(pStr);
-      setRunThresholdPaceStr(pStr);
-      setRunThresholdPaceSecPerKm(pSec);
+      pStr = String(val); pSec = parsePaceToSeconds(pStr); setRunThresholdPaceStr(pStr); setRunThresholdPaceSecPerKm(pSec);
     } else if (metric === "RUN_FTP") {
-      rFtp = Number(val);
-      setRunFtp(rFtp);
+      rFtp = Number(val); setRunFtp(rFtp);
     } else if (metric === "BIKE_FTP") {
-      bFtp = Number(val);
-      setBikeFtp(bFtp);
+      bFtp = Number(val); setBikeFtp(bFtp);
     } else if (metric === "LTHR") {
-      hLthr = Number(val);
-      setLthr(hLthr);
+      hLthr = Number(val); setLthr(hLthr);
     } else if (metric === "SWIM_CSS") {
-      sStr = String(val);
-      sSec = parseSwimPaceToSeconds(sStr);
-      setSwimCssStr(sStr);
-      setSwimCssSecPer100m(sSec);
+      sStr = String(val); sSec = parseSwimPaceToSeconds(sStr); setSwimCssStr(sStr); setSwimCssSecPer100m(sSec);
     }
 
     await onSave({
@@ -330,10 +327,22 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           quickEditMetric === "SWIM_CSS" ? swimCssStr : ""
         }
         onClose={() => setQuickEditMetric(null)}
-        onSave={async (m, v) => {
-          await handleUpdateThreshold(m, v);
-        }}
+        onSave={handleUpdateThreshold}
       />
+
+      {/* 5. Modal de Confirmación de Transición de Modo Fisiológico */}
+      {pendingModeSwitch && (
+        <RunningModeConfirmModal
+          currentMode={runningTrainingMode}
+          targetMode={pendingModeSwitch}
+          onCancel={() => setPendingModeSwitch(null)}
+          onConfirm={async () => {
+            const target = pendingModeSwitch;
+            setPendingModeSwitch(null);
+            await confirmToggleRunningMode(target);
+          }}
+        />
+      )}
     </div>
   );
 };

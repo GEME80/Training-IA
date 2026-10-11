@@ -74,6 +74,7 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
   const isPaceMode = isRun && (runningTrainingMode === "PACE" || hasRunningPowerMeter === false || effFtp === 0);
   const defaultMetric = isPaceMode && hasPaceData ? "PACE" : hasWattsData ? "WATTS" : hasPaceData ? "PACE" : "HR";
   const [activeZoneType, setActiveZoneType] = useState<"PACE" | "WATTS" | "HR">(defaultMetric);
+  const [showAllZones, setShowAllZones] = useState<boolean>(false);
 
   // 1. Zonas de Potencia (Stryd CP 5 zonas para Carrera / Coggan 7 zonas para Ciclismo)
   const powerZones = useMemo<ZoneItem[]>(() => {
@@ -266,47 +267,68 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
         </div>
       </div>
 
-      {/* Lista Horizontal de Zonas Estilo TrainingPeaks */}
+      {/* Lista Horizontal de Zonas con Carril de Escala y Filtro Top Activas */}
       <div className="space-y-1.5 py-0.5">
-        {activeZones.map((z) => {
-          const barWidthPct = z.seconds > 0 ? Math.max(3, Math.round((z.seconds / maxSeconds) * 100)) : 0;
-          const barColor =
-            resolvedZoneType === "WATTS" ? "#a855f7" : resolvedZoneType === "PACE" ? "#06b6d4" : z.color;
+        {(() => {
+          const zeroCount = activeZones.filter((z) => z.seconds === 0).length;
+          const displayedZones = showAllZones || zeroCount === 0
+            ? activeZones
+            : activeZones.filter((z) => z.seconds > 0);
 
           return (
-            <div key={z.id} className="flex items-center text-xs">
-              {/* Columna Izquierda: Definición de Zona y Rango (Alineado a la Derecha) */}
-              <div className="w-[115px] sm:w-[135px] text-right pr-2.5 shrink-0 min-w-0">
-                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 block truncate">
-                  {z.id}: {z.name}
-                </span>
-                <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500 block truncate">
-                  {z.rangeLabel}
-                </span>
-              </div>
+            <>
+              {displayedZones.map((z) => {
+                const barWidthPct = z.seconds > 0 ? Math.max(4, Math.round((z.seconds / maxSeconds) * 100)) : 0;
+                const barColor =
+                  resolvedZoneType === "WATTS" ? "#a855f7" : resolvedZoneType === "PACE" ? "#06b6d4" : z.color;
 
-              {/* Eje Divisor Central y Barra Horizontal */}
-              <div className="flex-1 border-l-2 border-slate-300 dark:border-slate-700 pl-2.5 flex items-center gap-2 min-w-0 h-7">
-                <div className="flex-1 max-w-[260px] sm:max-w-[340px] flex items-center">
-                  {barWidthPct > 0 ? (
-                    <div
-                      style={{ width: `${barWidthPct}%`, backgroundColor: barColor }}
-                      className="h-4 sm:h-5 rounded-r-md transition-all duration-500 shadow-2xs hover:brightness-110"
-                      title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)}`}
-                    />
-                  ) : (
-                    <div className="w-1 h-3 bg-slate-200 dark:bg-slate-800 rounded-r-xs" />
-                  )}
+                return (
+                  <div key={z.id} className="flex items-center text-xs">
+                    {/* Columna Izquierda: Definición de Zona y Rango */}
+                    <div className="w-[110px] sm:w-[130px] text-right pr-2 shrink-0 min-w-0">
+                      <span className="text-[10.5px] font-bold text-slate-800 dark:text-slate-200 block truncate">
+                        {z.id}: {z.name}
+                      </span>
+                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 block truncate">
+                        {z.rangeLabel}
+                      </span>
+                    </div>
+
+                    {/* Eje Divisor Central, Carril de Escala Tenue y Barra */}
+                    <div className="flex-1 border-l-2 border-slate-300 dark:border-slate-700 pl-2 flex items-center gap-2 min-w-0 h-6 sm:h-7">
+                      <div className="flex-1 max-w-[240px] sm:max-w-[320px] h-3.5 sm:h-4.5 bg-slate-100 dark:bg-slate-800/70 rounded-r-md overflow-hidden flex items-center">
+                        {barWidthPct > 0 ? (
+                          <div
+                            style={{ width: `${barWidthPct}%`, backgroundColor: barColor }}
+                            className="h-full rounded-r-xs transition-all duration-500 shadow-2xs hover:brightness-110"
+                            title={`${z.id} (${z.name}): ${z.percent}% - ${formatZoneTime(z.seconds)}`}
+                          />
+                        ) : null}
+                      </div>
+
+                      {/* Tiempo y Porcentaje */}
+                      <span className="font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 shrink-0 min-w-[45px] text-right">
+                        {formatZoneTime(z.seconds)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {zeroCount > 0 && (
+                <div className="pt-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllZones(!showAllZones)}
+                    className="text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                  >
+                    {showAllZones ? "▲ Ocultar zonas inactivas" : `▼ Ver desglose completo (${zeroCount} zonas en 0%)`}
+                  </button>
                 </div>
-
-                {/* Tiempo Acumulado en la Zona */}
-                <span className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                  {formatZoneTime(z.seconds)}
-                </span>
-              </div>
-            </div>
+              )}
+            </>
           );
-        })}
+        })()}
       </div>
     </div>
   );

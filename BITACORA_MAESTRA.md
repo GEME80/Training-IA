@@ -7625,3 +7625,42 @@ Tras verificar la resolución del error `#310`, el deportista observó:
   - `src/components/macrocycle/WorkoutDetailModal.tsx`: 324 LOC ($\le 350$).
   - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 313 LOC ($\le 350$).
 
+---
+
+## 118. REDISEÑO ESTRUCTURAL: BOTTOM SHEET MODAL EXPANDIBLE (50% / 92%), HERO CARDS MAESTRAS Y TABS SEGMENTADOS (v5.42)
+
+### 118.1. Transformación de Arquitectura de Interacción
+En respuesta a la propuesta de rediseño estructural del deportista para eliminar la sobrecarga cognitiva y el aislamiento de los pop-ups en móviles:
+1. **Contenedor Bottom Sheet Modal (`WorkoutDetailModal.tsx`):**
+   - Sustitución del pop-up centrado rígido por un **Bottom Sheet modal nativo** con manija de arrastre táctil (*drag handle*).
+   - **Snap Points reactivos:**
+     * **Estado Resumen (50% de pantalla - `54vh`):** Presentación inmediata de KPIs maestros y zonas dominantes sin bloquear la noción espacial del calendario.
+     * **Estado Completo (92% de pantalla - `92vh`):** Despliegue de la gráfica de telemetría completa y análisis biomecánico profundo.
+   - Gesto de expansión con un toque o clic en manija/botón principal, y cierre fluido vía fondo backdrop o botón de cerrar.
+2. **Jerarquía en 3 Niveles de Lectura:**
+   - **Nivel 1: Tarjetas Hero Maestras (`WorkoutBottomSheetHero.tsx` - 132 LOC):** 3 tarjetas horizontales de impacto inmediato:
+     * `Carga TSS:` $\text{⚡ Real / Planificada}$
+     * `Volumen:` $\text{⏱ Duración • Distancia}$
+     * `Objetivo:` $\text{🎯 Target de potencia / ritmo / Z2}$
+   - **Nivel 2: Gráficos de Zonas con Carril Tenue de Escala y Acordeón (`ActivityZoneDistribution.tsx` - 335 LOC):**
+     * Carril gris de fondo tenue (`bg-slate-100 dark:bg-slate-800`) en cada barra horizontal para dar noción de escala (0 a 100%).
+     * Filtro inteligente: por defecto se muestran únicamente las zonas con actividad real ($> 0\text{ s}$), ocultando las zonas en 0% bajo el acordeón `▼ Ver desglose completo (X zonas en 0%)`.
+   - **Nivel 3: Control Segmentado Horizontal (`WorkoutSegmentedTabs.tsx` - 61 LOC):**
+     * `[ 📈 Telemetría ]`: Gráfica interactiva y distribución de zonas.
+     * `[ 📊 Fisiología ]`: Tabla canónica `Mín | Prom | Máx` y métricas avanzadas (`NP`, `IF`, `VI`, `Pw:Hr`, `EF`).
+     * `[ 📋 Plan ]`: Prescripción técnica, movilidad y nutrición.
+   - **Nivel 4: Barra de Acción Inferior Fija:** Botón principal de acción `[ ↗ Ver Análisis Completo ]` en estado del 50% y `[ ↘ Vista Resumen | Cerrar ]` en pantalla completa.
+
+### 118.2. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 316 LOC ($\le 350$).
+  - `src/components/macrocycle/WorkoutBottomSheetHero.tsx`: 132 LOC ($\le 350$).
+  - `src/components/macrocycle/WorkoutSegmentedTabs.tsx`: 61 LOC ($\le 350$).
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 335 LOC ($\le 350$).
+  - `src/components/macrocycle/ExecutedSessionMetricsTable.tsx`: 219 LOC ($\le 350$).
+  - `src/components/macrocycle/ActivityTelemetryChart.tsx`: 346 LOC ($\le 350$).
+  - `src/components/macrocycle/telemetryChartHelpers.tsx`: 252 LOC ($\le 350$).
+
+

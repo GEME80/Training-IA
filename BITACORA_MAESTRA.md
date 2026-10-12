@@ -8371,6 +8371,10 @@ Esto causaba que:
   - **Gobernanza Visual del Buffer Rodante en Semanas:** Primera versión de cálculo de buffer rodante en semanas.
 - **v5.64 (`93f557f`):**
   - **Resolución Determinista por `weekNumber`:** Se sustituyó la comparación de cadenas de fechas por la evaluación directa del `weekNumber` relativo al `currentWeekNumber` del macrociclo (`week.weekNumber >= currentWeekNum && week.weekNumber < currentWeekNum + 3`). Esto elimina cualquier desajuste por zona horaria (UTC vs GMT-5) y asegura que semanas lejanas como la Semana 13 (28 Dic - 3 Ene) muestren estrictamente `⏳ Por sincronizar` y oculten el botón de sync.
+- **v5.65 (`219c5d3`):**
+  - **Estabilización de Dirty Hash en Refresco:** Se fijaron las métricas fisiológicas de generación (`stableCtl`, `stableRunFtp`, `stableBikeFtp`, `stableThresholdPace`) usando `blueprint.athleteCtlAtCreation` y valores de perfil estables. Esto evita que el hash varíe entre 0 y el valor retornado por el fetch de telemetría, eliminando falsos positivos de sincronización en cada recarga de página.
+  - **Silenciamiento de Toast en Sincronización Automática:** En `NotificationToast.tsx`, las sincronizaciones automáticas de fondo ahora se procesan de forma 100% silenciosa en la campanita de la cabecera (sin desplegar toasts flotantes en pantalla). Los toasts quedan reservados exclusivamente para acciones manuales explícitas y alertas del sistema.
+
 
 
 

@@ -95,11 +95,17 @@ export function useAutoIntervalsSync({
     const { targetWeeks, fromDate, toDate } = calculateRollingWindow(blueprint.weeks, todayStr, 3);
     if (targetWeeks.length === 0) return;
 
-    // 3. Generar entrenamientos para la ventana
+    // 3. Generar entrenamientos para la ventana con métricas estables del macrociclo
+    const stableCtl = blueprint.athleteCtlAtCreation || userProfile?.ctl || ctl || 35;
+    const stableRunFtp = userProfile?.runFtp || runFtp || 0;
+    const stableBikeFtp = userProfile?.bikeFtp || bikeFtp || 0;
+    const stableThresholdPace = userProfile?.runThresholdPaceSecPerKm || runningOpts?.thresholdPaceSec || 285;
+
     const effPrimaryRaceDate = blueprint.primaryRace?.date || blueprint.raceDate || undefined;
     const effRunningOpts = {
       ...runningOpts,
-      mode: blueprint.runningTrainingMode || runningOpts?.mode || (runFtp > 0 ? "POWER" : "PACE"),
+      mode: blueprint.runningTrainingMode || runningOpts?.mode || (stableRunFtp > 0 ? "POWER" : "PACE"),
+      thresholdPaceSec: stableThresholdPace,
       raceGoal: blueprint.primaryRace?.goalTarget,
     };
 
@@ -107,11 +113,11 @@ export function useAutoIntervalsSync({
     targetWeeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
         week,
-        runFtp,
-        bikeFtp,
+        stableRunFtp,
+        stableBikeFtp,
         resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
         (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
-        ctl || 35,
+        stableCtl,
         effPrimaryRaceDate,
         effRunningOpts
       );
@@ -123,10 +129,10 @@ export function useAutoIntervalsSync({
 
     // 4. Calcular Hash de contenido para Dirty Checking
     const currentHash = computePlanHash(futurePlan, {
-      runFtp,
-      bikeFtp,
+      runFtp: stableRunFtp,
+      bikeFtp: stableBikeFtp,
       runningMode: effRunningOpts.mode,
-      thresholdPaceSec: effRunningOpts.thresholdPaceSec,
+      thresholdPaceSec: stableThresholdPace,
     });
 
     const syncToKey = `last_synced_to_${athleteId}`;

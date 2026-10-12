@@ -14,6 +14,10 @@ export const NotificationToast: React.FC = () => {
     const unsubscribe = notificationService.subscribe((items) => {
       if (items.length > 0) {
         const latest = items[0];
+        // Las sincronizaciones automáticas en segundo plano no muestran toast flotante; van silenciosas a la campanita
+        if (latest.category === "SYNC" && latest.title?.toLowerCase().includes("automática")) {
+          return;
+        }
         // Solo mostrar toast para notificaciones nuevas creadas hace menos de 5 segundos
         const diffMs = Date.now() - new Date(latest.timestamp).getTime();
         if (diffMs < 5000) {

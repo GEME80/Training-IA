@@ -261,6 +261,11 @@ export function useIntervalsSync({
         throw new Error(data.error || "Fallo en la sincronización con Intervals.icu");
       }
 
+      const toDate = targetWeeks[targetWeeks.length - 1]?.endDate;
+      if (toDate && athleteId) {
+        userStorage.setItem(`last_synced_to_${athleteId}`, toDate);
+      }
+
       const weekNumbers = targetWeeks.map((w) => w.weekNumber).join(", ");
       const structuredCount = triweeklyPlan.filter((p) => !p.isRestDay && p.discipline !== "Descanso").length;
 

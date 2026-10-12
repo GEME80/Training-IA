@@ -58,16 +58,17 @@ export function useAutoIntervalsSync({
   const lastCheckTimestampRef = useRef<number>(0);
 
   const checkAndExecuteRollingSync = useCallback(async () => {
-    // Throttling mínimo: no evaluar más de una vez cada 20 segundos
-    const now = Date.now();
-    if (now - lastCheckTimestampRef.current < 20000 || isExecutingRef.current) {
+    // 0. Si ya hay una sincronización en ejecución, no solapar
+    if (isExecutingRef.current) return;
+
+    // 1. Si los datos mínimos aún no están en memoria, abortar de inmediato SIN penalizar el throttle
+    if (!athleteId || !blueprint?.weeks || blueprint.weeks.length === 0) {
       return;
     }
-    lastCheckTimestampRef.current = now;
 
     const activeApiKey = apiKeyCache || userStorage.getItem("intervals_api_key") || userProfile?.intervalsApiKey || "";
 
-    // 1. Validar elegibilidad del atleta productivo (6 compuertas de seguridad)
+    // 2. Validar elegibilidad del atleta productivo (6 compuertas de seguridad)
     const isEligible = isAthleteEligibleForAutoSync({
       isReadOnly,
       status: userProfile?.status,
@@ -81,9 +82,15 @@ export function useAutoIntervalsSync({
       hasApiKey: Boolean(userProfile?.hasApiKey),
     });
 
-    if (!isEligible || !blueprint?.weeks) return;
+    if (!isEligible) return;
 
-    // 2. Extraer ventana rodante de 3 semanas (21 días hacia adelante)
+    // 3. Throttling mínimo: solo penalizar si ya tenemos datos y el atleta es elegible
+    const now = Date.now();
+    if (lastCheckTimestampRef.current > 0 && now - lastCheckTimestampRef.current < 20000) {
+      return;
+    }
+
+    // 4. Extraer ventana rodante de 3 semanas (21 días hacia adelante)
     const todayStr = new Date().toISOString().split("T")[0];
     const { targetWeeks, fromDate, toDate } = calculateRollingWindow(blueprint.weeks, todayStr, 3);
     if (targetWeeks.length === 0) return;
@@ -128,7 +135,10 @@ export function useAutoIntervalsSync({
     const lastSyncedHash = userStorage.getItem(syncHashKey);
 
     const isNeeded = isRollingSyncNeeded(lastSyncedTo, toDate, todayStr, lastSyncedHash, currentHash, 14);
-    if (!isNeeded) return;
+    if (!isNeeded) {
+      lastCheckTimestampRef.current = now;
+      return;
+    }
 
     // 5. Ejecutar sincronización silenciosa en segundo plano
     try {
@@ -184,6 +194,7 @@ export function useAutoIntervalsSync({
     } catch (err) {
       console.warn("[AutoIntervalsSync] Error silencioso en sincronización en background:", err);
     } finally {
+      lastCheckTimestampRef.current = Date.now();
       isExecutingRef.current = false;
     }
   }, [
@@ -204,10 +215,15 @@ export function useAutoIntervalsSync({
   ]);
 
   useEffect(() => {
-    // Trigger 1: Mount inicial de la app
+    // Trigger 1: Mount inicial o cuando cambian los datos del atleta
     checkAndExecuteRollingSync();
 
-    // Trigger 2: Retorno a primer plano en móvil (desbloqueo o cambio de pestaña)
+    // Trigger 2: Reintento de cortesía a los 1.5s por resolución asíncrona de Firestore/LocalStorage
+    const timer = setTimeout(() => {
+      checkAndExecuteRollingSync();
+    }, 1500);
+
+    // Trigger 3: Retorno a primer plano en móvil (desbloqueo o cambio de pestaña)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         checkAndExecuteRollingSync();
@@ -218,6 +234,7 @@ export function useAutoIntervalsSync({
     window.addEventListener("focus", checkAndExecuteRollingSync);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", checkAndExecuteRollingSync);
     };

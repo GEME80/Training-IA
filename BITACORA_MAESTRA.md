@@ -8358,7 +8358,7 @@ Esto causaba que:
 - **Gate 4 (Scope Integrity & FinOps):** Persistencia 100% local en memoria/userStorage ($0 USD en Cloud Firestore). Cero mutaciones en modo auditoría (`isReadOnly`) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Documentado detalladamente en la sección 134 ✅.
 
-### 134.4. Parches de Estabilidad y Despliegue (v5.61, v5.62 & v5.63)
+### 134.4. Parches de Estabilidad y Despliegue (v5.61, v5.62, v5.63 & v5.64)
 - **v5.61 (`7a552f1`):**
   - Campanita de notificaciones conectada en `AthleteDashboardHeader.tsx` (resolviendo visibilidad en Web y Móvil para atletas autenticados).
   - Elegibilidad con credenciales de servidor (`hasEncryptedKey`, `hasApiKey`, superadmin master email) en `isAthleteEligibleForAutoSync`.
@@ -8368,8 +8368,9 @@ Esto causaba que:
   - **Temporizador de Cortesía (1.5s):** Se incorporó un `setTimeout` de seguridad de 1.5s para disparar la auto-sincronización de fondo si no hubo un re-render por dependencias.
   - **Unificación de Respaldo Tri-Semanal:** El botón manual `[ 🔄 Sincronizar ]` en la semana actual sincroniza el buffer de 3 semanas completo y actualiza `last_synced_to_${athleteId}`.
 - **v5.63 (`db6abba`):**
-  - **Gobernanza Visual del Buffer Rodante en Semanas:** Se calculó `isWithinGarminBuffer` para determinar con precisión qué semanas están en la ventana activa de 21 días (lunes actual + 3 semanas).
-  - **Semanas Activas:** Exhiben la insignia `🟢 En tu reloj Garmin` y el botón de re-sincronización `[ 🔄 Sincronizar ]`.
-  - **Semanas Futuras Fuera del Buffer:** Exhiben la insignia informativa `⏳ Pendiente · Buffer rodante` y ocultan el botón de sincronización para evitar solapamientos y saturación fuera de política.
+  - **Gobernanza Visual del Buffer Rodante en Semanas:** Primera versión de cálculo de buffer rodante en semanas.
+- **v5.64 (`93f557f`):**
+  - **Resolución Determinista por `weekNumber`:** Se sustituyó la comparación de cadenas de fechas por la evaluación directa del `weekNumber` relativo al `currentWeekNumber` del macrociclo (`week.weekNumber >= currentWeekNum && week.weekNumber < currentWeekNum + 3`). Esto elimina cualquier desajuste por zona horaria (UTC vs GMT-5) y asegura que semanas lejanas como la Semana 13 (28 Dic - 3 Ene) muestren estrictamente `⏳ Por sincronizar` y oculten el botón de sync.
+
 
 

@@ -8223,3 +8223,75 @@ Esto causaba que:
   - `src/components/macrocycle/WorkoutDetailModal.tsx`: 81 LOC ($\le 350$) ✅.
 - **Zero-Touch Backend:** Cero modificaciones en rutas de API, esquemas o servicios de servidor ✅.
 
+---
+
+## 133. Estandarización Integral Responsiva y "App-Like Experience" del Centro de Control (Admin) (v5.57)
+
+### 133.1. Visión y Objetivos de la Refactorización
+- **Arquitectura de Navegación "App-Like" Móvil (< 1024px):** Ocultamiento total del sidebar rígido de escritorio en pantallas móviles; incorporación de una barra de navegación inferior fija (`AdminMobileBottomNav.tsx`) con 4 pestañas directas (Finanzas/Billing, Atletas, Programas, Ajustes) y un Drawer táctil para opciones secundarias (Planes y Configuración de IA).
+- **Cabecera Móvil y Ergonomía Deportiva (`AdminMobileHeader.tsx`):** Barra superior flotante con logo, badge de Admin, botón de refresco y acceso rápido de un toque `[ 🏃 Mi Entreno ]` para retornar al entrenamiento del coach.
+- **Estandarización de Identidad Visual (PULSE AI):**
+  - Adopción estricta del Verde Esmeralda corporativo (`bg-emerald-600 hover:bg-emerald-700 text-white`) como color primario de acción en todo el panel.
+  - Erradicación total de botones e interactivos en color morado o naranja fuera de semáforos biológicos de alerta.
+  - Reemplazo completo de emojis por iconos SVG consistentes de **Lucide React** (`Footprints`, `Trophy`, `Sprout`, `Zap`, `Heart`, `Clock`, `Brain`, `Flame`, `Activity`, `Shield`, `Eye`, `CheckCircle2`, `Bell`).
+- **Zero-Touch Backend Guardrail:** Inmutabilidad absoluta de endpoints `/api/admin/*`, esquemas de Firestore, modelos o lógica de servidor. 100% de la refactorización ejecutada en la capa de interfaz React/Tailwind.
+
+### 133.2. Detalle de Mejoras por Vista
+
+1. **Shell Principal y Navegación (`AdminLayoutShell.tsx` / `AdminPanel.tsx` / `AdminSidebar.tsx`):**
+   - Sidebar fijo restringido a `hidden lg:flex lg:w-72` con botón estilizado `← Modo Atleta` en `bg-slate-800 text-slate-200`.
+   - Soporte fluido para cambio de pestañas coordinado entre Sidebar (desktop) y Bottom Navigation (mobile).
+2. **Dashboard & Finanzas (`AdminBillingKpis.tsx`, `AdminBillingTable.tsx`, `MobileBillingCard.tsx`, `AdminSquadAthleticRadar.tsx`):**
+   - Rejilla responsiva de KPIs 2x4 (2 columnas en móvil, 4 en sm+).
+   - Tasa de recaudo y badges de pago destacados en verde esmeralda.
+   - Corrección de formato en la tabla de facturación (eliminada duplicidad visual `$ $80` $\rightarrow$ `$80 USD`).
+   - Implementación de `MobileBillingCard.tsx` para renderizar cobros en tarjetas táctiles con botón de acción de ancho completo.
+   - Radar Atlético: Iconografía vectorial (`Footprints`) y colapso visual táctil cuando no hay competiciones registradas.
+3. **Gestión de Atletas (`AdminUsersTab.tsx`, `AdminUsersTable.tsx`, `AdminUserCardMobile.tsx`):**
+   - Botón `+ 7 Demos` transformado a botón secundario neutro (`bg-slate-100 hover:bg-slate-200 text-slate-700`).
+   - Botón `+ Invitar Atleta` jerarquizado con Verde Esmeralda (`bg-emerald-600`).
+   - Botón `Ver como atleta` estandarizado a estilo institucional sobrio (`bg-slate-900 text-white dark:bg-emerald-600`).
+   - Sanitización defensiva de FTP en bicicleta: si `bikeFtp <= 20`, se renderiza como `--` en tabla y tarjetas.
+   - Reemplazo total de emojis de disciplinas y estados por iconos de Lucide.
+4. **Tarifas y Ajustes Bancarios (`AdminPlansTab.tsx`):**
+   - Distribución en columna vertical ergonómica en móvil y 2 columnas en desktop.
+   - Campos de cuenta bancaria y Bre-B desagregados en inputs táctiles individuales.
+   - Checkbox institucional con acento esmeralda (`accent-emerald-600`).
+   - Sticky footer móvil para guardar cambios con soporte de `safe-area-inset-bottom`.
+5. **Motor de IA y Prompts Maestros (`AdminAISettingsTab.tsx`, `AdminAIPromptsSection.tsx`):**
+   - Guardado unificado mediante botón maestro en cabecera (`Guardar Ajustes de IA`).
+   - Semáforo de temperatura: para valor `0.0` se muestra en Verde Esmeralda con etiqueta "Determinista (Recomendado para SGEA)".
+   - Anti scroll-trap en móvil: botón de pantalla completa (`Maximize2`) para editar prompts extensos sin atrapar el scroll de la página principal.
+   - Cuadro de confirmación nativo al restablecer prompts a valores por defecto.
+6. **Ciencia y Metodología (`AdminProgramLibrariesTab.tsx`, `AdminProgramCard.tsx`, `AdminProgramMetricsHud.tsx`, `AdminProgramHeader.tsx`):**
+   - Botón maestro `Crear con Asistente IA` estandarizado a Verde Esmeralda (`bg-emerald-600`).
+   - Métricas HUD: soporte de desplazamiento horizontal continuo (`flex overflow-x-auto no-scrollbar gap-2.5 pb-1 sm:grid sm:grid-cols-4 sm:gap-3`) y eliminación de emojis en el texto.
+   - Tarjetas de programas con iconos vectoriales de deporte (`Footprints`, `Bike`, `Mountain`, `Waves`) y badges tipados con iconos (`Trophy`, `Sprout`, `Flame`, etc.).
+
+### 133.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Zero-Touch Backend:** Cero modificaciones en rutas `/api/*` o esquemas de base de datos ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/AdminPanel.tsx`: 155 LOC ✅
+  - `src/components/admin/AdminMobileHeader.tsx`: 73 LOC ✅
+  - `src/components/admin/AdminMobileBottomNav.tsx`: 179 LOC ✅
+  - `src/components/admin/AdminSidebar.tsx`: 229 LOC ✅
+  - `src/components/admin/AdminBillingKpis.tsx`: 112 LOC ✅
+  - `src/components/admin/MobileBillingCard.tsx`: 120 LOC ✅
+  - `src/components/admin/AdminBillingTable.tsx`: 325 LOC ✅
+  - `src/components/admin/AdminSquadAthleticRadar.tsx`: 137 LOC ✅
+  - `src/components/admin/AdminUsersTab.tsx`: 331 LOC ✅
+  - `src/components/admin/AdminUsersTable.tsx`: 343 LOC ✅
+  - `src/components/admin/AdminUserCardMobile.tsx`: 263 LOC ✅
+  - `src/components/admin/AdminPlansTab.tsx`: 292 LOC ✅
+  - `src/components/admin/AdminAISettingsTab.tsx`: 193 LOC ✅
+  - `src/components/admin/AdminAIPromptsSection.tsx`: 340 LOC ✅
+  - `src/components/admin/AdminProgramHeader.tsx`: 61 LOC ✅
+  - `src/components/admin/AdminProgramCard.tsx`: 196 LOC ✅
+  - `src/components/admin/AdminProgramMetricsHud.tsx`: 42 LOC ✅
+  - `src/components/admin/AdminProgramLibrariesTab.tsx`: 340 LOC ✅
+  - `src/components/admin/AdminProgramDetailModal.tsx`: 146 LOC ✅
+  - `src/components/admin/AdminProgramDetailViewSection.tsx`: 194 LOC ✅
+
+

@@ -154,10 +154,10 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               type="button"
               onClick={handleSeedDemos}
               disabled={isSeedingDemos}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
               title="Sembrar los 7 atletas demo para pruebas"
             >
-              <Sparkles className="h-4 w-4 text-purple-600" />
+              <Sparkles className="h-4 w-4 text-slate-500" />
               <span className="hidden sm:inline">+ 7 Demos</span>
             </button>
           )}
@@ -169,14 +169,14 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition cursor-pointer disabled:opacity-50"
             title="Refrescar listado de usuarios"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-cyan-600" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-emerald-600" : ""}`} />
             <span className="hidden sm:inline">Refrescar</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer w-full sm:w-auto"
+            className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer w-full sm:w-auto"
           >
             <UserPlus className="h-4 w-4" />
             <span>+ Invitar Atleta</span>

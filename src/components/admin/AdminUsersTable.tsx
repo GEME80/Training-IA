@@ -14,6 +14,11 @@ import {
   AlertCircle,
   Unlink,
   Eye,
+  Heart,
+  Scale,
+  Waves,
+  Bike,
+  Activity,
 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
@@ -83,7 +88,6 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                 const isPending = u.status === "pending";
                 const isPreAuth = Boolean(u.isPreAuthorized || u.uid.startsWith("preauth_"));
                 const isIntervalsOk = Boolean(u.intervalsAthleteId && (u.hasIntervalsKey || isRootAdmin));
-                const isPaceMode = u.runningTrainingMode === "PACE" || !u.hasRunningPowerMeter;
 
                 return (
                   <tr key={u.uid} className="hover:bg-slate-50/80 transition-colors">
@@ -100,18 +104,15 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                             </span>
                             {isRootAdmin ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
-                                <Shield className="h-2.5 w-2.5" />
-                                Superadmin
+                                <Shield className="h-2.5 w-2.5" /> Superadmin
                               </span>
                             ) : u.role === "admin" ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200 shrink-0">
-                                <Shield className="h-2.5 w-2.5" />
-                                Admin
+                                <Shield className="h-2.5 w-2.5" /> Admin
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200/80 shrink-0">
-                                <User className="h-2.5 w-2.5" />
-                                Atleta
+                                <User className="h-2.5 w-2.5" /> Atleta
                               </span>
                             )}
                           </div>
@@ -128,9 +129,7 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                             <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
                             <span>Solicitud Pendiente</span>
                             {isPreAuth && (
-                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 font-mono">
-                                Invitado
-                              </span>
+                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 font-mono">Invitado</span>
                             )}
                           </span>
                         ) : u.status === "active" ? (
@@ -138,9 +137,7 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                             <span>Activo</span>
                             {isPreAuth && (
-                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono">
-                                Preautorizado
-                              </span>
+                              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono">Preautorizado</span>
                             )}
                           </span>
                         ) : (
@@ -158,11 +155,11 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                             </span>
                           ) : u.billingStatus === "PENDING_VERIFICATION" ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
-                              <span>Por verificar</span>
+                              Por verificar
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
-                              <span>Pendiente (${u.planPrice || 80})</span>
+                              Pendiente (${u.planPrice || 80})
                             </span>
                           )}
                         </div>
@@ -196,13 +193,21 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                       <div className="flex flex-col gap-1.5 text-xs font-mono whitespace-nowrap">
                         <div className="text-[10px] font-sans font-semibold">
                           {u.swimCssStr && u.bikeFtp && (u.runFtp || u.runThresholdPaceStr) ? (
-                            <span className="text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">🏊🚴🏃 Triatlón</span>
+                            <span className="inline-flex items-center gap-1 text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
+                              <Activity className="h-3 w-3 text-indigo-600" /> Triatlón
+                            </span>
                           ) : u.bikeFtp && (!u.runFtp && !u.runThresholdPaceStr) ? (
-                            <span className="text-cyan-800 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">🚴 Ciclismo Puro</span>
+                            <span className="inline-flex items-center gap-1 text-cyan-800 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                              <Bike className="h-3 w-3 text-cyan-600" /> Ciclismo
+                            </span>
                           ) : u.runThresholdPaceStr && (!u.runFtp || u.runningTrainingMode === "PACE") ? (
-                            <span className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">⏱️ Running (Ritmo)</span>
+                            <span className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              <Clock className="h-3 w-3 text-emerald-600" /> Running (Ritmo)
+                            </span>
                           ) : u.runFtp ? (
-                            <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">🏃 Running (Potencia Stryd)</span>
+                            <span className="inline-flex items-center gap-1 text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                              <Zap className="h-3 w-3 text-amber-600" /> Running (Stryd)
+                            </span>
                           ) : null}
                         </div>
 
@@ -210,37 +215,46 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                           {Boolean(u.runFtp && u.runFtp > 0) ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/70 text-[11px] font-semibold">
                               <Zap className="h-3 w-3 text-amber-600 shrink-0" />
-                              <span className="text-slate-500 font-sans">Run CP:</span>
-                              <strong className="font-bold">{u.runFtp}W</strong>
+                              <span className="text-slate-500 font-sans">CP:</span>
+                              <strong>{u.runFtp}W</strong>
                             </span>
                           ) : u.runThresholdPaceStr ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/70 text-[11px] font-semibold">
                               <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
                               <span className="text-slate-500 font-sans">Ritmo:</span>
-                              <strong className="font-bold">{u.runThresholdPaceStr}/km</strong>
+                              <strong>{u.runThresholdPaceStr}/km</strong>
                             </span>
                           ) : null}
 
-                          {Boolean(u.bikeFtp && u.bikeFtp > 0) && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200/70 text-[11px] font-semibold">
-                              <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
-                              <span className="text-slate-500 font-sans">Bike FTP:</span>
-                              <strong className="font-bold">{u.bikeFtp}W</strong>
-                            </span>
-                          )}
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200/70 text-[11px] font-semibold">
+                            <Bike className="h-3 w-3 text-cyan-600 shrink-0" />
+                            <span className="text-slate-500 font-sans">FTP:</span>
+                            <strong>{Boolean(u.bikeFtp && u.bikeFtp > 20) ? `${u.bikeFtp}W` : "--"}</strong>
+                          </span>
 
                           {u.swimCssStr && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200/70 text-[11px] font-semibold">
-                              <span className="text-slate-500 font-sans">🏊 CSS:</span>
-                              <strong className="font-bold">{u.swimCssStr}/100m</strong>
+                              <Waves className="h-3 w-3 text-sky-600 shrink-0" />
+                              <span className="text-slate-500 font-sans">CSS:</span>
+                              <strong>{u.swimCssStr}/100m</strong>
                             </span>
                           )}
                         </div>
 
                         {(u.weightKg || u.lthr) && (
                           <div className="text-[10px] text-slate-400 font-sans flex items-center gap-2">
-                            {u.weightKg && <span>⚖️ {u.weightKg} kg</span>}
-                            {u.lthr && <span>❤️ LTHR: {u.lthr} bpm</span>}
+                            {u.weightKg && (
+                              <span className="inline-flex items-center gap-1">
+                                <Scale className="h-3 w-3 text-slate-400" />
+                                <span>{u.weightKg} kg</span>
+                              </span>
+                            )}
+                            {u.lthr && (
+                              <span className="inline-flex items-center gap-1">
+                                <Heart className="h-3 w-3 text-rose-500" />
+                                <span>LTHR: {u.lthr} bpm</span>
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -249,12 +263,11 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                     {/* Columna 5: Acciones de Gestión */}
                     <td className="py-4 px-5 sm:px-6 text-right">
                       <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                        {/* Botón Rápido de Aprobación para Pendientes */}
                         {isPending && (
                           <button
                             type="button"
                             onClick={() => onStatusChange(u.uid, u.email, "active")}
-                            title={isIntervalsOk ? "Aprobar y activar acceso" : "Aprobar acceso (Intervals pendiente de verificar)"}
+                            title={isIntervalsOk ? "Aprobar y activar acceso" : "Aprobar acceso (Intervals pendiente)"}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -262,31 +275,28 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                           </button>
                         )}
 
-                        {/* Botón Inspeccionar / Ver como atleta (Solo Lectura) */}
                         {onInspectAthlete && (
                           <button
                             type="button"
                             onClick={() => onInspectAthlete(u)}
                             title={`Inspeccionar Home de ${u.displayName || u.email} en modo solo lectura`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 hover:text-purple-900 border border-purple-200 transition cursor-pointer text-xs font-bold shrink-0 shadow-2xs"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 transition cursor-pointer text-xs font-bold shrink-0 shadow-xs active:scale-95"
                           >
-                            <Eye className="h-3.5 w-3.5 text-purple-600" />
+                            <Eye className="h-3.5 w-3.5" />
                             <span>Ver como atleta</span>
                           </button>
                         )}
 
-                        {/* Configuración y Soporte de Perfil */}
                         <button
                           type="button"
                           onClick={() => onEdit(u)}
-                          title="Configurar perfil, umbrales y soporte de Intervals"
+                          title="Configurar perfil, umbrales y soporte"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-200 border border-slate-200 text-slate-700 transition cursor-pointer text-xs font-bold shrink-0 shadow-2xs"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
                           <span>Configurar</span>
                         </button>
 
-                        {/* Alternar Estado: Activo / Deshabilitado */}
                         {u.status === "active" && !isRootAdmin && (
                           <button
                             type="button"
@@ -309,7 +319,6 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                           </button>
                         )}
 
-                        {/* Eliminar */}
                         {!isRootAdmin && (
                           <button
                             type="button"

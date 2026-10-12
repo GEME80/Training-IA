@@ -1,7 +1,24 @@
 "use client";
 
 import React from "react";
-import { Edit, Plus, Trash2, Eye } from "lucide-react";
+import {
+  Edit,
+  Plus,
+  Trash2,
+  Eye,
+  Trophy,
+  Sprout,
+  Zap,
+  Heart,
+  Clock,
+  Brain,
+  Flame,
+  Footprints,
+  Bike,
+  Mountain,
+  Waves,
+  Activity,
+} from "lucide-react";
 import { MacrocycleDefinition } from "@/lib/physiology/macrocycleLibrary";
 
 interface AdminProgramCardProps {
@@ -10,6 +27,20 @@ interface AdminProgramCardProps {
   onEdit: (prog: MacrocycleDefinition) => void;
   onDuplicate: (prog: MacrocycleDefinition) => void;
   onDelete: (id: string) => void;
+}
+
+function getProgramSportIcon(sport?: string) {
+  switch (sport) {
+    case "cycling":
+      return <Bike className="h-5 w-5 text-sky-600" />;
+    case "trail_running":
+      return <Mountain className="h-5 w-5 text-emerald-600" />;
+    case "triathlon":
+      return <Waves className="h-5 w-5 text-cyan-600" />;
+    case "running":
+    default:
+      return <Footprints className="h-5 w-5 text-emerald-600" />;
+  }
 }
 
 export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
@@ -22,14 +53,16 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
   return (
     <div
       onClick={() => onInspect(prog)}
-      className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group hover:border-cyan-400 cursor-pointer"
+      className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group hover:border-emerald-500 cursor-pointer"
     >
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center space-x-2.5">
-            <span className="text-2xl">{prog.icon || "🏃‍♂️"}</span>
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/80">
+              {getProgramSportIcon(prog.sport)}
+            </div>
             <div>
-              <h3 className="text-sm font-black text-slate-900 group-hover:text-cyan-600 transition-colors">
+              <h3 className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
                 {prog.title}
               </h3>
               <p className="text-[11px] text-slate-500 font-medium leading-snug">
@@ -38,15 +71,25 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
             </div>
           </div>
           {prog.isCustom && (
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
               Personalizado
             </span>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
-            {prog.category === "RACE_TARGET" ? "🏆 Carrera Objetivo" : "🌱 Momento del Atleta"}
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
+            {prog.category === "RACE_TARGET" ? (
+              <>
+                <Trophy className="h-3 w-3 text-amber-500" />
+                <span>Carrera Objetivo</span>
+              </>
+            ) : (
+              <>
+                <Sprout className="h-3 w-3 text-emerald-600" />
+                <span>Momento del Atleta</span>
+              </>
+            )}
           </span>
           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
             {prog.distanceType.toUpperCase()}
@@ -64,7 +107,7 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
             {prog.supportedMetrics?.map((m) => (
               <span
                 key={m}
-                className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
                   m === "POWER"
                     ? "bg-amber-100 text-amber-800"
                     : m === "HEART_RATE"
@@ -74,8 +117,14 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
                     : "bg-emerald-100 text-emerald-800"
                 }`}
               >
-                {m === "POWER" ? "⚡ Potencia" : m === "HEART_RATE" ? "💓 FC" : m === "PACE" ? "⏱️ Ritmo" : "🧠 RPE"}
-                {m === prog.defaultMetric && " ★"}
+                {m === "POWER" && <Zap className="h-2.5 w-2.5 text-amber-600" />}
+                {m === "HEART_RATE" && <Heart className="h-2.5 w-2.5 text-rose-600" />}
+                {m === "PACE" && <Clock className="h-2.5 w-2.5 text-cyan-600" />}
+                {m === "RPE" && <Brain className="h-2.5 w-2.5 text-emerald-600" />}
+                <span>
+                  {m === "POWER" ? "Potencia" : m === "HEART_RATE" ? "FC" : m === "PACE" ? "Ritmo" : "RPE"}
+                  {m === prog.defaultMetric && " ★"}
+                </span>
               </span>
             ))}
           </div>
@@ -83,7 +132,10 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
 
         <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1">
           <div className="flex items-center justify-between text-xs font-bold text-amber-900">
-            <span>🔥 Tirada Pico Máxima</span>
+            <span className="inline-flex items-center gap-1">
+              <Flame className="h-3.5 w-3.5 text-amber-600" />
+              Tirada Pico Máxima
+            </span>
             <span className="font-mono text-amber-700 font-black">
               {prog.maxLongRunKm ? `${prog.maxLongRunKm} km` : `${prog.maxLongRunMinutes} min`}
             </span>
@@ -100,7 +152,7 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
         </p>
 
         {/* Indicador visual de Click para ver metodología */}
-        <div className="flex items-center space-x-1 text-[11px] font-bold text-cyan-600 pt-1 group-hover:text-cyan-700">
+        <div className="flex items-center space-x-1.5 text-[11px] font-bold text-emerald-600 pt-1 group-hover:text-emerald-700">
           <Eye className="h-3.5 w-3.5" />
           <span>Ver metodología completa & fases...</span>
         </div>
@@ -113,9 +165,9 @@ export const AdminProgramCard: React.FC<AdminProgramCardProps> = ({
         <button
           type="button"
           onClick={() => onEdit(prog)}
-          className="flex-1 flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-cyan-50 hover:text-cyan-700 border border-slate-200/80 text-slate-800 text-xs font-bold transition cursor-pointer"
+          className="flex-1 flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80 text-slate-800 text-xs font-bold transition cursor-pointer"
         >
-          <Edit className="h-3.5 w-3.5 text-cyan-600" />
+          <Edit className="h-3.5 w-3.5 text-emerald-600" />
           <span>Editar</span>
         </button>
 

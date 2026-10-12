@@ -11,6 +11,8 @@ import {
   Layers,
   Dumbbell,
   Target,
+  Trophy,
+  Sprout,
 } from "lucide-react";
 import { MacrocycleDefinition, IntensityMetric } from "@/lib/physiology/macrocycleLibrary";
 
@@ -43,8 +45,18 @@ export const AdminProgramDetailViewSection: React.FC<AdminProgramDetailViewSecti
     <div className="space-y-6">
       {/* Badges Clave */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-          {program.category === "RACE_TARGET" ? "🏆 Carrera Objetivo" : "🌱 Momento del Atleta"}
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+          {program.category === "RACE_TARGET" ? (
+            <>
+              <Trophy className="h-3.5 w-3.5 text-amber-500" />
+              <span>Carrera Objetivo</span>
+            </>
+          ) : (
+            <>
+              <Sprout className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Momento del Atleta</span>
+            </>
+          )}
         </span>
         <span className="px-3 py-1 rounded-xl text-xs font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
           Distancia: {program.distanceType.toUpperCase()}

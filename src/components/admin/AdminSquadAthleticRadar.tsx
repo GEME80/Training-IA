@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Zap, Trophy, Clock, Activity, Calendar, ShieldAlert, Award } from "lucide-react";
+import React, { useState } from "react";
+import { Zap, Trophy, Clock, Activity, Calendar, Award, Footprints, ChevronDown } from "lucide-react";
 import { SquadAthleticStats } from "@/lib/services/adminBillingService";
 
 interface AdminSquadAthleticRadarProps {
@@ -9,8 +9,10 @@ interface AdminSquadAthleticRadarProps {
 }
 
 export const AdminSquadAthleticRadar: React.FC<AdminSquadAthleticRadarProps> = ({ stats }) => {
+  const [isRadarExpanded, setIsRadarExpanded] = useState<boolean>(stats.goalRaces.length > 0);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
       {/* TARJETA 1: Salud Fisiológica & Distribución de Modalidades */}
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
@@ -72,7 +74,7 @@ export const AdminSquadAthleticRadar: React.FC<AdminSquadAthleticRadarProps> = (
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
           <div className="flex items-center space-x-2.5">
-            <div className="h-9 w-9 rounded-xl bg-purple-50 text-purple-600 border border-purple-200/70 flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70 flex items-center justify-center">
               <Trophy className="h-4 w-4" />
             </div>
             <div>
@@ -80,40 +82,55 @@ export const AdminSquadAthleticRadar: React.FC<AdminSquadAthleticRadarProps> = (
               <p className="text-[11px] text-slate-500">Próximos objetivos deportivos de la temporada</p>
             </div>
           </div>
-          <Award className="h-4 w-4 text-purple-600" />
+          {stats.goalRaces.length > 0 ? (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
+              {stats.goalRaces.length} Objetivo(s)
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsRadarExpanded((p) => !p)}
+              className="lg:hidden p-1 text-slate-400 hover:text-slate-600"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${isRadarExpanded ? "rotate-180" : ""}`} />
+            </button>
+          )}
         </div>
 
         {/* Listado de Carreras Objetivo */}
-        <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
-          {stats.goalRaces.length > 0 ? (
-            stats.goalRaces.map((race, idx) => (
-              <div
-                key={`${race.athleteName}-${idx}`}
-                className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 flex items-center justify-between gap-3 text-xs hover:bg-slate-100/70 transition"
-              >
-                <div className="min-w-0">
-                  <div className="font-bold text-slate-900 truncate">{race.raceName}</div>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                    <span>🏃 {race.athleteName}</span>
-                    <span>•</span>
-                    <span className="font-mono text-slate-400">{race.raceDate}</span>
+        {(isRadarExpanded || stats.goalRaces.length > 0) && (
+          <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
+            {stats.goalRaces.length > 0 ? (
+              stats.goalRaces.map((race, idx) => (
+                <div
+                  key={`${race.athleteName}-${idx}`}
+                  className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 flex items-center justify-between gap-3 text-xs hover:bg-slate-100/70 transition"
+                >
+                  <div className="min-w-0">
+                    <div className="font-bold text-slate-900 truncate">{race.raceName}</div>
+                    <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                      <Footprints className="h-3 w-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{race.athleteName}</span>
+                      <span>•</span>
+                      <span className="font-mono text-slate-400 shrink-0">{race.raceDate}</span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                      <Calendar className="h-3 w-3 text-amber-600" />
+                      <span>W-{race.weeksRemaining}</span>
+                    </span>
                   </div>
                 </div>
-
-                <div className="shrink-0 text-right">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200">
-                    <Calendar className="h-3 w-3 text-purple-600" />
-                    <span>W-{race.weeksRemaining}</span>
-                  </span>
-                </div>
+              ))
+            ) : (
+              <div className="py-4 text-center text-xs text-slate-400">
+                No hay competiciones registradas para las próximas semanas.
               </div>
-            ))
-          ) : (
-            <div className="py-6 text-center text-xs text-slate-400">
-              No hay carreras objetivo registradas próximamente.
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

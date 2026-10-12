@@ -13,6 +13,7 @@ import {
   Activity,
   CheckCircle2,
   CreditCard,
+  ArrowLeft,
 } from "lucide-react";
 import { AdminSidebarTab, LiveConnectionsData } from "./types";
 import { AdminStats } from "@/lib/db/types";
@@ -25,6 +26,7 @@ interface AdminSidebarProps {
   connections: LiveConnectionsData | null;
   isLoading: boolean;
   onRefreshAll: () => void;
+  onGoBackToDashboard?: () => void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
@@ -35,12 +37,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   connections,
   isLoading,
   onRefreshAll,
+  onGoBackToDashboard,
 }) => {
   return (
-    <aside className="hidden md:flex md:w-64 lg:w-72 bg-slate-50/95 border-r border-slate-200/90 p-5 lg:p-6 flex-col justify-between shrink-0">
-      <div className="space-y-6">
+    <aside className="hidden lg:flex lg:w-72 bg-slate-50/95 border-r border-slate-200/90 p-5 lg:p-6 flex-col justify-between shrink-0">
+      <div className="space-y-5">
         {/* Encabezado de la Consola */}
-        <div className="space-y-1">
+        <div className="space-y-3">
           <div className="flex items-center space-x-2.5">
             <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-cyan-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
               <ShieldCheck className="h-5 w-5" />
@@ -55,6 +58,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Botón de retorno al perfil de atleta */}
+          {onGoBackToDashboard && (
+            <button
+              type="button"
+              onClick={onGoBackToDashboard}
+              className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-100 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer active:scale-98"
+              title="Volver a la vista del atleta"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 text-slate-500" />
+              <span>← Modo Atleta</span>
+            </button>
+          )}
         </div>
 
         {/* Menú de Navegación Estructurado por Categorías */}

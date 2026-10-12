@@ -208,7 +208,7 @@ export const AdminProgramLibrariesTab: React.FC<AdminProgramLibrariesTabProps> =
             sport: "running",
             supportedMetrics: ["POWER", "HEART_RATE", "PACE", "RPE"],
             defaultMetric: "POWER",
-            icon: "🏃‍♂️",
+            icon: "running",
             badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
             accentColor: "from-blue-500 to-indigo-600",
             minWeeks: 8,

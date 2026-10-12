@@ -1,29 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Save,
-  BookOpen,
-  Sparkles,
-  RotateCcw,
-  ChevronDown,
-  Calendar,
-  Activity,
-} from "lucide-react";
+import { BookOpen, Sparkles, RotateCcw, ChevronDown, Calendar, Activity, Maximize2, X, Check } from "lucide-react";
 import { AgentPromptsLibrary, DEFAULT_PROMPTS, SPECIALIZED_AGENTS_METADATA } from "@/lib/ai/prompts";
 
 interface AdminAIPromptsSectionProps {
   prompts: AgentPromptsLibrary;
   setPrompts: React.Dispatch<React.SetStateAction<AgentPromptsLibrary>>;
-  onSavePrompts: () => void;
-  isSavingPrompts: boolean;
+  onSavePrompts?: () => void;
+  isSavingPrompts?: boolean;
 }
+
+type AgentKey = "headCoach" | "macrocycle" | "dailyAudit";
 
 export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
   prompts,
   setPrompts,
-  onSavePrompts,
-  isSavingPrompts,
 }) => {
   const [collapsedPrompts, setCollapsedPrompts] = useState<{
     headCoach: boolean;
@@ -35,30 +27,40 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
     dailyAudit: true,
   });
 
+  const [fullscreenAgent, setFullscreenAgent] = useState<AgentKey | null>(null);
+
+  const handleResetPrompt = (key: "headCoachPrompt" | "macrocyclePrompt" | "dailyAuditPrompt", title: string) => {
+    if (!confirm(`¿Restablecer las instrucciones maestras de "${title}" a la versión oficial de fábrica? Se perderán las modificaciones no guardadas.`)) {
+      return;
+    }
+    setPrompts((p) => ({ ...p, [key]: DEFAULT_PROMPTS[key] }));
+  };
+
+  const getAgentPromptValue = (key: AgentKey) => {
+    if (key === "headCoach") return prompts.headCoachPrompt;
+    if (key === "macrocycle") return prompts.macrocyclePrompt;
+    return prompts.dailyAuditPrompt;
+  };
+
+  const setAgentPromptValue = (key: AgentKey, val: string) => {
+    if (key === "headCoach") setPrompts((p) => ({ ...p, headCoachPrompt: val }));
+    else if (key === "macrocycle") setPrompts((p) => ({ ...p, macrocyclePrompt: val }));
+    else setPrompts((p) => ({ ...p, dailyAuditPrompt: val }));
+  };
+
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center space-x-2">
-            <BookOpen className="h-5 w-5 text-amber-500 shrink-0" />
-            <h2 className="text-base font-bold text-slate-900">
-              Sistema de Agentes de IA Especializados (Instrucciones Maestras SSOT)
-            </h2>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Fuente única de verdad. Las directrices aquí configuradas gobiernan la inferencia, dictámenes y periodización.
-          </p>
+      {/* Cabecera Informativa */}
+      <div>
+        <div className="flex items-center space-x-2">
+          <BookOpen className="h-5 w-5 text-emerald-600 shrink-0" />
+          <h2 className="text-base font-bold text-slate-900">
+            Sistema de Agentes de IA Especializados (Instrucciones Maestras SSOT)
+          </h2>
         </div>
-
-        <button
-          type="button"
-          onClick={onSavePrompts}
-          disabled={isSavingPrompts}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50 transition w-full sm:w-auto shrink-0"
-        >
-          <Save className="h-3.5 w-3.5" />
-          <span>{isSavingPrompts ? "Guardando..." : "Guardar Todos los Agentes"}</span>
-        </button>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Fuente única de verdad. Las directrices aquí configuradas gobiernan la inferencia, dictámenes y periodización.
+        </p>
       </div>
 
       {/* Agente 01: Head Coach */}
@@ -89,8 +91,8 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
           <div className="flex items-center space-x-2 shrink-0 self-end sm:self-center">
             <button
               type="button"
-              onClick={() => setPrompts((p) => ({ ...p, headCoachPrompt: DEFAULT_PROMPTS.headCoachPrompt }))}
-              title="Restablecer a versión entrenada recomendada"
+              onClick={() => handleResetPrompt("headCoachPrompt", SPECIALIZED_AGENTS_METADATA.headCoach.title)}
+              title="Restablecer a versión recomendada"
               className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer"
             >
               <RotateCcw className="h-3 w-3 text-amber-600" />
@@ -111,13 +113,32 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
             <p className="text-[11px] text-slate-500 italic">
               {SPECIALIZED_AGENTS_METADATA.headCoach.roleDescription}
             </p>
-            <textarea
-              rows={8}
-              value={prompts.headCoachPrompt}
-              onChange={(e) => setPrompts((p) => ({ ...p, headCoachPrompt: e.target.value }))}
-              placeholder="Instrucciones maestras del Head Coach..."
-              className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
-            />
+
+            {/* Desktop View */}
+            <div className="hidden sm:block">
+              <textarea
+                rows={8}
+                value={prompts.headCoachPrompt}
+                onChange={(e) => setPrompts((p) => ({ ...p, headCoachPrompt: e.target.value }))}
+                placeholder="Instrucciones maestras del Head Coach..."
+                className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+              />
+            </div>
+
+            {/* Mobile Anti Scroll-Trap Preview + Fullscreen Trigger */}
+            <div className="sm:hidden space-y-2">
+              <div className="max-h-36 overflow-y-auto p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 leading-relaxed whitespace-pre-wrap select-none">
+                {prompts.headCoachPrompt.slice(0, 400)}...
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullscreenAgent("headCoach")}
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-xs cursor-pointer"
+              >
+                <Maximize2 className="h-3.5 w-3.5 text-amber-400" />
+                <span>✏️ Editar en Pantalla Completa</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -150,8 +171,8 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
           <div className="flex items-center space-x-2 shrink-0 self-end sm:self-center">
             <button
               type="button"
-              onClick={() => setPrompts((p) => ({ ...p, macrocyclePrompt: DEFAULT_PROMPTS.macrocyclePrompt }))}
-              title="Restablecer a versión entrenada recomendada"
+              onClick={() => handleResetPrompt("macrocyclePrompt", SPECIALIZED_AGENTS_METADATA.macrocycle.title)}
+              title="Restablecer a versión recomendada"
               className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer"
             >
               <RotateCcw className="h-3 w-3 text-cyan-600" />
@@ -172,13 +193,32 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
             <p className="text-[11px] text-slate-500 italic">
               {SPECIALIZED_AGENTS_METADATA.macrocycle.roleDescription}
             </p>
-            <textarea
-              rows={8}
-              value={prompts.macrocyclePrompt}
-              onChange={(e) => setPrompts((p) => ({ ...p, macrocyclePrompt: e.target.value }))}
-              placeholder="Instrucciones maestras del Arquitecto de Macrociclos..."
-              className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-cyan-500 focus:bg-white transition shadow-2xs"
-            />
+
+            {/* Desktop View */}
+            <div className="hidden sm:block">
+              <textarea
+                rows={8}
+                value={prompts.macrocyclePrompt}
+                onChange={(e) => setPrompts((p) => ({ ...p, macrocyclePrompt: e.target.value }))}
+                placeholder="Instrucciones maestras del Arquitecto de Macrociclos..."
+                className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-cyan-500 focus:bg-white transition shadow-2xs"
+              />
+            </div>
+
+            {/* Mobile Anti Scroll-Trap Preview + Fullscreen Trigger */}
+            <div className="sm:hidden space-y-2">
+              <div className="max-h-36 overflow-y-auto p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 leading-relaxed whitespace-pre-wrap select-none">
+                {prompts.macrocyclePrompt.slice(0, 400)}...
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullscreenAgent("macrocycle")}
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-xs cursor-pointer"
+              >
+                <Maximize2 className="h-3.5 w-3.5 text-cyan-400" />
+                <span>✏️ Editar en Pantalla Completa</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -211,8 +251,8 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
           <div className="flex items-center space-x-2 shrink-0 self-end sm:self-center">
             <button
               type="button"
-              onClick={() => setPrompts((p) => ({ ...p, dailyAuditPrompt: DEFAULT_PROMPTS.dailyAuditPrompt }))}
-              title="Restablecer a versión entrenada recomendada"
+              onClick={() => handleResetPrompt("dailyAuditPrompt", SPECIALIZED_AGENTS_METADATA.dailyAudit.title)}
+              title="Restablecer a versión recomendada"
               className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer"
             >
               <RotateCcw className="h-3 w-3 text-emerald-600" />
@@ -233,16 +273,68 @@ export const AdminAIPromptsSection: React.FC<AdminAIPromptsSectionProps> = ({
             <p className="text-[11px] text-slate-500 italic">
               {SPECIALIZED_AGENTS_METADATA.dailyAudit.roleDescription}
             </p>
-            <textarea
-              rows={8}
-              value={prompts.dailyAuditPrompt}
-              onChange={(e) => setPrompts((p) => ({ ...p, dailyAuditPrompt: e.target.value }))}
-              placeholder="Instrucciones maestras del Auditor Fisiológico..."
-              className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-emerald-500 focus:bg-white transition shadow-2xs"
-            />
+
+            {/* Desktop View */}
+            <div className="hidden sm:block">
+              <textarea
+                rows={8}
+                value={prompts.dailyAuditPrompt}
+                onChange={(e) => setPrompts((p) => ({ ...p, dailyAuditPrompt: e.target.value }))}
+                placeholder="Instrucciones maestras del Auditor Fisiológico..."
+                className="w-full p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-mono text-slate-900 leading-relaxed focus:outline-none focus:border-emerald-500 focus:bg-white transition shadow-2xs"
+              />
+            </div>
+
+            {/* Mobile Anti Scroll-Trap Preview + Fullscreen Trigger */}
+            <div className="sm:hidden space-y-2">
+              <div className="max-h-36 overflow-y-auto p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 leading-relaxed whitespace-pre-wrap select-none">
+                {prompts.dailyAuditPrompt.slice(0, 400)}...
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullscreenAgent("dailyAudit")}
+                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-xs cursor-pointer"
+              >
+                <Maximize2 className="h-3.5 w-3.5 text-emerald-400" />
+                <span>✏️ Editar en Pantalla Completa</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Modal Dedicado de Edición en Pantalla Completa para Móvil */}
+      {fullscreenAgent && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col animate-fadeIn">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {SPECIALIZED_AGENTS_METADATA[fullscreenAgent].title}
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                {getAgentPromptValue(fullscreenAgent).length} caracteres
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFullscreenAgent(null)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs"
+            >
+              <Check className="h-3.5 w-3.5" />
+              <span>Listo</span>
+            </button>
+          </div>
+
+          <div className="flex-1 p-4 overflow-hidden flex flex-col">
+            <textarea
+              value={getAgentPromptValue(fullscreenAgent)}
+              onChange={(e) => setAgentPromptValue(fullscreenAgent, e.target.value)}
+              className="flex-1 w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-900 dark:text-white leading-relaxed focus:outline-none resize-none"
+              placeholder="Escribe las directrices maestras..."
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

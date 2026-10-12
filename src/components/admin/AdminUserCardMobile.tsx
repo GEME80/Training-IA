@@ -14,6 +14,9 @@ import {
   AlertCircle,
   Unlink,
   Eye,
+  Bike,
+  Waves,
+  Heart,
 } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
@@ -52,7 +55,7 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
                 {u.displayName || "Sin nombre registrado"}
               </span>
               {isRootAdmin && (
-                <span className="px-1.5 py-0.2 rounded-md text-[9px] font-mono font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                <span className="px-1.5 py-0.2 rounded-md text-[9px] font-mono font-bold bg-slate-900 text-white">
                   Superadmin
                 </span>
               )}
@@ -64,13 +67,13 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
         <span
           className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
             u.role === "admin"
-              ? "bg-purple-50 text-purple-900 border-purple-200"
+              ? "bg-slate-100 text-slate-800 border-slate-200"
               : "bg-slate-100 text-slate-700 border-slate-200"
           }`}
         >
           {u.role === "admin" ? (
             <>
-              <Shield className="h-3 w-3 text-purple-600" />
+              <Shield className="h-3 w-3 text-slate-600" />
               <span>Admin</span>
             </>
           ) : (
@@ -166,24 +169,24 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
         ) : (
           <div className="flex items-center gap-1 text-slate-400">
             <span className="text-[10px] font-sans">Carrera:</span>
-            <span className="ml-auto font-sans text-[10px]">N/A</span>
+            <span className="ml-auto font-sans text-[10px]">--</span>
           </div>
         )}
-        {Boolean(u.bikeFtp && u.bikeFtp > 0) ? (
-          <div className="flex items-center gap-1 text-cyan-800">
-            <Zap className="h-3 w-3 text-cyan-600 shrink-0" />
+        {Boolean(u.bikeFtp && u.bikeFtp > 20) ? (
+          <div className="flex items-center gap-1 text-cyan-800 dark:text-cyan-300">
+            <Bike className="h-3 w-3 text-cyan-600 shrink-0" />
             <span className="text-[10px] text-slate-500 font-sans">Bike FTP:</span>
             <strong className="font-bold ml-auto">{u.bikeFtp}W</strong>
           </div>
         ) : u.swimCssStr ? (
           <div className="flex items-center gap-1 text-sky-800">
-            <span className="text-[10px] text-slate-500 font-sans">🏊 CSS:</span>
+            <Waves className="h-3 w-3 text-sky-600 shrink-0 inline mr-1" /><span className="text-[10px] text-slate-500 font-sans">CSS:</span>
             <strong className="font-bold ml-auto">{u.swimCssStr}</strong>
           </div>
         ) : (
           <div className="flex items-center gap-1 text-slate-400">
             <span className="text-[10px] text-slate-500 font-sans">Ciclismo:</span>
-            <span className="ml-auto font-sans text-[10px]">N/A</span>
+            <span className="ml-auto font-sans text-[10px]">--</span>
           </div>
         )}
       </div>
@@ -205,7 +208,7 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
           <button
             type="button"
             onClick={() => onInspectAthlete(u)}
-            className="flex items-center justify-center gap-1 px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200 transition cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 text-xs font-bold transition cursor-pointer shrink-0 shadow-xs active:scale-95"
             title="Ver cómo ve la app (Solo lectura)"
           >
             <Eye className="h-3.5 w-3.5" />

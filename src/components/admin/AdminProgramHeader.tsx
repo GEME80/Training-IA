@@ -32,7 +32,7 @@ export const AdminProgramHeader: React.FC<AdminProgramHeaderProps> = ({
         <button
           type="button"
           onClick={onOpenAiModal}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-500/20 transition cursor-pointer"
+          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 transition cursor-pointer active:scale-95"
         >
           <Sparkles className="h-4 w-4" />
           <span>Crear con Asistente IA</span>

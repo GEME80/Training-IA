@@ -1,39 +1,39 @@
 "use client";
 
 import React from "react";
-import { Zap, Activity, Clock, Sparkles } from "lucide-react";
+import { Zap, Heart, Clock, Brain } from "lucide-react";
 
 export const AdminProgramMetricsHud: React.FC = () => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+    <div className="flex overflow-x-auto no-scrollbar gap-2.5 pb-1 sm:grid sm:grid-cols-4 sm:gap-3">
+      <div className="min-w-[130px] sm:min-w-0 flex-1 p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1 shrink-0">
         <div className="flex items-center space-x-2 text-amber-600">
           <Zap className="h-4 w-4" />
-          <span className="text-xs font-bold">⚡ Potencia</span>
+          <span className="text-xs font-bold">Potencia</span>
         </div>
         <p className="text-[11px] text-slate-500">Stryd CP (% CP) & Bike FTP (% FTP)</p>
       </div>
 
-      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+      <div className="min-w-[130px] sm:min-w-0 flex-1 p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1 shrink-0">
         <div className="flex items-center space-x-2 text-rose-600">
-          <Activity className="h-4 w-4" />
-          <span className="text-xs font-bold">💓 FC</span>
+          <Heart className="h-4 w-4" />
+          <span className="text-xs font-bold">FC</span>
         </div>
         <p className="text-[11px] text-slate-500">% LTHR, % FC Máx & Zonas Z1-Z5</p>
       </div>
 
-      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+      <div className="min-w-[130px] sm:min-w-0 flex-1 p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1 shrink-0">
         <div className="flex items-center space-x-2 text-cyan-600">
           <Clock className="h-4 w-4" />
-          <span className="text-xs font-bold">⏱️ Ritmo</span>
+          <span className="text-xs font-bold">Ritmo</span>
         </div>
         <p className="text-[11px] text-slate-500">Ritmos min/km, min/mile & % VAM</p>
       </div>
 
-      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1">
+      <div className="min-w-[130px] sm:min-w-0 flex-1 p-3 sm:p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-1 shrink-0">
         <div className="flex items-center space-x-2 text-emerald-600">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-xs font-bold">🧠 Sensaciones</span>
+          <Brain className="h-4 w-4" />
+          <span className="text-xs font-bold">Sensaciones</span>
         </div>
         <p className="text-[11px] text-slate-500">Escala de Borg 1-10 & RPE</p>
       </div>

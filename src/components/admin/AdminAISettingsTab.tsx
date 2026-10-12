@@ -38,13 +38,23 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
   onSavePrompts,
   isSavingPrompts,
 }) => {
+  const isSavingMaster = isSavingAI || isSavingPrompts;
+
+  const handleSaveMaster = async () => {
+    onSaveAISettings();
+    onSavePrompts();
+  };
+
+  const isDeterministic = aiSettings.temperature === 0.0;
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Titular */}
+      {/* Titular y Acción Maestra Unificada */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold text-slate-950 tracking-tight">Configuración del Motor AI & Prompts</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-950 tracking-tight">
+            Configuración del Motor AI & Prompts
+          </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Ajustes de inferencia, temperatura y biblioteca de prompts maestros SSOT.
           </p>
@@ -53,12 +63,12 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
         <div className="flex items-center space-x-2">
           <button
             type="button"
-            onClick={onSaveAISettings}
-            disabled={isSavingAI}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer disabled:opacity-50"
+            onClick={handleSaveMaster}
+            disabled={isSavingMaster}
+            className="flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50"
           >
-            <Save className="h-4 w-4" />
-            <span>{isSavingAI ? "Guardando..." : "Guardar Motor AI"}</span>
+            {isSavingMaster ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            <span>{isSavingMaster ? "Guardando Motor & Prompts..." : "Guardar Motor & Prompts"}</span>
           </button>
         </div>
       </div>
@@ -69,14 +79,14 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
         <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Cpu className="h-4 w-4 text-cyan-600" />
+              <Cpu className="h-4 w-4 text-emerald-600" />
               <h3 className="text-xs font-bold uppercase text-slate-800">Modelo Primario Gemini</h3>
             </div>
             <button
               type="button"
               onClick={fetchGeminiModels}
               disabled={isLoadingModels}
-              className="text-[11px] font-bold text-cyan-700 hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className={`h-3 w-3 ${isLoadingModels ? "animate-spin" : ""}`} />
               <span>Sincronizar</span>
@@ -85,7 +95,7 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
           <select
             value={aiSettings.primaryModel}
             onChange={(e) => setAiSettings((prev) => ({ ...prev, primaryModel: e.target.value }))}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/90 text-xs font-bold text-slate-900 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/90 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
             {availableModels.length > 0 ? (
               availableModels.map((m) => (
@@ -106,17 +116,24 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
           </p>
         </div>
 
-        {/* Slider de Temperatura */}
+        {/* Slider de Temperatura (Semáforo Determinista / Creativo) */}
         <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Thermometer className="h-4 w-4 text-rose-500" />
+              <Thermometer className={`h-4 w-4 ${isDeterministic ? "text-emerald-500" : "text-amber-500"}`} />
               <h3 className="text-xs font-bold uppercase text-slate-800">
-                Temperatura: <span className="font-mono text-rose-600">{aiSettings.temperature.toFixed(1)}</span>
+                Temperatura: <span className={`font-mono font-bold ${isDeterministic ? "text-emerald-600" : "text-amber-600"}`}>{aiSettings.temperature.toFixed(1)}</span>
               </h3>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-              {aiSettings.temperature === 0 ? "0.0 = Determinista" : aiSettings.temperature <= 0.3 ? "Estructurado" : "Creativo"}
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 ${
+              isDeterministic
+                ? "bg-emerald-100 text-emerald-800"
+                : aiSettings.temperature <= 0.3
+                ? "bg-cyan-100 text-cyan-800"
+                : "bg-amber-100 text-amber-800"
+            }`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${isDeterministic ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`} />
+              <span>{isDeterministic ? "0.0 = Determinista" : aiSettings.temperature <= 0.3 ? "Estructurado" : "Creativo"}</span>
             </span>
           </div>
 
@@ -127,7 +144,9 @@ export const AdminAISettingsTab: React.FC<AdminAISettingsTabProps> = ({
             step="0.1"
             value={aiSettings.temperature}
             onChange={(e) => setAiSettings((prev) => ({ ...prev, temperature: parseFloat(e.target.value) }))}
-            className="w-full accent-rose-500 cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none"
+            className={`w-full cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none ${
+              isDeterministic ? "accent-emerald-600" : "accent-amber-500"
+            }`}
           />
 
           <div className="flex items-center justify-between gap-2 pt-1">

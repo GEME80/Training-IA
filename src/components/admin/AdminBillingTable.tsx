@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AdminUserListItem } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import { MobileBillingCard } from "./MobileBillingCard";
 
 interface AdminBillingTableProps {
   users: AdminUserListItem[];
@@ -80,7 +81,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
+    <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
       {/* Encabezado y Filtros Rápidos */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
@@ -128,7 +129,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
               type="button"
               onClick={() => setFilter("VERIFY")}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                filter === "VERIFY" ? "bg-purple-600 text-white shadow-2xs" : "text-purple-700 bg-purple-100/60 hover:bg-purple-100"
+                filter === "VERIFY" ? "bg-emerald-600 text-white shadow-2xs" : "text-emerald-700 bg-emerald-100/60 hover:bg-emerald-100"
               }`}
             >
               <span>Por Validar ({verifyCount})</span>
@@ -137,8 +138,27 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
         </div>
       </div>
 
-      {/* Tabla Panorámica de Pagos */}
-      <div className="overflow-x-auto w-full">
+      {/* 1. Vista Móvil de Tarjetas Táctiles (< md) */}
+      <div className="block md:hidden space-y-3">
+        {filteredAthletes.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-400">
+            No hay atletas con el filtro seleccionado.
+          </div>
+        ) : (
+          filteredAthletes.map((athlete) => (
+            <MobileBillingCard
+              key={athlete.uid}
+              athlete={athlete}
+              isUpdating={updatingUid === athlete.uid}
+              onSetStatus={handleSetStatus}
+              onEditAthlete={onEditAthlete}
+            />
+          ))
+        )}
+      </div>
+
+      {/* 2. Tabla Panorámica de Escritorio (md+) */}
+      <div className="hidden md:block overflow-x-auto w-full">
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[10px] font-mono font-bold uppercase text-slate-500 tracking-wider">
             <tr>
@@ -174,12 +194,9 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                     </div>
                   </td>
 
-                  {/* Tarifa */}
+                  {/* Tarifa (Sin doble signo de moneda) */}
                   <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                    <div className="flex items-center gap-1.5">
-                      <DollarSign className="h-3.5 w-3.5 text-cyan-600 shrink-0" />
-                      <span>{formatMoney(price, currency)}</span>
-                    </div>
+                    <span>{formatMoney(price, currency)}</span>
                   </td>
 
                   {/* Día de Corte */}
@@ -198,8 +215,8 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                         <span>PAGADO</span>
                       </span>
                     ) : status === "PENDING_VERIFICATION" ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 animate-pulse">
-                        <Smartphone className="h-3 w-3 text-purple-600" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
+                        <Smartphone className="h-3 w-3 text-amber-600" />
                         <span>PAGO REPORTADO</span>
                       </span>
                     ) : status === "OVERDUE" ? (
@@ -208,8 +225,8 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                         <span>EN MORA</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                        <Clock className="h-3 w-3 text-amber-600" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        <Clock className="h-3 w-3 text-slate-500" />
                         <span>PENDIENTE</span>
                       </span>
                     )}
@@ -218,7 +235,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
                   {/* Último Pago / Ref */}
                   <td className="py-3 px-4 text-xs font-mono text-slate-500">
                     {status === "PENDING_VERIFICATION" && athlete.paymentReference ? (
-                      <div className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-block">
+                      <div className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block">
                         Ref: {athlete.paymentReference}
                       </div>
                     ) : athlete.lastPaymentDate ? (

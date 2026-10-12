@@ -8,9 +8,18 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.49).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.57).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.57: Estandarización Integral Responsiva y "App-Like Experience" del Centro de Control (Admin), Design System Corporativo PULSE AI, Ergonomía Móvil y Blindaje Zero-Touch Backend:
+  * Shell de Administración App-Like: Ocultamiento del sidebar rígido en pantallas < 1024px; navegación inferior fija (`AdminMobileBottomNav.tsx`) con 4 pestañas directas y Drawer modal para ajustes; cabecera móvil flotante (`AdminMobileHeader.tsx`) con acceso rápido táctil `[ 🏃 Mi Entreno ]`.
+  * Estandarización Cromática PULSE AI: Verde Esmeralda (`bg-emerald-600 hover:bg-emerald-700 text-white`) como color primario institucional de acción en toda la plataforma. Erradicación total de botones morados o naranjas en interactivos.
+  * Erradicación Total de Emojis: Reemplazo del 100% de emojis por iconos vectoriales SVG de Lucide React (`Footprints`, `Bike`, `Waves`, `Mountain`, `Trophy`, `Sprout`, `Zap`, `Heart`, `Clock`, `Brain`, `Flame`, `Activity`, `CheckCircle2`, etc.).
+  * Dashboard Móvil y Modal Completo: Apertura directa a 1 toque de sesiones sin hojas intermedias (Peek); erradicación de la "Vista Resumen"; soporte nativo de doble sesión diaria (`MobileWeeklyDayGroup.tsx`); tipografía tabular (`tabular-nums font-mono`) para métricas de tiempo, TSS y vatios.
+  * Mi Temporada & Fases: Hero card para la fase activa en curso; formateadores puros reutilizables (`formatDuration`, `sanitizePhaseDescription`); cero cadenas hardcodeadas de planes o atletas.
+  * Perfil Fisiológico Contextual: Navegación por disciplina gobernando umbrales y zonas; eliminación de badges huérfanos y redondeo continuo.
+  * Evolución & PMC: Cabecera con anclaje temporal (`PMCComplianceHeader.tsx`), métricas Fitness Real vs Planificado, Scrubber dinámico y Hero Status Card colapsable.
+  * Zero-Touch Backend Guardrail & Modularidad: Inmutabilidad absoluta de endpoints `/api/*` y esquemas de BD; 100% de archivos $\le 350$ LOC; compilación limpia `npm run build` (21/21 rutas).
 - Versión 5.49: Blindaje Fisiológico Multi-Atleta, Aislamiento Temporal Estricto de Carrera Objetivo Primaria, Erradicación de Fallbacks Ciegos por Prioridad, Salvaguardas de Triatlón y Optimización de Evolución Móvil (Actual vs Plan):
   * Aislamiento Temporal Estricto de Carrera (`raceDayOverlay.ts`): Validación acotada a la ventana semanal `minDate <= opts.primaryRaceDate && opts.primaryRaceDate <= maxDate` y coincidencia exacta de fecha `r.date === opts.primaryRaceDate`. Prohibición absoluta de `|| r.priority === "A"` para evitar contaminar planes de maratón con residuos de triatlón/Ironman.
   * Aislamiento por Fecha en Fila Semanal (`AthleteCalendarWeekRow.tsx`): Filtrado estricto por `weekDateSet = new Set(weekDates)`.
@@ -878,3 +887,79 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 5. **Ley de Protección Fisiológica de Triatlón (Prohibición de Bloques Extensos de Maratón):**
    - En macrociclos de triatlón (`triathlon_short`, `triathlon_70_3`), las sesiones fraccionadas de carrera a pie quedan restringidas a distancias submáximas ($\le 2\text{km}$) o fartleks progresivos.
    - Queda prohibido programar bloques específicos de maratón ($3\times 4\text{km}$, $2\times 6\text{km}$) en triatletas, protegiendo la fatiga neuromuscular y garantizando la asimilación del volumen ciclista.
+
+---
+
+## 🎨 24. DESIGN SYSTEM INSTITUCIONAL PULSE AI: ESTÁNDARES DE COLORIMETRÍA, TIPOGRAFÍA, ICONOGRAFÍA Y EXPERIENCIA MÓVIL (v5.57)
+
+Todo desarrollador o agente de IA que implemente, modifique o audite componentes de interfaz de usuario en PULSE AI / SGEA debe acatar rigurosamente estas directrices universales:
+
+### 24.1. Paleta Cromática Institucional y Restricciones Semánticas
+
+| Rol en la Interfaz | Tokens Tailwind CSS | Propósito y Reglas de Uso |
+| :--- | :--- | :--- |
+| **Primario de Acción & Estados Activos** | `bg-emerald-600 hover:bg-emerald-700 text-white`<br>`border-emerald-600 ring-emerald-500`<br>`text-emerald-600 dark:text-emerald-400` | **Color rector de interacción y confirmación en toda la plataforma.** Gobierna botones primarios (Guardar, Crear, Invitar, Aprobar), pestañas activas principales, tasas de recaudo y estados exitosos. |
+| **Superficies & Contenedores Neutros** | `bg-white dark:bg-slate-900`<br>`border-slate-200/90 dark:border-slate-800`<br>`text-slate-900 dark:text-slate-100` | Estructura base de tarjetas (`rounded-2xl` o `rounded-3xl`), modales, tablas y barras de navegación. |
+| **Segmented Controls & Píldoras de Filtro** | Contenedor: `bg-slate-100 dark:bg-slate-800 p-1 rounded-xl`<br>Opción Activa: `bg-slate-900 text-white dark:bg-emerald-600` o `bg-emerald-600 text-white` | Selectores de 2 o más estados (ej. Potencia vs Ritmo, 30D / 90D / 6M / 1 Año). Opciones inactivas: `text-slate-500 hover:text-slate-900`. |
+| **Restricción Semántica del Morado (`purple` / `violet`)** | `text-purple-600 bg-purple-50 border-purple-200` | **PROHIBIDO en botones de acción, navegación o tabs interactivas.** Reservado exclusivamente para: telemetría en gráficas (curvas de potencia Stryd/FTP, zonas anaeróbicas Z6/Z7) y badges de rol `Superadmin`. |
+| **Restricción Semántica del Naranja / Ámbar (`amber` / `orange`)** | `text-amber-600 bg-amber-50 border-amber-200` | **PROHIBIDO en botones primarios de creación o IA.** Reservado exclusivamente para: telemetría de Potencia Stryd (CP), advertencias biológicas de fatiga aguda, TSB negativo profundo o tarjetas de Tirada Pico Máxima. |
+| **Acentos Fisiológicos Secundarios** | `cyan` / `sky` / `rose` | `cyan/sky`: Ritmo de carrera (`min/km`), ciclismo y natación CSS. `rose`: Frecuencia cardíaca (FC / LTHR) y acciones destructivas/deshabilitación. |
+
+### 24.2. Estándares de Tipografía y Métricas Tabulares
+
+1. **Jerarquía Visual y Pesos:**
+   - Títulos de tarjeta / modales: `text-sm sm:text-base font-black text-slate-900 dark:text-white`.
+   - Subtítulos y metadatos secundarios: `text-[11px] text-slate-500 font-medium`.
+   - Badges y etiquetas técnicas: `text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider`.
+2. **Ley de Números Tabulares en Telemetría Deportiva:**
+   - Toda cifra cuantitativa de tiempo, duración, TSS, ritmo, pulso, W/kg o vatios DEBE incluir obligatoriamente las clases:
+     `tabular-nums font-mono`
+   - Esto erradica el temblor o desajuste de ancho al cambiar o comparar valores en listas, agendas móviles, tablas de facturación y scrubbers.
+
+### 24.3. Estándar de Iconografía Vectorial (Erradicación Total de Emojis)
+
+1. **Prohibición Absoluta de Emojis en Código de UI:**
+   - Queda **terminantemente prohibido** renderizar emojis del sistema operativo (`🏃‍♂️`, `🏆`, `🌱`, `⚡`, `💓`, `⏱️`, `🧠`, `🔥`, `🚴`, `🏊`, `🚲`, `📍`, `🎯`) en componentes React, botones, tarjetas o tablas.
+2. **Catálogo Vectorial Canónico (`lucide-react`):**
+   - **Disciplinas Deportivas:**
+     * Carrera en ruta: `<Footprints className="h-4 w-4" />`
+     * Trail running: `<Mountain className="h-4 w-4" />`
+     * Ciclismo: `<Bike className="h-4 w-4" />`
+     * Natación / Triatlón: `<Waves className="h-4 w-4" />`
+     * Actividad general / Mixta: `<Activity className="h-4 w-4" />`
+   - **Métricas Fisiológicas & Focos:**
+     * Potencia / Vatios: `<Zap className="h-3.5 w-3.5 text-amber-500" />`
+     * Frecuencia Cardíaca: `<Heart className="h-3.5 w-3.5 text-rose-500" />`
+     * Ritmo / Tiempo: `<Clock className="h-3.5 w-3.5 text-cyan-600" />`
+     * Sensaciones / RPE: `<Brain className="h-3.5 w-3.5 text-emerald-600" />`
+     * Carrera Objetivo: `<Trophy className="h-3.5 w-3.5 text-amber-500" />`
+     * Momento del Atleta / Base: `<Sprout className="h-3.5 w-3.5 text-emerald-600" />`
+     * Tirada Pico / Estímulo Máximo: `<Flame className="h-3.5 w-3.5 text-amber-600" />`
+
+### 24.4. Principios de Ergonomía Móvil ("App-Like Experience")
+
+1. **Navegación Directa al Detalle a 1 Toque:**
+   - Al tocar cualquier entrenamiento o elemento en vistas móviles, se despliega de inmediato el modal completo (`h-[92vh] max-h-[94vh]`), eliminando pasos intermedios (Peek / Bottom sheets comprimidos) y erradicando botones confusos de "Vista Resumen".
+2. **Soporte Nativo de Doble / Múltiple Sesión:**
+   - Si un día tiene 2 o más estímulos (ej. Running + Fuerza), la agenda diaria móvil (`MobileWeeklyDayGroup.tsx`) los agrupa bajo una cabecera unificada con badge sutil `Doble Sesión`, renderizando cada sesión como tarjeta independiente accionable.
+3. **Shell de Administración Adaptativo (`< 1024px` vs `>= 1024px`):**
+   - En móviles (`< lg`), el sidebar fijo se oculta por completo (`hidden lg:flex`).
+   - Se utiliza una barra de navegación inferior fija (`AdminMobileBottomNav.tsx`) con 4 pestañas esenciales y un Drawer táctil para ajustes secundarios.
+   - La cabecera superior móvil (`AdminMobileHeader.tsx`) provee acceso inmediato en 1 toque al modo atleta (`[ 🏃 Mi Entreno ]`).
+4. **Anti Scroll-Trap en Móvil:**
+   - Todo campo de edición de texto extenso (ej. Prompts maestros de IA) debe incluir un botón de pantalla completa modal (`Maximize2`) para permitir la edición cómoda sin atrapar el scroll de la página contenedora.
+5. **Sticky Footers Táctiles:**
+   - Botones de acción fija inferior deben contemplar márgenes de seguridad para dispositivos móviles: `pb-[calc(1rem+env(safe-area-inset-bottom))]`.
+
+### 24.5. Leyes de Formateo Puro y Cero Hardcode
+
+1. **Cero Hardcode de Planes o Atletas:**
+   - Prohibido quemar nombres de atletas, carreras (ej. "Tokio 2027"), metodologías ("Canova", "Pfitzinger") o duraciones ("3h 05m"). Todo debe consumirse de las props y estado reactivo.
+2. **Centralización de Formateadores (`formatters.ts`):**
+   - Usar `formatDuration(minutes)` para convertir minutos a `"Xh YYm"` o `"XX min"`.
+   - Usar `sanitizePhaseDescription(name, desc)` para prevenir duplicidades textuales del generador.
+3. **Zero-Touch Backend Guardrail:**
+   - Prohibido modificar contratos de API, endpoints o esquemas de base de datos durante refactorizaciones visuales de frontend.
+
+---
+

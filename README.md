@@ -1,9 +1,20 @@
-# ⚡ SGEA Pro (v5.49) — Sistema Adaptativo de Entrenamiento Inteligente
-> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
+# ⚡ SGEA Pro (v5.57) — Sistema Adaptativo de Entrenamiento Inteligente
+> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 📱 **Centro de Control (Admin) App-Like, Design System PULSE AI y Ergonomía Móvil (v5.57):**
+  - **Experiencia Móvil "App-Like" en Administración:** Ocultamiento total del sidebar rígido en pantallas móviles (`< 1024px`); nueva barra fija de navegación inferior (`AdminMobileBottomNav.tsx`) con 4 pestañas directas y Drawer modal táctil de Ajustes; cabecera superior móvil (`AdminMobileHeader.tsx`) con botón de retorno rápido `[ 🏃 Mi Entreno ]`.
+  - **Design System PULSE AI (Verde Esmeralda Institucional):** Estandarización de `bg-emerald-600 hover:bg-emerald-700 text-white` como color primario de acción en todo el panel y la plataforma. Erradicación total de botones morados o naranjas en componentes interactivos de UI.
+  - **Erradicación Absoluta de Emojis por Iconografía Vectorial (`lucide-react`):** Reemplazo del 100% de emojis por iconos SVG tipados de Lucide (`Footprints`, `Bike`, `Waves`, `Mountain`, `Trophy`, `Sprout`, `Zap`, `Heart`, `Clock`, `Brain`, `Flame`, `Activity`, `CheckCircle2`, `Bell`).
+  - **Dashboard Móvil con Apertura Directa en 1 Toque:** Al pulsar cualquier sesión en el calendario móvil se abre inmediatamente el modal completo expandido (`h-[92vh] max-h-[94vh]`), erradicando la hoja intermedia previa (Peek) y la confusa "Vista Resumen".
+  - **Soporte Nativo de Doble Sesión Diaria (`MobileWeeklyDayGroup.tsx`):** Agrupación visual limpia con badge sutil `Doble Sesión` y tarjetas independientes para cada estímulo diario (ej. Carrera + Fuerza).
+  - **Tipografía Tabular (`tabular-nums font-mono`):** Aplicada a todas las métricas de tiempo, TSS y vatios para evitar temblores numéricos.
+  - **Mi Temporada & Fases sin Hardcode:** Hero card para la fase activa en curso; formateadores reutilizables puros (`formatDuration`, `sanitizePhaseDescription`); cero textos de carreras o planes quemados en el código.
+  - **Perfil Fisiológico Contextual:** Selector de disciplina deportiva que gobierna dinámicamente umbrales superiores y tablas de zonas, compartiendo FC umbral y de reposo.
+  - **Evolución & PMC:** Cabecera con anclaje temporal (`PMCComplianceHeader.tsx`), métricas Fitness Real vs Planificado, Scrubber dinámico y Hero Status Card colapsable.
 
 - 🛡️ **Blindaje Fisiológico Multi-Atleta & Aislamiento de Competiciones (v5.49):**
   - **Aislamiento Temporal Estricto de Carrera Objetivo (`raceDayOverlay.ts`):** Validación estricta que exige que la fecha de la prueba caiga dentro de los 7 días de la semana evaluada (`minDate <= primaryRaceDate <= maxDate`). Erradicación total de fallbacks ciegos por prioridad (`|| r.priority === 'A'`), eliminando la contaminación cruzada de carreras demo (ej. Ironman en planes de maratón).

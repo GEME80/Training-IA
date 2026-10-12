@@ -256,6 +256,12 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
               week.startDate === currentMonStr ||
               (!isHistoricalWeek && week.startDate <= todayStr && todayStr <= week.endDate);
             const isPastWeek = !isCurrentWeek && week.endDate < todayStr;
+            const currentWeekNum = currentBlueprintWeek?.weekNumber || 1;
+            const isWithinBuffer =
+              !isHistoricalWeek &&
+              !isPastWeek &&
+              week.weekNumber >= currentWeekNum &&
+              week.weekNumber < currentWeekNum + 3;
             const calendarWeekNumber = getWeekOfYear(week.startDate);
             const wIdx = isHistoricalWeek
               ? week.weekNumber
@@ -291,6 +297,7 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
                     weeksCount={blueprintWeeks.length}
                     isCurrentWeek={isCurrentWeek}
                     isFutureWeek={isFutureWeek}
+                    isWithinBuffer={isWithinBuffer}
                     isSelectedWeek={wIdx === selectedMacroWeekIdx}
                     isPastWeek={isPastWeek}
                     calendarWeekNumber={calendarWeekNumber}

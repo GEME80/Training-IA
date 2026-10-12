@@ -14,7 +14,7 @@ import { formatLocalDateToYMD } from "@/lib/dateUtils";
 interface AthleteCalendarWeekRowProps {
   week: MacrocycleWeek; wIdx: number; weeksCount: number; isCurrentWeek: boolean;
   isFutureWeek?: boolean; isSelectedWeek?: boolean; isPastWeek: boolean; calendarWeekNumber: number;
-  blueprint: MacrocycleBlueprint; runFtp: number; bikeFtp: number;
+  isWithinBuffer?: boolean; blueprint: MacrocycleBlueprint; runFtp: number; bikeFtp: number;
   effectiveAvailability: WeeklyAvailabilityMap; weeklyExecutedTss: number;
   dailyExecutedActivities: DailyExecutedMap; calendarEvents?: CalendarEvent[];
   runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
@@ -54,7 +54,7 @@ function resolvePhaseShortLabel(week: MacrocycleWeek, isHistorical: boolean): st
 }
 
 export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
-  week, wIdx, weeksCount, isCurrentWeek, isFutureWeek, isSelectedWeek, isPastWeek,
+  week, wIdx, weeksCount, isCurrentWeek, isFutureWeek, isWithinBuffer, isSelectedWeek, isPastWeek,
   calendarWeekNumber, blueprint, runFtp, bikeFtp, effectiveAvailability,
   weeklyExecutedTss, dailyExecutedActivities, calendarEvents, runningOpts, todayStr,
   gridTemplate, currentWeekRef, onSelectWeek, onOpenAICoach,
@@ -88,17 +88,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     try { await onSyncWeekToIntervals(weekPlan); } finally { setIsSyncingCurrentWeek(false); }
   };
 
-  const isWithinGarminBuffer = React.useMemo(() => {
-    if (!week.startDate || isHistoricalOnly || isPastWeek) return false;
-    if (isCurrentWeek) return true;
-    try {
-      const today = new Date(todayStr || new Date().toISOString().split("T")[0]);
-      const distToMon = today.getDay() === 0 ? -6 : 1 - today.getDay();
-      const bufferEnd = new Date(today);
-      bufferEnd.setDate(today.getDate() + distToMon + 21);
-      return week.startDate < bufferEnd.toISOString().split("T")[0];
-    } catch { return isCurrentWeek; }
-  }, [week.startDate, isHistoricalOnly, isPastWeek, isCurrentWeek, todayStr]);
+  const isWithinGarminBuffer = Boolean(isWithinBuffer ?? isCurrentWeek);
 
   let totalMins = 0, plannedTss = 0, runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0, swimMins = 0, swimTss = 0, strengthMins = 0, strengthTss = 0;
   let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0, execDirectTotalTss = 0;
@@ -332,11 +322,11 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             )}
             {isFutureWeek && !isWithinGarminBuffer && !isHistoricalOnly && (
               <span
-                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-[11px] font-bold text-amber-700 dark:text-amber-300"
-                title="Esta semana se sincronizará automáticamente al entrar en el buffer de 3 semanas"
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-[11px] font-bold text-amber-700 dark:text-amber-300"
+                title="Esta semana se sincronizará automáticamente cuando entre en el colchón de las próximas 3 semanas."
               >
                 <Clock className="h-3.5 w-3.5 text-amber-500" />
-                <span>Pendiente · Buffer rodante</span>
+                <span>Por sincronizar</span>
               </span>
             )}
           </div>

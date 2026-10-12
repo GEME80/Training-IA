@@ -8357,3 +8357,14 @@ Esto causaba que:
 - **Gate 3 (Compilación de Producción):** `npm run build` completado con código 0 (21/21 rutas Next.js empaquetadas limpiamente) ✅.
 - **Gate 4 (Scope Integrity & FinOps):** Persistencia 100% local en memoria/userStorage ($0 USD en Cloud Firestore). Cero mutaciones en modo auditoría (`isReadOnly`) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Documentado detalladamente en la sección 134 ✅.
+
+### 134.4. Parches de Estabilidad y Despliegue (v5.61 & v5.62)
+- **v5.61 (`7a552f1`):**
+  - Campanita de notificaciones conectada en `AthleteDashboardHeader.tsx` (resolviendo visibilidad en Web y Móvil para atletas autenticados).
+  - Elegibilidad con credenciales de servidor (`hasEncryptedKey`, `hasApiKey`, superadmin master email) en `isAthleteEligibleForAutoSync`.
+  - Reincorporación del botón manual de respaldo `[ 🔄 Sincronizar ]` en `AthleteCalendarWeekRow.tsx` y `WeeklyPlanner.tsx`.
+- **v5.62 (`272b021`):**
+  - **Corrección de Ahogamiento por Throttling Inicial:** `checkAndExecuteRollingSync` ahora comprueba la presencia de `athleteId` y `blueprint.weeks` ANTES de actualizar la marca de tiempo del throttle. Esto garantiza que cuando el macrociclo termine de cargar de forma asíncrona de Firestore/localStorage (~250ms después del mount), la sincronización automática se dispare de inmediato sin esperar 20 segundos.
+  - **Temporizador de Cortesía (1.5s):** Se incorporó un `setTimeout` de seguridad de 1.5s para disparar la auto-sincronización de fondo si no hubo un re-render por dependencias.
+  - **Unificación de Respaldo Tri-Semanal:** El botón manual `[ 🔄 Sincronizar ]` en la semana actual sincroniza el buffer de 3 semanas completo y actualiza `last_synced_to_${athleteId}`, dejando a Garmin e Intervals 100% en fase.
+

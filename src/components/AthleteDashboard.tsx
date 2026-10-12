@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { OnboardingBanner } from "./dashboard/OnboardingBanner";
-import { SyncNotificationModal } from "./dashboard/SyncNotificationModal";
+import { NotificationToast } from "./notifications/NotificationToast";
 import { AthleteSidebar, AthleteSidebarNavSection } from "./dashboard/AthleteSidebar";
 import { AthleteMobileBottomNav } from "./dashboard/AthleteMobileBottomNav";
 import { WorkoutDetailModal } from "./macrocycle/WorkoutDetailModal";
@@ -272,7 +272,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             onClose={() => setSelectedWorkoutModal(null)}
           />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />
-          <SyncNotificationModal notification={sync.syncNotification} onClose={() => sync.setSyncNotification(null)} />
+          <NotificationToast />
         </main>
         <AthleteMobileBottomNav activeSection={activeNavSection} onSelectSection={(s) => { if (s === "head_coach") selectCoachWeek(); setActiveNavSection(s); }} isIntervalsConnected={telemetry.isLiveConnected} />
       </div>

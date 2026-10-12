@@ -12,6 +12,7 @@ import { UserStorage } from "@/lib/storage/userStorage";
 import { isMasterAdminEmail } from "@/lib/env";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
 import { CalendarEvent } from "@/lib/intervals/types";
+import { notificationService } from "@/lib/notifications/notificationService";
 import {
   createPhaseInfoFromBlueprint,
   persistProfileField,
@@ -208,6 +209,10 @@ export function useSeasonPlans({
     }
     userStorage.removeItem("season_plans");
     userStorage.removeItem("active_blueprint");
+    if (targetId) {
+      userStorage.removeItem(`last_synced_to_${targetId}`);
+      userStorage.removeItem(`last_synced_hash_${targetId}`);
+    }
     if (typeof window !== "undefined") {
       try { localStorage.removeItem("sgea_active_blueprint"); localStorage.removeItem("sgea_season_plans_chain"); } catch {}
     }
@@ -215,13 +220,12 @@ export function useSeasonPlans({
     setViewingPlanId(null);
     setMacrocyclePhase(null);
     if (refreshTelemetry) await refreshTelemetry(profileId, apiKeyCache, runFtp, bikeFtp);
-    if (setSyncNotification) {
-      setSyncNotification({
-        title: "Plan Eliminado",
-        message: "El macrociclo activo ha sido eliminado de la base de datos y tu calendario ha quedado restablecido.",
-        type: "success",
-      });
-    }
+    notificationService.addNotification(userStorage, {
+      title: "Temporada Eliminada",
+      message: "El macrociclo ha sido eliminado y las sesiones futuras se retiraron de tu reloj Garmin e Intervals.icu.",
+      category: "SEASON",
+      severity: "info",
+    });
   };
 
   useEffect(() => {

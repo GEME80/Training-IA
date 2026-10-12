@@ -2,17 +2,21 @@
 
 import React from "react";
 import { ShieldCheck, RefreshCw, ArrowLeft, Footprints } from "lucide-react";
+import { NotificationBellButton } from "../notifications/NotificationBellButton";
+import { getUserStorage, UserStorage } from "@/lib/storage/userStorage";
 
 interface AdminMobileHeaderProps {
   onGoBackToDashboard?: () => void;
   onRefreshAll?: () => void;
   isLoading?: boolean;
+  userStorage?: UserStorage;
 }
 
 export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
   onGoBackToDashboard,
   onRefreshAll,
   isLoading,
+  userStorage,
 }) => {
   return (
     <header className="lg:hidden sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 py-2.5 transition-all">
@@ -40,8 +44,10 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
           </div>
         </div>
 
-        {/* Acciones Rápidas: Actualizar Telemetría + Retorno a Modo Atleta */}
+        {/* Acciones Rápidas: Campanita + Actualizar Telemetría + Retorno a Modo Atleta */}
         <div className="flex items-center gap-1.5 shrink-0">
+          <NotificationBellButton userStorage={userStorage || getUserStorage()} />
+
           {onRefreshAll && (
             <button
               type="button"

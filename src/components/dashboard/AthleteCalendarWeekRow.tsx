@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target } from "lucide-react";
+import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target, CheckCircle2 } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { WeeklyAvailabilityMap, PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
@@ -318,29 +318,11 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               <Sparkles className="h-3.5 w-3.5" />
               <span>Head Coach IA</span>
             </button>
-            {onSyncTriweeklyBlock && !isHistoricalWeek && !isHistoricalOnly && (
-              <button
-                type="button"
-                onClick={handleSyncTriweekly}
-                disabled={isSyncingTriweekly || isSyncingCurrentWeek}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Sincronizar bloque tri-semanal a Intervals.icu (ventana rodante adaptativa)"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 text-emerald-500 ${isSyncingTriweekly ? "animate-spin" : ""}`} />
-                <span>{isSyncingTriweekly ? "Sincronizando..." : "Sync 3 sem (2:1)"}</span>
-              </button>
-            )}
-            {onSyncWeekToIntervals && !isHistoricalOnly && (
-              <button
-                type="button"
-                onClick={handleSyncWeek}
-                disabled={isSyncingTriweekly || isSyncingCurrentWeek}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Sincroniza esta semana a Intervals.icu y actualiza tus zonas en Garmin Connect"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isSyncingCurrentWeek ? "animate-spin" : ""}`} />
-                <span>{isSyncingCurrentWeek ? "Sincronizando..." : "Esta sem."}</span>
-              </button>
+            {(isCurrentWeek || isFutureWeek) && !isHistoricalOnly && (
+              <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <span>En tu reloj Garmin</span>
+              </span>
             )}
           </div>
         </div>

@@ -8295,3 +8295,65 @@ Esto causaba que:
   - `src/components/admin/AdminProgramDetailViewSection.tsx`: 194 LOC ✅
 
 
+
+
+---
+
+## 134. Sincronización Automática por Buffer Rodante (3 Semanas), Gobernanza de Atletas Productivos y Espacio de Notificaciones (v5.60)
+
+**Fecha:** 2026-10-12  
+**Alcance:** Capa de Sincronización en Segundo Plano, Gobernanza de Atletas Reales, Espacio de Notificaciones No Invasivo y Erradicación Total de Botones Manuales de Sincronización.
+
+### 134.1. Visión y Objetivos de la Implementación
+1. **Despreocupación Absoluta del Atleta (Zero-Touch Sync):**
+   - El atleta deja de ser un operador de software. Se eliminan definitivamente los botones manuales `"Sincronizar Semana"`, `"Sincronizar 3 Semanas"` y `"Sincronizar a Intervals"`.
+   - Implementación de un **Buffer Rodante de 3 Semanas (21 días de colchón hacia adelante)**: el atleta siempre tiene las próximas 3 semanas cargadas y actualizadas en su reloj Garmin e Intervals.icu.
+2. **Gobernanza y Matriz de Elegibilidad para Atletas Productivos (6 Compuertas):**
+   - Blindaje contra el modo auditoría (`isReadOnly === true`): prohibición absoluta de mutar el calendario de un atleta durante la inspección del coach.
+   - Aislamiento estricto de perfiles demo (`!isDemoProfile && !email.includes('demo')`) para no consumir cuotas externas.
+   - Validación de cuenta activa (`status === "active"`), credenciales conectadas de Intervals (`hasIntervalsKey && intervalsAthleteId`) y macrociclo estructurado vigente.
+3. **Erradicación de Modales Bloqueantes & Nuevo Espacio de Notificaciones:**
+   - Desmantelamiento definitivo de `SyncNotificationModal.tsx` (que bloqueaba la pantalla con un backdrop oscuro exigiendo pulsar "Entendido").
+   - Creación del **Espacio de Notificaciones en Cabecera Superior** (`NotificationBellButton.tsx`, `NotificationCenterDrawer.tsx`, `NotificationToast.tsx` y `notificationService.ts`):
+     * Píldora flotante efímera de 3 segundos para confirmación visual sin interrumpir la navegación.
+     * Campanita táctil en la cabecera superior (`Header.tsx` y `AdminMobileHeader.tsx`) con indicador reactivo `[ 🔔 • ]`.
+     * Historial de eventos en memoria local del dispositivo (`userStorage`: `pulse_notifications_feed`), cumpliendo la política de **cero costos ($0 USD FinOps)** sin lecturas ni escrituras en Firestore.
+4. **Garantía Anti-Solapamientos y Purga Automática de Temporada:**
+   - Al cancelar o eliminar un macrociclo, se purgan de raíz todas las sesiones futuras de Intervals.icu y se limpian los cursores `lastSyncedToDate` y `lastSyncedHash`.
+   - Al crear una nueva temporada, se ejecuta `clean_and_sync` garantizando cero duplicados.
+
+### 134.2. Detalle de Archivos Creados y Modificados
+1. **`src/lib/physiology/rollingSyncEngine.ts` (164 LOC) [NEW]:**
+   - `isAthleteEligibleForAutoSync`: Evaluación de las 6 compuertas de seguridad para atletas reales.
+   - `calculateRollingWindow`: Extracción de la ventana rodante de 3 semanas (21 días) a partir de la fecha actual.
+   - `computePlanHash`: Firma determinista FNV-1a para dirty checking.
+   - `isRollingSyncNeeded`: Verificación de avance de semana (< 14 días de colchón) o mutación de plan.
+2. **`src/lib/notifications/types.ts` (18 LOC) [NEW]:**
+   - Tipos unificados `NotificationItem`, `NotificationCategory` (`SYNC`, `COACH`, `ZONES`, `SEASON`, `ALERT`) y severidades.
+3. **`src/lib/notifications/notificationService.ts` (97 LOC) [NEW]:**
+   - Gestor reactivo singleton sobre `userStorage` con patrón observer (`subscribe`), límite de 25 eventos y $0 costo en Firestore.
+4. **`src/components/notifications/NotificationToast.tsx` (64 LOC) [NEW]:**
+   - Toast efímero flotante no invasivo de 3.5 segundos con iconografía de Lucide.
+5. **`src/components/notifications/NotificationBellButton.tsx` (56 LOC) [NEW]:**
+   - Campanita de cabecera superior con badge dinámico animado de notificaciones no leídas.
+6. **`src/components/notifications/NotificationCenterDrawer.tsx` (176 LOC) [NEW]:**
+   - Panel responsivo (Popover en Web / Drawer en Móvil) con historial de actividades, vaciado y marcado de leídas.
+7. **`src/hooks/useAutoIntervalsSync.ts` (214 LOC) [REFACTOR]:**
+   - Reingeniería para buffer continuo de 3 semanas, listeners `visibilitychange` y `focus` en PWA móvil, throttling de 20s y despacho a `notificationService`.
+8. **`src/components/dashboard/AthleteCalendarWeekRow.tsx` (333 LOC) [REFACTOR]:**
+   - Eliminados los botones interactivos `[ Sincronizar Semana ]` y `[ Sincronizar 3 Semanas ]`. Sustituidos por el badge `🟢 En tu reloj Garmin`.
+9. **`src/components/WeeklyPlanner.tsx` (577 LOC) [REFACTOR]:**
+   - Eliminado el botón manual `[ Sincronizar a Intervals ]`. Sustituido por el indicador sutil `Auto-Sync Garmin activo`.
+10. **`src/components/Header.tsx` (257 LOC) & `src/components/admin/AdminMobileHeader.tsx` (78 LOC) [REFACTOR]:**
+    - Integración de `<NotificationBellButton />` en la barra superior junto al logo y perfil.
+11. **`src/components/AthleteDashboard.tsx` (282 LOC) [REFACTOR]:**
+    - Reemplazo de `SyncNotificationModal` por `<NotificationToast />`.
+12. **`src/hooks/useIntervalsSync.ts` (340 LOC) & `src/hooks/useSeasonPlans.ts` (346 LOC) [REFACTOR]:**
+    - Redirección de alertas y confirmaciones de sincronización y purga de temporada hacia `notificationService`.
+
+### 134.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (LOC Budget):** 100% de los archivos creados o modificados cumplen estrictamente $\le 350$ LOC (componentes $\le 250$ LOC, servicios $\le 180$ LOC) ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado con código 0 (21/21 rutas Next.js empaquetadas limpiamente) ✅.
+- **Gate 4 (Scope Integrity & FinOps):** Persistencia 100% local en memoria/userStorage ($0 USD en Cloud Firestore). Cero mutaciones en modo auditoría (`isReadOnly`) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Documentado detalladamente en la sección 134 ✅.

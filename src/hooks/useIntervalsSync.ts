@@ -7,6 +7,7 @@ import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
 import { isMasterAdminEmail } from "@/lib/env";
 import { UserStorage } from "@/lib/storage/userStorage";
+import { notificationService } from "@/lib/notifications/notificationService";
 
 interface UseIntervalsSyncProps {
   athleteId: string;
@@ -77,16 +78,18 @@ export function useIntervalsSync({
         throw new Error(data.error || "Fallo en la sincronización con Intervals.icu");
       }
 
-      setSyncNotification({
-        title: "¡Microciclo Sincronizado con Éxito!",
-        message: `Se cargaron ${data.createdCount || 7} entrenamientos estructurados en tu calendario de Intervals.icu y Garmin Connect.`,
-        type: "success",
+      notificationService.addNotification(userStorage, {
+        title: "Microciclo Sincronizado",
+        message: `Se cargaron ${data.createdCount || 7} entrenamientos en tu calendario de Intervals.icu y Garmin Connect.`,
+        category: "SYNC",
+        severity: "success",
       });
     } catch (err: any) {
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Error de Sincronización",
-        message: err.message || "No se pudo sincronizar el microciclo.",
-        type: "error",
+        message: err.message || "No se pudo sincronizar el microciclo con Intervals.icu.",
+        category: "SYNC",
+        severity: "warning",
       });
     } finally {
       setIsSyncing(false);
@@ -164,20 +167,22 @@ export function useIntervalsSync({
       }
 
       const structuredCount = fullCyclePlan.filter((p) => !p.isRestDay && p.discipline !== "Descanso").length;
-      setSyncNotification({
-        title: "¡Macrociclo Sincronizado con Éxito!",
-        message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos estructurados en tu calendario de Intervals.icu (${blueprint.weeks.length} semanas).`,
+      notificationService.addNotification(userStorage, {
+        title: "Temporada Sincronizada",
+        message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos en Intervals.icu y Garmin Connect (${blueprint.weeks.length} semanas).`,
         details: runningOpts?.mode === "PACE"
-          ? `Cada día refleja exactamente tu disponibilidad semanal de deportes, días de descanso (0 TSS) y zonas de ritmo (Pace: ${runningOpts.thresholdPaceStr || "4:45"}/km, Bike FTP: ${bikeFtp}W).`
-          : `Cada día refleja exactamente tu disponibilidad semanal de deportes, días de descanso (0 TSS) y zonas de potencia (Stryd CP: ${runFtp}W, Bike FTP: ${bikeFtp}W).`,
-        type: "success",
+          ? `Zonas por Ritmo (Pace: ${runningOpts.thresholdPaceStr || "4:45"}/km, Bike FTP: ${bikeFtp}W).`
+          : `Zonas por Potencia (Stryd CP: ${runFtp}W, Bike FTP: ${bikeFtp}W).`,
+        category: "SYNC",
+        severity: "success",
       });
     } catch (err: any) {
       console.error("Error al sincronizar macrociclo completo:", err);
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Error de Sincronización",
-        message: err.message || "No se pudo completar la sincronización.",
-        type: "error",
+        message: err.message || "No se pudo sincronizar la temporada con Intervals.icu.",
+        category: "SYNC",
+        severity: "warning",
       });
     } finally {
       setIsSyncing(false);
@@ -259,20 +264,19 @@ export function useIntervalsSync({
       const weekNumbers = targetWeeks.map((w) => w.weekNumber).join(", ");
       const structuredCount = triweeklyPlan.filter((p) => !p.isRestDay && p.discipline !== "Descanso").length;
 
-      setSyncNotification({
-        title: `¡Bloque de 3 Semanas Sincronizado! (Sem. ${weekNumbers})`,
+      notificationService.addNotification(userStorage, {
+        title: `Bloque de 3 Semanas Sincronizado (Sem. ${weekNumbers})`,
         message: `Se cargaron ${data.createdCount || structuredCount} entrenamientos en Intervals.icu y Garmin Connect (${targetWeeks[0].formattedRange} al ${targetWeeks[targetWeeks.length - 1].formattedRange}).`,
-        details: runningOpts?.mode === "PACE"
-          ? `Zonas calibradas por Pace (${runningOpts.thresholdPaceStr || "4:45"}/km) y Ciclismo FTP (${bikeFtp}W).`
-          : "Al término de este bloque, el sistema recalibrará automáticamente tus zonas según tu adherencia y CTL/TSB.",
-        type: "success",
+        category: "SYNC",
+        severity: "success",
       });
     } catch (err: any) {
       console.error("Error al sincronizar bloque de 3 semanas:", err);
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Error de Sincronización",
         message: err.message || "No se pudo sincronizar el bloque de 3 semanas.",
-        type: "error",
+        category: "SYNC",
+        severity: "warning",
       });
     } finally {
       setIsSyncing(false);
@@ -281,10 +285,11 @@ export function useIntervalsSync({
 
   const handleDeleteFutureWorkouts = async (fromDateStr?: string) => {
     if (isReadOnly) {
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Modo Auditoría (Solo Lectura)",
         message: "Las modificaciones a Intervals.icu están deshabilitadas en modo auditoría.",
-        type: "error",
+        category: "ALERT",
+        severity: "warning",
       });
       return;
     }
@@ -307,16 +312,18 @@ export function useIntervalsSync({
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Error al eliminar sesiones en Intervals.icu");
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Limpieza Completada en Intervals.icu",
-        message: `Se eliminaron ${data.deletedCount || 0} sesiones planificadas a partir del ${targetFromDate}. Listo para sincronizar el macrociclo purificado.`,
-        type: "success",
+        message: `Se retiraron ${data.deletedCount || 0} sesiones planificadas a partir del ${targetFromDate}.`,
+        category: "SEASON",
+        severity: "info",
       });
     } catch (err: any) {
-      setSyncNotification({
+      notificationService.addNotification(userStorage, {
         title: "Error de Limpieza",
         message: err.message || "No se pudieron eliminar los entrenamientos futuros.",
-        type: "error",
+        category: "SEASON",
+        severity: "warning",
       });
     } finally {
       setIsSyncing(false);

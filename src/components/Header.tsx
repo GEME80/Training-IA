@@ -5,6 +5,8 @@ import { Shield, LayoutDashboard, Home, LogOut, User as UserIcon, Sparkles } fro
 import { PulseLogo } from "./PulseLogo";
 import { useAuth } from "@/context/AuthContext";
 import { isMasterAdminEmail } from "@/lib/env";
+import { NotificationBellButton } from "./notifications/NotificationBellButton";
+import { getUserStorage } from "@/lib/storage/userStorage";
 
 interface HeaderProps {
   athleteName?: string;
@@ -118,6 +120,9 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
             </div>
+          )}
+          {(user || userProfile) && (
+            <NotificationBellButton userStorage={getUserStorage(user?.uid)} />
           )}
           {user || userProfile ? (
             <div className="relative">

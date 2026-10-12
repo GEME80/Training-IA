@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { sanitizeWorkoutDoc } from "@/lib/physiology/workoutSyntaxSanitizer";
 import { WorkoutBottomSheetHero } from "./WorkoutBottomSheetHero";
@@ -53,9 +52,6 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
     executedTss,
     displayTarget,
     parsedTargetRange,
-    peekProgressSummary,
-    snapPoint,
-    setSnapPoint,
     activeTab,
     setActiveTab,
     discoveredWatts,
@@ -70,15 +66,11 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
       {/* Backdrop click para descartar */}
       <div className="absolute inset-0 -z-10" onClick={onClose} />
 
-      {/* Contenedor Bottom Sheet Modal */}
+      {/* Contenedor Bottom Sheet Modal Completo */}
       <div
-        className={`relative w-full max-w-2xl mx-auto rounded-t-[28px] bg-white dark:bg-slate-900 border-t border-x border-slate-200 dark:border-slate-800 shadow-2xl transition-all duration-300 ease-out flex flex-col ${
-          snapPoint === "PEEK"
-            ? "h-[345px] max-h-[360px] overflow-hidden"
-            : "h-[90vh] max-h-[92vh] overflow-hidden"
-        }`}
+        className="relative w-full max-w-2xl mx-auto rounded-t-[28px] bg-white dark:bg-slate-900 border-t border-x border-slate-200 dark:border-slate-800 shadow-2xl transition-all duration-300 ease-out flex flex-col h-[92vh] max-h-[94vh] overflow-hidden"
       >
-        {/* Nivel 1: Cabecera, Manija táctil, 3 StatCards y Barra destacada */}
+        {/* Nivel 1: Cabecera, Manija táctil y 3 StatCards */}
         <WorkoutBottomSheetHero
           workout={workout}
           isExtraActivity={isExtraActivity}
@@ -87,17 +79,11 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
           durationMin={matchedAct?.movingTimeMin || workout.durationMinutes}
           distanceKm={matchedAct?.distanceKm}
           targetLabel={parsedTargetRange?.label || displayTarget}
-          snapPoint={snapPoint}
-          onToggleSnap={() => setSnapPoint(snapPoint === "PEEK" ? "EXPANDED" : "PEEK")}
           onClose={onClose}
-          progressSummaryBar={peekProgressSummary}
         />
 
-        {/* Solo en Modo EXPANDIDO (90%): Pestañas Segmentadas y Contenido Detallado */}
-        {snapPoint === "EXPANDED" && (
-          <>
-            {/* Control Segmentado de Pestañas */}
-            <WorkoutSegmentedTabs activeTab={activeTab} onTabChange={(t) => setActiveTab(t)} />
+        {/* Nivel 2: Control Segmentado de Pestañas */}
+        <WorkoutSegmentedTabs activeTab={activeTab} onTabChange={(t) => setActiveTab(t)} />
 
             {/* Contenedor Scrollable de Pestañas */}
             <div className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-3 space-y-3">
@@ -220,45 +206,19 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
                 </div>
               )}
             </div>
-          </>
-        )}
 
         {/* Sticky Footer CTA con Safe Area Inset Support */}
         <div
           className="p-3 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md"
           style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom))" }}
         >
-          {snapPoint === "PEEK" ? (
-            <button
-              type="button"
-              onClick={() => {
-                setSnapPoint("EXPANDED");
-                setActiveTab("RESUMEN");
-              }}
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-[0.99]"
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-              <span>Ver Análisis Completo</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSnapPoint("PEEK")}
-                className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <Minimize2 className="h-3.5 w-3.5" />
-                <span>Vista Resumen</span>
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 text-xs font-bold transition cursor-pointer"
-              >
-                <span>Cerrar</span>
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-[0.99] shadow-xs"
+          >
+            <span>Cerrar</span>
+          </button>
         </div>
       </div>
     </div>

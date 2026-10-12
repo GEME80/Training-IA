@@ -8191,11 +8191,35 @@ Esto causaba que:
   - `src/components/dashboard/AthleteMobileWorkoutCard.tsx`: 183 LOC ($\le 350$) ✅.
   - `src/components/dashboard/AthleteMobileExtraCard.tsx`: 131 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/useWorkoutDetailData.tsx`: 186 LOC ($\le 350$) ✅.
-  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 266 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 227 LOC ($\le 350$) ✅.
 
+---
 
+## 132. Erradicación Definitiva de "Vista Resumen" y Unificación a Modal Completo Exclusivo (v5.56)
 
+### 132.1. Diagnóstico y Necesidad de UX Móvil
+- El usuario reportó que tras abrir el modal móvil de entrenamientos, aún persistía el botón secundario "Vista Resumen" y el botón de alternancia (`Maximize2`/`Minimize2`), los cuales permitían volver a una tarjeta comprimida de 345px con el botón "Ver Análisis Completo" y barra morada.
+- Se instruyó eliminar por completo la "Vista Resumen" para que el modal móvil sea única y exclusivamente la vista completa expandida a pantalla completa (`h-[92vh] max-h-[94vh]`), con acceso incondicional a todas las pestañas (Resumen, Distribución, Evolución) y un solo botón limpio de "Cerrar" en el pie.
 
+### 132.2. Modificaciones de Arquitectura y Componentes
+1. **`src/components/macrocycle/WorkoutBottomSheetMobile.tsx` (227 LOC):**
+   - Altura forzada y unificada a pantalla completa `h-[92vh] max-h-[94vh]`.
+   - Eliminados los estados condicionales de `snapPoint === "PEEK"`. Pestañas segmentadas (`WorkoutSegmentedTabs`) y vistas de contenido (`RESUMEN`, `DISTRIBUCION`, `EVOLUCION`) renderizadas siempre de manera incondicional e inmediata.
+   - Eliminado el botón "Vista Resumen" y el botón "Ver Análisis Completo" del footer.
+   - Sticky footer simplificado a un único botón ancho y ergonómico `Cerrar` con soporte de `safe-area-inset-bottom`.
+2. **`src/components/macrocycle/WorkoutBottomSheetHero.tsx` (106 LOC):**
+   - Eliminado el botón de minimizar/expandir (`Maximize2` / `Minimize2`) junto a la `X` de cerrar en la cabecera del modal.
+   - `snapPoint` y `onToggleSnap` convertidos en parámetros opcionales en `WorkoutBottomSheetHeroProps` para desacople total.
+   - Eliminada la barra horizontal residual de progreso del modo comprimido.
+   - Estandarización cromática del icono y badge de Fuerza a verde esmeralda (`text-emerald-500` / `bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800`), erradicando acentos morados en la UI interactiva.
+   - StatCard de "Eficacia" estandarizada a `text-emerald-600 dark:text-emerald-400`.
 
-
+### 132.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 227 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutBottomSheetHero.tsx`: 106 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutDetailModal.tsx`: 81 LOC ($\le 350$) ✅.
+- **Zero-Touch Backend:** Cero modificaciones en rutas de API, esquemas o servicios de servidor ✅.
 

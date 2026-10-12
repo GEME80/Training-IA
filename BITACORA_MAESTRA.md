@@ -8164,6 +8164,36 @@ Esto causaba que:
   - `src/lib/utils/phaseFormattingUtils.ts`: 10 LOC ($\le 350$) ✅.
   - `src/components/season/SeasonActivePlanCard.tsx`: 214 LOC ($\le 350$) ✅.
 
+---
+
+## 131. SOPORTE DE MÚLTIPLES ENTRENAMIENTOS POR DÍA Y NAVEGACIÓN DIRECTA AL DETALLE EN DASHBOARD MÓVIL (v5.55)
+
+### 131.1. Directriz de Experiencia Móvil: Eliminación de Fricción
+- **Apertura Directa a 1 Toque:** Al pulsar cualquier sesión en el calendario móvil, se abre de inmediato el modal completo de detalle con sus intervalos, zonas, telemetría y prescripción (`snapPoint: "EXPANDED"` por defecto en `useWorkoutDetailData.tsx`), eliminando la hoja intermedia previa (Peek) y el doble tap innecesario.
+- **Minimalismo y Ergonomía:** Preservada la vista móvil libre de barras de escritorio redundantes; el flujo de días se despliega de manera fluida y táctil.
+
+### 131.2. Soporte Nativo de Doble / Múltiple Sesión (`MobileWeeklyDayGroup.tsx`)
+- **Agrupación Diaria Estructurada:** Creado `src/components/dashboard/MobileWeeklyDayGroup.tsx` (254 LOC).
+- **Indicador de Doble Sesión:** Si un día cuenta con 2 o más sesiones planificadas o ejecutadas (ej. Carrera + Fuerza), la cabecera del día exhibe el badge sutil `Doble Sesión` (`text-[10px] bg-slate-100 dark:bg-slate-800`).
+- **Mapeo Independiente:** Cada sesión se renderiza como una micro-tarjeta interactiva independiente con icono de disciplina, título, duración (`formatDuration`), TSS tabular (`tabular-nums font-mono`) y estado, con apertura directa individual.
+- **Días de Descanso:** Fila sobria y compacta de baja altura para días libres o sin sesiones.
+
+### 131.3. Estandarización Cromática y Tipográfica
+- **Cero Morado en UI:** Iconos de fuerza y acentos interactivos unificados al Verde Esmeralda corporativo (`text-emerald-500 dark:text-emerald-400`).
+- **Tipografía Tabular:** Aplicado `tabular-nums font-mono` a todas las métricas de tiempo, TSS y vatios en tarjetas móviles.
+
+### 131.4. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/dashboard/MobileWeeklyDayGroup.tsx`: 254 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 301 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileWorkoutCard.tsx`: 183 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileExtraCard.tsx`: 131 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/useWorkoutDetailData.tsx`: 186 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 266 LOC ($\le 350$) ✅.
+
+
 
 
 

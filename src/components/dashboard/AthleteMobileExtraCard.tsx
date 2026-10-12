@@ -25,7 +25,7 @@ const renderActivityIcon = (type: string, name?: string) => {
   if (t.includes("swim") || n.includes("nataci") || n.includes("swim")) {
     return <Waves className="h-4 w-4 text-sky-500" />;
   }
-  return <Dumbbell className="h-4 w-4 text-purple-500" />;
+  return <Dumbbell className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />;
 };
 
 export const AthleteMobileExtraCard: React.FC<AthleteMobileExtraCardProps> = ({

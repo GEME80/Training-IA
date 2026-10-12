@@ -8,7 +8,7 @@ import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle
 import { getMondayOfWeekStr } from "@/lib/dateUtils";
 import { AthleteMobileExtraCard } from "./AthleteMobileExtraCard";
 import { AthleteMobileWorkoutCard } from "./AthleteMobileWorkoutCard";
-import { MobileWeekFeedItem } from "./AthleteMobileWeekFeed";
+import { MobileWeeklyDayGroup } from "./MobileWeeklyDayGroup";
 import { WeeklyCalendarStrip } from "./WeeklyCalendarStrip";
 import { matchDailyActivities } from "./matchDailyActivities";
 import { dayShortNames, getWeekDates, formatDayMonthShort } from "./athleteMobileHelpers";
@@ -190,12 +190,19 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
 
       {/* 2. Control sutil de vista: Día vs Semana completa */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
-          {viewMode === "day"
-            ? `${dayShortNames[selectedDayIdx]} • ${formatDayMonthShort(selectedDayData.date)}`
-            : "Semana Completa"}
-        </span>
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[10px] font-bold">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono truncate">
+            {viewMode === "day"
+              ? `${dayShortNames[selectedDayIdx]} • ${formatDayMonthShort(selectedDayData.date)}`
+              : "Semana Completa"}
+          </span>
+          {viewMode === "day" && matchedItems.filter((m) => !m.isRest || Boolean(m.matchedAct)).length + extraActivities.length > 1 && (
+            <span className="text-[9.5px] font-mono font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shrink-0">
+              Doble Sesión
+            </span>
+          )}
+        </div>
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60 text-[10px] font-bold shrink-0">
           <button
             type="button"
             onClick={() => setViewMode("day")}
@@ -261,28 +268,29 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             )}
           </div>
       ) : (
-        /* 5. Vista Feed Semanal tipo TrainingPeaks */
-        <div className="space-y-2">
+        /* 5. Vista Feed Semanal tipo TrainingPeaks con Soporte de Doble Sesión */
+        <div className="space-y-2.5">
           {dayShortNames.map((name, idx) => {
             const dayData = daysMap[idx] || { date: "", items: [] };
             const isToday = dayData.date === todayStr;
             const isPast = dayData.date ? dayData.date < todayStr : false;
             const dayExecuted = dayData.date ? dailyExecutedActivities[dayData.date] : undefined;
+            const formattedDayLabel = `${name} ${formatDayMonthShort(dayData.date)}`;
 
             return (
-              <MobileWeekFeedItem
+              <MobileWeeklyDayGroup
                 key={idx}
-                dayName={name}
-                dateStr={dayData.date}
-                items={dayData.items}
-                dailyExecuted={dayExecuted}
+                date={dayData.date}
+                dayLabel={formattedDayLabel}
                 isToday={isToday}
                 isPast={isPast}
+                workouts={dayData.items}
+                dailyExecuted={dayExecuted}
+                onSelectWorkoutModal={onSelectWorkoutModal}
                 onSelectDay={() => {
                   setSelectedDayIdx(idx);
                   setViewMode("day");
                 }}
-                onSelectWorkoutModal={onSelectWorkoutModal}
               />
             );
           })}

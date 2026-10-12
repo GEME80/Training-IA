@@ -37,7 +37,7 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
   } = props;
 
   const { user, userProfile } = useAuth();
-  const [snapPoint, setSnapPoint] = useState<SheetSnapPoint>("PEEK");
+  const [snapPoint, setSnapPoint] = useState<SheetSnapPoint>("EXPANDED");
   const [activeTab, setActiveTab] = useState<WorkoutModalTab>("RESUMEN");
   const [discoveredWatts, setDiscoveredWatts] = useState<Record<string, number>>({});
 

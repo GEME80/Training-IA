@@ -88,10 +88,20 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
     try { await onSyncWeekToIntervals(weekPlan); } finally { setIsSyncingCurrentWeek(false); }
   };
 
-  let totalMins = 0, plannedTss = 0, runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0;
-  let swimMins = 0, swimTss = 0, strengthMins = 0, strengthTss = 0;
-  let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0, execDirectTotalTss = 0;
+  const isWithinGarminBuffer = React.useMemo(() => {
+    if (!week.startDate || isHistoricalOnly || isPastWeek) return false;
+    if (isCurrentWeek) return true;
+    try {
+      const today = new Date(todayStr || new Date().toISOString().split("T")[0]);
+      const distToMon = today.getDay() === 0 ? -6 : 1 - today.getDay();
+      const bufferEnd = new Date(today);
+      bufferEnd.setDate(today.getDate() + distToMon + 21);
+      return week.startDate < bufferEnd.toISOString().split("T")[0];
+    } catch { return isCurrentWeek; }
+  }, [week.startDate, isHistoricalOnly, isPastWeek, isCurrentWeek, todayStr]);
 
+  let totalMins = 0, plannedTss = 0, runMins = 0, runTss = 0, bikeMins = 0, bikeTss = 0, swimMins = 0, swimTss = 0, strengthMins = 0, strengthTss = 0;
+  let execBikeTss = 0, execRunTss = 0, execSwimTss = 0, execStrengthTss = 0, execDirectTotalTss = 0;
   const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const weekDates: string[] = [];
   if (week.startDate) {
@@ -101,8 +111,7 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
 
   weekPlan.forEach((item) => {
     const parsed = parseWorkoutDoc(item.workoutDoc, item.discipline);
-    const m = item.durationMinutes || parsed.totalMins || 45;
-    const t = item.tss || parsed.estimatedTss || 0;
+    const m = item.durationMinutes || parsed.totalMins || 45, t = item.tss || parsed.estimatedTss || 0;
     if (!item.isRestDay && item.discipline !== "Descanso") {
       totalMins += m; plannedTss += t;
       const d = item.discipline.toLowerCase();
@@ -115,54 +124,37 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
 
   weekDates.forEach((wDate) => {
     const actDay = dailyExecutedActivities?.[wDate];
-    if (actDay && actDay.totalTss > 0) {
+    if (actDay?.totalTss) {
       execDirectTotalTss += actDay.totalTss;
       actDay.activities?.forEach((a) => {
-        const type = (a.type || "").toLowerCase();
-        if (/run|carrera/.test(type)) execRunTss += a.tss;
-        else if (/ride|ciclismo|bike|virtualride/.test(type)) execBikeTss += a.tss;
-        else if (/swim|nataci/.test(type)) execSwimTss += a.tss;
-        else if (/weighttraining|weight|gym|fuerza|strength/.test(type)) execStrengthTss += a.tss;
+        const t = (a.type || "").toLowerCase();
+        if (/run|carrera/.test(t)) execRunTss += a.tss;
+        else if (/ride|ciclismo|bike|virtualride/.test(t)) execBikeTss += a.tss;
+        else if (/swim|nataci/.test(t)) execSwimTss += a.tss;
+        else if (/weight|gym|fuerza|strength/.test(t)) execStrengthTss += a.tss;
       });
     }
   });
 
   const isHistoricalWeek = Boolean((week as any).isHistorical || week.weekNumber <= 0);
-  const effectiveExecuted =
-    execDirectTotalTss > 0
-      ? execDirectTotalTss
-      : isCurrentWeek
-      ? weeklyExecutedTss
-      : 0;
-
+  const effectiveExecuted = execDirectTotalTss > 0 ? execDirectTotalTss : isCurrentWeek ? weeklyExecutedTss : 0;
   const displayPlannedTss = plannedTss > 0 ? plannedTss : (week.targetTss || 0);
-  const completionPct =
-    displayPlannedTss > 0
-      ? Math.round((effectiveExecuted / displayPlannedTss) * 100)
-      : 0;
-
+  const completionPct = displayPlannedTss > 0 ? Math.round((effectiveExecuted / displayPlannedTss) * 100) : 0;
   const phaseShort = resolvePhaseShortLabel(week, isHistoricalWeek);
   const fullPhaseLabel = week.phaseLabel || week.phase || "Base";
 
-  // Colores según estado de la semana
   const weekBorderClass = isCurrentWeek
     ? "border-sky-400 dark:border-sky-500 shadow-md ring-1 ring-sky-400/30"
-    : isHistoricalWeek
-    ? "border-slate-200 dark:border-slate-800/70"
-    : isFutureWeek
-    ? "border-indigo-200/80 dark:border-indigo-800/60"
-    : isPastWeek
-    ? "border-slate-200/80 dark:border-slate-800/70 opacity-95 hover:opacity-100"
+    : isHistoricalWeek ? "border-slate-200 dark:border-slate-800/70"
+    : isFutureWeek ? "border-indigo-200/80 dark:border-indigo-800/60"
+    : isPastWeek ? "border-slate-200/80 dark:border-slate-800/70 opacity-95 hover:opacity-100"
     : "border-slate-200 dark:border-slate-800 hover:border-slate-300";
 
   const weekBgClass = isCurrentWeek
     ? "bg-white dark:bg-slate-900"
-    : isHistoricalWeek
-    ? "bg-slate-50/60 dark:bg-slate-950/50"
-    : isFutureWeek
-    ? "bg-indigo-50/30 dark:bg-indigo-950/15"
-    : isPastWeek
-    ? "bg-slate-50/40 dark:bg-slate-950/30"
+    : isHistoricalWeek ? "bg-slate-50/60 dark:bg-slate-950/50"
+    : isFutureWeek ? "bg-indigo-50/30 dark:bg-indigo-950/15"
+    : isPastWeek ? "bg-slate-50/40 dark:bg-slate-950/30"
     : "bg-white/95 dark:bg-slate-900/90";
 
   return (
@@ -318,23 +310,34 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
               <Sparkles className="h-3.5 w-3.5" />
               <span>Head Coach IA</span>
             </button>
-            {(isCurrentWeek || isFutureWeek) && !isHistoricalOnly && (
-              <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                <span>En tu reloj Garmin</span>
-              </span>
+            {isWithinGarminBuffer && (
+              <>
+                <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>En tu reloj Garmin</span>
+                </span>
+                {((isCurrentWeek && onSyncTriweeklyBlock) || onSyncWeekToIntervals) && !isHistoricalOnly && (
+                  <button
+                    type="button"
+                    onClick={isCurrentWeek && onSyncTriweeklyBlock ? handleSyncTriweekly : handleSyncWeek}
+                    disabled={isSyncingCurrentWeek || isSyncingTriweekly}
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 active:scale-95 shadow-xs"
+                    title={isCurrentWeek && onSyncTriweeklyBlock ? "Re-sincronizar buffer de 3 semanas a Garmin" : "Re-sincronizar semana a Garmin"}
+                  >
+                    <RefreshCw className={`h-3 w-3 text-slate-500 dark:text-slate-400 ${(isSyncingCurrentWeek || isSyncingTriweekly) ? "animate-spin" : ""}`} />
+                    <span>{(isSyncingCurrentWeek || isSyncingTriweekly) ? "Sync..." : "Sincronizar"}</span>
+                  </button>
+                )}
+              </>
             )}
-            {((isCurrentWeek && onSyncTriweeklyBlock) || onSyncWeekToIntervals) && !isHistoricalOnly && (
-              <button
-                type="button"
-                onClick={isCurrentWeek && onSyncTriweeklyBlock ? handleSyncTriweekly : handleSyncWeek}
-                disabled={isSyncingCurrentWeek || isSyncingTriweekly}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 active:scale-95 shadow-xs"
-                title={isCurrentWeek && onSyncTriweeklyBlock ? "Sincronizar buffer de 3 semanas a Garmin" : "Sincronizar semana a Garmin"}
+            {isFutureWeek && !isWithinGarminBuffer && !isHistoricalOnly && (
+              <span
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-[11px] font-bold text-amber-700 dark:text-amber-300"
+                title="Esta semana se sincronizará automáticamente al entrar en el buffer de 3 semanas"
               >
-                <RefreshCw className={`h-3 w-3 text-slate-500 dark:text-slate-400 ${(isSyncingCurrentWeek || isSyncingTriweekly) ? "animate-spin" : ""}`} />
-                <span>{(isSyncingCurrentWeek || isSyncingTriweekly) ? "Sync..." : "Sincronizar"}</span>
-              </button>
+                <Clock className="h-3.5 w-3.5 text-amber-500" />
+                <span>Pendiente · Buffer rodante</span>
+              </span>
             )}
           </div>
         </div>

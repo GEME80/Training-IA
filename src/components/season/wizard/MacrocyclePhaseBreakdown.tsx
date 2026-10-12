@@ -1,28 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronUp, Activity, ShieldCheck, Flame, Zap, Award } from "lucide-react";
 import { MacrocycleWeek } from "@/lib/physiology/macrocycle";
+import { sanitizePhaseDescription, formatLongRunDuration } from "@/lib/utils/phaseFormattingUtils";
 
 interface MacrocyclePhaseBreakdownProps {
   weeks: MacrocycleWeek[];
   planTitle?: string;
   primaryRaceName?: string;
+  activeWeekNumber?: number;
 }
 
 export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> = ({
   weeks,
-  planTitle,
-  primaryRaceName,
+  activeWeekNumber,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [expandedSecondaryPhases, setExpandedSecondaryPhases] = useState<Record<string, boolean>>({});
 
   if (!weeks || weeks.length === 0) return null;
 
   const totalWeeks = weeks.length;
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  // Agrupamos semanas por fase
-  const phaseGroups = React.useMemo(() => {
+  // Determinación defensiva de la semana activa en curso (prop o fecha actual)
+  const currentWeekNumber = useMemo(() => {
+    if (typeof activeWeekNumber === "number" && activeWeekNumber > 0) {
+      return activeWeekNumber;
+    }
+    const matched = weeks.find((w) => todayStr >= w.startDate && todayStr <= w.endDate);
+    if (matched) return matched.weekNumber;
+    if (weeks[0] && todayStr < weeks[0].startDate) return weeks[0].weekNumber;
+    return weeks[weeks.length - 1]?.weekNumber || 1;
+  }, [weeks, activeWeekNumber, todayStr]);
+
+  // Agrupación de semanas consecutivas por fase fisiológica
+  const phaseGroups = useMemo(() => {
     const groups: {
       phase: string;
       label: string;
@@ -76,20 +90,19 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
     return groups;
   }, [weeks]);
 
+  const toggleSecondaryPhase = (phaseKey: string) => {
+    setExpandedSecondaryPhases((prev) => ({
+      ...prev,
+      [phaseKey]: !prev[phaseKey],
+    }));
+  };
+
   const getPhaseIcon = (phase: string) => {
     if (phase.includes("BASE")) return ShieldCheck;
     if (phase.includes("BUILD")) return Zap;
     if (phase.includes("PEAK")) return Flame;
     if (phase.includes("TAPER")) return Activity;
     return Award;
-  };
-
-  const getPhaseColorClass = (phase: string) => {
-    if (phase.includes("BASE")) return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800";
-    if (phase.includes("BUILD")) return "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800";
-    if (phase.includes("PEAK")) return "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800";
-    if (phase.includes("TAPER")) return "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800";
-    return "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800";
   };
 
   return (
@@ -102,66 +115,136 @@ export const MacrocyclePhaseBreakdown: React.FC<MacrocyclePhaseBreakdownProps> =
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-emerald-500 shrink-0" />
           <div>
-            <h4 className="text-xs font-black text-slate-900 dark:text-white">
-              Estructura y Descripción por Fases ({phaseGroups.length} Fases · {totalWeeks} Semanas)
-            </h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                Estructura y Descripción por Fases ({phaseGroups.length} Fases · {totalWeeks} Semanas)
+              </h4>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                Semana {currentWeekNumber} Activa
+              </span>
+            </div>
             <p className="text-[10px] text-slate-400 font-mono">
-              Objetivos fisiológicos, progresiones de volumen y asimilación de carga estilo Palladino
+              Objetivos fisiológicos, progresión atlética y asimilación de carga
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+        <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
           <span>{isExpanded ? "Ocultar" : "Ver Fases"}</span>
           {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </div>
       </button>
 
       {isExpanded && (
-        <div className="px-3.5 pb-3.5 space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3 animate-fadeIn">
+        <div className="px-3 pb-3 space-y-2 border-t border-slate-100 dark:border-slate-800 pt-2.5 animate-fadeIn">
           {phaseGroups.map((grp, idx) => {
             const Icon = getPhaseIcon(grp.phase);
-            const colorClass = getPhaseColorClass(grp.phase);
+            const isCurrentPhase = currentWeekNumber >= grp.startWeek && currentWeekNumber <= grp.endWeek;
+            const phaseKey = `${grp.phase}-${idx}`;
+            const isSecondaryOpen = !!expandedSecondaryPhases[phaseKey];
+            const cleanDescription = sanitizePhaseDescription(grp.label, grp.focusSummary);
+
+            if (isCurrentPhase) {
+              return (
+                <div
+                  key={phaseKey}
+                  className="p-3 sm:p-3.5 rounded-xl border border-emerald-500/40 dark:border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/20 ring-1 ring-emerald-500/20 shadow-xs space-y-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-emerald-600 text-white shadow-xs">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h5 className="text-xs font-black text-slate-900 dark:text-white">
+                            {grp.label}
+                          </h5>
+                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[9px] font-black uppercase tracking-wider">
+                            📍 En Curso
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-mono font-bold">
+                          Semanas {grp.startWeek} a {grp.endWeek} ({grp.weeksCount} {grp.weeksCount === 1 ? "semana" : "semanas"})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono tabular-nums">
+                      <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-500/20 text-slate-700 dark:text-slate-200 font-bold">
+                        Media: ~{grp.avgTss} TSS
+                      </span>
+                      {grp.maxTss > grp.avgTss && (
+                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold">
+                          Pico: {grp.maxTss} TSS
+                        </span>
+                      )}
+                      {grp.maxLongRun > 0 && (
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black shadow-xs">
+                          Fondo: {formatLongRunDuration(grp.maxLongRun)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {cleanDescription && (
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-sans pl-8 sm:pl-9 border-l-2 border-emerald-500/40 ml-1">
+                      {cleanDescription}
+                    </p>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <div
-                key={idx}
-                className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-1.5"
+                key={phaseKey}
+                className="rounded-xl border border-slate-100 dark:border-slate-800 bg-white/70 dark:bg-slate-950/30 overflow-hidden transition-colors"
               >
-                <div className="flex flex-wrap items-center justify-between gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleSecondaryPhase(phaseKey)}
+                  className="w-full flex flex-wrap items-center justify-between p-2.5 sm:p-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition cursor-pointer text-left gap-2"
+                >
                   <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg border ${colorClass}`}>
+                    <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                       <Icon className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <h5 className="text-xs font-black text-slate-900 dark:text-white">
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {grp.label}
                       </h5>
                       <span className="text-[10px] text-slate-400 font-mono">
-                        Semanas {grp.startWeek} a {grp.endWeek} ({grp.weeksCount} {grp.weeksCount === 1 ? "semana" : "semanas"})
+                        Semanas {grp.startWeek} a {grp.endWeek} ({grp.weeksCount} sem)
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold" title="Carga promedio semanal de la fase">
-                      Media: ~{grp.avgTss} TSS
-                    </span>
-                    {grp.maxTss > grp.avgTss && (
-                      <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold border border-amber-500/25" title="Semana con carga cumbre en esta fase">
-                        Pico: {grp.maxTss} TSS
-                      </span>
-                    )}
-                    {grp.maxLongRun > 0 && (
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/20">
-                        Fondo: {grp.maxLongRun} min
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                      <span className="hidden sm:inline font-bold">~{grp.avgTss} TSS</span>
+                      {grp.maxLongRun > 0 && (
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold border border-slate-200/60 dark:border-slate-700">
+                          Fondo: {formatLongRunDuration(grp.maxLongRun)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-slate-400 dark:text-slate-500">
+                      {isSecondaryOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </div>
                   </div>
-                </div>
+                </button>
 
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-sans pl-8">
-                  {grp.focusSummary}
-                </p>
+                {isSecondaryOpen && cleanDescription && (
+                  <div className="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800/60 animate-fadeIn">
+                    <div className="flex items-center gap-2 mb-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                      <span>Carga media: ~{grp.avgTss} TSS</span>
+                      {grp.maxTss > grp.avgTss && <span>· Pico: {grp.maxTss} TSS</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-sans pl-2 border-l border-slate-200 dark:border-slate-700">
+                      {cleanDescription}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}

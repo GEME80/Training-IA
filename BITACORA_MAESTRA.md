@@ -8112,6 +8112,36 @@ Esto causaba que:
   - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 266 LOC ($\le 350$) ✅.
   - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 310 LOC ($\le 350$) ✅.
 
+---
+
+## 129. REFACTORIZACIÓN VISUAL DE FASES DE MACROCICLO: DEDUPLICACIÓN EN FRONTEND, FORMATO ATLÉTICO Y ESTILO HERO (v5.53)
+
+### 129.1. Directriz de Seguridad (Zero-Touch Backend Guardrail)
+- **Blindaje Total de Backend:** Cero modificaciones en controladores, esquemas de base de datos, endpoints (`/api/macrocycles`, Firestore, Intervals.icu) ni generadores fisiológicos.
+- **Capa Presentacional Pura:** Toda la sanitización, formateo y jerarquía se ejecuta de forma defensiva y exclusiva en el frontend durante el renderizado.
+
+### 129.2. Deduplicación Textual y Formateo Atlético (`phaseFormattingUtils.ts`)
+- **Sanitización Defensiva (`sanitizePhaseDescription`):** Erradica redundancias donde el modelo devolvía descripciones con el prefijo del título (ej. `"Fase 1: Base Aeróbica: Desarrollo mitocondrial..."`), extrayendo el contenido limpio sin prefijos duplicados.
+- **Formateo Atlético de Tiempos (`formatLongRunDuration`):** Transforma minutos brutos en notación deportiva estándar (ej. `150` -> `"2h 30m"`, `55` -> `"55 min"`), eliminando etiquetas poco naturales como `"Fondo: 150 min"`.
+
+### 129.3. Jerarquía Visual Hero y Optimización Responsiva (`MacrocyclePhaseBreakdown.tsx`)
+- **Fase Activa en Estilo Hero:**
+  - Detección automática y defensiva de la fase en curso basada en la fecha actual (`todayStr`) cotejada con el rango de fechas de cada microciclo.
+  - Destacada visualmente con borde esmeralda (`border-emerald-500/40`), badge prominente `📍 EN CURSO`, icono de fase en verde esmeralda y descripción técnica visible.
+- **Fases Secundarias Compactas y Colapsables:**
+  - En lugar de apilar 4 o 5 bloques de texto pesados con scroll vertical infinito, las fases secundarias se muestran en una fila compacta elegante con sus métricas clave (`~XXX TSS`, `Fondo: Xh YYm`).
+  - Acordeón individual interactivo para desplegar bajo demanda la descripción técnica de cualquier fase pasada o futura.
+- **Estandarización Cromática PULSE AI:**
+  - Eliminado el badge naranja discordante de carga pico (`Pico: XXX TSS`), reemplazado por métricas tabulares neutras y esmeralda corporativo.
+
+### 129.4. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/lib/utils/phaseFormattingUtils.ts`: 48 LOC ($\le 350$) ✅.
+  - `src/components/season/wizard/MacrocyclePhaseBreakdown.tsx`: 255 LOC ($\le 350$) ✅.
+
+
 
 
 

@@ -111,7 +111,7 @@ export const WeeklyCalendarStrip: React.FC<WeeklyCalendarStripProps> = ({
               onClick={() => onSelectDay(idx)}
               className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all cursor-pointer relative touch-bounce ${
                 isSelected
-                  ? "bg-purple-600 text-white font-black shadow-md shadow-purple-600/30 scale-[1.02]"
+                  ? "bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30 scale-[1.02]"
                   : isToday
                   ? "bg-emerald-50/60 text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-300 font-bold border border-emerald-500/40"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
@@ -119,7 +119,7 @@ export const WeeklyCalendarStrip: React.FC<WeeklyCalendarStripProps> = ({
             >
               {/* Letra del día (L, M, X, J, V, S, D) */}
               <span className={`text-[10px] font-bold uppercase leading-none ${
-                isSelected ? "text-purple-200" : "text-slate-400 dark:text-slate-500"
+                isSelected ? "text-emerald-200" : "text-slate-400 dark:text-slate-500"
               }`}>
                 {letter}
               </span>

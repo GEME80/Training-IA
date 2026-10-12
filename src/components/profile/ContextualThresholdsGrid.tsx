@@ -54,7 +54,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
           <button
             type="button"
             onClick={() => setIsCollapsed((prev) => !prev)}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 hover:text-purple-600 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 hover:text-emerald-600 transition cursor-pointer"
           >
             <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
             <span>Umbrales de {sportName}</span>
@@ -68,7 +68,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                 else if (selectedSport === "BIKE") onEditThreshold("BIKE_FTP");
                 else onEditThreshold("SWIM_CSS");
               }}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-500 hover:text-purple-600 dark:hover:text-purple-400 bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 transition cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition cursor-pointer"
             >
               <Edit3 className="h-3 w-3" />
               <span>Editar</span>
@@ -84,7 +84,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               onClick={() => onToggleRunMode("POWER")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 runTelemetryMode === "POWER"
-                  ? "bg-purple-600 text-white font-black shadow-xs"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
             >
@@ -96,7 +96,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               onClick={() => onToggleRunMode("PACE")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 runTelemetryMode === "PACE"
-                  ? "bg-purple-600 text-white font-black shadow-xs"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
             >
@@ -113,7 +113,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               onClick={() => onToggleBikeMode("POWER")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 bikeTelemetryMode === "POWER"
-                  ? "bg-purple-600 text-white font-black shadow-xs"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
             >
@@ -125,7 +125,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               onClick={() => onToggleBikeMode("HR")}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 bikeTelemetryMode === "HR"
-                  ? "bg-purple-600 text-white font-black shadow-xs"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-xs"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
             >
@@ -145,14 +145,14 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 1: Potencia Run */}
               <div
                 onClick={() => onEditThreshold?.("RUN_FTP")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
-                    <Footprints className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                    <Footprints className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                     Potencia Run
                   </span>
-                  <span className="font-mono text-purple-600 dark:text-purple-400 font-black">{runWkg} W/kg</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">{runWkg} W/kg</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
                   {runFtp > 0 ? `${runFtp}W` : "336W"}
@@ -162,7 +162,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 2: Ritmo Daniels VDOT */}
               <div
                 onClick={() => onEditThreshold?.("RUN_PACE")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
@@ -180,7 +180,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 3: FC Umbral / Máx */}
               <div
                 onClick={() => onEditThreshold?.("LTHR")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
@@ -219,7 +219,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 1: FTP Ciclismo */}
               <div
                 onClick={() => onEditThreshold?.("BIKE_FTP")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
@@ -236,7 +236,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 2: FC Umbral */}
               <div
                 onClick={() => onEditThreshold?.("LTHR")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
@@ -274,7 +274,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 1: Ritmo CSS */}
               <div
                 onClick={() => onEditThreshold?.("SWIM_CSS")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
@@ -292,7 +292,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               {/* Tarjeta 2: FC Umbral / Esfuerzo */}
               <div
                 onClick={() => onEditThreshold?.("LTHR")}
-                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-purple-300 dark:hover:border-purple-800 transition cursor-pointer"
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-800 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">

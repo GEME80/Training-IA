@@ -31,7 +31,7 @@ export const SportContextSelector: React.FC<SportContextSelectorProps> = ({
             onClick={() => onSelectSport(id)}
             className={`flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               isActive
-                ? "bg-purple-600 text-white font-black shadow-sm ring-1 ring-purple-600/20"
+                ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-sm ring-1 ring-emerald-600/20"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/40"
             }`}
           >

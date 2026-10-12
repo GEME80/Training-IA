@@ -165,7 +165,7 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
             className="w-full flex items-center justify-between p-3.5 sm:p-4 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                 {showCurvesAccordion ? "▾" : "▸"} Curvas de Potencia / Ritmo y Récords Históricos ({selectedSport === "RUN" ? "Carrera" : "Ciclismo"})
               </span>

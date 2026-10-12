@@ -233,7 +233,7 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
                 onClick={() => setTimeframe(tf.id)}
                 className={`px-3 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
                   timeframe === tf.id || (timeframe === "3m" && tf.id === "90d")
-                    ? "bg-purple-600 text-white shadow-xs"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                 }`}
               >
@@ -261,7 +261,7 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
                 onClick={() => setTimeframe(tf.id)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   timeframe === tf.id || (timeframe === "3m" && tf.id === "90d")
-                    ? "bg-purple-600 text-white font-black shadow-xs"
+                    ? "bg-emerald-600 text-white font-black shadow-xs"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                 }`}
               >

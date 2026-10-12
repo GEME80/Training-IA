@@ -235,7 +235,7 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
                 setSnapPoint("EXPANDED");
                 setActiveTab("RESUMEN");
               }}
-              className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-purple-500/20 active:scale-[0.99]"
+              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-[0.99]"
             >
               <Maximize2 className="h-3.5 w-3.5" />
               <span>Ver Análisis Completo</span>

@@ -219,7 +219,7 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
     <div className="space-y-3 font-sans text-slate-900 dark:text-white">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <BarChart3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+          <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
             Distribución de Zonas
           </span>
@@ -245,7 +245,7 @@ export const ActivityZoneDistribution: React.FC<ActivityZoneDistributionProps> =
               type="button"
               onClick={() => setActiveZoneType("WATTS")}
               className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
-                resolvedZoneType === "WATTS" ? "bg-purple-600 text-white font-black shadow-xs" : "bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:text-white"
+                resolvedZoneType === "WATTS" ? "bg-emerald-600 text-white font-black shadow-xs" : "bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:text-white"
               }`}
             >
               <Zap className="h-3 w-3" /> Potencia

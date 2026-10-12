@@ -201,7 +201,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             onClick={() => setViewMode("day")}
             className={`px-2 py-0.5 rounded-md transition-all ${
               viewMode === "day"
-                ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-black"
+                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs font-black"
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
@@ -212,7 +212,7 @@ export const AthleteMobileAgendaView: React.FC<AthleteMobileAgendaViewProps> = (
             onClick={() => setViewMode("week")}
             className={`px-2 py-0.5 rounded-md transition-all ${
               viewMode === "week"
-                ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-black"
+                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs font-black"
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >

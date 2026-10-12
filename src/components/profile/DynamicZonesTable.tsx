@@ -140,7 +140,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">
                   {runTelemetryMode === "POWER" ? "Zonas de Potencia Stryd (CP)" : "Zonas de Ritmo Daniels VDOT"}
                 </span>
-                <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                   {runTelemetryMode === "POWER" ? `${runFtp || 336}W CP` : "Ritmo Umbral"}
                 </span>
               </div>

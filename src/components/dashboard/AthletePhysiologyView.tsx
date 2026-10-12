@@ -198,7 +198,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 dark:border-slate-800 pb-2 sm:pb-3">
         <div>
           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
-            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 dark:text-purple-400" />
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400" />
             Perfil del Atleta & Fisiología
           </h2>
         </div>
@@ -217,7 +217,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           onClick={() => setActiveTab("zones")}
           className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === "zones"
-              ? "bg-purple-600 text-white font-black shadow-xs"
+              ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-sm"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >

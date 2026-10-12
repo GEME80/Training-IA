@@ -24,7 +24,7 @@ export const AthleteBiometricsBar: React.FC<AthleteBiometricsBarProps> = ({
     .filter(Boolean)
     .slice(0, 2)
     .join("")
-    .toUpperCase() || "GE";
+    .toUpperCase() || "GM";
 
   const bmi =
     weightKg && weightKg > 0 && heightCm && heightCm > 0
@@ -33,8 +33,8 @@ export const AthleteBiometricsBar: React.FC<AthleteBiometricsBarProps> = ({
 
   return (
     <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0 select-none">
-      {/* Avatar GE con gradiente morado corporativo */}
-      <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-tr from-purple-700 to-indigo-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-xs shrink-0 tracking-wider">
+      {/* Avatar GM con estilo corporativo Pulse AI */}
+      <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl bg-slate-900 text-white dark:bg-emerald-600 flex items-center justify-center font-black text-xs sm:text-sm shadow-xs shrink-0 tracking-wider">
         {initials}
       </div>
 

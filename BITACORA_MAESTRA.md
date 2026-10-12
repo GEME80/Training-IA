@@ -8074,6 +8074,44 @@ Esto causaba que:
   - `src/components/dashboard/AthletePhysiologyView.tsx`: 349 LOC ($\le 350$) ✅.
   - `src/lib/physiology/runningWorkoutAdapter.ts`: 350 LOC ($\le 350$) ✅.
 
+---
+
+## 128. ESTANDARIZACIÓN DE COLORIMETRÍA GLOBAL Y UNIFICACIÓN DE "PERFIL DEL ATLETA" BAJO EL DESIGN SYSTEM (EMERALD / SLATE / CYAN) (v5.52)
+
+### 128.1. Diagnóstico y Directiva de Estandarización Cromática
+- **Problema Detectado:** La vista "Perfil del Atleta & Fisiología" y ciertos controles heredados utilizaban el color morado (`bg-purple-600`, `text-purple-600`), rompiendo la coherencia visual con el resto de la plataforma (Dashboard, Mi Temporada, Head Coach, Sidebar), donde el color primario de acción y estado seleccionado es el Verde Esmeralda (`bg-emerald-600`).
+- **Directiva de Jerarquía Visual:**
+  - **Color Primario de Interacción y Selección:** Verde Esmeralda (`bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm`, acentos `ring-emerald-500` / `border-emerald-600`).
+  - **Restricción Semántica del Morado:** Reservado exclusivamente para telemetría de datos fisiológicos (curva de Fatiga ATL en el PMC o curva Stryd en gráficos). Prohibido en botones, pestañas o cabeceras de UI.
+
+### 128.2. Refactorización de Componentes de Perfil y Vistas Clave
+- **`AthletePhysiologyView.tsx`:** Pestaña activa "Zonas & Umbrales" migrada a `bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm`. Icono `User` en `text-emerald-600 dark:text-emerald-400`.
+- **`AthleteBiometricsBar.tsx`:** Avatar de identidad unificado a `bg-slate-900 text-white dark:bg-emerald-600 font-black shadow-xs` con iniciales "GM" (Germán Morales).
+- **`SportContextSelector.tsx`:** Pestaña activa de disciplina ([ 🏃 Carrera ] | [ 🚴 Ciclismo ] | [ 🏊 Natación ]) migrada a `bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-sm ring-1 ring-emerald-600/20`.
+- **`ContextualThresholdsGrid.tsx`:** Switches contextuales de Carrera ([ Potencia ] vs [ Ritmo ]) y Ciclismo ([ Potencia ] vs [ FC ]) migrados a `bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-xs`. Bordes interactivos y acentos a `emerald`.
+- **`DynamicZonesTable.tsx` & `AthleteZonesTab.tsx`:** Acentos de potencia CP e iconos de acordeón unificados a esmeralda.
+- **`AthletePMCChart.tsx`:** Selector temporal de rangos [ 30D | 90D | 6M | 1 Año ] tanto en desktop como en móvil unificado a `bg-emerald-600 text-white`.
+- **`WeeklyCalendarStrip.tsx`:** Día activo en la tira móvil de calendario unificado a `bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30`.
+- **`AthleteMobileAgendaView.tsx`:** Conmutador [ Día | Semana ] unificado con acento activo `text-emerald-600 dark:text-emerald-400 font-black`.
+- **`WorkoutBottomSheetMobile.tsx`:** Botón principal de acción "Ver Análisis Completo" unificado a `bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20`.
+- **`ActivityZoneDistribution.tsx`:** Conmutador activo de potencia ("WATTS") e icono de distribución migrados a `bg-emerald-600 text-white` y `text-emerald-600`.
+
+### 128.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/components/profile/AthleteBiometricsBar.tsx`: 65 LOC ($\le 350$) ✅.
+  - `src/components/profile/SportContextSelector.tsx`: 45 LOC ($\le 350$) ✅.
+  - `src/components/profile/DynamicZonesTable.tsx`: 233 LOC ($\le 350$) ✅.
+  - `src/components/profile/AthleteZonesTab.tsx`: 251 LOC ($\le 350$) ✅.
+  - `src/components/profile/ContextualThresholdsGrid.tsx`: 330 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthletePhysiologyView.tsx`: 348 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/pmc/AthletePMCChart.tsx`: 348 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/WeeklyCalendarStrip.tsx`: 164 LOC ($\le 350$) ✅.
+  - `src/components/dashboard/AthleteMobileAgendaView.tsx`: 293 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/WorkoutBottomSheetMobile.tsx`: 266 LOC ($\le 350$) ✅.
+  - `src/components/macrocycle/ActivityZoneDistribution.tsx`: 310 LOC ($\le 350$) ✅.
+
 
 
 

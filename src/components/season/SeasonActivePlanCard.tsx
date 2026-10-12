@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Layers, Calendar, Sparkles, CheckCircle2, Clock, Trash2, Trophy, Flame } from "lucide-react";
 import { SeasonPlanItem, TargetRace } from "@/lib/physiology/macrocycle";
+import { formatDuration } from "@/lib/utils/formatters";
 import { SeasonCurveChart } from "./wizard/SeasonCurveChart";
 import { MacrocyclePhaseBreakdown } from "./wizard/MacrocyclePhaseBreakdown";
 
@@ -30,8 +31,9 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
   const totalWeeks = activePlan?.totalWeeks || blueprintWeeks.length || 16;
   const rawTitle = activePlan?.planName || activePlan?.blueprint?.cycleTitle || "";
   const isGeneric = !rawTitle || rawTitle === "Macrociclo de Temporada" || rawTitle === "Plan de Temporada";
+  const raceDistanceLabel = primaryRace?.distance ? ` (${primaryRace.distance.toUpperCase()})` : "";
   const planTitle = isGeneric && primaryRace
-    ? `Macrociclo para ${primaryRace.name} (${primaryRace.distance?.toUpperCase() || "42K"})`
+    ? `Macrociclo para ${primaryRace.name}${raceDistanceLabel}`
     : rawTitle || "Plan de Temporada";
 
   const avgWeeklyTss = blueprintWeeks.length > 0
@@ -129,7 +131,7 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
           </div>
           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800">
             <span className="text-[9px] text-slate-400 uppercase block font-bold">Tirada Pico</span>
-            <strong className="text-xs font-black text-sky-600 dark:text-sky-400">{maxLongRun > 0 ? `${maxLongRun} min` : "Específico"}</strong>
+            <strong className="text-xs font-black text-sky-600 dark:text-sky-400">{maxLongRun > 0 ? formatDuration(maxLongRun) : "Específico"}</strong>
           </div>
         </div>
       </div>

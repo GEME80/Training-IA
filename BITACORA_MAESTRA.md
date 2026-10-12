@@ -8141,6 +8141,30 @@ Esto causaba que:
   - `src/lib/utils/phaseFormattingUtils.ts`: 48 LOC ($\le 350$) ✅.
   - `src/components/season/wizard/MacrocyclePhaseBreakdown.tsx`: 255 LOC ($\le 350$) ✅.
 
+---
+
+## 130. UTILIDADES PURAS DE FORMATEO Y DESPARASITACIÓN DATA-DRIVEN EN MI TEMPORADA (v5.54)
+
+### 130.1. Directriz de Datos: Prohibición Absoluta de Hardcode
+- **Filosofía Data-Driven:** Se prohíbe quemar textos estáticos de carreras, distancias o atletas. Todos los valores se consumen dinámicamente de las propiedades de la carrera y el plan activo.
+- **Erradicación de Fallbacks Rígidos:** En `SeasonActivePlanCard.tsx`, se eliminó el fallback quemado `"42K"`, permitiendo que el título del macrociclo se adapte automáticamente a cualquier disciplina o distancia (5K, 10K, 21K, 42K, Ciclismo, Triatlón).
+
+### 130.2. Centralización de Formateadores Puros (`formatters.ts`)
+- **Creación de `src/lib/utils/formatters.ts`:**
+  - `formatDuration(minutes)`: Transforma minutos brutos a formato legible atlético (`185` $\rightarrow$ `"3h 05m"`, `45` $\rightarrow$ `"45 min"`, `0` $\rightarrow$ `"--"`).
+  - `sanitizePhaseDescription(phaseName, description)`: Elimina de forma defensiva prefijos duplicados del nombre de la fase en la descripción técnica generada por la IA o el backend.
+- **Métricas Atléticas en UI:** En `SeasonActivePlanCard.tsx`, la métrica "Tirada Pico" pasa de renderizar cadenas rígidas (`${maxLongRun} min`) a utilizar `formatDuration(maxLongRun)` (ej. `"2h 30m"`).
+- **Consolidación Modular:** `phaseFormattingUtils.ts` re-exporta limpiamente desde `formatters.ts` para garantizar compatibilidad retroactiva total.
+
+### 130.3. Certificación de Calidad y Modularidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Compilación de Producción:** `npm run build` completado con código 0 (21/21 rutas Next.js) ✅.
+- **Ley de Modularidad ($\le 350$ LOC por archivo):**
+  - `src/lib/utils/formatters.ts`: 46 LOC ($\le 350$) ✅.
+  - `src/lib/utils/phaseFormattingUtils.ts`: 10 LOC ($\le 350$) ✅.
+  - `src/components/season/SeasonActivePlanCard.tsx`: 214 LOC ($\le 350$) ✅.
+
+
 
 
 

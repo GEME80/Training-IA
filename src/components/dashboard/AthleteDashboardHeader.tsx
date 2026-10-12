@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { PulseLogo } from "../PulseLogo";
 import { Shield, LayoutDashboard, Home, LogOut } from "lucide-react";
 import { isMasterAdminEmail } from "@/lib/env";
+import { NotificationBellButton } from "../notifications/NotificationBellButton";
+import { UserStorage } from "@/lib/storage/userStorage";
 
 interface AthleteDashboardHeaderProps {
   displayName: string;
@@ -14,6 +16,7 @@ interface AthleteDashboardHeaderProps {
   onRefreshTelemetry: () => void;
   onSelectView?: (view: "landing" | "dashboard" | "admin") => void;
   signOutUser: () => void;
+  userStorage?: UserStorage;
 }
 
 export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
@@ -25,6 +28,7 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
   onRefreshTelemetry,
   onSelectView,
   signOutUser,
+  userStorage,
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const isMasterAdmin = isMasterAdminEmail(email);
@@ -44,12 +48,15 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
         </button>
       </div>
 
-      <div className="relative ml-auto">
-        <button
-          type="button"
-          onClick={() => setShowUserDropdown(!showUserDropdown)}
-          className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl shadow-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-        >
+      <div className="flex items-center gap-2 ml-auto">
+        <NotificationBellButton userStorage={userStorage} />
+
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowUserDropdown(!showUserDropdown)}
+            className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl shadow-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+          >
           {photoURL ? (
             <img src={photoURL} alt={displayName} className="h-6 w-6 rounded-full object-cover" />
           ) : (
@@ -92,6 +99,7 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
             </div>
           </>
         )}
+        </div>
       </div>
     </header>
   );

@@ -324,6 +324,18 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
                 <span>En tu reloj Garmin</span>
               </span>
             )}
+            {onSyncWeekToIntervals && !isHistoricalOnly && (
+              <button
+                type="button"
+                onClick={handleSyncWeek}
+                disabled={isSyncingCurrentWeek}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer disabled:opacity-60 active:scale-95 shadow-xs"
+                title="Sincronizar esta semana de respaldo a Intervals.icu y Garmin Connect"
+              >
+                <RefreshCw className={`h-3 w-3 text-slate-500 dark:text-slate-400 ${isSyncingCurrentWeek ? "animate-spin" : ""}`} />
+                <span>{isSyncingCurrentWeek ? "Sync..." : "Sincronizar"}</span>
+              </button>
+            )}
           </div>
         </div>
       )}

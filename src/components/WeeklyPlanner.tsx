@@ -387,8 +387,20 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
           {/* Estado de Sincronización Automática */}
           <div className="flex items-center space-x-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-            <span>Auto-Sync Garmin activo</span>
+            <span>Auto-Sync activo</span>
           </div>
+
+          {onSyncIntervals && (
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="flex items-center space-x-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 px-3.5 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition cursor-pointer disabled:opacity-50 active:scale-95 shadow-xs"
+              title="Forzar sincronización inmediata de este microciclo con Intervals.icu y Garmin"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin text-emerald-500" : "text-emerald-500"}`} />
+              <span>{isSyncing ? "Sincronizando..." : "Sincronizar a Garmin"}</span>
+            </button>
+          )}
         </div>
       </div>
 

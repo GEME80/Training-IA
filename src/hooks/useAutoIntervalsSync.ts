@@ -77,6 +77,8 @@ export function useAutoIntervalsSync({
       apiKey: activeApiKey,
       hasPlan: Boolean(blueprint?.weeks && blueprint.weeks.length > 0),
       autoSyncIntervals: userProfile?.autoSyncIntervals,
+      hasEncryptedKey: Boolean(userProfile?.encryptedApiKey),
+      hasApiKey: Boolean(userProfile?.hasApiKey),
     });
 
     if (!isEligible || !blueprint?.weeks) return;

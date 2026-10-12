@@ -233,6 +233,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           onRefreshTelemetry={() => telemetry.refreshTelemetry(telemetry.profile.id, telemetry.apiKeyCache, telemetry.profile.run_ftp, telemetry.profile.bike_ftp)}
           onSelectView={onSelectView}
           signOutUser={signOutUser}
+          userStorage={userStorage}
         />
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
           {!isAuditing && !telemetry.apiKeyCache && !effectiveUserProfile?.encryptedApiKey && !effectiveUserProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (

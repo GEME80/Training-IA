@@ -1,5 +1,6 @@
 import { MacrocycleWeek } from "./macrocycle";
 import { PlanItem } from "@/lib/gemini/engine";
+import { isMasterAdminEmail } from "@/lib/env";
 
 export interface AthleteEligibilityOpts {
   isReadOnly?: boolean;
@@ -10,6 +11,8 @@ export interface AthleteEligibilityOpts {
   apiKey?: string;
   hasPlan?: boolean;
   autoSyncIntervals?: boolean;
+  hasEncryptedKey?: boolean;
+  hasApiKey?: boolean;
 }
 
 /**
@@ -31,8 +34,10 @@ export function isAthleteEligibleForAutoSync(opts: AthleteEligibilityOpts): bool
     return false;
   }
 
-  // 4. Credenciales válidas de Intervals.icu presentes
-  if (!opts.athleteId || !opts.apiKey) {
+  // 4. Credenciales de Intervals.icu presentes (en cliente o en servidor vía Firestore/Env)
+  const isSuper = isMasterAdminEmail(opts.email);
+  const hasCredentialKey = Boolean(opts.apiKey || opts.hasEncryptedKey || opts.hasApiKey || isSuper);
+  if (!opts.athleteId || !hasCredentialKey) {
     return false;
   }
 

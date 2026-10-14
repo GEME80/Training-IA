@@ -1,18 +1,13 @@
 "use client";
 
 import React from "react";
-import { SportCanvasBackground } from "./SportCanvasBackground";
-import { KineticTextBackground } from "./landing/KineticTextBackground";
 import { LandingNavbar } from "./landing/LandingNavbar";
 import { HeroSection } from "./landing/HeroSection";
-import { LandingLogoCarousel } from "./landing/LandingLogoCarousel";
+import { EcosystemTicker } from "./landing/EcosystemTicker";
 import { AppMotionShowcase } from "./landing/AppMotionShowcase";
-import { EditorialStorytellingSection } from "./landing/EditorialStorytellingSection";
-import { LandingFeaturesGrid } from "./landing/LandingFeaturesGrid";
-import { LandingDisciplineModels } from "./landing/LandingDisciplineModels";
-import { CoachesScienceSection } from "./landing/CoachesScienceSection";
-import { LandingPricingSection } from "./landing/LandingPricingSection";
-import { LandingFaq } from "./landing/LandingFaq";
+import { UnifiedPhysioEngine } from "./landing/UnifiedPhysioEngine";
+import { CoachingImpactBanner } from "./landing/CoachingImpactBanner";
+import { PricingAndFaqSection } from "./landing/PricingAndFaqSection";
 import { LandingFooter } from "./landing/LandingFooter";
 import { useAuth } from "@/context/AuthContext";
 import { X, ExternalLink } from "lucide-react";
@@ -48,14 +43,8 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
   const isUserAuthenticated = isAuthenticated || !!user;
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white font-sans relative overflow-x-hidden">
-      {/* 1. Fondo Canvas Interactivo Luminoso (fixed en z-0) */}
-      <SportCanvasBackground />
-
-      {/* 2. Textura Tipográfica Dinámica Cinética (Marca de Agua) */}
-      <KineticTextBackground />
-
-      {/* 3. Header / Navbar Estratégico Simplificado (Sticky z-40) */}
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-white font-sans relative overflow-x-hidden">
+      {/* 1. Header / Navbar Estratégico (Sticky z-40) */}
       <LandingNavbar
         isAuthenticated={isUserAuthenticated}
         userEmail={userEmail || user?.email || undefined}
@@ -68,12 +57,12 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         onSignOut={onSignOut || signOutUser}
       />
 
-      {/* Contenido en capa z-10 */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      {/* Contenedor Principal (Lienzo blanco pulcro, sin partículas ni marcas de agua) */}
+      <main className="flex-1 flex flex-col">
         {/* Modal Informativo si Firebase Auth requiere activación en consola */}
         {error && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-            <div className="max-w-lg w-full rounded-3xl bg-white border border-cyan-500/40 p-6 sm:p-7 shadow-2xl space-y-5 text-left relative">
+            <div className="max-w-lg w-full rounded-3xl bg-white border border-cyan-500/40 p-6 sm:p-7 shadow-2xl space-y-5 text-left relative text-slate-900">
               <button
                 type="button"
                 onClick={clearError}
@@ -145,41 +134,40 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           </div>
         )}
 
-        {/* 4. Hero Section Modular */}
+        {/* =========================================================================
+            BLOQUE 1: SPLIT HERO CINEMÁTICO + CARRUSEL DE ECOSISTEMA
+           ========================================================================= */}
         <HeroSection
           isAuthenticated={isUserAuthenticated}
           onOpenAuthModal={onOpenAuthModal}
           onLoginWithGoogle={onLoginWithGoogle}
           onGoToDashboard={onGoToDashboard}
         />
+        <EcosystemTicker />
 
-        {/* 5. Carrusel Continuo Infinito de Logos */}
-        <LandingLogoCarousel />
-
-        {/* 6. Showcase Dinámico "App en Movimiento" (#showcase) con Capturas Reales */}
+        {/* =========================================================================
+            BLOQUE 2: SHOWCASE "LA APP EN MOVIMIENTO" (MAQUETA SMARTPHONE)
+           ========================================================================= */}
         <AppMotionShowcase onOpenAuthModal={onOpenAuthModal} />
 
-        {/* 7. Storytelling Editorial Estilo TrainingPeaks: PLANIFICA & ADAPTA con Halos */}
-        <EditorialStorytellingSection onOpenAuthModal={onOpenAuthModal} />
+        {/* =========================================================================
+            BLOQUE 3: EL MOTOR FISIOLÓGICO (PILARES + METODÓLOGOS CON MODAL)
+           ========================================================================= */}
+        <UnifiedPhysioEngine />
 
-        {/* 8. Tres Pilares del Sistema */}
-        <LandingFeaturesGrid />
+        {/* =========================================================================
+            BLOQUE 4: BANNER DE CONVERSIÓN DE ALTO CONTRASTE (ESTILO ATHLETICA.AI)
+           ========================================================================= */}
+        <CoachingImpactBanner onOpenAuthModal={onOpenAuthModal} />
 
-        {/* 9. Modelos Deportivos por Disciplina */}
-        <LandingDisciplineModels />
+        {/* =========================================================================
+            BLOQUE 5: PRECIOS CON SELLOS LOCALES & FAQ EN ACORDEÓN
+           ========================================================================= */}
+        <PricingAndFaqSection onOpenAuthModal={onOpenAuthModal} />
+      </main>
 
-        {/* 10. Metodología & Entrenadores de Élite Vigentes con Modal Biográfico (#metodologia) */}
-        <CoachesScienceSection />
-
-        {/* 11. Plan Único de Suscripción Oficial (#precios) */}
-        <LandingPricingSection onOpenAuthModal={onOpenAuthModal} />
-
-        {/* 12. Preguntas Frecuentes (#faq) */}
-        <LandingFaq />
-
-        {/* 13. Footer Minimalista */}
-        <LandingFooter />
-      </div>
+      {/* Footer Minimalista */}
+      <LandingFooter />
     </div>
   );
 };

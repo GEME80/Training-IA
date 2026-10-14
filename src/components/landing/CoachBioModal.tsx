@@ -68,18 +68,20 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
 
         {/* 1. Cabecera: Foto Real del Entrenador, Nombre y Título */}
         <div className="flex items-start gap-4 pr-8">
-          {coach.imageUrl && !imageError ? (
-            <img
-              src={coach.imageUrl}
-              alt={coach.name}
-              onError={() => setImageError(true)}
-              className="h-16 w-16 rounded-2xl object-cover object-top border-2 border-emerald-500/30 shadow-md shrink-0 bg-slate-100"
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-lg shadow-md shrink-0">
-              {coach.initials}
-            </div>
-          )}
+          <div className="w-14 h-14 min-w-14 max-w-14 rounded-2xl overflow-hidden border-2 border-emerald-500/30 shadow-md shrink-0 bg-slate-100">
+            {coach.imageUrl && !imageError ? (
+              <img
+                src={coach.imageUrl}
+                alt={coach.name}
+                onError={() => setImageError(true)}
+                className="w-full h-full object-cover object-top select-none"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-base shadow-md">
+                {coach.initials}
+              </div>
+            )}
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
               {coach.discipline}

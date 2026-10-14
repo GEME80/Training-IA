@@ -91,32 +91,36 @@ export const CoachesScienceSection: React.FC = () => {
             }}
           >
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Foto Real del Entrenador */}
-                  {coach.imageUrl && !failedImages[coach.id] ? (
-                    <img
-                      src={coach.imageUrl}
-                      alt={coach.name}
-                      onError={() => setFailedImages((prev) => ({ ...prev, [coach.id]: true }))}
-                      className="h-13 w-13 rounded-2xl object-cover object-top border-2 border-slate-200 shadow-sm shrink-0 bg-slate-100 group-hover:scale-105 group-hover:border-emerald-400 transition-all"
-                    />
-                  ) : (
-                    <div className="h-13 w-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-sm shadow-md shrink-0">
-                      {coach.initials}
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-lg font-black text-slate-950 group-hover:text-emerald-700 transition-colors">
+              {/* Cabecera de la Tarjeta con Avatar Fotográfico Compacto y Título */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {/* Foto Real del Entrenador (Avatar pequeño y circular de 48px) */}
+                  <div className="w-12 h-12 min-w-12 max-w-12 rounded-full overflow-hidden border-2 border-emerald-500/30 shadow-xs shrink-0 bg-slate-100 group-hover:scale-105 group-hover:border-emerald-500 transition-all">
+                    {coach.imageUrl && !failedImages[coach.id] ? (
+                      <img
+                        src={coach.imageUrl}
+                        alt={coach.name}
+                        onError={() => setFailedImages((prev) => ({ ...prev, [coach.id]: true }))}
+                        className="w-full h-full object-cover object-top select-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-xs">
+                        {coach.initials}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-black text-slate-950 truncate group-hover:text-emerald-700 transition-colors">
                       {coach.name}
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium">
+                    <p className="text-xs text-slate-500 font-medium truncate">
                       {coach.title}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-slate-400 group-hover:text-emerald-600 transition-colors">
+                <div className="flex items-center gap-1 text-slate-400 group-hover:text-emerald-600 transition-colors shrink-0">
                   <span className="text-[11px] font-mono font-bold hidden sm:inline">Ver método</span>
                   <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
                 </div>

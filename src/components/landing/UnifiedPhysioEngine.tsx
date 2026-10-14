@@ -6,25 +6,20 @@ import {
   Eye,
   Quote,
   ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
-  Pause,
-  Play,
 } from "lucide-react";
 import { CoachBioModal, CoachData } from "./CoachBioModal";
 import { PHYSIO_PILLARS } from "./physioEngineData";
 
-const AUTO_PLAY_INTERVAL = 5000; // 5 segundos por metodólogo
+const AUTO_PLAY_INTERVAL = 5000; // 5 segundos por entrenador
 
 export const UnifiedPhysioEngine: React.FC = () => {
   const [activeTabIdx, setActiveTabIdx] = useState<number>(0);
   const [selectedCoach, setSelectedCoach] = useState<CoachData | null>(null);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Rotación automática continua cada 5 segundos (solo se detiene si el usuario pausa explícitamente o abre el modal)
+  // Rotación automática continua cada 5 segundos (solo se detiene si se abre el modal biográfico)
   useEffect(() => {
-    if (isPaused || selectedCoach !== null) {
+    if (selectedCoach !== null) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -36,17 +31,9 @@ export const UnifiedPhysioEngine: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPaused, selectedCoach, activeTabIdx]);
+  }, [selectedCoach, activeTabIdx]);
 
   const activePillar = PHYSIO_PILLARS[activeTabIdx];
-
-  const handleNext = () => {
-    setActiveTabIdx((prev) => (prev + 1) % PHYSIO_PILLARS.length);
-  };
-
-  const handlePrev = () => {
-    setActiveTabIdx((prev) => (prev - 1 + PHYSIO_PILLARS.length) % PHYSIO_PILLARS.length);
-  };
 
   return (
     <section id="metodologia" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
@@ -68,8 +55,8 @@ export const UnifiedPhysioEngine: React.FC = () => {
         </p>
       </div>
 
-      {/* Controles de Carrusel: Selector Visual de los 4 Entrenadores */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto mb-6">
+      {/* Selector Visual de los 4 Entrenadores con Indicador de Progreso */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto mb-8">
         {PHYSIO_PILLARS.map((pillar, idx) => {
           const isActive = activeTabIdx === idx;
           return (
@@ -86,15 +73,13 @@ export const UnifiedPhysioEngine: React.FC = () => {
               {/* Barra de Progreso Activa en el Carrusel */}
               {isActive && (
                 <span
-                  key={`progress-${activeTabIdx}-${isPaused}`}
-                  className={`absolute bottom-0 left-0 h-1 bg-emerald-500 rounded-full ${
-                    isPaused ? "w-full" : "animate-[progress_5s_linear]"
-                  }`}
+                  key={`progress-${activeTabIdx}`}
+                  className="absolute bottom-0 left-0 h-1 bg-emerald-500 rounded-full animate-[progress_5s_linear]"
                   style={{ animationDuration: `${AUTO_PLAY_INTERVAL}ms` }}
                 />
               )}
 
-              {/* Avatar Compacto del Metodólogo */}
+              {/* Avatar Compacto del Entrenador */}
               <div className="w-10 h-10 min-w-10 max-w-10 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-2xs shrink-0">
                 <img
                   src={pillar.coach.imageUrl}
@@ -114,50 +99,6 @@ export const UnifiedPhysioEngine: React.FC = () => {
             </button>
           );
         })}
-      </div>
-
-      {/* Barra de Navegación del Carrusel (Flechas + Pausa + Indicador) */}
-      <div className="flex items-center justify-between max-w-5xl mx-auto px-2 mb-4 text-xs font-mono text-slate-500">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-            title="Entrenador anterior"
-          >
-            <ChevronLeft className="w-4 h-4" strokeWidth={1.75} />
-          </button>
-          <button
-            type="button"
-            onClick={handleNext}
-            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
-            title="Siguiente entrenador"
-          >
-            <ChevronRight className="w-4 h-4" strokeWidth={1.75} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsPaused((prev) => !prev)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] transition cursor-pointer"
-          >
-            {isPaused ? (
-              <>
-                <Play className="w-3 h-3 text-emerald-600 fill-emerald-600" />
-                <span>Reanudar rotación</span>
-              </>
-            ) : (
-              <>
-                <Pause className="w-3 h-3 text-slate-500" />
-                <span>Pausar</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="text-[11px]">
-          Entrenador <span className="font-bold text-slate-900">{activeTabIdx + 1}</span> de{" "}
-          <span className="font-bold text-slate-900">{PHYSIO_PILLARS.length}</span> (rotación automática cada 5s)
-        </div>
       </div>
 
       {/* Tarjeta Principal del Entrenador Activo con Transición Fluida */}
@@ -197,7 +138,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
             </div>
           </div>
 
-          {/* Columna Derecha: Tarjeta Clickeable del Metodólogo de Élite (lg:col-span-5) */}
+          {/* Columna Derecha: Tarjeta Clickeable del Entrenador (lg:col-span-5) */}
           <div className="lg:col-span-5">
             <div
               onClick={() => setSelectedCoach(activePillar.coach)}

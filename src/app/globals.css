@@ -109,6 +109,12 @@ header {
   color: #ffffff !important;
 }
 
+/* Chasis negro elegante del smartphone en showcase */
+.phone-chassis-black {
+  background-color: #020617 !important;
+  border-color: #0f172a !important;
+}
+
 /* Contenedores de sub-bloques, gráficas y sintaxis en gris ultra-claro */
 .rounded-lg.bg-slate-950\/90,
 .rounded-xl.bg-slate-950\/60,

@@ -138,8 +138,11 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
             </button>
           </div>
 
-          {/* Maqueta del Smartphone (340x660 aprox con pantalla de alta fidelidad) */}
-          <div className="relative w-full max-w-[340px] h-[660px] rounded-[48px] bg-slate-950 p-3 shadow-2xl shadow-emerald-500/10 ring-1 ring-slate-800 border-4 border-slate-800 flex flex-col">
+          {/* Maqueta del Smartphone (Chasis Negro Azabache / Black Titanium) */}
+          <div
+            style={{ backgroundColor: "#020617", borderColor: "#0f172a" }}
+            className="phone-chassis-black relative w-full max-w-[340px] h-[660px] rounded-[50px] p-3 shadow-2xl shadow-black/50 ring-2 ring-black border-[5px] flex flex-col select-none"
+          >
             {isTapTriggered && (
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-emerald-400/30 animate-ping pointer-events-none z-30" />
             )}

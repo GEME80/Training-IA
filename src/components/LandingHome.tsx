@@ -6,7 +6,6 @@ import { HeroSection } from "./landing/HeroSection";
 import { EcosystemTicker } from "./landing/EcosystemTicker";
 import { AppMotionShowcase } from "./landing/AppMotionShowcase";
 import { UnifiedPhysioEngine } from "./landing/UnifiedPhysioEngine";
-import { CoachingImpactBanner } from "./landing/CoachingImpactBanner";
 import { PricingAndFaqSection } from "./landing/PricingAndFaqSection";
 import { LandingFooter } from "./landing/LandingFooter";
 import { useAuth } from "@/context/AuthContext";
@@ -151,17 +150,12 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         <AppMotionShowcase onOpenAuthModal={onOpenAuthModal} />
 
         {/* =========================================================================
-            BLOQUE 3: EL MOTOR FISIOLÓGICO (PILARES + METODÓLOGOS CON MODAL)
+            BLOQUE 3: EL MOTOR METODOLÓGICO Y CIENTÍFICO (CON CAROUSEL AUTOMÁTICO)
            ========================================================================= */}
         <UnifiedPhysioEngine />
 
         {/* =========================================================================
-            BLOQUE 4: BANNER DE CONVERSIÓN DE ALTO CONTRASTE (ESTILO ATHLETICA.AI)
-           ========================================================================= */}
-        <CoachingImpactBanner onOpenAuthModal={onOpenAuthModal} />
-
-        {/* =========================================================================
-            BLOQUE 5: PRECIOS CON SELLOS LOCALES & FAQ EN ACORDEÓN
+            BLOQUE 4: PRECIOS CON SELLOS LOCALES & FAQ EN ACORDEÓN
            ========================================================================= */}
         <PricingAndFaqSection onOpenAuthModal={onOpenAuthModal} />
       </main>

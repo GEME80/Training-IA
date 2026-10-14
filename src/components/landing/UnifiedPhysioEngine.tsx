@@ -14,7 +14,7 @@ import {
 import { CoachBioModal, CoachData } from "./CoachBioModal";
 import { PHYSIO_PILLARS } from "./physioEngineData";
 
-const AUTO_PLAY_INTERVAL = 6000; // 6 segundos por metodólogo
+const AUTO_PLAY_INTERVAL = 5000; // 5 segundos por metodólogo
 
 export const UnifiedPhysioEngine: React.FC = () => {
   const [activeTabIdx, setActiveTabIdx] = useState<number>(0);
@@ -22,7 +22,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Rotación automática tipo carrusel con pausa al interactuar o abrir modal
+  // Rotación automática continua cada 5 segundos (solo se detiene si el usuario pausa explícitamente o abre el modal)
   useEffect(() => {
     if (isPaused || selectedCoach !== null) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -36,7 +36,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPaused, selectedCoach]);
+  }, [isPaused, selectedCoach, activeTabIdx]);
 
   const activePillar = PHYSIO_PILLARS[activeTabIdx];
 
@@ -49,12 +49,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
   };
 
   return (
-    <section
-      id="metodologia"
-      className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
+    <section id="metodologia" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
       {/* Cabecera del Motor con Branding PULSE AI */}
       <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-2xs">
@@ -81,10 +76,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
             <button
               key={pillar.id}
               type="button"
-              onClick={() => {
-                setActiveTabIdx(idx);
-                setSelectedCoach(pillar.coach);
-              }}
+              onClick={() => setActiveTabIdx(idx)}
               className={`relative text-left p-3 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden flex items-center gap-3 ${
                 isActive
                   ? "bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 scale-[1.02]"
@@ -96,7 +88,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
                 <span
                   key={`progress-${activeTabIdx}-${isPaused}`}
                   className={`absolute bottom-0 left-0 h-1 bg-emerald-500 rounded-full ${
-                    isPaused ? "w-full" : "animate-[progress_6s_linear]"
+                    isPaused ? "w-full" : "animate-[progress_5s_linear]"
                   }`}
                   style={{ animationDuration: `${AUTO_PLAY_INTERVAL}ms` }}
                 />
@@ -164,14 +156,14 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
         <div className="text-[11px]">
           Metodólogo <span className="font-bold text-slate-900">{activeTabIdx + 1}</span> de{" "}
-          <span className="font-bold text-slate-900">{PHYSIO_PILLARS.length}</span> (auto-rotación activa)
+          <span className="font-bold text-slate-900">{PHYSIO_PILLARS.length}</span> (auto-rotación cada 5s)
         </div>
       </div>
 
-      {/* Tarjeta Principal del Metodólogo Activo (2 Columnas con Clic Directo al Modal) */}
+      {/* Tarjeta Principal del Metodólogo Activo con Transición Fluida */}
       <div
-        onClick={() => setSelectedCoach(activePillar.coach)}
-        className="bg-white rounded-3xl border border-slate-200/90 hover:border-emerald-400 shadow-xl hover:shadow-2xl p-6 sm:p-10 transition-all duration-300 cursor-pointer group relative"
+        key={activePillar.id}
+        className="bg-white rounded-3xl border border-slate-200/90 hover:border-emerald-400 shadow-xl p-6 sm:p-10 transition-all duration-300 relative group"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Columna Izquierda: La Regla Biomecánica (lg:col-span-7) */}
@@ -205,12 +197,15 @@ export const UnifiedPhysioEngine: React.FC = () => {
             </div>
           </div>
 
-          {/* Columna Derecha: El Metodólogo de Élite (lg:col-span-5) */}
+          {/* Columna Derecha: Tarjeta Clickeable del Metodólogo de Élite (lg:col-span-5) */}
           <div className="lg:col-span-5">
-            <div className="bg-slate-50/90 group-hover:bg-emerald-50/40 rounded-2xl border border-slate-200 group-hover:border-emerald-300 p-6 space-y-4 text-left shadow-2xs transition-all">
+            <div
+              onClick={() => setSelectedCoach(activePillar.coach)}
+              className="bg-slate-50/90 hover:bg-emerald-50/50 rounded-2xl border border-slate-200 hover:border-emerald-300 p-6 space-y-4 text-left shadow-2xs transition-all cursor-pointer hover:scale-[1.01]"
+            >
               {/* Foto compacta y datos del entrenador */}
               <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 min-w-14 max-w-14 rounded-2xl overflow-hidden border-2 border-emerald-500/50 shadow-xs shrink-0 bg-white group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 min-w-14 max-w-14 rounded-2xl overflow-hidden border-2 border-emerald-500/50 shadow-xs shrink-0 bg-white">
                   <img
                     src={activePillar.coach.imageUrl}
                     alt={activePillar.coach.name}
@@ -243,7 +238,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
                     e.stopPropagation();
                     setSelectedCoach(activePillar.coach);
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 group-hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
                   <span>Ver biografía y metodología completa de {activePillar.coach.name}</span>

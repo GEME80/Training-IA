@@ -67,27 +67,46 @@ header {
 
 /* Override de fondos oscuros a tarjetas blancas limpias con sombra sutil y bordes precisos */
 .card-gradient,
-.bg-slate-950,
-.bg-slate-950\/90,
-.bg-slate-950\/80,
-.bg-slate-950\/60,
-.bg-slate-950\/40,
-.bg-slate-900,
-.bg-slate-900\/90,
-.bg-slate-900\/80,
-.bg-slate-900\/60,
-.bg-slate-900\/50,
-.bg-slate-900\/40,
-.from-slate-900,
-.from-slate-950,
-.via-slate-900,
-.via-slate-900\/90,
-.via-slate-950,
-.to-slate-900,
-.to-slate-950 {
+.bg-slate-950:not(.telemetry-card-bg):not(.preserve-dark),
+.bg-slate-950\/90:not(.telemetry-hud-box):not(.preserve-dark),
+.bg-slate-950\/80:not(.preserve-dark),
+.bg-slate-950\/60:not(.preserve-dark),
+.bg-slate-950\/40:not(.preserve-dark),
+.bg-slate-900:not(.telemetry-card-bg):not(.preserve-dark),
+.bg-slate-900\/90:not(.preserve-dark),
+.bg-slate-900\/80:not(.preserve-dark),
+.bg-slate-900\/60:not(.preserve-dark),
+.bg-slate-900\/50:not(.preserve-dark),
+.bg-slate-900\/40:not(.preserve-dark),
+.from-slate-900:not(.preserve-dark),
+.from-slate-950:not(.preserve-dark),
+.via-slate-900:not(.preserve-dark),
+.via-slate-900\/90:not(.preserve-dark),
+.via-slate-950:not(.preserve-dark),
+.to-slate-900:not(.preserve-dark),
+.to-slate-950:not(.preserve-dark) {
   background-color: #ffffff !important;
   background-image: none !important;
   border-color: #e2e8f0 !important;
+}
+
+/* Preservar telemetría deportiva cinematográfica oscura y marco de video */
+.telemetry-card-bg {
+  background-color: #020617 !important;
+  color: #ffffff !important;
+}
+.telemetry-card-bg .text-white,
+.telemetry-card-bg .hud-text-white {
+  color: #ffffff !important;
+}
+.telemetry-hud-box {
+  background-color: rgba(2, 6, 23, 0.94) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+  color: #ffffff !important;
+}
+.telemetry-hud-box .text-white,
+.telemetry-hud-box .hud-white {
+  color: #ffffff !important;
 }
 
 /* Contenedores de sub-bloques, gráficas y sintaxis en gris ultra-claro */

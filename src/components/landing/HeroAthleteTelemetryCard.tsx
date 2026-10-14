@@ -1,30 +1,100 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Zap, Activity, CheckCircle2 } from "lucide-react";
+import { Zap, Activity, CheckCircle2, Waves, Flame, RefreshCw } from "lucide-react";
 
 /**
  * HeroAthleteTelemetryCard
  * 
- * Tarjeta cinemática de telemetría deportiva con video en alta definición (H.264)
- * y fotografía de respaldo poster instantánea para garantizar máxima fluidez.
+ * Tarjeta cinemática de telemetría deportiva con video cristalino de alta definición
+ * y motor multideporte agnóstico a marcas (Natación, Ciclismo, Carrera).
  */
 const VIDEO_SRC = "/videos/hero-athlete.mp4";
 const POSTER_IMAGE = "/images/hero-athlete.jpg";
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1200&auto=format&fit=crop";
 
+interface SportTelemetry {
+  id: string;
+  sportLabel: string;
+  badgeLabel: string;
+  badgeIcon: React.ElementType;
+  primaryValue: string;
+  primaryUnit: string;
+  primaryLabel: string;
+  secondaryValue: string;
+  secondaryUnit: string;
+  secondaryLabel: string;
+  tertiaryValue: string;
+  tertiaryLabel: string;
+  sessionGoal: string;
+  sessionRule: string;
+}
+
+const SPORTS_TELEMETRY: SportTelemetry[] = [
+  {
+    id: "swim",
+    sportLabel: "Natación",
+    badgeLabel: "PULSE HYDRO · RITMO CSS",
+    badgeIcon: Waves,
+    primaryValue: "1:22",
+    primaryUnit: "/100m",
+    primaryLabel: "Ritmo Crítico CSS",
+    secondaryValue: "32",
+    secondaryUnit: "br/min",
+    secondaryLabel: "Eficiencia SWOLF 31",
+    tertiaryValue: "+12 TSB",
+    tertiaryLabel: "Forma Óptima",
+    sessionGoal: "Meta: Triatlón 70.3 & Aguas Abiertas",
+    sessionRule: "3.200m Fraccionados VT2",
+  },
+  {
+    id: "bike",
+    sportLabel: "Ciclismo",
+    badgeLabel: "PULSE POWER · FTP & COGGAN",
+    badgeIcon: Zap,
+    primaryValue: "285",
+    primaryUnit: "W NP",
+    primaryLabel: "Potencia Normalizada",
+    secondaryValue: "92",
+    secondaryUnit: "rpm",
+    secondaryLabel: "Cadencia · IF 0.88",
+    tertiaryValue: "+12 TSB",
+    tertiaryLabel: "Forma Óptima",
+    sessionGoal: "Meta: Gran Fondo 160K",
+    sessionRule: "2h 30m SweetSpot Z4",
+  },
+  {
+    id: "run",
+    sportLabel: "Carrera",
+    badgeLabel: "PULSE RUN · POTENCIA & VDOT",
+    badgeIcon: Flame,
+    primaryValue: "336",
+    primaryUnit: "W",
+    primaryLabel: "Potencia Crítica (CP)",
+    secondaryValue: "3:45",
+    secondaryUnit: "/km",
+    secondaryLabel: "Ritmo Específico VDOT",
+    tertiaryValue: "+12 TSB",
+    tertiaryLabel: "Forma Óptima",
+    sessionGoal: "Meta: Maratón Tokio 2027",
+    sessionRule: "1h 45m Canova Z4",
+  },
+];
+
+const ROTATION_INTERVAL = 4500; // 4.5 segundos por disciplina
+
 export const HeroAthleteTelemetryCard: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
+  const [activeSportIdx, setActiveSportIdx] = useState<number>(0);
   const [imgSrc, setImgSrc] = useState<string>(POSTER_IMAGE);
 
-  // Inicialización de reproducción nativa silenciada (política estricta de navegadores)
+  // Inicialización de video nativo con autoplay silenciado
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Asignación explícita de propiedades DOM requeridas por Safari y Chrome
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
@@ -36,24 +106,33 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
     if (playPromise !== undefined) {
       playPromise
         .then(() => setIsVideoPlaying(true))
-        .catch(() => {
-          // Autoplay silenciado diferido hasta que haya buffer listo
-          setIsVideoPlaying(false);
-        });
+        .catch(() => setIsVideoPlaying(false));
     }
   }, []);
+
+  // Rotación automática de telemetría deportiva
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSportIdx((prev) => (prev + 1) % SPORTS_TELEMETRY.length);
+    }, ROTATION_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentSport = SPORTS_TELEMETRY[activeSportIdx];
+  const BadgeIcon = currentSport.badgeIcon;
 
   return (
     <div className="relative w-full max-w-md lg:max-w-none mx-auto select-none">
       {/* Resplandor ambiental exterior en verde esmeralda */}
       <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-cyan-500/20 rounded-[32px] blur-xl opacity-75 pointer-events-none" />
 
-      {/* Contenedor principal con marco cinemático 4/5 blindado */}
+      {/* Contenedor principal con marco cinemático 4/5 */}
       <div
         style={{ backgroundColor: "#020617" }}
         className="telemetry-card-bg rounded-3xl overflow-hidden shadow-2xl border border-slate-700/80 aspect-[4/5] relative group"
       >
-        {/* Capa 1: Fotografía Poster Base de Alta Resolución (visible siempre como fondo) */}
+        {/* Capa 1: Fotografía Poster Base de Alta Resolución (visible siempre como respaldo) */}
         <img
           src={imgSrc}
           onError={() => {
@@ -65,7 +144,7 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
           className="absolute inset-0 w-full h-full object-cover object-center select-none"
         />
 
-        {/* Capa 2: Video Cinemático en Bucle Autoplay (se superpone al reproducirse) */}
+        {/* Capa 2: Video Cinemático NÍTIDO sin filtro velado */}
         <video
           ref={videoRef}
           src={VIDEO_SRC}
@@ -75,16 +154,23 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
           playsInline
           preload="auto"
           onPlaying={() => setIsVideoPlaying(true)}
-          className={`absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-700 select-none ${
-            isVideoPlaying ? "opacity-100" : "opacity-90"
-          }`}
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 select-none opacity-100"
         />
 
-        {/* Capa 3: Gradiente cinemático de protección de contraste para HUD */}
+        {/* Capa 3A: Gradiente sutil SUPERIOR para contraste de píldoras (centro 100% limpio) */}
         <div
           style={{
             background:
-              "linear-gradient(to top, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.4) 45%, rgba(2,6,23,0.2) 100%)",
+              "linear-gradient(to bottom, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.2) 15%, transparent 28%)",
+          }}
+          className="absolute inset-0 pointer-events-none"
+        />
+
+        {/* Capa 3B: Gradiente sutil INFERIOR para contraste de la tarjeta HUD (centro 100% limpio) */}
+        <div
+          style={{
+            background:
+              "linear-gradient(to top, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.4) 25%, transparent 45%)",
           }}
           className="absolute inset-0 pointer-events-none"
         />
@@ -115,52 +201,84 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
           </div>
         </div>
 
-        {/* Tarjeta HUD Flotante (Glassmorphism de Alto Contraste en la Base) */}
+        {/* Tarjeta HUD Flotante Multideporte (Glassmorphism de Alto Contraste) */}
         <div
-          style={{ backgroundColor: "rgba(2, 6, 23, 0.94)", borderColor: "rgba(51, 65, 85, 0.85)" }}
-          className="telemetry-hud-box absolute bottom-4 inset-x-4 p-4 sm:p-5 border rounded-2xl space-y-3 shadow-2xl z-20"
+          style={{ backgroundColor: "rgba(2, 6, 23, 0.92)", borderColor: "rgba(51, 65, 85, 0.85)" }}
+          className="telemetry-hud-box absolute bottom-4 inset-x-4 p-4 sm:p-5 border rounded-2xl space-y-3 shadow-2xl z-20 backdrop-blur-md"
         >
-          {/* Fila 1: Potenciómetro Stryd & Meta de Temporada */}
+          {/* Fila 1: Selector / Título Multideporte y Meta */}
           <div className="flex items-center justify-between text-[11px] font-mono border-b border-slate-800 pb-2">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-              <Zap className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400" strokeWidth={1.75} />
-              <span className="text-emerald-400">STRYD RUN POWER</span>
+            <div className="flex items-center gap-1.5 text-emerald-400 font-bold transition-all">
+              <BadgeIcon className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400" strokeWidth={1.75} />
+              <span className="tracking-tight">{currentSport.badgeLabel}</span>
             </div>
-            <span className="text-slate-300">Meta: Maratón Tokio 2027</span>
+
+            {/* Chips de Selección Rápida de Deporte */}
+            <div className="flex items-center gap-1">
+              {SPORTS_TELEMETRY.map((s, idx) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setActiveSportIdx(idx)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                    activeSportIdx === idx
+                      ? "bg-emerald-500 text-slate-950 shadow-xs"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                  title={`Ver telemetría de ${s.sportLabel}`}
+                >
+                  {s.sportLabel.slice(0, 3)}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Fila 2: Métricas en Tiempo Real (Potencia, Ritmo y HRV) */}
-          <div className="grid grid-cols-3 gap-2 items-baseline text-left">
+          {/* Fila 2: Métricas Dinámicas del Deporte Activo */}
+          <div key={currentSport.id} className="grid grid-cols-3 gap-2 items-baseline text-left animate-fadeIn">
             <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Potencia</div>
+              <div className="text-[10px] font-mono text-slate-400 uppercase truncate">
+                {currentSport.primaryLabel}
+              </div>
               <div className="text-xl sm:text-2xl font-black font-mono text-emerald-400 tracking-tight">
-                336 <span className="text-xs font-normal text-slate-300">W</span>
+                {currentSport.primaryValue}{" "}
+                <span className="text-xs font-normal text-slate-300">
+                  {currentSport.primaryUnit}
+                </span>
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Ritmo Stryd</div>
+              <div className="text-[10px] font-mono text-slate-400 uppercase truncate">
+                {currentSport.secondaryLabel}
+              </div>
               <div className="text-sm sm:text-base font-bold font-mono text-white">
-                3:45 <span className="text-[10px] font-normal text-slate-400">/km</span>
+                {currentSport.secondaryValue}{" "}
+                <span className="text-[10px] font-normal text-slate-400">
+                  {currentSport.secondaryUnit}
+                </span>
               </div>
             </div>
 
             <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Estado HRV</div>
+              <div className="text-[10px] font-mono text-slate-400 uppercase truncate">
+                {currentSport.tertiaryLabel}
+              </div>
               <div className="text-xs sm:text-sm font-bold font-mono text-cyan-400 flex items-center gap-1">
                 <Activity className="h-3 w-3 text-cyan-400" strokeWidth={1.75} />
-                <span>+12 TSB</span>
+                <span>{currentSport.tertiaryValue}</span>
               </div>
             </div>
           </div>
 
-          {/* Fila 3: Sincronización de Dispositivo y Bloque de Canova */}
+          {/* Fila 3: Sincronización Universal y Prescripción de Sesión */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px] font-mono text-slate-400">
-            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-              <CheckCircle2 className="h-3 w-3" strokeWidth={1.75} />
-              <span>Sincronizado con Garmin</span>
+            <span className="flex items-center gap-1 text-emerald-400 font-semibold truncate">
+              <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+              <span>Sincronización Multidispositivo</span>
             </span>
-            <span className="text-slate-300 font-medium">1h 45m Canova Z4</span>
+            <span className="text-slate-300 font-medium truncate ml-2">
+              {currentSport.sessionRule}
+            </span>
           </div>
         </div>
       </div>

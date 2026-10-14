@@ -1,20 +1,29 @@
 "use client";
 
 import React, { useState } from "react";
-import { Zap, Activity, CheckCircle2, Radio } from "lucide-react";
+import { Zap, Activity, CheckCircle2 } from "lucide-react";
 
 /**
  * HeroAthleteTelemetryCard
  * 
- * Tarjeta cinemática de telemetría deportiva con fotografía de atleta en acción.
- * Imagen personalizable en: public/images/hero-athlete.jpg
- * Cuenta con fallback automático para garantizar que jamás quede un recuadro blanco vacío.
+ * Tarjeta cinemática de telemetría deportiva con soporte para VIDEO o FOTOGRAFÍA en alta definición.
+ * 
+ * 🎬 CÓMO CARGAR TU VIDEO:
+ * 1. Guarda tu video en formato .mp4 (preferiblemente optimizado en H.264 o WebM) en:
+ *    public/videos/hero-athlete.mp4
+ * 2. O cambia la constante VIDEO_SRC por una URL de tu CDN o almacenamiento externo.
+ * 
+ * Si no hay video o tarda en cargar, el sistema muestra automáticamente la fotografía
+ * poster (/images/hero-athlete.jpg) garantizando cero cuadros vacíos.
  */
+const VIDEO_SRC = "/videos/hero-athlete.mp4";
+const POSTER_IMAGE = "/images/hero-athlete.jpg";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1200&auto=format&fit=crop";
+
 export const HeroAthleteTelemetryCard: React.FC = () => {
-  // Imagen local editable por el usuario con fallback deportivo de alta definición
-  const [imgSrc, setImgSrc] = useState<string>("/images/hero-athlete.jpg");
-  const fallbackImg =
-    "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1200&auto=format&fit=crop";
+  const [useVideo, setUseVideo] = useState<boolean>(true);
+  const [imgSrc, setImgSrc] = useState<string>(POSTER_IMAGE);
 
   return (
     <div className="relative w-full max-w-md lg:max-w-none mx-auto select-none">
@@ -23,17 +32,34 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
 
       {/* Contenedor principal con marco cinemático 4/5 */}
       <div className="rounded-3xl overflow-hidden shadow-2xl border border-slate-200/90 dark:border-slate-800 aspect-[4/5] bg-slate-950 relative group">
-        {/* Fotografía de Alta Resolución del Atleta */}
-        <img
-          src={imgSrc}
-          onError={() => {
-            if (imgSrc !== fallbackImg) {
-              setImgSrc(fallbackImg);
-            }
-          }}
-          alt="Atleta de resistencia ejecutando serie con telemetría en tiempo real"
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 select-none"
-        />
+        {/* Reproductor de Video Cinemático en Bucle Autoplay Muted */}
+        {useVideo ? (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            poster={POSTER_IMAGE}
+            onError={() => setUseVideo(false)}
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 select-none"
+          >
+            <source src={VIDEO_SRC} type="video/mp4" />
+            <source src="/videos/hero-athlete.webm" type="video/webm" />
+          </video>
+        ) : (
+          /* Fotografía de Alta Resolución (Fallback si el video no existe o da error) */
+          <img
+            src={imgSrc}
+            onError={() => {
+              if (imgSrc !== FALLBACK_IMAGE) {
+                setImgSrc(FALLBACK_IMAGE);
+              }
+            }}
+            alt="Atleta de resistencia ejecutando serie con telemetría en tiempo real"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 select-none"
+          />
+        )}
 
         {/* Gradiente cinematográfico de protección de contraste para HUD */}
         <div className="bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20 absolute inset-0 pointer-events-none" />

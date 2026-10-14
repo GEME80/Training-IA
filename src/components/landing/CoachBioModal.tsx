@@ -129,7 +129,7 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </p>
           <div className="flex items-center gap-1.5 pt-1 text-[11px] text-emerald-700 font-mono">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={1.75} />
-            <span>Regla Algorítmica SSOT Activa en el Motor</span>
+            <span>Metodología Científica Activa en tu Plan</span>
           </div>
         </div>
 

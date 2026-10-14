@@ -28,7 +28,7 @@ export const CoachingImpactBanner: React.FC<CoachingImpactBannerProps> = ({ onOp
 
           {/* Subtítulo */}
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
-            Eleva tu rendimiento deportivo con la precisión de la potencia Stryd, el cuidado fisiológico de tu HRV y la asistencia continua de tu Head Coach digital.
+            Eleva tu rendimiento deportivo entrenando a los ritmos y vatios exactos para tu cuerpo, respetando tu recuperación biológica (HRV) y con la guía 24/7 de tu entrenador de inteligencia artificial.
           </p>
 
           {/* Botón de Alto Contraste y Micro-copy */}

@@ -11,12 +11,12 @@ interface BrandItem {
 }
 
 const BRANDS: BrandItem[] = [
-  { name: "Garmin Connect", sub: "Forerunner & Edge", logoSrc: "/brands/garmin.png" },
-  { name: "Coros Training Hub", sub: "Apex & Pace Series", logoSrc: "/brands/coros.png" },
-  { name: "Stryd Running Power", sub: "Potencia Crítica CP", logoSrc: "/brands/stryd.png" },
-  { name: "Intervals.icu", sub: "API Telemetría", logoSrc: "/brands/intervals.png" },
+  { name: "Garmin Connect", sub: "Relojes GPS & Sensores", logoSrc: "/brands/garmin.png" },
+  { name: "Coros Training Hub", sub: "Pace, Apex & Pulsómetros", logoSrc: "/brands/coros.png" },
+  { name: "Stryd", sub: "Potencia de Carrera (Vatios)", logoSrc: "/brands/stryd.png" },
+  { name: "Intervals.icu", sub: "Sincronización Automática", logoSrc: "/brands/intervals.png" },
   { name: "Strava", sub: "Comunidad & Segmentos", isStrava: true },
-  { name: "Google Gemini", sub: "Inferencia Fisiológica", isGemini: true },
+  { name: "Google Gemini", sub: "Inteligencia Artificial Adaptativa", isGemini: true },
 ];
 
 export const EcosystemTicker: React.FC = () => {
@@ -26,7 +26,7 @@ export const EcosystemTicker: React.FC = () => {
     <section id="ecosistema" className="py-7 w-full overflow-hidden border-y border-slate-200/80 bg-white">
       <div className="max-w-7xl mx-auto px-4 text-center mb-3">
         <span className="text-[11px] font-mono font-bold tracking-widest text-slate-500 uppercase">
-          Ecosistema Compatible • Sincronización Automática en Segundo Plano
+          Ecosistema Compatible • Sincronización Automática con tus Dispositivos
         </span>
       </div>
 

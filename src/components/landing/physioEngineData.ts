@@ -17,17 +17,17 @@ export interface PhysioPillar {
 export const PHYSIO_PILLARS: PhysioPillar[] = [
   {
     id: "canova",
-    tabTitle: "Cap Biomecánico 3h",
+    tabTitle: "Tope Seguro de 3 Horas",
     coachName: "Renato Canova",
     coachRole: "Maratón Olímpico",
     tabIcon: Shield,
-    ruleTitle: "Tope Biomecánico de 3 Horas y Asimilación 3:1",
+    ruleTitle: "Límite Seguro de 3 Horas y Asimilación 3:1",
     ruleDescription:
-      "La ciencia moderna demostró que superar las 3 horas de carrera continua en fondos dominicales destruye tejido conectivo sin generar adaptaciones mitocondriales adicionales.",
+      "La ciencia demostró que correr más de 3 horas continuas en tus fondos dominicales aumenta drásticamente el riesgo de lesiones y desgaste articular, sin aportar beneficios adicionales de resistencia.",
     bullets: [
-      "Bloqueo estricto a 3 horas de tirada larga para blindar tendones, sóleos y rodillas contra sobreentrenamiento.",
-      "Fraccionamiento de fondos con bloques específicos al 98-102% del ritmo maratón según tu potencia crítica.",
-      "Periodización con ciclos 3:1: tres microciclos de carga progresiva seguidos por una semana de asimilación obligatoria.",
+      "Límite automático de 3 horas en tiradas largas para proteger tendones, sóleos y rodillas del sobreentrenamiento.",
+      "Fondos divididos en bloques fraccionados a tu ritmo objetivo de maratón, enseñándole a tu cuerpo a sostener la velocidad de carrera.",
+      "Ciclos 3:1: tres semanas de aumento progresivo de entrenamiento seguidas por una semana de asimilación (descanso activo) para absorber la carga.",
     ],
     coach: {
       id: "canova",
@@ -36,28 +36,28 @@ export const PHYSIO_PILLARS: PhysioPillar[] = [
       imageUrl: "/coaches/renato-canova.png",
       title: "Entrenador Olímpico de Maratón (Kenia e Italia)",
       discipline: "Maratón de Élite",
-      focus: "Resistencia Específica al Ritmo Maratón y Cap Biomecánico de 3h",
+      focus: "Resistencia Específica al Ritmo de Carrera y Límite Seguro de 3 Horas",
       quote:
-        "La especificidad biomecánica a ritmo de carrera supera al volumen vacío. El cuerpo debe aprender a reclutar fibras rápidas en estado de glucógeno depletado.",
+        "La especificidad a ritmo de carrera supera al volumen vacío. El cuerpo debe aprender a reclutar fibras musculares eficientes cuando ya hay cansancio acumulado.",
       biomechanicalImpact:
-        "Eliminó el kilometraje basura en maratón mundial. Demostró que fondos superiores a 3 horas generan microlesiones fibrilares irreversibles, priorizando bloques fraccionados a ritmo competitivo.",
+        "Eliminó el kilometraje excesivo e innecesario en maratón mundial. Demostró que entrenamientos superiores a 3 horas generan microlesiones irreversibles, priorizando bloques fraccionados a tu ritmo real de competencia.",
       pulseApplication:
-        "Algoritmo de Cap Biomecánico de 3h en tiradas dominicales y cálculo automático de bloques fraccionados a Ritmo Específico de Maratón según tu Stryd Critical Power.",
+        "Límite automático de 3 horas en tus fondos dominicales y cálculo de series fraccionadas a tu ritmo objetivo de maratón según tu potencia y nivel actual.",
     },
   },
   {
     id: "banister",
-    tabTitle: "Adaptación Diaria HRV",
+    tabTitle: "Recuperación Diaria (HRV)",
     coachName: "Dr. Stephen Seiler",
-    coachRole: "Modelo Polarizado & Banister",
+    coachRole: "Modelo Polarizado & Recuperación",
     tabIcon: Activity,
-    ruleTitle: "Modelo Impulso-Respuesta y Variabilidad Cardíaca",
+    ruleTitle: "Variabilidad Cardíaca (HRV) y Equilibrio 80/20",
     ruleDescription:
-      "Tu sistema nervioso autónomo nunca miente. El algoritmo de Eric Banister y Stephen Seiler cruza tu HRV matutino con la carga acumulada para recalibrar la sesión del día.",
+      "Tu cuerpo avisa antes que la mente. Al medir tu HRV (Variabilidad de la Frecuencia Cardíaca) al despertar, PULSE AI detecta si estás recuperado o fatigado y ajusta la sesión del día.",
     bullets: [
-      "Lectura matutina de variabilidad cardíaca (HRV rMSSD) que detecta fatiga del sistema parasimpático antes de salir a entrenar.",
-      "Sustitución automática instantánea: si tu TSB cae bajo -10, la sesión de umbral se modula a rodaje Z1 regenerativo.",
-      "Ratio polarizado 80/20 estricto: el 80% del volumen semanal se ejecuta en Zona 1/2 real para multiplicar capilares sin estrés crónico.",
+      "Lectura matutina de HRV (Variabilidad Cardíaca) que mide tu nivel real de descanso biológico antes de que salgas a entrenar.",
+      "Ajuste automático inteligente: si tu nivel de fatiga acumulada es alto, la sesión intensa se modula a un trote suave regenerativo.",
+      "Regla 80/20 comprobada: el 80% de tus entrenamientos se hace a ritmo suave y conversacional (Zona 2) y solo el 20% a alta intensidad, evitando el agotamiento crónico.",
     ],
     coach: {
       id: "seiler",
@@ -65,59 +65,59 @@ export const PHYSIO_PILLARS: PhysioPillar[] = [
       initials: "SS",
       imageUrl: "/coaches/stephen-seiler.jpg",
       title: "Investigador Científico de Deportes de Resistencia",
-      discipline: "Modelo Polarizado & Banister",
-      focus: "Entrenamiento Polarizado 80/20 y Preservación del Umbral Z1/Z2",
+      discipline: "Modelo Polarizado 80/20",
+      focus: "Entrenamiento Polarizado 80/20 y Preservación de la Salud Muscular",
       quote:
         "El 80% del volumen debe ser verdaderamente fácil para que el 20% restante pueda ser ejecutado con máxima calidad.",
       biomechanicalImpact:
-        "Descubrió que los atletas de élite realizan el 80% de su volumen por debajo del umbral ventilatorio VT1, evitando la fatiga crónica del sistema nervioso autónomo generada en la zona gris.",
+        "Descubrió que los mejores atletas del mundo entrenan el 80% del tiempo a intensidades suaves y cómodas (Zona 2), evitando la fatiga crónica y reservando toda la energía para cuando realmente toca ir rápido (el 20% restante).",
       pulseApplication:
-        "Monitoreo del ratio de polarización semanal y modelo impulso-respuesta de Banister para calcular tu Fitness (CTL), Fatiga (ATL) y Forma (TSB) al segundo.",
+        "Control del equilibrio 80/20 semanal y cálculo diario de tu nivel de Forma (TSB), Fatiga acumulada y Condición física real a partir de tu Variabilidad Cardíaca (HRV).",
     },
   },
   {
     id: "coggan",
-    tabTitle: "Potencia Stryd & FTP",
+    tabTitle: "Entrenamiento por Vatios (FTP)",
     coachName: "Dr. Andrew Coggan",
-    coachRole: "Fisiólogo & Métricas de Vatios",
+    coachRole: "Pionero del Entrenamiento por Potencia",
     tabIcon: Zap,
-    ruleTitle: "Cuantificación por Potencia Normalizada (NP) y TSS",
+    ruleTitle: "Potencia (FTP) y Medición del Esfuerzo Real",
     ruleDescription:
-      "El pulso cardíaco sufre de deriva por calor, estrés y cafeína. Los vatios de potencia son la métrica honesta que calcula el coste fisiológico real e inmune al viento.",
+      "Las pulsaciones cardíacas varían por calor, estrés o cafeína. Medir tu esfuerzo en vatios te da el dato exacto de tu trabajo muscular, sin importar si hay viento o subidas.",
     bullets: [
-      "Prescripción en vatios exactos con Stryd Running Power y medidores de potencia ciclistas en rodillo o ruta.",
-      "Cálculo del Training Stress Score (TSS) y Factor de Intensidad (IF) para cada serie y microciclo.",
-      "Eliminación de la deriva cardíaca: mantén el mismo esfuerzo celular en subidas pronunciadas o viento en contra sin sobrecargar el miocardio.",
+      "Prescripción en vatios exactos para carrera o ciclismo, compatibles con cualquier potenciómetro o sensor deportivo.",
+      "Cálculo automático de la carga real: medimos el estrés exacto de cada sesión (TSS / Training Stress Score) para que progreses sin sobreentrenar.",
+      "Esfuerzo constante: mantén el ritmo justo en subidas o con viento en contra, protegiendo tu corazón de sobreesfuerzos innecesarios.",
     ],
     coach: {
       id: "coggan",
       name: "Dr. Andrew Coggan",
       initials: "AC",
       imageUrl: "/coaches/andrew-coggan.jpg",
-      title: "Fisiólogo del Ejercicio & Pionero de Métricas de Potencia",
-      discipline: "Ciclismo & Potencia Stryd",
-      focus: "Potencia Ciclista (FTP), Normalización (NP) y Carga TSS",
+      title: "Fisiólogo del Ejercicio & Creador del FTP y TSS",
+      discipline: "Potencia en Ciclismo y Carrera",
+      focus: "Entrenamiento por Vatios (FTP) y Medición del Esfuerzo Real (TSS)",
       quote:
-        "La potencia en vatios es la única métrica honesta e inmune al calor, fatiga acumulada o estrés externo.",
+        "La potencia en vatios es la única métrica honesta e inmune al calor, fatiga acumulada o factores externos.",
       biomechanicalImpact:
-        "Creador de los estándares mundiales de Functional Threshold Power (FTP), Potencia Normalizada (NP) y TSS. Permitió cuantificar con rigor matemático la carga metabólica real del ejercicio.",
+        "Creador de los estándares mundiales de FTP (Potencia Umbral Funcional) y TSS (Puntaje de Carga y Estrés). Permitió cuantificar con rigor matemático la energía real que exige cada entrenamiento.",
       pulseApplication:
-        "Cálculo en tiempo real de TSS, Fitness (CTL), Fatiga (ATL) y Forma (TSB). Distribución de series por % FTP en rodillo o vatios Stryd con control del factor de variabilidad.",
+        "Cálculo en tiempo real de tu carga de entrenamiento (TSS), control del esfuerzo exacto en vatios tanto en ruta como en rodillo y distribución inteligente de tus series.",
     },
   },
   {
     id: "daniels",
-    tabTitle: "Ritmos VDOT de Precisión",
+    tabTitle: "Ritmos de Carrera (VDOT)",
     coachName: "Dr. Jack Daniels",
-    coachRole: "Fisiólogo Olímpico",
+    coachRole: "Fisiólogo Olímpico de Atletismo",
     tabIcon: Timer,
-    ruleTitle: "Fórmula VDOT y Zonas Fisiológicas Específicas",
+    ruleTitle: "Fórmula VDOT: Ritmos Exactos para tu Nivel",
     ruleDescription:
-      "El Dr. Jack Daniels vinculó el consumo máximo de oxígeno (VO2max) con la economía de carrera para diseñar las zonas metabólicas más respetadas del atletismo olímpico.",
+      "El Dr. Jack Daniels creó la fórmula VDOT (Índice de Capacidad de Oxígeno y Rendimiento), que calcula los ritmos precisos para cada tipo de entrenamiento según tu marca real.",
     bullets: [
-      "Calibración de ritmos de entrenamiento (Easy, Marathon, Threshold, Interval, Repetition) según tu marca más reciente.",
-      "Estímulo óptimo del aclaramiento de lactato en series de umbral (T) al 88-92% de tu frecuencia cardíaca máxima.",
-      "Economía de carrera optimizada: series rápidas fraccionadas que mejoran la eficiencia neuromuscular con el mínimo costo biológico.",
+      "Ritmos personalizados para cada sesión: suave (recuperación), maratón (fondo), umbral (resistencia) e intervalos (velocidad).",
+      "Entrenamiento eficiente del umbral: mejora la capacidad de tu cuerpo para tolerar ritmos rápidos por más tiempo sin acumular fatiga excesiva.",
+      "Mayor velocidad con menos cansancio: series fraccionadas que enseñan a tus músculos a ser más eficientes consumiendo menos energía.",
     ],
     coach: {
       id: "daniels",
@@ -125,14 +125,14 @@ export const PHYSIO_PILLARS: PhysioPillar[] = [
       initials: "JD",
       imageUrl: "/coaches/jack-daniels.jpg",
       title: "Fisiólogo Olímpico y Creador del Sistema VDOT",
-      discipline: "Running & Fisiología",
-      focus: "Fórmula VDOT, Zonas Fisiológicas y Economía de Carrera",
+      discipline: "Atletismo & Ritmos de Precisión",
+      focus: "Fórmula VDOT (Ritmos Personalizados de Carrera) y Economía de Esfuerzo",
       quote:
         "Entrena al menor costo fisiológico posible para lograr la máxima adaptación biológica requerida.",
       biomechanicalImpact:
-        "Concibió la tabla universal VDOT correlacionando el VO2max con la economía de carrera. Estableció los ritmos exactos para cada zona demostrando su impacto específico en la capilarización celular.",
+        "Creador de las tablas universales VDOT (Índice de Rendimiento y Ritmos). Estableció los ritmos exactos para cada tipo de sesión (recuperación, fondo, umbral y series), asegurando que entrenes al paso justo sin sobrecargarte.",
       pulseApplication:
-        "Prescripción de zonas fisiológicas al milímetro. El motor clasifica automáticamente tus series de umbral (T) e intervalos (I) garantizando el estímulo metabólico óptimo sin sobrecarga neuromuscular.",
+        "Cálculo milimétrico de tus ritmos de carrera para cada distancia. El sistema calibra tus series de umbral y velocidad para que mejores tu resistencia con el menor cansancio posible.",
     },
   },
 ];

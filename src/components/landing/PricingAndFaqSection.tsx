@@ -9,16 +9,16 @@ interface PricingAndFaqSectionProps {
 
 const FAQS = [
   {
-    q: "¿Cómo se sincroniza con mi reloj Garmin o Coros?",
-    a: "Las series estructuradas viajan automáticamente a tu dispositivo mediante la integración nativa de Intervals.icu. Sales a entrenar y tu reloj pita en cada intervalo, cambio de zona de potencia o descanso prescrito sin programar nada manual.",
+    q: "¿Cómo se sincroniza con mi reloj deportivo (Garmin, Coros o Apple Watch)?",
+    a: "Tus entrenamientos viajan automáticamente a tu reloj. Al salir a entrenar, tu reloj te guiará en cada serie, intervalo de ritmo y descanso sin que tengas que programar nada manualmente.",
   },
   {
     q: "¿Qué pasa si un día no puedo entrenar o duermo mal?",
-    a: "PULSE AI recalibra la semana en tiempo real. Al registrar tu HRV matutino o notar una sesión omitida, el Head Coach reestructura los microciclos siguientes para proteger tus tendones y sostener el pico de forma.",
+    a: "PULSE AI recalibra tu semana en tiempo real. Al registrar tu nivel de descanso matutino por HRV (Variabilidad Cardíaca) o notar que omitiste una sesión, el entrenador inteligente reestructura los días siguientes para evitar sobrecargas y mantener tu progreso.",
   },
   {
-    q: "¿Necesito potenciómetro Stryd obligatoriamente?",
-    a: "No es obligatorio. El motor es compatible con potenciómetros Stryd para máxima precisión por vatios, potenciómetros de ciclismo (rodillo o ruta), o bandas de pulso cardíaco y ritmos VDOT tradicionales.",
+    q: "¿Necesito sensores costosos o potenciómetro obligatoriamente?",
+    a: "No es obligatorio. La app funciona perfecto con cualquier reloj deportivo estándar, banda de pulso cardíaco o sensores de potencia. Si entrenas solo por ritmo, calcula tus pasos ideales mediante la fórmula científica VDOT.",
   },
   {
     q: "¿Cómo cancelo mi suscripción?",
@@ -47,7 +47,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
           TRANSPARENCIA TOTAL • PLAN ÚNICO
         </span>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight">
-          Un Solo Plan. Toda la Inteligencia Fisiológica.
+          Un Solo Plan. Todo tu Entrenamiento Inteligente.
         </h2>
         {/* Anclaje de Valor (Price Anchoring) */}
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">

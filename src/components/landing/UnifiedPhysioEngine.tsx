@@ -57,14 +57,14 @@ export const UnifiedPhysioEngine: React.FC = () => {
             <img src="/pulse-icon.jpg" alt="PULSE" className="w-full h-full object-cover" />
           </div>
           <span className="font-mono uppercase tracking-wider text-[11px]">
-            PULSE AI™ · CIENCIA DEL ALTO RENDIMIENTO
+            PULSE AI™ · METODOLOGÍA CIENTÍFICA APLICADA
           </span>
         </div>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight">
-          El Motor Fisiológico que Gobierna tu Plan
+          La Metodología Científica detrás de tu Plan
         </h2>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-          Los 4 grandes metodólogos de resistencia vigentes, orquestados en tiempo real por inteligencia artificial. Haz clic en cualquiera para explorar su metodología completa.
+          Los métodos comprobados de los 4 grandes entrenadores del mundo, adaptados automáticamente a tu nivel. Haz clic en cualquiera para conocer su fórmula.
         </p>
       </div>
 
@@ -155,23 +155,23 @@ export const UnifiedPhysioEngine: React.FC = () => {
         </div>
 
         <div className="text-[11px]">
-          Metodólogo <span className="font-bold text-slate-900">{activeTabIdx + 1}</span> de{" "}
-          <span className="font-bold text-slate-900">{PHYSIO_PILLARS.length}</span> (auto-rotación cada 5s)
+          Entrenador <span className="font-bold text-slate-900">{activeTabIdx + 1}</span> de{" "}
+          <span className="font-bold text-slate-900">{PHYSIO_PILLARS.length}</span> (rotación automática cada 5s)
         </div>
       </div>
 
-      {/* Tarjeta Principal del Metodólogo Activo con Transición Fluida */}
+      {/* Tarjeta Principal del Entrenador Activo con Transición Fluida */}
       <div
         key={activePillar.id}
         className="bg-white rounded-3xl border border-slate-200/90 hover:border-emerald-400 shadow-xl p-6 sm:p-10 transition-all duration-300 relative group"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Columna Izquierda: La Regla Biomecánica (lg:col-span-7) */}
+          {/* Columna Izquierda: El Principio Científico (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-5 text-left">
             <div>
               <div className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                 <activePillar.tabIcon className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
-                <span>Regla Biomecánica Activa</span>
+                <span>Principio de Entrenamiento Activo</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-950 mt-2 tracking-tight group-hover:text-emerald-900 transition-colors">
                 {activePillar.ruleTitle}
@@ -193,7 +193,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
             <div className="flex items-center gap-2 pt-2 text-xs font-mono text-emerald-800 font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
-              <span>Orquestado en tiempo real por los algoritmos de PULSE AI™</span>
+              <span>Adaptado automáticamente a tu condición física por PULSE AI™</span>
             </div>
           </div>
 
@@ -241,7 +241,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
                   className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  <span>Ver biografía y metodología completa de {activePillar.coach.name}</span>
+                  <span>Conocer más sobre el método de {activePillar.coach.name}</span>
                 </button>
               </div>
             </div>

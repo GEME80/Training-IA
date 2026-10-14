@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Zap, Activity, CheckCircle2, Waves, Flame, RefreshCw } from "lucide-react";
+import { Zap, Activity, CheckCircle2, Waves, Flame } from "lucide-react";
 
 /**
  * HeroAthleteTelemetryCard
  * 
  * Tarjeta cinemática de telemetría deportiva con video cristalino de alta definición
- * y motor multideporte agnóstico a marcas (Natación, Ciclismo, Carrera).
+ * y motor multideporte agnóstico a marcas con explicaciones claras de métricas.
  */
 const VIDEO_SRC = "/videos/hero-athlete.mp4";
 const POSTER_IMAGE = "/images/hero-athlete.jpg";
@@ -35,50 +35,50 @@ const SPORTS_TELEMETRY: SportTelemetry[] = [
   {
     id: "swim",
     sportLabel: "Natación",
-    badgeLabel: "PULSE HYDRO · RITMO CSS",
+    badgeLabel: "NATACIÓN · RITMO CSS (Velocidad Crítica)",
     badgeIcon: Waves,
     primaryValue: "1:22",
     primaryUnit: "/100m",
-    primaryLabel: "Ritmo Crítico CSS",
+    primaryLabel: "Ritmo Umbral (CSS)",
     secondaryValue: "32",
     secondaryUnit: "br/min",
-    secondaryLabel: "Eficiencia SWOLF 31",
+    secondaryLabel: "SWOLF (Eficiencia de Brazada)",
     tertiaryValue: "+12 TSB",
-    tertiaryLabel: "Forma Óptima",
-    sessionGoal: "Meta: Triatlón 70.3 & Aguas Abiertas",
-    sessionRule: "3.200m Fraccionados VT2",
+    tertiaryLabel: "Forma Óptima (Descanso)",
+    sessionGoal: "Meta: Triatlón & Aguas Abiertas",
+    sessionRule: "3.200m Fraccionados a Ritmo Objetivo",
   },
   {
     id: "bike",
     sportLabel: "Ciclismo",
-    badgeLabel: "PULSE POWER · FTP & COGGAN",
+    badgeLabel: "CICLISMO · POTENCIA FTP (Umbral en Vatios)",
     badgeIcon: Zap,
     primaryValue: "285",
     primaryUnit: "W NP",
-    primaryLabel: "Potencia Normalizada",
+    primaryLabel: "Potencia Normalizada (NP)",
     secondaryValue: "92",
     secondaryUnit: "rpm",
-    secondaryLabel: "Cadencia · IF 0.88",
+    secondaryLabel: "Cadencia (Pedaleo Óptimo)",
     tertiaryValue: "+12 TSB",
-    tertiaryLabel: "Forma Óptima",
+    tertiaryLabel: "Forma Óptima (Descanso)",
     sessionGoal: "Meta: Gran Fondo 160K",
-    sessionRule: "2h 30m SweetSpot Z4",
+    sessionRule: "2h 30m Ritmo Controlado (Zona 4)",
   },
   {
     id: "run",
     sportLabel: "Carrera",
-    badgeLabel: "PULSE RUN · POTENCIA & VDOT",
+    badgeLabel: "CARRERA · RITMOS VDOT & POTENCIA",
     badgeIcon: Flame,
     primaryValue: "336",
     primaryUnit: "W",
-    primaryLabel: "Potencia Crítica (CP)",
+    primaryLabel: "Potencia de Carrera (Vatios)",
     secondaryValue: "3:45",
     secondaryUnit: "/km",
-    secondaryLabel: "Ritmo Específico VDOT",
+    secondaryLabel: "Ritmo Objetivo (Fórmula VDOT)",
     tertiaryValue: "+12 TSB",
-    tertiaryLabel: "Forma Óptima",
+    tertiaryLabel: "Forma Óptima (Descanso)",
     sessionGoal: "Meta: Maratón Tokio 2027",
-    sessionRule: "1h 45m Canova Z4",
+    sessionRule: "1h 45m Bloques a Ritmo de Carrera",
   },
 ];
 
@@ -233,7 +233,7 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
             </div>
           </div>
 
-          {/* Fila 2: Métricas Dinámicas del Deporte Activo */}
+          {/* Fila 2: Métricas Dinámicas del Deporte Activo con Etiquetas Claras */}
           <div key={currentSport.id} className="grid grid-cols-3 gap-2 items-baseline text-left animate-fadeIn">
             <div>
               <div className="text-[10px] font-mono text-slate-400 uppercase truncate">
@@ -274,7 +274,7 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
           <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px] font-mono text-slate-400">
             <span className="flex items-center gap-1 text-emerald-400 font-semibold truncate">
               <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} />
-              <span>Sincronización Multidispositivo</span>
+              <span>Compatible con Cualquier Reloj o Sensor</span>
             </span>
             <span className="text-slate-300 font-medium truncate ml-2">
               {currentSport.sessionRule}

@@ -63,6 +63,8 @@ export interface UserProfileData {
   visibleMetrics?: string[];
   targetRaces?: any[];
   seasonPlans?: any[];
+  termsAcceptedAt?: string;
+  termsVersion?: string;
   createdAt: string;
   lastLoginAt: string;
   updatedAt: string;

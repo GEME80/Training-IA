@@ -50,6 +50,8 @@ export const ProfileUpdateRequestSchema = z.object({
   visibleMetrics: z.array(z.string()).optional(),
   targetRaces: z.array(z.any()).optional(),
   seasonPlans: z.array(z.any()).optional(),
+  termsAcceptedAt: z.string().optional(),
+  termsVersion: z.string().optional(),
 });
 
 export type ProfileUpdateRequest = z.infer<typeof ProfileUpdateRequestSchema>;

@@ -229,6 +229,8 @@ export async function saveUserProfile(
     visibleMetrics?: string[];
     targetRaces?: any[];
     seasonPlans?: any[];
+    termsAcceptedAt?: string;
+    termsVersion?: string;
   }
 ): Promise<void> {
   if (!adminDb) return;
@@ -267,6 +269,8 @@ export async function saveUserProfile(
       visibleMetrics: data.visibleMetrics ?? existingData?.visibleMetrics,
       targetRaces: data.targetRaces ?? existingData?.targetRaces,
       seasonPlans: data.seasonPlans ?? existingData?.seasonPlans,
+      termsAcceptedAt: data.termsAcceptedAt ?? existingData?.termsAcceptedAt,
+      termsVersion: data.termsVersion ?? existingData?.termsVersion,
       createdAt: existingData?.createdAt ?? new Date().toISOString(),
       lastLoginAt: existingData?.lastLoginAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -308,9 +312,7 @@ export async function getUserProfileDecrypted(
     };
   }
 
-  if (!adminDb) {
-    return null;
-  }
+  if (!adminDb) return null;
 
   try {
     const userRef = adminDb.collection("users").doc(uid);

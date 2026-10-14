@@ -289,8 +289,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               )}
 
               {activeTab === "register" && (
-                <p className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
-                  💡 <strong>Nota:</strong> Tu solicitud será enviada al entrenador Germán Morales para su aprobación antes de poder acceder a los planes.
+                <p className="text-[10px] text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-100 leading-relaxed">
+                  Al registrarte aceptas nuestros <a href="/terms" target="_blank" className="text-emerald-600 underline font-semibold">Términos & Exención de IA</a> y la <a href="/privacy" target="_blank" className="text-emerald-600 underline font-semibold">Política de Privacidad</a>.
                 </p>
               )}
 

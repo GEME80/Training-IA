@@ -1,6 +1,5 @@
-"use client";
-
 import React from "react";
+import Link from "next/link";
 import { PulseLogo } from "../PulseLogo";
 
 export const LandingFooter: React.FC = () => {
@@ -12,11 +11,17 @@ export const LandingFooter: React.FC = () => {
           PULSE AI PRO © 2026 • Smart Endurance & Performance Coach
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-500 font-semibold">
-          <a href="#modelos" className="hover:text-cyan-700 transition">Modelos</a>
+          <a href="#metodologia" className="hover:text-emerald-700 transition">Metodología</a>
           <span>•</span>
-          <a href="#headcoaches" className="hover:text-cyan-700 transition">Head Coaches</a>
+          <a href="#faq" className="hover:text-emerald-700 transition">Preguntas</a>
           <span>•</span>
-          <a href="#faq" className="hover:text-cyan-700 transition">Preguntas</a>
+          <Link href="/terms" className="hover:text-emerald-700 text-slate-600 transition underline underline-offset-2">
+            Términos & Exención IA
+          </Link>
+          <span>•</span>
+          <Link href="/privacy" className="hover:text-emerald-700 text-slate-600 transition underline underline-offset-2">
+            Política de Privacidad
+          </Link>
         </div>
       </div>
     </footer>

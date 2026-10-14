@@ -8375,6 +8375,43 @@ Esto causaba que:
   - **Estabilización de Dirty Hash en Refresco:** Se fijaron las métricas fisiológicas de generación (`stableCtl`, `stableRunFtp`, `stableBikeFtp`, `stableThresholdPace`) usando `blueprint.athleteCtlAtCreation` y valores de perfil estables. Esto evita que el hash varíe entre 0 y el valor retornado por el fetch de telemetría, eliminando falsos positivos de sincronización en cada recarga de página.
   - **Silenciamiento de Toast en Sincronización Automática:** En `NotificationToast.tsx`, las sincronizaciones automáticas de fondo ahora se procesan de forma 100% silenciosa en la campanita de la cabecera (sin desplegar toasts flotantes en pantalla). Los toasts quedan reservados exclusivamente para acciones manuales explícitas y alertas del sistema.
 
+---
+
+## SECCIÓN 135: BLINDAJE LEGAL INTEGRAL (v5.66) — POLÍTICA DE PRIVACIDAD, TÉRMINOS DE SERVICIO CON EXENCIÓN MÉDICA & IA Y MODAL DE CONSENTIMIENTO INELUDIBLE AL INICIO DE SESIÓN
+
+### 135.1. Contexto y Objetivos de la Intervención
+- **Aprobación de OAuth 2.0 en Intervals.icu:** Cumplimiento de los requisitos formales de Intervals.icu y Google OAuth mediante el despliegue de una Política de Privacidad pública y certificada.
+- **Blindaje Jurídico Integral y Exención de Responsabilidad Médica y por IA:** Protección legal total para la plataforma PULSE AI y su dirección técnica frente a lesiones físicas, sobreentrenamiento, rabdomiólisis, eventos cardiovasculares agudos, accidentes viales durante rodadas o carreras, o desvíos/aproximaciones derivados de modelos de Inteligencia Artificial (LLMs).
+- **Consentimiento Activo e Ineludible (Gateway Legal):** Bloqueo mandatorio de la interfaz para usuarios no firmantes hasta aceptar expresamente los términos con registro de timestamp en base de datos.
+
+### 135.2. Detalle de Archivos Creados y Modificados
+1. **`src/app/privacy/page.tsx` (189 LOC) [NEW]:**
+   - Página pública accesible en `/privacy`. Detalla categorías de datos recolectados (cuenta, antropometría, telemetría deportiva de Intervals.icu), cifrado AES-256-GCM, no comercialización de datos y derechos ARCO.
+2. **`src/app/terms/page.tsx` (161 LOC) [NEW]:**
+   - Página pública accesible en `/terms`. Contrato de Términos de Servicio y Exención Médica & IA: delimitación de asistencia de IA (no médico), asunción del 100% del riesgo físico por el atleta, renuncia irrevocable a reclamos/indemnizaciones, deber de autorregulación y exclusión por averías de equipos o accidentes en vía pública.
+3. **`src/components/legal/TermsConsentModal.tsx` (175 LOC) [NEW]:**
+   - Modal bloqueante para atletas autenticados sin firma registrada (`!userProfile.termsAcceptedAt`). Resumen ejecutivo de 4 pilares, enlaces a textos completos, checkbox obligatorio interactivo y guardado atómico en `/api/profile`.
+4. **`src/lib/db/types.ts` (220 LOC) [MODIFIED]:**
+   - Incorporación de `termsAcceptedAt?: string;` y `termsVersion?: string;` en la interfaz `UserProfileData`.
+5. **`src/lib/validation/schemas.ts` (129 LOC) [MODIFIED]:**
+   - Validación tipada Zod para `termsAcceptedAt` y `termsVersion` en `ProfileUpdateRequestSchema`.
+6. **`src/lib/db/userProfile.ts` (346 LOC) [MODIFIED]:**
+   - Persistencia segura en Firestore de los campos de consentimiento legal en `saveUserProfile`.
+7. **`src/app/page.tsx` (208 LOC) [MODIFIED]:**
+   - Intercepción temprana del atleta autenticado para desplegar `<TermsConsentModal />` si no ha aceptado los términos vigentes.
+8. **`src/components/auth/AuthModal.tsx` (348 LOC) [MODIFIED]:**
+   - Inclusión de aviso legal vinculante con enlaces a `/terms` y `/privacy` en la pestaña de registro.
+9. **`src/components/landing/LandingFooter.tsx` (30 LOC) [MODIFIED]:**
+   - Enlaces visibles con `next/link` en el footer del Home hacia `Términos & Exención IA` y `Política de Privacidad`.
+
+### 135.3. Certificación del Set de Pruebas Obligatorio (Pipeline de Gobernanza)
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** 100% de los archivos creados y modificados cumplen $\le 350$ LOC ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado con código 0 (23/23 rutas Next.js empaquetadas limpiamente) ✅.
+- **Gate 4 (Scope Integrity & FinOps):** $0 USD en costos de infraestructura; persistencia atómica en Firestore únicamente tras consentimiento explícito del atleta ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Documentado detalladamente en la sección 135 ✅.
+
+
 
 
 

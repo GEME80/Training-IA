@@ -8,7 +8,6 @@ import { AthleteDashboard } from "@/components/AthleteDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { TermsConsentModal } from "@/components/legal/TermsConsentModal";
 import { purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 import { AdminImpersonationBanner } from "@/components/admin/AdminImpersonationBanner";
 import { AdminUserListItem } from "@/lib/db/types";
@@ -186,16 +185,6 @@ export default function HomePage() {
             onGeminiConnectedChange={(connected) => setIsGeminiConnected(connected)}
           />
         </div>
-      )}
-
-      {/* Modal Obligatorio de Consentimiento y Exención Legal/Médica */}
-      {user && userProfile && !userProfile.termsAcceptedAt && (
-        <TermsConsentModal
-          isOpen={true}
-          userUid={user.uid}
-          userEmail={user.email || undefined}
-          onAccepted={refreshProfile}
-        />
       )}
 
       <AuthModal

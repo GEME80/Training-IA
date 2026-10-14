@@ -8411,6 +8411,11 @@ Esto causaba que:
 - **Gate 4 (Scope Integrity & FinOps):** $0 USD en costos de infraestructura; persistencia atómica en Firestore únicamente tras consentimiento explícito del atleta ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Documentado detalladamente en la sección 135 ✅.
 
+### 135.4. Parche de Usabilidad (v5.67): Desmantelamiento de Modal Bloqueante y Reubicación Estricta al Pie de Página
+- **Desmantelamiento de Bloqueo:** Eliminado `<TermsConsentModal />` para garantizar que ningún atleta sufra bloqueos de pantalla ni errores de registro al acceder.
+- **Ubicación en Pie de Página:** Los enlaces a `Términos & Exención IA` y `Política de Privacidad` residen de manera permanente y no invasiva en el footer del Home ([`LandingFooter.tsx`](./src/components/landing/LandingFooter.tsx)) y en el pie del Dashboard de Atleta ([`AthleteDashboard.tsx`](./src/components/AthleteDashboard.tsx)).
+
+
 
 
 

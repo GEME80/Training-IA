@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { OnboardingBanner } from "./dashboard/OnboardingBanner";
 import { NotificationToast } from "./notifications/NotificationToast";
 import { AthleteSidebar, AthleteSidebarNavSection } from "./dashboard/AthleteSidebar";
@@ -274,6 +275,15 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />
           <NotificationToast />
+
+          {/* Pie de página discreto con enlaces legales */}
+          <footer className="py-6 text-center text-[11px] text-slate-400 space-x-2">
+            <span>PULSE AI PRO © 2026</span>
+            <span>•</span>
+            <Link href="/terms" target="_blank" className="hover:text-emerald-600 underline underline-offset-2">Términos & Exención IA</Link>
+            <span>•</span>
+            <Link href="/privacy" target="_blank" className="hover:text-emerald-600 underline underline-offset-2">Privacidad</Link>
+          </footer>
         </main>
         <AthleteMobileBottomNav activeSection={activeNavSection} onSelectSection={(s) => { if (s === "head_coach") selectCoachWeek(); setActiveNavSection(s); }} isIntervalsConnected={telemetry.isLiveConnected} />
       </div>

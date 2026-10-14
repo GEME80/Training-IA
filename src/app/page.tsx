@@ -22,6 +22,7 @@ export default function HomePage() {
     isDisabled,
     loading: authLoading,
     signInWithGoogle,
+    signOutUser,
   } = useAuth();
 
   const [mounted, setMounted] = useState<boolean>(false);
@@ -66,18 +67,10 @@ export default function HomePage() {
     return <RestrictedAccessView status="pending" />;
   }
 
-  // 4. Si el usuario no está autenticado -> Mostrar Header unificado + Landing Page pública con AuthModal
+  // 4. Si el usuario no está autenticado -> Mostrar Landing Page pública con LandingNavbar integrado y AuthModal
   if (!user && !userProfile) {
     return (
       <div className="min-h-screen bg-transparent text-slate-900 flex flex-col justify-between font-sans">
-        <Header
-          activeView="landing"
-          onSelectView={(v) => setCurrentView(v)}
-          onOpenSettings={() => {}}
-          onOpenAuthModal={handleOpenAuthModal}
-          isIntervalsConnected={false}
-          isGeminiConnected={false}
-        />
         <LandingHome
           onLoginWithGoogle={signInWithGoogle}
           onOpenAuthModal={handleOpenAuthModal}
@@ -99,21 +92,17 @@ export default function HomePage() {
       {/* VISTA 1: LANDING PAGE */}
       {currentView === "landing" ? (
         <div className="min-h-screen flex flex-col justify-between">
-          <Header
-            activeView="landing"
-            onSelectView={(v) => setCurrentView(v)}
-            onOpenSettings={() => {}}
-            onOpenAuthModal={handleOpenAuthModal}
-            isIntervalsConnected={isIntervalsConnected}
-            isGeminiConnected={isGeminiConnected}
-          />
           <LandingHome
             onLoginWithGoogle={signInWithGoogle}
             onOpenAuthModal={handleOpenAuthModal}
             onGoToDashboard={() => setCurrentView("dashboard")}
+            onGoToAdmin={() => setCurrentView("admin")}
             isAuthenticated={true}
             userEmail={user?.email || userProfile?.email || undefined}
             userName={userProfile?.displayName || user?.displayName || undefined}
+            photoURL={userProfile?.photoURL || user?.photoURL || undefined}
+            isAdmin={isAdmin}
+            onSignOut={signOutUser}
           />
         </div>
       ) : currentView === "admin" && isAdmin ? (

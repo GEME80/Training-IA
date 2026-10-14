@@ -2,12 +2,13 @@
 
 import React from "react";
 import { SportCanvasBackground } from "./SportCanvasBackground";
-import { LandingHero } from "./landing/LandingHero";
+import { LandingNavbar } from "./landing/LandingNavbar";
+import { HeroSection } from "./landing/HeroSection";
 import { LandingLogoCarousel } from "./landing/LandingLogoCarousel";
-import { LandingProductMockup } from "./landing/LandingProductMockup";
+import { AppMotionShowcase } from "./landing/AppMotionShowcase";
 import { LandingFeaturesGrid } from "./landing/LandingFeaturesGrid";
 import { LandingDisciplineModels } from "./landing/LandingDisciplineModels";
-import { LandingHeadCoaches } from "./landing/LandingHeadCoaches";
+import { CoachesScienceSection } from "./landing/CoachesScienceSection";
 import { LandingPricingSection } from "./landing/LandingPricingSection";
 import { LandingFaq } from "./landing/LandingFaq";
 import { LandingFooter } from "./landing/LandingFooter";
@@ -20,6 +21,10 @@ interface LandingHomeProps {
   isAuthenticated?: boolean;
   userEmail?: string;
   userName?: string;
+  photoURL?: string;
+  isAdmin?: boolean;
+  onGoToAdmin?: () => void;
+  onSignOut?: () => void;
   onOpenAuthModal?: (tab?: "login" | "register") => void;
 }
 
@@ -27,9 +32,15 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
   onLoginWithGoogle,
   onGoToDashboard,
   isAuthenticated = false,
+  userEmail,
+  userName,
+  photoURL,
+  isAdmin = false,
+  onGoToAdmin,
+  onSignOut,
   onOpenAuthModal,
 }) => {
-  const { error, clearError, user, loginAsMasterAdminDemo } = useAuth();
+  const { error, clearError, user, userProfile, loginAsMasterAdminDemo, signOutUser } = useAuth();
 
   const isConfigError = error === "FIREBASE_AUTH_NOT_CONFIGURED";
   const isUserAuthenticated = isAuthenticated || !!user;
@@ -38,6 +49,19 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
     <div className="min-h-screen bg-transparent text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white font-sans relative overflow-x-hidden">
       {/* 1. Fondo Canvas Interactivo Luminoso (fixed en z-0) */}
       <SportCanvasBackground />
+
+      {/* 2. Header / Navbar Estratégico Simplificado (Sticky z-40) */}
+      <LandingNavbar
+        isAuthenticated={isUserAuthenticated}
+        userEmail={userEmail || user?.email || undefined}
+        userName={userName || userProfile?.displayName || user?.displayName || undefined}
+        photoURL={photoURL || userProfile?.photoURL || user?.photoURL || undefined}
+        isAdmin={isAdmin}
+        onOpenAuthModal={onOpenAuthModal}
+        onGoToDashboard={onGoToDashboard}
+        onGoToAdmin={onGoToAdmin}
+        onSignOut={onSignOut || signOutUser}
+      />
 
       {/* Contenido en capa z-10 */}
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -48,14 +72,15 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
               <button
                 type="button"
                 onClick={clearError}
+                aria-label="Cerrar modal"
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" strokeWidth={1.75} />
               </button>
 
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 flex items-center justify-center text-2xl shrink-0">
-                  ⚠️
+                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 flex items-center justify-center text-2xl shrink-0 font-bold">
+                  !
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
@@ -101,7 +126,7 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
                   className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-800 transition cursor-pointer"
                 >
                   <span>Abrir Firebase Console</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-cyan-600" />
+                  <ExternalLink className="h-3.5 w-3.5 text-cyan-600" strokeWidth={1.75} />
                 </a>
                 <button
                   type="button"
@@ -115,36 +140,36 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
           </div>
         )}
 
-        {/* 2. Hero Section (1 solo CTA primario, sin ticker público sobrecargado) */}
-        <LandingHero
+        {/* 3. Hero Section Modular */}
+        <HeroSection
           isAuthenticated={isUserAuthenticated}
           onOpenAuthModal={onOpenAuthModal}
           onLoginWithGoogle={onLoginWithGoogle}
           onGoToDashboard={onGoToDashboard}
         />
 
-        {/* 3. Carrusel Continuo Infinito de Logos (Garmin, Coros, Intervals, Stryd, Google Gemini) */}
+        {/* 4. Carrusel Continuo Infinito de Logos */}
         <LandingLogoCarousel />
 
-        {/* 4. Mockup Visual en Vivo: Telemetría Real + Gráfica de Intervalos + Veredicto IA */}
-        <LandingProductMockup />
+        {/* 5. Showcase Dinámico "App en Movimiento" (#showcase) con Simulador Interactivo HRV */}
+        <AppMotionShowcase />
 
-        {/* 5. Tres Pilares del Sistema (Adaptabilidad Diaria, Cap 3h Lesiones, Sincronización Automática) */}
+        {/* 6. Tres Pilares del Sistema */}
         <LandingFeaturesGrid />
 
-        {/* 6. Modelos Deportivos por Disciplina (Running, Ciclismo, Triatlón en Tabs compactos) */}
+        {/* 7. Modelos Deportivos por Disciplina */}
         <LandingDisciplineModels />
 
-        {/* 7. Metodólogos de Autoridad (Fichas compactas de Head Coaches) */}
-        <LandingHeadCoaches />
+        {/* 8. Metodología & Entrenadores de Élite con Modal Biográfico (#metodologia) */}
+        <CoachesScienceSection />
 
-        {/* 8. Plan Único de Suscripción Oficial (SSOT Dinámico) */}
+        {/* 9. Plan Único de Suscripción Oficial (#precios) */}
         <LandingPricingSection onOpenAuthModal={onOpenAuthModal} />
 
-        {/* 9. Preguntas Frecuentes Ultra-Compactas (2 columnas, acordeón limpio) */}
+        {/* 10. Preguntas Frecuentes (#faq) */}
         <LandingFaq />
 
-        {/* 10. Footer Minimalista (Sin botones de registro redundantes) */}
+        {/* 11. Footer Minimalista */}
         <LandingFooter />
       </div>
     </div>

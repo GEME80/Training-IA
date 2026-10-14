@@ -34,7 +34,7 @@ export const LandingPricingSection: React.FC<LandingPricingSectionProps> = ({
   }, [initialPlan]);
 
   return (
-    <section className="py-20 px-4 sm:px-6 max-w-6xl mx-auto w-full relative z-10">
+    <section id="precios" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto w-full relative z-10">
       <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
         <span className="text-xs font-bold font-mono uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200">
           Transparencia Total • Plan Único

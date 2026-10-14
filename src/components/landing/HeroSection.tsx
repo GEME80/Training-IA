@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, LayoutDashboard, Sparkles, CheckCircle2, Rocket, ShieldCheck } from "lucide-react";
+import { ArrowRight, LayoutDashboard, CheckCircle2, Rocket, ShieldCheck } from "lucide-react";
 import { HeroAthleteTelemetryCard } from "./HeroAthleteTelemetryCard";
 
 interface HeroSectionProps {
@@ -22,17 +22,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Columna A: Mensaje, Autoridad y Conversión (lg:col-span-7) */}
         <div className="lg:col-span-7 space-y-6 text-left">
-          {/* Badge de Inferencia */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-            <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
-            <span>Inferencia Fisiológica con Google Gemini</span>
+          {/* Badge de Marca PULSE AI e Inferencia */}
+          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-2xs">
+            <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 border border-emerald-500/30">
+              <img src="/pulse-icon.jpg" alt="PULSE AI" className="w-full h-full object-cover" />
+            </div>
+            <span>PULSE AI™ · Motor Fisiológico con Inferencia Google Gemini</span>
           </div>
 
-          {/* Titular Principal H1 */}
+          {/* Titular Principal H1 (Simplificado y Enfocado) */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-[1.12]">
-            Tu Head Coach Inteligente que Adapta tu Entrenamiento{" "}
-            <span className="text-emerald-600 dark:text-emerald-400">
-              Cada Mañana a tu Fatiga Real.
+            Tu Head Coach Inteligente que{" "}
+            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+              Adapta tu Entrenamiento.
             </span>
           </h1>
 
@@ -107,7 +109,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
 
-        {/* Columna B: Fotografía Deportiva 4K con Telemetría HUD (lg:col-span-5) */}
+        {/* Columna B: Fotografía Deportiva con Telemetría HUD (lg:col-span-5) */}
         <div className="lg:col-span-5">
           <HeroAthleteTelemetryCard />
         </div>

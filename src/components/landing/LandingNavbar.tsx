@@ -53,7 +53,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
         {/* 1. Izquierda: Logo */}
         <div className="flex items-center shrink-0">
           <a href="#" className="flex items-center gap-2 cursor-pointer focus:outline-hidden">
-            <PulseLogo size="md" showSubtext={false} />
+            <PulseLogo size="md" showSubtext={true} />
           </a>
         </div>
 

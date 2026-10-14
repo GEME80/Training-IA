@@ -151,8 +151,8 @@ export const LandingHome: React.FC<LandingHomeProps> = ({
         {/* 4. Carrusel Continuo Infinito de Logos */}
         <LandingLogoCarousel />
 
-        {/* 5. Showcase Dinámico "App en Movimiento" (#showcase) con Simulador Interactivo HRV */}
-        <AppMotionShowcase />
+        {/* 5. Showcase Dinámico "App en Movimiento" (#showcase) con Capturas Reales y Argumentario de Venta */}
+        <AppMotionShowcase onOpenAuthModal={onOpenAuthModal} />
 
         {/* 6. Tres Pilares del Sistema */}
         <LandingFeaturesGrid />

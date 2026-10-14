@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Quote, Sparkles, Activity, ShieldCheck } from "lucide-react";
 
 export interface CoachData {
   id: string;
   name: string;
   initials: string;
+  imageUrl: string;
   title: string;
   discipline: string;
   focus: string;
@@ -22,19 +23,20 @@ interface CoachBioModalProps {
 }
 
 export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onClose }) => {
-  // Manejo de tecla ESC para accesibilidad
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [coach]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
-
     if (isOpen) {
       document.body.style.overflow = "hidden";
       window.addEventListener("keydown", handleKeyDown);
     }
-
     return () => {
       document.body.style.overflow = "unset";
       window.removeEventListener("keydown", handleKeyDown);
@@ -55,7 +57,6 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
         className="w-full max-w-xl rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 space-y-6 text-left relative animate-in zoom-in-95 duration-200 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Botón de cierre accesible */}
         <button
           type="button"
           onClick={onClose}
@@ -65,17 +66,24 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           <X className="h-5 w-5" strokeWidth={1.75} />
         </button>
 
-        {/* 1. Cabecera: Avatar, Nombre y Título */}
+        {/* 1. Cabecera: Foto Real del Entrenador, Nombre y Título */}
         <div className="flex items-start gap-4 pr-8">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-lg shadow-md shadow-emerald-600/20 shrink-0">
-            {coach.initials}
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                {coach.discipline}
-              </span>
+          {coach.imageUrl && !imageError ? (
+            <img
+              src={coach.imageUrl}
+              alt={coach.name}
+              onError={() => setImageError(true)}
+              className="h-16 w-16 rounded-2xl object-cover object-top border-2 border-emerald-500/30 shadow-md shrink-0 bg-slate-100"
+            />
+          ) : (
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-lg shadow-md shrink-0">
+              {coach.initials}
             </div>
+          )}
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {coach.discipline}
+            </span>
             <h3 id="coach-modal-title" className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
               {coach.name}
             </h3>
@@ -85,13 +93,12 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </div>
         </div>
 
-        {/* Resumen de Especialidad */}
         <div className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-2">
           <Activity className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
           <span>{coach.focus}</span>
         </div>
 
-        {/* 2. Filosofía Clave (Cita célebre) */}
+        {/* 2. Filosofía Clave */}
         <div className="relative pl-5 border-l-2 border-emerald-500/60 py-1">
           <Quote className="h-4 w-4 text-emerald-600/60 absolute -top-1 left-0 -translate-x-1/2 bg-white" strokeWidth={1.75} />
           <p className="text-xs sm:text-sm italic text-slate-700 leading-relaxed font-serif">
@@ -99,7 +106,7 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </p>
         </div>
 
-        {/* 3. Impacto Biomecánico (3 líneas) */}
+        {/* 3. Impacto Biomecánico */}
         <div className="space-y-1.5">
           <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
             Impacto Fisiológico & Biomecánico
@@ -109,7 +116,7 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </p>
         </div>
 
-        {/* 4. Cómo lo aplica PULSE AI (Bloque esmeralda destacado) */}
+        {/* 4. Cómo lo aplica PULSE AI */}
         <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-emerald-50/40 border border-emerald-300/80 shadow-xs space-y-2">
           <div className="flex items-center gap-2 text-emerald-950 font-bold text-xs tracking-wide uppercase">
             <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
@@ -124,14 +131,13 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </div>
         </div>
 
-        {/* Botón inferior de cierre */}
         <div className="pt-2 flex justify-end">
           <button
             type="button"
             onClick={onClose}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
           >
-            Entendido, volver a la ciencia
+            Entendido, volver a entrenadores
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowUpRight, BookOpen, Quote, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Quote, ShieldCheck } from "lucide-react";
 import { CoachBioModal, CoachData } from "./CoachBioModal";
 
 const ELITE_COACHES: CoachData[] = [
@@ -9,6 +9,7 @@ const ELITE_COACHES: CoachData[] = [
     id: "canova",
     name: "Renato Canova",
     initials: "RC",
+    imageUrl: "/coaches/renato-canova.png",
     title: "Entrenador Olímpico de Maratón (Kenia e Italia)",
     discipline: "Maratón de Élite",
     focus: "Resistencia Específica al Ritmo Maratón y Cap Biomecánico de 3h",
@@ -20,6 +21,7 @@ const ELITE_COACHES: CoachData[] = [
     id: "daniels",
     name: "Dr. Jack Daniels",
     initials: "JD",
+    imageUrl: "/coaches/jack-daniels.jpg",
     title: "Fisiólogo Olímpico y Creador del Sistema VDOT",
     discipline: "Running & Fisiología",
     focus: "Fórmula VDOT, Zonas Fisiológicas y Economía de Carrera",
@@ -31,6 +33,7 @@ const ELITE_COACHES: CoachData[] = [
     id: "coggan",
     name: "Dr. Andrew Coggan",
     initials: "AC",
+    imageUrl: "/coaches/andrew-coggan.jpg",
     title: "Fisiólogo del Ejercicio & Pionero de Métricas de Potencia",
     discipline: "Ciclismo & Potencia",
     focus: "Potencia Ciclista (FTP), Normalización (NP) y Carga TSS",
@@ -42,6 +45,7 @@ const ELITE_COACHES: CoachData[] = [
     id: "seiler",
     name: "Dr. Stephen Seiler",
     initials: "SS",
+    imageUrl: "/coaches/stephen-seiler.jpg",
     title: "Investigador Científico de Deportes de Resistencia",
     discipline: "Modelo Polarizado",
     focus: "Entrenamiento Polarizado 80/20 y Preservación del Umbral Z1/Z2",
@@ -53,23 +57,24 @@ const ELITE_COACHES: CoachData[] = [
 
 export const CoachesScienceSection: React.FC = () => {
   const [selectedCoach, setSelectedCoach] = useState<CoachData | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   return (
     <section id="metodologia" className="py-16 sm:py-24 px-4 sm:px-6 max-w-6xl mx-auto w-full relative z-10">
-      {/* Encabezado de la Sección */}
+      {/* Encabezado Renovado y Claro para Ventas */}
       <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
         <span className="text-xs font-bold font-mono uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-200 shadow-2xs">
-          Metodología de Élite • Evidencia Científica
+          Metodología de Élite • Entrenadores Vigentes
         </span>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight">
-          La Ciencia de los 4 Grandes Metodólogos
+          Los Grandes Entrenadores de Resistencia Vigentes
         </h2>
         <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-          PULSE AI no improvisa algoritmos de caja negra. Cada vatio, cada serie de umbral y cada descanso están gobernados por las reglas maestras de los fisiólogos más laureados del deporte mundial.
+          PULSE AI no improvisa algoritmos de caja negra. Integra las metodologías científicas que han creado récords mundiales y medallas olímpicas en maratón, ciclismo y triatlón.
         </p>
       </div>
 
-      {/* Grid de los 4 Entrenadores */}
+      {/* Grid de los 4 Entrenadores con Fotografías Reales */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
         {ELITE_COACHES.map((coach) => (
           <div
@@ -86,12 +91,21 @@ export const CoachesScienceSection: React.FC = () => {
             }}
           >
             <div className="space-y-4">
-              {/* Cabecera de Tarjeta: Avatar y Disciplina */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-sm shadow-md shadow-emerald-600/15 group-hover:scale-105 transition-transform">
-                    {coach.initials}
-                  </div>
+                  {/* Foto Real del Entrenador */}
+                  {coach.imageUrl && !failedImages[coach.id] ? (
+                    <img
+                      src={coach.imageUrl}
+                      alt={coach.name}
+                      onError={() => setFailedImages((prev) => ({ ...prev, [coach.id]: true }))}
+                      className="h-13 w-13 rounded-2xl object-cover object-top border-2 border-slate-200 shadow-sm shrink-0 bg-slate-100 group-hover:scale-105 group-hover:border-emerald-400 transition-all"
+                    />
+                  ) : (
+                    <div className="h-13 w-13 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-mono font-bold text-sm shadow-md shrink-0">
+                      {coach.initials}
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-lg font-black text-slate-950 group-hover:text-emerald-700 transition-colors">
                       {coach.name}
@@ -108,12 +122,10 @@ export const CoachesScienceSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Foco Biomecánico */}
               <div className="py-2 px-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700">
                 {coach.focus}
               </div>
 
-              {/* Cita Célebre */}
               <div className="relative pl-4 border-l-2 border-emerald-400/50 py-0.5">
                 <Quote className="h-3.5 w-3.5 text-emerald-600/40 absolute -top-1 left-0 -translate-x-1/2 bg-white" strokeWidth={1.75} />
                 <p className="text-xs text-slate-600 italic leading-relaxed line-clamp-2">
@@ -122,11 +134,10 @@ export const CoachesScienceSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Micro-badge de integración con PULSE AI */}
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={1.75} />
-                <span>Integrado en el motor PULSE</span>
+                <span>Método activo en el algoritmo</span>
               </div>
               <span className="text-slate-400 font-mono text-[10px] group-hover:text-emerald-600 transition-colors">
                 Toca para abrir bio &rarr;
@@ -136,7 +147,6 @@ export const CoachesScienceSection: React.FC = () => {
         ))}
       </div>
 
-      {/* Modal de Biografía en Profundidad */}
       <CoachBioModal
         coach={selectedCoach}
         isOpen={selectedCoach !== null}

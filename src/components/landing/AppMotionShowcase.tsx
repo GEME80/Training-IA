@@ -2,9 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  TrendingUp, Sparkles, Play, Pause, LayoutDashboard, Target,
+  TrendingUp,
+  Sparkles,
+  Play,
+  Pause,
+  LayoutDashboard,
+  Target,
+  ArrowRight,
+  Watch,
+  HeartPulse,
+  Brain,
+  ShieldCheck,
 } from "lucide-react";
-import { InteractiveHrvSimulator } from "./InteractiveHrvSimulator";
 
 interface ShowcaseScreen {
   id: "dashboard" | "pmc" | "season" | "headcoach";
@@ -12,6 +21,8 @@ interface ShowcaseScreen {
   icon: React.ReactNode;
   imageSrc: string;
   alt: string;
+  highlightTitle: string;
+  highlightDesc: string;
 }
 
 const SHOWCASE_SCREENS: ShowcaseScreen[] = [
@@ -21,6 +32,8 @@ const SHOWCASE_SCREENS: ShowcaseScreen[] = [
     icon: <LayoutDashboard className="h-3.5 w-3.5" strokeWidth={1.75} />,
     imageSrc: "/showcase/mobile-dashboard.png",
     alt: "Captura Real del Dashboard Móvil con Calendario y Test Stryd",
+    highlightTitle: "Calendario y Sesión Diaria Prescrita",
+    highlightDesc: "Tu plan diario al detalle con series fraccionadas, vatios Stryd objetivo y estado de ejecución sincronizado.",
   },
   {
     id: "pmc",
@@ -28,6 +41,8 @@ const SHOWCASE_SCREENS: ShowcaseScreen[] = [
     icon: <TrendingUp className="h-3.5 w-3.5" strokeWidth={1.75} />,
     imageSrc: "/showcase/mobile-pmc.png",
     alt: "Captura Real de la Gráfica PMC y Cumplimiento Semanal",
+    highlightTitle: "Curva PMC y Estado de Forma Real",
+    highlightDesc: "Monitorea tu Fitness (CTL), Fatiga (ATL) y Frescura (TSB) con modelos matemáticos de Banister a 30D, 90D o 1 año.",
   },
   {
     id: "season",
@@ -35,6 +50,8 @@ const SHOWCASE_SCREENS: ShowcaseScreen[] = [
     icon: <Target className="h-3.5 w-3.5" strokeWidth={1.75} />,
     imageSrc: "/showcase/mobile-season.png",
     alt: "Captura Real de la Periodización de 22 semanas",
+    highlightTitle: "Periodización de 22 Semanas hacia tu Meta",
+    highlightDesc: "Desglose por 6 fases atléticas (Base, Construcción, Pico, Tapering) con carga TSS semanal y control de tirada pico.",
   },
   {
     id: "headcoach",
@@ -42,10 +59,16 @@ const SHOWCASE_SCREENS: ShowcaseScreen[] = [
     icon: <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />,
     imageSrc: "/showcase/mobile-coach.png",
     alt: "Captura Real del Chat Fisiológico Head Coach En Vivo",
+    highlightTitle: "Head Coach Fisiológico 24/7 con Google Gemini",
+    highlightDesc: "Consulta dudas sobre fatiga, ritmos con viento o asimilación celular y recibe respuestas adaptadas a tu Critical Power.",
   },
 ];
 
-export const AppMotionShowcase: React.FC = () => {
+interface AppMotionShowcaseProps {
+  onOpenAuthModal?: (tab?: "login" | "register") => void;
+}
+
+export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuthModal }) => {
   const [activeScreen, setActiveScreen] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isTapTriggered, setIsTapTriggered] = useState<boolean>(false);
@@ -80,7 +103,7 @@ export const AppMotionShowcase: React.FC = () => {
           La Experiencia Móvil Real de la Resistencia
         </h2>
         <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-          Capturas reales de cómo funciona PULSE AI en tu teléfono. Visualiza tu calendario estructurado, telemetría Stryd, curva PMC y el Head Coach Fisiológico autónomo.
+          Diseñada para atletas que entrenan a diario. Sin tablas complejas de Excel: cada mañana abres tu teléfono y tienes la prescripción exacta adaptada a tu cuerpo.
         </p>
       </div>
 
@@ -143,7 +166,6 @@ export const AppMotionShowcase: React.FC = () => {
                   }`}
                 />
 
-                {/* Fallback si la imagen no cargara */}
                 {!hasRealImage && (
                   <div className="p-6 text-center text-xs text-slate-400 flex flex-col items-center justify-center h-full">
                     <span>{currentScreen.title}</span>
@@ -163,9 +185,91 @@ export const AppMotionShowcase: React.FC = () => {
           </p>
         </div>
 
-        {/* COLUMNA 2: Simulador Interactivo HRV / TSB */}
-        <div className="lg:col-span-7 flex flex-col justify-center space-y-4">
-          <InteractiveHrvSimulator />
+        {/* COLUMNA 2: Argumentario Comercial de Venta (Reemplaza el simulador pesado) */}
+        <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
+          <div className="space-y-2">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              ¿Por qué elegir PULSE AI?
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+              Toda la Ciencia de la Resistencia en la Palma de tu Mano
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed font-normal">
+              Olvídate de contratar planes estáticos en PDF o entrenadores que no ajustan tu carga diaria. PULSE AI vigila tu fisiología las 24 horas y sincroniza cada sesión al instante.
+            </p>
+          </div>
+
+          {/* 4 Propuestas de Valor Clave */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 transition-all space-y-2">
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                <HeartPulse className="h-4 w-4" strokeWidth={1.75} />
+              </div>
+              <h4 className="text-sm font-bold text-slate-950">
+                Adaptación Matutina por HRV
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Si tu variabilidad cardíaca o sueño nocturno muestran fatiga aguda, el sistema recalibra los vatios y el volumen automáticamente.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 transition-all space-y-2">
+              <div className="h-9 w-9 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center border border-cyan-200">
+                <Watch className="h-4 w-4" strokeWidth={1.75} />
+              </div>
+              <h4 className="text-sm font-bold text-slate-950">
+                Directo a Garmin & Coros
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Las series viajan por API a tu reloj deportivo en segundo plano. Sales a entrenar y tu reloj pita en cada cambio de zona o potencia.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 transition-all space-y-2">
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
+              </div>
+              <h4 className="text-sm font-bold text-slate-950">
+                Pico de Forma Garantizado
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Modelado matemático de 22 semanas (Banister/Coggan) para que llegues a tu maratón o triatlón con frescura (+TSB) y máxima aptitud.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 transition-all space-y-2">
+              <div className="h-9 w-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-200">
+                <Brain className="h-4 w-4" strokeWidth={1.75} />
+              </div>
+              <h4 className="text-sm font-bold text-slate-950">
+                Head Coach con IA 24/7
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Pregunta cualquier duda sobre ritmos con viento, nutrición o dolores musculares. Respuestas fisiológicas fundamentadas en segundos.
+              </p>
+            </div>
+          </div>
+
+          {/* Tarjeta de Conversión Rápida */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-lg shadow-emerald-600/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <div className="text-sm font-black flex items-center justify-center sm:justify-start gap-1.5">
+                <ShieldCheck className="h-4 w-4" strokeWidth={1.75} />
+                <span>Comienza tu Prueba de 7 Días Gratis</span>
+              </div>
+              <p className="text-xs text-emerald-100">
+                Configura tu cuenta en 2 minutos conectando tu Intervals.icu o reloj habitual.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenAuthModal?.("register")}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-emerald-950 font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <span>Probar Gratis Ahora</span>
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
       </div>
     </section>

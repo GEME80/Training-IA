@@ -29,35 +29,8 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ onOpenOnboar
               Conecta tu cuenta de Intervals.icu y activa tu IA de Entrenamiento
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
-              Vincula tu reloj <strong>Garmin, Coros, Polar, Suunto, Strava o Stryd</strong> a través de Intervals.icu para sincronizar tus zonas de potencia, telemetría biológica en vivo (Fitness, Fatiga, Forma) y planificar con IA.
+              Sincroniza tu reloj <strong>Garmin, Coros, Polar, Suunto, Strava o Stryd</strong> a través de Intervals.icu en 1 solo clic para activar tu telemetría biológica en vivo (Fitness, Fatiga, Forma) y periodización inteligente.
             </p>
-          </div>
-
-          {/* Mini Guía Rápida de 2 Pasos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            <div className="p-3 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-cyan-200/50 dark:border-cyan-800/40 flex items-start gap-2.5">
-              <div className="h-7 w-7 rounded-xl bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <User className="h-3.5 w-3.5" />
-              </div>
-              <div className="text-[11px]">
-                <strong className="block text-slate-900 dark:text-slate-100 font-bold">1. Tu Athlete ID</strong>
-                <span className="text-slate-500 dark:text-slate-400">
-                  En Ajustes de Intervals.icu en la <strong>parte inferior derecha</strong> (ej: <code className="font-mono text-cyan-700 dark:text-cyan-300 font-bold">i123456</code>).
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-cyan-200/50 dark:border-cyan-800/40 flex items-start gap-2.5">
-              <div className="h-7 w-7 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                <Key className="h-3.5 w-3.5" />
-              </div>
-              <div className="text-[11px]">
-                <strong className="block text-slate-900 dark:text-slate-100 font-bold">2. Tu Clave API</strong>
-                <span className="text-slate-500 dark:text-slate-400">
-                  Genérala en <em>Settings &gt; Developer Settings</em> y pégala con 1 clic.
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -66,9 +39,9 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ onOpenOnboar
           <button
             type="button"
             onClick={onOpenOnboarding}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold transition shadow-md shadow-slate-900/10 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20 cursor-pointer"
           >
-            <span>Vincular Cuenta (Paso a Paso)</span>
+            <span>Conectar con Intervals.icu (1 Clic)</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
 
@@ -76,9 +49,9 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ onOpenOnboar
             href="https://intervals.icu/settings"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-cyan-100/50 dark:hover:bg-slate-800 text-[11px] font-semibold transition cursor-pointer border border-cyan-200/60 dark:border-slate-800"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-800"
           >
-            <span>Abrir Ajustes de Intervals</span>
+            <span>Ajustes en Intervals.icu</span>
             <ExternalLink className="h-3 w-3" />
           </a>
         </div>

@@ -96,31 +96,45 @@ export const OnboardingStepVerify: React.FC<OnboardingStepVerifyProps> = ({
                     <strong className="text-slate-900 dark:text-white font-bold">{testResult.athleteName}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800">
-                    <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase">⚡ Stryd CP</span>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase font-bold">Stryd CP</span>
                     <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{testResult.runFtp ? `${testResult.runFtp} W` : "Detectando..."}</strong>
                   </div>
                   <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800">
-                    <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase">🚴 Bike FTP</span>
-                    <strong className="text-cyan-700 dark:text-cyan-400 font-bold">{testResult.bikeFtp ? `${testResult.bikeFtp} W` : "Detectando..."}</strong>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase font-bold">Bike FTP</span>
+                    <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{testResult.bikeFtp ? `${testResult.bikeFtp} W` : "Detectando..."}</strong>
                   </div>
                   {testResult.restingHR && (
                     <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800">
-                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase">❤️ FC Reposo</span>
+                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase font-bold">FC Reposo</span>
                       <strong className="text-slate-800 dark:text-slate-200 font-bold">{testResult.restingHR} bpm</strong>
                     </div>
                   )}
                   {testResult.weight && (
                     <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800">
-                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase">⚖️ Peso</span>
+                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase font-bold">Peso</span>
                       <strong className="text-slate-800 dark:text-slate-200 font-bold">{testResult.weight} kg</strong>
                     </div>
                   )}
                   {testResult.city && (
                     <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800">
-                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase">📍 Ubicación</span>
+                      <span className="text-slate-500 dark:text-slate-400 block text-[9px] uppercase font-bold">Ubicación</span>
                       <strong className="text-slate-800 dark:text-slate-200 font-bold">{testResult.city}</strong>
                     </div>
                   )}
+                </div>
+              )}
+
+              {testResult.success && (
+                <div className="pt-2 flex items-center justify-between text-[11px] text-emerald-800 dark:text-emerald-300">
+                  <span>¿Reloj Garmin no sincroniza aún?</span>
+                  <a
+                    href="https://intervals.icu/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold underline text-emerald-700 hover:text-emerald-900 ml-1"
+                  >
+                    Vincular Garmin en Intervals
+                  </a>
                 </div>
               )}
             </div>

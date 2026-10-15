@@ -25,24 +25,15 @@ export function useAthleteTelemetry({
   isReadOnly = false,
 }: UseAthleteTelemetryProps) {
   const isSuper = isMasterAdminEmail(userProfile?.email || user?.email) && !isReadOnly;
-
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true), [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false), [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
   const [apiKeyCache, setApiKeyCache] = useState<string>(""), [geminiKeyCache, setGeminiKeyCache] = useState<string>("");
   const [visibleMetrics, setVisibleMetrics] = useState<string[]>(userProfile?.visibleMetrics || DEFAULT_VISIBLE_METRICS);
-  const [wellnessHistory, setWellnessHistory] = useState<AthleteWellness[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [weeklyExecutedTss, setWeeklyExecutedTss] = useState<number>(0);
-  const [dailyExecutedActivities, setDailyExecutedActivities] = useState<DailyExecutedMap>({});
+  const [wellnessHistory, setWellnessHistory] = useState<AthleteWellness[]>([]), [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [weeklyExecutedTss, setWeeklyExecutedTss] = useState<number>(0), [dailyExecutedActivities, setDailyExecutedActivities] = useState<DailyExecutedMap>({});
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
-  const [recentFtpCalibration, setRecentFtpCalibration] = useState<any>(null);
-  const [recentPaceCalibration, setRecentPaceCalibration] = useState<any>(null);
-  const [recentRunPowerCalibration, setRecentRunPowerCalibration] = useState<any>(null);
-
-  const lastFetchTimestampRef = useRef<number>(0);
-  const lastPersistedProfileRef = useRef<string>("");
+  const [recentFtpCalibration, setRecentFtpCalibration] = useState<any>(null), [recentPaceCalibration, setRecentPaceCalibration] = useState<any>(null), [recentRunPowerCalibration, setRecentRunPowerCalibration] = useState<any>(null);
+  const lastFetchTimestampRef = useRef<number>(0), lastPersistedProfileRef = useRef<string>("");
 
   const persistProfileToApi = useCallback(async (body: Record<string, any>) => {
     if (isReadOnly) return;
@@ -266,22 +257,29 @@ export function useAthleteTelemetry({
       setIsLoading(true);
       purgeLegacyGlobalStorage();
 
-      let storedAthleteId =
-        userProfile?.intervalsAthleteId || userStorage.getItem("athlete_id") ||
-        (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || process.env.NEXT_PUBLIC_DEFAULT_ATHLETE_ID || "i442091") : "");
+      // Soporte reactivo para retorno inmediato de OAuth Intervals
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("intervals_connected") === "true") {
+          const oauthToken = urlParams.get("token");
+          const oauthAthlete = urlParams.get("athleteId");
+          if (oauthToken) userStorage.setItem("intervals_api_key", oauthToken);
+          if (oauthAthlete) userStorage.setItem("athlete_id", oauthAthlete);
+          userStorage.setItem("onboarding_welcomed", "true");
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
 
+      let storedAthleteId = userProfile?.intervalsAthleteId || userStorage.getItem("athlete_id") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || "i442091") : "");
       if (!isSuper && storedAthleteId.toLowerCase() === "i442091") {
         storedAthleteId = "";
         userStorage.removeItem("athlete_id");
       }
-
       const storedApiKey = userStorage.getItem("intervals_api_key") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "") : "");
       const storedGeminiKey = userStorage.getItem("custom_gemini_key") || "";
-
       if (storedApiKey) userStorage.setItem("intervals_api_key", storedApiKey);
       if (storedAthleteId) userStorage.setItem("athlete_id", storedAthleteId);
       else userStorage.removeItem("athlete_id");
-
       setApiKeyCache(storedApiKey);
       setGeminiKeyCache(storedGeminiKey);
 

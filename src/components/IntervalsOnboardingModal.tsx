@@ -39,7 +39,14 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
   const [apiKey, setApiKey] = useState<string>("");
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [isValidating, setIsValidating] = useState<boolean>(false);
+  const [isConnectingOAuth, setIsConnectingOAuth] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<OnboardingTestResult | null>(null);
+
+  const handleStartOAuth = () => {
+    setIsConnectingOAuth(true);
+    const returnTo = typeof window !== "undefined" ? window.location.pathname : "/";
+    window.location.href = `/api/auth/intervals/authorize?uid=${encodeURIComponent(initialAthleteId || "")}&returnTo=${encodeURIComponent(returnTo)}`;
+  };
 
   if (!isOpen) return null;
 
@@ -217,6 +224,8 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
                   setCurrentStep(1);
                 }
               }}
+              onStartOAuth={handleStartOAuth}
+              isConnectingOAuth={isConnectingOAuth}
             />
           )}
 

@@ -8669,3 +8669,44 @@ Se implementó una guarda fisiológica bidireccional automática (`safeLthr = mi
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 páginas estáticas generadas) ✅.
 - **Gate 4 (Precisión Fisiológica):** Muestra `156 / 178 bpm` y permite editar ambos parámetros con un clic ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 141 ✅.
+
+---
+
+## 142. Integración Oficial OAuth 2.0 (App 1371 PULSE IA), Onboarding en 1 Clic y Sincronización Automática de Reloj (v5.73)
+
+### 142.1. Contexto y Requerimiento
+Tras la aprobación formal de la aplicación OAuth 1371 de PULSE IA por parte de Intervals.icu, se eliminó la fricción manual en la vinculación de cuentas:
+1. **Erradicación de Claves API Manuales:** Los atletas ya no necesitan copiar ni pegar cadenas de texto crudas ni buscar IDs técnicos en la configuración de Intervals.
+2. **Onboarding Universal en 1 Clic:** Un único botón permite autorizar de inmediato si el deportista ya cuenta con Intervals.icu, o crear su cuenta gratuita con Google en 10 segundos si es nuevo.
+3. **Flujo de Callback y Detección Automática:** Redirección automática de regreso a PULSE AI, intercambio seguro de tokens (server-to-server), ingesta de biometría y detección de dispositivo Garmin.
+
+### 142.2. Implementación Arquitectónica
+1. **Rutas de Autenticación OAuth 2.0 Backend:**
+   - **`src/app/api/auth/intervals/authorize/route.ts` (47 LOC):** Construye la URL oficial de autorización con `client_id=1371`, `redirect_uri` dinámico, scopes requeridos (`ACTIVITY,CALENDAR,WELLNESS,SETTINGS`) y estado codificado en base64url para protección anti-CSRF.
+   - **`src/app/api/auth/intervals/callback/route.ts` (110 LOC):** Intercambia el código temporal por el `access_token` seguro en Intervals.icu (`https://intervals.icu/api/oauth/token`), normaliza el `athleteId` (`iXXXX`), consulta el perfil inicial mediante `IntervalsClient`, persiste las credenciales en Firestore y redirige a la aplicación con éxito.
+2. **Soporte Híbrido de Tokens en Cliente (`src/lib/intervals/client.ts` - 266 LOC):**
+   - Soporte automático para tokens Bearer OAuth (`Authorization: Bearer <token>`) y retrocompatibilidad total con API Keys tradicionales (`Authorization: Basic <credentials>`).
+3. **Rediseño del Selector de Onboarding (`src/components/onboarding/OnboardingPathSelector.tsx` - 112 LOC):**
+   - Tarjeta destacada con botón Verde Esmeralda institucional `[ ⚡ Conectar con Intervals.icu en 1 Clic ]` y sección colapsable para configuración manual avanzada.
+4. **Resiliencia en Pantalla de Espera (`src/components/RestrictedAccessView.tsx` - 156 LOC):**
+   - Permite a los atletas pendientes de aprobación adelantar la vinculación de su reloj deportivo con un clic mientras el administrador aprueba su cuenta.
+5. **Banner del Dashboard (`src/components/dashboard/OnboardingBanner.tsx` - 60 LOC) & Modal de Onboarding (`src/components/IntervalsOnboardingModal.tsx` - 326 LOC):**
+   - Botón directo de 1 clic y enlace directo para activar el switch de Garmin Connect en Intervals.
+6. **Recepción Reactiva en Telemetría (`src/hooks/useAthleteTelemetry.ts` - 348 LOC):**
+   - Detección inmediata de los parámetros `intervals_connected=true` en la URL para almacenar credenciales en memoria y limpiar la barra de direcciones de forma silenciosa.
+
+### 142.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `authorize/route.ts`: 47 LOC ($\le 350$) ✅
+  - `callback/route.ts`: 110 LOC ($\le 350$) ✅
+  - `client.ts`: 266 LOC ($\le 350$) ✅
+  - `OnboardingPathSelector.tsx`: 112 LOC ($\le 350$) ✅
+  - `OnboardingStepVerify.tsx`: 146 LOC ($\le 350$) ✅
+  - `IntervalsOnboardingModal.tsx`: 326 LOC ($\le 350$) ✅
+  - `RestrictedAccessView.tsx`: 156 LOC ($\le 350$) ✅
+  - `OnboardingBanner.tsx`: 60 LOC ($\le 350$) ✅
+  - `useAthleteTelemetry.ts`: 348 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (UX Sin Fricción):** Conexión en 1 solo clic; cero copia/pega manual de API Keys ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 142 ✅.

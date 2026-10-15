@@ -66,23 +66,35 @@ export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ stat
 
           {/* Tarjeta Proactiva de Preparación Intervals */}
           {isPending && (
-            <div className="rounded-2xl p-4 bg-cyan-50/70 border border-cyan-200 text-left space-y-2">
-              <div className="flex items-center space-x-2 text-cyan-900 font-bold text-xs">
-                <Sparkles className="h-4 w-4 text-cyan-600 shrink-0" />
-                <span>¿Aún no tienes cuenta en Intervals.icu?</span>
+            userProfile?.intervalsAthleteId ? (
+              <div className="rounded-2xl p-4 bg-emerald-50/70 border border-emerald-200 text-left space-y-1">
+                <div className="flex items-center space-x-2 text-emerald-900 font-bold text-xs">
+                  <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Intervals.icu Vinculado ({userProfile.intervalsAthleteId})</span>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  Tu motor de telemetría deportiva ya está conectado. Tan pronto el Administrador apruebe tu acceso, tus entrenamientos se activarán de inmediato.
+                </p>
               </div>
-              <p className="text-[11px] text-cyan-800 leading-relaxed">
-                Adelanta la creación de tu cuenta gratuita y vincula tu reloj deportivo (Garmin, Coros, Strava) para estar 100% listo al ser aprobado.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowGuideModal(true)}
-                className="inline-flex items-center space-x-1.5 text-xs font-bold text-cyan-700 hover:text-cyan-950 transition cursor-pointer pt-0.5"
-              >
-                <span>Ver guía de preparación</span>
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
+            ) : (
+              <div className="rounded-2xl p-4 bg-emerald-50/70 border border-emerald-200 text-left space-y-2.5">
+                <div className="flex items-center space-x-2 text-emerald-900 font-bold text-xs">
+                  <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Conecta tu reloj deportivo (Garmin, Coros)</span>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  Adelanta la vinculación de tu cuenta de Intervals.icu en 1 clic para que tu reloj y tu telemetría estén 100% listos al ser aprobado.
+                </p>
+                <a
+                  href={`/api/auth/intervals/authorize?uid=${encodeURIComponent(user?.uid || "")}&returnTo=${encodeURIComponent("/")}`}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition cursor-pointer"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Conectar con Intervals.icu en 1 Clic</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            )
           )}
 
           {/* Botones de Acción */}

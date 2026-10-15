@@ -10,9 +10,10 @@ try {
 const BASE_URL = "https://intervals.icu/api/v1";
 
 function getAuthHeader(apiKey: string): Record<string, string> {
-  const credentials = Buffer.from(`API_KEY:${apiKey}`).toString("base64");
+  const isBearer = apiKey.startsWith("Bearer ");
+  const authHeader = isBearer ? apiKey : `Basic ${Buffer.from(`API_KEY:${apiKey}`).toString("base64")}`;
   return {
-    Authorization: `Basic ${credentials}`,
+    Authorization: authHeader,
     "Content-Type": "application/json",
     Accept: "application/json",
     "User-Agent": "PulseAI-SGEA/2.0 (Macintosh; Intel Mac OS X; athlete-sync)",

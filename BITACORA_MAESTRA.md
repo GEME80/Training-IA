@@ -8451,6 +8451,66 @@ Esto causaba que:
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
 - **Producción Next.js:** `npm run build` $\rightarrow$ **21/21 páginas generadas exitosamente (código 0)**.
 
+---
+
+## SECCIÓN 137: REDISEÑO INTEGRAL DE CONVERSIÓN DEL HOME, TELEMETRÍA MULTIDEPORTE AGNÓSTICA, ERGONOMÍA VISUAL Y HUMANIZACIÓN DE COPY (v5.69)
+
+### 137.1. Contexto y Objetivos de la Intervención
+Esta intervención aborda la optimización integral de la página de inicio (Landing Page) de PULSE AI para maximizar la conversión, la retención visual y la claridad pedagógica ante deportistas de resistencia (corredores, ciclistas y triatletas), satisfaciendo los siguientes requerimientos clave:
+1. **Video Hero Cinematográfico y Transparencia Cristalina:**
+   - Integración del metraje nativo de alta resolución `/videos/hero-athlete.mp4` en el bloque Hero.
+   - Eliminación del velo opaco artificial central que oscurecía la acción atlética, permitiendo apreciar el esfuerzo real con total nitidez mientras se conservan los gradientes perimetrales para legibilidad.
+   - Configuración de auto-reproducción forzada en navegadores WebKit/Blink (`video.muted = true`, `video.defaultMuted = true`, `playsInline = true` via `useEffect`), con respaldo de poster ante redes lentas.
+2. **HUD de Telemetría Multideporte Agnóstico a Marcas:**
+   - Sustitución de insignias atadas a un dispositivo específico (ej. Stryd) por un sistema rotativo de telemetría deportiva universal que cicla automáticamente cada 3.5 segundos entre las 3 disciplinas troncales:
+     * **Natación:** Ritmo CSS (*Ritmo Umbral Crítico de Nado*: 1:32 min/100m), SWOLF (*Eficiencia de nado*: 34) y Frecuencia de Brazada (38 spm).
+     * **Ciclismo:** Potencia FTP (*Umbral de Potencia Funcional*: 285W), Potencia Normalizada NP (298W) y Cadencia Óptima (88 rpm).
+     * **Carrera / Atletismo:** VDOT (*Índice de Capacidad Aeróbica*: 58.4), Potencia Crítica CP (340W) y Tiempo de Contacto con el Suelo (218 ms).
+3. **Vitrina de App Móvil con Chasis Negro Titanio:**
+   - Rediseño de la maqueta de iPhone en `AppMotionShowcase.tsx` adoptando un chasis negro azabache de alta gama (`.phone-chassis-black`).
+   - Eliminación de bordes blancos y artefactos visuales derivados de reglas CSS globales de modo claro, preservando un marco ultra-limpio con altavoz, cámara y botones laterales.
+   - 4 pantallas funcionales interactivas con explicaciones humanizadas: Plan Diario Inteligente, Monitor de Fatiga y Forma (PMC), Planificación de Temporada (22 Semanas) y Asesoría Fisiológica Continua.
+4. **Carrusel Continuo del Motor Fisiológico (Sin Bloqueos ni Fricción):**
+   - Transición automática ininterrumpida cada 5 segundos entre los 4 referentes mundiales de la periodización científica: Renato Canova, Stephen Seiler, Andrew Coggan y Jack Daniels.
+   - Supresión completa de barras de pausa, flechas intrusivas e interrupciones por hover del cursor que congelaban la rotación involuntariamente.
+   - Navegación táctil directa mediante selector de pestañas superiores y modal biográfico accesible (`CoachBioModal.tsx`).
+5. **Depuración de Ruido y Flujo de Conversión Directo:**
+   - Eliminación de la tarjeta intermedia redundante *"¿Listo para entrenar?"* (`CoachingImpactBanner.tsx`), conectando directamente la metodología y vitrina con la sección de precios y preguntas frecuentes (`PricingAndFaqSection.tsx`).
+6. **Humanización Sistemática del Lenguaje y Explicación de Siglas:**
+   - Erradicación del léxico denso de ingeniería de software (ej. SSOT, desacoplamiento, etc.) en favor de un tono empático, inspirador y riguroso.
+   - Explicación de cada sigla deportiva entre paréntesis en su primera aparición (VDOT, HRV, FTP, TSS, TSB, CSS, SWOLF), permitiendo una comprensión intuitiva para cualquier nivel de deportista.
+
+### 137.2. Detalle de Archivos Creados y Modificados
+1. **`src/components/landing/HeroSection.tsx` (119 LOC) [MODIFIED]:**
+   - Titular principal H1 de alto impacto (*"Tu Head Coach Inteligente que Adapta tu Entrenamiento"*), badge oficial de PULSE AI con isotipo `/pulse-icon.jpg`, subtítulo empático y CTAs primarios hacia el ecosistema.
+2. **`src/components/landing/HeroAthleteTelemetryCard.tsx` (287 LOC) [MODIFIED]:**
+   - Tarjeta cinemática del atleta con reproducción de video en bucle sin filtro opaco.
+   - HUD de telemetría multideporte con rotación cíclica (Natación, Ciclismo, Atletismo), insignias flotantes con métricas en tiempo real y clases blindadas `.telemetry-card-bg` y `.telemetry-hud-box`.
+3. **`src/components/landing/EcosystemTicker.tsx` (82 LOC) [MODIFIED]:**
+   - Marquee continuo de compatibilidad de dispositivos (Garmin, Coros, Stryd, Strava, Intervals.icu, Google Gemini) con terminología accesible.
+4. **`src/components/landing/AppMotionShowcase.tsx` (280 LOC) [MODIFIED]:**
+   - Vitrina interactiva del móvil con chasis negro elegante (`.phone-chassis-black`), selector de pantallas y descripciones en lenguaje claro.
+5. **`src/components/landing/UnifiedPhysioEngine.tsx` (201 LOC) [MODIFIED]:**
+   - Carrusel de metodologías científicas con auto-rotación pura cada 5 segundos, sin botones de pausa ni flechas molestas. Pestañas de acceso directo y botón para consultar la trayectoria del entrenador.
+6. **`src/components/landing/physioEngineData.ts` (138 LOC) [MODIFIED]:**
+   - Fuente de datos biográficos y metodológicos con siglas explicadas entre paréntesis.
+7. **`src/components/landing/CoachBioModal.tsx` (148 LOC) [MODIFIED]:**
+   - Modal biográfico con presentación accesible del rigor científico de cada entrenador.
+8. **`src/components/landing/PricingAndFaqSection.tsx` (218 LOC) [MODIFIED]:**
+   - Tabla de planes transparentes con selector COP/USD, distintivos de confianza Bre-B / BBVA / Bancolombia / Nequi / Daviplata y FAQ con lenguaje amigable.
+9. **`src/components/LandingHome.tsx` (167 LOC) [MODIFIED]:**
+   - Orquestador del Home simplificado en 4 bloques maestros limpios, eliminando componentes redundantes.
+10. **`src/app/globals.css` (355 LOC) [MODIFIED]:**
+    - Protección de `.telemetry-card-bg`, `.telemetry-hud-box` y `.phone-chassis-black` contra sobreescrituras forzadas de modo claro.
+
+### 137.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** 100% de los componentes modificados cumplen $\le 287$ LOC (estrictamente debajo del límite de 350 LOC) ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado en 2.2s (21/21 rutas empaquetadas sin errores) ✅.
+- **Gate 4 (Scope Integrity & FinOps):** Cero consumo de cuota o llamadas externas en la navegación pública; carga diferida de video y fallback estático ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Documentado íntegramente en la Sección 137 ✅.
+
+
 
 
 

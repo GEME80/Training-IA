@@ -1,9 +1,30 @@
-# ⚡ SGEA Pro (v5.57) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.69) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🚀 **Rediseño Integral de Conversión del Home, Telemetría Multideporte & Video HD (v5.69):**
+  - **Hero Cinematográfico de Alto Rendimiento (`HeroSection.tsx` & `HeroAthleteTelemetryCard.tsx`):** Titular directo de valor (*"Tu Head Coach Inteligente que Adapta tu Entrenamiento"*), comunicación empática enfocada en el deportista e integración de video nativo en bucle `/videos/hero-athlete.mp4` (`muted`, `loop`, `playsInline`) con transparencia cristalina (eliminación del velo opaco central) y fallback a imagen HD.
+  - **HUD de Telemetría Multideporte Agnóstico a Marcas:** Rotación dinámica en tiempo real entre disciplinas:
+    * *Natación:* Ritmo CSS (Ritmo Umbral de Nado: 1:32 min/100m), SWOLF (Eficiencia de brazada: 34) y Frecuencia de Brazada (38 spm).
+    * *Ciclismo:* Potencia FTP (Umbral de Potencia Funcional: 285W), Potencia Normalizada NP (298W) y Cadencia Óptima (88 rpm).
+    * *Carrera / Atletismo:* VDOT (Índice de Capacidad Aeróbica: 58.4), Potencia Crítica CP (340W) y Tiempo de Contacto con el Suelo (218 ms).
+    * Diseño universal e independiente de hardware específico, con badges protegidos contra estilos de modo claro.
+  - **Vitrina Móvil Hiperrealista en Chasis Negro Titanio (`AppMotionShowcase.tsx`):** Acabado negro de alta gama (`.phone-chassis-black`), eliminando desbordamientos de borde y exhibiendo 4 pantallas clave con navegación fluida y explicaciones orientadas al usuario (Plan Diario, Forma y Fatiga PMC, Temporada 22 Semanas y Head Coach IA 24/7).
+  - **Carrusel Continuo del Motor Metodológico (5s) (`UnifiedPhysioEngine.tsx`):** Rotación automática fluida cada 5 segundos a través de las metodologías de Renato Canova, Stephen Seiler, Andrew Coggan y Jack Daniels. Erradicación total de botones invasivos de pausa y flechas que trababan la lectura; navegación directa mediante pestañas superiores y modal biográfico accesible (`CoachBioModal.tsx`).
+  - **Humanización de Copy y Explicación Sistemática de Siglas:** Depuración de jerga técnica y términos de ingeniería; todas las siglas de ciencias del deporte cuentan con su explicación clara entre paréntesis en su primera mención (VDOT, HRV, FTP, TSS, TSB, CSS, SWOLF).
+  - **Optimización del Embudo de Conversión (`LandingHome.tsx`):** Supresión de la tarjeta redundante de impacto (*"¿Listo para entrenar?"*), conectando de forma directa y fluida la ciencia de entrenamiento con los planes de precios transparentes (`PricingAndFaqSection.tsx`), selector COP/USD y medios de pago interoperables de Colombia (Bre-B, BBVA, Bancolombia, Nequi, Daviplata).
+
+- ⚡ **Calibración Biométrica Stryd, Sincronización Bidireccional & FC Reposo Garmin (v5.68):**
+  - **Alineación Cuadrática de TSS Stryd:** Normalización de la Potencia Crítica (CP) en Intervals.icu y Pulse AI para erradicar el déficit del 18.4% en el cálculo de Power TSS.
+  - **Ingesta de FC de Reposo Directa de Garmin Wellness:** Extractor fisiológico SSOT (`wellnessHelpers.ts`) que lee directamente la frecuencia cardíaca nocturna mínima y el peso de báscula inteligente.
+  - **Compatibilidad Multilingüe de Deportes (`sportMatchers.ts`):** Emparejamiento nativo en español e inglés para sincronización de umbrales y zonas en `sportSettings`.
+
+- ⚖️ **Blindaje Legal Integral & Transparencia Institucional (v5.66 - v5.67):**
+  - **Páginas Públicas de Cumplimiento:** Términos de Servicio con Exención Médica y por IA (`/terms`) y Política de Privacidad con protección ARCO y cifrado (`/privacy`).
+  - **Acceso No Invasivo Permanente:** Enlaces permanentes y directos en el pie de página de la Landing (`LandingFooter.tsx`) y del panel del atleta (`AthleteDashboard.tsx`), eliminando modales bloqueantes.
 
 - 📱 **Centro de Control (Admin) App-Like, Design System PULSE AI y Ergonomía Móvil (v5.57):**
   - **Experiencia Móvil "App-Like" en Administración:** Ocultamiento total del sidebar rígido en pantallas móviles (`< 1024px`); nueva barra fija de navegación inferior (`AdminMobileBottomNav.tsx`) con 4 pestañas directas y Drawer modal táctil de Ajustes; cabecera superior móvil (`AdminMobileHeader.tsx`) con botón de retorno rápido `[ 🏃 Mi Entreno ]`.

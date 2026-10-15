@@ -1,9 +1,17 @@
-# ⚡ SGEA Pro (v5.70) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.71) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- ⚖️ **Blindaje Legal Integral, Consentimiento Clickwrap & Backfill de T&C en Base de Datos (v5.71):**
+  - **Consentimiento Clickwrap Mandatorio (`AuthModal.tsx`):** Checkbox interactivo obligatorio con enlaces a Términos y Condiciones (`/terms`) y Política de Privacidad (`/privacy`), que inhabilita el botón de registro hasta ser aceptado conscientemente. Aviso vinculante claro en Google OAuth.
+  - **Registro de Evidencia Digital ISO-8601 en Firestore:** Cada alta o inicio de sesión persiste atómicamente `termsAcceptedAt` (marca temporal) y `termsVersion: "1.0"`.
+  - **Backfill Automático Transaccional para Usuarios Existentes (`adminUsers.ts`, `userProfile.ts`):** Proceso resiliente que evalúa toda la colección `users` en Firestore y estampa la evidencia legal en los documentos de atletas antiguos sin desplegar modales invasivos ni bloquear la navegación.
+  - **Auditoría Visual en la Mesa de Control Admin (`AdminUsersTable.tsx`, `AdminUserCardMobile.tsx`):** Insignia verde `✓ T&C v1.0` en la tabla de escritorio y en las tarjetas táctiles móviles para certificar en tiempo real que el 100% de los atletas cuentan con su estado contractual en regla.
+  - **Páginas Públicas de Cumplimiento:** Términos de Servicio con Exención Médica, Asunción Total de Riesgo Físico y Cláusula de Limitación por IA (`/terms`), y Política de Privacidad con Derechos ARCO y Cifrado AES-256-GCM (`/privacy`).
+  - **Acceso Permanente No Invasivo:** Enlaces discretos y accesibles en el pie de página de la Landing (`LandingFooter.tsx`) y del Dashboard del atleta (`AthleteDashboard.tsx`).
 
 - 🎯 **Soberanía del Atleta, Pre-llenado Inteligente de Sensores & Calibración Exacta de Cargas (v5.70):**
   - **Soberanía y Edición Libre en Pulse AI (SSOT):** El deportista elige explícitamente su modalidad de entrenamiento (`[ 🔘 Potencia (Stryd) | 🔘 Ritmo ]`). En modo potencia, el ingreso del Critical Power (CP) de Stryd es manual directo desde la app Stryd. Todos los campos biométricos y de frecuencia cardíaca (FC de Reposo Basal, FC Máxima, LTHR, Peso, Altura, Fecha de Nacimiento) son 100% editables por el deportista en cualquier momento desde `AthleteBioProfileTab`, `ContextualThresholdsGrid`, `QuickThresholdModal` y `AthleteEditProfileModal`.

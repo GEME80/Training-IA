@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.25)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.71)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.57).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.71).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.71: Blindaje Legal Integral, Consentimiento Clickwrap Mandatorio y Backfill Automático de T&C en Base de Datos:
+  * Clickwrap Mandatorio en Registro (`AuthModal.tsx`): Checkbox interactivo obligatorio que valida la aceptación de Términos y Condiciones (`/terms`) y Política de Privacidad (`/privacy`), inhabilitando el envío hasta ser marcado conscientemente.
+  * Evidencia Digital en Firestore: Registro timestamp ISO-8601 de `termsAcceptedAt` y `termsVersion: "1.0"` ante cada registro o inicio de sesión.
+  * Backfill Automático y Consistencia de Base de Datos (`adminUsers.ts`, `userProfile.ts`): Actualización transparente y atómica de usuarios productivos existentes en Firestore sin popups bloqueantes ni fricción en la navegación.
+  * Auditoría Visual en Administración (`AdminUsersTable.tsx`, `AdminUserCardMobile.tsx`): Badge `✓ T&C v1.0` en mesa de control de escritorio y móvil.
+- Versión 5.70: Soberanía del Atleta, Pre-llenado Inteligente de Sensores & Calibración Exacta de Cargas (Stryd CP, FC de reposo basal, zonas Coggan/Friel hacia Intervals.icu).
 - Versión 5.57: Estandarización Integral Responsiva y "App-Like Experience" del Centro de Control (Admin), Design System Corporativo PULSE AI, Ergonomía Móvil y Blindaje Zero-Touch Backend:
   * Shell de Administración App-Like: Ocultamiento del sidebar rígido en pantallas < 1024px; navegación inferior fija (`AdminMobileBottomNav.tsx`) con 4 pestañas directas y Drawer modal para ajustes; cabecera móvil flotante (`AdminMobileHeader.tsx`) con acceso rápido táctil `[ 🏃 Mi Entreno ]`.
   * Estandarización Cromática PULSE AI: Verde Esmeralda (`bg-emerald-600 hover:bg-emerald-700 text-white`) como color primario institucional de acción en toda la plataforma. Erradicación total de botones morados o naranjas en interactivos.

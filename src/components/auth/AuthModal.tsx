@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck, AlertCircle, Clock } from "lucide-react";
+import { X, Mail, Lock, User, Eye, EyeOff, Activity, ArrowRight, ArrowLeft, ShieldCheck, AlertCircle, Clock, Send, UserPlus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface AuthModalProps {
@@ -14,15 +14,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, loginAsMasterAdminDemo, error: authError, clearError } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [displayName, setDisplayName] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
-  const [requestSubmitted, setRequestSubmitted] = useState<boolean>(false);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -136,7 +136,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs text-left space-y-1">
-              <div className="font-bold">🟡 Estado: En espera de aprobación</div>
+              <div className="flex items-center gap-1.5 font-bold">
+                <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <span>Estado: En espera de aprobación</span>
+              </div>
               <p className="text-[11px] text-amber-800 leading-snug">
                 El entrenador validará tu cuenta y activará tus planes. Una vez aprobada, podrás ingresar con tu correo <strong>{email}</strong> y contraseña.
               </p>
@@ -149,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
           <>
             <div className="text-center space-y-1 pt-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
-                <Sparkles className="h-3 w-3" />
+                <Activity className="h-3 w-3 text-emerald-600" />
                 <span>PULSE AI • Smart Coach</span>
               </div>
               <h2 className="text-xl font-black text-slate-900">
@@ -166,16 +169,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                 <button
                   type="button"
                   onClick={() => { setActiveTab("login"); setLocalError(null); clearError(); }}
-                  className={`flex-1 py-2 rounded-xl transition cursor-pointer ${activeTab === "login" ? "bg-white text-slate-950 shadow-xs font-black" : "text-slate-500 hover:text-slate-800"}`}
+                  className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === "login" ? "bg-white text-slate-950 shadow-xs font-black" : "text-slate-500 hover:text-slate-800"}`}
                 >
-                  Iniciar Sesión
+                  <User className="h-3.5 w-3.5" />
+                  <span>Iniciar Sesión</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setActiveTab("register"); setLocalError(null); clearError(); }}
-                  className={`flex-1 py-2 rounded-xl transition cursor-pointer ${activeTab === "register" ? "bg-white text-emerald-700 shadow-xs font-black" : "text-slate-500 hover:text-slate-800"}`}
+                  className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === "register" ? "bg-white text-emerald-700 shadow-xs font-black" : "text-slate-500 hover:text-slate-800"}`}
                 >
-                  ⚡ Registrarme como Atleta
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>Registrarme como Atleta</span>
                 </button>
               </div>
             )}
@@ -215,9 +220,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   Al continuar aceptas los <a href="/terms" target="_blank" className="underline hover:text-emerald-600 font-semibold">Términos</a> y la <a href="/privacy" target="_blank" className="underline hover:text-emerald-600 font-semibold">Privacidad</a>.
                 </p>
                 <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-slate-200"></div>
+                  <div className="flex-grow border-t border-slate-200" />
                   <span className="flex-shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">{activeTab === "login" ? "o con tu correo" : "o con formulario"}</span>
-                  <div className="flex-grow border-t border-slate-200"></div>
+                  <div className="flex-grow border-t border-slate-200" />
                 </div>
               </div>
             )}
@@ -228,14 +233,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre y Apellidos</label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej. Pedro Gómez"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-slate-900 font-medium"
-                    />
+                    <input type="text" required placeholder="Ej. Pedro Gómez" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-slate-900 font-medium" />
                   </div>
                 </div>
               )}
@@ -244,14 +242,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="atleta@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-slate-900 font-medium"
-                  />
+                  <input type="email" required placeholder="atleta@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-slate-900 font-medium" />
                 </div>
               </div>
 
@@ -308,14 +299,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               <button
                 type="submit"
                 disabled={isSubmitting || (activeTab === "register" && !termsAccepted)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? <span>Procesando...</span> : activeTab === "login" ? (
                   <><span>Entrar a mi Cuenta</span><ArrowRight className="h-3.5 w-3.5" /></>
                 ) : activeTab === "register" ? (
-                  <><span>🚀 Enviar Solicitud de Acceso</span><Sparkles className="h-3.5 w-3.5" /></>
+                  <><Send className="h-3.5 w-3.5" /><span>Enviar Solicitud de Acceso</span></>
                 ) : (
-                  <span>Enviar Enlace de Recuperación</span>
+                  <><Mail className="h-3.5 w-3.5" /><span>Enviar Enlace de Recuperación</span></>
                 )}
               </button>
 
@@ -334,8 +325,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   <button
                     type="button"
                     onClick={() => { setActiveTab("login"); setLocalError(null); clearError(); }}
-                    className="text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer"
-                  >← Volver a Iniciar Sesión</button>
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Volver a Iniciar Sesión</span>
+                  </button>
                 </div>
               )}
             </form>

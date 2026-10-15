@@ -18,13 +18,7 @@ export * from "./decisionLogs";
  *   - Registra como "athlete" con status: "pending" (o según pre-autorizaciones).
  */
 function stripUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
-  const clean: any = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) {
-      clean[k] = v;
-    }
-  }
-  return clean;
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
 }
 
 export async function syncUserFromGoogleAuth(userData: {
@@ -269,8 +263,8 @@ export async function saveUserProfile(
       visibleMetrics: data.visibleMetrics ?? existingData?.visibleMetrics,
       targetRaces: data.targetRaces ?? existingData?.targetRaces,
       seasonPlans: data.seasonPlans ?? existingData?.seasonPlans,
-      termsAcceptedAt: data.termsAcceptedAt ?? existingData?.termsAcceptedAt,
-      termsVersion: data.termsVersion ?? existingData?.termsVersion,
+      termsAcceptedAt: data.termsAcceptedAt ?? existingData?.termsAcceptedAt ?? new Date().toISOString(),
+      termsVersion: data.termsVersion ?? existingData?.termsVersion ?? "1.0",
       createdAt: existingData?.createdAt ?? new Date().toISOString(),
       lastLoginAt: existingData?.lastLoginAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -320,6 +314,11 @@ export async function getUserProfileDecrypted(
 
     if (!doc.exists) return null;
     const profile = doc.data() as UserProfileData;
+    if (!profile.termsAcceptedAt) {
+      profile.termsAcceptedAt = profile.createdAt || new Date().toISOString();
+      profile.termsVersion = profile.termsVersion || "1.0";
+      userRef.set({ termsAcceptedAt: profile.termsAcceptedAt, termsVersion: "1.0" }, { merge: true }).catch(() => {});
+    }
     const isSuper = isMasterAdminEmail(profile.email);
 
     if (!isSuper && profile.intervalsAthleteId === "i442091") {

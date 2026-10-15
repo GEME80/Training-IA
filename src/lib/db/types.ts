@@ -77,6 +77,8 @@ export interface AdminUserListItem {
   photoURL?: string;
   role: UserRole;
   status: UserStatus;
+  termsAcceptedAt?: string;
+  termsVersion?: string;
   intervalsAthleteId?: string;
   hasIntervalsKey: boolean;
   isPreAuthorized?: boolean;

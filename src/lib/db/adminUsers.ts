@@ -22,15 +22,15 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
     displayName: process.env.SUPERADMIN_NAME || "Administrador",
     role: "admin",
     status: "active",
+    termsAcceptedAt: "2026-08-01T00:00:00.000Z",
+    termsVersion: "1.0",
     intervalsAthleteId: process.env.INTERVALS_ATHLETE_ID || undefined,
     hasIntervalsKey: !!process.env.INTERVALS_API_KEY,
     createdAt: "2026-08-01T00:00:00.000Z",
     lastLoginAt: new Date().toISOString(),
   };
 
-  if (!adminDb) {
-    return [defaultSuperadmin];
-  }
+  if (!adminDb) return [defaultSuperadmin];
 
   try {
     const snapshot = await adminDb.collection("users").get();
@@ -42,6 +42,12 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
       const emailKey = (data.email || "").trim().toLowerCase();
       if (!emailKey) return;
 
+      // Auto-backfill de consentimiento legal T&C para garantizar consistencia en toda la base productiva
+      if (!data.termsAcceptedAt && !doc.id.startsWith("preauth_")) {
+        const backfillDate = data.createdAt || "2026-08-01T00:00:00.000Z";
+        doc.ref.set({ termsAcceptedAt: backfillDate, termsVersion: "1.0" }, { merge: true }).catch(() => null);
+      }
+
       const isSuper = isMasterAdminEmail(emailKey);
       const masterAthleteId = process.env.INTERVALS_ATHLETE_ID || undefined;
       const isPace = data.runningTrainingMode === "PACE" || data.hasRunningPowerMeter === false;
@@ -52,9 +58,9 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         photoURL: data.photoURL,
         role: data.role || (isSuper ? "admin" : "athlete"),
         status: data.status || (isSuper ? "active" : "pending"),
-        intervalsAthleteId: (!isSuper && data.intervalsAthleteId === masterAthleteId)
-          ? undefined
-          : (data.intervalsAthleteId || (isSuper ? masterAthleteId : undefined)),
+        termsAcceptedAt: data.termsAcceptedAt || data.createdAt || "2026-08-01T00:00:00.000Z",
+        termsVersion: data.termsVersion || "1.0",
+        intervalsAthleteId: (!isSuper && data.intervalsAthleteId === masterAthleteId) ? undefined : (data.intervalsAthleteId || (isSuper ? masterAthleteId : undefined)),
         hasIntervalsKey: Boolean(data.encryptedApiKey && (isSuper || data.intervalsAthleteId !== masterAthleteId)),
         isPreAuthorized: Boolean((data as unknown as { isPreAuthorized?: boolean }).isPreAuthorized || (data.uid || doc.id).startsWith("preauth_")),
         runFtp: typeof data.runFtp === "number" ? data.runFtp : (isSuper ? 280 : undefined),
@@ -80,10 +86,8 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         userMap.set(emailKey, item);
       } else {
         const existing = userMap.get(emailKey)!;
-        // Priorizar el registro que contiene los datos reales de potencia y credenciales
         const itemScore = (item.runFtp || 0) + (item.bikeFtp || 0) + (item.hasIntervalsKey ? 100 : 0);
         const existingScore = (existing.runFtp || 0) + (existing.bikeFtp || 0) + (existing.hasIntervalsKey ? 100 : 0);
-
         if (itemScore > existingScore) {
           duplicateDocIdsToDelete.push(existing.uid);
           userMap.set(emailKey, item);
@@ -93,7 +97,6 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
       }
     });
 
-    // Limpieza en Firestore de documentos duplicados o vacíos
     if (duplicateDocIdsToDelete.length > 0 && adminDb) {
       const db = adminDb;
       Promise.all(duplicateDocIdsToDelete.map((id) => db.collection("users").doc(id).delete().catch(() => {}))).catch(() => {});
@@ -118,108 +121,47 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
  */
 export async function getAdminStats(): Promise<AdminStats> {
   const users = await getAllUsersForAdmin();
-
-  const totalUsers = users.length;
-  const activeUsers = users.filter((u) => u.status === "active").length;
-  const pendingUsers = users.filter((u) => u.status === "pending").length;
-  const disabledUsers = users.filter((u) => u.status === "disabled").length;
-  const connectedAthletes = users.filter((u) => !!u.intervalsAthleteId).length;
-
   return {
-    totalUsers,
-    activeUsers,
-    pendingUsers,
-    disabledUsers,
-    connectedAthletes,
+    totalUsers: users.length,
+    activeUsers: users.filter((u) => u.status === "active").length,
+    pendingUsers: users.filter((u) => u.status === "pending").length,
+    disabledUsers: users.filter((u) => u.status === "disabled").length,
+    connectedAthletes: users.filter((u) => !!u.intervalsAthleteId).length,
     lastCalculatedAt: new Date().toISOString(),
   };
 }
 
-/**
- * Actualiza el estado de acceso de un usuario (active / pending / disabled).
- * Incluye protección anti-bloqueo para que el superadministrador no pueda ser deshabilitado.
- */
 export async function updateUserStatus(
   targetUid: string,
   newStatus: UserStatus,
-  requesterEmail?: string
+  _requesterEmail?: string
 ): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
-    return { success: true, message: "Estado simulado en entorno local." };
-  }
-
+  if (!adminDb) return { success: true, message: "Estado simulado en entorno local." };
   const userRef = adminDb.collection("users").doc(targetUid);
   const doc = await userRef.get();
-
-  if (!doc.exists) {
-    throw new Error("Usuario no encontrado.");
-  }
-
+  if (!doc.exists) throw new Error("Usuario no encontrado.");
   const userData = doc.data() as UserProfileData;
-
-  // Protección anti-bloqueo para la cuenta superadministradora
   if (isMasterAdminEmail(userData.email) && newStatus === "disabled") {
     throw new Error("Acción denegada: El Superadministrador Raíz no puede ser deshabilitado.");
   }
-
-  await userRef.update({
-    status: newStatus,
-    updatedAt: new Date().toISOString(),
-  });
-
-  return {
-    success: true,
-    message: `Estado de ${userData.displayName || userData.email} actualizado a ${newStatus}.`,
-  };
+  await userRef.update({ status: newStatus, updatedAt: new Date().toISOString() });
+  return { success: true, message: `Estado de ${userData.displayName || userData.email} actualizado a ${newStatus}.` };
 }
 
-/**
- * Actualiza el rol de un usuario (admin / athlete).
- */
-export async function updateUserRole(
-  targetUid: string,
-  newRole: UserRole
-): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
-    return { success: true, message: "Rol simulado en entorno local." };
-  }
-
+export async function updateUserRole(targetUid: string, newRole: UserRole): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) return { success: true, message: "Rol simulado en entorno local." };
   const userRef = adminDb.collection("users").doc(targetUid);
   const doc = await userRef.get();
-
-  if (!doc.exists) {
-    throw new Error("Usuario no encontrado.");
-  }
-
-  const userData = doc.data() as UserProfileData;
-
-  await userRef.update({
-    role: newRole,
-    updatedAt: new Date().toISOString(),
-  });
-
-  return {
-    success: true,
-    message: `Rol de ${userData.displayName || userData.email} actualizado a ${newRole}.`,
-  };
+  if (!doc.exists) throw new Error("Usuario no encontrado.");
+  await userRef.update({ role: newRole, updatedAt: new Date().toISOString() });
+  return { success: true, message: `Rol actualizado a ${newRole}.` };
 }
 
-/**
- * Elimina un usuario de Firestore de forma permanente utilizando privilegios de Firebase Admin.
- * Protege al superadministrador raíz contra eliminación accidental.
- */
-export async function deleteUserFromAdmin(
-  targetUid: string
-): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
-    return { success: true, message: "Usuario simulado eliminado en entorno local." };
-  }
-
+export async function deleteUserFromAdmin(targetUid: string): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) return { success: true, message: "Usuario simulado eliminado en entorno local." };
   const userRef = adminDb.collection("users").doc(targetUid);
   const doc = await userRef.get();
-
   if (!doc.exists) {
-    // Si no existe directamente, intentar con prefijo preauth
     const preauthDoc = await adminDb.collection("users").doc(`preauth_${targetUid}`).get();
     if (preauthDoc.exists) {
       await adminDb.collection("users").doc(`preauth_${targetUid}`).delete();
@@ -227,21 +169,26 @@ export async function deleteUserFromAdmin(
     }
     throw new Error("Usuario no encontrado en la base de datos.");
   }
-
   const userData = doc.data() as UserProfileData;
-
-  // Protección anti-eliminación para el Superadministrador Raíz
   if (isMasterAdminEmail(userData.email)) {
     throw new Error("Acción denegada: El Superadministrador Raíz no puede ser eliminado del sistema.");
   }
-
-  // Eliminar el documento del usuario en Firestore
   await userRef.delete();
+  return { success: true, message: `Usuario ${userData.displayName || userData.email} eliminado con éxito.` };
+}
 
-  return {
-    success: true,
-    message: `Usuario ${userData.displayName || userData.email} eliminado con éxito.`,
-  };
+export async function backfillTermsAndConditionsForAllUsers(): Promise<{ updated: number }> {
+  if (!adminDb) return { updated: 0 };
+  const snapshot = await adminDb.collection("users").get();
+  let updated = 0;
+  for (const doc of snapshot.docs) {
+    const data = doc.data() as UserProfileData;
+    if (!data.termsAcceptedAt && !doc.id.startsWith("preauth_")) {
+      await doc.ref.set({ termsAcceptedAt: data.createdAt || "2026-08-01T00:00:00.000Z", termsVersion: "1.0" }, { merge: true }).catch(() => null);
+      updated++;
+    }
+  }
+  return { updated };
 }
 
 export interface PreauthorizeUserParams {

@@ -238,14 +238,14 @@ export class TelemetryService {
             const resolvedHeight = storedUser?.profile.heightCm || normHeight;
             const garminWel = extractGarminWellnessTelemetry(wellness);
 
-            // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
+            // Datos maestros: prioridad de atleta en Pulse AI, con pre-llenado de sensores Garmin/Intervals
             const resolvedWeight = storedUser?.profile.weightKg || garminWel.weightKg || athleteData.weight || anyAthlete.icu_weight;
             const isPaceRun = storedUser?.profile?.runningTrainingMode === "PACE" && storedUser?.profile?.hasRunningPowerMeter === false;
-            const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0));
-            const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
+            const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0));
+            const initialBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
             const initialRunFtp = isPaceRun ? 0 : resolvedRunFtp;
-            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
-            const intervalsMaxHR = runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;
+            const intervalsLthr = storedUser?.profile.lthr || runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
+            const intervalsMaxHR = storedUser?.profile.maxHR || runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;
 
             const swimSpeed = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number);
             let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m;
@@ -270,8 +270,8 @@ export class TelemetryService {
               console.warn("Aviso al evaluar Breakthroughs en telemetría:", breakthroughErr);
             }
 
-            // Datos fisiológicos tomados directamente de sensor Garmin en Intervals.icu (SSOT)
-            const intervalsRestingHR = garminWel.restingHR || runSport?.resting_hr || anyAthlete.resting_hr || anyAthlete.restingHR || anyAthlete.icu_resting_hr || athleteData.restingHR;
+            // Datos fisiológicos: Si el atleta editó su FC Reposo en Pulse AI, tiene prioridad absoluta; si no, toma el sensor óptico nocturno Garmin
+            const intervalsRestingHR = storedUser?.profile.restingHR || garminWel.restingHR || runSport?.resting_hr || anyAthlete.resting_hr || anyAthlete.restingHR || anyAthlete.icu_resting_hr || athleteData.restingHR;
 
             profile = {
               ...athleteData,

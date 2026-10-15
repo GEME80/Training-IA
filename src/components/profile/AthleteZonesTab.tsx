@@ -42,8 +42,8 @@ interface AthleteZonesTabProps {
   suggestedSwimCss?: ThresholdSuggestionItem | null;
   onNavigateToProfile: () => void;
   onToggleMode: (newMode: RunningTrainingMode) => void;
-  onEditThreshold: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS") => void;
-  onUpdateThreshold: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => Promise<void>;
+  onEditThreshold: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS" | "RESTING_HR" | "MAX_HR") => void;
+  onUpdateThreshold: (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS" | "RESTING_HR" | "MAX_HR", val: string | number) => Promise<void>;
   onApplySuggestion?: (sug: ThresholdSuggestionItem) => Promise<void>;
   onDismissSuggestion?: (suggestion: ThresholdSuggestionItem) => void;
 }

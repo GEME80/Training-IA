@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Check, Loader2, Footprints, Bike, HeartPulse, Timer, Waves } from "lucide-react";
+import { X, Check, Loader2, Footprints, Bike, HeartPulse, Timer, Waves, Moon } from "lucide-react";
 
-export type EditableThresholdMetric = "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS";
+export type EditableThresholdMetric = "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS" | "RESTING_HR" | "MAX_HR";
 
 interface QuickThresholdModalProps {
   isOpen: boolean;
@@ -52,6 +52,24 @@ const METRIC_CONFIG: Record<
     iconColor: "text-rose-500",
     isNumeric: true,
     placeholder: "168",
+  },
+  MAX_HR: {
+    title: "Frecuencia Cardíaca Máxima",
+    subtitle: "Ajusta tu FC máxima alcanzada en test de campo o prueba de esfuerzo",
+    unit: "bpm",
+    icon: HeartPulse,
+    iconColor: "text-rose-600",
+    isNumeric: true,
+    placeholder: "185",
+  },
+  RESTING_HR: {
+    title: "FC de Reposo Basal",
+    subtitle: "Ajusta tu frecuencia cardíaca de reposo para la calibración de carga y zonas cardíacas",
+    unit: "bpm",
+    icon: Moon,
+    iconColor: "text-indigo-400",
+    isNumeric: true,
+    placeholder: "52",
   },
   SWIM_CSS: {
     title: "Ritmo Umbral Natación (CSS)",

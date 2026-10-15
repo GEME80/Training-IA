@@ -153,20 +153,36 @@ export async function POST(req: NextRequest) {
 
         // 1. Ciclismo FTP
         if (bikeFtp !== undefined && bikeFtp !== null && bikeFtp > 0) {
+          const ftp = Number(bikeFtp);
+          const cogganPowerZones = [
+            Math.round(ftp * 0.55),
+            Math.round(ftp * 0.75),
+            Math.round(ftp * 0.90),
+            Math.round(ftp * 1.05),
+            Math.round(ftp * 1.20),
+            Math.round(ftp * 1.50),
+          ];
           const rideSport = (sports || []).find(isRideSport);
           if (rideSport?.id) {
-            await client.updateSportSettings(rideSport.id, { ftp: Number(bikeFtp) }).catch(() => null);
+            await client.updateSportSettings(rideSport.id, { ftp, power_zones: cogganPowerZones }).catch(() => null);
           }
-          await client.updateAthlete({ icu_ftp: Number(bikeFtp) } as any).catch(() => null);
+          await client.updateAthlete({ icu_ftp: ftp } as any).catch(() => null);
         }
 
-        // 2. Stryd Potencia Carrera
+        // 2. Stryd Potencia Carrera (Calibración exacta de 5 zonas Stryd para TSS)
         if (runFtp !== undefined && runFtp !== null && runFtp > 0) {
+          const cp = Number(runFtp);
+          const strydPowerZones = [
+            Math.round(cp * 0.80),
+            Math.round(cp * 0.90),
+            Math.round(cp * 1.00),
+            Math.round(cp * 1.15),
+          ];
           const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
-            await client.updateSportSettings(runSport.id, { ftp: Number(runFtp) }).catch(() => null);
+            await client.updateSportSettings(runSport.id, { ftp: cp, power_zones: strydPowerZones }).catch(() => null);
           }
-          await client.updateAthlete({ icu_running_ftp: Number(runFtp) } as any).catch(() => null);
+          await client.updateAthlete({ icu_running_ftp: cp } as any).catch(() => null);
         }
 
         // 3. Ritmo Umbral Carrera
@@ -189,34 +205,46 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // 5. Frecuencia Cardíaca y Biometría (SSOT Intervals)
+        // 5. Frecuencia Cardíaca y Biometría (SSOT Intervals para CTL/ATL/TSS)
         const numLthr = lthr !== undefined && lthr !== null ? Number(lthr) : undefined;
         const numMaxHR = maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined;
         const numResting = restingHR !== undefined && restingHR !== null ? Number(restingHR) : undefined;
         const numWeight = weightKg !== undefined && weightKg !== null ? Number(weightKg) : undefined;
 
-        if (numLthr || numMaxHR || numResting || numWeight) {
+        if (numLthr || numMaxHR || numResting || numWeight || birthDate || gender) {
+          const hrZones = numLthr
+            ? [
+                Math.round(numLthr * 0.81),
+                Math.round(numLthr * 0.89),
+                Math.round(numLthr * 0.99),
+                Math.round(numLthr * 1.05),
+              ]
+            : undefined;
+
           if (numLthr || numMaxHR) {
             const runSport = (sports || []).find(isRunSport);
             if (runSport?.id) {
               await client.updateSportSettings(runSport.id, {
-                ...(numLthr ? { lthr: numLthr } : {}),
+                ...(numLthr ? { lthr: numLthr, hr_zones: hrZones } : {}),
                 ...(numMaxHR ? { max_hr: numMaxHR } : {}),
               }).catch(() => null);
             }
             const rideSport = (sports || []).find(isRideSport);
             if (rideSport?.id) {
               await client.updateSportSettings(rideSport.id, {
-                ...(numLthr ? { lthr: numLthr } : {}),
+                ...(numLthr ? { lthr: numLthr, hr_zones: hrZones } : {}),
                 ...(numMaxHR ? { max_hr: numMaxHR } : {}),
               }).catch(() => null);
             }
           }
+
           await client.updateAthlete({
             ...(numLthr ? { lthr: numLthr } : {}),
             ...(numMaxHR ? { max_hr: numMaxHR } : {}),
             ...(numResting ? { icu_resting_hr: numResting } : {}),
             ...(numWeight ? { weight: numWeight, icu_weight: numWeight } : {}),
+            ...(birthDate ? { dob: birthDate, icu_date_of_birth: birthDate } : {}),
+            ...(gender ? { sex: gender, icu_gender: gender } : {}),
           } as any).catch(() => null);
 
           if (numWeight) {

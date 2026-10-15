@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { User, Calendar, Scale, Ruler, Check, Loader2, Save } from "lucide-react";
+import { User, Calendar, Scale, Ruler, Check, Loader2, Save, Moon } from "lucide-react";
 
 interface AthleteBioProfileTabProps {
   athleteName: string;
@@ -10,12 +10,14 @@ interface AthleteBioProfileTabProps {
   gender?: "M" | "F" | "OTHER";
   weightKg?: number;
   heightCm?: number;
+  restingHR?: number;
   onSaveBio: (data: {
     displayName: string;
     birthDate?: string;
     gender?: "M" | "F" | "OTHER";
     weightKg?: number;
     heightCm?: number;
+    restingHR?: number;
   }) => Promise<void>;
 }
 
@@ -26,6 +28,7 @@ export const AthleteBioProfileTab: React.FC<AthleteBioProfileTabProps> = ({
   gender: initialGender,
   weightKg: initialWeight,
   heightCm: initialHeight,
+  restingHR: initialRestingHR,
   onSaveBio,
 }) => {
   const [displayName, setDisplayName] = useState(initialName || "");
@@ -33,6 +36,7 @@ export const AthleteBioProfileTab: React.FC<AthleteBioProfileTabProps> = ({
   const [gender, setGender] = useState<"M" | "F" | "OTHER" | undefined>(initialGender);
   const [weightKg, setWeightKg] = useState<number | undefined>(initialWeight);
   const [heightCm, setHeightCm] = useState<number | undefined>(initialHeight);
+  const [restingHR, setRestingHR] = useState<number | undefined>(initialRestingHR);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -42,7 +46,8 @@ export const AthleteBioProfileTab: React.FC<AthleteBioProfileTabProps> = ({
     setGender(initialGender);
     setWeightKg(initialWeight);
     setHeightCm(initialHeight);
-  }, [initialName, initialBirthDate, initialGender, initialWeight, initialHeight]);
+    setRestingHR(initialRestingHR);
+  }, [initialName, initialBirthDate, initialGender, initialWeight, initialHeight, initialRestingHR]);
 
   const liveAge = useMemo(() => {
     if (!birthDate) return null;
@@ -66,6 +71,7 @@ export const AthleteBioProfileTab: React.FC<AthleteBioProfileTabProps> = ({
         gender,
         weightKg,
         heightCm,
+        restingHR,
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
@@ -192,6 +198,28 @@ export const AthleteBioProfileTab: React.FC<AthleteBioProfileTabProps> = ({
                 placeholder="175"
               />
               <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">cm</span>
+            </div>
+          </div>
+
+          {/* FC de Reposo (Basal) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Moon className="h-3.5 w-3.5 text-indigo-400" /> FC Reposo
+              </label>
+              <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold">Basal ✎</span>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                min="30"
+                max="120"
+                value={restingHR || ""}
+                onChange={(e) => setRestingHR(e.target.value ? Number(e.target.value) : undefined)}
+                className={inputClass}
+                placeholder="54"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">bpm</span>
             </div>
           </div>
         </div>

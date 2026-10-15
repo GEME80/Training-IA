@@ -175,7 +175,7 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
           {/* Bloque 2: Biometría & Umbrales */}
           <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biometría & Rendimiento</span>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Peso Corporal</label>
@@ -194,6 +194,16 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
                 <div className="relative mt-1">
                   <input type="number" value={form.heightCm || ""} onChange={(e) => update("heightCm", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cm</span>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">FC Reposo (Basal)</label>
+                  <SyncBadge />
+                </div>
+                <div className="relative mt-1">
+                  <input type="number" min="30" max="120" value={form.restingHR || ""} onChange={(e) => update("restingHR", Number(e.target.value))} className={numInputClass} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">bpm</span>
                 </div>
               </div>
             </div>

@@ -18,7 +18,7 @@ interface ContextualThresholdsGridProps {
   onToggleRunMode: (mode: "POWER" | "PACE") => void;
   bikeTelemetryMode: "POWER" | "HR";
   onToggleBikeMode: (mode: "POWER" | "HR") => void;
-  onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS") => void;
+  onEditThreshold?: (metric: "RUN_FTP" | "RUN_PACE" | "BIKE_FTP" | "LTHR" | "SWIM_CSS" | "RESTING_HR" | "MAX_HR") => void;
 }
 
 export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> = ({
@@ -197,13 +197,16 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               </div>
 
               {/* Tarjeta 4: FC Reposo */}
-              <div className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+              <div
+                onClick={() => onEditThreshold?.("RESTING_HR")}
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-indigo-300 dark:hover:border-indigo-800 transition cursor-pointer"
+              >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
                     <Moon className="h-3 w-3 text-indigo-400" />
                     FC Reposo
                   </span>
-                  <span className="text-[9px] text-slate-400 font-sans">Basal</span>
+                  <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
                   {restingHR || 54}{" "}
@@ -252,13 +255,16 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               </div>
 
               {/* Tarjeta 3: FC Reposo */}
-              <div className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+              <div
+                onClick={() => onEditThreshold?.("RESTING_HR")}
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-indigo-300 dark:hover:border-indigo-800 transition cursor-pointer"
+              >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
                     <Moon className="h-3 w-3 text-indigo-400" />
                     FC Reposo
                   </span>
-                  <span className="text-[9px] text-slate-400 font-sans">Basal</span>
+                  <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
                   {restingHR || 54}{" "}
@@ -308,13 +314,16 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
               </div>
 
               {/* Tarjeta 3: FC Reposo */}
-              <div className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+              <div
+                onClick={() => onEditThreshold?.("RESTING_HR")}
+                className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-indigo-300 dark:hover:border-indigo-800 transition cursor-pointer"
+              >
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
                   <span className="flex items-center gap-1">
                     <Moon className="h-3 w-3 text-indigo-400" />
                     FC Reposo
                   </span>
-                  <span className="text-[9px] text-slate-400 font-sans">Basal</span>
+                  <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
                   {restingHR || 54}{" "}

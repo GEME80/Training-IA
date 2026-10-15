@@ -125,17 +125,18 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     }
   };
 
-  const handleSaveBio = async (bioData: { displayName: string; birthDate?: string; gender?: "M" | "F" | "OTHER"; weightKg?: number; heightCm?: number }) => {
+  const handleSaveBio = async (bioData: { displayName: string; birthDate?: string; gender?: "M" | "F" | "OTHER"; weightKg?: number; heightCm?: number; restingHR?: number }) => {
     setAthleteName(bioData.displayName);
     if (bioData.birthDate !== undefined) setBirthDate(bioData.birthDate);
     if (bioData.gender !== undefined) setGender(bioData.gender);
     if (bioData.weightKg !== undefined) setWeightKg(bioData.weightKg);
     if (bioData.heightCm !== undefined) setHeightCm(bioData.heightCm);
+    if (bioData.restingHR !== undefined) setRestingHR(bioData.restingHR);
 
     await onSave({
       displayName: bioData.displayName, birthDate: bioData.birthDate, gender: bioData.gender,
       weightKg: bioData.weightKg, heightCm: bioData.heightCm,
-      runFtp, bikeFtp, lthr, restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
+      runFtp, bikeFtp, lthr, restingHR: bioData.restingHR ?? restingHR, maxHR, hasRunningPowerMeter, runningTrainingMode,
       runThresholdPaceStr, runThresholdPaceSecPerKm, swimCssStr, swimCssSecPer100m,
       intervalsAthleteId: athleteId, apiKey, weeklyAvailability,
     });
@@ -171,19 +172,21 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
     showNotification(`Modo actualizado a: ${newMode === "POWER" ? "Potencia Carrera (Stryd)" : "Ritmo (Pace)"}. Semanas adaptadas.`);
   };
 
-  const handleUpdateThreshold = async (metric: "RUN_PACE" | "RUN_FTP" | "BIKE_FTP" | "LTHR" | "SWIM_CSS", val: string | number) => {
+  const handleUpdateThreshold = async (metric: EditableThresholdMetric, val: string | number) => {
     let pSec = runThresholdPaceSecPerKm, pStr = runThresholdPaceStr;
     let sSec = swimCssSecPer100m, sStr = swimCssStr;
-    let rFtp = runFtp, bFtp = bikeFtp, hLthr = lthr;
+    let rFtp = runFtp, bFtp = bikeFtp, hLthr = lthr, rResting = restingHR, rMax = maxHR;
 
     if (metric === "RUN_PACE") { pStr = String(val); pSec = parsePaceToSeconds(pStr); setRunThresholdPaceStr(pStr); setRunThresholdPaceSecPerKm(pSec); }
     else if (metric === "RUN_FTP") { rFtp = Number(val); setRunFtp(rFtp); }
     else if (metric === "BIKE_FTP") { bFtp = Number(val); setBikeFtp(bFtp); }
     else if (metric === "LTHR") { hLthr = Number(val); setLthr(hLthr); }
+    else if (metric === "MAX_HR") { rMax = Number(val); setMaxHR(rMax); }
+    else if (metric === "RESTING_HR") { rResting = Number(val); setRestingHR(rResting); }
     else if (metric === "SWIM_CSS") { sStr = String(val); sSec = parseSwimPaceToSeconds(sStr); setSwimCssStr(sStr); setSwimCssSecPer100m(sSec); }
 
     await onSave({
-      runFtp: rFtp, bikeFtp: bFtp, lthr: hLthr, restingHR, maxHR,
+      runFtp: rFtp, bikeFtp: bFtp, lthr: hLthr, restingHR: rResting, maxHR: rMax,
       weightKg, heightCm, birthDate, gender, displayName: athleteName,
       runThresholdPaceStr: pStr, runThresholdPaceSecPerKm: pSec,
       swimCssStr: sStr, swimCssSecPer100m: sSec,
@@ -212,62 +215,31 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
 
       {/* 2. Barra de Pestañas */}
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto no-scrollbar">
-        <button
-          type="button"
-          onClick={() => setActiveTab("zones")}
-          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
-            activeTab === "zones"
-              ? "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-sm"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span>Zonas & Umbrales</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("profile")}
-          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
-            activeTab === "profile"
-              ? "bg-sky-500 text-white font-black shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span>Perfil & Biometría</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("availability")}
-          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
-            activeTab === "availability"
-              ? "bg-emerald-500 text-white font-black shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span>Disponibilidad</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("intervals")}
-          className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
-            activeTab === "intervals"
-              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <Radio className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
-          <span>Conexión Intervals</span>
-          {isLiveConnected || !!apiKey ? (
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 inline-block" />
-          ) : (
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-rose-500 inline-block" />
-          )}
-        </button>
+        {[
+          { id: "zones" as const, label: "Zonas & Umbrales", icon: Zap, activeClass: "bg-emerald-600 text-white hover:bg-emerald-700 font-black shadow-sm" },
+          { id: "profile" as const, label: "Perfil & Biometría", icon: User, activeClass: "bg-sky-500 text-white font-black shadow-xs" },
+          { id: "availability" as const, label: "Disponibilidad", icon: CalendarDays, activeClass: "bg-emerald-500 text-white font-black shadow-xs" },
+          { id: "intervals" as const, label: "Conexión Intervals", icon: Radio, activeClass: "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-xs" },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer shrink-0 ${
+                isActive ? tab.activeClass : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>{tab.label}</span>
+              {tab.id === "intervals" && (
+                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full inline-block ${isLiveConnected || !!apiKey ? "bg-emerald-500" : "bg-rose-500"}`} />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* 3. Contenido de Pestaña */}
@@ -291,7 +263,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         <div className="animate-fadeIn">
           <AthleteBioProfileTab
             athleteName={athleteName} email={email} birthDate={birthDate} gender={gender}
-            weightKg={weightKg} heightCm={heightCm} onSaveBio={handleSaveBio}
+            weightKg={weightKg} heightCm={heightCm} restingHR={restingHR} onSaveBio={handleSaveBio}
           />
         </div>
       )}
@@ -324,6 +296,8 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           quickEditMetric === "RUN_FTP" ? runFtp :
           quickEditMetric === "BIKE_FTP" ? bikeFtp :
           quickEditMetric === "LTHR" ? (lthr || 0) :
+          quickEditMetric === "MAX_HR" ? (maxHR || 0) :
+          quickEditMetric === "RESTING_HR" ? (restingHR || 0) :
           quickEditMetric === "SWIM_CSS" ? swimCssStr : ""
         }
         onClose={() => setQuickEditMetric(null)}

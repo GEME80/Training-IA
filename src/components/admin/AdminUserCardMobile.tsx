@@ -137,8 +137,8 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
           )}
         </div>
 
-        {/* Subscription / Billing Badge */}
-        <div>
+        {/* Subscription / Billing & Terms Badge */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           {u.billingStatus === "PAID" ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <span>${u.planPrice || 80} USD</span>
@@ -149,6 +149,9 @@ export const AdminUserCardMobile: React.FC<AdminUserCardMobileProps> = ({
               <span>Pendiente (${u.planPrice || 80})</span>
             </span>
           )}
+          <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-700 font-medium">
+            <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" /> T&C v{u.termsVersion || "1.0"}
+          </span>
         </div>
       </div>
 

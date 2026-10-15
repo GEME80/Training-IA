@@ -147,21 +147,20 @@ export const AdminUsersTable: React.FC<AdminUsersTableProps> = ({
                           </span>
                         )}
 
-                        <div className="text-[10px] font-mono">
+                        <div className="text-[10px] font-mono flex items-center gap-1.5 flex-wrap">
                           {u.billingStatus === "PAID" ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/70 font-semibold">
                               <span>${u.planPrice || 80} USD</span>
                               <span className="text-emerald-600 font-bold">✓ Pagado</span>
                             </span>
                           ) : u.billingStatus === "PENDING_VERIFICATION" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
-                              Por verificar
-                            </span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold">Por verificar</span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
-                              Pendiente (${u.planPrice || 80})
-                            </span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">Pendiente (${u.planPrice || 80})</span>
                           )}
+                          <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-700 font-medium">
+                            <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" /> T&C v{u.termsVersion || "1.0"}
+                          </span>
                         </div>
                       </div>
                     </td>

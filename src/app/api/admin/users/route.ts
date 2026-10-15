@@ -63,6 +63,8 @@ export async function GET(req: NextRequest) {
           hasIntervalsKey: Boolean(process.env.INTERVALS_API_KEY),
           createdAt: "2026-08-01T00:00:00.000Z",
           lastLoginAt: new Date().toISOString(),
+          termsAcceptedAt: "2026-08-01T00:00:00.000Z",
+          termsVersion: "1.0",
         },
       ],
       stats: {

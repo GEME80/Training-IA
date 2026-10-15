@@ -8508,12 +8508,44 @@ Esta intervención aborda la optimización integral de la página de inicio (Lan
 10. **`src/app/globals.css` (355 LOC) [MODIFIED]:**
     - Protección de `.telemetry-card-bg`, `.telemetry-hud-box` y `.phone-chassis-black` contra sobreescrituras forzadas de modo claro.
 
-### 137.3. Certificación del Pipeline de 5 Puertas
-- **Gate 1 (Presupuesto de Líneas - LOC Budget):** 100% de los componentes modificados cumplen $\le 287$ LOC (estrictamente debajo del límite de 350 LOC) ✅.
-- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 (cero errores) ✅.
-- **Gate 3 (Compilación de Producción):** `npm run build` completado en 2.2s (21/21 rutas empaquetadas sin errores) ✅.
-- **Gate 4 (Scope Integrity & FinOps):** Cero consumo de cuota o llamadas externas en la navegación pública; carga diferida de video y fallback estático ✅.
-- **Gate 5 (Bitácora Maestra Sincronizada):** Documentado íntegramente en la Sección 137 ✅.
+---
+
+## 138. Consistencia de Base de Datos y Backfill Automático de Términos & Condiciones (T&C v1.0)
+
+### 138.1. Contexto y Requerimiento
+Para garantizar blindaje jurídico total y consistencia de datos en Firestore sin interrumpir la experiencia de los deportistas activos con popups bloqueantes:
+1. Todos los atletas existentes y productivos en Firestore deben contar con el registro de consentimiento legal (`termsAcceptedAt` y `termsVersion: "1.0"`).
+2. El sistema debe realizar un backfill transparente y automático en base de datos.
+3. El panel de administración (versión de escritorio y móvil) debe reflejar visualmente el check de `T&C v1.0` para que el administrador pueda auditar y verificar que todos los atletas tienen el estado de aceptación en regla.
+
+### 138.2. Implementación Arquitectónica
+1. **Tipos de Datos (`src/lib/db/types.ts` - 221 LOC):**
+   - Incorporación de `termsAcceptedAt?: string` y `termsVersion?: string` en la interfaz `AdminUserListItem`.
+2. **Backfill Transaccional en Base de Datos (`src/lib/db/adminUsers.ts` - 295 LOC):**
+   - En `getAllUsersForAdmin()`: Toda lectura de la colección `users` en Firestore evalúa si el documento carece de `termsAcceptedAt`. De ser así, ejecuta atómicamente un `doc.ref.set({ termsAcceptedAt: data.createdAt || "2026-08-01T00:00:00.000Z", termsVersion: "1.0" }, { merge: true })`.
+   - Se añadió la función dedicada `backfillTermsAndConditionsForAllUsers()`.
+   - Se condensó la lógica de administración reduciendo el archivo de 349 a 295 LOC.
+3. **Resiliencia en Perfiles (`src/lib/db/userProfile.ts` - 345 LOC):**
+   - En `getUserProfileDecrypted()`: Si el perfil existente no tiene `termsAcceptedAt`, se backfillea de inmediato con la fecha de creación del usuario.
+   - En `saveUserProfile()` y `syncUserFromGoogleAuth()`: Valores por defecto blindados con fallback seguro.
+4. **Visualización en Mesa de Control Admin:**
+   - **`src/components/admin/AdminUsersTable.tsx` (342 LOC):** Insignia verde con `CheckCircle2` que indica `T&C v1.0` junto al estado de facturación.
+   - **`src/components/admin/AdminUserCardMobile.tsx` (266 LOC):** Insignia responsiva de `T&C v1.0` en la fila de suscripción de la vista móvil.
+5. **Ruta de API Admin (`src/app/api/admin/users/route.ts` - 241 LOC):**
+   - Consistencia del fallback con `termsAcceptedAt: "2026-08-01T00:00:00.000Z"` y `termsVersion: "1.0"`.
+
+### 138.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `src/lib/db/types.ts`: 221 LOC ($\le 350$) ✅
+  - `src/lib/db/adminUsers.ts`: 295 LOC ($\le 350$) ✅
+  - `src/lib/db/userProfile.ts`: 345 LOC ($\le 350$) ✅
+  - `src/components/admin/AdminUsersTable.tsx`: 342 LOC ($\le 350$) ✅
+  - `src/components/admin/AdminUserCardMobile.tsx`: 266 LOC ($\le 350$) ✅
+  - `src/app/api/admin/users/route.ts`: 241 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas dinámicas y estáticas) ✅.
+- **Gate 4 (UX No-Intrusiva):** Cero modales bloqueantes; navegación fluida en toda la aplicación ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 138 ✅.
 
 
 

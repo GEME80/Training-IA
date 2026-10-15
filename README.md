@@ -1,9 +1,20 @@
-# ⚡ SGEA Pro (v5.69) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.70) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🎯 **Soberanía del Atleta, Pre-llenado Inteligente de Sensores & Calibración Exacta de Cargas (v5.70):**
+  - **Soberanía y Edición Libre en Pulse AI (SSOT):** El deportista elige explícitamente su modalidad de entrenamiento (`[ 🔘 Potencia (Stryd) | 🔘 Ritmo ]`). En modo potencia, el ingreso del Critical Power (CP) de Stryd es manual directo desde la app Stryd. Todos los campos biométricos y de frecuencia cardíaca (FC de Reposo Basal, FC Máxima, LTHR, Peso, Altura, Fecha de Nacimiento) son 100% editables por el deportista en cualquier momento desde `AthleteBioProfileTab`, `ContextualThresholdsGrid`, `QuickThresholdModal` y `AthleteEditProfileModal`.
+  - **Pre-llenado de Sensores de Cero Fricción para Nuevos Atletas:** Ingesta automática desde la telemetría del sensor óptico nocturno de Garmin Connect (FC de reposo en sueño profundo de `/wellness`), báscula inteligente y umbrales de reloj. Si el atleta nunca ha configurado datos en Intervals.icu, Pulse AI puebla los valores iniciales sin forzarlo a manipulaciones manuales iniciales.
+  - **Precedencia Absoluta de la Verdad en Telemetría (`telemetryService.ts`):** Las ediciones confirmadas por el atleta en Pulse AI (`storedUser.profile.*`) tienen prioridad absoluta sobre lecturas crudas o desactualizadas de sensores externos.
+  - **Sincronización Maestra y Calibración Fisiológica de Cargas hacia Intervals.icu (`route.ts`):** Al guardar cualquier umbral en Pulse AI, se actualizan de inmediato en Intervals.icu:
+    * *Carrera:* `sportSettings[Run].ftp` + las 5 zonas exactas de Stryd (`power_zones: [0.80*CP, 0.90*CP, 1.00*CP, 1.15*CP]`) para un cálculo fidedigno de Power TSS.
+    * *Ciclismo:* `sportSettings[Ride].ftp` + las 7 zonas Coggan para cálculo exacto de bTSS.
+    * *Cardio:* `sportSettings.lthr` + zonas Friel (Z1-Z5c) y `athlete.icu_resting_hr` para cálculo de hrTSS.
+    * *Biometría Diaria:* `athlete.weight` y `wellness[today].weight` para mantener las gráficas diarias de CTL, ATL, TSB y $W/kg$ perfectamente consistentes sin saltos.
+  - **Aislamiento e Inmutabilidad del Motor de Macrociclos:** Todo el motor de prescripción de entrenamientos y periodización permanece intacto, garantizando cero regresiones operativas.
 
 - 🚀 **Rediseño Integral de Conversión del Home, Telemetría Multideporte & Video HD (v5.69):**
   - **Hero Cinematográfico de Alto Rendimiento (`HeroSection.tsx` & `HeroAthleteTelemetryCard.tsx`):** Titular directo de valor (*"Tu Head Coach Inteligente que Adapta tu Entrenamiento"*), comunicación empática enfocada en el deportista e integración de video nativo en bucle `/videos/hero-athlete.mp4` (`muted`, `loop`, `playsInline`) con transparencia cristalina (eliminación del velo opaco central) y fallback a imagen HD.

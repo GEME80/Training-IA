@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity, Sparkles, Trash2 } from "lucide-react";
+import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { useAuth } from "@/context/AuthContext";
 import { AdminUsersTable } from "./AdminUsersTable";
@@ -30,14 +30,11 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [connectionFilter, setConnectionFilter] = useState<string>("ALL");
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [isSeedingDemos, setIsSeedingDemos] = useState<boolean>(false);
 
   // Modales
   const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<AdminUserListItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<AdminUserListItem | null>(null);
-
-  const hasDemos = useMemo(() => users.some((u) => u.uid?.startsWith("demo_") || u.email?.includes("pulse-demo.com")), [users]);
 
   // Conteo para métricas y segmentos
   const counts = useMemo(() => {
@@ -70,34 +67,6 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
     setIsRefreshing(true);
     await onRefresh();
     setTimeout(() => setIsRefreshing(false), 500);
-  };
-
-  const handleSeedDemos = async () => {
-    setIsSeedingDemos(true);
-    try {
-      const res = await fetch("/api/admin/demo-athletes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "seed", requesterUid: user?.uid || userProfile?.uid, requesterEmail: user?.email || userProfile?.email }),
-      });
-      const data = await res.json();
-      if (data.success) { showMessage("7 Atletas Demo sembrados para pruebas.", "success"); onRefresh(); }
-      else showMessage(data.error || "Error al sembrar demos.", "error");
-    } catch { showMessage("Error al sembrar demos.", "error"); } finally { setIsSeedingDemos(false); }
-  };
-
-  const handleCleanDemos = async () => {
-    setIsSeedingDemos(true);
-    try {
-      const res = await fetch("/api/admin/demo-athletes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "clean", requesterUid: user?.uid || userProfile?.uid, requesterEmail: user?.email || userProfile?.email }),
-      });
-      const data = await res.json();
-      if (data.success) { showMessage("Atletas demo eliminados correctamente.", "success"); onRefresh(); }
-      else showMessage(data.error || "Error al eliminar demos.", "error");
-    } catch { showMessage("Error al eliminar demos.", "error"); } finally { setIsSeedingDemos(false); }
   };
 
   const handleStatusChange = async (targetUid: string, targetEmail: string, newStatus: UserStatus) => {
@@ -138,30 +107,6 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {hasDemos ? (
-            <button
-              type="button"
-              onClick={handleCleanDemos}
-              disabled={isSeedingDemos}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
-              title="Borrar los atletas demo de prueba"
-            >
-              <Trash2 className="h-4 w-4 text-rose-600" />
-              <span className="hidden sm:inline">Borrar Demos</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSeedDemos}
-              disabled={isSeedingDemos}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer disabled:opacity-50"
-              title="Sembrar los 7 atletas demo para pruebas"
-            >
-              <Sparkles className="h-4 w-4 text-slate-500" />
-              <span className="hidden sm:inline">+ 7 Demos</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={handleManualRefresh}

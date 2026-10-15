@@ -1,4 +1,4 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v3.36)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.71)
 
 Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas sin generar reprocesos.
 
@@ -154,7 +154,7 @@ radar
 
 ---
 
-### 🟢 MEJORA 6: Centro de Control Administrativo, Metodología de Macrociclos, Modelos Científicos y Tests de Campo [✅ COMPLETADA AL 100% (v3.72 - v3.77)]
+### 🟢 MEJORA 11: Centro de Control Administrativo, Metodología de Macrociclos, Modelos Científicos y Tests de Campo [✅ COMPLETADA AL 100% (v3.72 - v3.77)]
 * **Estado:** ✅ **COMPLETADA EN VERSIONES 3.72 A 3.77**.
 * **Impacto:** Refactorización atómica integral (< 350 LOC) de la consola de administración y la suite de ciencia deportiva SSOT:
   - **Gestión de Atletas & Pre-autorización (v3.72-v3.75):** Inyección de credenciales administrativas en cliente/servidor, tabla responsiva de 5 columnas sin recortes flexbox, columna en vivo de conectividad con Intervals.icu y modal de calibración biométrica (`AdminUsersTab`, `AdminUsersTable`, `AdminUserInviteModal`, `AdminUserEditModal`).
@@ -165,7 +165,7 @@ radar
 
 ---
 
-### 🟢 MEJORA 7: Superposición Fisiológica de Carreras Secundarias (Race Day Overlay), Variación de Running por Ritmo y Reflejo Inmediato en Auditoría Admin [✅ COMPLETADA AL 100% v4.07]
+### 🟢 MEJORA 12: Superposición Fisiológica de Carreras Secundarias (Race Day Overlay), Variación de Running por Ritmo y Reflejo Inmediato en Auditoría Admin [✅ COMPLETADA AL 100% v4.07]
 * **Estado:** ✅ **COMPLETADA EN v4.07**.
 * **Impacto:** Erradicó desajustes metodológicos al auditar atletas desde el espacio de administración y aseguró coherencia fisiológica absoluta:
   - `src/lib/physiology/raceDayOverlay.ts` (188 LOC): Inferencia semántica exacta de disciplina deportiva (ej. Giro de Rigo clasificado como Ciclismo puro, nunca atletismo). Reemplazo atómico del día de carrera por $240\text{m}$ @ $68-78\%\text{ FTP}$ ($210\text{ TSS}$), víspera como pedaleo suave de activación ($35\text{m Z1}$) y post-carrera como rodillo regenerativo.
@@ -173,6 +173,22 @@ radar
   - `src/lib/ai/knowledge/triathlonModel.ts`: Inyección de bloques estructurados de Tempo Z3 ($3\times 10\text{m}$, $2\times 15\text{m}$, $4\times 6\text{m}$ @ $4:55-5:15\text{ min/km}$).
   - `src/lib/intervals/calendarHydration.ts` (313 LOC): En modo auditoría admin (`isAuditing: true`), prioriza la prescripción viva de `matchingFallback` para eventos `[PULSE AI]`, reflejando instantáneamente los nuevos entrenamientos en pantalla sin depender de purgas externas de Intervals.icu.
   - `src/lib/services/telemetryService.ts` & `src/components/PhysiologicalCards.tsx`: Forzado de `runFtp = 0` para atletas en modo `PACE` o sin Stryd, sustituyendo la tarjeta `strydCp` ("Potencia Run 400W") por `runPace` ("Ritmo Carrera: 4:45 min/km").
+
+---
+
+### 🟡 MEJORA 13: Descomposición Modular Quirúrgica de Contenedores Extensos (> 350 LOC) [📋 PROGRAMADA EN BACKLOG]
+* **Prioridad:** MEDIA-ALTA.
+* **Objetivo:** Cumplir el 100% de la Regla de Modularidad Estricta ($\le 350\text{ LOC}$) mediante la extracción de subcomponentes presentacionales en los 9 archivos que actualmente superan el umbral:
+  1. `src/components/HeadCoachChatDrawer.tsx` (1.000 LOC): Desacoplar en subcomponentes de barra de entrada táctica, visor de diffing y renderizador de mensajes.
+  2. `src/components/MacrocycleWizardModal.tsx` (741 LOC): Modularizar los pasos del wizard en subcomponentes atómicos (`wizard/`).
+  3. `src/components/season/SeasonPlanGeneratorTab.tsx` (593 LOC): Separar el formulario de parámetros de la previsualización de la curva.
+  4. `src/components/WeeklyPlanner.tsx` (588 LOC): Extraer tarjetas de días y lógica de reagrupación.
+  5. `src/components/ProfileModal.tsx` (526 LOC): Desacoplar secciones de biometría y de umbrales.
+  6. `src/components/SeasonPlannerCard.tsx` (462 LOC): Separar bloques visuales del plan.
+  7. `src/components/SeasonStudioModal.tsx` (419 LOC): Aislar tabs y orquestador.
+  8. `src/components/MacrocycleLibraryModal.tsx` (367 LOC): Extraer lista de programas y filtros.
+  9. `src/lib/physiology/raceTargetMacrocycles.ts` (354 LOC): Dividir por tipo de distancia objetivo.
+* **Beneficio:** Menor latencia de inferencia para agentes de IA, máxima testabilidad y cero riesgo de romper lógica fisiológica.
 
 ---
 

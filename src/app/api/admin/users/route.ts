@@ -138,12 +138,19 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const numRunFtp = Number(runFtp);
-    const numBikeFtp = Number(bikeFtp);
-    const numLthr = Number(lthr);
-    const numMaxHR = Number(maxHR);
-    const numResting = Number(restingHR);
-    const numWeight = Number(weightKg);
+    const numRunFtp = Number(runFtp) || 0;
+    const numBikeFtp = Number(bikeFtp) || 0;
+    let numLthr = Number(lthr) || 0;
+    let numMaxHR = Number(maxHR) || 0;
+    const numResting = Number(restingHR) || 0;
+    const numWeight = Number(weightKg) || 0;
+
+    // Blindaje fisiológico: la FC Máxima nunca puede ser menor al Umbral de Lactato (LTHR)
+    if (numLthr > 0 && numMaxHR > 0 && numLthr > numMaxHR) {
+      const swapHr = numLthr;
+      numLthr = numMaxHR;
+      numMaxHR = swapHr;
+    }
 
     const result = await updateUserDetails(targetUid, {
       displayName,

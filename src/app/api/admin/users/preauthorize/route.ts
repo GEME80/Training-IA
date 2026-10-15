@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const numLthr = lthr ? Number(lthr) : undefined;
+    const numMaxHR = maxHR ? Number(maxHR) : undefined;
+    const safeLthr = numLthr && numMaxHR && numLthr > numMaxHR ? numMaxHR : numLthr;
+    const safeMaxHR = numLthr && numMaxHR && numLthr > numMaxHR ? numLthr : numMaxHR;
+
     const result = await preauthorizeUser({
       email,
       displayName,
@@ -69,8 +74,8 @@ export async function POST(req: NextRequest) {
       bikeFtp,
       weightKg,
       restingHR,
-      maxHR,
-      lthr,
+      maxHR: safeMaxHR,
+      lthr: safeLthr,
       hasRunningPowerMeter,
       runningTrainingMode,
     });

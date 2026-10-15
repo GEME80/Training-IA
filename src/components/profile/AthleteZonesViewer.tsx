@@ -108,15 +108,19 @@ export const AthleteZonesViewer: React.FC<AthleteZonesViewerProps> = ({
     { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 150% FTP", range: bikeFtp > 0 ? `> ${Math.round(bikeFtp * 1.50)} W` : "—" },
   ], [bikeFtp]);
 
-  const hrZones = useMemo(() => [
-    { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: lthr > 0 ? `0 - ${Math.round(lthr * 0.83)} bpm` : "—" },
-    { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.83) + 1} - ${Math.round(lthr * 0.88)} bpm` : "—" },
-    { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.88) + 1} - ${Math.round(lthr * 0.92)} bpm` : "—" },
-    { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.93)} - ${Math.round(lthr * 0.98)} bpm` : "—" },
-    { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: lthr > 0 ? `${Math.round(lthr * 0.98) + 1} - ${lthr} bpm` : "—" },
-    { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: lthr > 0 ? `${lthr + 1} - ${Math.round(lthr * 1.03)} bpm` : "—" },
-    { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: lthr > 0 ? `${Math.round(lthr * 1.04)} - ${maxHR > 0 ? `${maxHR} bpm` : "Máx"}` : "—" },
-  ], [lthr, maxHR]);
+  const hrZones = useMemo(() => {
+    const safeLthr = lthr > 0 && maxHR > 0 && lthr > maxHR ? maxHR : lthr;
+    const safeMaxHR = lthr > 0 && maxHR > 0 && lthr > maxHR ? lthr : maxHR;
+    return [
+      { id: "Z1", name: "Recovery", nameColor: "text-slate-600 dark:text-slate-400", pct: "0 - 83% LTHR", range: safeLthr > 0 ? `0 - ${Math.round(safeLthr * 0.83)} bpm` : "—" },
+      { id: "Z2", name: "Aerobic", nameColor: "text-sky-600 dark:text-sky-400", pct: "83 - 88% LTHR", range: safeLthr > 0 ? `${Math.round(safeLthr * 0.83) + 1} - ${Math.round(safeLthr * 0.88)} bpm` : "—" },
+      { id: "Z3", name: "Tempo", nameColor: "text-teal-600 dark:text-teal-400", pct: "88 - 92% LTHR", range: safeLthr > 0 ? `${Math.round(safeLthr * 0.88) + 1} - ${Math.round(safeLthr * 0.92)} bpm` : "—" },
+      { id: "Z4", name: "SubThreshold", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "93 - 98% LTHR", range: safeLthr > 0 ? `${Math.round(safeLthr * 0.93)} - ${Math.round(safeLthr * 0.98)} bpm` : "—" },
+      { id: "Z5", name: "SuperThreshold", nameColor: "text-amber-600 dark:text-amber-400", pct: "98 - 100% LTHR", range: safeLthr > 0 ? `${Math.round(safeLthr * 0.98) + 1} - ${safeLthr} bpm` : "—" },
+      { id: "Z6", name: "Aerobic Capacity", nameColor: "text-orange-600 dark:text-orange-400", pct: "101 - 103% LTHR", range: safeLthr > 0 ? `${safeLthr + 1} - ${Math.round(safeLthr * 1.03)} bpm` : "—" },
+      { id: "Z7", name: "Anaerobic", nameColor: "text-rose-600 dark:text-rose-400", pct: "104%+ LTHR", range: safeLthr > 0 ? `${Math.round(safeLthr * 1.04)} - ${safeMaxHR > 0 ? `${safeMaxHR} bpm` : "Máx"}` : "—" },
+    ];
+  }, [lthr, maxHR]);
 
   const { rideCurves, runCurves } = useAthleteCurves({ athleteId, apiKey, email, weightKg });
 

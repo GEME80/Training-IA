@@ -128,7 +128,9 @@ export function useAthleteTelemetry({
 
           const p = data.profile || {};
           const [resBike, resRun] = [p.bike_ftp || bikeFtp || profile.bike_ftp, p.run_ftp || runFtp || profile.run_ftp];
-          const [resLthr, resRhr, resMax] = [p.lthr ?? profile.lthr, p.restingHR ?? profile.restingHR, p.maxHR ?? profile.maxHR];
+          const [rawL, rawM] = [p.lthr ?? profile.lthr, p.maxHR ?? profile.maxHR];
+          const [resLthr, resMax] = rawL && rawM && Number(rawL) > Number(rawM) ? [rawM, rawL] : [rawL, rawM];
+          const resRhr = p.restingHR ?? profile.restingHR;
 
           const syncFields: Array<[string, any]> = [
             ["bike_ftp", p.bike_ftp], ["run_ftp", p.run_ftp], ["lthr", p.lthr], ["resting_hr", p.restingHR],
@@ -173,19 +175,21 @@ export function useAthleteTelemetry({
     ];
     storageKeys.forEach(([k, v]) => { if (v !== undefined && v !== null) userStorage.setItem(k, String(v)); });
 
+    const [rawL, rawM] = [data.lthr ?? profile.lthr, data.maxHR ?? profile.maxHR];
+    const [effLthr, effMaxHR] = rawL && rawM && Number(rawL) > Number(rawM) ? [rawM, rawL] : [rawL, rawM];
+
     setProfile((prev) => ({
       ...prev, id: athleteIdToUse || prev.id, name: data.displayName || prev.name,
       run_ftp: data.runFtp ?? prev.run_ftp, bike_ftp: data.bikeFtp ?? prev.bike_ftp,
       heightCm: data.heightCm ?? prev.heightCm, weight: data.weightKg ?? prev.weight,
       gender: data.gender ?? prev.gender, birthDate: data.birthDate ?? prev.birthDate,
-      lthr: data.lthr ?? prev.lthr, restingHR: data.restingHR ?? prev.restingHR, maxHR: data.maxHR ?? prev.maxHR,
+      lthr: effLthr, restingHR: data.restingHR ?? prev.restingHR, maxHR: effMaxHR,
       hasRunningPowerMeter: data.hasRunningPowerMeter ?? prev.hasRunningPowerMeter,
       runningTrainingMode: data.runningTrainingMode || prev.runningTrainingMode,
       runThresholdPaceStr: data.runThresholdPaceStr || prev.runThresholdPaceStr,
       runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? prev.runThresholdPaceSecPerKm,
       swimCssStr: data.swimCssStr || prev.swimCssStr, swimCssSecPer100m: data.swimCssSecPer100m ?? prev.swimCssSecPer100m,
     }));
-
     if (data.apiKey) { setApiKeyCache(data.apiKey); userStorage.setItem("intervals_api_key", data.apiKey); }
     if (data.geminiApiKey) { setGeminiKeyCache(data.geminiApiKey); userStorage.setItem("custom_gemini_key", data.geminiApiKey); }
     if (data.visibleMetrics) { setVisibleMetrics(data.visibleMetrics); userStorage.setJSON("visible_metrics", data.visibleMetrics); }
@@ -198,7 +202,7 @@ export function useAthleteTelemetry({
       uid: user?.uid || "", email: user?.email || userProfile?.email || "",
       displayName: data.displayName || profile.name || user?.displayName || userProfile?.displayName,
       intervalsAthleteId: athleteIdToUse || profile.id, rawApiKey: targetApiKey,
-      runFtp: effRunFtp, bikeFtp: effBikeFtp, lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
+      runFtp: effRunFtp, bikeFtp: effBikeFtp, lthr: effLthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: effMaxHR,
       hasRunningPowerMeter: data.hasRunningPowerMeter ?? profile.hasRunningPowerMeter, runningTrainingMode: data.runningTrainingMode || profile.runningTrainingMode,
       runThresholdPaceStr: data.runThresholdPaceStr || profile.runThresholdPaceStr, runThresholdPaceSecPerKm: data.runThresholdPaceSecPerKm ?? profile.runThresholdPaceSecPerKm,
       swimCssStr: data.swimCssStr || profile.swimCssStr, swimCssSecPer100m: data.swimCssSecPer100m ?? profile.swimCssSecPer100m,
@@ -214,7 +218,7 @@ export function useAthleteTelemetry({
             athleteId: athleteIdToUse || profile.id, apiKey: targetApiKey || undefined, uid: user?.uid, email: user?.email || userProfile?.email || "",
             runFtp: effRunFtp, bikeFtp: effBikeFtp, swimCssSecPer100m: data.swimCssSecPer100m ?? profile.swimCssSecPer100m,
             weightKg: effWeight, birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
-            lthr: data.lthr ?? profile.lthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: data.maxHR ?? profile.maxHR,
+            lthr: effLthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: effMaxHR,
           }),
         });
       } catch (syncErr) { console.warn("Aviso al sincronizar hacia Intervals.icu:", syncErr); }

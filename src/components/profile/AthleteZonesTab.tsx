@@ -86,6 +86,8 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
 
   const livePaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr) || 263;
   const liveSwimCssSec = swimCssSecPer100m || parseSwimPaceToSeconds(swimCssStr) || 130;
+  const safeLthr = lthr && maxHR && lthr > maxHR ? maxHR : lthr;
+  const safeMaxHR = lthr && maxHR && lthr > maxHR ? lthr : maxHR;
 
   const { rideCurves, runCurves } = useAthleteCurves({ athleteId, apiKey, email, weightKg });
 
@@ -119,8 +121,8 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         weightKg={weightKg}
         runFtp={runFtp}
         bikeFtp={bikeFtp}
-        lthr={lthr}
-        maxHR={maxHR}
+        lthr={safeLthr}
+        maxHR={safeMaxHR}
         restingHR={restingHR}
         runThresholdPaceStr={runThresholdPaceStr}
         swimCssStr={swimCssStr}
@@ -141,8 +143,8 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
         livePaceSec={livePaceSec}
         liveSwimCssSec={liveSwimCssSec}
         swimCssStr={swimCssStr}
-        lthr={lthr}
-        maxHR={maxHR}
+        lthr={safeLthr}
+        maxHR={safeMaxHR}
         suggestedBikeFtp={suggestedBikeFtp}
         suggestedRunPace={suggestedRunPace}
         suggestedRunFtp={suggestedRunFtp}

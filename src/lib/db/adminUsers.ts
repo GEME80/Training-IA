@@ -42,6 +42,16 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
       const emailKey = (data.email || "").trim().toLowerCase();
       if (!emailKey) return;
 
+      // Blindaje de pureza: excluir de forma terminante cualquier atleta demo
+      if (
+        doc.id.startsWith("demo_") ||
+        emailKey.endsWith("@pulse-demo.com") ||
+        (data as any).isDemoAthlete === true ||
+        (data as any).demoTag === "PULSE_DEMO_ATHLETE"
+      ) {
+        return;
+      }
+
       // Auto-backfill de consentimiento legal T&C para garantizar consistencia en toda la base productiva
       if (!data.termsAcceptedAt && !doc.id.startsWith("preauth_")) {
         const backfillDate = data.createdAt || "2026-08-01T00:00:00.000Z";

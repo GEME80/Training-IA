@@ -42,6 +42,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
   // Cálculos de vatios por kilo
   const runWkg = weightKg && weightKg > 0 && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "4.10";
   const bikeWkg = weightKg && weightKg > 0 && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "2.76";
+  const safeLthr = lthr && maxHR && lthr > maxHR ? maxHR : lthr;
+  const safeMaxHR = lthr && maxHR && lthr > maxHR ? lthr : maxHR;
 
   const sportName =
     selectedSport === "RUN" ? "Carrera" : selectedSport === "BIKE" ? "Ciclismo" : "Natación";
@@ -190,8 +192,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-slate-400 font-sans">Cardio</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {lthr || 178}{" "}
-                  <span className="text-slate-400 font-normal text-xs">/ {maxHR || 185}</span>{" "}
+                  {safeLthr || 178}{" "}
+                  <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR || 185}</span>{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -249,7 +251,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-slate-400 font-sans">Cardio</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {lthr || 178}{" "}
+                  {safeLthr || 178}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -308,7 +310,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-slate-400 font-sans">Cardio</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {lthr || 178}{" "}
+                  {safeLthr || 178}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>

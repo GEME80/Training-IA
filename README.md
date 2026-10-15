@@ -350,27 +350,30 @@ Abre tu navegador en [http://localhost:3000](http://localhost:3000).
 
 ```text
 IA Training/
-├── BITACORA_MAESTRA.md             # Dossier histórico, memoria central y changelog
+├── BITACORA_MAESTRA.md             # Dossier histórico, memoria central y changelog (v1.0 - v5.71)
 ├── PROJECT_RULES.md               # Leyes de gobernanza inmutables y prompt maestro
-├── BACKLOG_MEJORAS_ARQUITECTURA.md # Backlog de auditoría técnica y refactorizaciones
+├── BACKLOG_MEJORAS_ARQUITECTURA.md # Backlog de auditoría técnica, refactorizaciones y modularidad
 ├── README.md                      # Resumen visual, arquitectura y puesta en marcha
 ├── src/
-│   ├── app/                       # Next.js App Router y API Routes delgadas (<= 30 LOC)
-│   ├── components/                # Componentes UI organizados por dominio (< 350 LOC)
-│   │   ├── admin/                 # Panel de SuperAdmin y monitor de tokens
-│   │   ├── dashboard/             # AthleteDashboard (< 160 LOC), calendario y subcomponentes
-│   │   ├── macrocycle/            # Línea de tiempo y visor de microciclos
-│   │   ├── profile/               # Perfil del atleta y zonas de potencia
-│   │   └── season/                # Estudio de temporada y curvas SVG
+│   ├── app/                       # Next.js App Router (Páginas y API Routes)
+│   ├── components/                # Componentes UI organizados por vistas y dominios
+│   │   ├── AthleteDashboard.tsx   # Dashboard interactivo principal del atleta
+│   │   ├── admin/                 # Panel de SuperAdmin, monitor de tokens y gestión
+│   │   ├── auth/                  # Modales de autenticación y consentimiento legal
+│   │   ├── dashboard/             # Calendario continuo, agenda móvil y telemetría PMC
+│   │   ├── landing/               # Hero cinematográfico, vitrina móvil y conversion flow
+│   │   ├── macrocycle/            # Línea de tiempo, HUD ejecutado y visor de microciclos
+│   │   ├── profile/               # Perfil del atleta, biometría y zonas de potencia/ritmo
+│   │   └── season/                # Estudio de temporada, wizard guiado y curvas SVG
 │   ├── context/                   # Contextos globales (AuthContext)
 │   ├── hooks/                     # Custom Hooks (useAthleteTelemetry, useSeasonPlans, useIntervalsSync)
 │   └── lib/                       # Lógica de negocio y motores fisiológicos
-│       ├── ai/                    # Inferencia de IA, contextCondenser (FinOps), prompts
+│       ├── ai/                    # Inferencia de IA, contextCondenser (FinOps), prompts y Head Coach
 │       │   └── knowledge/         # 18 Modelos científicos SSOT modulares (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón)
-│       ├── db/                    # Persistencia Firestore y AES-256-GCM
-│       ├── intervals/             # Cliente HTTP para Intervals.icu API
+│       ├── db/                    # Persistencia Firestore, perfiles y AES-256-GCM
+│       ├── intervals/             # Cliente HTTP para Intervals.icu API y wellness helpers
 │       ├── physiology/            # Banister, macrociclos, rotación coprima anti-repetición y calibración multi-deporte
-│       ├── services/              # Capa de Servicios Backend (TelemetryService, IntervalsSyncService)
+│       ├── services/              # Capa de Servicios Backend (TelemetryService, IntervalsSyncService, Breakthroughs)
 │       └── validation/            # Esquemas de validación declarativos con Zod (schemas.ts)
 ```
 

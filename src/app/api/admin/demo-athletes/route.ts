@@ -85,8 +85,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "seed") {
-      const res = await seedDemoAthletes();
-      return NextResponse.json(res);
+      return NextResponse.json({
+        success: false,
+        error: "La creación de atletas demo ha sido deshabilitada definitivamente para proteger la integridad de los atletas reales.",
+      }, { status: 400 });
     }
 
     if (action === "clean" || action === "delete") {

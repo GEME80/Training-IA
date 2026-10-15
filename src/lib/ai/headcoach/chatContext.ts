@@ -98,15 +98,17 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const defaultMaxHr = computedAge ? Math.round(208 - 0.7 * computedAge) : 185;
         const defaultLthr = Math.round(defaultMaxHr * 0.88);
         const defaultRestingHr = 55;
+        const rawM = maxHR || runSport?.max_hr || rideSport?.max_hr || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr;
+        const rawL = lthr || runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath?.lthr || defaultLthr;
+        const safeMax = rawL && rawM && Number(rawL) > Number(rawM) ? rawL : rawM;
+        const safeLthr = rawL && rawM && Number(rawL) > Number(rawM) ? rawM : rawL;
 
         profile = {
           ...ath, id: ath?.id || effectiveAthleteId || "", name: ath?.name || profile.name || "Atleta",
           birthDate: birthDate || icuDob, age: computedAge, gender: resolvedSex,
           weight: resolvedWeight ? Number(resolvedWeight) : undefined, heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
           restingHR: restingHR || garminWel.restingHR || runSport?.resting_hr || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
-          maxHR: maxHR || runSport?.max_hr || rideSport?.max_hr || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr,
-          lthr: lthr || runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath?.lthr || defaultLthr,
-          run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
+          maxHR: safeMax, lthr: safeLthr, run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
         };
       }
       wellness = Array.isArray(wel) ? wel : [];

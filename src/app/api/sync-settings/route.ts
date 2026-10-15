@@ -7,6 +7,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { athleteId, apiKey, uid, email, runFtp, bikeFtp, swimCssSecPer100m, weightKg, birthDate, gender, lthr, maxHR, restingHR } = body;
+    const numLthr = lthr ? Number(lthr) : undefined;
+    const numMaxHR = maxHR ? Number(maxHR) : undefined;
+    const safeLthr = numLthr && numMaxHR && numLthr > numMaxHR ? numMaxHR : numLthr;
+    const safeMaxHR = numLthr && numMaxHR && numLthr > numMaxHR ? numLthr : numMaxHR;
 
     const { athleteId: effId, apiKey: effKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
     if (!effKey || !effId) {
@@ -23,29 +27,29 @@ export async function POST(req: NextRequest) {
       const rideSetting = (sportSettings || []).find(isRideSport);
       const swimSetting = (sportSettings || []).find(isSwimSport);
 
-      if (runSetting?.id && (runFtp || lthr || maxHR)) {
+      if (runSetting?.id && (runFtp || safeLthr || safeMaxHR)) {
         const patch: Record<string, any> = { ...runSetting };
         if (runFtp) patch.ftp = Number(runFtp);
-        if (lthr) patch.lthr = Number(lthr);
-        if (maxHR) patch.max_hr = Number(maxHR);
+        if (safeLthr) patch.lthr = safeLthr;
+        if (safeMaxHR) patch.max_hr = safeMaxHR;
         await client.updateSportSettings(runSetting.id, patch);
         if (runFtp) syncResults.runFtp = `${runFtp}W (Stryd)`;
       }
-      if (rideSetting?.id && (bikeFtp || lthr || maxHR)) {
+      if (rideSetting?.id && (bikeFtp || safeLthr || safeMaxHR)) {
         const patch: Record<string, any> = { ...rideSetting };
         if (bikeFtp) patch.ftp = Number(bikeFtp);
-        if (lthr) patch.lthr = Number(lthr);
-        if (maxHR) patch.max_hr = Number(maxHR);
+        if (safeLthr) patch.lthr = safeLthr;
+        if (safeMaxHR) patch.max_hr = safeMaxHR;
         await client.updateSportSettings(rideSetting.id, patch);
         if (bikeFtp) syncResults.bikeFtp = `${bikeFtp}W`;
       }
-      if (swimSetting?.id && (swimCssSecPer100m || lthr || maxHR)) {
+      if (swimSetting?.id && (swimCssSecPer100m || safeLthr || safeMaxHR)) {
         const patch: Record<string, any> = { ...swimSetting };
         if (swimCssSecPer100m && Number(swimCssSecPer100m) > 0) {
           patch.threshold_pace = Number((100 / Number(swimCssSecPer100m)).toFixed(4));
         }
-        if (lthr) patch.lthr = Number(lthr);
-        if (maxHR) patch.max_hr = Number(maxHR);
+        if (safeLthr) patch.lthr = safeLthr;
+        if (safeMaxHR) patch.max_hr = safeMaxHR;
         await client.updateSportSettings(swimSetting.id, patch);
         if (swimCssSecPer100m) syncResults.swimCss = `${swimCssSecPer100m}s/100m`;
       }
@@ -60,8 +64,8 @@ export async function POST(req: NextRequest) {
       if (runFtp) athletePayload.icu_running_ftp = Number(runFtp);
       if (weightKg) athletePayload.weight = Number(weightKg);
       if (restingHR) athletePayload.icu_resting_hr = Number(restingHR);
-      if (lthr) athletePayload.lthr = Number(lthr);
-      if (maxHR) athletePayload.max_hr = Number(maxHR);
+      if (safeLthr) athletePayload.lthr = safeLthr;
+      if (safeMaxHR) athletePayload.max_hr = safeMaxHR;
       if (birthDate) { athletePayload.icu_date_of_birth = birthDate; athletePayload.dob = birthDate; }
       if (gender) athletePayload.sex = gender === "M" ? "M" : gender === "F" ? "F" : undefined;
 

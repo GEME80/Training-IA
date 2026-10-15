@@ -105,6 +105,15 @@ export const AdminUserEditBiometricsSection: React.FC<AdminUserEditBiometricsSec
           />
         </div>
       </div>
+
+      {lthr !== "" && maxHR !== "" && Number(lthr) > Number(maxHR) && (
+        <div className="mt-2.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-center gap-1.5">
+          <span>⚠️</span>
+          <span>
+            <strong>Inversión detectada:</strong> La FC Umbral ({lthr} ppm) supera a la FC Máxima ({maxHR} ppm). Se normalizará automáticamente (Umbral: {maxHR} ppm, Máx: {lthr} ppm) para preservar la coherencia fisiológica.
+          </span>
+        </div>
+      )}
     </div>
   );
 };

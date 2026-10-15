@@ -86,8 +86,6 @@ flowchart TD
 
 ---
 
-## 5. Tipologías de Macrociclos Soportados
-
 ## 5. Suite Maestra de Metodologías Deportivas Científicas (SSOT v2.4)
 
 El motor fisiológico del SGEA desacopla completamente el conocimiento metodológico del código fuente (`src/lib/ai/knowledge/`), integrando los modelos más reconocidos de la fisiología del ejercicio moderna:
@@ -7473,9 +7471,9 @@ El usuario reportó dos requerimientos críticos:
 
 ---
 
-## 115. CORRECCIÓN DE AISLAMIENTO TEMPORAL DEL OVERLAY DE CARRERA OBJETIVO Y FILTRADO POR FECHA DE SEMANA (v5.39)
+## 113.1. CORRECCIÓN DE AISLAMIENTO TEMPORAL DEL OVERLAY DE CARRERA OBJETIVO Y FILTRADO POR FECHA DE SEMANA (v5.37)
 
-### 115.1. Diagnóstico y Causa Raíz
+### 113.1.1. Diagnóstico y Causa Raíz
 El usuario reportó un bug crítico visual en su dashboard personal:
 *"en el cambio veo un error que ahora en el plan de german morales todos los domingos tengo una competencia de Ironman"*
 
@@ -7487,7 +7485,7 @@ El usuario reportó un bug crítico visual en su dashboard personal:
    - En la fila semanal del calendario, `dayItemsMap` agrupaba las sesiones exclusivamente por `item.day` (`weekPlan.forEach(item => dayItemsMap[item.day].push(item))`).
    - Al recibir el item inyectado con `day: "Domingo"`, lo colocaba en la columna del domingo de cada semana aunque su fecha (`item.date`) fuera meses posterior.
 
-### 115.2. Solución Implementada
+### 113.1.2. Solución Implementada
 1. **Acotación Estricta de Límites en `src/lib/physiology/raceDayOverlay.ts` (222 LOC):**
    - El cálculo de `minDate` y `maxDate` se ejecuta ahora de forma preliminar al inicio de la función.
    - La inyección atómica de la carrera primaria ahora exige estrictamente:
@@ -7499,7 +7497,7 @@ El usuario reportó un bug crítico visual en su dashboard personal:
 3. **Refinamiento en `src/lib/intervals/calendarHydration.ts` (337 LOC):**
    - El emparejamiento con `dayFallback` ahora exige coincidencia con `/COMPETICI[ÓO]N/i` y verificación exacta de `rInfo.date === dateStr`.
 
-### 115.3. Certificación de Calidad y Cumplimiento
+### 113.1.3. Certificación de Calidad y Cumplimiento
 - **Prueba de Aislamiento:** Validado que en semanas ordinarias (ej. Semana 1 y 2 de German Morales) el domingo conserva su rodaje largo aeróbico normal y **cero tarjetas de Ironman** (`PASS`).
 - **Semana de Carrera:** La semana que contiene el `primaryRaceDate` (Semana 8 / 29 Nov) sigue inyectando de forma atómica y exclusiva la tarjeta dorada de competición (`PASS`).
 - **TypeScript:** `npx tsc --noEmit` completado con código 0 ✅.
@@ -8377,7 +8375,7 @@ Esto causaba que:
 
 ---
 
-## SECCIÓN 135: BLINDAJE LEGAL INTEGRAL (v5.66) — POLÍTICA DE PRIVACIDAD, TÉRMINOS DE SERVICIO CON EXENCIÓN MÉDICA & IA Y MODAL DE CONSENTIMIENTO INELUDIBLE AL INICIO DE SESIÓN
+## 135. BLINDAJE LEGAL INTEGRAL (v5.66) — POLÍTICA DE PRIVACIDAD, TÉRMINOS DE SERVICIO CON EXENCIÓN MÉDICA & IA Y MODAL DE CONSENTIMIENTO INELUDIBLE AL INICIO DE SESIÓN
 
 ### 135.1. Contexto y Objetivos de la Intervención
 - **Aprobación de OAuth 2.0 en Intervals.icu:** Cumplimiento de los requisitos formales de Intervals.icu y Google OAuth mediante el despliegue de una Política de Privacidad pública y certificada.
@@ -8458,7 +8456,7 @@ Esto causaba que:
 
 ---
 
-## SECCIÓN 137: REDISEÑO INTEGRAL DE CONVERSIÓN DEL HOME, TELEMETRÍA MULTIDEPORTE AGNÓSTICA, ERGONOMÍA VISUAL Y HUMANIZACIÓN DE COPY (v5.69)
+## 137. REDISEÑO INTEGRAL DE CONVERSIÓN DEL HOME, TELEMETRÍA MULTIDEPORTE AGNÓSTICA, ERGONOMÍA VISUAL Y HUMANIZACIÓN DE COPY (v5.69)
 
 ### 137.1. Contexto y Objetivos de la Intervención
 Esta intervención aborda la optimización integral de la página de inicio (Landing Page) de PULSE AI para maximizar la conversión, la retención visual y la claridad pedagógica ante deportistas de resistencia (corredores, ciclistas y triatletas), satisfaciendo los siguientes requerimientos clave:
@@ -8546,6 +8544,96 @@ Para garantizar blindaje jurídico total y consistencia de datos en Firestore si
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas dinámicas y estáticas) ✅.
 - **Gate 4 (UX No-Intrusiva):** Cero modales bloqueantes; navegación fluida en toda la aplicación ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 138 ✅.
+
+---
+
+## 139. Blindaje de Pureza de Atletas Reales: Erradicación de Botones de Demos en Consola de Administración y Filtro Estricto de Persistencia (v5.72)
+
+### 139.1. Diagnóstico y Requerimiento
+Para evitar auditorías o cruces accidentales con perfiles ficticios en la consola de administración, el usuario solicitó la eliminación permanente de los controles de atletas demo:
+1. **Eliminación del Botón `+ 7 Demos` en UI:** Retirar el botón flotante de sembrado y purga de demos en la cabecera de gestión de atletas.
+2. **Preservación Inviolable del Escuadrón Real (7 Atletas):**
+   - German Morales (`gerkof@gmail.com`) - Superadmin
+   - Juan Pablo Vasquez (`juan.vasquez.1983@gmail.com`)
+   - Sylvia Rey (`sylviarey86@gmail.com`)
+   - Georg Schmitt (`gschmitt@outlook.com`)
+   - Juan Diego Cespedes (`jd.cespedes@hotmail.com`)
+   - Juan Esteban Gallo (`juan@lagallera.co`)
+   - Ivan (`ivanandresrojas@gmail.com`)
+3. **Bloqueo a Nivel de Datos y API:** Prevenir cualquier inyección accidental de perfiles demo a través de llamadas de API y garantizar que la función de lectura de usuarios descarte automáticamente registros con etiquetas demo.
+
+### 139.2. Detalle de Archivos Modificados
+1. **`src/components/admin/AdminUsersTab.tsx` (304 LOC):**
+   - Eliminados los estados `isSeedingDemos` y `hasDemos`.
+   - Eliminadas las funciones `handleSeedDemos` y `handleCleanDemos`.
+   - Eliminado el bloque de botones `+ 7 Demos` y `Borrar Demos` de la cabecera, dejando una barra de acciones limpia con los botones legítimos: *Refrescar* y *+ Invitar Atleta*.
+   - Limpieza de importaciones no utilizadas (`Sparkles`, `Trash2`).
+2. **`src/lib/db/adminUsers.ts` (305 LOC):**
+   - En `getAllUsersForAdmin()`: Inyección de filtro estricto de pureza que descarta de forma terminante cualquier documento cuyo `id` inicie con `demo_`, correo con `@pulse-demo.com` o cuente con `isDemoAthlete: true` / `demoTag: "PULSE_DEMO_ATHLETE"`.
+3. **`src/app/api/admin/demo-athletes/route.ts` (117 LOC):**
+   - Deshabilitada definitivamente la acción `seed`: retorna código 400 y mensaje de protección de base de datos de producción.
+
+### 139.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AdminUsersTab.tsx`: 304 LOC ($\le 350$) ✅
+  - `adminUsers.ts`: 305 LOC ($\le 350$) ✅
+  - `demo-athletes/route.ts`: 117 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con código 0 ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 páginas estáticas generadas) ✅.
+- **Gate 4 (Pureza de Datos):** 100% de la mesa de administración restringida exclusivamente a los 7 atletas reales ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 139 ✅.
+
+---
+
+## 140. Blindaje Fisiológico Universal Bidireccional: Coherencia Frecuencia Cardíaca Umbral (LTHR) y Máxima (FC Máx) para Todos los Atletas (v5.73)
+
+### 140.1. Diagnóstico y Problema Fisiológico Detectado
+En la auditoría del perfil de Juan Pablo Vásquez (`juan.vasquez.1983@gmail.com`), la tarjeta de carrera mostraba `184 / 166 bpm` bajo el título `FC Umbral / Máx`.
+- **Causa Raíz:** En la base de datos y la sincronización con sensores se asignaron cruzados los valores: `lthr = 184` y `maxHR = 166`.
+- **Incoherencia Médica/Fisiológica:** La Frecuencia Cardíaca Máxima es el límite absoluto de esfuerzo miocárdico ($\approx 184$ bpm), mientras que el Umbral de Lactato (LTHR) es un esfuerzo submáximo sustentable ($\approx 88\text{--}90\%$ de FC Máx = $166$ bpm). Es biológicamente imposible que la FC Máxima sea menor que el Umbral.
+
+### 140.2. Solución Universal para el Ecosistema Completo
+Se implementó una guarda fisiológica bidireccional automática (`safeLthr = min(lthr, maxHR)` y `safeMaxHR = max(lthr, maxHR)`) transversal a todos los atletas en las siguientes capas:
+
+1. **Capa de Telemetría e Ingesta:**
+   - `src/lib/services/telemetryService.ts`: Al resolver `intervalsLthr` e `intervalsMaxHR`, normaliza e intercambia automáticamente si se detecta inversión.
+2. **Capa Visual & Tarjetas de Umbral:**
+   - `src/components/profile/ContextualThresholdsGrid.tsx`: Muestra `safeLthr` / `safeMaxHR` (`166 / 184 bpm`) en Carrera, y `166 bpm` en Ciclismo y Natación.
+   - `src/components/profile/AthleteZonesTab.tsx`: Pasa métricas normalizadas a todos los componentes hijos.
+   - `src/components/profile/DynamicZonesTable.tsx`: Calcula zonas cardíacas Friel (Z1-Z5) y encabezados a partir de `safeLthr`.
+   - `src/components/profile/AthleteZonesViewer.tsx`: Protege rangos de zonas Z1-Z7 para que Z7 Anaeróbica (`104%+ LTHR`) nunca exceda la FC Máxima.
+3. **Capa de Hooks React:**
+   - `src/hooks/useAthleteTelemetry.ts`: Normalización en el hook global de telemetría al recibir datos y al despachar sincronizaciones.
+4. **Capa de APIs y Persistencia:**
+   - `src/app/api/admin/users/route.ts`: Normaliza en backend antes de actualizar Firestore o Intervals.icu.
+   - `src/app/api/profile/route.ts`: Blindaje en la auto-actualización del perfil de cualquier atleta.
+   - `src/app/api/sync-settings/route.ts`: Blindaje al sincronizar con `sportSettings` y perfil en Intervals.icu.
+   - `src/app/api/admin/users/preauthorize/route.ts`: Preautorización con salvaguarda biométrica.
+5. **Capa de Inteligencia Artificial (HeadCoach AI):**
+   - `src/lib/ai/headcoach/chatContext.ts`: Garantiza que el contexto del prompt del Head Coach reciba siempre `maxHR >= lthr`.
+6. **Capa de Administración:**
+   - `src/components/admin/AdminUserEditModal.tsx` y `AdminUserEditBiometricsSection.tsx`: Aviso interactivo en tiempo real al administrador si ingresa un LTHR mayor que la FC Máx.
+
+### 140.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `ContextualThresholdsGrid.tsx`: 341 LOC ($\le 350$) ✅
+  - `AthleteZonesTab.tsx`: 254 LOC ($\le 350$) ✅
+  - `DynamicZonesTable.tsx`: 236 LOC ($\le 350$) ✅
+  - `AthleteZonesViewer.tsx`: 272 LOC ($\le 350$) ✅
+  - `telemetryService.ts`: 345 LOC ($\le 350$) ✅
+  - `chatContext.ts`: 349 LOC ($\le 350$) ✅
+  - `useAthleteTelemetry.ts`: 350 LOC ($\le 350$) ✅
+  - `AdminUserEditModal.tsx`: 336 LOC ($\le 350$) ✅
+  - `AdminUserEditBiometricsSection.tsx`: 119 LOC ($\le 350$) ✅
+  - `app/api/admin/users/route.ts`: 247 LOC ($\le 350$) ✅
+  - `app/api/profile/route.ts`: 273 LOC ($\le 350$) ✅
+  - `app/api/sync-settings/route.ts`: 92 LOC ($\le 350$) ✅
+  - `app/api/admin/users/preauthorize/route.ts`: 89 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 páginas) ✅.
+- **Gate 4 (Universalidad):** Aplicado a todos los atletas (Juan Pablo, German, Sylvia, Georg, etc.) de forma determinista ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 140 ✅.
+
 
 
 

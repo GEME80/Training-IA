@@ -44,6 +44,9 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
   onApplySuggestion,
   onDismissSuggestion,
 }) => {
+  // Blindaje fisiológico continuo: LTHR nunca puede ser mayor a MaxHR
+  const safeLthr = lthr > 0 && maxHR > 0 && lthr > maxHR ? maxHR : (lthr > 0 ? lthr : 178);
+
   // ── 1. ZONAS DE CICLISMO (Coggan 7 Zonas - Continuidad Estricta) ──
   const cyclingZones = useMemo(() => {
     const ftp = bikeFtp > 0 ? bikeFtp : 226;
@@ -91,7 +94,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
 
   // ── 4. ZONAS CARDÍACAS (LTHR) ──
   const hrZones = useMemo(() => {
-    const hr = lthr > 0 ? lthr : 178;
+    const hr = safeLthr;
     return [
       { id: "Z1", name: "Recuperación", nameColor: "text-slate-500 dark:text-slate-400", pct: "< 83% LTHR", range: `< ${Math.round(hr * 0.83)} bpm` },
       { id: "Z2", name: "Aeróbico Fondo", nameColor: "text-sky-600 dark:text-sky-400", pct: "83% – 88% LTHR", range: `${Math.round(hr * 0.83)} – ${Math.round(hr * 0.88)} bpm` },
@@ -99,7 +102,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
       { id: "Z4", name: "Sub-Umbral", nameColor: "text-amber-500 dark:text-amber-400", pct: "94% – 99% LTHR", range: `${Math.round(hr * 0.93) + 1} – ${hr} bpm` },
       { id: "Z5", name: "Super-Umbral / Máx", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 100% LTHR", range: `> ${hr} bpm` },
     ];
-  }, [lthr]);
+  }, [safeLthr]);
 
   const renderZoneRows = (zones: ZoneItem[], valueHeader: string) => (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
@@ -150,7 +153,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
             <div>
               <div className="flex items-center justify-between pb-2 px-1">
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">Zonas Cardíacas (FC Carrera)</span>
-                <span className="text-[10px] font-mono text-rose-500 font-bold">{lthr || 178} ppm LTHR</span>
+                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm LTHR</span>
               </div>
               {renderZoneRows(hrZones, "Pulsaciones")}
             </div>
@@ -172,7 +175,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   {bikeTelemetryMode === "POWER" ? "Modelo Coggan 7 Zonas (FTP Ciclismo)" : "Zonas Cardíacas (Ciclismo)"}
                 </span>
                 <span className="text-[10px] font-mono text-sky-600 dark:text-sky-400 font-bold">
-                  {bikeTelemetryMode === "POWER" ? `${bikeFtp || 226}W FTP` : `${lthr || 178} ppm`}
+                  {bikeTelemetryMode === "POWER" ? `${bikeFtp || 226}W FTP` : `${safeLthr} ppm`}
                 </span>
               </div>
               {bikeTelemetryMode === "POWER" ? renderZoneRows(cyclingZones, "Vatios (W)") : renderZoneRows(hrZones, "Pulsaciones")}
@@ -184,7 +187,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   {bikeTelemetryMode === "POWER" ? "Zonas Cardíacas (Ciclismo LTHR)" : "Modelo Coggan Potencia"}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400 font-bold">
-                  {bikeTelemetryMode === "POWER" ? `${lthr || 178} ppm` : `${bikeFtp || 226}W`}
+                  {bikeTelemetryMode === "POWER" ? `${safeLthr} ppm` : `${bikeFtp || 226}W`}
                 </span>
               </div>
               {bikeTelemetryMode === "POWER" ? renderZoneRows(hrZones, "Pulsaciones") : renderZoneRows(cyclingZones, "Vatios (W)")}
@@ -218,7 +221,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">
                   Zonas Cardíacas / Esfuerzo (Natación)
                 </span>
-                <span className="text-[10px] font-mono text-rose-500 font-bold">{lthr || 178} ppm</span>
+                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm</span>
               </div>
               {renderZoneRows(hrZones, "Pulsaciones")}
             </div>

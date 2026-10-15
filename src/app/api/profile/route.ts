@@ -95,6 +95,11 @@ export async function POST(req: NextRequest) {
       seasonPlans,
     } = parseResult.data;
 
+    const parsedLthr = lthr !== undefined && lthr !== null ? Number(lthr) : undefined;
+    const parsedMaxHR = maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined;
+    const numLthr = parsedLthr && parsedMaxHR && parsedLthr > parsedMaxHR ? parsedMaxHR : parsedLthr;
+    const numMaxHR = parsedLthr && parsedMaxHR && parsedLthr > parsedMaxHR ? parsedLthr : parsedMaxHR;
+
     try {
       await saveUserProfile(uid, {
         email,
@@ -110,8 +115,8 @@ export async function POST(req: NextRequest) {
         swimCssStr: swimCssStr ?? undefined,
         swimCssSecPer100m: swimCssSecPer100m !== undefined && swimCssSecPer100m !== null ? Number(swimCssSecPer100m) : undefined,
         restingHR: restingHR !== undefined && restingHR !== null ? Number(restingHR) : undefined,
-        maxHR: maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined,
-        lthr: lthr !== undefined && lthr !== null ? Number(lthr) : undefined,
+        maxHR: numMaxHR,
+        lthr: numLthr,
         weightKg: weightKg !== undefined && weightKg !== null ? Number(weightKg) : undefined,
         heightCm: heightCm !== undefined && heightCm !== null ? Number(heightCm) : undefined,
         birthDate,
@@ -206,8 +211,6 @@ export async function POST(req: NextRequest) {
         }
 
         // 5. Frecuencia Cardíaca y Biometría (SSOT Intervals para CTL/ATL/TSS)
-        const numLthr = lthr !== undefined && lthr !== null ? Number(lthr) : undefined;
-        const numMaxHR = maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined;
         const numResting = restingHR !== undefined && restingHR !== null ? Number(restingHR) : undefined;
         const numWeight = weightKg !== undefined && weightKg !== null ? Number(weightKg) : undefined;
 

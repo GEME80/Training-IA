@@ -196,17 +196,38 @@ flowchart TD
 
 ---
 
+## 🔒 8. CERO DATOS QUEMADOS Y PROTOCOLO SSOT (FUENTE ÚNICA DE VERDAD VIVA)
+1. **Prohibición Terminante de Mocks y Valores Ficticios:** Queda estrictamente prohibido el uso de mocks, datos quemados (*hardcoded*) o suposiciones sobre biotipo (peso, altura), métricas de umbral (Stryd CP, Bike FTP, FC LTHR, CSS), fechas de competición o metas de tiempo en cualquier script, componente o prompt del sistema.
+2. **Consulta Dinámica a la Fuente Viva:** Toda consulta de atleta debe resolverse dinámicamente desde el servicio unificado SSOT (`TelemetryService.evaluate` o `getAthleteSSOT`), autenticado por `athleteId` o `email`.
+3. **Aislamiento Multi-Atleta y Borrado Quirúrgico:** La purga y sincronización de eventos en Intervals.icu se restringe estrictamente a los prefijos oficiales de la plataforma (`[PULSE AI]` y `[SGEA]`) dentro de la ventana del plan, operando de forma 100% aislada sobre el `athleteId` autenticado sin contaminar eventos manuales ni atletas cruzados.
+4. **Modo Auditoría e Impersonación Segura (Read-Only & In-Memory):** Al inspeccionar el dashboard de un deportista en modo solo lectura (`isReadOnly = true`), queda estrictamente prohibida cualquier mutación (escritura en Firestore, sincronización hacia Intervals.icu o mutación en localStorage). Todo estado temporal se maneja exclusivamente en memoria volátil (`createReadOnlyMemoryStorage`), garantizando la preservación intacta de la sesión del administrador.
+
+---
+
 ## 🤖 9. ARQUITECTURA INTEGRAL DE AGENTES Y SUBAGENTES (RUNTIME & DESARROLLO)
 
-El sistema opera bajo un modelo de **Doble Capa de Agentes** para garantizar tanto el rigor científico con el atleta como la excelencia técnica del código:
+El sistema opera bajo un modelo de **Agentes de IA Fisiológicos y de Desarrollo** para garantizar tanto el rigor científico con el atleta como la excelencia técnica del código:
 
 ```mermaid
 flowchart TD
     subgraph CAPA_RUNTIME [" CAPA 1: AGENTES DE IA EN TIEMPO DE EJECUCIÓN (DEPORTIVOS) "]
-        A1["Agente 01: PULSE Live Coach (Head Coach Adaptativo /api/headcoach/chat)"]
-        A2["Agente 02: PULSE Macrocycle Architect (Periodizador /api/macrocycles/generate-ai)"]
-        A3["Agente 03: PULSE Daily Physio Auditor (Evaluador /api/evaluate)"]
-        A4["Agente 04: PULSE Program Library Curator (Curador de Catálogo /api/admin/programs)"]
+        subgraph SUB_PHYSIO [" 🧠 Fisiología & Periodización (8 Agentes) "]
+            A1["01: Live Coach (Head Coach)"]
+            A2["02: Macrocycle Architect"]
+            A3["03: Daily Physio Auditor"]
+            A4["04: Program Library Curator"]
+            A5["05: Biological Response Engine"]
+            A6["06: Race Debrief & Recalibrator"]
+            A7["07: Intra-Workout Fueling"]
+            A8["08: Dynamic Mobility Engine"]
+        end
+        subgraph SUB_SC [" 🏋️ Suite Especializada de Fuerza S&C (5 Agentes) "]
+            S1["S1: Running & Marathon Strength"]
+            S2["S2: Cycling & Climbing Strength"]
+            S3["S3: Triathlon Multi-Sport Strength"]
+            S4["S4: Trail & Mountain Strength"]
+            S5["S5: Prehab, Longevity & Rehab"]
+        end
     end
 
     subgraph CAPA_DEV [" CAPA 2: AGENTES DE INGENIERÍA, ARQUITECTURA & QA (DESARROLLO) "]
@@ -590,7 +611,7 @@ Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas c
 | **Visualizador de Zonas (Stryd CP, Bike FTP, FC LTHR)** | `src/components/profile/AthleteZonesViewer.tsx` |
 | **Matriz Semanal de Disponibilidad (Días de entreno)** | `src/components/profile/CompactAvailabilityMatrix.tsx` |
 | **Conexiones y Credenciales Intervals.icu en UI** | `src/components/dashboard/AthleteConnectionsView.tsx` |
-| **Estudio de Temporada / Gestor de Carreras A/B/C** | `src/components/season/SeasonStudioModal.tsx` / `SeasonRacesTab.tsx` |
+| **Estudio de Temporada / Gestor de Carreras A/B/C** | `src/components/SeasonStudioModal.tsx` / `SeasonRacesTab.tsx` |
 | **Tarjeta de Plan Activo de Temporada** | `src/components/season/SeasonActivePlanCard.tsx` |
 | **Generador Guiado de Temporada con Curva SVG** | `src/components/season/SeasonAIGenerator.tsx` |
 | **Biblioteca de Programas en UI** | `src/components/season/SeasonProgramLibrary.tsx` |

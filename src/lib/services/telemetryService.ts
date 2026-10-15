@@ -244,8 +244,10 @@ export class TelemetryService {
             const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0));
             const initialBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
             const initialRunFtp = isPaceRun ? 0 : resolvedRunFtp;
-            const intervalsLthr = storedUser?.profile.lthr || runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
-            const intervalsMaxHR = storedUser?.profile.maxHR || runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;
+            const rawLthr = storedUser?.profile.lthr || runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
+            const rawMaxHR = storedUser?.profile.maxHR || runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;
+            const intervalsLthr = rawLthr && rawMaxHR && Number(rawLthr) > Number(rawMaxHR) ? rawMaxHR : rawLthr;
+            const intervalsMaxHR = rawLthr && rawMaxHR && Number(rawLthr) > Number(rawMaxHR) ? rawLthr : rawMaxHR;
 
             const swimSpeed = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number);
             let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m;

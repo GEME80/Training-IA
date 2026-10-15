@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
     const clientId = process.env.NEXT_PUBLIC_INTERVALS_CLIENT_ID || process.env.INTERVALS_CLIENT_ID || "1371";
 
     // Determinar la URL base de redirección de forma dinámica según el host de la petición
-    const forwardedHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
+    const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    const forwardedHost = rawHost && !rawHost.includes("0.0.0.0") ? rawHost : "pulse-ia--training-ia-8f67f.us-central1.hosted.app";
     const forwardedProto = req.headers.get("x-forwarded-proto") || (forwardedHost.includes("localhost") ? "http" : "https");
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
     const redirectUri = `${baseUrl}/api/auth/intervals/callback`;

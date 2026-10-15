@@ -25,10 +25,16 @@ export async function GET(req: NextRequest) {
 
   const separator = returnTo.includes("?") ? "&" : "?";
 
+  // Determinar la URL base pública de redirección respetando proxies de Cloud Run / App Hosting
+  const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const forwardedHost = rawHost && !rawHost.includes("0.0.0.0") ? rawHost : "pulse-ia--training-ia-8f67f.us-central1.hosted.app";
+  const forwardedProto = req.headers.get("x-forwarded-proto") || (forwardedHost.includes("localhost") ? "http" : "https");
+  const baseUrl = `${forwardedProto}://${forwardedHost}`;
+
   // Manejo de rechazo por parte del usuario en la pantalla de autorización
   if (errorParam || !code) {
     const errorMsg = errorParam || "Autorización cancelada o código ausente.";
-    return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=${encodeURIComponent(errorMsg)}`, req.url));
+    return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=${encodeURIComponent(errorMsg)}`, baseUrl));
   }
 
   const clientId = process.env.NEXT_PUBLIC_INTERVALS_CLIENT_ID || process.env.INTERVALS_CLIENT_ID || "1371";
@@ -53,15 +59,18 @@ export async function GET(req: NextRequest) {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("Error al intercambiar token OAuth en Intervals.icu:", errText);
-      return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=token_exchange_failed`, req.url));
+      return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=token_exchange_failed`, baseUrl));
     }
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
-    const rawAthleteId = String(tokenData.athlete_id || "");
+    // Intervals.icu devuelve el ID en tokenData.athlete.id
+    const rawAthleteId = String(tokenData.athlete?.id || tokenData.athlete_id || tokenData.id || "");
+    const athleteName = tokenData.athlete?.name || tokenData.name || "";
 
     if (!accessToken || !rawAthleteId) {
-      return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=invalid_token_payload`, req.url));
+      console.error("Payload de token inválido recibido de Intervals:", JSON.stringify(tokenData));
+      return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=invalid_token_payload`, baseUrl));
     }
 
     // Normalizar ID de atleta para garantizar prefijo i
@@ -85,7 +94,7 @@ export async function GET(req: NextRequest) {
       await saveUserProfile(uid, {
         intervalsAthleteId: effectiveAthleteId,
         rawApiKey: bearerKey,
-        displayName: detectedProfile.athleteName || tokenData.name,
+        displayName: detectedProfile.athleteName || athleteName,
         runFtp: detectedProfile.runFtp,
         bikeFtp: detectedProfile.bikeFtp,
         restingHR: detectedProfile.restingHR,
@@ -101,10 +110,11 @@ export async function GET(req: NextRequest) {
     const successUrl = `${returnTo}${separator}intervals_connected=true&athleteId=${effectiveAthleteId}&token=${encodeURIComponent(
       bearerKey
     )}`;
-    return NextResponse.redirect(new URL(successUrl, req.url));
+    return NextResponse.redirect(new URL(successUrl, baseUrl));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error inesperado en callback OAuth";
     console.error("Fallo crítico en /api/auth/intervals/callback:", message);
-    return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=${encodeURIComponent(message)}`, req.url));
+    return NextResponse.redirect(new URL(`${returnTo}${separator}intervals_error=${encodeURIComponent(message)}`, baseUrl));
   }
 }
+

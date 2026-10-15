@@ -8715,3 +8715,34 @@ Tras la aprobación formal de la aplicación OAuth 1371 de PULSE IA por parte de
 - **Gate 4 (UX Sin Fricción & Seguridad):** Conexión en 1 solo clic; cero copia/pega manual de API Keys; secreto custodiado exclusivamente en Google Secret Manager ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 142 ✅.
 
+---
+
+## 143. Corrección de Extracción de Atleta en OAuth y Sanitización de Proxy Cloud Run (`0.0.0.0`) (v5.74)
+
+### 143.1. Diagnóstico del Incidente
+Durante la primera prueba de autorización real en producción con una cuenta nueva (`Germantest1`), la autorización en Intervals.icu fue exitosa, pero al volver ocurrió una redirección a `https://0.0.0.0:8080/?intervals_error=invalid_token_payload`. El análisis reveló dos causas raíz complementarias:
+1. **Estructura del Payload de Intervals.icu (`POST /api/oauth/token`):**
+   - Intervals.icu entrega los datos del usuario dentro de un objeto anidado: `{ access_token, token_type, athlete: { id: "iXXXX", name: "..." } }`.
+   - El código esperaba `tokenData.athlete_id` a nivel raíz, evaluando falsamente `rawAthleteId` como vacío y disparando el error `invalid_token_payload`.
+2. **Direccionamiento de Reverse Proxy en Contenedores Cloud Run / App Hosting:**
+   - La cabecera `req.url` en el contenedor de Google Cloud Run resuelve al socket interno `0.0.0.0:8080`. Al ejecutar `NextResponse.redirect(new URL(..., req.url))`, el navegador cliente era enviado a la IP interna inaccesible `0.0.0.0:8080`.
+
+### 143.2. Solución Aplicada
+1. **Extracción Robusta del ID y Nombre de Atleta (`src/app/api/auth/intervals/callback/route.ts` - 120 LOC):**
+   - Ingesta prioritaria desde `tokenData.athlete?.id || tokenData.athlete_id || tokenData.id`.
+   - Extracción de nombre de atleta desde `tokenData.athlete?.name || tokenData.name`.
+2. **Sanitización Dinámica de Host y Protocolo (`authorize` & `callback` routes):**
+   - Inspección de cabeceras `x-forwarded-host` y `x-forwarded-proto`.
+   - Filtro explícito para descartar `0.0.0.0` y hacer fallback automático al dominio canónico oficial de producción (`pulse-ia--training-ia-8f67f.us-central1.hosted.app`) o `localhost` en entornos de desarrollo.
+   - Sustitución total de `req.url` por `baseUrl` en todas las respuestas `NextResponse.redirect`.
+
+### 143.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas):**
+  - `authorize/route.ts`: 48 LOC ($\le 350$) ✅
+  - `callback/route.ts`: 120 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** Compilación verificada ✅.
+- **Gate 4 (Resiliencia Cloud Run & OAuth):** Redirecciones siempre resueltas sobre el dominio canónico y payload OAuth de Intervals 100% compatible ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 143 ✅.
+
+

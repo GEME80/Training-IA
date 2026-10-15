@@ -7,12 +7,9 @@ import { Zap, Activity, CheckCircle2, Waves, Flame } from "lucide-react";
  * HeroAthleteTelemetryCard
  * 
  * Tarjeta cinemática de telemetría deportiva con video cristalino de alta definición
- * y motor multideporte agnóstico a marcas con explicaciones claras de métricas.
+ * y motor multideporte sincronizado en tiempo real con la disciplina en pantalla.
  */
 const VIDEO_SRC = "/videos/hero-athlete.mp4";
-const POSTER_IMAGE = "/images/hero-athlete.jpg";
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=1200&auto=format&fit=crop";
 
 interface SportTelemetry {
   id: string;
@@ -82,13 +79,40 @@ const SPORTS_TELEMETRY: SportTelemetry[] = [
   },
 ];
 
-const ROTATION_INTERVAL = 4500; // 4.5 segundos por disciplina
-
 export const HeroAthleteTelemetryCard: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
   const [activeSportIdx, setActiveSportIdx] = useState<number>(0);
-  const [imgSrc, setImgSrc] = useState<string>(POSTER_IMAGE);
+
+  // Sincronización en tiempo real con el segundo exacto del video (Triatlón 10s: Natación -> Ciclismo -> Carrera)
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration || Number.isNaN(video.duration)) return;
+    const t = video.currentTime;
+    const dur = video.duration;
+    const segment = dur / 3;
+
+    let targetIdx = 0;
+    if (t < segment) {
+      targetIdx = 0; // Natación (0.0s - 3.33s)
+    } else if (t < segment * 2) {
+      targetIdx = 1; // Ciclismo (3.33s - 6.66s)
+    } else {
+      targetIdx = 2; // Carrera (6.66s - 10.0s)
+    }
+
+    setActiveSportIdx((prev) => (prev !== targetIdx ? targetIdx : prev));
+  };
+
+  // Salto manual inmediato en el video al pulsar un chip de disciplina
+  const handleSelectSport = (idx: number) => {
+    setActiveSportIdx(idx);
+    const video = videoRef.current;
+    if (video && video.duration && !Number.isNaN(video.duration)) {
+      const segment = video.duration / 3;
+      video.currentTime = idx * segment + 0.05;
+    }
+  };
 
   // Inicialización de video nativo con autoplay silenciado
   useEffect(() => {
@@ -110,14 +134,14 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
     }
   }, []);
 
-  // Rotación automática de telemetría deportiva
+  // Fallback de rotación automática únicamente si el video no pudiese reproducirse
   useEffect(() => {
+    if (isVideoPlaying) return;
     const timer = setInterval(() => {
       setActiveSportIdx((prev) => (prev + 1) % SPORTS_TELEMETRY.length);
-    }, ROTATION_INTERVAL);
-
+    }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isVideoPlaying]);
 
   const currentSport = SPORTS_TELEMETRY[activeSportIdx];
   const BadgeIcon = currentSport.badgeIcon;
@@ -132,19 +156,7 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
         style={{ backgroundColor: "#020617" }}
         className="telemetry-card-bg rounded-3xl overflow-hidden shadow-2xl border border-slate-700/80 aspect-[4/5] relative group"
       >
-        {/* Capa 1: Fotografía Poster Base de Alta Resolución (visible siempre como respaldo) */}
-        <img
-          src={imgSrc}
-          onError={() => {
-            if (imgSrc !== FALLBACK_IMAGE) {
-              setImgSrc(FALLBACK_IMAGE);
-            }
-          }}
-          alt="Atleta de resistencia ejecutando serie con telemetría en tiempo real"
-          className="absolute inset-0 w-full h-full object-cover object-center select-none"
-        />
-
-        {/* Capa 2: Video Cinemático NÍTIDO sin filtro velado */}
+        {/* Video Cinemático NÍTIDO sin filtro velado ni imágenes estáticas intermedias */}
         <video
           ref={videoRef}
           src={VIDEO_SRC}
@@ -153,6 +165,7 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
           muted
           playsInline
           preload="auto"
+          onTimeUpdate={handleTimeUpdate}
           onPlaying={() => setIsVideoPlaying(true)}
           className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 select-none opacity-100"
         />
@@ -219,13 +232,13 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => setActiveSportIdx(idx)}
+                  onClick={() => handleSelectSport(idx)}
                   className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
                     activeSportIdx === idx
                       ? "bg-emerald-500 text-slate-950 shadow-xs"
                       : "text-slate-400 hover:text-white hover:bg-slate-800"
                   }`}
-                  title={`Ver telemetría de ${s.sportLabel}`}
+                  title={`Ver telemetría y video de ${s.sportLabel}`}
                 >
                   {s.sportLabel.slice(0, 3)}
                 </button>

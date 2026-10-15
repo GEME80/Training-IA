@@ -8634,11 +8634,38 @@ Se implementó una guarda fisiológica bidireccional automática (`safeLthr = mi
 - **Gate 4 (Universalidad):** Aplicado a todos los atletas (Juan Pablo, German, Sylvia, Georg, etc.) de forma determinista ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 140 ✅.
 
+---
 
+## 141. Clarificación Biométrica de FC Umbral de Lactato / Máx y Edición Dual Instantánea (v5.74)
 
+### 141.1. Diagnóstico y Requerimientos del Atleta
+1. **Claridad Terminológica Inequívoca:** La tarjeta de frecuencia cardíaca mostraba de forma simplificada `FC Umbral / Máx`, generando dudas sobre a qué umbral fisiológico hacía referencia. Se requirió renombrar explícitamente a: **`FC Umbral de Lactato / Máx`**.
+2. **Edición Dual Desbloqueada (LTHR y FC Máx):** Previamente, la tarjeta solo abría el modal rápido para editar la FC Umbral, imposibilitando editar la FC Máxima sin navegar por múltiples pantallas. El usuario requirió que se puedan ajustar tanto la FC Umbral de Lactato como la FC Máxima directamente.
+3. **Diagnóstico y Calibración del Perfil de German Morales (`gerkof@gmail.com`):**
+   - *Comportamiento de Garmin Connect:* Garmin almacena sus umbrales de FC en la app/reloj (FC Máx: 178 bpm, Umbral de Lactato: 156 bpm, Reposo: 52 bpm), pero el protocolo de enlace Garmin-Intervals.icu solo sincroniza archivos FIT de actividades y métricas de sueño (wellness), sin transferir automáticamente los ajustes del perfil de zonas del reloj.
+   - *Calibración en Vivo:* Se sincronizaron vía API en Intervals.icu (`i442091`) los `sportSettings` de Carrera (`Run 1844382`: LTHR 156, Máx 178), Ciclismo (`Ride 1844381`: LTHR 156, Máx 178) y FC Reposo (52 bpm), dejando el perfil en concordancia exacta con Garmin Connect.
 
+### 141.2. Detalle de Archivos Modificados
+1. **`src/components/profile/ContextualThresholdsGrid.tsx` (343 LOC):**
+   - Título de la Card 3 actualizado en todas las disciplinas a: `FC Umbral de Lactato / Máx`.
+   - Etiqueta de ajuste rápida interactiva `✎ Ajustar` conectada para desplegar el modal de edición de frecuencia cardíaca.
+   - Preservación de la guarda de seguridad biológica (`safeLthr <= safeMaxHR`).
+2. **`src/components/profile/QuickThresholdModal.tsx` (208 LOC):**
+   - Incorporación de selector de pestañas duales interactivo: `[ FC Umbral de Lactato ] [ FC Máxima ]` cuando se edita cualquiera de las dos métricas cardíacas.
+   - Permite al atleta o entrenador cambiar instantáneamente el objetivo de edición sin cerrar y reabrir el modal.
+   - Nombres claros: `"FC Umbral de Lactato (LTHR)"` y `"Frecuencia Cardíaca Máxima (FC Máx)"` con explicaciones y rangos fisiológicos pertinentes.
+3. **`src/components/dashboard/AthletePhysiologyView.tsx` (323 LOC):**
+   - Propagación del callback `onSwitchMetric` al componente `QuickThresholdModal` para gobernar el estado reactivo `quickEditMetric`.
+4. **`src/components/profile/DynamicZonesTable.tsx` (236 LOC):**
+   - Encabezados de tabla de zonas Friel clarificados a `{safeLthr} ppm Umbral Lactato`.
 
-
-
-
-
+### 141.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `ContextualThresholdsGrid.tsx`: 343 LOC ($\le 350$) ✅
+  - `QuickThresholdModal.tsx`: 208 LOC ($\le 350$) ✅
+  - `AthletePhysiologyView.tsx`: 323 LOC ($\le 350$) ✅
+  - `DynamicZonesTable.tsx`: 236 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 páginas estáticas generadas) ✅.
+- **Gate 4 (Precisión Fisiológica):** Muestra `156 / 178 bpm` y permite editar ambos parámetros con un clic ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 141 ✅.

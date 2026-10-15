@@ -11,6 +11,7 @@ interface QuickThresholdModalProps {
   currentValue: string | number;
   onClose: () => void;
   onSave: (metric: EditableThresholdMetric, value: string | number) => Promise<void>;
+  onSwitchMetric?: (metric: EditableThresholdMetric) => void;
 }
 
 const METRIC_CONFIG: Record<
@@ -45,22 +46,22 @@ const METRIC_CONFIG: Record<
     placeholder: "220",
   },
   LTHR: {
-    title: "Frecuencia Cardíaca Umbral (LTHR)",
-    subtitle: "Ajusta tu umbral de lactato para las zonas cardíacas Friel (Z1-Z5c)",
+    title: "FC Umbral de Lactato (LTHR)",
+    subtitle: "Ajusta tu umbral de lactato en bpm para calibrar las zonas cardíacas Friel (Z1-Z5)",
     unit: "bpm",
     icon: HeartPulse,
     iconColor: "text-rose-500",
     isNumeric: true,
-    placeholder: "168",
+    placeholder: "156",
   },
   MAX_HR: {
-    title: "Frecuencia Cardíaca Máxima",
-    subtitle: "Ajusta tu FC máxima alcanzada en test de campo o prueba de esfuerzo",
+    title: "Frecuencia Cardíaca Máxima (FC Máx)",
+    subtitle: "Ajusta tu FC máxima alcanzada en test de esfuerzo o carrera (bpm)",
     unit: "bpm",
     icon: HeartPulse,
     iconColor: "text-rose-600",
     isNumeric: true,
-    placeholder: "185",
+    placeholder: "178",
   },
   RESTING_HR: {
     title: "FC de Reposo Basal",
@@ -88,6 +89,7 @@ export const QuickThresholdModal: React.FC<QuickThresholdModalProps> = ({
   currentValue,
   onClose,
   onSave,
+  onSwitchMetric,
 }) => {
   const [val, setVal] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
@@ -137,6 +139,33 @@ export const QuickThresholdModal: React.FC<QuickThresholdModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3.5">
+          {(metric === "LTHR" || metric === "MAX_HR") && onSwitchMetric && (
+            <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold gap-1 mb-1">
+              <button
+                type="button"
+                onClick={() => onSwitchMetric("LTHR")}
+                className={`flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${
+                  metric === "LTHR"
+                    ? "bg-white dark:bg-slate-700 text-rose-500 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                FC Umbral de Lactato
+              </button>
+              <button
+                type="button"
+                onClick={() => onSwitchMetric("MAX_HR")}
+                className={`flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${
+                  metric === "MAX_HR"
+                    ? "bg-white dark:bg-slate-700 text-rose-600 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
+              >
+                FC Máxima
+              </button>
+            </div>
+          )}
+
           <p className="text-xs text-slate-600 dark:text-slate-300">{config.subtitle}</p>
 
           <div className="relative">

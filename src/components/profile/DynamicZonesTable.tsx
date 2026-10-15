@@ -153,7 +153,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
             <div>
               <div className="flex items-center justify-between pb-2 px-1">
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">Zonas Cardíacas (FC Carrera)</span>
-                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm LTHR</span>
+                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm Umbral Lactato</span>
               </div>
               {renderZoneRows(hrZones, "Pulsaciones")}
             </div>
@@ -184,7 +184,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
             <div>
               <div className="flex items-center justify-between pb-2 px-1">
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">
-                  {bikeTelemetryMode === "POWER" ? "Zonas Cardíacas (Ciclismo LTHR)" : "Modelo Coggan Potencia"}
+                  {bikeTelemetryMode === "POWER" ? "Zonas Cardíacas (Ciclismo Umbral Lactato)" : "Modelo Coggan Potencia"}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400 font-bold">
                   {bikeTelemetryMode === "POWER" ? `${safeLthr} ppm` : `${bikeFtp || 226}W`}

@@ -302,6 +302,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         }
         onClose={() => setQuickEditMetric(null)}
         onSave={handleUpdateThreshold}
+        onSwitchMetric={(m) => setQuickEditMetric(m)}
       />
 
       {/* 5. Modal de Confirmación de Transición de Modo Fisiológico */}

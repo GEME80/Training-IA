@@ -8745,4 +8745,50 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Resiliencia Cloud Run & OAuth):** Redirecciones siempre resueltas sobre el dominio canónico y payload OAuth de Intervals 100% compatible ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 143 ✅.
 
+---
+
+## 144. Sincronización Interactiva de Relojes (Opción 1), Control Global de Admisión y Blindaje Legal T&C (v5.75)
+
+### 144.1. Contexto y Requerimientos
+1. **Fricción en la Sincronización de Garmin:** Tras autorizar Intervals.icu, los atletas desconocían cómo encender la sincronización de Garmin u otras marcas (Polar, Coros, Suunto, Wahoo). Debido a las políticas de seguridad de Garmin (`X-Frame-Options: SAMEORIGIN` / anti-clickjacking), no es viable embeber la página en un iframe; se requería una solución guiada en popup de 1 clic con selección de marcas.
+2. **Eliminación de Fricción en Producción (Control de Admisión):** El administrador necesitaba un interruptor institucional en el panel de control para alternar libremente entre *"Aprobación Manual (Beta Privada)"* y *"Registro Abierto (Producción Pública)"*, permitiendo que cuando la app esté abierta al público, los nuevos atletas accedan inmediatamente sin esperas.
+3. **Blindaje Legal 100% Obligatorio en Términos & Condiciones:** El registro mediante Google Auth permitía el registro sin marcar expresamente la casilla de Términos; se requería colocar la casilla de forma visible y bloquear tanto el botón de Google como el formulario hasta su aceptación explícita.
+4. **Purga Completa de Atletas de Prueba:** Capacidad de eliminar atletas de prueba tanto de Firestore como de Firebase Authentication de manera sincronizada.
+
+### 144.2. Implementación Arquitectónica
+1. **Modal de Sincronización de Reloj (`src/components/onboarding/WatchSyncModal.tsx` - 156 LOC):**
+   - Tarjeta con doble branding: **PULSE IA** ⚡ **Intervals.icu** con check verde y badge del atleta (`Germantest1 / i754934`).
+   - Selector interactivo de marcas de relojes: **Garmin Connect** (badge institucional Recomendado), **Polar Flow**, **Coros**, **Apple Watch / Wahoo / Suunto**.
+   - Botón esmeralda `[ ⌚ Abrir Ajustes en Intervals.icu ↗ ]` que dispara un popup enfocado a `https://intervals.icu/settings` para activar el switch del reloj en 10 segundos.
+   - Integrado reactivamente en `AthleteDashboard.tsx` tras el retorno OAuth (`intervals_connected=true`).
+2. **Acceso Adelantado para Atletas en Espera (`src/components/RestrictedAccessView.tsx` - 165 LOC):**
+   - La tarjeta de Intervals ahora incluye el botón directo para configurar Garmin en Intervals mientras esperan la aprobación.
+3. **Módulo de Admisión Global (`src/lib/db/systemAccessConfig.ts` - 60 LOC & `userProfile.ts` - 340 LOC):**
+   - Colección `system_config/access_settings` con `registrationMode: "OPEN" | "APPROVAL_REQUIRED"`.
+   - `syncUserFromGoogleAuth` evalúa `getDefaultUserStatus()`: si el modo es `"OPEN"`, los nuevos usuarios arrancan inmediatamente como `"active"`.
+4. **Switch en Panel de Administrador (`src/components/admin/AdminUsersTab.tsx` - 339 LOC & `/api/admin/config/route.ts` - 272 LOC):**
+   - Banner superior con iconos `Lock` / `Unlock`, badge visual dinámico y botón de alternancia en 1 clic.
+5. **Blindaje Legal de Registro (`src/components/auth/AuthModal.tsx` - 346 LOC):**
+   - La casilla de aceptación de Términos, Exención IA y Privacidad se renderiza visiblemente antes de los botones de registro.
+   - Tanto el botón *"Registrarme con Google"* como el formulario por correo quedan deshabilitados hasta que el checkbox está marcado. `handleGoogleAuth` valida estrictamente la aceptación.
+6. **Purga Sincronizada de Base de Datos y Auth (`src/app/api/admin/users/delete/route.ts` - 90 LOC):**
+   - Soporte para eliminación por `targetEmail` purgando documentos de `users`, `preauth_*` y registros en `adminAuth.deleteUser()`.
+
+### 144.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `WatchSyncModal.tsx`: 156 LOC ($\le 350$) ✅
+  - `RestrictedAccessView.tsx`: 165 LOC ($\le 350$) ✅
+  - `systemAccessConfig.ts`: 60 LOC ($\le 350$) ✅
+  - `userProfile.ts`: 340 LOC ($\le 350$) ✅
+  - `AdminUsersTab.tsx`: 339 LOC ($\le 350$) ✅
+  - `AuthModal.tsx`: 346 LOC ($\le 350$) ✅
+  - `AthleteDashboard.tsx`: 305 LOC ($\le 350$) ✅
+  - `config/route.ts`: 272 LOC ($\le 350$) ✅
+  - `users/delete/route.ts`: 90 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (UX Sin Fricción & Cobertura Legal):** Sincronización de reloj con popup guiado, switch de admisión en vivo y consentimiento de T&C 100% mandatorio ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 144 ✅.
+
+
 

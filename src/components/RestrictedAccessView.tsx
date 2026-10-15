@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PulseLogo } from "./PulseLogo";
-import { ShieldAlert, Clock, LogOut, Mail, ArrowRight, Sparkles, X } from "lucide-react";
+import { ShieldAlert, Clock, LogOut, Mail, ArrowRight, Sparkles, X, Watch, ExternalLink } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { OnboardingIntervalsGuide } from "./onboarding/OnboardingIntervalsGuide";
 
@@ -67,14 +67,23 @@ export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ stat
           {/* Tarjeta Proactiva de Preparación Intervals */}
           {isPending && (
             userProfile?.intervalsAthleteId ? (
-              <div className="rounded-2xl p-4 bg-emerald-50/70 border border-emerald-200 text-left space-y-1">
+              <div className="rounded-2xl p-4 bg-emerald-50/70 border border-emerald-200 text-left space-y-2">
                 <div className="flex items-center space-x-2 text-emerald-900 font-bold text-xs">
                   <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
                   <span>Intervals.icu Vinculado ({userProfile.intervalsAthleteId})</span>
                 </div>
                 <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  Tu motor de telemetría deportiva ya está conectado. Tan pronto el Administrador apruebe tu acceso, tus entrenamientos se activarán de inmediato.
+                  Tu telemetría deportiva está lista. Aprovecha mientras eres aprobado para vincular tu reloj deportivo en Intervals:
                 </p>
+                <button
+                  type="button"
+                  onClick={() => window.open("https://intervals.icu/settings", "_blank", "width=880,height=780,scrollbars=yes")}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow transition cursor-pointer"
+                >
+                  <Watch className="h-3.5 w-3.5 text-cyan-400" />
+                  <span>Configurar Garmin / Reloj en Intervals</span>
+                  <ExternalLink className="h-3 w-3 text-slate-400" />
+                </button>
               </div>
             ) : (
               <div className="rounded-2xl p-4 bg-emerald-50/70 border border-emerald-200 text-left space-y-2.5">

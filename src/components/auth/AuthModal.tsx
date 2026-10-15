@@ -39,6 +39,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
 
   const handleGoogleAuth = async () => {
     setLocalError(null);
+    if (activeTab === "register" && !termsAccepted) {
+      setLocalError("Debes marcar la casilla de aceptación de Términos antes de continuar.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
@@ -201,11 +205,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
 
             {/* Google Auth: Disponible tanto para Iniciar Sesión como para Registro Rápido */}
             {activeTab !== "forgot" && (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
+                {activeTab === "register" && (
+                  <label className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                    />
+                    <span className="text-[10px] text-slate-600 leading-snug">
+                      He leído y acepto los <a href="/terms" target="_blank" className="text-emerald-600 underline font-semibold">Términos & Exención IA</a> y la <a href="/privacy" target="_blank" className="text-emerald-600 underline font-semibold">Privacidad</a>.
+                    </span>
+                  </label>
+                )}
+
                 <button
                   type="button"
                   onClick={handleGoogleAuth}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (activeTab === "register" && !termsAccepted)}
                   className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
                   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -216,9 +234,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   </svg>
                   <span>{activeTab === "login" ? "Continuar con Google" : "Registrarme con Google"}</span>
                 </button>
-                <p className="text-[10px] text-center text-slate-400">
-                  Al continuar aceptas los <a href="/terms" target="_blank" className="underline hover:text-emerald-600 font-semibold">Términos</a> y la <a href="/privacy" target="_blank" className="underline hover:text-emerald-600 font-semibold">Privacidad</a>.
-                </p>
+                {activeTab === "login" && (
+                  <p className="text-[10px] text-center text-slate-400">
+                    Al continuar aceptas los <a href="/terms" target="_blank" className="underline hover:text-emerald-600 font-semibold">Términos</a> y la <a href="/privacy" target="_blank" className="underline hover:text-emerald-600 font-semibold">Privacidad</a>.
+                  </p>
+                )}
                 <div className="relative flex py-1 items-center">
                   <div className="flex-grow border-t border-slate-200" />
                   <span className="flex-shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">{activeTab === "login" ? "o con tu correo" : "o con formulario"}</span>
@@ -279,21 +299,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                     </button>
                   </div>
                 </div>
-              )}
-
-              {activeTab === "register" && (
-                <label className="flex items-start gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    className="mt-0.5 w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
-                  />
-                  <span className="text-[10px] text-slate-600 leading-snug">
-                    He leído y acepto los <a href="/terms" target="_blank" className="text-emerald-600 underline font-semibold">Términos & Exención IA</a> y la <a href="/privacy" target="_blank" className="text-emerald-600 underline font-semibold">Privacidad</a>.
-                  </span>
-                </label>
               )}
 
               <button

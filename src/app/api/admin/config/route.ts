@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { isMasterAdminEmail, getSuperadminEmail } from "@/lib/env";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { getSystemAccessConfig, setSystemAccessConfig, SystemRegistrationMode } from "@/lib/db/systemAccessConfig";
 
 export interface GlobalAISettings {
   primaryModel: string;
@@ -151,6 +152,8 @@ export async function GET(req: NextRequest) {
       console.warn("No se pudo cargar system_config/ai_settings, usando valores por defecto:", e);
     }
 
+    const accessConfig = await getSystemAccessConfig();
+
     return NextResponse.json({
       success: true,
       projectId,
@@ -164,6 +167,7 @@ export async function GET(req: NextRequest) {
         tier: "GCP Always Free ($0.00)",
       },
       aiSettings,
+      accessConfig,
     });
   } catch (error) {
     console.error("Error en GET /api/admin/config:", error);
@@ -223,6 +227,17 @@ export async function POST(req: NextRequest) {
         { success: false, error: "Acceso no autorizado para modificar configuración global." },
         { status: 403 }
       );
+    }
+
+    // Si la petición actualiza el modo de admisión de atletas
+    if (body.registrationMode) {
+      const mode: SystemRegistrationMode = body.registrationMode === "OPEN" ? "OPEN" : "APPROVAL_REQUIRED";
+      const updatedAccess = await setSystemAccessConfig(mode, requesterEmail || requesterUid || "admin");
+      return NextResponse.json({
+        success: true,
+        message: `Modo de admisión actualizado a: ${mode === "OPEN" ? "Registro Abierto" : "Aprobación Manual"}.`,
+        accessConfig: updatedAccess,
+      });
     }
 
     // 2. Guardado en Firestore

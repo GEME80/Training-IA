@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity } from "lucide-react";
+import { UserPlus, Search, Users, CheckCircle2, Clock, Mail, RefreshCw, X, Zap, Activity, Lock, Unlock } from "lucide-react";
 import { AdminUserListItem, UserStatus } from "@/lib/db/types";
 import { useAuth } from "@/context/AuthContext";
 import { AdminUsersTable } from "./AdminUsersTable";
@@ -30,21 +30,24 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [connectionFilter, setConnectionFilter] = useState<string>("ALL");
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [registrationMode, setRegistrationMode] = useState<"OPEN" | "APPROVAL_REQUIRED">("APPROVAL_REQUIRED");
+  const [isTogglingMode, setIsTogglingMode] = useState<boolean>(false);
 
-  // Modales
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
+  React.useEffect(() => {
+    fetch("/api/admin/config").then((r) => r.json()).then((d) => d.accessConfig?.registrationMode && setRegistrationMode(d.accessConfig.registrationMode)).catch(() => {});
+  }, []);
+
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserListItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<AdminUserListItem | null>(null);
 
-  // Conteo para métricas y segmentos
-  const counts = useMemo(() => {
-    const total = users.length;
-    const active = users.filter((u) => u.status === "active").length;
-    const pending = users.filter((u) => u.status === "pending").length;
-    const invited = users.filter((u) => Boolean(u.isPreAuthorized || u.uid.startsWith("preauth_"))).length;
-    const connected = users.filter((u) => Boolean(u.intervalsAthleteId)).length;
-    return { total, active, pending, invited, connected };
-  }, [users]);
+  const counts = useMemo(() => ({
+    total: users.length,
+    active: users.filter((u) => u.status === "active").length,
+    pending: users.filter((u) => u.status === "pending").length,
+    invited: users.filter((u) => Boolean(u.isPreAuthorized || u.uid.startsWith("preauth_"))).length,
+    connected: users.filter((u) => Boolean(u.intervalsAthleteId)).length,
+  }), [users]);
 
   // Filtrado reactivo de usuarios
   const filteredUsers = useMemo(() => {
@@ -88,6 +91,31 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
     }
   };
 
+  const handleToggleRegistrationMode = async () => {
+    const nextMode = registrationMode === "OPEN" ? "APPROVAL_REQUIRED" : "OPEN";
+    setIsTogglingMode(true);
+    try {
+      const requesterUid = user?.uid || userProfile?.uid || "superadmin-root";
+      const requesterEmail = user?.email || userProfile?.email || "";
+      const res = await fetch("/api/admin/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationMode: nextMode, requesterUid, requesterEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al actualizar modo de admisión");
+      setRegistrationMode(nextMode);
+      showMessage(
+        `Modo de admisión actualizado: ${nextMode === "OPEN" ? "Registro Abierto (Sin Fricción)" : "Aprobación Requerida (Beta)"}`,
+        "success"
+      );
+    } catch (err: unknown) {
+      showMessage(err instanceof Error ? err.message : "Error al cambiar modo de admisión", "error");
+    } finally {
+      setIsTogglingMode(false);
+    }
+  };
+
   return (
     <div className="space-y-6 sm:space-y-7 animate-fadeIn">
       {/* 1. Titular Principal & Acciones Globales */}
@@ -127,6 +155,41 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             <span>+ Invitar Atleta</span>
           </button>
         </div>
+      </div>
+
+      {/* Control Global: Modo de Admisión de Nuevos Atletas */}
+      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center space-x-3">
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${registrationMode === "OPEN" ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-amber-50 text-amber-600 border border-amber-200"}`}>
+            {registrationMode === "OPEN" ? <Unlock className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-900">Modo de Admisión de Nuevos Atletas</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${registrationMode === "OPEN" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+                {registrationMode === "OPEN" ? "Registro Abierto" : "Aprobación Requerida"}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {registrationMode === "OPEN"
+                ? "Producción Pública: Todo atleta nuevo se activa de inmediato y entra al Dashboard sin esperar."
+                : "Beta Privada: Todo nuevo registro queda en espera hasta que tú lo apruebes manualmente."}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleToggleRegistrationMode}
+          disabled={isTogglingMode}
+          className={`px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center space-x-1.5 shrink-0 ${
+            registrationMode === "OPEN"
+              ? "bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
+              : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+          }`}
+        >
+          <span>{registrationMode === "OPEN" ? "Cambiar a Aprobación Manual" : "Activar Registro Abierto (Producción)"}</span>
+        </button>
       </div>
 
       {/* 2. Tarjetas KPI de Resumen Rápido (Nuevo en v4.00) */}

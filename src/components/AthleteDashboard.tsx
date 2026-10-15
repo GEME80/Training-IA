@@ -10,6 +10,7 @@ import { WorkoutDetailModal } from "./macrocycle/WorkoutDetailModal";
 import { AthleteDashboardHeader } from "./dashboard/AthleteDashboardHeader";
 import { AthleteDashboardViewRouter } from "./dashboard/AthleteDashboardViewRouter";
 import { IntervalsOnboardingModal } from "@/components/IntervalsOnboardingModal";
+import { WatchSyncModal } from "@/components/onboarding/WatchSyncModal";
 import { PlanItem } from "@/lib/gemini/engine";
 import { isMasterAdminEmail } from "@/lib/env";
 import { getOffsetForWeek } from "@/lib/physiology/macrocycle";
@@ -116,6 +117,17 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   const [activeNavSection, setActiveNavSection] = useState<AthleteSidebarNavSection>("dashboard");
   const [selectedWorkoutModal, setSelectedWorkoutModal] = useState<PlanItem | null>(null);
   const [activePlan, setActivePlan] = useState<PlanItem[]>([]);
+
+  const [isWatchSyncModalOpen, setIsWatchSyncModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("intervals_connected") === "true") {
+        setIsWatchSyncModalOpen(true);
+      }
+    }
+  }, []);
 
   const telemetry = useAthleteTelemetry({
     user: effectiveUser,
@@ -274,6 +286,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
             onClose={() => setSelectedWorkoutModal(null)}
           />
           <IntervalsOnboardingModal isOpen={telemetry.isOnboardingOpen} onClose={() => telemetry.setIsOnboardingOpen(false)} initialAthleteId={telemetry.profile.id} onSuccess={telemetry.handleOnboardingSuccess} />
+          <WatchSyncModal isOpen={isWatchSyncModalOpen} onClose={() => setIsWatchSyncModalOpen(false)} athleteId={telemetry.profile.id} athleteName={telemetry.profile.name} />
           <NotificationToast />
 
           {/* Pie de página discreto con enlaces legales */}

@@ -3,20 +3,14 @@ import { encryptSensitiveData, decryptSensitiveData } from "../crypto";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY } from "../gemini/engine";
 import { isMasterAdminEmail, getSuperadminEmail } from "../env";
 import { UserProfileData, UserRole, UserStatus, RunningTrainingMode } from "./types";
+import { getDefaultUserStatus } from "./systemAccessConfig";
 
 // Re-exportación completa de tipos y módulos para mantener 100% de retrocompatibilidad
 export * from "./types";
 export * from "./adminUsers";
 export * from "./decisionLogs";
 
-/**
- * Sincroniza o crea el usuario en Firestore al iniciar sesión con Google.
- * Si coincide con el superadministrador:
- *   - Asigna inmediatamente rol: "admin" y status: "active"
- *   - Vincula las métricas fisiológicas completas del atleta rector.
- * Para cualquier otro usuario:
- *   - Registra como "athlete" con status: "pending" (o según pre-autorizaciones).
- */
+/** Sincroniza o crea el usuario en Firestore al iniciar sesión con Google */
 function stripUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
 }
@@ -29,6 +23,7 @@ export async function syncUserFromGoogleAuth(userData: {
 }): Promise<UserProfileData> {
   const now = new Date().toISOString();
   const isSuperadmin = isMasterAdminEmail(userData.email);
+  const defaultStatus = await getDefaultUserStatus(isSuperadmin);
 
   if (!adminDb) {
     // Fallback en memoria si Firebase Admin no está inicializado en entorno local
@@ -38,7 +33,7 @@ export async function syncUserFromGoogleAuth(userData: {
       displayName: userData.displayName || (isSuperadmin ? (process.env.SUPERADMIN_NAME || "Administrador") : "Atleta"),
       photoURL: userData.photoURL || undefined,
       role: isSuperadmin ? "admin" : "athlete",
-      status: isSuperadmin ? "active" : "pending",
+      status: defaultStatus,
       intervalsAthleteId: isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
       createdAt: now,
@@ -53,7 +48,7 @@ export async function syncUserFromGoogleAuth(userData: {
   if (!doc.exists) {
     // Verificar si existía un pre-registro o whitelist para este correo
     let preAuthRole: UserRole = isSuperadmin ? "admin" : "athlete";
-    let preAuthStatus: UserStatus = isSuperadmin ? "active" : "pending";
+    let preAuthStatus: UserStatus = defaultStatus;
     let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined;
     let preAuthRunFtp: number | undefined, preAuthBikeFtp: number | undefined;
     let preAuthEncryptedApiKey: any, preAuthWeightKg: number | undefined;

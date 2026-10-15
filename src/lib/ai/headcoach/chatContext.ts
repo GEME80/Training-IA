@@ -1,4 +1,6 @@
 import { IntervalsClient } from "@/lib/intervals/client";
+import { isRunSport, isRideSport } from "@/lib/intervals/sportMatchers";
+import { extractGarminWellnessTelemetry } from "@/lib/intervals/wellnessHelpers";
 import { PhysiologicalEngine, PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness, ActivitySummary } from "@/lib/intervals/types";
 import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, normalizeDisciplines, CANONICAL_DAYS, getDayDisciplines, resolveEffectiveAvailability } from "@/lib/gemini/engine";
@@ -61,7 +63,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     try {
       const client = new IntervalsClient(effectiveAthleteId, effectiveApiKey);
       const today = new Date();
-      const oldestStr = new Date(today.getTime() - 14 * 86400000).toISOString().split("T")[0];
+      const oldestStr = new Date(today.getTime() - 60 * 86400000).toISOString().split("T")[0];
       const newestStr = today.toISOString().split("T")[0];
 
       const [ath, wel, acts, sports] = await Promise.all([
@@ -72,9 +74,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       ]);
 
       if (ath) {
-        const runSport = (sports || []).find((s: any) => s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) || /run/i.test(String(s.id)));
-        const rideSport = (sports || []).find((s: any) => s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id)));
-
+        const runSport = (sports || []).find(isRunSport);
+        const rideSport = (sports || []).find(isRideSport);
         const anyAth = (ath || {}) as any;
         const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || birthDate;
         let computedAge: number | undefined = undefined;
@@ -90,7 +91,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const resolvedSex: "M" | "F" | "OTHER" = (gender === "M" || anyAth.sex === "M" || anyAth.gender === "M") ? "M" : ((gender === "F" || anyAth.sex === "F" || anyAth.gender === "F") ? "F" : "M");
         const rawHeight = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
         const resolvedHeight = (body as any).height || (rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined);
-        const resolvedWeight = weight || anyAth.weight || (wellness[0] as any)?.weight || ath?.weight;
+        const garminWel = extractGarminWellnessTelemetry(Array.isArray(wel) ? wel : []);
+        const resolvedWeight = weight || garminWel.weightKg || anyAth.weight || ath?.weight;
         const resolvedRunFtp = (runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0;
         const resolvedBikeFtp = (bikeFtp ? Number(bikeFtp) : undefined) || rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || 0;
         const defaultMaxHr = computedAge ? Math.round(208 - 0.7 * computedAge) : 185;
@@ -98,16 +100,12 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const defaultRestingHr = 55;
 
         profile = {
-          ...ath,
-          id: ath?.id || effectiveAthleteId || "",
-          name: ath?.name || profile.name || "Atleta",
-          birthDate: birthDate || icuDob,
-          age: computedAge, gender: resolvedSex,
-          weight: resolvedWeight ? Number(resolvedWeight) : undefined,
-          heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
-          restingHR: restingHR || (wellness[0] as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
-          maxHR: maxHR || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr,
-          lthr: lthr || anyAth.lthr || ath?.lthr || defaultLthr,
+          ...ath, id: ath?.id || effectiveAthleteId || "", name: ath?.name || profile.name || "Atleta",
+          birthDate: birthDate || icuDob, age: computedAge, gender: resolvedSex,
+          weight: resolvedWeight ? Number(resolvedWeight) : undefined, heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
+          restingHR: restingHR || garminWel.restingHR || runSport?.resting_hr || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
+          maxHR: maxHR || runSport?.max_hr || rideSport?.max_hr || anyAth.max_hr || anyAth.maxHR || ath?.maxHR || defaultMaxHr,
+          lthr: lthr || runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath?.lthr || defaultLthr,
           run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
         };
       }

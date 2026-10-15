@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { saveUserProfile, getUserProfileDecrypted } from "@/lib/db/userProfile";
 import { DEFAULT_WEEKLY_AVAILABILITY } from "@/lib/gemini/engine";
 import { ProfileUpdateRequestSchema } from "@/lib/validation/schemas";
+import { isRunSport, isRideSport, isSwimSport } from "@/lib/intervals/sportMatchers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -152,10 +153,7 @@ export async function POST(req: NextRequest) {
 
         // 1. Ciclismo FTP
         if (bikeFtp !== undefined && bikeFtp !== null && bikeFtp > 0) {
-          const rideSport = (sports || []).find((s: any) =>
-            s.types?.some((t: string) => /ride|cycling|bike|virtualride/i.test(t)) ||
-            /ride|cycling|bike/i.test(String(s.id))
-          );
+          const rideSport = (sports || []).find(isRideSport);
           if (rideSport?.id) {
             await client.updateSportSettings(rideSport.id, { ftp: Number(bikeFtp) }).catch(() => null);
           }
@@ -164,10 +162,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Stryd Potencia Carrera
         if (runFtp !== undefined && runFtp !== null && runFtp > 0) {
-          const runSport = (sports || []).find((s: any) =>
-            s.types?.some((t: string) => /run|running|virtualrun/i.test(t)) ||
-            /run/i.test(String(s.id))
-          );
+          const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             await client.updateSportSettings(runSport.id, { ftp: Number(runFtp) }).catch(() => null);
           }
@@ -177,10 +172,7 @@ export async function POST(req: NextRequest) {
         // 3. Ritmo Umbral Carrera
         const effectiveSec = runThresholdPaceSecPerKm || (runThresholdPaceStr ? (await import("@/lib/physiology/runningWorkoutAdapter")).parsePaceToSeconds(runThresholdPaceStr) : 0);
         if (effectiveSec > 0) {
-          const runSport = (sports || []).find((s: any) =>
-            s.types?.some((t: string) => /run|running|virtualrun/i.test(t)) ||
-            /run/i.test(String(s.id))
-          );
+          const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             const speedMps = Number((1000 / effectiveSec).toFixed(3));
             await client.updateSportSettings(runSport.id, { pace: speedMps }).catch(() => null);
@@ -190,12 +182,46 @@ export async function POST(req: NextRequest) {
         // 4. Ritmo Umbral Natación (CSS)
         const effectiveSwimSec = swimCssSecPer100m || (swimCssStr ? (await import("@/lib/physiology/runningWorkoutAdapter")).parseSwimPaceToSeconds(swimCssStr) : 0);
         if (effectiveSwimSec > 0) {
-          const swimSport = (sports || []).find((s: any) =>
-            s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id))
-          );
+          const swimSport = (sports || []).find(isSwimSport);
           if (swimSport?.id) {
             const thresholdPace = Number((100 / effectiveSwimSec).toFixed(4));
             await client.updateSportSettings(swimSport.id, { threshold_pace: thresholdPace }).catch(() => null);
+          }
+        }
+
+        // 5. Frecuencia Cardíaca y Biometría (SSOT Intervals)
+        const numLthr = lthr !== undefined && lthr !== null ? Number(lthr) : undefined;
+        const numMaxHR = maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined;
+        const numResting = restingHR !== undefined && restingHR !== null ? Number(restingHR) : undefined;
+        const numWeight = weightKg !== undefined && weightKg !== null ? Number(weightKg) : undefined;
+
+        if (numLthr || numMaxHR || numResting || numWeight) {
+          if (numLthr || numMaxHR) {
+            const runSport = (sports || []).find(isRunSport);
+            if (runSport?.id) {
+              await client.updateSportSettings(runSport.id, {
+                ...(numLthr ? { lthr: numLthr } : {}),
+                ...(numMaxHR ? { max_hr: numMaxHR } : {}),
+              }).catch(() => null);
+            }
+            const rideSport = (sports || []).find(isRideSport);
+            if (rideSport?.id) {
+              await client.updateSportSettings(rideSport.id, {
+                ...(numLthr ? { lthr: numLthr } : {}),
+                ...(numMaxHR ? { max_hr: numMaxHR } : {}),
+              }).catch(() => null);
+            }
+          }
+          await client.updateAthlete({
+            ...(numLthr ? { lthr: numLthr } : {}),
+            ...(numMaxHR ? { max_hr: numMaxHR } : {}),
+            ...(numResting ? { icu_resting_hr: numResting } : {}),
+            ...(numWeight ? { weight: numWeight, icu_weight: numWeight } : {}),
+          } as any).catch(() => null);
+
+          if (numWeight) {
+            const todayStr = new Date().toISOString().split("T")[0];
+            await client.updateWellness(todayStr, { id: todayStr, weight: numWeight }).catch(() => null);
           }
         }
       }

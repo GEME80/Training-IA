@@ -138,8 +138,8 @@ export function useAthleteTelemetry({
           syncFields.forEach(([k, v]) => { if (v) userStorage.setItem(k, String(v)); });
 
           setProfile((prev) => ({
-            ...prev, ...p, weight: prev.weight ?? p.weight, heightCm: prev.heightCm ?? p.heightCm,
-            gender: prev.gender ?? p.gender, birthDate: prev.birthDate ?? p.birthDate,
+            ...prev, ...p, weight: p.weight ?? prev.weight, heightCm: p.heightCm ?? prev.heightCm,
+            gender: p.gender ?? prev.gender, birthDate: p.birthDate ?? prev.birthDate,
             lthr: resLthr ?? prev.lthr, restingHR: resRhr ?? prev.restingHR, maxHR: resMax ?? prev.maxHR,
             name: p.name && p.name !== "Atleta" ? p.name : (prev.name && prev.name !== "Atleta" ? prev.name : userProfile?.displayName || user?.displayName || "Atleta"),
             run_ftp: resRun, bike_ftp: resBike,
@@ -233,29 +233,26 @@ export function useAthleteTelemetry({
     await handleSaveSettings({ visibleMetrics: updated });
   };
 
-  const handleOnboardingSuccess = async (data: { athleteId: string; apiKey: string; athleteName?: string; runFtp?: number; bikeFtp?: number }) => {
+  const handleOnboardingSuccess = async (data: { athleteId: string; apiKey: string; athleteName?: string; runFtp?: number; bikeFtp?: number; restingHR?: number; maxHR?: number; lthr?: number; weightKg?: number }) => {
     if (isReadOnly) return;
     setApiKeyCache(data.apiKey);
     userStorage.setItem("intervals_api_key", data.apiKey);
     userStorage.setItem("athlete_id", data.athleteId);
     userStorage.setItem("onboarding_welcomed", "true");
-    if (data.runFtp) userStorage.setItem("run_ftp", data.runFtp.toString());
-    if (data.bikeFtp) userStorage.setItem("bike_ftp", data.bikeFtp.toString());
-
-    setProfile((prev) => ({
-      ...prev, id: data.athleteId, name: data.athleteName || prev.name,
-      run_ftp: data.runFtp || prev.run_ftp, bike_ftp: data.bikeFtp || prev.bike_ftp,
-    }));
-
+    if (data.runFtp) userStorage.setItem("run_ftp", String(data.runFtp));
+    if (data.bikeFtp) userStorage.setItem("bike_ftp", String(data.bikeFtp));
+    if (data.restingHR) userStorage.setItem("resting_hr", String(data.restingHR));
+    setProfile((prev) => ({ ...prev, id: data.athleteId, name: data.athleteName || prev.name, run_ftp: data.runFtp || prev.run_ftp, bike_ftp: data.bikeFtp || prev.bike_ftp }));
     if (user?.uid) {
       await persistProfileToApi({
         uid: user.uid, email: user.email, displayName: data.athleteName || user.displayName,
         intervalsAthleteId: data.athleteId, rawApiKey: data.apiKey, runFtp: data.runFtp, bikeFtp: data.bikeFtp,
+        restingHR: data.restingHR, maxHR: data.maxHR, lthr: data.lthr, weightKg: data.weightKg,
+        hasRunningPowerMeter: (data.runFtp && data.runFtp > 0) ? true : undefined,
+        runningTrainingMode: (data.runFtp && data.runFtp > 0) ? "POWER" : undefined,
       });
     }
-
-    setIsOnboardingOpen(false);
-    setIsLiveConnected(true);
+    setIsOnboardingOpen(false); setIsLiveConnected(true);
     if (onLiveConnectedChange) onLiveConnectedChange(true);
     refreshTelemetry(data.athleteId, data.apiKey, data.runFtp, data.bikeFtp, true);
   };

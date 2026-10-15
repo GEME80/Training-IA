@@ -1,4 +1,6 @@
 import { IntervalsClient } from "@/lib/intervals/client";
+import { isRunSport, isRideSport, isSwimSport } from "@/lib/intervals/sportMatchers";
+import { extractGarminWellnessTelemetry } from "@/lib/intervals/wellnessHelpers";
 import { PhysiologicalEngine, PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness, CalendarEvent, DailyExecutedMap } from "@/lib/intervals/types";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
@@ -213,15 +215,9 @@ export class TelemetryService {
             wellness = (wellnessData || []).map((w: any) => ({ ...w, id: w.id || w.date, date: w.date || w.id }));
             events = calendarEvents;
 
-            const runSport = (sportSettingsData || []).find((s: any) =>
-              s.types?.some((t: string) => /run/i.test(t)) || /run/i.test(String(s.id))
-            );
-            const rideSport = (sportSettingsData || []).find((s: any) =>
-              s.types?.some((t: string) => /ride|bike/i.test(t)) || /ride|bike/i.test(String(s.id))
-            );
-            const swimSport = (sportSettingsData || []).find((s: any) =>
-              s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id))
-            );
+            const runSport = (sportSettingsData || []).find(isRunSport);
+            const rideSport = (sportSettingsData || []).find(isRideSport);
+            const swimSport = (sportSettingsData || []).find(isSwimSport);
 
             const anyAthlete = athleteData as any;
             const icuDob = anyAthlete.icu_date_of_birth || anyAthlete.dob || anyAthlete.date_of_birth || storedUser?.profile.birthDate;
@@ -240,16 +236,16 @@ export class TelemetryService {
             const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
             const normHeight = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
             const resolvedHeight = storedUser?.profile.heightCm || normHeight;
-            const latestWellness = wellness.length > 0 ? wellness[wellness.length - 1] : undefined;
+            const garminWel = extractGarminWellnessTelemetry(wellness);
 
             // Datos maestros: peso, Stryd CP, Bike FTP, fecha de nacimiento, sexo
-            const resolvedWeight = storedUser?.profile.weightKg || athleteData.weight || anyAthlete.icu_weight || (latestWellness as any)?.weight;
-            const isPaceRun = storedUser?.profile?.hasRunningPowerMeter === false || storedUser?.profile?.runningTrainingMode === "PACE";
+            const resolvedWeight = storedUser?.profile.weightKg || garminWel.weightKg || athleteData.weight || anyAthlete.icu_weight;
+            const isPaceRun = storedUser?.profile?.runningTrainingMode === "PACE" && storedUser?.profile?.hasRunningPowerMeter === false;
             const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || storedUser?.profile.runFtp || 0));
             const initialBikeFtp = customBikeFtp ?? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || storedUser?.profile.bikeFtp || 0);
             const initialRunFtp = isPaceRun ? 0 : resolvedRunFtp;
-            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || athleteData.lthr;
-            const intervalsMaxHR = anyAthlete.max_hr || anyAthlete.maxHR || athleteData.maxHR;
+            const intervalsLthr = runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
+            const intervalsMaxHR = runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;
 
             const swimSpeed = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number);
             let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m;
@@ -274,8 +270,8 @@ export class TelemetryService {
               console.warn("Aviso al evaluar Breakthroughs en telemetría:", breakthroughErr);
             }
 
-            // Datos fisiológicos tomados directamente de Intervals.icu (SSOT)
-            const intervalsRestingHR = (latestWellness as any)?.restingHR || anyAthlete.resting_hr || anyAthlete.restingHR || athleteData.restingHR;
+            // Datos fisiológicos tomados directamente de sensor Garmin en Intervals.icu (SSOT)
+            const intervalsRestingHR = garminWel.restingHR || runSport?.resting_hr || anyAthlete.resting_hr || anyAthlete.restingHR || anyAthlete.icu_resting_hr || athleteData.restingHR;
 
             profile = {
               ...athleteData,
@@ -290,8 +286,8 @@ export class TelemetryService {
               lthr: intervalsLthr ? Number(intervalsLthr) : undefined,
               run_ftp: resolvedRunFtp,
               bike_ftp: initialBikeFtp,
-              hasRunningPowerMeter: storedUser?.profile.hasRunningPowerMeter,
-              runningTrainingMode: storedUser?.profile.runningTrainingMode,
+              hasRunningPowerMeter: storedUser?.profile.hasRunningPowerMeter ?? (resolvedRunFtp > 0),
+              runningTrainingMode: storedUser?.profile.runningTrainingMode || (resolvedRunFtp > 0 ? "POWER" : "PACE"),
               runThresholdPaceStr: storedUser?.profile.runThresholdPaceStr,
               runThresholdPaceSecPerKm: storedUser?.profile.runThresholdPaceSecPerKm,
               swimCssStr: resSwimStr,

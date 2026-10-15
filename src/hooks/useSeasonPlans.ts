@@ -17,6 +17,7 @@ import {
   createPhaseInfoFromBlueprint,
   persistProfileField,
   mergeTargetRacesList,
+  purgePlanStorageAndCaches,
 } from "@/lib/physiology/seasonPlanHelpers";
 
 interface UseSeasonPlansProps {
@@ -207,25 +208,13 @@ export function useSeasonPlans({
       const uParam = user?.uid ? `&uid=${encodeURIComponent(user.uid)}` : "";
       await fetch(`/api/macrocycles?athleteId=${encodeURIComponent(targetId)}${uParam}`, { method: "DELETE" }).catch(() => {});
     }
-    userStorage.removeItem("season_plans");
-    userStorage.removeItem("active_blueprint");
-    if (targetId) {
-      userStorage.removeItem(`last_synced_to_${targetId}`);
-      userStorage.removeItem(`last_synced_hash_${targetId}`);
-    }
-    if (typeof window !== "undefined") {
-      try { localStorage.removeItem("sgea_active_blueprint"); localStorage.removeItem("sgea_season_plans_chain"); } catch {}
-    }
+    purgePlanStorageAndCaches(userStorage, targetId);
     await handleSaveSeasonPlans([]);
     setViewingPlanId(null);
     setMacrocyclePhase(null);
-    if (refreshTelemetry) await refreshTelemetry(profileId, apiKeyCache, runFtp, bikeFtp);
-    notificationService.addNotification(userStorage, {
-      title: "Temporada Eliminada",
-      message: "El macrociclo ha sido eliminado y las sesiones futuras se retiraron de tu reloj Garmin e Intervals.icu.",
-      category: "SEASON",
-      severity: "info",
-    });
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   };
 
   useEffect(() => {

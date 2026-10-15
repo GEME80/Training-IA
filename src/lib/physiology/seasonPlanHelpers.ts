@@ -1,5 +1,6 @@
 import { MacrocyclePhaseInfo, TargetRace, MacrocycleBlueprint } from "./macrocycle";
 import { CalendarEvent } from "../intervals/types";
+import { UserStorage, purgeLegacyGlobalStorage } from "../storage/userStorage";
 
 export function createPhaseInfoFromBlueprint(bp: MacrocycleBlueprint, race?: TargetRace | null): MacrocyclePhaseInfo {
   const currentW = bp.currentWeek || bp.weeks?.[bp.currentWeekIndex || 0] || bp.weeks?.[0];
@@ -228,3 +229,30 @@ export function mergeTargetRacesList(
     return (a.date || "").localeCompare(b.date || "");
   });
 }
+
+/**
+ * Purgado integral de cachés y storage de planes y macrociclos al eliminar la temporada.
+ */
+export function purgePlanStorageAndCaches(userStorage: UserStorage, targetId?: string): void {
+  userStorage.removeItem("season_plans");
+  userStorage.removeItem("active_blueprint");
+  userStorage.removeItem("macrocycle_upgrade_proposal");
+  if (targetId) {
+    userStorage.removeItem(`last_synced_to_${targetId}`);
+    userStorage.removeItem(`last_synced_hash_${targetId}`);
+    userStorage.removeItem(`rolling_sync_throttled_${targetId}`);
+  }
+  purgeLegacyGlobalStorage();
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("sgea_active_blueprint");
+      localStorage.removeItem("sgea_season_plans_chain");
+      Object.keys(localStorage).forEach((key) => {
+        if (key.includes("blueprint") || key.includes("season_plan")) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch {}
+  }
+}
+

@@ -28,7 +28,7 @@ interface AthleteSeasonStudioViewProps {
   onNavigateToDashboard?: () => void;
   onNavigateToProfile?: () => void;
   onOpenHeadCoach?: () => void;
-  onDeleteActivePlan?: () => void;
+  onDeleteActivePlan?: () => Promise<void> | void;
 }
 
 export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = ({
@@ -142,21 +142,19 @@ export const AthleteSeasonStudioView: React.FC<AthleteSeasonStudioViewProps> = (
       onPersistRunningMode(blueprint.runningTrainingMode).catch(() => {});
     }
     if (onApplyPlan) onApplyPlan(blueprint, { mode: "REPLACE" });
-    const lastWeek = blueprint.weeks[blueprint.weeks.length - 1];
-    const newPlanItem: SeasonPlanItem = {
-      id: "plan_" + Date.now(), planName: title || blueprint.cycleTitle || "Macrociclo Personalizado",
-      goalType: blueprint.mode, startDate: blueprint.startDate, endDate: lastWeek ? lastWeek.endDate : blueprint.startDate,
-      totalWeeks: blueprint.weeks.length, status: "ACTIVE", orderIndex: 0, createdAt: new Date().toISOString(), blueprint,
-    };
-    onSaveSeasonPlans([newPlanItem]);
     setIsDesignSectionOpen(false);
-    showNotification(`¡Macrociclo "${newPlanItem.planName}" activado!`);
+    showNotification(`¡Macrociclo "${title || blueprint.cycleTitle || "Personalizado"}" activado!`);
+    if (onNavigateToDashboard) {
+      setTimeout(() => onNavigateToDashboard(), 500);
+    }
   };
 
-  const handleDeleteActivePlan = () => {
-    if (onDeleteActivePlan) onDeleteActivePlan();
+  const handleDeleteActivePlan = async () => {
+    if (onDeleteActivePlan) {
+      await onDeleteActivePlan();
+    }
     setIsDesignSectionOpen(true);
-    showNotification("Macrociclo eliminado. Puedes diseñar un nuevo plan.");
+    showNotification("Macrociclo eliminado. Limpiando caché y reiniciando...");
   };
 
   return (

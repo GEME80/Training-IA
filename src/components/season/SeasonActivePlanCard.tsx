@@ -14,7 +14,7 @@ interface SeasonActivePlanCardProps {
   onNavigateToDashboard?: () => void;
   onOpenHeadCoach?: () => void;
   onOpenDesigner?: () => void;
-  onDeletePlan?: () => void;
+  onDeletePlan?: () => Promise<void> | void;
 }
 
 export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
@@ -26,6 +26,7 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
   onDeletePlan,
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const blueprintWeeks = activePlan?.blueprint?.weeks || [];
   const totalWeeks = activePlan?.totalWeeks || blueprintWeeks.length || 16;
@@ -189,13 +190,19 @@ export const SeasonActivePlanCard: React.FC<SeasonActivePlanCardProps> = ({
             <div className="flex items-center gap-1.5 animate-fadeIn">
               <button
                 type="button"
-                onClick={() => {
-                  setIsConfirmingDelete(false);
-                  onDeletePlan();
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    if (onDeletePlan) await onDeletePlan();
+                  } finally {
+                    setIsConfirmingDelete(false);
+                    setIsDeleting(false);
+                  }
                 }}
-                className="px-3 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs font-mono transition cursor-pointer shadow-xs whitespace-nowrap"
+                className="px-3 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-black text-xs font-mono transition cursor-pointer shadow-xs whitespace-nowrap"
               >
-                ¿Confirmar Borrado?
+                {isDeleting ? "Borrando y limpiando..." : "¿Confirmar Borrado?"}
               </button>
               <button
                 type="button"

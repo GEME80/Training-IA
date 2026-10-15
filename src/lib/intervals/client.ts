@@ -1,5 +1,7 @@
 import dns from "node:dns";
 import { AthleteProfile, AthleteWellness, CalendarEvent, ActivitySummary } from "./types";
+import { isRunSport, isRideSport, isSwimSport } from "./sportMatchers";
+import { extractGarminWellnessTelemetry } from "./wellnessHelpers";
 
 try {
   dns.setDefaultResultOrder("ipv4first");
@@ -54,30 +56,37 @@ export class IntervalsClient {
     error?: string;
   }> {
     try {
-      const athlete = await this.getAthlete();
+      const now = new Date();
+      const past60 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 60);
+      const todayStr = now.toISOString().split("T")[0];
+      const past60Str = past60.toISOString().split("T")[0];
+
+      const [athlete, sportsData, welRecords] = await Promise.all([
+        this.getAthlete(),
+        this.getSportSettings().catch(() => []),
+        this.getWellness(past60Str, todayStr).catch(() => []),
+      ]);
       const anyAthlete = athlete as unknown as Record<string, unknown>;
       const athleteName = athlete.name || athlete.id || "Atleta";
 
-      const sports = (anyAthlete.sportSettings as Array<Record<string, unknown>>) || [];
-      const runSport = sports.find((s) => {
-        const types = s.types as string[] | undefined;
-        return types?.some((t) => /run|running|virtualrun|trailrun/i.test(t)) || /run/i.test(String(s.id));
-      });
-      const rideSport = sports.find((s) => {
-        const types = s.types as string[] | undefined;
-        return types?.some((t) => /ride|cycling|bike|virtualride/i.test(t)) || /ride|cycling|bike/i.test(String(s.id));
-      });
-      const swimSport = sports.find((s) => {
-        const types = s.types as string[] | undefined;
-        return types?.some((t) => /swim|swimming|openwater/i.test(t)) || /swim/i.test(String(s.id));
-      });
+      const sports = (sportsData && sportsData.length > 0)
+        ? sportsData
+        : ((anyAthlete.sportSettings as Array<Record<string, unknown>>) || []);
+      const runSport = sports.find(isRunSport);
+      const rideSport = sports.find(isRideSport);
+      const swimSport = sports.find(isSwimSport);
+
+      // Extraer FC Reposo y Peso medidos directamente por reloj Garmin en el sueño
+      const garminWel = extractGarminWellnessTelemetry(welRecords);
+      const garminRestingHR = garminWel.restingHR;
+      const latestGarminWeight = garminWel.weightKg;
 
       const mmpModel = runSport?.mmp_model as { criticalPower?: number } | undefined;
       const runFtp = mmpModel?.criticalPower || (runSport?.ftp as number) || (anyAthlete.icu_running_ftp as number) || (anyAthlete.run_ftp as number) || undefined;
       const bikeFtp = (rideSport?.ftp as number) || (anyAthlete.icu_ftp as number) || (anyAthlete.bike_ftp as number) || undefined;
-      const restingHR = (anyAthlete.icu_resting_hr as number) || (anyAthlete.restingHR as number) || undefined;
-      const lthr = (runSport?.lthr as number) || (rideSport?.lthr as number) || (anyAthlete.lthr as number) || undefined;
-      const maxHR = (runSport?.max_hr as number) || (rideSport?.max_hr as number) || (anyAthlete.max_hr as number) || (anyAthlete.maxHR as number) || undefined;
+      const restingHR = garminRestingHR || (anyAthlete.icu_resting_hr as number) || (anyAthlete.restingHR as number) || (anyAthlete.resting_hr as number) || (runSport?.resting_hr as number) || undefined;
+      const lthr = (runSport?.lthr as number) || (rideSport?.lthr as number) || (anyAthlete.lthr as number) || (anyAthlete.icu_lthr as number) || undefined;
+      const maxHR = (runSport?.max_hr as number) || (rideSport?.max_hr as number) || (anyAthlete.max_hr as number) || (anyAthlete.maxHR as number) || (anyAthlete.icu_max_hr as number) || undefined;
       
       const swimThresholdPace = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number) || undefined;
       let swimCssSecPer100m: number | undefined = undefined;
@@ -89,7 +98,7 @@ export class IntervalsClient {
         swimCssStr = `${mins}:${String(secs).padStart(2, "0")}`;
       }
 
-      const weight = (anyAthlete.icu_weight as number) || (anyAthlete.weight as number) || undefined;
+      const weight = latestGarminWeight || (anyAthlete.icu_weight as number) || (anyAthlete.weight as number) || undefined;
       const rawHeight = (anyAthlete.icu_height as number) || (anyAthlete.height as number) || undefined;
       const heightCm = rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined;
       const rawSex = anyAthlete.sex || anyAthlete.gender || anyAthlete.icu_gender;

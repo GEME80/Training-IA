@@ -81,7 +81,7 @@ export class PhysiologicalEngine {
     const currentHrv = latestWithHrv ? getHrvValue(latestWithHrv) : null;
 
     const latestWithRhr = reversedWellness.find(
-      (w) => typeof w.restingHR === "number" && w.restingHR > 0
+      (w) => typeof w.restingHR === "number" && w.restingHR > 28 && w.restingHR < 125
     );
     const restingHR =
       latestWithRhr?.restingHR ??

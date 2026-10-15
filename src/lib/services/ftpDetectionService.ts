@@ -1,4 +1,5 @@
 import { IntervalsClient } from "@/lib/intervals/client";
+import { isRideSport } from "@/lib/intervals/sportMatchers";
 import { saveUserProfile } from "@/lib/db/userProfile";
 
 export interface FtpCalibrationEvent {
@@ -159,10 +160,7 @@ export class FtpDetectionService {
     try {
       const client = new IntervalsClient(athleteId, apiKey);
       const sports = await client.getSportSettings().catch(() => []);
-      const rideSport = (sports || []).find((s: any) =>
-        s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
-        /ride|cycling|bike/i.test(String(s.id))
-      );
+      const rideSport = (sports || []).find(isRideSport);
 
       if (rideSport?.id) {
         await client.updateSportSettings(rideSport.id, { ftp: candidateFtp }).catch((err) => {

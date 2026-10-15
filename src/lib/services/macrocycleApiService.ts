@@ -1,5 +1,7 @@
 import { MacrocycleAIEngine } from "@/lib/gemini/macrocycleAI";
 import { IntervalsClient } from "@/lib/intervals/client";
+import { isRunSport, isRideSport } from "@/lib/intervals/sportMatchers";
+import { extractGarminWellnessTelemetry } from "@/lib/intervals/wellnessHelpers";
 import { PhysiologicalEngine } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness } from "@/lib/intervals/types";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
@@ -77,14 +79,8 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
       ]);
 
       if (ath) {
-        const runSport = (sports || []).find((s: any) =>
-          s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) ||
-          /run/i.test(String(s.id))
-        );
-        const rideSport = (sports || []).find((s: any) =>
-          s.types?.some((t: string) => /ride|cycling|bike|virtualride|ebikeride/i.test(t)) ||
-          /ride|cycling|bike/i.test(String(s.id))
-        );
+        const runSport = (sports || []).find(isRunSport);
+        const rideSport = (sports || []).find(isRideSport);
 
         const anyAth = ath as any;
         const icuDob = anyAth.icu_date_of_birth || anyAth.dob || anyAth.date_of_birth || body.birthDate || storedUser?.profile.birthDate;
@@ -102,7 +98,7 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
 
         const rawH = (anyAth.icu_height as number) || (anyAth.height as number) || undefined;
         const normH = rawH ? (rawH < 3 ? Math.round(rawH * 100) : Math.round(rawH)) : undefined;
-        const latestWel = wel.length > 0 ? wel[wel.length - 1] : undefined;
+        const garminWel = extractGarminWellnessTelemetry(wel);
 
         profile = {
           ...ath,
@@ -111,10 +107,10 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
           birthDate: icuDob,
           age: computedAge,
           gender: body.gender || (storedUser?.profile.gender as any) || anyAth.sex || anyAth.gender,
-          weight: body.weightKg || storedUser?.profile.weightKg || ath.weight || (latestWel as any)?.weight,
+          weight: body.weightKg || storedUser?.profile.weightKg || garminWel.weightKg || ath.weight,
           heightCm: body.heightCm || storedUser?.profile.heightCm || normH,
-          restingHR: (latestWel as any)?.restingHR || anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
-          maxHR: anyAth.max_hr || anyAth.maxHR || ath.maxHR,
+          restingHR: body.restingHR || storedUser?.profile.restingHR || garminWel.restingHR || runSport?.resting_hr || anyAth.resting_hr || anyAth.restingHR || ath.restingHR,
+          maxHR: runSport?.max_hr || rideSport?.max_hr || anyAth.max_hr || anyAth.maxHR || ath.maxHR,
           lthr: runSport?.lthr || rideSport?.lthr || anyAth.lthr || ath.lthr,
           run_ftp: runSport?.ftp || anyAth.icu_running_ftp || ath.run_ftp || runFtp || storedUser?.profile.runFtp,
           bike_ftp: rideSport?.ftp || anyAth.icu_ftp || ath.bike_ftp || bikeFtp || storedUser?.profile.bikeFtp,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { IntervalsClient } from "@/lib/intervals/client";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
+import { isRunSport, isRideSport, isSwimSport } from "@/lib/intervals/sportMatchers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,9 +19,9 @@ export async function POST(req: NextRequest) {
     // 1. Sincronizar FTP de carrera, ciclismo y CSS de natación en sport-settings
     try {
       const sportSettings = await client.getSportSettings();
-      const runSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /run/i.test(t)) || /run/i.test(String(s.id)));
-      const rideSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /ride|cycling|bike/i.test(t)) || /ride|cycling|bike/i.test(String(s.id)));
-      const swimSetting = sportSettings.find((s: any) => s.types?.some((t: string) => /swim/i.test(t)) || /swim/i.test(String(s.id)));
+      const runSetting = (sportSettings || []).find(isRunSport);
+      const rideSetting = (sportSettings || []).find(isRideSport);
+      const swimSetting = (sportSettings || []).find(isSwimSport);
 
       if (runSetting?.id && (runFtp || lthr || maxHR)) {
         const patch: Record<string, any> = { ...runSetting };
@@ -59,6 +60,8 @@ export async function POST(req: NextRequest) {
       if (runFtp) athletePayload.icu_running_ftp = Number(runFtp);
       if (weightKg) athletePayload.weight = Number(weightKg);
       if (restingHR) athletePayload.icu_resting_hr = Number(restingHR);
+      if (lthr) athletePayload.lthr = Number(lthr);
+      if (maxHR) athletePayload.max_hr = Number(maxHR);
       if (birthDate) { athletePayload.icu_date_of_birth = birthDate; athletePayload.dob = birthDate; }
       if (gender) athletePayload.sex = gender === "M" ? "M" : gender === "F" ? "F" : undefined;
 

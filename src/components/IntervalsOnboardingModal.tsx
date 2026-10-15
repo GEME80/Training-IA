@@ -18,6 +18,10 @@ interface IntervalsOnboardingModalProps {
     athleteName?: string;
     runFtp?: number;
     bikeFtp?: number;
+    restingHR?: number;
+    maxHR?: number;
+    lthr?: number;
+    weightKg?: number;
   }) => void;
 }
 
@@ -86,6 +90,10 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
           athleteName: detectedName,
           runFtp: detectedRunFtp,
           bikeFtp: detectedBikeFtp,
+          restingHR: data.restingHR || data.athlete?.icu_resting_hr,
+          maxHR: data.maxHR || data.athlete?.icu_max_hr || data.athlete?.max_hr,
+          lthr: data.lthr || data.athlete?.icu_lthr || data.athlete?.lthr,
+          weightKg: data.weight || data.athlete?.weight || data.athlete?.icu_weight,
         });
       } else {
         setTestResult({

@@ -1,4 +1,5 @@
 import { IntervalsClient } from "@/lib/intervals/client";
+import { isRunSport } from "@/lib/intervals/sportMatchers";
 import { saveUserProfile } from "@/lib/db/userProfile";
 import { formatPace, parsePaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
 
@@ -167,10 +168,7 @@ export class PaceDetectionService {
     try {
       const client = new IntervalsClient(athleteId, apiKey);
       const sports = await client.getSportSettings().catch(() => []);
-      const runSport = (sports || []).find((s: any) =>
-        s.types?.some((t: string) => /run|running|virtualrun|trailrun/i.test(t)) ||
-        /run/i.test(String(s.id))
-      );
+      const runSport = (sports || []).find(isRunSport);
 
       if (runSport?.id) {
         // En Intervals.icu se puede actualizar el pace en m/s

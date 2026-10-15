@@ -136,18 +136,27 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const numRunFtp = Number(runFtp);
+    const numBikeFtp = Number(bikeFtp);
+    const numLthr = Number(lthr);
+    const numMaxHR = Number(maxHR);
+    const numResting = Number(restingHR);
+    const numWeight = Number(weightKg);
+
     const result = await updateUserDetails(targetUid, {
       displayName,
       role,
       status,
       intervalsAthleteId,
-      runFtp,
-      bikeFtp,
+      runFtp: numRunFtp > 0 ? numRunFtp : undefined,
+      bikeFtp: numBikeFtp > 0 ? numBikeFtp : undefined,
+      hasRunningPowerMeter: numRunFtp > 0 ? true : undefined,
+      runningTrainingMode: numRunFtp > 0 ? "POWER" : undefined,
       rawApiKey,
-      weightKg,
-      restingHR,
-      maxHR,
-      lthr,
+      weightKg: numWeight > 0 ? numWeight : undefined,
+      restingHR: numResting > 0 ? numResting : undefined,
+      maxHR: numMaxHR > 0 ? numMaxHR : undefined,
+      lthr: numLthr > 0 ? numLthr : undefined,
       planPrice,
       planCurrency,
       billingStatus,
@@ -157,6 +166,63 @@ export async function PATCH(req: NextRequest) {
       primaryGoalRace,
       primaryGoalDate,
     });
+
+    // Sincronización automática hacia Intervals.icu (sport-settings, biometría y wellness)
+    try {
+      const { resolveIntervalsCredentials } = await import("@/lib/intervals/credentials");
+      const { IntervalsClient } = await import("@/lib/intervals/client");
+      const { isRunSport, isRideSport } = await import("@/lib/intervals/sportMatchers");
+      const creds = await resolveIntervalsCredentials({
+        athleteId: intervalsAthleteId,
+        apiKey: rawApiKey,
+        uid: targetUid,
+        email: body.targetEmail,
+      });
+
+      if (creds.athleteId && creds.apiKey) {
+        const client = new IntervalsClient(creds.athleteId, creds.apiKey);
+        const sports = await client.getSportSettings().catch(() => []);
+
+        if (numRunFtp > 0 || numLthr > 0 || numMaxHR > 0) {
+          const runSport = (sports || []).find(isRunSport);
+          if (runSport?.id) {
+            const patch: Record<string, any> = {};
+            if (numRunFtp > 0) patch.ftp = numRunFtp;
+            if (numLthr > 0) patch.lthr = numLthr;
+            if (numMaxHR > 0) patch.max_hr = numMaxHR;
+            await client.updateSportSettings(runSport.id, patch).catch(() => {});
+          }
+        }
+        if (numBikeFtp > 0 || numLthr > 0 || numMaxHR > 0) {
+          const rideSport = (sports || []).find(isRideSport);
+          if (rideSport?.id) {
+            const patch: Record<string, any> = {};
+            if (numBikeFtp > 0) patch.ftp = numBikeFtp;
+            if (numLthr > 0) patch.lthr = numLthr;
+            if (numMaxHR > 0) patch.max_hr = numMaxHR;
+            await client.updateSportSettings(rideSport.id, patch).catch(() => {});
+          }
+        }
+
+        const athletePayload: Record<string, any> = {};
+        if (numBikeFtp > 0) athletePayload.icu_ftp = numBikeFtp;
+        if (numRunFtp > 0) athletePayload.icu_running_ftp = numRunFtp;
+        if (numWeight > 0) { athletePayload.weight = numWeight; athletePayload.icu_weight = numWeight; }
+        if (numResting > 0) athletePayload.icu_resting_hr = numResting;
+        if (numLthr > 0) athletePayload.lthr = numLthr;
+        if (numMaxHR > 0) athletePayload.max_hr = numMaxHR;
+
+        if (Object.keys(athletePayload).length > 0) {
+          await client.updateAthlete(athletePayload as any).catch(() => {});
+        }
+        if (numWeight > 0) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          await client.updateWellness(todayStr, { id: todayStr, weight: numWeight }).catch(() => {});
+        }
+      }
+    } catch (syncErr) {
+      console.warn("Aviso al sincronizar con Intervals en admin users:", syncErr);
+    }
 
     return NextResponse.json(result);
   } catch (error: unknown) {

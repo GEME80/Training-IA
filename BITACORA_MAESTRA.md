@@ -8415,6 +8415,43 @@ Esto causaba que:
 - **Desmantelamiento de Bloqueo:** Eliminado `<TermsConsentModal />` para garantizar que ningún atleta sufra bloqueos de pantalla ni errores de registro al acceder.
 - **Ubicación en Pie de Página:** Los enlaces a `Términos & Exención IA` y `Política de Privacidad` residen de manera permanente y no invasiva en el footer del Home ([`LandingFooter.tsx`](./src/components/landing/LandingFooter.tsx)) y en el pie del Dashboard de Atleta ([`AthleteDashboard.tsx`](./src/components/AthleteDashboard.tsx)).
 
+## 136. Calibración Biométrica Stryd, Sincronización Bidireccional y FC de Reposo Directa de Garmin (v5.68)
+
+### 136.1. Diagnóstico Fisiológico y Causa Raíz de TSS Inconsistente
+1. **Sensibilidad Cuadrática del TSS de Stryd a la Potencia Crítica (CP):**
+   - La fórmula de Power TSS es $\text{TSS} = \frac{t \times \text{NP}^2}{3600 \times \text{CP}^2} \times 100$.
+   - Una sobreestimación de la Potencia Crítica en Intervals.icu o en el perfil de Pulse AI (ej. 300W en lugar de los 271W reales de Juan Pablo Vásquez) subestima el TSS en un $(271/300)^2 = 0.816 \rightarrow \mathbf{18.4\%}$ de déficit por sesión, frenando el crecimiento del CTL a pesar de cumplir el volumen prescrito.
+2. **Ingesta de FC de Reposo Directamente de Sensores Garmin:**
+   - La FC de reposo manual en Intervals (`icu_resting_hr`) es susceptible a manipulación o puede estar vacía en atletas recién registrados.
+   - Se diseñó un extractor fisiológico que recorre hacia atrás el flujo de telemetría de bienestar de Garmin Connect (`/wellness`), obteniendo la FC de reposo nocturna medida directamente por el sensor óptico durante el sueño profundo (`restingHR > 28 && restingHR < 125`), así como el peso corporal medido por báscula inteligente Garmin Index.
+3. **Sincronización Bidireccional de Rendimiento y Zonas Deportivas:**
+   - Creación del módulo multilingüe [`sportMatchers.ts`](./src/lib/intervals/sportMatchers.ts) para compatibilidad nativa con configuraciones en español e inglés (`Correr`, `Carrera virtual`, `Run`, `VirtualRun`, etc.).
+   - Actualización sincrónica tanto en `sportSettings` (ftp, lthr, max_hr) como en el perfil general de Intervals.icu (`icu_running_ftp`, `icu_ftp`, `weight`, `icu_resting_hr`, `lthr`, `max_hr`).
+   - Sincronización automática desencadenada tanto desde la edición de atletas en el panel de administración ([`AdminUserEditModal.tsx`](./src/components/admin/AdminUserEditModal.tsx), [`/api/admin/users`](./src/app/api/admin/users/route.ts)) como desde el modal de onboarding inicial ([`IntervalsOnboardingModal.tsx`](./src/components/IntervalsOnboardingModal.tsx), [`useAthleteTelemetry.ts`](./src/hooks/useAthleteTelemetry.ts)).
+
+### 136.2. Auditoría de Archivos y Presupuesto de Líneas ($\le 350$ LOC)
+- `src/lib/intervals/wellnessHelpers.ts`: **55 LOC** ($\le 350$) [NUEVO - SSOT Extractor Garmin]
+- `src/lib/intervals/sportMatchers.ts`: **36 LOC** ($\le 350$) [NUEVO - Multilingüe]
+- `src/lib/services/telemetryService.ts`: **343 LOC** ($\le 350$)
+- `src/lib/intervals/client.ts`: **265 LOC** ($\le 350$)
+- `src/lib/intervals/types.ts`: **223 LOC** ($\le 350$)
+- `src/lib/db/adminUsers.ts`: **348 LOC** ($\le 350$)
+- `src/hooks/useAthleteTelemetry.ts`: **346 LOC** ($\le 350$)
+- `src/lib/ai/headcoach/chatContext.ts`: **347 LOC** ($\le 350$)
+- `src/lib/services/macrocycleApiService.ts`: **158 LOC** ($\le 350$)
+- `src/lib/physiology/engine.ts`: **261 LOC** ($\le 350$)
+- `src/app/api/admin/users/route.ts`: **238 LOC** ($\le 350$)
+- `src/app/api/profile/route.ts`: **242 LOC** ($\le 350$)
+- `src/components/IntervalsOnboardingModal.tsx`: **317 LOC** ($\le 350$)
+- `src/components/admin/AdminUserEditModal.tsx`: **336 LOC** ($\le 350$)
+- `src/app/api/sync-settings/route.ts`: **88 LOC** ($\le 350$)
+- `src/app/api/admin/users/preauthorize/route.ts`: **84 LOC** ($\le 350$)
+
+### 136.3. Verificación de Compilación y Calidad
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` $\rightarrow$ **0 errores (código 0)**.
+- **Producción Next.js:** `npm run build` $\rightarrow$ **21/21 páginas generadas exitosamente (código 0)**.
+
+
 
 
 

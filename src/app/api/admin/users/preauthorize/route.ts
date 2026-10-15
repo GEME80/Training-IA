@@ -15,6 +15,12 @@ export async function POST(req: NextRequest) {
       rawApiKey,
       runFtp,
       bikeFtp,
+      weightKg,
+      restingHR,
+      maxHR,
+      lthr,
+      hasRunningPowerMeter,
+      runningTrainingMode,
       requesterEmail,
       requesterUid,
     } = body;
@@ -61,6 +67,12 @@ export async function POST(req: NextRequest) {
       rawApiKey,
       runFtp,
       bikeFtp,
+      weightKg,
+      restingHR,
+      maxHR,
+      lthr,
+      hasRunningPowerMeter,
+      runningTrainingMode,
     });
 
     return NextResponse.json(result);

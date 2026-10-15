@@ -98,12 +98,12 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
       if (res.ok && data.success) {
         const detectedName = data.athleteName || data.athlete?.name || "Atleta";
         setTestResult({ success: true, message: `Conexión verificada exitosamente para "${detectedName}".`, athleteName: detectedName });
-        if (data.runFtp && (!runFtp || runFtp === 300)) setRunFtp(Number(data.runFtp));
-        if (data.bikeFtp && (!bikeFtp || bikeFtp === 250)) setBikeFtp(Number(data.bikeFtp));
-        if (data.weight && !weightKg) setWeightKg(Number(data.weight));
-        if (data.lthr && !lthr) setLthr(Number(data.lthr));
-        if (data.maxHR && !maxHR) setMaxHR(Number(data.maxHR));
-        if (data.restingHR && !restingHR) setRestingHR(Number(data.restingHR));
+        if (data.runFtp) setRunFtp(Number(data.runFtp));
+        if (data.bikeFtp) setBikeFtp(Number(data.bikeFtp));
+        if (data.weight) setWeightKg(Number(data.weight));
+        if (data.lthr) setLthr(Number(data.lthr));
+        if (data.maxHR) setMaxHR(Number(data.maxHR));
+        if (data.restingHR) setRestingHR(Number(data.restingHR));
       } else {
         setTestResult({ success: false, message: data.error || "No se pudo conectar con Intervals.icu." });
       }

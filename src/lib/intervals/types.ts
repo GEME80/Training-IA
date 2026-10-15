@@ -91,6 +91,7 @@ export interface AthleteWellness {
   fatigue?: number;
   stress?: number;
   soreness?: number;
+  weight?: number;
   comments?: string;
 }
 

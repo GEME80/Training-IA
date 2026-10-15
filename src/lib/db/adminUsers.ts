@@ -7,6 +7,7 @@ import {
   AdminStats,
   UserRole,
   UserStatus,
+  RunningTrainingMode,
 } from "./types";
 
 /**
@@ -244,14 +245,9 @@ export async function deleteUserFromAdmin(
 }
 
 export interface PreauthorizeUserParams {
-  email: string;
-  displayName?: string;
-  role?: UserRole;
-  status?: UserStatus;
-  intervalsAthleteId?: string;
-  rawApiKey?: string;
-  runFtp?: number;
-  bikeFtp?: number;
+  email: string; displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
+  rawApiKey?: string; runFtp?: number; bikeFtp?: number; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
+  hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
 }
 
 /**
@@ -265,9 +261,7 @@ export async function preauthorizeUser(
   const sanitizedDocId = `preauth_${cleanEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
   const now = new Date().toISOString();
 
-  if (!adminDb) {
-    return { success: true, message: `Invitación simulada para ${cleanEmail}.`, docId: sanitizedDocId };
-  }
+  if (!adminDb) return { success: true, message: `Invitación simulada para ${cleanEmail}.`, docId: sanitizedDocId };
 
   const preauthRef = adminDb.collection("users").doc(sanitizedDocId);
   const data: Record<string, any> = {
@@ -277,6 +271,12 @@ export async function preauthorizeUser(
     encryptedApiKey: params.rawApiKey?.trim() ? encryptSensitiveData(params.rawApiKey.trim()) : undefined,
     runFtp: params.runFtp ? Number(params.runFtp) : undefined,
     bikeFtp: params.bikeFtp ? Number(params.bikeFtp) : undefined,
+    weightKg: params.weightKg ? Number(params.weightKg) : undefined,
+    restingHR: params.restingHR ? Number(params.restingHR) : undefined,
+    maxHR: params.maxHR ? Number(params.maxHR) : undefined,
+    lthr: params.lthr ? Number(params.lthr) : undefined,
+    hasRunningPowerMeter: params.hasRunningPowerMeter ?? (params.runFtp ? Number(params.runFtp) > 0 : undefined),
+    runningTrainingMode: params.runningTrainingMode ?? (params.runFtp && Number(params.runFtp) > 0 ? "POWER" : undefined),
     isPreAuthorized: true, createdAt: now, updatedAt: now, lastLoginAt: now,
   };
 
@@ -303,6 +303,7 @@ export async function preauthorizeUser(
 export interface UpdateUserDetailsParams {
   displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
   runFtp?: number; bikeFtp?: number; rawApiKey?: string; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
+  hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
   planPrice?: number; planCurrency?: "USD" | "COP" | "EUR";
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number; lastPaymentDate?: string; paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
@@ -326,6 +327,7 @@ export async function updateUserDetails(
     ...(updates.role !== undefined && { role: updates.role }), ...(updates.status !== undefined && { status: updates.status }),
     ...(updates.intervalsAthleteId !== undefined && { intervalsAthleteId: updates.intervalsAthleteId.trim() }),
     ...(typeof updates.runFtp === "number" && !isNaN(updates.runFtp) && { runFtp: updates.runFtp }), ...(typeof updates.bikeFtp === "number" && !isNaN(updates.bikeFtp) && { bikeFtp: updates.bikeFtp }),
+    ...(updates.hasRunningPowerMeter !== undefined && { hasRunningPowerMeter: updates.hasRunningPowerMeter }), ...(updates.runningTrainingMode !== undefined && { runningTrainingMode: updates.runningTrainingMode }),
     ...(typeof updates.weightKg === "number" && !isNaN(updates.weightKg) && { weightKg: updates.weightKg }), ...(typeof updates.restingHR === "number" && !isNaN(updates.restingHR) && { restingHR: updates.restingHR }),
     ...(typeof updates.maxHR === "number" && !isNaN(updates.maxHR) && { maxHR: updates.maxHR }), ...(typeof updates.lthr === "number" && !isNaN(updates.lthr) && { lthr: updates.lthr }),
     ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),
@@ -344,4 +346,3 @@ export async function updateUserDetails(
     return { success: true, message: "Datos actualizados en modo local/resiliente." };
   }
 }
-

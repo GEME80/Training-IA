@@ -100,7 +100,11 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
       thresholdPaceSec: thresholdPaceSec || (thresholdPaceStr ? parsePaceToSeconds(thresholdPaceStr) : 285),
     });
   } else if (isRunPower && displayTarget) {
-    displayTarget = displayTarget.replace(/%\s*FTP\b/gi, "% CP");
+    displayTarget = interpolateWorkoutTarget(displayTarget, {
+      discipline: "Carrera",
+      mode: "POWER",
+      runFtp: effRunFtp,
+    });
   }
 
   const parseTargetWorkRange = (): TargetWorkRange | undefined => {

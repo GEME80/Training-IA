@@ -19,8 +19,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
   const [displayName, setDisplayName] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null); const [requestSubmitted, setRequestSubmitted] = useState<boolean>(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
+  const [requestSubmitted, setRequestSubmitted] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +30,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
       setLocalError(null);
       setResetSuccessMessage(null);
       setRequestSubmitted(false);
+      setTermsAccepted(false);
       clearError();
     }
   }, [isOpen, initialTab, clearError]);
@@ -80,6 +83,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
         setLocalError("Ingresa tu nombre y apellido para el entrenador.");
         return;
       }
+      if (!termsAccepted) {
+        setLocalError("Debes aceptar los Términos de Servicio y la Exención Médica para registrarte.");
+        return;
+      }
 
       setIsSubmitting(true);
       try {
@@ -125,20 +132,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
             <div className="space-y-1">
               <h3 className="text-xl font-black text-slate-900">¡Solicitud Enviada con Éxito!</h3>
               <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
-                Hola <strong>{displayName}</strong>, tu solicitud de registro para PULSE AI ha sido recibida y notificada a <strong>Germán Morales</strong>.
+                Hola <strong>{displayName}</strong>, tu solicitud para PULSE AI ha sido recibida y notificada a <strong>Germán Morales</strong>.
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs text-left space-y-1">
               <div className="font-bold">🟡 Estado: En espera de aprobación</div>
               <p className="text-[11px] text-amber-800 leading-snug">
-                El entrenador validará tu cuenta y activará tus planes. Una vez aprobada, podrás ingresar con tu correo <strong>{email}</strong> y tu contraseña.
+                El entrenador validará tu cuenta y activará tus planes. Una vez aprobada, podrás ingresar con tu correo <strong>{email}</strong> y contraseña.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
-            >
+            <button type="button" onClick={onClose} className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer">
               Entendido
             </button>
           </div>
@@ -150,14 +153,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                 <span>PULSE AI • Smart Coach</span>
               </div>
               <h2 className="text-xl font-black text-slate-900">
-                {activeTab === "login" && "Bienvenido a tu Plataforma"}
-                {activeTab === "register" && "Solicitud de Ingreso para Atletas"}
-                {activeTab === "forgot" && "Recuperar Contraseña"}
+                {activeTab === "login" ? "Bienvenido a tu Plataforma" : activeTab === "register" ? "Solicitud de Ingreso para Atletas" : "Recuperar Contraseña"}
               </h2>
               <p className="text-xs text-slate-500">
-                {activeTab === "login" && "Ingresa para acceder a tus entrenamientos y analítica."}
-                {activeTab === "register" && "Ingresa tus datos para solicitar acceso a tus planes guiados por IA."}
-                {activeTab === "forgot" && "Te enviaremos un enlace seguro para restablecerla."}
+                {activeTab === "login" ? "Ingresa para acceder a tus entrenamientos y analítica." : activeTab === "register" ? "Ingresa tus datos para solicitar acceso a tus planes guiados por IA." : "Te enviaremos un enlace seguro para restablecerla."}
               </p>
             </div>
 
@@ -212,6 +211,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
                   </svg>
                   <span>{activeTab === "login" ? "Continuar con Google" : "Registrarme con Google"}</span>
                 </button>
+                <p className="text-[10px] text-center text-slate-400">
+                  Al continuar aceptas los <a href="/terms" target="_blank" className="underline hover:text-emerald-600 font-semibold">Términos</a> y la <a href="/privacy" target="_blank" className="underline hover:text-emerald-600 font-semibold">Privacidad</a>.
+                </p>
                 <div className="relative flex py-1 items-center">
                   <div className="flex-grow border-t border-slate-200"></div>
                   <span className="flex-shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">{activeTab === "login" ? "o con tu correo" : "o con formulario"}</span>
@@ -289,28 +291,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               )}
 
               {activeTab === "register" && (
-                <p className="text-[10px] text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-100 leading-relaxed">
-                  Al registrarte aceptas nuestros <a href="/terms" target="_blank" className="text-emerald-600 underline font-semibold">Términos & Exención de IA</a> y la <a href="/privacy" target="_blank" className="text-emerald-600 underline font-semibold">Política de Privacidad</a>.
-                </p>
+                <label className="flex items-start gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-600 leading-snug">
+                    He leído y acepto los <a href="/terms" target="_blank" className="text-emerald-600 underline font-semibold">Términos & Exención IA</a> y la <a href="/privacy" target="_blank" className="text-emerald-600 underline font-semibold">Privacidad</a>.
+                  </span>
+                </label>
               )}
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (activeTab === "register" && !termsAccepted)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50"
               >
-                {isSubmitting ? (
-                  <span>Procesando...</span>
-                ) : activeTab === "login" ? (
-                  <>
-                    <span>Entrar a mi Cuenta</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </>
+                {isSubmitting ? <span>Procesando...</span> : activeTab === "login" ? (
+                  <><span>Entrar a mi Cuenta</span><ArrowRight className="h-3.5 w-3.5" /></>
                 ) : activeTab === "register" ? (
-                  <>
-                    <span>🚀 Enviar Solicitud de Acceso</span>
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </>
+                  <><span>🚀 Enviar Solicitud de Acceso</span><Sparkles className="h-3.5 w-3.5" /></>
                 ) : (
                   <span>Enviar Enlace de Recuperación</span>
                 )}
@@ -319,11 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialTa
               {/* Acceso Rápido Administrador (SOLO en pestaña Iniciar Sesión) */}
               {activeTab === "login" && (
                 <div className="pt-2 border-t border-slate-100 text-center">
-                  <button
-                    type="button"
-                    onClick={() => { loginAsMasterAdminDemo(); onClose(); }}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 hover:text-purple-700 cursor-pointer py-1"
-                  >
+                  <button type="button" onClick={() => { loginAsMasterAdminDemo(); onClose(); }} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-purple-600 hover:text-purple-700 cursor-pointer py-1">
                     <ShieldCheck className="h-3.5 w-3.5 text-purple-600" />
                     <span>Acceso Rápido SuperAdmin (Germán Morales)</span>
                   </button>

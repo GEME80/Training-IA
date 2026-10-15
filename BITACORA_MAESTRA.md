@@ -8415,6 +8415,11 @@ Esto causaba que:
 - **Desmantelamiento de Bloqueo:** Eliminado `<TermsConsentModal />` para garantizar que ningún atleta sufra bloqueos de pantalla ni errores de registro al acceder.
 - **Ubicación en Pie de Página:** Los enlaces a `Términos & Exención IA` y `Política de Privacidad` residen de manera permanente y no invasiva en el footer del Home ([`LandingFooter.tsx`](./src/components/landing/LandingFooter.tsx)) y en el pie del Dashboard de Atleta ([`AthleteDashboard.tsx`](./src/components/AthleteDashboard.tsx)).
 
+### 135.5. Parche de Blindaje Legal Clickwrap y Registro de Evidencia Inviolable (v5.68)
+- **Consentimiento Expreso Clickwrap en Registro:** Incorporado checkbox interactivo obligatorio `[ ]` en la pestaña de registro de [`AuthModal.tsx`](./src/components/auth/AuthModal.tsx) (*«He leído y acepto los Términos de Servicio & Exención IA y la Política de Privacidad»*), inhabilitando el botón de envío hasta su marcación explícita.
+- **Registro Inviolable de Evidencia:** En [`syncUserFromGoogleAuth`](./src/lib/db/userProfile.ts), tanto la creación de nuevos usuarios como la actualización de sesiones existentes estampa en Firestore la marca de tiempo exacta (`termsAcceptedAt: now`) y versión del contrato (`termsVersion: "1.0"`), garantizando plena validez probatoria frente a litigios.
+- **Aviso Legal en Google OAuth:** Inclusión de cláusula de adhesión transparente y visible bajo el botón de acceso de Google.
+
 ## 136. Calibración Biométrica Stryd, Sincronización Bidireccional y FC de Reposo Directa de Garmin (v5.68)
 
 ### 136.1. Diagnóstico Fisiológico y Causa Raíz de TSS Inconsistente

@@ -61,13 +61,9 @@ export async function syncUserFromGoogleAuth(userData: {
     let preAuthRole: UserRole = isSuperadmin ? "admin" : "athlete";
     let preAuthStatus: UserStatus = isSuperadmin ? "active" : "pending";
     let preAuthAthleteId = isSuperadmin ? (process.env.INTERVALS_ATHLETE_ID || undefined) : undefined;
-    let preAuthRunFtp: number | undefined = undefined;
-    let preAuthBikeFtp: number | undefined = undefined;
-    let preAuthEncryptedApiKey: any = undefined;
-    let preAuthWeightKg: number | undefined = undefined;
-    let preAuthLthr: number | undefined = undefined;
-    let preAuthRestingHR: number | undefined = undefined;
-    let preAuthMaxHR: number | undefined = undefined;
+    let preAuthRunFtp: number | undefined, preAuthBikeFtp: number | undefined;
+    let preAuthEncryptedApiKey: any, preAuthWeightKg: number | undefined;
+    let preAuthLthr: number | undefined, preAuthRestingHR: number | undefined, preAuthMaxHR: number | undefined;
 
     const sanitizedEmailId = `preauth_${userData.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_")}`;
     const preAuthRef = adminDb.collection("users").doc(sanitizedEmailId);
@@ -144,6 +140,8 @@ export async function syncUserFromGoogleAuth(userData: {
       restingHR: existingData.restingHR || preAuthRestingHR,
       maxHR: existingData.maxHR || preAuthMaxHR,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
+      termsAcceptedAt: now,
+      termsVersion: "1.0",
       createdAt: now,
       lastLoginAt: now,
       updatedAt: now,
@@ -158,6 +156,8 @@ export async function syncUserFromGoogleAuth(userData: {
   const updates: Partial<UserProfileData> = {
     lastLoginAt: now,
     displayName: userData.displayName || existing.displayName,
+    termsAcceptedAt: existing.termsAcceptedAt || now,
+    termsVersion: existing.termsVersion || "1.0",
     updatedAt: now,
   };
 

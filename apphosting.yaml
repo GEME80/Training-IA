@@ -27,3 +27,10 @@ env:
     secret: pulse-encryption-master-key
   - variable: GEMINI_API_KEY
     secret: gemini-api-key
+  - variable: INTERVALS_CLIENT_ID
+    value: "1371"
+  - variable: NEXT_PUBLIC_INTERVALS_CLIENT_ID
+    value: "1371"
+  - variable: INTERVALS_CLIENT_SECRET
+    secret: intervals-client-secret
+

@@ -8694,6 +8694,9 @@ Tras la aprobación formal de la aplicación OAuth 1371 de PULSE IA por parte de
    - Botón directo de 1 clic y enlace directo para activar el switch de Garmin Connect en Intervals.
 6. **Recepción Reactiva en Telemetría (`src/hooks/useAthleteTelemetry.ts` - 348 LOC):**
    - Detección inmediata de los parámetros `intervals_connected=true` en la URL para almacenar credenciales en memoria y limpiar la barra de direcciones de forma silenciosa.
+7. **Gestión Segura de Secretos en Infraestructura GCP & App Hosting:**
+   - Creación del secreto `intervals-client-secret` en Google Cloud Secret Manager mediante Firebase App Hosting CLI (`firebase apphosting:secrets:set`).
+   - Inyección declarativa en `apphosting.yaml` bajo `env:` referenciando `secret: intervals-client-secret` y variables de cliente `1371`. Cero almacenamiento de secretos en código fuente o control de versiones.
 
 ### 142.3. Certificación del Pipeline de 5 Puertas
 - **Gate 1 (Presupuesto de Líneas - LOC Budget):**
@@ -8706,7 +8709,9 @@ Tras la aprobación formal de la aplicación OAuth 1371 de PULSE IA por parte de
   - `RestrictedAccessView.tsx`: 156 LOC ($\le 350$) ✅
   - `OnboardingBanner.tsx`: 60 LOC ($\le 350$) ✅
   - `useAthleteTelemetry.ts`: 348 LOC ($\le 350$) ✅
+  - `apphosting.yaml`: 37 LOC ($\le 350$) ✅
 - **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
-- **Gate 4 (UX Sin Fricción):** Conexión en 1 solo clic; cero copia/pega manual de API Keys ✅.
+- **Gate 4 (UX Sin Fricción & Seguridad):** Conexión en 1 solo clic; cero copia/pega manual de API Keys; secreto custodiado exclusivamente en Google Secret Manager ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 142 ✅.
+

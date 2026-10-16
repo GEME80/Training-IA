@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, AlertCircle, RefreshCw, ExternalLink, Watch, Unlink, Activity, ShieldCheck, Zap } from "lucide-react";
+import { Check, AlertCircle, RefreshCw, Unlink, Activity, ShieldCheck, Zap } from "lucide-react";
 
 interface AthleteIntervalsTabProps {
   athleteId: string;
@@ -10,24 +10,6 @@ interface AthleteIntervalsTabProps {
   onSaveCredentials: (creds: { athleteId: string; apiKey: string }) => Promise<void>;
   onTestConnection?: (athleteId: string) => Promise<{ success: boolean; athleteName?: string; error?: string }>;
 }
-
-interface IntegrationDevice {
-  id: string;
-  name: string;
-  category: string;
-  iconBg: string;
-  iconText: string;
-  iconLetter: string;
-  popular?: boolean;
-}
-
-const SUPPORTED_DEVICES: IntegrationDevice[] = [
-  { id: "garmin", name: "Garmin", category: "Actividades · Salud", iconBg: "bg-[#007cc3]", iconText: "text-white", iconLetter: "G", popular: true },
-  { id: "wahoo", name: "Wahoo", category: "Actividades", iconBg: "bg-slate-900 dark:bg-slate-800", iconText: "text-white", iconLetter: "W" },
-  { id: "coros", name: "COROS", category: "Actividades · Salud", iconBg: "bg-[#d32f2f]", iconText: "text-white", iconLetter: "C" },
-  { id: "hammerhead", name: "Hammerhead", category: "Actividades", iconBg: "bg-black", iconText: "text-amber-400", iconLetter: "H" },
-  { id: "polar", name: "Polar", category: "Actividades · Salud", iconBg: "bg-[#d31b2c]", iconText: "text-white", iconLetter: "P" },
-];
 
 export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
   athleteId,
@@ -86,12 +68,6 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
       setShowConfirmDisconnect(false);
     } finally {
       setIsDisconnecting(false);
-    }
-  };
-
-  const handleOpenDeviceSettings = () => {
-    if (typeof window !== "undefined") {
-      window.open("https://intervals.icu/settings", "_blank", "width=900,height=800,scrollbars=yes");
     }
   };
 
@@ -212,37 +188,6 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
             )}
           </div>
         </div>
-
-        {/* Lista de Dispositivos (Garmin, Wahoo, COROS, Hammerhead, Polar) */}
-        {SUPPORTED_DEVICES.map((device) => (
-          <div key={device.id} className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-            <div className="flex items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-2xl ${device.iconBg} ${device.iconText} flex items-center justify-center font-black text-sm shadow-sm shrink-0`}>
-                {device.iconLetter}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{device.name}</h4>
-                  {device.popular && (
-                    <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded-full border border-cyan-200 dark:border-cyan-800">
-                      Recomendado
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{device.category}</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleOpenDeviceSettings}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-xs"
-            >
-              <span>Conectar en Intervals</span>
-              <ExternalLink className="h-3 w-3 text-slate-400" />
-            </button>
-          </div>
-        ))}
       </div>
 
       {/* Modal de Confirmación para Desconectar */}

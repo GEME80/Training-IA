@@ -41,17 +41,22 @@ export const AthleteBiometricsBar: React.FC<AthleteBiometricsBarProps> = ({
       {/* Nombre y Biometría limpia */}
       <div className="min-w-0">
         <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
-          {athleteName || "German Morales"}
+          {athleteName || "Atleta"}
         </h3>
         <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
-          <span>
-            {calculatedAge && calculatedAge > 0 ? `${calculatedAge}a` : "46a"}{" "}
-            ({genderLabel})
-          </span>
-          <span>•</span>
-          <span>{weightKg && weightKg > 0 ? `${weightKg}kg` : "82kg"}</span>
-          <span>•</span>
-          <span>{heightCm && heightCm > 0 ? `${heightCm}cm` : "185cm"}</span>
+          <span>{calculatedAge && calculatedAge > 0 ? `${calculatedAge}a ` : ""}({genderLabel})</span>
+          {weightKg && weightKg > 0 && (
+            <>
+              <span>•</span>
+              <span>{weightKg}kg</span>
+            </>
+          )}
+          {heightCm && heightCm > 0 && (
+            <>
+              <span>•</span>
+              <span>{heightCm}cm</span>
+            </>
+          )}
           {bmi && (
             <>
               <span>•</span>

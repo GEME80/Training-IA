@@ -20,15 +20,7 @@ export async function GET(
     const uid = searchParams.get("uid") || undefined;
     const email = searchParams.get("email") || undefined;
 
-    const credentials = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
-    let effAthleteId = credentials.athleteId;
-    let effApiKey = credentials.apiKey;
-
-    // Resiliencia local/admin: Si no se enviaron credenciales y existe llave en el entorno, usar fallback
-    if (!effApiKey && process.env.INTERVALS_API_KEY) {
-      effApiKey = (process.env.INTERVALS_API_KEY || "").replace(/["']/g, "").trim();
-      effAthleteId = effAthleteId || (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
-    }
+    const { athleteId: effAthleteId, apiKey: effApiKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
     if (!effApiKey || !effAthleteId) {
       return NextResponse.json(

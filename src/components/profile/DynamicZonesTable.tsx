@@ -16,8 +16,8 @@ interface DynamicZonesTableProps {
   livePaceSec: number;
   liveSwimCssSec: number;
   swimCssStr: string;
-  lthr: number;
-  maxHR: number;
+  lthr?: number;
+  maxHR?: number;
   suggestedBikeFtp?: ThresholdSuggestionItem | null;
   suggestedRunPace?: ThresholdSuggestionItem | null;
   suggestedRunFtp?: ThresholdSuggestionItem | null;
@@ -35,8 +35,8 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
   livePaceSec,
   liveSwimCssSec,
   swimCssStr,
-  lthr,
-  maxHR,
+  lthr = 0,
+  maxHR = 0,
   suggestedBikeFtp,
   suggestedRunPace,
   suggestedRunFtp,
@@ -45,11 +45,22 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
   onDismissSuggestion,
 }) => {
   // Blindaje fisiológico continuo: LTHR nunca puede ser mayor a MaxHR
-  const safeLthr = lthr > 0 && maxHR > 0 && lthr > maxHR ? maxHR : (lthr > 0 ? lthr : 178);
+  const safeLthr = lthr > 0 && maxHR > 0 && lthr > maxHR ? maxHR : (lthr > 0 ? lthr : (maxHR > 0 ? Math.round(maxHR * 0.88) : 0));
 
   // ── 1. ZONAS DE CICLISMO (Coggan 7 Zonas - Continuidad Estricta) ──
   const cyclingZones = useMemo(() => {
-    const ftp = bikeFtp > 0 ? bikeFtp : 226;
+    const ftp = bikeFtp > 0 ? bikeFtp : 0;
+    if (ftp === 0) {
+      return [
+        { id: "Z1", name: "Recuperación Activa", nameColor: "text-slate-500 dark:text-slate-400", pct: "< 55% FTP", range: "— W" },
+        { id: "Z2", name: "Resistencia Base", nameColor: "text-sky-600 dark:text-sky-400", pct: "56% – 75% FTP", range: "— W" },
+        { id: "Z3", name: "Tempo", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "76% – 90% FTP", range: "— W" },
+        { id: "Z4", name: "Umbral FTP", nameColor: "text-amber-500 dark:text-amber-400", pct: "91% – 105% FTP", range: "— W" },
+        { id: "Z5", name: "VO2max", nameColor: "text-orange-500 dark:text-orange-400", pct: "106% – 120% FTP", range: "— W" },
+        { id: "Z6", name: "Capacidad Anaeróbica", nameColor: "text-rose-600 dark:text-rose-400", pct: "121% – 150% FTP", range: "— W" },
+        { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-700 dark:text-rose-300", pct: "> 150% FTP", range: "— W" },
+      ];
+    }
     const z1Max = Math.round(ftp * 0.55);
     const z2Min = z1Max;
     const z2Max = Math.round(ftp * 0.75);
@@ -61,7 +72,6 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
     const z5Max = Math.round(ftp * 1.20);
     const z6Min = z5Max + 1;
     const z6Max = Math.round(ftp * 1.50);
-    const z7Min = z6Max + 1;
 
     return [
       { id: "Z1", name: "Recuperación Activa", nameColor: "text-slate-500 dark:text-slate-400", pct: "< 55% FTP", range: `< ${z2Min} W` },
@@ -70,7 +80,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
       { id: "Z4", name: "Umbral FTP", nameColor: "text-amber-500 dark:text-amber-400", pct: "91% – 105% FTP", range: `${z4Min} – ${z4Max} W` },
       { id: "Z5", name: "VO2max", nameColor: "text-orange-500 dark:text-orange-400", pct: "106% – 120% FTP", range: `${z5Min} – ${z5Max} W` },
       { id: "Z6", name: "Capacidad Anaeróbica", nameColor: "text-rose-600 dark:text-rose-400", pct: "121% – 150% FTP", range: `${z6Min} – ${z6Max} W` },
-      { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-700 dark:text-rose-300", pct: "> 150% FTP", range: `> ${z6Max} W` },
+      { id: "Z7", name: "Neuromuscular", nameColor: "text-rose-700 dark:text-rose-300", pct: "> 150% FTP", range: `> ${z6Max + 1} W` },
     ];
   }, [bikeFtp]);
 
@@ -81,7 +91,17 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
   const paceZones = useMemo(() => calculatePaceZones(livePaceSec), [livePaceSec]);
 
   const strydZones = useMemo(() => {
-    const cp = runFtp > 0 ? runFtp : 336;
+    const cp = runFtp > 0 ? runFtp : 0;
+    if (cp === 0) {
+      return [
+        { id: "Z1", name: "Fácil / Recuperación", nameColor: "text-slate-500 dark:text-slate-400", pct: "65% – 80% CP", range: "— W" },
+        { id: "Z2", name: "Moderado / Fondo", nameColor: "text-sky-600 dark:text-sky-400", pct: "80% – 90% CP", range: "— W" },
+        { id: "Z3", name: "Umbral Potencia", nameColor: "text-amber-500 dark:text-amber-400", pct: "90% – 100% CP", range: "— W" },
+        { id: "Z4", name: "Intervalo VO2", nameColor: "text-orange-500 dark:text-orange-400", pct: "100% – 115% CP", range: "— W" },
+        { id: "Z5", name: "Repetición Anaeróbica", nameColor: "text-rose-600 dark:text-rose-400", pct: "> 115% CP", range: "— W" },
+        { id: "SS", name: "Sweet Spot", nameColor: "text-emerald-600 dark:text-emerald-400", pct: "84% – 97% CP", range: "— W" },
+      ];
+    }
     return [
       { id: "Z1", name: "Fácil / Recuperación", nameColor: "text-slate-500 dark:text-slate-400", pct: "65% – 80% CP", range: `${Math.round(cp * 0.65)} – ${Math.round(cp * 0.80)} W` },
       { id: "Z2", name: "Moderado / Fondo", nameColor: "text-sky-600 dark:text-sky-400", pct: "80% – 90% CP", range: `${Math.round(cp * 0.80) + 1} – ${Math.round(cp * 0.90)} W` },
@@ -144,7 +164,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   {runTelemetryMode === "POWER" ? "Zonas de Potencia Stryd (CP)" : "Zonas de Ritmo Daniels VDOT"}
                 </span>
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                  {runTelemetryMode === "POWER" ? `${runFtp || 336}W CP` : "Ritmo Umbral"}
+                  {runTelemetryMode === "POWER" ? (runFtp > 0 ? `${runFtp}W CP` : "Sin Potencia") : "Ritmo Umbral"}
                 </span>
               </div>
               {runTelemetryMode === "POWER" ? renderZoneRows(strydZones, "Vatios (W)") : renderZoneRows(paceZones, "Ritmo (/km)")}
@@ -153,7 +173,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
             <div>
               <div className="flex items-center justify-between pb-2 px-1">
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">Zonas Cardíacas (FC Carrera)</span>
-                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm Umbral Lactato</span>
+                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr > 0 ? `${safeLthr} ppm Umbral Lactato` : "—"}</span>
               </div>
               {renderZoneRows(hrZones, "Pulsaciones")}
             </div>
@@ -175,7 +195,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   {bikeTelemetryMode === "POWER" ? "Modelo Coggan 7 Zonas (FTP Ciclismo)" : "Zonas Cardíacas (Ciclismo)"}
                 </span>
                 <span className="text-[10px] font-mono text-sky-600 dark:text-sky-400 font-bold">
-                  {bikeTelemetryMode === "POWER" ? `${bikeFtp || 226}W FTP` : `${safeLthr} ppm`}
+                  {bikeTelemetryMode === "POWER" ? (bikeFtp > 0 ? `${bikeFtp}W FTP` : "Sin Potencia") : (safeLthr > 0 ? `${safeLthr} ppm` : "—")}
                 </span>
               </div>
               {bikeTelemetryMode === "POWER" ? renderZoneRows(cyclingZones, "Vatios (W)") : renderZoneRows(hrZones, "Pulsaciones")}
@@ -187,7 +207,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   {bikeTelemetryMode === "POWER" ? "Zonas Cardíacas (Ciclismo Umbral Lactato)" : "Modelo Coggan Potencia"}
                 </span>
                 <span className="text-[10px] font-mono text-slate-400 font-bold">
-                  {bikeTelemetryMode === "POWER" ? `${safeLthr} ppm` : `${bikeFtp || 226}W`}
+                  {bikeTelemetryMode === "POWER" ? (safeLthr > 0 ? `${safeLthr} ppm` : "—") : (bikeFtp > 0 ? `${bikeFtp}W` : "—")}
                 </span>
               </div>
               {bikeTelemetryMode === "POWER" ? renderZoneRows(hrZones, "Pulsaciones") : renderZoneRows(cyclingZones, "Vatios (W)")}
@@ -210,7 +230,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                   Zonas Fisiológicas CSS (Velocidad Crítica)
                 </span>
                 <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-                  CSS {swimCssStr || "2:10"}/100m
+                  {swimCssStr ? `CSS ${swimCssStr}/100m` : "Sin CSS"}
                 </span>
               </div>
               {renderZoneRows(swimZones, "Ritmo (/100m)")}
@@ -221,7 +241,7 @@ export const DynamicZonesTable: React.FC<DynamicZonesTableProps> = ({
                 <span className="text-xs font-bold text-slate-500 uppercase font-mono">
                   Zonas Cardíacas / Esfuerzo (Natación)
                 </span>
-                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr} ppm</span>
+                <span className="text-[10px] font-mono text-rose-500 font-bold">{safeLthr > 0 ? `${safeLthr} ppm` : "—"}</span>
               </div>
               {renderZoneRows(hrZones, "Pulsaciones")}
             </div>

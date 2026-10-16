@@ -209,15 +209,17 @@ export async function fetchAthleteCurvesFromIntervals(params: {
   sport: "Ride" | "Run";
   weightKg?: number;
 }): Promise<SportCurvesResponse> {
-  const { sport, weightKg = 82 } = params;
-  let athleteId = (params.athleteId || "").replace(/["']/g, "").trim();
-  let apiKey = (params.apiKey || "").replace(/["']/g, "").trim();
+  const { sport, weightKg = 75 } = params;
+  const athleteId = (params.athleteId || "").replace(/["']/g, "").trim();
+  const apiKey = (params.apiKey || "").replace(/["']/g, "").trim();
 
-  if (!athleteId || athleteId.startsWith("demo")) {
-    athleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
-  }
-  if (!apiKey) {
-    apiKey = (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq").replace(/["']/g, "").trim();
+  if (!athleteId || !apiKey || athleteId.startsWith("demo")) {
+    return {
+      success: false,
+      sport,
+      weightKg,
+      error: "Credenciales de Intervals.icu no disponibles para este atleta",
+    };
   }
 
   const authHeader = "Basic " + Buffer.from(`API_KEY:${apiKey}`).toString("base64");

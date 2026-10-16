@@ -8952,3 +8952,52 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
 - **Gate 4 (Experiencia de Usuario Guiada):** Los atletas no conectados permanecen en Onboarding garantizado sin entrar al dashboard vacío ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 148 ✅.
+
+---
+
+## 149. Erradicación Total de Métricas Fantasma en Zonas y Focalización Exclusiva a Intervals.icu en Perfil (v5.80)
+
+### 149.1. Diagnóstico y Causa Raíz
+1. **Métricas Quemadas y Fallbacks Artificiales:**
+   - Al registrarse o conectarse un atleta nuevo (ej. `germanmoralesconsulting@gmail.com` con ID `i755164`), la API de Intervals retornaba sus valores reales configurados (`peso: 80kg`, `bikeFtp: 250W`, `lthr: 161`, `maxHR: 178`). Sin embargo, para los campos ausentes en su cuenta (sin Stryd, sin altura, sin edad registrada, sin ritmo de carrera en Intervals), múltiples componentes de UI tenían parámetros por defecto hardcodeados (`runFtp = 336`, `bikeFtp = 226`, `heightCm = 185`, `restingHR = 54`, `calculatedAge = 46`, `runThresholdPaceStr = "4:23"`, `swimCssStr = "2:10"`).
+   - Como resultado, el nuevo atleta observaba en su pantalla de fisiología y zonas números que no le pertenecían (incluyendo un IMC distorsionado de 23.4 al mezclar sus 80 kg reales con los 185 cm quemados).
+2. **Fuga de Curvas Fisiológicas por Credenciales de Servidor:**
+   - `useAthleteCurves`, `/api/athlete-curves` y `curvesService.ts` poseían fallbacks que inyectaban el Athlete ID `i442091` y la API Key maestra del servidor cuando el usuario no tenía curvas propias, cargando las curvas de potencia de Germán Morales en la sesión del nuevo atleta.
+3. **Dispersión de Opciones en Perfil de Integraciones:**
+   - En *Perfil del Atleta* -> *Conexión Intervals*, aparecían tarjetas y enlaces para Garmin, Wahoo, COROS, Hammerhead y Polar, desviando la atención del usuario del verdadero conector central.
+
+### 149.2. Implementaciones Realizadas
+1. **Focalización Exclusiva de Integración en Perfil (`AthleteIntervalsTab.tsx` - 233 LOC):**
+   - Removidos completamente `SUPPORTED_DEVICES` (Garmin, Wahoo, COROS, Hammerhead, Polar) y sus modales o redirecciones.
+   - La pestaña ahora se dedica al 100% a Intervals.icu, mostrando el estado de conexión, el Athlete ID vinculado, botón de verificación en vivo y botones de conexión/desconexión limpia.
+2. **Extracción Automática de Ritmo Umbral (`telemetryService.ts` - 342 LOC):**
+   - Incorporada la extracción de `threshold_pace` desde el objeto `runSport` devuelto por Intervals.icu, convirtiéndolo de m/s a formato estándar de carrera `min:seg/km`.
+3. **Erradicación de Fallbacks en Componentes de Fisiología:**
+   - `AthleteZonesTab.tsx` (253 LOC): Eliminados todos los defaults numéricos en props (`runFtp = 0`, `bikeFtp = 0`, etc.).
+   - `AthleteBiometricsBar.tsx` (70 LOC): Eliminados los strings por defecto `"German Morales"`, `"46a"`, `"82kg"`, `"185cm"`.
+   - `ContextualThresholdsGrid.tsx` (343 LOC): Sustitución de valores fijos por indicadores contextuales `"—"` cuando la métrica no ha sido registrada.
+   - `DynamicZonesTable.tsx` (256 LOC): Manejo dinámico de umbrales en cero (muestra `"Sin Potencia"` o `" — "` en lugar de `336W` o `226W`).
+   - `SwimPacingAccordion.tsx` (87 LOC): Desactivación del cálculo con `130s` (2:10) por defecto; muestra un mensaje informativo para configurar el CSS si no existe en Intervals.
+4. **Blindaje de Curvas de Telemetría y Actividades:**
+   - `useAthleteCurves.ts` (84 LOC): Retorno temprano sin peticiones si el usuario no tiene ID propio configurado.
+   - `/api/athlete-curves/route.ts` (46 LOC) y `curvesService.ts` (318 LOC): Erradicación de fallbacks a `i442091` y claves maestras para atletas no administradores.
+   - `/api/activities/[id]/streams/route.ts` (76 LOC): Resolución estricta de credenciales sin bypass no autorizado.
+
+### 149.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AthleteIntervalsTab.tsx`: 233 LOC ($\le 350$) ✅
+  - `telemetryService.ts`: 342 LOC ($\le 350$) ✅
+  - `AthleteZonesTab.tsx`: 253 LOC ($\le 350$) ✅
+  - `AthleteBiometricsBar.tsx`: 70 LOC ($\le 350$) ✅
+  - `ContextualThresholdsGrid.tsx`: 343 LOC ($\le 350$) ✅
+  - `DynamicZonesTable.tsx`: 256 LOC ($\le 350$) ✅
+  - `SwimPacingAccordion.tsx`: 87 LOC ($\le 350$) ✅
+  - `useAthleteCurves.ts`: 84 LOC ($\le 350$) ✅
+  - `curvesService.ts`: 318 LOC ($\le 350$) ✅
+  - `streams/route.ts`: 76 LOC ($\le 350$) ✅
+  - `athlete-curves/route.ts`: 46 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (Cero Métricas Fantasma & UI Exclusiva):** Solo Intervals.icu en integraciones y datos 100% reales del atleta ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 149 ✅.
+

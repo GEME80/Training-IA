@@ -55,18 +55,18 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
   email,
   calculatedAge,
   gender,
-  weightKg = 82,
-  heightCm = 185,
-  runFtp = 336,
-  bikeFtp = 226,
-  lthr = 178,
-  restingHR = 54,
-  maxHR = 185,
+  weightKg,
+  heightCm,
+  runFtp = 0,
+  bikeFtp = 0,
+  lthr,
+  restingHR,
+  maxHR,
   runningTrainingMode,
-  runThresholdPaceStr = "4:23",
+  runThresholdPaceStr = "",
   runThresholdPaceSecPerKm,
   swimCssSecPer100m,
-  swimCssStr = "2:10",
+  swimCssStr = "",
   suggestedBikeFtp,
   suggestedRunPace,
   suggestedRunFtp,
@@ -84,8 +84,8 @@ export const AthleteZonesTab: React.FC<AthleteZonesTabProps> = ({
   const [bikeTelemetryMode, setBikeTelemetryMode] = useState<"POWER" | "HR">("POWER");
   const [showCurvesAccordion, setShowCurvesAccordion] = useState(false);
 
-  const livePaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr) || 263;
-  const liveSwimCssSec = swimCssSecPer100m || parseSwimPaceToSeconds(swimCssStr) || 130;
+  const livePaceSec = runThresholdPaceSecPerKm || parsePaceToSeconds(runThresholdPaceStr) || 0;
+  const liveSwimCssSec = swimCssSecPer100m || parseSwimPaceToSeconds(swimCssStr) || 0;
   const safeLthr = lthr && maxHR && lthr > maxHR ? maxHR : lthr;
   const safeMaxHR = lthr && maxHR && lthr > maxHR ? lthr : maxHR;
 

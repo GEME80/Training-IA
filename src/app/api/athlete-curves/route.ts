@@ -24,11 +24,11 @@ export async function GET(req: NextRequest) {
     let effAthleteId = credentials.athleteId || athleteId;
     let effApiKey = credentials.apiKey || apiKey;
 
-    if (!effAthleteId || effAthleteId.startsWith("demo")) {
-      effAthleteId = (process.env.INTERVALS_ATHLETE_ID || "i442091").replace(/["']/g, "").trim();
-    }
-    if (!effApiKey) {
-      effApiKey = (process.env.INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq").replace(/["']/g, "").trim();
+    if (!effAthleteId || !effApiKey) {
+      return NextResponse.json(
+        { success: false, error: "Credenciales de Intervals.icu no disponibles para este atleta" },
+        { status: 400 }
+      );
     }
 
     const data = await fetchAthleteCurvesFromIntervals({

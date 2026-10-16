@@ -14,7 +14,8 @@ export const SwimPacingAccordion: React.FC<SwimPacingAccordionProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const safeCss = swimCssSec > 0 ? swimCssSec : 130; // 2:10 por defecto si no hay dato
+  const hasCss = swimCssSec > 0;
+  const safeCss = swimCssSec;
 
   const milestones = [
     { label: "50m", sec: Math.round(safeCss * 0.5) },
@@ -41,7 +42,7 @@ export const SwimPacingAccordion: React.FC<SwimPacingAccordionProps> = ({
         <div className="flex items-center gap-2">
           <Waves className="h-4 w-4 text-cyan-500" />
           <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-            {isOpen ? "▾" : "▸"} Calculadora de Parciales y Ritmos de Paso (CSS {swimCssStr || "2:10"}/100m)
+            {isOpen ? "▾" : "▸"} Calculadora de Parciales y Ritmos de Paso {hasCss ? `(CSS ${swimCssStr}/100m)` : "(Sin CSS)"}
           </span>
         </div>
         <ChevronDown
@@ -53,10 +54,16 @@ export const SwimPacingAccordion: React.FC<SwimPacingAccordionProps> = ({
 
       {isOpen && (
         <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800/80 animate-fadeIn space-y-2 bg-slate-50/50 dark:bg-slate-900/50">
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            Tiempos de paso proyectados para nado continuo al 100% de la Velocidad Crítica de Nado (CSS):
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {!hasCss ? (
+            <p className="text-xs text-slate-500 italic p-2 text-center">
+              No hay un ritmo umbral CSS registrado en Intervals.icu para proyectar los tiempos de paso.
+            </p>
+          ) : (
+            <>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                Tiempos de paso proyectados para nado continuo al 100% de la Velocidad Crítica de Nado (CSS):
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             {milestones.map((m) => (
               <div
                 key={m.label}
@@ -71,6 +78,8 @@ export const SwimPacingAccordion: React.FC<SwimPacingAccordionProps> = ({
               </div>
             ))}
           </div>
+            </>
+          )}
         </div>
       )}
     </div>

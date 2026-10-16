@@ -29,8 +29,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
   lthr,
   maxHR,
   restingHR,
-  runThresholdPaceStr = "4:23",
-  swimCssStr = "2:10",
+  runThresholdPaceStr = "",
+  swimCssStr = "",
   runTelemetryMode,
   onToggleRunMode,
   bikeTelemetryMode,
@@ -40,8 +40,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Cálculos de vatios por kilo
-  const runWkg = weightKg && weightKg > 0 && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "4.10";
-  const bikeWkg = weightKg && weightKg > 0 && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "2.76";
+  const runWkg = weightKg && weightKg > 0 && runFtp > 0 ? (runFtp / weightKg).toFixed(2) : "—";
+  const bikeWkg = weightKg && weightKg > 0 && bikeFtp > 0 ? (bikeFtp / weightKg).toFixed(2) : "—";
   const safeLthr = lthr && maxHR && lthr > maxHR ? maxHR : lthr;
   const safeMaxHR = lthr && maxHR && lthr > maxHR ? lthr : maxHR;
 
@@ -157,7 +157,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">{runWkg} W/kg</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {runFtp > 0 ? `${runFtp}W` : "336W"}
+                  {runFtp && runFtp > 0 ? `${runFtp}W` : "—"}
                 </div>
               </div>
 
@@ -174,7 +174,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="font-mono text-sky-600 dark:text-sky-400 font-black">Umbral T</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {runThresholdPaceStr || "4:23"}{" "}
+                  {runThresholdPaceStr || "—"}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">/km</span>
                 </div>
               </div>
@@ -192,8 +192,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-rose-500 font-sans font-bold">✎ Ajustar</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {safeLthr || 178}{" "}
-                  <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR || 185}</span>{" "}
+                  {safeLthr || "—"}{" "}
+                  {safeMaxHR ? <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR}</span> : null}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {restingHR || 54}{" "}
+                  {restingHR || "—"}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="font-mono text-sky-600 dark:text-sky-400 font-black">{bikeWkg} W/kg</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {bikeFtp > 0 ? `${bikeFtp}W` : "226W"}
+                  {bikeFtp && bikeFtp > 0 ? `${bikeFtp}W` : "—"}
                 </div>
               </div>
 
@@ -251,8 +251,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-rose-500 font-sans font-bold">✎ Ajustar</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {safeLthr || 178}{" "}
-                  <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR || 185}</span>{" "}
+                  {safeLthr || "—"}{" "}
+                  {safeMaxHR ? <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR}</span> : null}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {restingHR || 54}{" "}
+                  {restingHR || "—"}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">Vel. Crítica</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {swimCssStr || "2:10"}{" "}
+                  {swimCssStr || "—"}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">/100m</span>
                 </div>
               </div>
@@ -311,8 +311,8 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-rose-500 font-sans font-bold">✎ Ajustar</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {safeLthr || 178}{" "}
-                  <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR || 185}</span>{" "}
+                  {safeLthr || "—"}{" "}
+                  {safeMaxHR ? <span className="text-slate-400 font-normal text-xs">/ {safeMaxHR}</span> : null}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>
@@ -330,7 +330,7 @@ export const ContextualThresholdsGrid: React.FC<ContextualThresholdsGridProps> =
                   <span className="text-[9px] text-indigo-500 font-sans font-bold">Basal ✎</span>
                 </div>
                 <div className="text-base sm:text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
-                  {restingHR || 54}{" "}
+                  {restingHR || "—"}{" "}
                   <span className="text-[10px] font-sans font-normal text-slate-400">bpm</span>
                 </div>
               </div>

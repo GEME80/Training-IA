@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { SportCurvesResponse } from "@/lib/intervals/curvesTypes";
 import { getUserStorage } from "@/lib/storage/userStorage";
+import { isMasterAdminEmail } from "@/lib/env";
 
 interface UseAthleteCurvesProps {
   athleteId?: string;
@@ -11,7 +12,7 @@ interface UseAthleteCurvesProps {
   weightKg?: number;
 }
 
-export function useAthleteCurves({ athleteId, apiKey, email, weightKg = 82 }: UseAthleteCurvesProps) {
+export function useAthleteCurves({ athleteId, apiKey, email, weightKg }: UseAthleteCurvesProps) {
   const [rideCurves, setRideCurves] = useState<SportCurvesResponse | null>(null);
   const [runCurves, setRunCurves] = useState<SportCurvesResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -27,19 +28,25 @@ export function useAthleteCurves({ athleteId, apiKey, email, weightKg = 82 }: Us
       try {
         const queryParams = new URLSearchParams();
         const storage = getUserStorage();
+        const isSuper = isMasterAdminEmail(email);
 
         const effAthleteId = athleteId && !athleteId.startsWith("demo")
           ? athleteId
-          : (storage.getItem("athlete_id") || process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || "i442091");
+          : (storage.getItem("athlete_id") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || "i442091") : ""));
 
         const effApiKey = apiKey
           ? apiKey
-          : (storage.getItem("intervals_api_key") || process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq");
+          : (storage.getItem("intervals_api_key") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "48eje8t1wnj95t0sbjx2oumkq") : ""));
+
+        if (!effAthleteId) {
+          if (isMounted) setIsLoading(false);
+          return;
+        }
 
         if (effAthleteId) queryParams.set("athleteId", effAthleteId);
         if (effApiKey) queryParams.set("apiKey", effApiKey);
         if (email) queryParams.set("email", email);
-        if (weightKg) queryParams.set("weightKg", String(weightKg));
+        if (weightKg && weightKg > 0) queryParams.set("weightKg", String(weightKg));
 
         const [resRide, resRun] = await Promise.all([
           fetch(`/api/athlete-curves?sport=Ride&${queryParams.toString()}`, { cache: "no-store" }),

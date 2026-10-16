@@ -251,11 +251,17 @@ export class TelemetryService {
             const intervalsMaxHR = rawLthr && rawMaxHR && Number(rawLthr) > Number(rawMaxHR) ? rawLthr : rawMaxHR;
 
             const swimSpeed = (swimSport?.threshold_pace as number) || (anyAthlete.swim_threshold_pace as number);
-            let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m;
-            let resSwimStr: string | undefined = storedUser?.profile.swimCssStr;
+            let resSwimSec: number | undefined = storedUser?.profile.swimCssSecPer100m, resSwimStr: string | undefined = storedUser?.profile.swimCssStr;
             if (!resSwimSec && typeof swimSpeed === "number" && swimSpeed > 0) {
               resSwimSec = Math.round(100 / swimSpeed);
               resSwimStr = `${Math.floor(resSwimSec / 60)}:${String(Math.round(resSwimSec % 60)).padStart(2, "0")}`;
+            }
+
+            const runSpeed = (runSport?.threshold_pace as number) || (anyAthlete.run_threshold_pace as number) || (anyAthlete.threshold_pace as number);
+            let resRunPaceSec: number | undefined = storedUser?.profile.runThresholdPaceSecPerKm, resRunPaceStr: string | undefined = storedUser?.profile.runThresholdPaceStr;
+            if (!resRunPaceSec && typeof runSpeed === "number" && runSpeed > 0) {
+              resRunPaceSec = Math.round(1000 / runSpeed);
+              resRunPaceStr = `${Math.floor(resRunPaceSec / 60)}:${String(Math.round(resRunPaceSec % 60)).padStart(2, "0")}`;
             }
 
             // Detección unificada de Breakthroughs (Ciclismo, Ritmo y Potencia de Carrera)
@@ -263,7 +269,7 @@ export class TelemetryService {
               const breakthroughs = await BreakthroughDetectionService.evaluateAll({
                 activities: activitiesData || [], athleteId: effectiveAthleteId, apiKey: effectiveApiKey, uid,
                 currentBikeFtp: initialBikeFtp, currentRunFtp: initialRunFtp,
-                currentPaceSec: storedUser?.profile.runThresholdPaceSecPerKm || 285, currentPaceStr: storedUser?.profile.runThresholdPaceStr || "4:45",
+                currentPaceSec: resRunPaceSec || 285, currentPaceStr: resRunPaceStr || "4:45",
                 lthr: intervalsLthr, maxHR: intervalsMaxHR,
               });
               recentFtpCalibration = breakthroughs.recentFtpCalibration;
@@ -291,8 +297,8 @@ export class TelemetryService {
               bike_ftp: initialBikeFtp,
               hasRunningPowerMeter: storedUser?.profile.hasRunningPowerMeter ?? (resolvedRunFtp > 0),
               runningTrainingMode: storedUser?.profile.runningTrainingMode || (resolvedRunFtp > 0 ? "POWER" : "PACE"),
-              runThresholdPaceStr: storedUser?.profile.runThresholdPaceStr,
-              runThresholdPaceSecPerKm: storedUser?.profile.runThresholdPaceSecPerKm,
+              runThresholdPaceStr: resRunPaceStr,
+              runThresholdPaceSecPerKm: resRunPaceSec,
               swimCssStr: resSwimStr,
               swimCssSecPer100m: resSwimSec,
             };
@@ -303,20 +309,10 @@ export class TelemetryService {
       }
 
       const physioStatus = PhysiologicalEngine.evaluateAthlete(profile, wellness);
-      profile.ctl = physioStatus.ctl;
-      profile.atl = physioStatus.atl;
-      profile.tsb = physioStatus.tsb;
-      profile.rampRate = physioStatus.rampRate;
+      profile.ctl = physioStatus.ctl; profile.atl = physioStatus.atl; profile.tsb = physioStatus.tsb; profile.rampRate = physioStatus.rampRate;
 
       return {
-        success: true,
-        isLive,
-        profile,
-        wellness,
-        events,
-        physioStatus,
-        macrocyclePhase: null,
-        agentDecision: null,
+        success: true, isLive, profile, wellness, events, physioStatus, macrocyclePhase: null, agentDecision: null,
         executedWeeklyTss,
         dailyExecutedActivities,
         recentFtpCalibration,

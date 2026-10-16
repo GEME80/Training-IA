@@ -31,8 +31,8 @@ interface SportTelemetry {
 const SPORTS_TELEMETRY: SportTelemetry[] = [
   {
     id: "swim",
-    sportLabel: "Natación",
-    badgeLabel: "NATACIÓN · RITMO CSS (Velocidad Crítica)",
+    sportLabel: "Triatlón & Natación",
+    badgeLabel: "TRIATLÓN · RITMO CSS & AGUAS ABIERTAS",
     badgeIcon: Waves,
     primaryValue: "1:22",
     primaryUnit: "/100m",
@@ -42,7 +42,7 @@ const SPORTS_TELEMETRY: SportTelemetry[] = [
     secondaryLabel: "SWOLF (Eficiencia de Brazada)",
     tertiaryValue: "+12 TSB",
     tertiaryLabel: "Forma Óptima (Descanso)",
-    sessionGoal: "Meta: Triatlón & Aguas Abiertas",
+    sessionGoal: "Meta: Triatlón Sprint, 70.3 e Ironman",
     sessionRule: "3.200m Fraccionados a Ritmo Objetivo",
   },
   {
@@ -79,10 +79,33 @@ const SPORTS_TELEMETRY: SportTelemetry[] = [
   },
 ];
 
-export const HeroAthleteTelemetryCard: React.FC = () => {
+export interface HeroAthleteTelemetryCardProps {
+  activeSportIdx?: number;
+  onSportChange?: (idx: number) => void;
+  seekRequest?: { idx: number; timestamp: number } | null;
+}
+
+export const HeroAthleteTelemetryCard: React.FC<HeroAthleteTelemetryCardProps> = ({
+  activeSportIdx: controlledSportIdx,
+  onSportChange,
+  seekRequest,
+}) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
-  const [activeSportIdx, setActiveSportIdx] = useState<number>(0);
+  const [internalSportIdx, setInternalSportIdx] = useState<number>(0);
+
+  const activeSportIdx = controlledSportIdx !== undefined ? controlledSportIdx : internalSportIdx;
+
+  // Reaccionar a solicitudes de salto manual enviadas desde HeroSection
+  useEffect(() => {
+    if (!seekRequest) return;
+    const video = videoRef.current;
+    if (video && video.duration && !Number.isNaN(video.duration)) {
+      const segment = video.duration / 3;
+      video.currentTime = seekRequest.idx * segment + 0.05;
+    }
+    setInternalSportIdx(seekRequest.idx);
+  }, [seekRequest]);
 
   // Sincronización en tiempo real con el segundo exacto del video (Triatlón 10s: Natación -> Ciclismo -> Carrera)
   const handleTimeUpdate = () => {
@@ -94,24 +117,28 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
 
     let targetIdx = 0;
     if (t < segment) {
-      targetIdx = 0; // Natación (0.0s - 3.33s)
+      targetIdx = 0; // Triatlón / Natación (0.0s - 3.33s)
     } else if (t < segment * 2) {
       targetIdx = 1; // Ciclismo (3.33s - 6.66s)
     } else {
       targetIdx = 2; // Carrera (6.66s - 10.0s)
     }
 
-    setActiveSportIdx((prev) => (prev !== targetIdx ? targetIdx : prev));
+    if (targetIdx !== activeSportIdx) {
+      setInternalSportIdx(targetIdx);
+      onSportChange?.(targetIdx);
+    }
   };
 
-  // Salto manual inmediato en el video al pulsar un chip de disciplina
+  // Salto manual inmediato en el video al pulsar un chip de disciplina dentro del HUD
   const handleSelectSport = (idx: number) => {
-    setActiveSportIdx(idx);
     const video = videoRef.current;
     if (video && video.duration && !Number.isNaN(video.duration)) {
       const segment = video.duration / 3;
       video.currentTime = idx * segment + 0.05;
     }
+    setInternalSportIdx(idx);
+    onSportChange?.(idx);
   };
 
   // Inicialización de video nativo con autoplay silenciado
@@ -138,10 +165,14 @@ export const HeroAthleteTelemetryCard: React.FC = () => {
   useEffect(() => {
     if (isVideoPlaying) return;
     const timer = setInterval(() => {
-      setActiveSportIdx((prev) => (prev + 1) % SPORTS_TELEMETRY.length);
+      setInternalSportIdx((prev) => {
+        const next = (prev + 1) % SPORTS_TELEMETRY.length;
+        onSportChange?.(next);
+        return next;
+      });
     }, 4000);
     return () => clearInterval(timer);
-  }, [isVideoPlaying]);
+  }, [isVideoPlaying, onSportChange]);
 
   const currentSport = SPORTS_TELEMETRY[activeSportIdx];
   const BadgeIcon = currentSport.badgeIcon;

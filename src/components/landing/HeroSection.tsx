@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { ArrowRight, LayoutDashboard, CheckCircle2, Rocket, ShieldCheck } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowRight, LayoutDashboard, CheckCircle2, Rocket, ShieldCheck, Footprints, Bike, Waves } from "lucide-react";
 import { HeroAthleteTelemetryCard } from "./HeroAthleteTelemetryCard";
 
 interface HeroSectionProps {
@@ -11,23 +11,58 @@ interface HeroSectionProps {
   onGoToDashboard?: () => void;
 }
 
+const SPORT_DISCIPLINES = [
+  {
+    idx: 2, // Mapea a Carrera en video y telemetría
+    id: "run",
+    name: "Carrera a Pie",
+    scope: "5K, 10K, 21K, 42K & Trail",
+    metric: "Ritmos VDOT & Potencia Stryd",
+    icon: Footprints,
+  },
+  {
+    idx: 1, // Mapea a Ciclismo en video y telemetría
+    id: "bike",
+    name: "Ciclismo",
+    scope: "Ruta, Gran Fondo & Crono",
+    metric: "Potencia FTP & Zonas Coggan",
+    icon: Bike,
+  },
+  {
+    idx: 0, // Mapea a Triatlón / Aguas Abiertas en video y telemetría
+    id: "triathlon",
+    name: "Triatlón",
+    scope: "Sprint, Olímpico, 70.3 y 140.6",
+    metric: "Periodización Multideporte",
+    icon: Waves,
+  },
+];
+
 export const HeroSection: React.FC<HeroSectionProps> = ({
   isAuthenticated,
   onOpenAuthModal,
   onLoginWithGoogle,
   onGoToDashboard,
 }) => {
+  const [activeSportIdx, setActiveSportIdx] = useState<number>(0);
+  const [seekRequest, setSeekRequest] = useState<{ idx: number; timestamp: number } | null>(null);
+
+  const handleCardClick = (idx: number) => {
+    setActiveSportIdx(idx);
+    setSeekRequest({ idx, timestamp: Date.now() });
+  };
+
   return (
     <section className="relative py-10 lg:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Columna A: Mensaje, Autoridad y Conversión (lg:col-span-7) */}
-        <div className="lg:col-span-7 space-y-6 text-left">
-          {/* Badge de Marca PULSE AI */}
+        <div className="lg:col-span-7 space-y-5 text-left">
+          {/* Badge de Marca PULSE AI con foco multideporte claro */}
           <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-2xs">
             <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 border border-emerald-500/30">
               <img src="/pulse-icon.jpg" alt="PULSE AI" className="w-full h-full object-cover" />
             </div>
-            <span>PULSE AI™ · Tu Entrenador Personal con Inteligencia Artificial (Google Gemini)</span>
+            <span>PULSE AI™ · Planes Fisiológicos para Carrera, Ciclismo y Triatlón</span>
           </div>
 
           {/* Titular Principal H1 (Claro, Humano y Enfocado) */}
@@ -40,8 +75,59 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Subtítulo Empático y Accesible para Cualquier Deportista */}
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal max-w-2xl">
-            Entrena según tu vida real, sin sentirte culpable. Prescribe ritmos y vatios exactos para tu nivel, calcula tu recuperación al despertar por HRV (Variabilidad de la Frecuencia Cardíaca) y envía las series directo a tu reloj deportivo (Garmin, Coros o Apple Watch). Sin hojas de cálculo. Sin sobreentrenamiento.
+            Entrena según tu vida real, sin sentirte culpable. Planes independientes de alto rendimiento que prescriben ritmos y vatios exactos para tu nivel, calculan tu recuperación al despertar por HRV (Variabilidad de la Frecuencia Cardíaca) y sincronizan tus series directo a tu reloj deportivo (Garmin, Coros o Apple Watch).
           </p>
+
+          {/* Trilogía de Especialidades Deportivas con Salto Reactivo al Video */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 font-bold tracking-wider uppercase">
+              <span>Planes Especializados por Disciplina:</span>
+              <span className="text-[10px] text-emerald-600 font-semibold lowercase">toca para ver en video</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {SPORT_DISCIPLINES.map((sport) => {
+                const IconComponent = sport.icon;
+                const isActive = activeSportIdx === sport.idx;
+                return (
+                  <button
+                    key={sport.id}
+                    type="button"
+                    onClick={() => handleCardClick(sport.idx)}
+                    className={`p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative overflow-hidden group ${
+                      isActive
+                        ? "bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500/30 scale-[1.01]"
+                        : "bg-slate-50/80 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 shadow-2xs"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div
+                        className={`h-6 w-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isActive
+                            ? "bg-emerald-600 text-white"
+                            : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 group-hover:text-emerald-600"
+                        }`}
+                      >
+                        <IconComponent className="h-3.5 w-3.5" strokeWidth={2} />
+                      </div>
+                      <span className={`text-xs font-black tracking-tight ${
+                        isActive ? "text-emerald-950 dark:text-emerald-300" : "text-slate-900 dark:text-white"
+                      }`}>
+                        {sport.name}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+                      {sport.scope}
+                    </div>
+                    <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 truncate font-semibold">
+                      {sport.metric}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Checks Rápidos de Validación con Explicación de Siglas */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -51,16 +137,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
-              <span>Ajuste diario según tu recuperación (HRV)</span>
+              <span>Ajuste diario según recuperación (HRV)</span>
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
-              <span>Ritmos personalizados (Fórmula VDOT)</span>
+              <span>IA Adaptativa con Google Gemini</span>
             </span>
           </div>
 
           {/* Llamado a la Acción (CTA Dinámico) */}
-          <div className="pt-2">
+          <div className="pt-1">
             {isAuthenticated && onGoToDashboard ? (
               <button
                 type="button"
@@ -111,7 +197,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Columna B: Video Deportivo con Telemetría HUD (lg:col-span-5) */}
         <div className="lg:col-span-5">
-          <HeroAthleteTelemetryCard />
+          <HeroAthleteTelemetryCard
+            activeSportIdx={activeSportIdx}
+            onSportChange={setActiveSportIdx}
+            seekRequest={seekRequest}
+          />
         </div>
       </div>
     </section>

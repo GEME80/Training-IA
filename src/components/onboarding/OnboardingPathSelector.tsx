@@ -1,38 +1,37 @@
 "use client";
 
 import React from "react";
-import { UserPlus, KeyRound, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap } from "lucide-react";
 
 interface OnboardingPathSelectorProps {
-  onSelectPath: (path: "new" | "existing") => void;
+  onSelectPath?: (path: "new" | "existing") => void;
   onStartOAuth?: () => void;
   isConnectingOAuth?: boolean;
 }
 
 export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
-  onSelectPath,
   onStartOAuth,
   isConnectingOAuth = false,
 }) => {
   return (
-    <div className="space-y-4 animate-in fade-in">
+    <div className="space-y-4 animate-in fade-in text-left">
       <div className="text-center space-y-1 pb-1">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">
           Conecta tu Telemetría y Reloj Deportivo
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-          PULSE AI se sincroniza con <strong>Intervals.icu</strong> para leer los entrenamientos de tu reloj (Garmin, Coros, Strava) y enviarte tus sesiones prescritas.
+          PULSE AI se sincroniza con <strong>Intervals.icu</strong> para leer los entrenamientos de tu reloj (Garmin, Coros, Polar, Strava) y enviarte tus sesiones prescritas.
         </p>
       </div>
 
-      {/* Opción Maestra: Conexión OAuth 1-Clic Aprobada */}
+      {/* Opción Única: Conexión OAuth 1-Clic Oficial */}
       <div className="p-4 sm:p-5 rounded-2xl border-2 border-emerald-500/80 bg-gradient-to-b from-emerald-50/70 to-white dark:from-emerald-950/20 dark:to-slate-900 shadow-md space-y-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Zap className="h-5 w-5" />
           </div>
           <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-            Recomendado • 1 Clic
+            Conexión Oficial • 1 Clic
           </span>
         </div>
 
@@ -63,52 +62,6 @@ export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
           <Zap className="h-4 w-4" />
           <span>{isConnectingOAuth ? "Conectando con Intervals..." : "Conectar o Crear Cuenta en Intervals.icu"}</span>
           <ArrowRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-slate-200 dark:border-slate-800" />
-        <span className="flex-shrink mx-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-          Opciones manuales alternativas
-        </span>
-        <div className="flex-grow border-t border-slate-200 dark:border-slate-800" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Opción Manual 1: Guía de registro manual */}
-        <button
-          type="button"
-          onClick={() => onSelectPath("new")}
-          className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition text-left flex items-center justify-between cursor-pointer group"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
-              <UserPlus className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Guía de registro</div>
-              <div className="text-[10px] text-slate-400">Paso a paso manual</div>
-            </div>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:translate-x-0.5 transition" />
-        </button>
-
-        {/* Opción Manual 2: Tengo Clave API */}
-        <button
-          type="button"
-          onClick={() => onSelectPath("existing")}
-          className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition text-left flex items-center justify-between cursor-pointer group"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
-              <KeyRound className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Ingresar Clave API</div>
-              <div className="text-[10px] text-slate-400">Modo avanzado</div>
-            </div>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:translate-x-0.5 transition" />
         </button>
       </div>
 

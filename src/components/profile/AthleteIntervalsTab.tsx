@@ -198,13 +198,17 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
                 <span>Desconectar</span>
               </button>
             ) : (
-              <a
-                href="/api/auth/intervals/authorize?returnTo=/profile"
+              <button
+                type="button"
+                onClick={() => {
+                  const returnTo = typeof window !== "undefined" ? window.location.pathname : "/profile";
+                  window.location.href = `/api/auth/intervals/authorize?returnTo=${encodeURIComponent(returnTo)}`;
+                }}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
               >
                 <Zap className="h-3.5 w-3.5" />
-                <span>Conectar en 1 Clic</span>
-              </a>
+                <span>Conectar con Intervals.icu</span>
+              </button>
             )}
           </div>
         </div>

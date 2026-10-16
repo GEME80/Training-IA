@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { PulseLogo } from "./PulseLogo";
-import { ShieldAlert, Clock, LogOut, Mail, ArrowRight, Sparkles, X, Watch, ExternalLink } from "lucide-react";
+import { ShieldAlert, Clock, LogOut, Mail, ArrowRight, Sparkles, Watch, ExternalLink } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { OnboardingIntervalsGuide } from "./onboarding/OnboardingIntervalsGuide";
 
 interface RestrictedAccessViewProps {
   status: "pending" | "disabled";
@@ -12,7 +11,6 @@ interface RestrictedAccessViewProps {
 
 export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ status }) => {
   const { user, userProfile, signOutUser } = useAuth();
-  const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
 
   const isPending = status === "pending";
 
@@ -127,35 +125,6 @@ export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ stat
           </div>
         </div>
       </main>
-
-      {/* Modal de Guía para Usuarios en Espera */}
-      {showGuideModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="h-4 w-4 text-cyan-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Guía: Crear Intervals.icu y Vincular Reloj
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowGuideModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto">
-              <OnboardingIntervalsGuide
-                onCompleteGuide={() => setShowGuideModal(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-400">
         <p>PULSE AI PRO © 2026 • Acceso Protegido por Aislamiento Multi-Tenant</p>

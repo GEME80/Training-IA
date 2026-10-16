@@ -1,59 +1,71 @@
 "use client";
 
-import React from "react";
-import { Sparkles, ArrowRight, ExternalLink, ShieldCheck, User, Key } from "lucide-react";
+import React, { useState } from "react";
+import { Zap, ArrowRight, ExternalLink, ShieldCheck } from "lucide-react";
 
 interface OnboardingBannerProps {
-  onOpenOnboarding: () => void;
+  uid?: string;
+  onOpenOnboarding?: () => void;
 }
 
-export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ onOpenOnboarding }) => {
-  return (
-    <div className="relative overflow-hidden rounded-3xl border border-cyan-200/90 dark:border-cyan-800/60 bg-gradient-to-br from-cyan-500/10 via-sky-500/5 to-slate-50/50 dark:from-cyan-950/40 dark:via-sky-950/20 dark:to-slate-900/40 p-5 sm:p-6 shadow-sm backdrop-blur-xs animate-in fade-in">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        {/* Información Principal */}
-        <div className="space-y-3 max-w-3xl">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-cyan-600/15 dark:bg-cyan-400/15 text-cyan-700 dark:text-cyan-300 border border-cyan-300/40 dark:border-cyan-700/40">
-              <Sparkles className="h-3 w-3 animate-pulse" />
-              Primer Paso del Atleta
-            </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-              <ShieldCheck className="h-3 w-3" />
-              Cifrado AES-256-GCM
-            </span>
-          </div>
+export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ uid, onOpenOnboarding }) => {
+  const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
 
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-              Conecta tu cuenta de Intervals.icu y activa tu IA de Entrenamiento
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
-              Sincroniza tu reloj <strong>Garmin, Coros, Polar, Suunto, Strava o Stryd</strong> a través de Intervals.icu en 1 solo clic para activar tu telemetría biológica en vivo (Fitness, Fatiga, Forma) y periodización inteligente.
+  const handleConnect = () => {
+    setIsRedirecting(true);
+    if (typeof window !== "undefined") {
+      const returnTo = window.location.pathname;
+      window.location.href = `/api/auth/intervals/authorize?uid=${encodeURIComponent(uid || "")}&returnTo=${encodeURIComponent(returnTo)}`;
+    } else if (onOpenOnboarding) {
+      onOpenOnboarding();
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-slate-50/50 dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-slate-900/40 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-xs animate-in fade-in">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Lado Izquierdo: Mensaje conciso y badge */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Zap className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+                1er Paso
+              </span>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                Conecta tu reloj deportivo con Intervals.icu
+              </h3>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:block">
+              Sincroniza Garmin, Coros o Strava en 1 solo clic para activar tu telemetría biológica y prescripción inteligente.
             </p>
           </div>
         </div>
 
-        {/* Acciones de Llamado Directo */}
-        <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 justify-center">
-          <button
-            type="button"
-            onClick={onOpenOnboarding}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20 cursor-pointer"
-          >
-            <span>Conectar con Intervals.icu (1 Clic)</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-
+        {/* Lado Derecho: Acciones compactas */}
+        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
           <a
             href="https://intervals.icu/settings"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-800"
+            className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-[11px] font-medium transition"
           >
-            <span>Ajustes en Intervals.icu</span>
+            <span>Ajustes</span>
             <ExternalLink className="h-3 w-3" />
           </a>
+
+          <button
+            type="button"
+            onClick={handleConnect}
+            disabled={isRedirecting}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+          >
+            <Zap className="h-3.5 w-3.5" />
+            <span>{isRedirecting ? "Conectando..." : "Conectar en 1 Clic"}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>

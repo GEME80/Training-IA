@@ -8840,6 +8840,47 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Experiencia de Usuario & Coherencia Visual):** Flujo de onboarding guiado, Hub de integraciones alineado a diseño de referencia y métricas de atletas nuevos sin datos quemados ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 145 ✅.
 
+---
+
+## 146. Eliminación de Opciones Obsoletas de Onboarding, Banner Compacto Directo y Erradicación Total de Claves Manuales (v5.77)
+
+### 146.1. Contexto y Requerimientos
+1. **Opciones Confusas en Onboarding Inicial:** En el modal de bienvenida (`OnboardingPathSelector.tsx`), se mostraban dos botones secundarios (*"Guía de registro"* y *"Ingresar Clave API"*) que desviaban al atleta del flujo OAuth y lo llevaban a popups antiguos de registro manual.
+2. **Banner Gigante en Dashboard:** En la parte superior del Dashboard se presentaba un banner de gran altura que, al ser pulsado, llamaba al modal antiguo pidiendo el Athlete ID manual.
+3. **Erradicación de Componentes Manuales:** Existían archivos huérfanos del flujo manual (`OnboardingStepAthleteId`, `OnboardingStepApiKey`, `OnboardingStepVerify`, `OnboardingIntervalsGuide`) que debían eliminarse para limpiar la arquitectura.
+4. **Remoción de Fallbacks en Fisiología:** En `AthletePhysiologyView.tsx` aún quedaban fallbacks a `4:45` y `1:45` en el estado local.
+
+### 146.2. Implementación Arquitectónica
+1. **Onboarding Inicial 100% Focalizado (`OnboardingPathSelector.tsx` - 74 LOC):**
+   - Eliminado el divisor de *"OPCIONES MANUALES ALTERNATIVAS"* y los botones *"Guía de registro"* e *"Ingresar Clave API"*.
+   - Se mantiene únicamente el botón institucional esmeralda `[ ⚡ Conectar o Crear Cuenta en Intervals.icu ]` con la guía de 5 segundos para nuevos atletas.
+2. **Modal de Onboarding Simplificado (`IntervalsOnboardingModal.tsx` - 61 LOC):**
+   - Rediseñado como diálogo directo hacia OAuth; eliminados los estados internos de wizard y guías manuales.
+3. **Banner Compacto y Discreto en Dashboard (`OnboardingBanner.tsx` - 73 LOC):**
+   - Reducido a una barra horizontal delgada y elegante (altura reducida ~40px).
+   - El botón *"Conectar en 1 Clic"* redirige inmediatamente a `/api/auth/intervals/authorize?uid=${uid}&returnTo=${pathname}` de forma directa, sin abrir ningún popup viejo.
+4. **Erradicación de Archivos Obsoletos:**
+   - Eliminados con `git rm`: `OnboardingStepAthleteId.tsx`, `OnboardingStepApiKey.tsx`, `OnboardingStepVerify.tsx` y `OnboardingIntervalsGuide.tsx`.
+   - Limpieza de referencias en `RestrictedAccessView.tsx` (134 LOC).
+5. **Corrección de Estado Fisiológico:**
+   - En `AthletePhysiologyView.tsx` (323 LOC): erradicados los fallbacks a `4:45` y `1:45` en los estados locales de ritmo y natación.
+   - En `AthleteIntervalsTab.tsx` (287 LOC): ajustado el botón *"Conectar con Intervals.icu"* para disparar la ruta OAuth con `returnTo` dinámico.
+
+### 146.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `OnboardingPathSelector.tsx`: 74 LOC ($\le 350$) ✅
+  - `IntervalsOnboardingModal.tsx`: 61 LOC ($\le 350$) ✅
+  - `OnboardingBanner.tsx`: 73 LOC ($\le 350$) ✅
+  - `AthleteDashboard.tsx`: 326 LOC ($\le 350$) ✅
+  - `AthleteIntervalsTab.tsx`: 287 LOC ($\le 350$) ✅
+  - `AthletePhysiologyView.tsx`: 323 LOC ($\le 350$) ✅
+  - `RestrictedAccessView.tsx`: 134 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (UX Sin Fricción):** 100% de los flujos de conexión dirigen a OAuth 2.0; cero formularios de Athlete ID o API Key residuales ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 146 ✅.
+
+
 
 
 

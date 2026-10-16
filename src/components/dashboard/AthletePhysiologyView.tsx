@@ -41,10 +41,10 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   const [lthr, setLthr] = useState<number | undefined>(initialLthr); const [maxHR, setMaxHR] = useState<number | undefined>(initialMaxHR);
   const [hasRunningPowerMeter, setHasRunningPowerMeter] = useState<boolean>(initialHasPower ?? (initialRunFtp > 0));
   const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>(initialRunningMode || (initialRunFtp > 0 ? "POWER" : "PACE"));
-  const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>(initialThresholdPaceStr || "4:45");
-  const [runThresholdPaceSecPerKm, setRunThresholdPaceSecPerKm] = useState<number>(initialThresholdPaceSec || 285);
-  const [swimCssStr, setSwimCssStr] = useState<string>(initialSwimCssStr || "1:45");
-  const [swimCssSecPer100m, setSwimCssSecPer100m] = useState<number>(initialSwimCssSec || 105);
+  const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>(initialThresholdPaceStr || "");
+  const [runThresholdPaceSecPerKm, setRunThresholdPaceSecPerKm] = useState<number>(initialThresholdPaceSec || 0);
+  const [swimCssStr, setSwimCssStr] = useState<string>(initialSwimCssStr || "");
+  const [swimCssSecPer100m, setSwimCssSecPer100m] = useState<number>(initialSwimCssSec || 0);
   const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityMap>(initialAvailability || DEFAULT_WEEKLY_AVAILABILITY);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [pendingModeSwitch, setPendingModeSwitch] = useState<RunningTrainingMode | null>(null);

@@ -8920,3 +8920,35 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 
 
 
+---
+
+## 148. Sincronización Estricta de Estado de Onboarding y Erradicación de Race Conditions Post-OAuth (v5.79)
+
+### 148.1. Diagnóstico de la Causa Raíz
+1. **Condición de Conexión Imprecisa (`AthleteDashboard.tsx`):**
+   - La condición previa dependía de una conjunción de múltiples banderas de almacenamiento (`!profile.id && !intervalsAthleteId && !apiKeyCache && !encryptedApiKey...`). Si el navegador guardaba un identificador de atleta huérfano en `localStorage` (sin token o credenciales activas), la condición evaluaba a falso y saltaba directamente al dashboard vacío, ocultando `AthleteOnboardingView`.
+2. **Race Condition de Parámetros URL (`useAthleteTelemetry.ts` vs `AthleteDashboard.tsx`):**
+   - Al retornar del flujo de autorización OAuth con `intervals_connected=true`, el hook `useAthleteTelemetry` ejecutaba inmediatamente `window.history.replaceState(...)`, limpiando los query params antes de que el `useEffect` de `AthleteDashboard` pudiera leer `intervals_connected=true` para disparar el modal `WatchSyncModal`.
+3. **Limpieza de ID Huérfano en Atletas Nuevos:**
+   - Si un usuario no es superadministrador y no posee token OAuth ni API key válida en backend o cliente, cualquier `athlete_id` residual queda descartado para evitar estados híbridos de "desconectado pero con ID".
+
+### 148.2. Solución Aplicada
+1. **Cálculo Unificado `isAthleteConnected` (`AthleteDashboard.tsx` - 345 LOC):**
+   - Se definió un cálculo estricto de conexión: `isAthleteConnected = Boolean(telemetry.isLiveConnected || (telemetry.profile.id && (telemetry.apiKeyCache || effectiveUserProfile?.encryptedApiKey || effectiveUserProfile?.hasApiKey)))`.
+   - Si `!isAuditing && !isAthleteConnected && !bypassOnboardingView && activeNavSection === dashboard`, la vista obligatoria es `AthleteOnboardingView`.
+   - Si el atleta activa un disparador modal alternativo, `IntervalsOnboardingModal` ahora está debidamente renderizado y responde de inmediato.
+2. **Desacoplamiento Temporal de URL (`useAthleteTelemetry.ts` - 347 LOC):**
+   - Se añadió una pausa de 2000ms antes del reemplazo de historial para garantizar que todos los modales post-OAuth capturen los parámetros de retorno.
+   - Si `!isSuper` y no hay credenciales activas, se elimina cualquier `athlete_id` huérfano de `localStorage`.
+3. **Erradicación de Emojis en `AthleteOnboardingView.tsx` (140 LOC):**
+   - Reemplazado `💡` por el icono SVG estándar de Lucide `Sparkles` en cumplimiento con las reglas de diseño del proyecto.
+
+### 148.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AthleteDashboard.tsx`: 345 LOC ($\le 350$) ✅
+  - `useAthleteTelemetry.ts`: 347 LOC ($\le 350$) ✅
+  - `AthleteOnboardingView.tsx`: 140 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (Experiencia de Usuario Guiada):** Los atletas no conectados permanecen en Onboarding garantizado sin entrar al dashboard vacío ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 148 ✅.

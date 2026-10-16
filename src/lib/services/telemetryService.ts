@@ -242,7 +242,8 @@ export class TelemetryService {
             const resolvedWeight = storedUser?.profile.weightKg || garminWel.weightKg || athleteData.weight || anyAthlete.icu_weight;
             const isPaceRun = storedUser?.profile?.runningTrainingMode === "PACE" && storedUser?.profile?.hasRunningPowerMeter === false;
             const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0));
-            const initialBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0);
+            const hasRideHistory = activitiesData && activitiesData.length > 0;
+            const initialBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || (hasRideHistory ? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0) : 0));
             const initialRunFtp = isPaceRun ? 0 : resolvedRunFtp;
             const rawLthr = storedUser?.profile.lthr || runSport?.lthr || rideSport?.lthr || anyAthlete.lthr || anyAthlete.icu_lthr || athleteData.lthr;
             const rawMaxHR = storedUser?.profile.maxHR || runSport?.max_hr || rideSport?.max_hr || anyAthlete.max_hr || anyAthlete.maxHR || anyAthlete.icu_max_hr || athleteData.maxHR;

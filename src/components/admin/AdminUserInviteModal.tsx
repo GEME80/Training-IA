@@ -29,8 +29,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
   const [intervalsId, setIntervalsId] = useState<string>("");
   const [intervalsApiKey, setIntervalsApiKey] = useState<string>("");
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
-  const [runFtp, setRunFtp] = useState<number>(300);
-  const [bikeFtp, setBikeFtp] = useState<number>(250);
+  const [runFtp, setRunFtp] = useState<number | "">("");
+  const [bikeFtp, setBikeFtp] = useState<number | "">("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
@@ -56,8 +56,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
           status,
           intervalsAthleteId: intervalsId.trim(),
           rawApiKey: intervalsApiKey.trim() || undefined,
-          runFtp: Number(runFtp) || 300,
-          bikeFtp: Number(bikeFtp) || 250,
+          runFtp: runFtp !== "" ? Number(runFtp) : undefined,
+          bikeFtp: bikeFtp !== "" ? Number(bikeFtp) : undefined,
           requesterEmail,
           requesterUid,
         }),
@@ -216,7 +216,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
                 <input
                   type="number"
                   value={runFtp}
-                  onChange={(e) => setRunFtp(Number(e.target.value))}
+                  onChange={(e) => setRunFtp(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Ej. 300 (opcional)"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -226,7 +227,8 @@ export const AdminUserInviteModal: React.FC<AdminUserInviteModalProps> = ({
                 <input
                   type="number"
                   value={bikeFtp}
-                  onChange={(e) => setBikeFtp(Number(e.target.value))}
+                  onChange={(e) => setBikeFtp(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Ej. 250 (opcional)"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-mono text-slate-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>

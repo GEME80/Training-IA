@@ -8790,5 +8790,56 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (UX Sin Fricción & Cobertura Legal):** Sincronización de reloj con popup guiado, switch de admisión en vivo y consentimiento de T&C 100% mandatorio ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 144 ✅.
 
+---
+
+## 145. Hub Integral de Integraciones, Onboarding Guiado con Kickoff de Plan IA y Erradicación de Métricas Quemadas (v5.76)
+
+### 145.1. Contexto y Requerimientos
+1. **Fricción Pre-Intervals en Onboarding:** Los atletas sin cuenta previa en Intervals.icu necesitaban instrucciones explícitas para saber que al abrir Intervals basta con hacer clic en *"¿No está registrado? Haga clic para registrarse"* (registro en 5 segundos con Google o email) para quedar vinculados inmediatamente.
+2. **Eliminación de Clutter en Watch Sync:** El modal de sincronización de relojes mostraba listas genéricas en vez de un paso a paso enfocado y pedagógico que guiara la conexión en la pestaña *"Conexiones"* de Intervals.icu.
+3. **Pérdida de Orientación Post-Onboarding:** Tras autorizar la telemetría, el atleta aterrizaba en el dashboard sin claridad sobre cuál era el paso siguiente; se requería un modal celebratorio con checklist de estado y un CTA directo y contundente para diseñar el plan de temporada con el Head Coach IA (`isSeasonStudioOpen: true`).
+4. **Erradicación de Valores Quemados (4:45 min/km y 250 W):** Atletas recién creados sin actividades ni potencia mostraban valores hardcodeados (`4:45` y `250 W`); se requería que todo atleta sin calibrar muestre `"—"`.
+5. **Modernización de la Pestaña de Conexiones (Integraciones Hub):** Inspirado en el diseño institucional de referencia (`media_1792114205020_e56052ec.jpg`), se requería un Hub visual de Integraciones en el perfil del atleta que elimine campos manuales de API Key o Athlete ID, muestre Intervals.icu con estado *"🟢 Conectado"*, botón de *"Desconectar"*, y accesos directos a Garmin, Wahoo, COROS, Hammerhead y Polar.
+
+### 145.2. Implementación Arquitectónica
+1. **Corrección de Umbrales en Telemetría y Métricas Fisiológicas:**
+   - En `src/hooks/useAthleteTelemetry.ts` (348 LOC): sustituido fallback `"4:45"` por `""` y `285` por `0` para `runThresholdPaceStr` y `runThresholdPaceSecPerKm`. Sustituido `"1:45"` por `""` y `105` por `0` para `swimCssStr` y `swimCssSecPer100m`.
+   - En `src/components/dashboard/physiologicalMetricBuilders.ts` (241 LOC): ritmo de carrera y natación CSS ahora evalúan `runThresholdPaceStr && runThresholdPaceStr !== "" ? runThresholdPaceStr : "—"`.
+   - En `src/lib/services/telemetryService.ts` (346 LOC): `initialBikeFtp` ahora valida si existen actividades reales registradas (`hasRideHistory`), evitando que un perfil nuevo de Intervals.icu inyecte un FTP por defecto de 250 W.
+   - En `src/components/admin/AdminUserInviteModal.tsx` (279 LOC): erradicados valores por defecto 300 W y 250 W en invitaciones manuales de administrador.
+2. **Claridad Pre-Intervals en Onboarding (`OnboardingPathSelector.tsx` - 121 LOC & `RestrictedAccessView.tsx` - 165 LOC):**
+   - Agregada caja de ayuda visual con el paso a paso exacto para usuarios nuevos: *"Al pulsar el botón serás llevado a Intervals. Si aún no tienes cuenta, haz clic en '¿No está registrado? Haga clic para registrarse' (toma 5 segundos con Google) y autorizas la conexión de inmediato"*.
+3. **Modal de Sincronización de Reloj Enfocado (`WatchSyncModal.tsx` - 155 LOC):**
+   - Eliminado ruido de marcas secundarias; estructurado en 4 pasos numerados y claros para abrir los Ajustes de Intervals, bajar a Conexiones y activar Garmin marcando actividades y salud. Conexión de callback `onComplete` para encadenar el onboarding.
+4. **Modal de Bienvenida y Kickoff de Plan (`src/components/onboarding/WelcomePlanModal.tsx` - 112 LOC [NUEVO]):**
+   - Felicitación al atleta con branding esmeralda, checklist de cuenta (PULSE AI activa, telemetría conectada, reloj enlazado) y botón de acción principal `[ 🚀 Diseñar mi Plan con el Head Coach IA ]` que abre directamente el Season Studio (`setActiveNavSection("season_studio")`).
+   - Conectado reactivamente en `AthleteDashboard.tsx` (326 LOC) tras completar el paso de reloj.
+5. **Hub de Integraciones de Alto Impacto (`src/components/profile/AthleteIntervalsTab.tsx` - 284 LOC):**
+   - Eliminados todos los inputs manuales de Athlete ID y API Key.
+   - Orígenes de Sincronización superiores: Actividades, Actividades Virtuales y Datos de Salud sincronizados desde Intervals.icu.
+   - Lista interactiva de Integraciones: Intervals.icu (`🟢 Conectado` / `Desconectar` / `Conectar en 1 Clic`), Garmin (`Conectar en Intervals ↗`), Wahoo, COROS, Hammerhead y Polar.
+   - Modal de confirmación seguro al desconectar.
+6. **Limpieza en Edición de Perfil (`src/components/profile/AthleteEditProfileModal.tsx` - 243 LOC):**
+   - Eliminado el Bloque 3 de credenciales manuales para evitar confusiones con la autenticación OAuth 2.0.
+
+### 145.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `useAthleteTelemetry.ts`: 348 LOC ($\le 350$) ✅
+  - `physiologicalMetricBuilders.ts`: 241 LOC ($\le 350$) ✅
+  - `OnboardingPathSelector.tsx`: 121 LOC ($\le 350$) ✅
+  - `RestrictedAccessView.tsx`: 165 LOC ($\le 350$) ✅
+  - `WatchSyncModal.tsx`: 155 LOC ($\le 350$) ✅
+  - `WelcomePlanModal.tsx`: 112 LOC ($\le 350$) ✅
+  - `AthleteDashboard.tsx`: 326 LOC ($\le 350$) ✅
+  - `AthleteEditProfileModal.tsx`: 243 LOC ($\le 350$) ✅
+  - `AthleteIntervalsTab.tsx`: 284 LOC ($\le 350$) ✅
+  - `AdminUserInviteModal.tsx`: 279 LOC ($\le 350$) ✅
+  - `telemetryService.ts`: 346 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (Experiencia de Usuario & Coherencia Visual):** Flujo de onboarding guiado, Hub de integraciones alineado a diseño de referencia y métricas de atletas nuevos sin datos quemados ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 145 ✅.
+
+
 
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Save, Activity, Check, Radio, Key, User, Loader2 } from "lucide-react";
+import { X, Save, Activity, Check, User, Loader2 } from "lucide-react";
 
 export interface AthleteProfileFormData {
   displayName?: string;
@@ -205,25 +205,6 @@ export const AthleteEditProfileModal: React.FC<AthleteEditProfileModalProps> = (
                   <input type="number" min="30" max="120" value={form.restingHR || ""} onChange={(e) => update("restingHR", Number(e.target.value))} className={numInputClass} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">bpm</span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bloque 3: Conexión Intervals.icu */}
-          <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Conexión Intervals.icu</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Radio className="h-3.5 w-3.5 text-sky-500" /> Athlete ID
-                </label>
-                <input type="text" placeholder="Ej. i123456" value={form.intervalsAthleteId || ""} onChange={(e) => update("intervalsAthleteId", e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Key className="h-3.5 w-3.5 text-amber-500" /> API Key
-                </label>
-                <input type="password" placeholder="Pegar para actualizar" value={form.apiKey || ""} onChange={(e) => update("apiKey", e.target.value)} className={inputClass} />
               </div>
             </div>
           </div>

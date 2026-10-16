@@ -92,14 +92,14 @@ export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ stat
                   <span>Conecta tu reloj deportivo (Garmin, Coros)</span>
                 </div>
                 <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  Adelanta la vinculación de tu cuenta de Intervals.icu en 1 clic para que tu reloj y tu telemetría estén 100% listos al ser aprobado.
+                  Adelanta la vinculación de tu reloj en 1 clic. Si no tienes cuenta en Intervals, al entrar haz clic en <strong>"¿No está registrado? Haga clic para registrarse"</strong> (5 seg con Google).
                 </p>
                 <a
                   href={`/api/auth/intervals/authorize?uid=${encodeURIComponent(user?.uid || "")}&returnTo=${encodeURIComponent("/")}`}
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>Conectar con Intervals.icu en 1 Clic</span>
+                  <span>Conectar o Crear Cuenta en Intervals</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </a>
               </div>

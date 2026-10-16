@@ -41,7 +41,16 @@ export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
             Conexión Oficial con Intervals.icu
           </h4>
           <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            Sin claves raras ni IDs técnicos. Si ya tienes cuenta la autorizas al instante; si no la tienes, se creará gratis con Google y quedará vinculada automáticamente.
+            Sin claves raras ni IDs técnicos. Autorización directa en 1 clic para leer tu reloj deportivo y sincronizar entrenamientos.
+          </p>
+        </div>
+
+        <div className="rounded-xl p-3 bg-amber-500/10 border border-amber-500/20 text-left space-y-1">
+          <div className="text-[11px] font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+            <span>💡 ¿No tienes cuenta en Intervals todavía?</span>
+          </div>
+          <p className="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed">
+            Al pulsar el botón serás llevado a Intervals. Si aún no tienes cuenta, haz clic en <strong>"¿No está registrado? Haga clic para registrarse"</strong> (toma 5 segundos con Google) y autorizas la conexión de inmediato.
           </p>
         </div>
 
@@ -52,7 +61,7 @@ export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
           className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition cursor-pointer disabled:opacity-50"
         >
           <Zap className="h-4 w-4" />
-          <span>{isConnectingOAuth ? "Conectando con Intervals..." : "Conectar con Intervals.icu en 1 Clic"}</span>
+          <span>{isConnectingOAuth ? "Conectando con Intervals..." : "Conectar o Crear Cuenta en Intervals.icu"}</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

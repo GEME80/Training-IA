@@ -44,23 +44,13 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ uid, onOpenO
           </div>
         </div>
 
-        {/* Lado Derecho: Acciones compactas */}
+        {/* Lado Derecho: Botón directo de 1 Clic */}
         <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-          <a
-            href="https://intervals.icu/settings"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-[11px] font-medium transition"
-          >
-            <span>Ajustes</span>
-            <ExternalLink className="h-3 w-3" />
-          </a>
-
           <button
             type="button"
             onClick={handleConnect}
             disabled={isRedirecting}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
           >
             <Zap className="h-3.5 w-3.5" />
             <span>{isRedirecting ? "Conectando..." : "Conectar en 1 Clic"}</span>

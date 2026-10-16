@@ -12,6 +12,7 @@ import { AthleteDashboardViewRouter } from "./dashboard/AthleteDashboardViewRout
 import { IntervalsOnboardingModal } from "@/components/IntervalsOnboardingModal";
 import { WatchSyncModal } from "@/components/onboarding/WatchSyncModal";
 import { WelcomePlanModal } from "@/components/onboarding/WelcomePlanModal";
+import { AthleteOnboardingView } from "@/components/onboarding/AthleteOnboardingView";
 import { PlanItem } from "@/lib/gemini/engine";
 import { isMasterAdminEmail } from "@/lib/env";
 import { getOffsetForWeek } from "@/lib/physiology/macrocycle";
@@ -121,6 +122,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
   const [isWatchSyncModalOpen, setIsWatchSyncModalOpen] = useState(false);
   const [isWelcomePlanModalOpen, setIsWelcomePlanModalOpen] = useState(false);
+  const [bypassOnboardingView, setBypassOnboardingView] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -253,25 +255,35 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           userStorage={userStorage}
         />
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
-          {!isAuditing && !telemetry.apiKeyCache && !effectiveUserProfile?.encryptedApiKey && !effectiveUserProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
-            <OnboardingBanner uid={effectiveUser?.uid} onOpenOnboarding={() => telemetry.setIsOnboardingOpen(true)} />
+          {!isAuditing && !telemetry.profile.id && !effectiveUserProfile?.intervalsAthleteId && !telemetry.apiKeyCache && !effectiveUserProfile?.encryptedApiKey && !effectiveUserProfile?.hasApiKey && !bypassOnboardingView && activeNavSection === "dashboard" ? (
+            <AthleteOnboardingView
+              uid={effectiveUser?.uid}
+              athleteName={displayName}
+              onExploreDashboard={() => setBypassOnboardingView(true)}
+            />
+          ) : (
+            <>
+              {!isAuditing && !telemetry.apiKeyCache && !effectiveUserProfile?.encryptedApiKey && !effectiveUserProfile?.hasApiKey && (!isMasterAdmin || telemetry.profile.id !== "i442091") && (
+                <OnboardingBanner uid={effectiveUser?.uid} onOpenOnboarding={() => telemetry.setIsOnboardingOpen(true)} />
+              )}
+              <AthleteDashboardViewRouter
+                activeNavSection={activeNavSection}
+                telemetry={telemetry}
+                season={season}
+                sync={sync}
+                user={effectiveUser}
+                userProfile={effectiveUserProfile}
+                displayName={displayName}
+                activePlan={activePlan}
+                setActivePlan={setActivePlan}
+                onSelectWorkoutModal={setSelectedWorkoutModal}
+                onNavigateTo={(section) => { if (section === "head_coach") selectCoachWeek(); setActiveNavSection(section); }}
+                onLiveConnectedChange={onLiveConnectedChange}
+                userStorage={userStorage}
+                isReadOnly={effectiveReadOnly}
+              />
+            </>
           )}
-          <AthleteDashboardViewRouter
-            activeNavSection={activeNavSection}
-            telemetry={telemetry}
-            season={season}
-            sync={sync}
-            user={effectiveUser}
-            userProfile={effectiveUserProfile}
-            displayName={displayName}
-            activePlan={activePlan}
-            setActivePlan={setActivePlan}
-            onSelectWorkoutModal={setSelectedWorkoutModal}
-            onNavigateTo={(section) => { if (section === "head_coach") selectCoachWeek(); setActiveNavSection(section); }}
-            onLiveConnectedChange={onLiveConnectedChange}
-            userStorage={userStorage}
-            isReadOnly={effectiveReadOnly}
-          />
           <WorkoutDetailModal
             workout={selectedWorkoutModal}
             dailyExecutedActivities={telemetry.dailyExecutedActivities}

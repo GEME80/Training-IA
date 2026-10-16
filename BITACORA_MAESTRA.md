@@ -8880,6 +8880,42 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (UX Sin Fricción):** 100% de los flujos de conexión dirigen a OAuth 2.0; cero formularios de Athlete ID o API Key residuales ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 146 ✅.
 
+---
+
+## 147. Vista Dedicada de Onboarding para Atletas Nuevos y Remoción Definitiva de Ajustes en Banner (v5.78)
+
+### 147.1. Contexto y Requerimientos
+1. **Atleta Desconectado Ingresaba Directo al Dashboard:** Al iniciar sesión o registrarse, el atleta entraba a un dashboard vacío (con métricas en `—` y calendario vacío) en lugar de permanecer en el flujo de onboarding guiado paso a paso.
+2. **Botón Residual "Ajustes":** El banner del dashboard contenía un enlace secundario *"Ajustes en Intervals.icu"* que generaba confusión y debía eliminarse por completo.
+3. **El Deber Ser del Onboarding:** Un usuario nuevo sin conexión de telemetría debe permanecer en la pantalla de onboarding estructurado con el roadmap claro de 3 pasos (1. Conectar Intervals, 2. Conectar Garmin, 3. Diseñar Plan IA) hasta completar su integración.
+
+### 147.2. Implementación Arquitectónica
+1. **Vista de Onboarding Dedicada (`src/components/onboarding/AthleteOnboardingView.tsx` - 139 LOC [NUEVO]):**
+   - Se presenta como la vista principal por defecto para todo atleta no conectado (`isUnconnected`).
+   - Roadmap de 3 pasos numerados:
+     - **Paso 1:** Conectar tu cuenta de Intervals.icu (En curso • Botón principal esmeralda `[ ⚡ Conectar o Crear Cuenta en Intervals.icu en 1 Clic ]`).
+     - **Paso 2:** Sincronizar Garmin u otro Reloj (bloqueado/siguiente, guiado tras OAuth).
+     - **Paso 3:** Diseñar tu Plan con el Head Coach IA (se desbloquea al vincular reloj).
+   - Incluye aclaración para nuevos usuarios (registro gratuito en 5 segundos con Google) y opción de *"Explorar el Dashboard en modo preliminar"* para flexibilidad.
+2. **Enrutamiento Inteligente en Dashboard (`AthleteDashboard.tsx` - 338 LOC):**
+   - Si el atleta no está conectado a Intervals y no está en modo auditoría, la sección `"dashboard"` renderiza inmediatamente `AthleteOnboardingView`, evitando que vea un calendario vacío o tarjetas desoladas.
+   - Al completar la autorización OAuth 2.0 y retornar con `intervals_connected=true`, se activan reactivamente `WatchSyncModal` y `WelcomePlanModal`, desbloqueando el dashboard completo.
+3. **Saneamiento Definitivo de Banner (`OnboardingBanner.tsx` - 63 LOC):**
+   - Removido 100% el botón *"Ajustes en Intervals.icu"*.
+   - El botón *"Conectar en 1 Clic"* ejecuta `window.location.href` directo hacia `/api/auth/intervals/authorize`.
+
+### 147.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AthleteOnboardingView.tsx`: 139 LOC ($\le 350$) ✅
+  - `OnboardingBanner.tsx`: 63 LOC ($\le 350$) ✅
+  - `AthleteDashboard.tsx`: 338 LOC ($\le 350$) ✅
+  - `AthleteIntervalsTab.tsx`: 288 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (Experiencia de Usuario Guiada):** El atleta permanece en el onboarding paso a paso hasta que conecta su telemetría ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 147 ✅.
+
+
 
 
 

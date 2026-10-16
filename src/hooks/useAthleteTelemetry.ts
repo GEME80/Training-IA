@@ -261,21 +261,20 @@ export function useAthleteTelemetry({
       if (typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("intervals_connected") === "true") {
-          const oauthToken = urlParams.get("token");
-          const oauthAthlete = urlParams.get("athleteId");
+          const [oauthToken, oauthAthlete] = [urlParams.get("token"), urlParams.get("athleteId")];
           if (oauthToken) userStorage.setItem("intervals_api_key", oauthToken);
           if (oauthAthlete) userStorage.setItem("athlete_id", oauthAthlete);
           userStorage.setItem("onboarding_welcomed", "true");
-          window.history.replaceState({}, document.title, window.location.pathname);
+          setTimeout(() => { try { window.history.replaceState({}, document.title, window.location.pathname); } catch {} }, 2000);
         }
       }
 
       let storedAthleteId = userProfile?.intervalsAthleteId || userStorage.getItem("athlete_id") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_ATHLETE_ID || "i442091") : "");
-      if (!isSuper && storedAthleteId.toLowerCase() === "i442091") {
+      const storedApiKey = userStorage.getItem("intervals_api_key") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "") : "");
+      if (!isSuper && (storedAthleteId.toLowerCase() === "i442091" || (!storedApiKey && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey))) {
         storedAthleteId = "";
         userStorage.removeItem("athlete_id");
       }
-      const storedApiKey = userStorage.getItem("intervals_api_key") || (isSuper ? (process.env.NEXT_PUBLIC_INTERVALS_API_KEY || "") : "");
       const storedGeminiKey = userStorage.getItem("custom_gemini_key") || "";
       if (storedApiKey) userStorage.setItem("intervals_api_key", storedApiKey);
       if (storedAthleteId) userStorage.setItem("athlete_id", storedAthleteId);

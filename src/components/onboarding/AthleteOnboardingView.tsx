@@ -98,7 +98,8 @@ export const AthleteOnboardingView: React.FC<AthleteOnboardingViewProps> = ({
         {/* Caja de Ayuda para Usuarios Nuevos */}
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
           <div className="font-bold flex items-center space-x-1.5 text-amber-700 dark:text-amber-300">
-            <span>💡 ¿No tienes cuenta previa en Intervals.icu?</span>
+            <Sparkles className="h-4 w-4" />
+            <span>¿No tienes cuenta previa en Intervals.icu?</span>
           </div>
           <p className="text-[11px] leading-relaxed">
             No te preocupes. Al pulsar el botón serás llevado a la ventana de Intervals. Si aún no tienes cuenta, pulsa en <strong>"¿No está registrado? Haga clic para registrarse"</strong> (se crea gratis en 5 segundos con Google o correo) y autorizas la conexión al instante.

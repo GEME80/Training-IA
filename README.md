@@ -1,9 +1,20 @@
-# ⚡ SGEA Pro (v5.71) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.80) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🧬 **Erradicación Total de Métricas Fantasma en Zonas y Focalización Exclusiva a Intervals.icu (v5.80):**
+  - **Cero Datos Quemados en UI:** Erradicación definitiva de valores por defecto hardcodeados en el código (`336W CP`, `226W FTP`, `4:23/km`, `185 cm`, `46 años`, `54 ppm FC reposo`, `2:10/100m CSS`). Todo perfil sin configurar renderiza indicadores limpios (`"—"`, `"Sin Potencia"`, `"Sin CSS"`).
+  - **Extracción Automática de Ritmo Umbral Real (`telemetryService.ts`):** Lectura directa de `runSport.threshold_pace` desde la API de Intervals.icu y conversión a formato estándar `min:seg/km`.
+  - **Pestaña de Integraciones Focalizada (`AthleteIntervalsTab.tsx`):** Remoción completa de dispositivos y marcas secundarias (Garmin, Wahoo, COROS, Hammerhead, Polar) para dejar a Intervals.icu como el único conector centralizado de telemetría.
+  - **Aislamiento Multi-Tenant de Curvas y Streams:** Blindaje de `/api/athlete-curves`, `curvesService.ts` y `/api/activities/[id]/streams` para impedir fugas de credenciales o curvas de potencia de administradores a atletas regulares.
+
+- 🧭 **Onboarding Guiado Obligatorio y Sincronización Post-OAuth en 1 Clic (v5.78 - v5.79):**
+  - **Vista Dedicada de Onboarding (`AthleteOnboardingView.tsx`):** Los atletas recién registrados o desconectados permanecen en un roadmap claro de 3 pasos (1. Conectar Intervals.icu, 2. Conectar Reloj GPS, 3. Diseñar Plan IA) sin caer en dashboards vacíos o confusos.
+  - **Flujo Directo OAuth 2.0:** Eliminación total de popups y formularios manuales de Athlete ID o API Key; autorización instantánea en 1 clic.
+  - **Sincronización Reactiva Post-OAuth:** Disparo fluido de modales de bienvenida y configuración de dispositivo al completar la vinculación sin colisiones de parámetros URL.
 
 - ⚖️ **Blindaje Legal Integral, Consentimiento Clickwrap & Backfill de T&C en Base de Datos (v5.71):**
   - **Consentimiento Clickwrap Mandatorio (`AuthModal.tsx`):** Checkbox interactivo obligatorio con enlaces a Términos y Condiciones (`/terms`) y Política de Privacidad (`/privacy`), que inhabilita el botón de registro hasta ser aceptado conscientemente. Aviso vinculante claro en Google OAuth.

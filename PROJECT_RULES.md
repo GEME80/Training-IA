@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.71)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.80)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,16 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.71).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.80).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.80: Erradicación Total de Métricas Fantasma en Zonas y Focalización Exclusiva a Intervals.icu en Perfil de Atleta:
+  * Cero Métricas Quemadas en UI: Erradicación de fallbacks numéricos hardcodeados (`336W CP`, `226W FTP`, `4:23/km`, `185 cm`, `46 años`, `54 ppm FC reposo`, `2:10/100m CSS`). Todo perfil sin configurar renderiza indicadores limpios (`"—"`, `"Sin Potencia"`, `"Sin CSS"`).
+  * Extracción Automática de Ritmo Umbral Real (`telemetryService.ts`): Ingesta de `runSport.threshold_pace` desde Intervals.icu y conversión matemática a formato `min:seg/km`.
+  * Focalización Exclusiva en Integraciones (`AthleteIntervalsTab.tsx`): Remoción de marcas accesorias (Garmin, Wahoo, COROS, Hammerhead, Polar) para concentrar la telemetría en Intervals.icu.
+  * Blindaje Multi-Tenant de Curvas y Streams (`useAthleteCurves.ts`, `/api/athlete-curves`, `/api/activities/[id]/streams`): Supresión de fallbacks cruzados a cuentas maestras.
+- Versión 5.79: Sincronización Estricta de Estado de Onboarding y Erradicación de Race Conditions Post-OAuth (retardo en limpieza de query params y sincronización reactiva de modales).
+- Versión 5.78: Vista Dedicada de Onboarding para Atletas Nuevos (`AthleteOnboardingView.tsx`) con Roadmap guiado de 3 pasos y remoción definitiva de botones residuales en banner.
 - Versión 5.71: Blindaje Legal Integral, Consentimiento Clickwrap Mandatorio y Backfill Automático de T&C en Base de Datos:
   * Clickwrap Mandatorio en Registro (`AuthModal.tsx`): Checkbox interactivo obligatorio que valida la aceptación de Términos y Condiciones (`/terms`) y Política de Privacidad (`/privacy`), inhabilitando el envío hasta ser marcado conscientemente.
   * Evidencia Digital en Firestore: Registro timestamp ISO-8601 de `termsAcceptedAt` y `termsVersion: "1.0"` ante cada registro o inicio de sesión.

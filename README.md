@@ -255,14 +255,14 @@
 ```
 
 ### 🧠 Capa 1: Los 8 Agentes Fisiológicos de Runtime
-1. **Agente 01 (`PULSE Live Coach`):** Coach adaptativo conversacional on-demand en `/api/headcoach/chat`.
-2. **Agente 02 (`PULSE Macrocycle Architect`):** Generador de periodización macrocíclica en `/api/macrocycles/generate-ai`.
-3. **Agente 03 (`PULSE Daily Physio Auditor`):** Auditor de carga Banister y Z-score HRV en `/api/evaluate`.
-4. **Agente 04 (`PULSE Program Library Curator`):** Generador de catálogo maestro de programas predefinidos.
-5. **Agente 05 (`PULSE Long-Term Adaptation Profiler`):** Perfilador de memoria y asimilación biológica a 365 días.
-6. **Agente 06 (`PULSE Race Debrief & Threshold Recalibrator`):** Auditor de debriefing post-carrera y recalibrador de Stryd CP / Bike FTP.
-7. **Agente 07 (`PULSE Intra-Workout Fueling & Hydration Strategist`):** Estratega de carbohidratos (60-90g CHO/h), sodio y líquidos.
-8. **Agente 08 (`PULSE Dynamic Mobility & Neuromuscular Warmup Engine`):** Motor de calentamiento neuromuscular estructurado en reloj.
+1. **Agente 01 (`PULSE Live Coach`):** Coach adaptativo conversacional on-demand en `/api/headcoach/chat` con consola táctica guiada en 2 niveles.
+2. **Agente 02 (`PULSE Macrocycle Architect`):** Periodizador híbrido en `/api/macrocycles/generate-ai` (`linearProgressionEngine`, `metricIntervalEngine`, `runningWorkoutAdapter`, `raceDayOverlay`).
+3. **Agente 03 (`PULSE Daily Physio Auditor`):** Auditor de carga Banister, Z-score HRV y curvas de rendimiento en `/api/evaluate` y `/api/athlete-curves`.
+4. **Agente 04 (`PULSE Program Library Curator`):** Generador y curador de catálogo maestro de programas en `/api/admin/programs`.
+5. **Agente 05 (`PULSE Long-Term Adaptation Profiler`):** Perfilador de memoria biológica a 365 días y potencial CTL bietápico (`ctlPotentialEngine.ts`).
+6. **Agente 06 (`PULSE Race Debrief & Breakthrough Recalibrator`):** Detector automático de *breakthroughs* de umbral (`breakthroughDetectionService.ts`) y recalibrador reactivo de Stryd CP / Pace / Bike FTP / CSS.
+7. **Agente 07 (`PULSE Intra-Workout Fueling & Hydration Strategist`):** Estratega de carbohidratos (60–90g CHO/h), sodio y reposición hídrica desacoplada (`fuelingStrategy`).
+8. **Agente 08 (`PULSE Dynamic Mobility & Neuromuscular Warmup Engine`):** Motor de activación neuromuscular fuera de cronómetro (`mobilityWarmup`).
 
 ### 🏋️ Capa 2: Suite de 5 Coaches de Fortalecimiento Especializados (S&C)
 | Agente S&C | Foco Biomecánico | Prescripción Clave | Métrica de Impacto |
@@ -274,9 +274,9 @@
 | **S5: Prehab** | Isometría de tendones, Equilibrio H:Q, Masa magra | Spanish Squats isométricos (45s), Curl femoral nórdico, Peso muerto rumano | $\text{ACWR} \le 1.3$, Cero bajas por sobreuso |
 
 ### 💻 Capa 3: Agentes Lead de Ingeniería & 12 Subagentes
-- **Lead Backend & Motores Fisiológicos:** Subagente 1.1 (Intervals Sync Engine), Subagente 1.2 (Cloud Persistence & AES-256), Subagente 1.3 (LLM FinOps), Subagente 1.4 (Periodization Engine).
-- **Lead Frontend & UX/UI Deportiva:** Subagente 2.1 (Continuous Calendar), Subagente 2.2 (Custom Hooks & SWR Cache), Subagente 2.3 (Head Coach Chat), Subagente 2.4 (Biometrics & Zones).
-- **Lead Auditor Técnico, QA & Debugging:** Subagente 3.1 (Type Safety Sentinel), Subagente 3.2 (Port 3000 Governor), Subagente 3.3 (Stryd Syntax Validator), Subagente 3.4 (Modular & LOC Budget Auditor).
+- **Lead Backend, Integraciones & Motores Fisiológicos:** Subagente 1.1 (Intervals OAuth, Sync & Curves), Subagente 1.2 (Cloud Persistence, AES-256, Legal Clickwrap & Billing MRR), Subagente 1.3 (LLM FinOps & Context Condenser), Subagente 1.4 (Hybrid Periodization & Metric Interval Engines).
+- **Lead Frontend, Mobile App-Like UX & Design System:** Subagente 2.1 (Continuous Calendar, Mobile Feed & PMC), Subagente 2.2 (Custom Hooks, Curves & SWR Cache), Subagente 2.3 (Head Coach Console & Diffing), Subagente 2.4 (Onboarding 3-Step, Biometrics, Curves & Billing UI).
+- **Lead Auditor Técnico, QA & Debugging:** Subagente 3.1 (Type Safety Sentinel), Subagente 3.2 (Port 3000 Governor), Subagente 3.3 (Canonical Workout Syntax `mtr`/`m` & Design System Validator), Subagente 3.4 (Zero-Ghost Metrics, Security & LOC Budget Auditor).
 
 ---
 
@@ -285,45 +285,49 @@
 ```mermaid
 flowchart TD
     subgraph Frontend_App [" Frontend (Next.js 15 App Router & Tailwind CSS) "]
-        DASH[Mi Dashboard: 145 LOC - Calendario Continuo & Telemetría PMC]
-        SEAS[Mi Temporada: Curva SVG, Diseñador IA & Carreras A/B/C]
-        COACH[Head Coach IA: Chat Conversacional & Diffing en Vivo]
-        PROF[Perfil del Atleta: Zonas Stryd, FTP & Matriz Semanal]
+        DASH[Mi Dashboard: Calendario Continuo, Agenda Móvil & Telemetría PMC]
+        ONB[Onboarding Dedicado 3 Pasos: OAuth Intervals, Reloj & Plan IA]
+        SEAS[Mi Temporada: Wizard SSOT 4 Pasos, Curva SVG & Carreras A/B/C]
+        COACH[Head Coach IA: Consola Táctica 2 Niveles & Diffing en Vivo]
+        PROF[Perfil & Evolución: Curvas Potencia/Ritmo, Zonas & Integraciones]
         
         subgraph Hooks_Layer [" Custom Hooks Especializados (src/hooks/) "]
             H_TEL[useAthleteTelemetry: SWR + Dirty Checking]
+            H_CUR[useAthleteCurves: Curvas 42d/90d/365d]
             H_SEA[useSeasonPlans: Ciclo de Vida Macrociclos]
             H_SYN[useIntervalsSync: Orquestador Sync Intervals]
         end
         DASH --- Hooks_Layer
     end
 
-    subgraph API_Layer [" Controladores Delgados API (src/app/api/ <= 30 LOC) "]
+    subgraph API_Layer [" Controladores Delgados API (src/app/api/ <= 80 LOC) "]
         ZOD[Validación Declarativa con Zod: schemas.ts]
-        EVAL[/api/evaluate: Delegación a TelemetryService/]
-        SYNC[/api/sync-intervals: Delegación a IntervalsSyncService/]
-        MACRO[/api/macrocycles: Generador & Encadenamiento/]
+        EVAL[/api/evaluate & /api/athlete-curves/]
+        OAUTH[/api/auth/intervals/authorize & callback/]
+        SYNC[/api/sync-intervals & /api/sync-settings/]
+        MACRO[/api/macrocycles & /api/macrocycles/generate-ai/]
         CHAT[/api/headcoach/chat: Inferencia Fisiológica con Gemini/]
         ZOD --> EVAL
         ZOD --> SYNC
     end
 
     subgraph Service_Layer [" Capa de Servicios Backend (src/lib/services/) "]
-        TS[TelemetryService: Consultas paralelas & Fallback]
-        IS[IntervalsSyncService: Ventanas, Purga & Creación]
+        TS[TelemetryService & CurvesService]
+        BS[BreakthroughDetectionService: CP, FTP, Pace & CSS]
+        IS[IntervalsSyncService: Purga Quirúrgica PULSE AI & Despacho]
         CC[contextCondenser.ts: FinOps ~70% Token Reduction]
     end
 
-    subgraph Knowledge_Layer [" Capa de Conocimiento Científico SSOT & Motor Fisiológico "]
+    subgraph Knowledge_Layer [" Capa de Conocimiento Científico SSOT & Motores Fisiológicos "]
         KM[src/lib/ai/knowledge/ - 18 Modelos Científicos Modulares]
-        MTH[macrocycleTemplateHelpers.ts: Rotación Coprima & Calibración Multi-Deporte]
-        KM --> MTH
+        ENG[linearProgressionEngine + metricIntervalEngine + runningWorkoutAdapter + raceDayOverlay]
+        KM --> ENG
     end
 
     subgraph Cloud_Services [" Servicios Cloud & Persistencia "]
-        INT[Intervals.icu REST API v1]
+        INT[Intervals.icu REST API v1 & OAuth2]
         FS[(Cloud Firestore - users/uid con AES-256-GCM)]
-        GEM[Google Gemini 2.5 / 3.0 API]
+        GEM[Google Gemini Flash / Pro API]
     end
 
     Frontend_App <--> API_Layer
@@ -368,31 +372,35 @@ Abre tu navegador en [http://localhost:3000](http://localhost:3000).
 
 ```text
 IA Training/
-├── BITACORA_MAESTRA.md             # Dossier histórico, memoria central y changelog (v1.0 - v5.71)
-├── PROJECT_RULES.md               # Leyes de gobernanza inmutables y prompt maestro
+├── BITACORA_MAESTRA.md             # Dossier histórico y changelog (v1.0 - v5.81, política Tail-Only)
+├── PROJECT_RULES.md                # Leyes de gobernanza inmutables, índice estructural y matriz canónica
 ├── BACKLOG_MEJORAS_ARQUITECTURA.md # Backlog de auditoría técnica, refactorizaciones y modularidad
-├── README.md                      # Resumen visual, arquitectura y puesta en marcha
+├── README.md                       # Resumen visual, arquitectura multi-agente y puesta en marcha
 ├── src/
-│   ├── app/                       # Next.js App Router (Páginas y API Routes)
-│   ├── components/                # Componentes UI organizados por vistas y dominios
-│   │   ├── AthleteDashboard.tsx   # Dashboard interactivo principal del atleta
-│   │   ├── admin/                 # Panel de SuperAdmin, monitor de tokens y gestión
-│   │   ├── auth/                  # Modales de autenticación y consentimiento legal
-│   │   ├── dashboard/             # Calendario continuo, agenda móvil y telemetría PMC
-│   │   ├── landing/               # Hero cinematográfico, vitrina móvil y conversion flow
-│   │   ├── macrocycle/            # Línea de tiempo, HUD ejecutado y visor de microciclos
-│   │   ├── profile/               # Perfil del atleta, biometría y zonas de potencia/ritmo
-│   │   └── season/                # Estudio de temporada, wizard guiado y curvas SVG
-│   ├── context/                   # Contextos globales (AuthContext)
-│   ├── hooks/                     # Custom Hooks (useAthleteTelemetry, useSeasonPlans, useIntervalsSync)
-│   └── lib/                       # Lógica de negocio y motores fisiológicos
-│       ├── ai/                    # Inferencia de IA, contextCondenser (FinOps), prompts y Head Coach
-│       │   └── knowledge/         # 18 Modelos científicos SSOT modulares (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón)
-│       ├── db/                    # Persistencia Firestore, perfiles y AES-256-GCM
-│       ├── intervals/             # Cliente HTTP para Intervals.icu API y wellness helpers
-│       ├── physiology/            # Banister, macrociclos, rotación coprima anti-repetición y calibración multi-deporte
-│       ├── services/              # Capa de Servicios Backend (TelemetryService, IntervalsSyncService, Breakthroughs)
-│       └── validation/            # Esquemas de validación declarativos con Zod (schemas.ts)
+│   ├── app/                        # Next.js App Router (Páginas, /terms, /privacy y 30 API Routes)
+│   ├── components/                 # Componentes UI organizados por vistas y dominios
+│   │   ├── AthleteDashboard.tsx    # Dashboard interactivo principal del atleta (< 160 LOC)
+│   │   ├── admin/                  # Centro de Control SuperAdmin (Desktop & Mobile App-Like Shell)
+│   │   ├── auth/                   # Autenticación Google OAuth y Clickwrap Legal T&C
+│   │   ├── dashboard/              # Calendario 8 col, doble sesión móvil, PMC, Head Coach y Pagos Bre-B/Nequi
+│   │   ├── landing/                # Hero cinematográfico, motor fisiológico unificado y pricing
+│   │   ├── macrocycle/             # Detalle de sesión, gráficas de intervalos y telemetría de streams
+│   │   ├── notifications/          # Centro de notificaciones reactivo (Campana, Drawer y Toast)
+│   │   ├── onboarding/             # Vista dedicada 3 pasos, OAuth Intervals y modales responsivos
+│   │   ├── profile/                # Biometría, curvas de potencia/ritmo, zonas y confirmación de modo
+│   │   └── season/                 # Estudio de temporada, Wizard SSOT 4 pasos y gestor de carreras A/B/C
+│   ├── context/                    # Contextos globales (AuthContext)
+│   ├── hooks/                      # Custom Hooks (useAthleteTelemetry, useAthleteCurves, useSeasonPlans, useIntervalsSync)
+│   └── lib/                        # Lógica de negocio y motores fisiológicos
+│       ├── ai/                     # Inferencia de IA, contextCondenser (FinOps), prompts y Head Coach
+│       │   └── knowledge/          # 18 Modelos científicos SSOT modulares (5K a 42K, Trail, Ciclismo, Triatlón, Salud)
+│       ├── db/                     # Persistencia Firestore, perfiles, macrociclos y AES-256-GCM
+│       ├── intervals/              # Cliente HTTP Intervals.icu, curvas multi-disciplina e hidratación de calendario
+│       ├── notifications/          # Servicio de alertas y notificaciones in-app
+│       ├── physiology/             # Banister, progresión lineal, intervalos métricos (mtr), adaptador Potencia/Ritmo y overlays
+│       ├── services/               # Servicios Backend (Telemetry, Sync, Breakthroughs CP/FTP/Pace/CSS y Billing MRR)
+│       ├── storage/                # Almacenamiento aislado por UID y modo Read-Only en memoria para auditoría
+│       └── validation/             # Esquemas de validación declarativos con Zod (schemas.ts)
 ```
 
 ---

@@ -10,6 +10,8 @@ import {
   Zap,
   Clock,
   Info,
+  CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { WorkoutChart } from "@/components/WorkoutChart";
@@ -28,6 +30,8 @@ const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "S
 export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = ({
   plan,
   weekNumber,
+  onApplyAndSync,
+  isApplying = false,
 }) => {
   const [expandedCardKey, setExpandedCardKey] = useState<string | null>(null);
 
@@ -39,16 +43,10 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
   const isContinuityPlan = plan.every((p) => p.action === "MANTENER" || p.discipline === "Descanso");
 
   const getDisciplineIcon = (disc: string) => {
-    switch (disc) {
-      case "Carrera":
-        return <Footprints className="h-3.5 w-3.5 text-emerald-500" />;
-      case "Ciclismo":
-        return <Bike className="h-3.5 w-3.5 text-sky-500" />;
-      case "Fuerza":
-        return <Dumbbell className="h-3.5 w-3.5 text-purple-500" />;
-      default:
-        return <Moon className="h-3.5 w-3.5 text-slate-400" />;
-    }
+    if (disc === "Carrera") return <Footprints className="h-3.5 w-3.5 text-emerald-500" />;
+    if (disc === "Ciclismo") return <Bike className="h-3.5 w-3.5 text-sky-500" />;
+    if (disc === "Fuerza") return <Dumbbell className="h-3.5 w-3.5 text-purple-500" />;
+    return <Moon className="h-3.5 w-3.5 text-slate-400" />;
   };
 
   const getActionBadge = (item: PlanItem) => {
@@ -306,6 +304,43 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
             </div>
           );
         })}
+      </div>
+
+      {/* Barra de Aprobación y Sincronización Directa */}
+      <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
+          <span className="font-bold text-slate-900 dark:text-white">{totalTss} TSS</span>
+          <span>•</span>
+          <span>{timeFormatted} de volumen</span>
+        </div>
+
+        {onApplyAndSync && !isContinuityPlan && (
+          <button
+            type="button"
+            onClick={() => onApplyAndSync(plan)}
+            disabled={isApplying}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition cursor-pointer disabled:opacity-50"
+          >
+            {isApplying ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>Sincronizando con Intervals.icu...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Aprobar y Sincronizar Microciclo</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {isContinuityPlan && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>Plan activo y confirmado en tu calendario</span>
+          </div>
+        )}
       </div>
     </div>
   );

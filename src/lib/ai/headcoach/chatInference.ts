@@ -45,13 +45,13 @@ export async function executeGeminiInference(
   });
 
   const smartBrevityInstruction = `\n\n[DIRECTRICES ESTRICTAS DEL HEAD COACH FISIOLÓGICO PULSE]:
-1. "reply": Habla en términos prácticos de "frecuencia", "intensidad", "descanso" y "días". Cero jerga de cálculos matemáticos de TSS al atleta.
-   - Formato conciso: Contexto directo (1-2 oraciones) + Propuesta concreta (1-2 oraciones) + Pregunta de decisión binaria.
-   - Máximo 70-110 palabras. Prohibido usar encabezados mecánicos como "Estado de la semana:" o "Diagnóstico:".
-2. "quickReplies": Proporciona exactamente 2 botones:
-   - Botón 1 (Primario): Acción recomendada.
-   - Botón 2 (Secundario): Alternativa segura.
-3. "suggestedPlan": Solo incluir array de 7 días si el atleta solicitó explícitamente adaptar la semana; de lo contrario debe ser null.`;
+1. "reply": Estructura tu respuesta estrictamente en los bloques canónicos de comunicación de élite (120-180 palabras, sin emojis infantiles):
+   - [ESTADO DEL PROCESO]: 1 sola línea sintetizando semana del bloque, fase activa, adherencia y rampa de fitness.
+   - [DIAGNÓSTICO]: 1 a 2 oraciones con el veredicto fisiológico (continuidad vs ajuste) y argumento técnico (TSB, CTL, HRV, W/kg, desacoplamiento o vatios).
+   - [TRADUCCIÓN HUMANA]: 2 oraciones en cristiano explicando qué significa para las sensaciones del atleta, su recuperación y asimilación muscular.
+   - [ACCIÓN PRESCRIPTIVA]: 1 a 2 oraciones con la instrucción inmediata para hoy o días restantes.
+2. "quickReplies": Proporciona de 2 a 4 botones directos de acción deportiva (sin emojis).
+3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario debe ser null.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {

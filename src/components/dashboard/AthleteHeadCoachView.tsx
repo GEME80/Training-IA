@@ -10,6 +10,7 @@ import { PlanItem, WeeklyAvailabilityMap, getWeekDates } from "@/lib/gemini/engi
 import { HeadCoachWeekSelector } from "./headcoach/HeadCoachWeekSelector";
 import { HeadCoachMessageItem } from "./headcoach/HeadCoachMessageItem";
 import { HeadCoachHeader } from "./headcoach/HeadCoachHeader";
+import { HeadCoachTacticalConsole } from "./headcoach/HeadCoachTacticalConsole";
 import { useHeadCoachChat } from "./headcoach/useHeadCoachChat";
 
 interface AthleteHeadCoachViewProps {
@@ -78,6 +79,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     isApplying,
     syncFeedback,
     messagesEndRef,
+    handleSendMessage,
     handleApplyAndSync,
     handleSelectSmartAction,
     handleApplyTemporaryMatrix,
@@ -136,6 +138,13 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
           phaseLabel={activePhaseLabel}
         />
       </div>
+
+      {/* CONSOLA TÁCTICA DE ACCIONES DIRECTAS (4 PILARES) */}
+      <HeadCoachTacticalConsole
+        onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
+        onOpenTemporaryMatrix={() => handleSelectSmartAction("Reorganizar")}
+        isLoading={isLoading}
+      />
 
       {/* FEEDBACK DE SINCRONIZACIÓN */}
       {syncFeedback && (

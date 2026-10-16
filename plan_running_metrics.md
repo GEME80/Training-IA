@@ -1,7 +1,8 @@
-# 📋 PLAN MAESTRO INTEGRAL DE EJECUCIÓN: Motor Multideporte de Workouts (Running Dual Mix, Natación CSS 100% Intervals Compliant, Breakthroughs y Recalibración Reactiva) — SGEA v4.07 a v5.71
+# 📋 PLAN MAESTRO INTEGRAL DE EJECUCIÓN: Motor Multideporte de Workouts (Running Dual Mix, Natación CSS 100% Intervals Compliant, Breakthroughs y Recalibración Reactiva) — SGEA v4.07 a v5.81
 
 > [!NOTE]
-> **ESTADO DEL PLAN: ✅ 100% IMPLEMENTADO, AUDITADO Y EN PRODUCCIÓN (Consolidado desde v4.07, en vigor en v5.71).**
+> **ESTADO DEL PLAN: ✅ 100% IMPLEMENTADO, AUDITADO Y CERRADO EN PRODUCCIÓN (v5.81).**  
+> **DIRECTRIZ FINOPS:** Documento de referencia histórica. No requiere lectura durante sesiones operativas; toda su gobernanza ya reside en [`PROJECT_RULES.md`](./PROJECT_RULES.md).
 
 ---
 

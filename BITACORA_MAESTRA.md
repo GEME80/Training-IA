@@ -9043,3 +9043,58 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 150 ✅.
 
 
+---
+
+## 151. Evolución Integral del Head Coach IA (PULSE Live Coach): Consola Táctica de 4 Pilares, Limpieza de Calendario, Rigor Técnico con Traducción Humana y Barra de Aprobación Directa (v5.82)
+
+### 151.1. Diagnóstico y Necesidades Reales del Atleta
+1. **Saturación Cognitiva en el Calendario Continuo:** Cada una de las 16 a 40 filas semanales mostraba un botón repetitivo `Head Coach IA`, generando fatiga visual, compitiendo con la sincronización a Garmin y dispersando la experiencia del atleta.
+2. **Desconexión entre Consulta y Diálogo Real:** El atleta requería un espacio centralizado para los 4 momentos clave en los que recurre a un entrenador humano:
+   - Balance semanal de volumen y asimilación biológica.
+   - Auditoría profunda de una sesión específica (desacoplamiento aeróbico, vatios, pulso).
+   - Proyección y rumbo hacia la meta principal (ritmo y factibilidad de carrera).
+   - Reagendamiento ágil por imprevistos reales (enfermedad/fiebre, falta de tiempo 30m/45m, cambio de días o rodillo regenerativo).
+3. **Fórmula de Comunicación: "Rigor Técnico con Traducción Humana":** El atleta valora los argumentos fisiológicos de élite (TSB, CTL, W/kg, EF, Stryd CP), pero necesita que inmediatamente se traduzcan a lenguaje humano, cercano, claro y tranquilizador.
+4. **Ausencia de Botón de Sincronización en la Tarjeta de Microciclo:** `HeadCoachMicrocycleCard.tsx` renderizaba los 7 días de la propuesta pero carecía de una barra de acción directa con el botón *"Aprobar y Sincronizar Microciclo con Intervals.icu"*.
+
+### 151.2. Implementaciones Realizadas
+1. **Limpieza del Calendario Semanal (`AthleteCalendarWeekRow.tsx` - 329 LOC):**
+   - Suprimido el botón repetitivo `Head Coach IA` en todas las semanas del calendario continuo.
+   - La fila queda 100% enfocada en ejecución deportiva, volumen total y sincronización con Garmin.
+2. **Consola Táctica de 4 Pilares (`HeadCoachTacticalConsole.tsx` - 188 LOC):**
+   - Creado componente interactivo con estética PULSE de alto rendimiento:
+     * 📊 **Balance de Semana:** Volumen, TSS real vs planificado y asimilación.
+     * 🔍 **Auditar Sesión:** Potencia, pulso y desacoplamiento aeróbico.
+     * 🎯 **Rumbo a mi Meta:** Proyección de fitness Banister y ritmo objetivo de carrera.
+     * 🔄 **Reagendar / Imprevisto:** Menú contextual desplegable para retorno seguro por enfermedad, compresión por tiempo limitado (30m/45m), matriz de disponibilidad o sustitución a rodillo Z2.
+3. **Integración en la Vista Principal (`AthleteHeadCoachView.tsx` - 191 LOC):**
+   - Integrada la consola táctica conectada directamente a `handleSendMessage` y al selector de matriz.
+   - El espacio se consolida como el Centro de Mando Táctico y Diálogo Estratégico del atleta.
+4. **Renderizado del Bloque Canónico de Traducción Humana (`HeadCoachMessageItem.tsx` - 344 LOC):**
+   - Incorporado el parser y renderizado para `[TRADUCCIÓN HUMANA]` con gradiente suave esmeralda/teal y tarjeta estilizada para el atleta.
+5. **Barra de Aprobación y Sincronización Directa (`HeadCoachMicrocycleCard.tsx` - 347 LOC):**
+   - Añadida barra inferior con resumen de volumen (`totalTss` y horas/minutos) y botón de alta conversión: *"Aprobar y Sincronizar Microciclo con Intervals.icu"*, con estado de carga y confirmación de continuidad.
+6. **Armonización de Prompts & Erradicación de Contradicciones (`defaultPrompts.ts` & `chatInference.ts`):**
+   - Inyectado el bloque obligatorio `[TRADUCCIÓN HUMANA]` en la Regla 9 de `defaultPrompts.ts`.
+   - Unificada la directriz en `chatInference.ts` para respetar los 4 bloques canónicos de 120-180 palabras.
+7. **Motor Determinístico & Modularización (`deterministicFallback.ts` - 311 LOC & `fallbackPlanGenerator.ts` - 90 LOC):**
+   - Extraída la generación de plan de fallback a `fallbackPlanGenerator.ts` para cumplir estrictamente el presupuesto de líneas.
+   - Implementados los flujos determinísticos para balance semanal, auditoría de sesión, rumbo a meta, retorno por enfermedad y compresión de tiempo.
+   - Erradicados al 100% los emojis en los textos de auditoría.
+
+### 151.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AthleteCalendarWeekRow.tsx`: 329 LOC ($\le 350$) ✅
+  - `AthleteHeadCoachView.tsx`: 191 LOC ($\le 250$) ✅
+  - `HeadCoachTacticalConsole.tsx`: 188 LOC ($\le 200$) ✅
+  - `HeadCoachMessageItem.tsx`: 344 LOC ($\le 348$) ✅
+  - `HeadCoachMicrocycleCard.tsx`: 347 LOC ($\le 348$) ✅
+  - `useHeadCoachChat.ts`: 337 LOC ($\le 350$) ✅
+  - `deterministicFallback.ts`: 311 LOC ($\le 348$) ✅
+  - `fallbackPlanGenerator.ts`: 90 LOC ($\le 100$) ✅
+  - `chatInference.ts`: 337 LOC ($\le 348$) ✅
+  - `defaultPrompts.ts`: 144 LOC ($\le 150$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas empaquetadas sin errores) ✅.
+- **Gate 4 (Alcance e Integridad de Código):** Cero archivos tocados fuera del alcance deportivo acordado ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 151 ✅.

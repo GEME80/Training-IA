@@ -55,7 +55,7 @@ export function useHeadCoachChat({
 
   const getWelcomeText = (name?: string) => {
     const firstName = (name || "Atleta").trim().split(" ")[0];
-    return `Hola ${firstName}, tu balance de recuperación (TSB) está en rango óptimo hoy y vienes con un 100% de adherencia. ¿En qué te puedo ayudar con tu microciclo de esta semana?`;
+    return `Hola ${firstName}, soy tu Head Coach Fisiológico. Estoy conectado a tu telemetría en tiempo real (CTL, ATL, TSB y umbrales de potencia). Utiliza la consola táctica de arriba para auditar tu semana, analizar una sesión o adaptar tu calendario según tus necesidades.`;
   };
 
   const [messages, setMessages] = useState<HeadCoachMessageData[]>([

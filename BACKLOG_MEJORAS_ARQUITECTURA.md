@@ -1,4 +1,4 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.71)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.81)
 
 Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas sin generar reprocesos.
 
@@ -7,33 +7,25 @@ Este documento contiene la **auditoría forense de la arquitectura actual del si
 ## 📊 1. Evaluación de Arquitectura Actual vs. Mejores Prácticas
 
 ```mermaid
-radar
-    title "Evaluación de Madurez Arquitectónica (SGEA v3.36)"
-    "Modularidad UI & Modelos (< 350 LOC)" : 100
-    "Type Safety (TypeScript Estricto)" : 100
-    "Seguridad & Criptografía (AES-256-GCM)" : 95
-    "Capa de Ciencia Deportiva (18 Modelos SSOT)" : 100
-    "Escalabilidad Universal Multi-Deporte" : 100
-    "Motor Anti-Repetición & Rotación Coprima" : 100
-    "Desacoplamiento Hooks/Servicios" : 100
-    "Validación de Schemas API (Zod)" : 100
-    "Gobernanza FinOps & Caché SWR" : 100
-    "Suites de Pruebas Fisiológicas Forenses" : 95
-    "Observabilidad & Structured Logging" : 65
+xychart-beta
+    title "Evaluación de Madurez Arquitectónica (SGEA v5.81)"
+    x-axis ["Modularidad", "Type Safety", "Seguridad/OAuth", "18 Modelos SSOT", "Motor Híbrido", "Hooks/Servicios", "Zod API", "FinOps/Tokens", "Mobile UX", "Observabilidad"]
+    y-axis "Cumplimiento (%)" 0 --> 100
+    bar [96, 100, 100, 100, 100, 100, 100, 100, 100, 75]
 ```
 
 | Dimensión de Ingeniería | Estado Actual | Cumplimiento | Diagnóstico Arquitectónico |
 | :--- | :---: | :---: | :--- |
-| **Modularidad de Componentes y Modelos** | 🟢 Excelente | **100%** | 100% de archivos UI, APIs, servicios y modelos científicos < 350 LOC. `AthleteDashboard.tsx` en **145 LOC** (< 160 LOC) y controladores API en $\le 71\text{ LOC}$ ($\le 80\text{ LOC}$). |
-| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Interfaces unificadas y retrocompatibles. |
-| **Seguridad & Multiusuario** | 🟢 Excelente | **95%** | Cifrado AES-256-GCM en reposo para API Keys en Cloud Firestore, reglas de seguridad por `uid`, fallback seguro en variables de entorno y auth Google OAuth. |
-| **Ciencia Deportiva & Escalabilidad Universal** | 🟢 Excelente | **100%** | **FASE 4 COMPLETADA:** 18 modelos SSOT (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Short/70.3/140.6) con $\ge 4-6$ variantes por bloque metabólico, tests duales y 100% Stryd syntax compliance. |
-| **Motor Anti-Repetición & Flexibilidad** | 🟢 Excelente | **100%** | **FASE 4 COMPLETADA:** Algoritmo de rotación de paso coprimo $\gcd(L, s) = 1$, progresión Bloque II en ciclos > 12 semanas y soporte para carrera en Sábado o Domingo con descanso post-carrera. |
-| **Capa de Hooks & Servicios** | 🟢 Excelente | **100%** | **FASES 2 Y 3 COMPLETADAS:** Custom Hooks (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`) y Servicios Backend (`telemetryService`, `intervalsSyncService`, `macrocycleApiService`). |
-| **Validación de Schemas API** | 🟢 Excelente | **100%** | **FASE 2 COMPLETADA:** Schemas declarativos con `Zod` blindando `/api/evaluate`, `/api/profile`, `/api/sync-intervals` y `/api/macrocycles`. |
-| **Gobernanza FinOps & SWR** | 🟢 Excelente | **100%** | **FASE 3 COMPLETADA:** Caché en memoria SWR (TTL 3 min), Dirty Checking en Firestore y condensador de contexto (`contextCondenser.ts`, -70% tokens). |
-| **Testing y Validación Fisiológica** | 🟢 Maduro | **90%** | Suites automatizadas (`test_universal_scalability.ts` y `test_juan_plan.ts`) validando 12 compuertas y 448 entrenamientos. Pendiente runner unitario Vitest en CI. |
-| **Logging y Observabilidad** | 🟡 Aceptable | **65%** | Uso de `console.log` estándar en servidor en lugar de un logger estructurado compatible con Google Cloud Logging. |
+| **Modularidad de Componentes y Modelos** | 🟢 Excelente | **96%** | 100% de los nuevos módulos, APIs, servicios y 18 modelos científicos cumplen $\le 350\text{ LOC}$. Solo restan 8 contenedores legados en cola de descomposición (Mejora 16). |
+| **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Contratos unificados en todo el stack. |
+| **Seguridad, OAuth2, Multiusuario & Legal** | 🟢 Excelente | **100%** | Flujo OAuth2 nativo con Intervals.icu, cifrado AES-256-GCM en Cloud Firestore, consentimiento Clickwrap mandatorio (`termsAcceptedAt`), aislamiento Read-Only en memoria para auditoría y cero métricas quemadas. |
+| **Ciencia Deportiva & Escalabilidad Universal** | 🟢 Excelente | **100%** | 18 modelos SSOT modulares (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Short/70.3/140.6, Salud/CaCo) con sintaxis canónica `mtr`/`km`/`m` y adaptación dual Potencia (`% CP`) vs Ritmo (`% Pace`). |
+| **Motor Híbrido Anti-Repetición & Overlays** | 🟢 Excelente | **100%** | Rotación de paso coprimo $\gcd(L, s) = 1$, progresión lineal (`linearProgressionEngine`), intervalos métricos (`metricIntervalEngine`) y superposición atómica de carreras (`raceDayOverlay`). |
+| **Capa de Hooks, Curvas & Breakthroughs** | 🟢 Excelente | **100%** | Custom Hooks (`useAthleteTelemetry`, `useAthleteCurves`, `useSeasonPlans`, `useIntervalsSync`) y detectores automáticos de umbrales (`breakthroughDetectionService`). |
+| **Validación de Schemas API** | 🟢 Excelente | **100%** | Schemas declarativos con `Zod` blindando `/api/evaluate`, `/api/profile`, `/api/sync-intervals` y `/api/macrocycles`. |
+| **Gobernanza FinOps & Mapa Canónico** | 🟢 Excelente | **100%** | Caché SWR (TTL 3 min), Dirty Checking, `contextCondenser.ts` (-70% tokens), política Tail-Only para `BITACORA_MAESTRA.md` y Matriz Canónica Full-Stack para enrutamiento autónomo de agentes. |
+| **Design System & Mobile App-Like UX** | 🟢 Excelente | **100%** | Paleta institucional Verde Esmeralda (`emerald-600`), 100% iconos vectoriales SVG Lucide (cero emojis), contención vertical `max-h-[90vh]` y touch targets $\ge 44\text{px}$. |
+| **Logging y Observabilidad** | 🟡 Aceptable | **75%** | Trazabilidad de tokens y bitácora de decisiones (`decisionLogs.ts`), con oportunidad de incorporar logger JSON estructurado para Cloud Logging. |
 
 ---
 
@@ -176,48 +168,57 @@ radar
 
 ---
 
-### 🟡 MEJORA 13: Descomposición Modular Quirúrgica de Contenedores Extensos (> 350 LOC) [📋 PROGRAMADA EN BACKLOG]
+### 🟢 MEJORA 13: Reingeniería Híbrida de Macrociclos, Elección Obligatoria Potencia vs Ritmo (`resolveRunningMode`) y Series Métricas `mtr` [✅ COMPLETADA AL 100% v5.25 - v5.49]
+* **Estado:** ✅ **COMPLETADA EN v5.25 - v5.49**.
+* **Impacto:**
+  - `src/lib/physiology/linearProgressionEngine.ts`, `metricIntervalEngine.ts` y `runningWorkoutAdapter.ts`: Separación determinista entre modo `POWER` (Stryd `% CP`) y `PACE` (Daniels `% Pace`), con conmutación reactiva atómica en Firestore (`updateActiveMacrocycleRunningMode`) y modal de confirmación (`RunningModeConfirmModal.tsx`).
+  - Aislamiento temporal estricto de carreras objetivo primarias (`minDate <= primaryRaceDate <= maxDate`), Freeze Window de tests a $\le 4$ semanas de competición A y blindaje de triatlón sin bloques de maratón.
+
+---
+
+### 🟢 MEJORA 14: Design System Institucional PULSE AI, "App-Like Experience" Móvil y Consentimiento Legal Clickwrap [✅ COMPLETADA AL 100% v5.57 - v5.71]
+* **Estado:** ✅ **COMPLETADA EN v5.57 - v5.71**.
+* **Impacto:**
+  - Paleta institucional Verde Esmeralda (`bg-emerald-600`), erradicación del 100% de emojis en UI en favor de iconos vectoriales SVG (`lucide-react`), tipografía tabular (`tabular-nums font-mono`) y navegación inferior móvil en Admin (`AdminMobileBottomNav.tsx`, `AdminMobileHeader.tsx`) y Atleta (`MobileWeeklyDayGroup.tsx`).
+  - Blindaje legal Clickwrap mandatorio en `AuthModal.tsx` (`/terms`, `/privacy`) con evidencia ISO-8601 `termsAcceptedAt` y backfill automático en Firestore.
+
+---
+
+### 🟢 MEJORA 15: Flujo OAuth2 Intervals.icu, Onboarding Dedicado 3 Pasos, Cero Métricas Fantasma y Ergonomía Móvil [✅ COMPLETADA AL 100% v5.76 - v5.81]
+* **Estado:** ✅ **COMPLETADA EN v5.81**.
+* **Impacto:**
+  - Integración OAuth2 nativa (`/api/auth/intervals/authorize` y `callback`), vista dedicada `AthleteOnboardingView.tsx`, pestaña focalizada `AthleteIntervalsTab.tsx` y erradicación absoluta de métricas quemadas en perfiles sin configurar (`"—"`, `"Sin Potencia"`).
+  - Contención vertical `max-h-[90vh]` con `shrink-0` en cabeceras/pies de modales (`WatchSyncModal.tsx`, `WelcomePlanModal.tsx`, `IntervalsOnboardingModal.tsx`) y touch targets $\ge 44\text{px}$.
+
+---
+
+### 🟡 MEJORA 16: Descomposición Modular Quirúrgica de Contenedores Legados (> 350 LOC) [📋 PROGRAMADA EN BACKLOG]
 * **Prioridad:** MEDIA-ALTA.
-* **Objetivo:** Cumplir el 100% de la Regla de Modularidad Estricta ($\le 350\text{ LOC}$) mediante la extracción de subcomponentes presentacionales en los 9 archivos que actualmente superan el umbral:
-  1. `src/components/HeadCoachChatDrawer.tsx` (1.000 LOC): Desacoplar en subcomponentes de barra de entrada táctica, visor de diffing y renderizador de mensajes.
-  2. `src/components/MacrocycleWizardModal.tsx` (741 LOC): Modularizar los pasos del wizard en subcomponentes atómicos (`wizard/`).
-  3. `src/components/season/SeasonPlanGeneratorTab.tsx` (593 LOC): Separar el formulario de parámetros de la previsualización de la curva.
+* **Objetivo:** Alcanzar el 100% absoluto de cumplimiento en los 9 archivos históricos que superan las 350 líneas:
+  1. `src/components/HeadCoachChatDrawer.tsx` (1.000 LOC): Extraer visor de mensajes y barra de acciones.
+  2. `src/components/MacrocycleWizardModal.tsx` (741 LOC): Delegar en los subcomponentes ya creados bajo `src/components/season/wizard/`.
+  3. `src/components/season/SeasonPlanGeneratorTab.tsx` (593 LOC): Separar formulario de previsualización.
   4. `src/components/WeeklyPlanner.tsx` (588 LOC): Extraer tarjetas de días y lógica de reagrupación.
-  5. `src/components/ProfileModal.tsx` (526 LOC): Desacoplar secciones de biometría y de umbrales.
+  5. `src/components/ProfileModal.tsx` (526 LOC): Unificar con las pestañas modulares de `src/components/profile/`.
   6. `src/components/SeasonPlannerCard.tsx` (462 LOC): Separar bloques visuales del plan.
   7. `src/components/SeasonStudioModal.tsx` (419 LOC): Aislar tabs y orquestador.
   8. `src/components/MacrocycleLibraryModal.tsx` (367 LOC): Extraer lista de programas y filtros.
-  9. `src/lib/physiology/raceTargetMacrocycles.ts` (354 LOC): Dividir por tipo de distancia objetivo.
-* **Beneficio:** Menor latencia de inferencia para agentes de IA, máxima testabilidad y cero riesgo de romper lógica fisiológica.
+  9. `src/lib/physiology/raceTargetMacrocycles.ts` (354 LOC): Extraer helpers de distancia.
+* **Beneficio:** Ahorro del 80% de tokens en sesiones de mantenimiento sobre esos componentes y máxima mantenibilidad.
 
 ---
 
 ## 📋 3. Matriz de Ejecución y Restricciones Inviolables (LOC Budgets & Zero-Rework)
 
-
-Todo agente o desarrollador que ejecute este backlog en el próximo chat debe acatar estrictamente las siguientes restricciones:
+Todo agente o desarrollador que ejecute este backlog debe acatar estrictamente las siguientes restricciones:
 
 1. **Presupuestos de Líneas (LOC Budgets):**
    - Rutas API (`src/app/api/**/route.ts`): Máximo **$\le 80\text{ LOC}$**.
    - Servicios de Negocio (`src/lib/services/*.ts`): Máximo **$\le 250\text{ LOC}$**.
-   - Custom Hooks (`src/hooks/`): Máximo **$\le 350\text{ LOC}$** (ideal $\le 150-300$).
+   - Custom Hooks (`src/hooks/`): Máximo **$\le 350\text{ LOC}$**.
    - Componentes UI refactorizados (`AthleteDashboard.tsx`): Máximo **< 160 LOC**.
    - Esquemas Zod (`src/lib/validation/`): Máximo **< 120 LOC**.
-2. **Edición Quirúrgica (Surgical Edits):** No modificar handlers de cálculo ni romper tipos consolidados.
-3. **Pipeline de 5 Puertas:** Validar `./node_modules/.bin/tsc --noEmit` (código 0) y `npm run build` (código 0) en cada paso.
+2. **Edición Quirúrgica y Enrutamiento Canónico:** Consultar la Matriz Canónica en `PROJECT_RULES.md` (Sección 14.5) antes de leer archivos.
+3. **Pipeline de 5 Puertas:** Validar `./node_modules/.bin/tsc --noEmit` (código 0) y `npm run build` (código 0) en cada paso, registrando en `BITACORA_MAESTRA.md` con política Tail-Only (`tail -n 60`).
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│               PROMPT SUGERIDO PARA EL CHAT DE TESTING AUTOMATIZADO     │
-└────────────────────────────────────────────────────────────────────────┘
-"Actúa como el Ingeniero Senior de Software y Auditor Técnico QA del SGEA.
-Vamos a ejecutar la FASE 4 del Plan Maestro implementando la MEJORA 4 del
-documento BACKLOG_MEJORAS_ARQUITECTURA.md:
-1. Configurar Vitest en el proyecto sin romper Next.js 15 App Router.
-2. Implementar la suite de tests unitarios en src/__tests__/ (banisterEngine,
-   tanakaFormula, strydSyntaxValidator, progressiveLongRun, cryptoAES256).
-3. Ejecutar el Set de Pruebas (vitest run + tsc --noEmit + npm run build)
-   y registrar los resultados en BITACORA_MAESTRA.md (v3.35).
-Confirma la lectura de PROJECT_RULES.md y BACKLOG_MEJORAS_ARQUITECTURA.md."
-```
 

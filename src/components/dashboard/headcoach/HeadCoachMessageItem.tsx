@@ -46,12 +46,14 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
   let normalizedText = text
     .replace(/^\[?📍?\s*ESTADO DEL PROCESO\]?:?\s*$/gim, "[ESTADO DEL PROCESO]:")
     .replace(/^\[?⚖️?\s*DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?\]?:?\s*$/gim, "[DIAGNÓSTICO]:")
+    .replace(/^\[?💬?\s*(?:TRADUCCI[OÓ]N HUMANA|EN CRISTIANO)\]?:?\s*$/gim, "[TRADUCCIÓN HUMANA]:")
     .replace(/^\[?🎯?\s*ACCI[OÓ]N PRESCRIPTIVA\]?:?\s*$/gim, "[ACCIÓN PRESCRIPTIVA]:");
 
   // Si las etiquetas están aisladas sin dos puntos, unirlas con la siguiente línea
   normalizedText = normalizedText
     .replace(/\[ESTADO DEL PROCESO\]:\n+/gi, "[ESTADO DEL PROCESO] ")
     .replace(/\[DIAGNÓSTICO\]:\n+/gi, "[DIAGNÓSTICO] ")
+    .replace(/\[TRADUCCIÓN HUMANA\]:\n+/gi, "[TRADUCCIÓN HUMANA] ")
     .replace(/\[ACCIÓN PRESCRIPTIVA\]:\n+/gi, "[ACCIÓN PRESCRIPTIVA] ");
 
   const lines = normalizedText.split("\n");
@@ -114,6 +116,20 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
                   {isAdjustment ? "Diagnóstico: Ajuste Fisiológico Sugerido" : "Veredicto: Continuidad del Plan"}
                 </span>
                 <div>{formatInline(content || "Mantenemos el plan previsto.")}</div>
+              </div>
+            </div>
+          );
+        }
+
+        // Bloque Canónico: Traducción Humana / En Cristiano
+        if (/^\[?💬?\s*(TRADUCCI[OÓ]N HUMANA|EN CRISTIANO)\]?/i.test(trimmed)) {
+          const content = trimmed.replace(/^\[?💬?\s*(TRADUCCI[OÓ]N HUMANA|EN CRISTIANO)\]?:?\s*/i, "");
+          return (
+            <div key={idx} className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/20 text-slate-900 dark:text-slate-100 flex items-start gap-2">
+              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-black uppercase tracking-wider text-[10px] text-emerald-700 dark:text-emerald-300 block mb-0.5">Traducción para el Atleta</span>
+                <div className="leading-relaxed">{formatInline(content || "Todo en orden.")}</div>
               </div>
             </div>
           );

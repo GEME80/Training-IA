@@ -91,8 +91,34 @@ Leyes Inviolables de Gobernanza:
 10. Eficiencia Extrema de Tokens (FinOps): Cero lecturas de archivos completos; búsquedas directas con grep_search; micro-lecturas acotadas (<= 20-30 LOC); respuestas concisas y ejecutivas; compresión de telemetría y prompt caching.
 11. Modo Auditoría e Impersonación Segura (Read-Only & Memory Storage): Al inspeccionar el dashboard de un atleta (`isReadOnly = true`), queda estrictamente prohibida cualquier mutación (persistencia a Firestore, sincronización hacia Intervals.icu o escritura en localStorage). Todo estado temporal se maneja exclusivamente en memoria volátil (`createReadOnlyMemoryStorage`) y la sesión del administrador debe preservarse 100% aislada.
 
-Por favor, confirma que leíste PROJECT_RULES.md y BITACORA_MAESTRA.md (Secciones 100 y 101), resume el estado actual y presenta tu propuesta o siguientes pasos.
+Por favor, confirma que leíste el Prompt Maestro de PROJECT_RULES.md y la última sección de BITACORA_MAESTRA.md (vía tail -n 60, prohibido leer el archivo histórico completo), resume el estado actual y presenta tu propuesta o siguientes pasos.
 ```
+
+---
+
+## 🧭 ÍNDICE ESTRUCTURAL DE REGLAS Y GOBERNANZA (SGEA v5.81)
+
+Para navegar sin desperdiciar tokens de lectura, utiliza este índice temático:
+- **Bloque I — Arquitectura Base, Seguridad y Operación (Secciones 1 a 8):**
+  * [Sección 1: Fuente Única de Verdad (SSOT) y Política Tail-Only de Bitácora](#-1-ley-suprema-fuente-única-de-verdad-ssot)
+  * [Sección 2: Control de Puerto Único 3000](#-2-control-de-puerto-único-y-daemons)
+  * [Sección 3: Modularidad Estricta ($\le 350$ LOC)](#-3-regla-de-modularidad-estricta--350-líneas)
+  * [Sección 4 y 19: Sintaxis Canónica Intervals.icu & Garmin (`mtr` vs `m`)](#-4-sintaxis-y-reglas-de-workouts-para-intervalsicu)
+  * [Sección 5 y 8: Seguridad Multiusuario, AES-256-GCM, Cero Datos Quemados e Impersonación Read-Only](#-5-seguridad-multiusuario-y-modo-100-manual)
+  * [Sección 6: Gobernanza de Modelos Científicos y Ecuación Inversa de Banister](#-6-gobernanza-de-modelos-científicos-y-lenguaje)
+  * [Sección 7: Robustez, Redundancia y Tolerancia a Reinicios](#-7-arquitectura-de-robustez-redundancia-y-tolerancia-a-reinicios-v30)
+- **Bloque II — Ecosistema Multi-Agente, Presupuestos LOC y FinOps (Secciones 9, 10 y 14):**
+  * [Sección 9: Arquitectura Integral de Agentes (8 Fisiológicos + 5 S&C + 3 Leads / 12 Subagentes)](#-9-arquitectura-integral-de-agentes-y-subagentes-runtime--desarrollo)
+  * [Sección 10: Presupuestos de Código (LOC Budgets) y Pipeline de 5 Puertas](#-10-presupuestos-de-código-loc-budgets-y-protocolo-anti-refactorizaciones-destructivas)
+  * [Sección 14: Protocolo Maestro FinOps, Cero Fricción y Matriz Canónica Full-Stack](#-14-protocolo-maestro-de-eficiencia-de-tokens-finops--token-density-mandate-v365)
+- **Bloque III — Gobernanza Fisiológica, Periodización y Competición (Secciones 11, 12, 15, 20, 21, 22 y 23):**
+  * [Sección 11 y 18: Head Coach Fisiológico, Consola Guiada 2 Niveles y Gráficas Reales](#-11-gobernanza-del-head-coach-fisiológico-finops--experiencia-atlética-v352)
+  * [Sección 12 y 15: Desacoplamiento Movilidad/Nutrición, Rotación de Tiradas y Escaleras](#-12-desacoplamiento-de-movilidad-y-nutrición-matriz-canónica--lenguaje-humano-v355)
+  * [Sección 20 y 23: Superposición de Carreras (`raceDayOverlay`), Aislamiento Temporal y Blindaje Triatlón](#-20-leyes-de-superposición-de-competiciones-secundarias-periodización-de-running-por-ritmo-y-blindaje-de-auditoría-admin-v407)
+  * [Sección 21 y 22: Fases de Base/Mantenimiento (`BASE_1`/`BASE_2`) y Pacing Plan Oficial a Potencia](#-21-leyes-de-gobernanza-metodológica-para-fases-de-base-y-mantenimiento-v532)
+- **Bloque IV — Design System Institucional, Calendario y Ergonomía Móvil (Secciones 13, 16, 17 y 24):**
+  * [Sección 13 y 17: Calendario Unificado 52 Semanas, Sticky Header y Calibración Universal](#-13-leyes-del-calendario-unificado-main-sticky-header--tarjetas-especializadas-v361)
+  * [Sección 16 y 24: Design System PULSE AI (Verde Esmeralda, Cero Emojis, Números Tabulares y Mobile UX)](#-24-design-system-institucional-pulse-ai-estándares-de-colorimetría-tipografía-iconografía-y-experiencia-móvil-v557)
 
 ---
 
@@ -106,29 +132,29 @@ flowchart TD
     T1 -->|Código 0| T2["Test 2: Compilación de Producción (npm run build)"]
     T1 -->|Errores| FIX1["Corregir Tipado Inmediatamente"]
     FIX1 --> T1
-    T2 -->|Código 0| T3["Test 3: Auditoría de Sintaxis Stryd (% FTP + Tiempo)"]
+    T2 -->|Código 0| T3["Test 3: Auditoría de Sintaxis Canónica (mtr / km / m / % CP / % Pace)"]
     T2 -->|Errores| FIX2["Corregir Rutas / Módulos"]
     FIX2 --> T2
-    T3 --> T4["Test 4: Registro Detallado en BITACORA_MAESTRA.md"]
-    T4 --> REPORT["Entrega de Reporte de Éxito al Usuario"]
+    T3 --> T4["Test 4: Registro Tail-Only al final de BITACORA_MAESTRA.md"]
+    T4 --> REPORT["Entrega de Reporte Ejecutivo al Usuario"]
 ```
 
 ### El Set de Pruebas Obligatorio:
 1. **Prueba 1 (Tipado Estricto):** Ejecutar `./node_modules/.bin/tsc --noEmit` (o `npx tsc --noEmit`). Debe arrojar **código 0 (cero errores)**.
 2. **Prueba 2 (Compilación de Producción):** Ejecutar `npm run build`. Todas las rutas de Next.js deben compilar y empaquetar limpiamente.
-3. **Prueba 3 (Auditoría de Sintaxis Stryd):** Verificar que los generadores de microciclos usen minutos/segundos + `% FTP` (cero distancias con % FTP).
-4. **Prueba 4 (Actualización del Dossier):** Documentar en la Sección correspondiente de [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md):
+3. **Prueba 3 (Auditoría de Sintaxis Canónica):** Verificar que los generadores usen `mtr`/`km` para distancia, `m`/`s` para tiempo y cero distancias con `% FTP` en ciclismo.
+4. **Prueba 4 (Actualización Tail-Only del Dossier):** Consultar exclusivamente las últimas 50 líneas de [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) (`tail -n 50`) y añadir al final la nueva versión con:
    - Fecha y hora del cambio.
-   - Lista de archivos modificados/creados y su conteo de líneas (< 350 líneas).
+   - Lista de archivos modificados/creados y su conteo de líneas ($\le 350$ líneas).
    - Resultado explícito del set de pruebas (`tsc` y `build`).
 
 ---
 
 ## 🏛️ 1. LEY SUPREMA: FUENTE ÚNICA DE VERDAD (SSOT)
-1. **Dossier Histórico:** Antes de iniciar cualquier tarea, lee obligatoriamente [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md). Queda prohibido asumir requerimientos o reinventar contratos ya documentados.
-2. **Telemetría Fisiológica:** **Intervals.icu API** es la **ÚNICA fuente de verdad** para métricas deportivas (CTL, ATL, TSB, HRV, entrenamientos realizados y planeados). Cero almacenamiento redundante de entrenamientos en Firestore.
-3. **Base de Datos:** **Cloud Firestore (`users/{uid}`)** es la única fuente de verdad para metadatos de usuario, credenciales cifradas con AES-256-GCM y macrociclos activos.
-4. **Registro Continuo:** Todo cambio o mejora debe registrarse en la Sección correspondiente de `BITACORA_MAESTRA.md`.
+1. **Dossier Histórico (Política Tail-Only FinOps):** [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) supera las 9.000 líneas históricas. **Queda terminantemente prohibido leer el archivo completo.** Para conocer el último hito o añadir una nueva versión, inspecciona únicamente las últimas 50-60 líneas (`tail -n 60 BITACORA_MAESTRA.md`).
+2. **Telemetría Fisiológica:** **Intervals.icu API** es la **ÚNICA fuente de verdad** para métricas deportivas (CTL, ATL, TSB, HRV, curvas de potencia/ritmo, entrenamientos realizados y planeados). Cero almacenamiento redundante de actividades en Firestore.
+3. **Base de Datos:** **Cloud Firestore (`users/{uid}`)** es la única fuente de verdad para metadatos de usuario, aceptación legal Clickwrap (`termsAcceptedAt`), credenciales cifradas con AES-256-GCM y macrociclos activos.
+4. **Registro Continuo:** Todo cierre de versión debe registrarse al final de `BITACORA_MAESTRA.md`.
 
 ---
 
@@ -258,81 +284,81 @@ flowchart TD
 
 #### A. Agentes Fisiológicos & de Periodización
 1. **Agente 01 — `PULSE Live Coach` (Head Coach Fisiológico On-Demand):**
-   - **Endpoint:** `POST /api/headcoach/chat` | **Jurisdicción:** `src/lib/ai/headcoach/` y `src/components/HeadCoachChatDrawer.tsx`.
-   - **Contexto Requerido (Input):** Biometría (edad, peso, categoría máster), umbrales (Stryd CP 327W / Bike FTP 240W), telemetría Banister en vivo (CTL, ATL, TSB, HRV Z-Score, sueño), desglose de actividades ejecutadas día a día vs planeadas, matriz semanal snapshot y fase de macrociclo.
-   - **Salida Estructurada (Output):** Dictamen fisiológico en markdown, array de `quickReplies` contextuales de 1 toque, objeto `workoutDiff` para sustitución visual y `workoutStructure` con pasos estructurados para el reloj Garmin / Intervals.icu.
-2. **Agente 02 — `PULSE Macrocycle Architect` (Periodizador de Temporada):**
-   - **Endpoint:** `POST /api/macrocycles/generate-ai` | **Jurisdicción:** `src/lib/physiology/macrocycleGenerator.ts` y `src/lib/ai/knowledge/`.
-   - **Contexto Requerido (Input):** Carrera objetivo (A/B/C), distancia, fecha límite, fecha de inicio seleccionada, matriz de 7 días y modelos científicos SSOT (`marathonModel`, `triathlonModel`, `cyclingModel`).
-   - **Salida Estructurada (Output):** Macrociclo completo (8 a 40 semanas) con fases encadenadas (GPP + Específico), curva matemática continua de TSS, CTL peak proyectado y tiradas progresivas con cotas máximas según nivel (`athleteLevelCaps`).
-3. **Agente 03 — `PULSE Daily Physio Auditor` (Diagnóstico de Carga & Asimilación):**
-   - **Endpoint:** `POST /api/evaluate` | **Jurisdicción:** `src/lib/physiology/engine.ts` y `src/lib/intervals/client.ts`.
-   - **Contexto Requerido (Input):** Wellness diario de Intervals.icu (rMSSD, RHR, sueño, fatiga, DOMS), actividades de los últimos 90 días y potencia ejecutada.
-   - **Salida Estructurada (Output):** Estado fisiológico (`FRESH`, `OPTIMAL`, `OVERLOAD`, `EXTREME_FATIGUE`), factor de desacoplamiento aeróbico EF y recomendación de modulación inmediata (Z1 o descanso).
+   - **Endpoint:** `POST /api/headcoach/chat` | **Jurisdicción:** `src/lib/ai/headcoach/` (`chatInference.ts`, `chatContext.ts`, `weekRetrospective.ts`) y `src/components/HeadCoachChatDrawer.tsx`.
+   - **Contexto Requerido (Input):** Biometría viva (edad, peso, categoría máster), umbrales dinámicos SSOT (Stryd CP en W / Ritmo Umbral en min/km / Bike FTP en W / Natación CSS), telemetría Banister en vivo (CTL, ATL, TSB, HRV Z-Score, sueño), desglose de actividades ejecutadas condensadas vs planeadas, matriz semanal snapshot y fase activa del macrociclo.
+   - **Salida Estructurada (Output):** Dictamen fisiológico en 3 bloques canónicos (120–180 palabras), array de acciones guiadas de 1 toque (`HeadCoachQuickActions.tsx`), objeto `suggestedPlan` con diffing visual e intervalos estructurados (`workoutDoc`) para Garmin / Intervals.icu.
+2. **Agente 02 — `PULSE Macrocycle Architect` (Periodizador Híbrido de Temporada):**
+   - **Endpoint:** `POST /api/macrocycles/generate-ai` | **Jurisdicción:** `src/lib/physiology/macrocycleGenerator.ts`, `linearProgressionEngine.ts`, `metricIntervalEngine.ts`, `runningWorkoutAdapter.ts`, `raceDayOverlay.ts` y `src/lib/ai/knowledge/`.
+   - **Contexto Requerido (Input):** Carrera objetivo primaria (A) y secundarias (B/C) o modo Salud/Base (`!isEventDriven`), modo obligatorio de carrera (`POWER` Stryd vs `PACE` Jack Daniels vía `resolveRunningMode`), disponibilidad de 7 días y modelos científicos SSOT.
+   - **Salida Estructurada (Output):** Macrociclo completo (8 a 40 semanas) con periodización 3:1 (o `BASE_1`/`BASE_2` en mantenimiento), rotación coprima anti-monotonía ($\gcd(L, s) = 1$), superposición atómica de carreras secundarias (`raceDayOverlay.ts`), series métricas de pista (`mtr`) y curva continua de TSS/CTL (`ctlPotentialEngine.ts`).
+3. **Agente 03 — `PULSE Daily Physio Auditor` (Diagnóstico de Carga, Asimilación & Curvas):**
+   - **Endpoints:** `POST /api/evaluate`, `GET /api/athlete-curves` | **Jurisdicción:** `src/lib/services/telemetryService.ts`, `src/lib/intervals/curvesService.ts` y `src/lib/physiology/engine.ts`.
+   - **Contexto Requerido (Input):** Wellness diario de Intervals.icu (rMSSD, RHR, sueño, fatiga, DOMS), actividades de los últimos 90–365 días, `runSport.threshold_pace` y curvas multi-disciplina de potencia y ritmo.
+   - **Salida Estructurada (Output):** Estado fisiológico (`FRESH`, `OPTIMAL`, `OVERLOAD`, `EXTREME_FATIGUE`), factor de eficiencia aeróbica (EF), curvas de mejores esfuerzos (hasta 42K) y recomendación de modulación inmediata.
 4. **Agente 04 — `PULSE Program Library Curator` (Curador del Catálogo):**
-   - **Endpoint:** `POST /api/admin/programs` | **Jurisdicción:** `src/lib/physiology/macrocycleLibrary.ts`.
+   - **Endpoint:** `POST /api/admin/programs` | **Jurisdicción:** `src/lib/physiology/macrocycleLibrary.ts` y `src/components/admin/AdminProgramLibrariesTab.tsx`.
    - **Contexto Requerido (Input):** Parámetros de disciplina, nivel del atleta y duración en semanas.
-   - **Salida Estructurada (Output):** Programas maestros estructurados con inyección de protocolos de test de campo en semanas 2 y 8.
-5. **Agente 05 — `PULSE Long-Term Adaptation Profiler` (Memoria de Adaptación a Largo Plazo):**
-   - **Jurisdicción:** `src/lib/ai/telemetry.ts` y `src/lib/db/userProfile.ts`.
-   - **Contexto Requerido (Input):** Histórico de 365 días de asimilación, respuestas individuales a semanas de choque vs. Sweetspot y tolerancia de rampa CTL.
-   - **Salida Estructurada (Output):** Perfil de reactividad biológica individualizado inyectado al Head Coach.
-6. **Agente 06 — `PULSE Race Debrief & Threshold Recalibrator` (Análisis Post-Carrera):**
-   - **Jurisdicción:** `src/lib/ai/knowledge/athleteMomentsModels.ts` y `POST /api/headcoach/chat`.
-   - **Contexto Requerido (Input):** Tiempo oficial de carrera, curva de pacing real vs. planeado, sensaciones y telemetría de competición.
-   - **Salida Estructurada (Output):** Diagnóstico de rendimiento, recalibración de Stryd CP / Bike FTP y activación del protocolo de descarga celular (`POST_RACE_DELOAD_MODEL`).
+   - **Salida Estructurada (Output):** Programas maestros estructurados con inyección de protocolos de test de campo en semanas 2 y 8 (respetando la Freeze Window de $\le 4$ semanas pre-competición A).
+5. **Agente 05 — `PULSE Long-Term Adaptation Profiler` (Memoria de Adaptación 365d):**
+   - **Jurisdicción:** `src/lib/ai/telemetry.ts`, `src/lib/physiology/ctlPotentialEngine.ts` y `src/lib/db/userProfile.ts`.
+   - **Contexto Requerido (Input):** Histórico de 365 días de asimilación (`peakCtlLastYear`, `annualVolumeTss`, `maxAtlRecorded`), respuestas individuales a semanas de carga y tolerancia de rampa CTL.
+   - **Salida Estructurada (Output):** Perfil de reactividad biológica y potencial fisiológico bietápico inyectado al Head Coach y al generador de macrociclos.
+6. **Agente 06 — `PULSE Race Debrief & Breakthrough Recalibrator` (Detección de Umbrales & Post-Carrera):**
+   - **Jurisdicción:** `src/lib/services/breakthroughDetectionService.ts`, `ftpDetectionService.ts`, `paceDetectionService.ts`, `runPowerDetectionService.ts`, `recalibrateService.ts` y `athleteMomentsModels.ts`.
+   - **Contexto Requerido (Input):** Esfuerzos pico reales detectados en Intervals.icu, tiempo oficial de carrera, curva de pacing real vs. planeado (`racePacingStrategy.ts`) y telemetría de competición.
+   - **Salida Estructurada (Output):** Detección automática de *Breakthroughs* fisiológicos (Stryd CP, Bike FTP, Ritmo Umbral y Natación CSS), banner de sugerencia de actualización (`SuggestedThresholdBanner.tsx`), recalibración reactiva del macrociclo activo y protocolo de descarga celular (`POST_RACE_DELOAD_MODEL`).
 7. **Agente 07 — `PULSE Intra-Workout Fueling & Hydration Strategist` (Nutrición e Hidratación):**
-   - **Jurisdicción:** `src/lib/physiology/macrocycleTemplates.ts` y `src/lib/ai/knowledge/`.
-   - **Contexto Requerido (Input):** Duración de la sesión (> 75 min), disciplina, intensidad en % FTP/CP y temperatura estimada.
-   - **Salida Estructurada (Output):** Prescripción exacta de carbohidratos (60 a 90g CHO/h), sales de sodio (mg/h) y tasa de reposición hídrica (ml/h).
-8. **Agente 08 — `PULSE Dynamic Mobility & Neuromuscular Warmup Engine` (Activación en Reloj):**
-   - **Jurisdicción:** `src/lib/physiology/strengthWorkoutPool.ts` y `workoutStructure`.
-   - **Contexto Requerido (Input):** Tipo de sesión (Calidad, Fondo, Regenerativo o Ciclismo).
-   - **Salida Estructurada (Output):** Pasos estructurados de activación neuromuscular (movilidad de tobillo, sóleo excéntrico, pogo hops y core) integrados en el bloque de calentamiento del reloj.
+   - **Jurisdicción:** `src/lib/physiology/macrocycleTemplates.ts` y `src/lib/ai/knowledge/` (campo desacoplado `fuelingStrategy`).
+   - **Contexto Requerido (Input):** Duración de la sesión (> 75 min), disciplina, intensidad en % FTP / % CP / % Pace y exigencia metabólica.
+   - **Salida Estructurada (Output):** Prescripción exacta de carbohidratos (60 a 90g CHO/h), sales de sodio (mg/h) y tasa de reposición hídrica (ml/h) desacoplada del `workoutDoc`.
+8. **Agente 08 — `PULSE Dynamic Mobility & Neuromuscular Warmup Engine` (Activación Articular):**
+   - **Jurisdicción:** `src/lib/physiology/strengthWorkoutPool.ts` y campo desacoplado `mobilityWarmup`.
+   - **Contexto Requerido (Input):** Tipo de sesión (Calidad, Fondo, Regenerativo, Ciclismo o Competición Oficial).
+   - **Salida Estructurada (Output):** Protocolo táctico de activación neuromuscular fuera de cronómetro (movilidad de tobillo, sóleo excéntrico, pogo hops y core) sin contaminar los intervalos del reloj Garmin.
 
 ---
 
 #### B. Suite de Agentes de Fortalecimiento Especializados por Disciplina (S&C)
 1. **Agente S1 — `PULSE Running & Marathon Strength Coach` (Carrera & Maratón):**
-   - **Enfoque Biomecánico:** Sóleo excéntrico, tendón de Aquiles, Leg Spring Stiffness (LSS Stryd), glúteo medio anti-Trendelenburg y cadena posterior propulsiva.
-   - **Objetivo:** Disminución del tiempo de contacto ($GCT < 210\text{ ms}$), prevención de fascitis/tendinopatías y mejora de economía ($\text{kJ/km}$).
+   - **Jurisdicción:** `src/lib/physiology/specializedStrengthCoaches.ts` y `strengthWorkoutPool.ts`.
+   - **Enfoque Biomecánico:** Sóleo excéntrico, tendón de Aquiles, Leg Spring Stiffness (LSS Stryd), glúteo medio anti-Trendelenburg y cadena posterior propulsiva ($GCT < 210\text{ ms}$, economía en $\text{kJ/km}$).
 2. **Agente S2 — `PULSE Cycling & Climbing Strength Coach` (Ciclismo & Escalada):**
-   - **Enfoque Biomecánico:** Torque máximo en cuádriceps (fase 1:00 a 5:00), glúteo mayor, fuerza-resistencia en isquios y estabilidad isométrica lumbar/escapular en posición aero/drop bar.
-   - **Objetivo:** Mayor torque en bajas cadencias en subida ($50\text{--}60\text{ rpm}$) y resistencia a la fatiga postural de 3 a 5 horas.
+   - **Jurisdicción:** `src/lib/physiology/cyclingAndTriStrengthPool.ts`.
+   - **Enfoque Biomecánico:** Torque máximo en cuádriceps, glúteo mayor, fuerza-resistencia en isquios y estabilidad isométrica lumbar/escapular en posición aero/drop bar ($50\text{--}60\text{ rpm}$ en puerto).
 3. **Agente S3 — `PULSE Triathlon Multi-Sport Strength Coach` (Triatlón Concurrente):**
-   - **Enfoque Biomecánico:** Dorsal ancho, serrato anterior y manguito rotador para natación (prevención del *Swimmer's Shoulder*); core hidrodinámico y fuerza neuromuscular de transición (*Brick Strength* bici $\rightarrow$ carrera).
-   - **Objetivo:** Preservación del ritmo de nado CSS y solidez biomecánica en los primeros kilómetros post-T2.
+   - **Jurisdicción:** `src/lib/physiology/cyclingAndTriStrengthPool.ts`.
+   - **Enfoque Biomecánico:** Dorsal ancho, serrato anterior y manguito rotador (*Swimmer's Shoulder*); core hidrodinámico y fuerza neuromuscular de transición (*Brick Strength* bici $\rightarrow$ carrera).
 4. **Agente S4 — `PULSE Trail & Ultra Mountain Strength Coach` (Trail & Montaña):**
-   - **Enfoque Biomecánico:** Fuerza excéntrica pesada de cuádriceps para absorción de impactos en bajadas técnicas ($+1.000\text{m D-}$), estabilidad multidireccional de tobillo (peroneos en roca suelta) y fuerza escapular para bastones/hiking.
-   - **Objetivo:** Mitigación del daño muscular excéntrico (DOMS/CK) y estabilidad articular.
+   - **Jurisdicción:** `src/lib/physiology/specializedStrengthCoaches.ts`.
+   - **Enfoque Biomecánico:** Fuerza excéntrica pesada de cuádriceps para absorción de impactos en bajadas técnicas ($+1.000\text{m D-}$), estabilidad multidireccional de tobillo (peroneos) y fuerza escapular para bastones.
 5. **Agente S5 — `PULSE Prehab, Longevity & Injury Rehab Coach` (Salud & Prevención):**
-   - **Enfoque Biomecánico:** Isométricos pesados (30-45s) para tendinopatías rotulianas/aquileas, equilibrio H:Q en rodilla, preservación de masa magra muscular (Sarcopenia / Dr. Peter Attia) y control de ratio de carga aguda:crónica (Dr. Tim Gabbett / Método CaCo).
-   - **Objetivo:** Blindaje contra sobreuso mecánico ($\text{ACWR} \le 1.3$) y longevidad deportiva.
+   - **Jurisdicción:** `src/lib/ai/knowledge/longevityModel.ts` y `athleteMomentsModels.ts`.
+   - **Enfoque Biomecánico:** Isométricos pesados (30-45s) para tendinopatías, equilibrio H:Q en rodilla, preservación de masa magra (Dr. Peter Attia) y control de carga aguda:crónica ($\text{ACWR} \le 1.3$, Dr. Tim Gabbett / Método CaCo).
 
 ---
 
 ### 💻 9.2. Capa 2: Agentes Especializados de Ingeniería y Desarrollo
-1. **Agente Lead Backend & Motores Fisiológicos:**
+1. **Agente Lead Backend, Integraciones & Motores Fisiológicos:**
    - **Jurisdicción:** `src/app/api/`, `src/lib/services/`, `src/lib/validation/`, `src/lib/intervals/`, `src/lib/db/`, `src/lib/ai/`, `src/lib/physiology/`.
    - **Subagentes:**
-     - *Subagente 1.1 (Intervals Sync Engine & Services):* Servicios desacoplados (`telemetryService.ts`, `intervalsSyncService.ts`), sincronización bidireccional, sanitización de credenciales y controladores API delgados.
-     - *Subagente 1.2 (Cloud Persistence & Security):* Cifrado AES-256-GCM, transacciones en Cloud Firestore, dirty checking de escrituras y guardas de SuperAdmin.
-     - *Subagente 1.3 (Physiological LLM Orchestrator & FinOps):* Enrutamiento de modelos Gemini, compresor de contexto (`contextCondenser.ts`), manejo de fallback determinista y optimización de tokens.
-     - *Subagente 1.4 (Periodization & Macrocycle Generator):* Algoritmos de balance 3:1, cálculo de CTL y asignación progresiva de volumen.
-2. **Agente Lead Frontend & Sports UX/UI Specialist:**
-   - **Jurisdicción:** `src/components/`, `src/hooks/`, `src/app/`, layout, Tailwind CSS, SVG.
+     - *Subagente 1.1 (Intervals OAuth, Sync Engine & Curves):* Flujo OAuth2 (`/api/auth/intervals/*`), servicios desacoplados (`telemetryService.ts`, `intervalsSyncService.ts`, `curvesService.ts`), detectores de breakthroughs (`*DetectionService.ts`) y borrado quirúrgico con prefijo `[PULSE AI]`.
+     - *Subagente 1.2 (Cloud Persistence, Security, Legal & Billing MRR):* Cifrado AES-256-GCM (`crypto.ts`), Cloud Firestore (`userProfile.ts`, `macrocycles.ts`, `adminUsers.ts`), evidencia legal Clickwrap (`termsAcceptedAt`), módulo financiero Bre-B/Nequi (`adminBillingService.ts`, `/api/admin/billing`, `/api/billing/report-payment`), notificaciones (`notificationService.ts`) y aislamiento en memoria para Auditoría Admin (`createReadOnlyMemoryStorage`).
+     - *Subagente 1.3 (Physiological LLM Orchestrator & FinOps):* Enrutamiento Gemini (`chatInference.ts`), compresor tabular (`contextCondenser.ts`), Prompt Caching en 2 capas (`prompts.ts` vs `chatContext.ts`) y fallback determinista (`deterministicFallback.ts`).
+     - *Subagente 1.4 (Hybrid Periodization & Workout Engines):* Progresión lineal (`linearProgressionEngine.ts`), intervalos métricos de pista (`metricIntervalEngine.ts`), adaptador dual Potencia/Ritmo (`runningWorkoutAdapter.ts`), superposición de carreras (`raceDayOverlay.ts`), resolutores de viernes/fin de semana (`fridayWorkoutResolver.ts`, `weekendRideResolver.ts`) y potencial CTL (`ctlPotentialEngine.ts`).
+2. **Agente Lead Frontend, Mobile App-Like UX & Design System Specialist:**
+   - **Jurisdicción:** `src/components/`, `src/hooks/`, `src/app/`, Tailwind CSS, Lucide SVG Icons.
    - **Subagentes:**
-     - *Subagente 2.1 (Continuous Calendar & PMC Telemetry):* Cuadrícula de 8 columnas, doble tarjeta (planeado vs ejecutado) y mini-cintas PMC.
-     - *Subagente 2.2 (Custom Hooks & State Governor):* Custom Hooks (`useAthleteTelemetry`, `useSeasonPlans`, `useIntervalsSync`), caché en memoria SWR (3 min TTL) y desacoplamiento de estado.
-     - *Subagente 2.3 (Head Coach Chat & Workout Diffing):* Interfaz de chat interactivo, drawer responsivo y visualizador de diffing de sesiones.
-     - *Subagente 2.4 (Biometrics & Zones Configurator):* Visor tabular de zonas (Stryd CP, Bike FTP, FC LTHR) y matriz de disponibilidad semanal.
+     - *Subagente 2.1 (Continuous Calendar, Mobile Feed & PMC Telemetry):* Cuadrícula de 8 columnas (`AthleteContinuousCalendar.tsx`), doble sesión móvil (`MobileWeeklyDayGroup.tsx`), cabecera de cumplimiento (`PMCComplianceHeader.tsx`, `PlannedVsActualProgress.tsx`) y gráficas reales de intervalos (`WorkoutChart.tsx`).
+     - *Subagente 2.2 (Custom Hooks & Reactive State Governor):* Hooks (`useAthleteTelemetry`, `useAthleteCurves`, `useSeasonPlans`, `useIntervalsSync`, `useAutoIntervalsSync`, `useMacrocycleUpgrade`), caché SWR en memoria (TTL 3 min) y mutación reactiva de modo de carrera.
+     - *Subagente 2.3 (Head Coach Console & Workout Diffing):* Consola guiada de 2 niveles (`HeadCoachQuickActions.tsx`), micro-tarjetas atléticas (`HeadCoachMessageItem.tsx`) y diffing semanal (`HeadCoachMicrocycleCard.tsx`).
+     - *Subagente 2.4 (Onboarding 3-Step, Biometrics, Curves & Billing UI):* Onboarding dedicado (`AthleteOnboardingView.tsx`, `WatchSyncModal.tsx`, `WelcomePlanModal.tsx`), integración exclusiva Intervals (`AthleteIntervalsTab.tsx`), curvas (`PowerDurationChart.tsx`, `PaceDurationChart.tsx`), confirmación de modo (`RunningModeConfirmModal.tsx`), pagos (`AthleteBreBPaymentModal.tsx`, `AthleteNequiPaymentModal.tsx`) y Shell Móvil Admin (`AdminMobileBottomNav.tsx`, `AdminMobileHeader.tsx`).
 3. **Agente Lead Auditor Técnico, QA & Debugging:**
-   - **Jurisdicción:** `tsconfig.json`, `next.config.mjs`, `package.json`, tests, scripts de despliegue.
+   - **Jurisdicción:** `tsconfig.json`, `next.config.mjs`, `package.json`, tests (`demoAthletesSuite.ts`), scripts de despliegue.
    - **Subagentes:**
-     - *Subagente 3.1 (Type Safety Sentinel):* Ejecución estricta de `./node_modules/.bin/tsc --noEmit` y erradicación de `any`.
+     - *Subagente 3.1 (Type Safety Sentinel):* Ejecución estricta de `./node_modules/.bin/tsc --noEmit` (Código 0) y erradicación de `any`.
      - *Subagente 3.2 (Port & Process Governor):* Garantía de puerto `3000` exclusivo (`npm run dev:clean`) y eliminación de procesos zombis.
-     - *Subagente 3.3 (Stryd Workout Syntax Validator):* Auditoría estricta de que **ningún** workout use distancia con `% FTP` (ciclismo siempre por tiempo). En carrera, validación de distancias canónicas en `mtr` (metros) o `km`, descansos por tiempo en `m` (minutos) o `s`, y asignación coherente de `% CP` (atletas con Stryd) vs `% Pace` (atletas sin Stryd).
-     - *Subagente 3.4 (Security & Modular Architecture Auditor):* Control estricto del límite de **350 líneas por archivo**, APIs $\le 80\text{ LOC}$, `AthleteDashboard` < 160 LOC, desacoplamiento de dependencias y auditoría de `firestore.rules`.
+     - *Subagente 3.3 (Canonical Workout Syntax & Design System Validator):* Auditoría de unidades (`mtr`/`km` para distancia, `m`/`s` para tiempo via `workoutSyntaxSanitizer.ts`), pureza de modo (`% CP` vs `% Pace`), erradicación del 100% de emojis en UI (solo Lucide SVG) y paleta institucional Verde Esmeralda (`emerald-600`).
+     - *Subagente 3.4 (Security, Zero-Ghost Metrics & LOC Budget Auditor):* Control de límite de **350 líneas por archivo**, APIs $\le 80\text{ LOC}$, cero métricas quemadas en perfiles nuevos y auditoría de `firestore.rules`.
 
 ### 🔒 9.3. Protocolo de Verdad Única (SSOT) para Agentes y Scripts (Prohibición de Mocks Ficticios)
 1. **Prohibición de Datos Quemados en Scripts y Prompts:**
@@ -608,89 +634,85 @@ El usuario solo debe describir lo que desea en sus propias palabras. Ejemplos v�
 #### 2. Matriz Canónica Integral de Enrutamiento Inmediato (100% Cobertura Full-Stack):
 Al recibir la petición del usuario, el agente **NUNCA** ejecutará búsquedas ciegas (`find`, `ls -R`, volcados de directorio) ni leerá archivos enteros. Consulta internamente esta tabla canónica organizada por capas:
 
-##### A. Capa Frontend UI (Vistas, Calendario, Tarjetas y Modales)
+##### A. Capa Frontend UI (Vistas, Calendario, Onboarding, Curvas y Modales)
 | Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
 | :--- | :--- |
 | **Calendario Continuo / Cuadrícula de 8 Columnas** | `src/components/dashboard/AthleteContinuousCalendar.tsx` |
 | **Tarjeta Diaria de Sesión (Ejecutado vs Planificado, Badges)** | `src/components/dashboard/AthleteCalendarDayTile.tsx` |
-| **Fila Semanal del Calendario (Balance TSS, Rampa)** | `src/components/dashboard/AthleteCalendarWeekRow.tsx` |
+| **Fila Semanal del Calendario (Balance TSS, Rampa, Fechas)** | `src/components/dashboard/AthleteCalendarWeekRow.tsx` |
 | **Main Sticky Header (4 Bloques, Tabs, Hoy, Fecha Actual)** | `src/components/dashboard/AthleteDashboardHeader.tsx` |
-| **Sidebar Lateral (Navegación entre vistas)** | `src/components/dashboard/AthleteSidebar.tsx` |
-| **Vista Móvil (Agenda Diaria con Swipe, Feed Semanal)** | `src/components/dashboard/AthleteMobileAgendaView.tsx` / `AthleteMobileWeekFeed.tsx` |
-| **Gráfica de Rendimiento PMC (Fitness CTL, ATL, TSB)** | `src/components/dashboard/pmc/AthletePMCChart.tsx` |
-| **Modal Detalle de Sesión (Series, Vatios, Streams, Gráfica)** | `src/components/macrocycle/WorkoutDetailModal.tsx` |
-| **Gráfica de Zonas e Intervalos (Skyline de Potencia)** | `src/components/WorkoutChart.tsx` |
-| **Modal de Perfil del Atleta (Antropometría, Peso, Altura)** | `src/components/profile/AthleteEditProfileModal.tsx` |
-| **Visualizador de Zonas (Stryd CP, Bike FTP, FC LTHR)** | `src/components/profile/AthleteZonesViewer.tsx` |
+| **Sidebar Lateral Desktop / Bottom Nav Móvil** | `src/components/dashboard/AthleteSidebar.tsx` / `AthleteMobileBottomNav.tsx` |
+| **Vista Móvil (Doble Sesión Diaria, Agenda y Feed Semanal)** | `src/components/dashboard/MobileWeeklyDayGroup.tsx` / `AthleteMobileAgendaView.tsx` |
+| **Gráfica de Rendimiento PMC & Evolución (Actual vs Plan)** | `src/components/dashboard/pmc/AthletePMCChart.tsx` / `PMCComplianceHeader.tsx` / `PlannedVsActualProgress.tsx` |
+| **Modal Detalle de Sesión (Series, Vatios, Streams, Gráfica)** | `src/components/macrocycle/WorkoutDetailModal.tsx` / `WorkoutDialogDesktop.tsx` / `WorkoutBottomSheetMobile.tsx` |
+| **Gráfica de Zonas e Intervalos (Skyline de Potencia / Ritmo)** | `src/components/WorkoutChart.tsx` |
+| **Vista Dedicada de Onboarding (3 Pasos para Atletas Nuevos)** | `src/components/onboarding/AthleteOnboardingView.tsx` / `OnboardingBanner.tsx` |
+| **Modales de Bienvenida y Sincronización de Reloj** | `src/components/onboarding/WelcomePlanModal.tsx` / `WatchSyncModal.tsx` / `IntervalsOnboardingModal.tsx` |
+| **Modal de Perfil del Atleta (Bio, Zonas, Integraciones)** | `src/components/profile/AthleteEditProfileModal.tsx` / `AthleteBioProfileTab.tsx` / `AthleteZonesTab.tsx` |
+| **Pestaña de Integración Exclusiva con Intervals.icu** | `src/components/profile/AthleteIntervalsTab.tsx` / `AthleteIntervalsConnectionCard.tsx` |
+| **Modal de Confirmación de Modo Carrera (Potencia vs Ritmo)** | `src/components/profile/RunningModeConfirmModal.tsx` |
+| **Curvas de Potencia y Ritmo / Mejores Esfuerzos (hasta 42K)** | `src/components/profile/PowerDurationChart.tsx` / `PaceDurationChart.tsx` / `SportBestEffortsTable.tsx` |
+| **Banner de Sugerencia de Nuevo Umbral (Breakthrough)** | `src/components/profile/SuggestedThresholdBanner.tsx` / `QuickThresholdModal.tsx` |
 | **Matriz Semanal de Disponibilidad (Días de entreno)** | `src/components/profile/CompactAvailabilityMatrix.tsx` |
-| **Conexiones y Credenciales Intervals.icu en UI** | `src/components/dashboard/AthleteConnectionsView.tsx` |
-| **Estudio de Temporada / Gestor de Carreras A/B/C** | `src/components/SeasonStudioModal.tsx` / `SeasonRacesTab.tsx` |
-| **Tarjeta de Plan Activo de Temporada** | `src/components/season/SeasonActivePlanCard.tsx` |
-| **Generador Guiado de Temporada con Curva SVG** | `src/components/season/SeasonAIGenerator.tsx` |
-| **Biblioteca de Programas en UI** | `src/components/season/SeasonProgramLibrary.tsx` |
-| **Autenticación Google OAuth en UI** | `src/components/auth/AuthModal.tsx` |
+| **Wizard de Temporada (4 Pasos: Objetivo, Disciplinas, Fisiología, Preview)** | `src/components/season/wizard/SeasonWizardStep1Target.tsx` (y Steps 2, 3, 4) |
+| **Estudio de Temporada / Gestor de Carreras A/B/C** | `src/components/SeasonStudioModal.tsx` / `src/components/season/SeasonRacesTab.tsx` |
+| **Tarjeta de Plan Activo / Upgrade de Potencial CTL** | `src/components/season/SeasonActivePlanCard.tsx` / `src/components/dashboard/MacrocycleUpgradeCard.tsx` |
+| **Pagos In-App Bre-B (Banco de la República) y Nequi / BBVA** | `src/components/dashboard/AthleteBreBPaymentModal.tsx` / `AthleteNequiPaymentModal.tsx` / `AthleteBillingBanner.tsx` |
+| **Centro de Notificaciones (Campana, Drawer y Toast)** | `src/components/notifications/NotificationCenterDrawer.tsx` / `NotificationBellButton.tsx` |
+| **Autenticación Google OAuth & Clickwrap T&C (`/terms`, `/privacy`)** | `src/components/auth/AuthModal.tsx` / `src/app/terms/page.tsx` / `src/app/privacy/page.tsx` |
 
 ##### B. Capa Head Coach & Inferencia IA (Chat, Prompts y Tokens)
 | Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
 | :--- | :--- |
-| **Drawer / Ventana Flotante del Chat con Head Coach** | `src/components/HeadCoachChatDrawer.tsx` |
+| **Drawer / Ventana Flotante del Chat con Head Coach** | `src/components/HeadCoachChatDrawer.tsx` / `src/components/dashboard/headcoach/useHeadCoachChat.ts` |
 | **Botonera Táctica Guiada en 2 Niveles (Quick Actions)** | `src/components/dashboard/headcoach/HeadCoachQuickActions.tsx` |
 | **Mensajes del Coach, Micro-Tarjetas Atléticas y Acordeón** | `src/components/dashboard/headcoach/HeadCoachMessageItem.tsx` |
 | **Tarjeta de Semana Sugerida / Diffing del Microciclo** | `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx` |
 | **Llamadas a Gemini API, Tokens (`maxOutputTokens`) y Modelos** | `src/lib/ai/headcoach/chatInference.ts` |
-| **Ensamblado del Contexto Fisiológico del Atleta para IA** | `src/lib/ai/headcoach/chatContext.ts` |
+| **Ensamblado del Contexto Fisiológico y Retrospectiva Semanal** | `src/lib/ai/headcoach/chatContext.ts` / `weekRetrospective.ts` |
 | **Fallback Determinista del Coach (Cero Costo de Tokens)** | `src/lib/ai/headcoach/deterministicFallback.ts` |
 | **Compresión Tabular FinOps de Actividades (-70% Tokens)** | `src/lib/ai/contextCondenser.ts` |
 | **Prompts del Sistema Maestros (Inmutables / Cacheables)** | `src/lib/ai/prompts.ts` / `defaultPrompts.ts` |
 
-##### C. Capa de Modelos Científicos Fisiológicos SSOT (`src/lib/ai/knowledge/`)
+##### C. Capa de Modelos Científicos Fisiológicos & Motores de Periodización (`src/lib/ai/knowledge/` & `src/lib/physiology/`)
 | Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
 | :--- | :--- |
 | **Maratón 42K (Canova, Pfitzinger, Daniels, Ritmo Maratón)** | `src/lib/ai/knowledge/marathonModel.ts` |
 | **Media Maratón 21K (Daniels, Magness, Umbral de Lactato)** | `src/lib/ai/knowledge/halfMarathonModel.ts` |
-| **10K Road Racing (VT2, series de 1.000m)** | `src/lib/ai/knowledge/tenKModel.ts` |
-| **5K Speed & Potencia Aeróbica (Billat vVO2max, 30/30)** | `src/lib/ai/knowledge/fiveKModel.ts` |
+| **10K Road Racing / 5K Speed (VT2, Billat vVO2max)** | `src/lib/ai/knowledge/tenKModel.ts` / `fiveKModel.ts` |
 | **Trail & Ultra Montaña (D+, Desnivel, Bastones, Koop)** | `src/lib/ai/knowledge/trailModel.ts` |
-| **Ciclismo Gran Fondo / Resistencia (Coggan 7 Zonas, Sweetspot)**| `src/lib/ai/knowledge/cyclingModel.ts` |
-| **Ciclismo Puertos / Escalada / Criterium (Torque, Cadencia)** | `src/lib/ai/knowledge/cyclingSpecialtyModels.ts` |
-| **Triatlón Sprint y Olímpico (Transiciones T1/T2, vVO2max)** | `src/lib/ai/knowledge/triathlonShortModel.ts` |
-| **Triatlón Media Distancia 70.3 (Friel, Olbrecht, Bricks)** | `src/lib/ai/knowledge/triathlonModel.ts` |
-| **Triatlón Full / IRONMAN 140.6 (Gestión Glucogénica Profunda)**| `src/lib/ai/knowledge/triathlon1406Model.ts` |
-| **Salud, Longevidad, Base Mitocondrial (Peter Attia, Seiler)** | `src/lib/ai/knowledge/athleteMomentsModels.ts` |
-| **Retorno de Lesión / Método CaCo / Control ACWR (Tim Gabbett)** | `src/lib/ai/knowledge/athleteMomentsModels.ts` |
+| **Ciclismo Gran Fondo, Puertos, Escalada y Criterium** | `src/lib/ai/knowledge/cyclingModel.ts` / `cyclingSpecialtyModels.ts` |
+| **Triatlón Sprint, Olímpico, 70.3 y Full IRONMAN 140.6** | `src/lib/ai/knowledge/triathlonShortModel.ts` / `triathlonModel.ts` / `triathlon1406Model.ts` |
+| **Salud, Longevidad, Base Mitocondrial y Retorno de Lesión CaCo**| `src/lib/ai/knowledge/athleteMomentsModels.ts` / `longevityModel.ts` |
 | **Rotación Dinámica de Tiradas Largas Dominicales (4 Tipos)** | `src/lib/ai/knowledge/longRunPeriodization.ts` |
 | **Tests Diagnósticos (Stryd 3/9m, FTP 20m, Ramp Test, CSS)** | `src/lib/ai/knowledge/testingProtocols.ts` |
-| **Coaches de Fortalecimiento S1 a S5 (Running, Bike, Prehab)**| `src/lib/physiology/specializedStrengthCoaches.ts` |
-| **Piscina de Entrenamientos de Fuerza Estructurados** | `src/lib/physiology/strengthWorkoutPool.ts` |
+| **Coaches de Fortalecimiento S1–S5 y Piscinas de Fuerza/Natación**| `src/lib/physiology/specializedStrengthCoaches.ts` / `strengthWorkoutPool.ts` / `swimWorkoutPool.ts` |
+| **Motor Rector de Macrociclos, Progresión Lineal e Intervalos `mtr`** | `src/lib/physiology/macrocycleGenerator.ts` / `linearProgressionEngine.ts` / `metricIntervalEngine.ts` |
+| **Adaptador Canónico Potencia vs Ritmo (`resolveRunningMode`)** | `src/lib/physiology/runningWorkoutAdapter.ts` |
+| **Superposición de Carreras (`raceDayOverlay`) y Pacing Oficial** | `src/lib/physiology/raceDayOverlay.ts` / `racePacingStrategy.ts` |
+| **Resolutores de Viernes y Fin de Semana Ciclista** | `src/lib/physiology/fridayWorkoutResolver.ts` / `weekendRideResolver.ts` |
+| **Sanitizador y Parser de Sintaxis de Workouts (`mtr`/`km`/`m`)** | `src/lib/physiology/workoutSyntaxSanitizer.ts` / `workoutDocParser.ts` |
+| **Potencial Fisiológico Bietápico CTL y Factibilidad de Meta** | `src/lib/physiology/ctlPotentialEngine.ts` / `goalFeasibilityEngine.ts` |
 
-##### D. Capa Backend, Servicios y Controladores API (`src/app/api/` & `src/lib/services/`)
+##### D. Capa Backend, Servicios, Hooks y Controladores API (`src/app/api/`, `src/lib/services/` & `src/hooks/`)
 | Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
 | :--- | :--- |
-| **Endpoint del Chat del Head Coach** | `src/app/api/headcoach/chat/route.ts` |
-| **Endpoint de Generación de Macrociclos con IA** | `src/app/api/macrocycles/generate-ai/route.ts` |
-| **Endpoint de Auditoría de Carga y Evaluación Diaria** | `src/app/api/evaluate/route.ts` |
-| **Endpoint de Sincronización de Entrenamientos a Intervals** | `src/app/api/sync-intervals/route.ts` |
-| **Endpoint de Sincronización de Peso/Potencia/FC a Intervals** | `src/app/api/sync-settings/route.ts` |
-| **Endpoint de Perfil de Atleta y Almacenamiento Cifrado** | `src/app/api/profile/route.ts` |
-| **Endpoint de Test de Conexión en Vivo con Intervals** | `src/app/api/test-connection/route.ts` |
-| **Endpoint de Streams de Potencia/FC Segundo a Segundo** | `src/app/api/activities/[id]/streams/route.ts` |
-| **Servicio de Telemetría (Agregación TSS, Banister, Fallback)** | `src/lib/services/telemetryService.ts` |
-| **Servicio de Sincronización Intervals (Borrado y Despacho)** | `src/lib/services/intervalsSyncService.ts` |
-| **Motor Rector de Generación de Macrociclos (Banister Rampa)** | `src/lib/physiology/macrocycleGenerator.ts` |
-| **Plantillas Canónicas de Periodización y Rotación Coprima** | `src/lib/physiology/macrocycleTemplates.ts` |
-| **Motor de Cálculo PMC (CTL tau 42, ATL tau 7, TSB)** | `src/lib/physiology/pmcEngine.ts` |
-| **Cliente HTTP de bajo nivel para Intervals.icu API** | `src/lib/intervals/client.ts` |
-| **Validación Declarativa de Payloads con Zod** | `src/lib/validation/schemas.ts` |
+| **Endpoints de IA (Head Coach, Macrociclos IA, Evaluación)** | `src/app/api/headcoach/chat/route.ts` / `macrocycles/generate-ai/route.ts` / `evaluate/route.ts` |
+| **Endpoints de OAuth2 con Intervals.icu (Authorize & Callback)** | `src/app/api/auth/intervals/authorize/route.ts` / `callback/route.ts` |
+| **Endpoints de Sincronización, Perfil, Curvas y Streams** | `src/app/api/sync-intervals/route.ts` / `sync-settings/route.ts` / `profile/route.ts` / `athlete-curves/route.ts` |
+| **Servicios de Telemetría, Curvas e Hidratación de Calendario** | `src/lib/services/telemetryService.ts` / `src/lib/intervals/curvesService.ts` / `calendarHydration.ts` |
+| **Servicios de Detección Automática de Breakthroughs (CP/FTP/Pace)**| `src/lib/services/breakthroughDetectionService.ts` / `ftpDetectionService.ts` / `paceDetectionService.ts` / `runPowerDetectionService.ts` |
+| **Servicio de Sincronización Quirúrgica con Intervals.icu** | `src/lib/services/intervalsSyncService.ts` |
+| **Custom Hooks de Cliente (Telemetría, Curvas, Planes, Sync)** | `src/hooks/useAthleteTelemetry.ts` / `useAthleteCurves.ts` / `useSeasonPlans.ts` / `useIntervalsSync.ts` |
 
-##### E. Capa de Persistencia, Seguridad & SuperAdmin
+##### E. Capa de Persistencia, Facturación MRR, Seguridad & SuperAdmin
 | Lo que pide el usuario (Lenguaje Natural) | Archivo Canónico Exacto (Destino Inmediato) |
 | :--- | :--- |
-| **Cifrado y Descifrado Criptográfico AES-256-GCM** | `src/lib/crypto.ts` |
-| **Operaciones con Cloud Firestore (`users/{uid}`)** | `src/lib/db/userProfile.ts` |
-| **Operaciones de Macrociclos en Base de Datos** | `src/lib/db/macrocycles.ts` |
-| **Gestión de Usuarios SuperAdmin y Preautorizaciones** | `src/lib/db/adminUsers.ts` |
-| **Endpoints de Administración (`/api/admin/*`)** | `src/app/api/admin/users/route.ts` / `programs/route.ts` |
-| **Panel de Administración en UI (Sidebar, Tabs, Métricas)** | `src/components/admin/AdminSidebar.tsx` / `AdminDashboardTab.tsx` |
+| **Cifrado AES-256-GCM y Storage Aislado Multiusuario (Read-Only)**| `src/lib/crypto.ts` / `src/lib/storage/userStorage.ts` |
+| **Operaciones Firestore (Perfiles, Macrociclos, Usuarios Admin)** | `src/lib/db/userProfile.ts` / `macrocycles.ts` / `adminUsers.ts` |
+| **Módulo Financiero MRR y Reporte de Pagos (`/api/admin/billing`)** | `src/lib/services/adminBillingService.ts` / `src/app/api/admin/billing/route.ts` / `billing/report-payment/route.ts` |
+| **Panel de Administración Desktop & Shell Móvil App-Like** | `src/components/admin/AdminSidebar.tsx` / `AdminMobileBottomNav.tsx` / `AdminMobileHeader.tsx` |
+| **Gestión de Usuarios, Facturación y Radar del Escuadrón en Admin**| `src/components/admin/AdminUsersTable.tsx` / `AdminBillingTable.tsx` / `AdminSquadAthleticRadar.tsx` |
 
 #### 3. Algoritmo Operativo Autónomo del Agente (Mínimo Consumo de Tokens):
 1. **Identificación Inmediata:** Identifica el archivo destino en la tabla canónica (0 tokens de exploración).

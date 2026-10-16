@@ -3,6 +3,7 @@ import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { applyTssAdjustmentToPlan } from "./weekRetrospective";
 import { ResolvedChatContext } from "./chatContext";
 import { HeadCoachChatResponse, WorkoutDiff, ChatMessage, SmartActionItem } from "./types";
+import { generateInitialFallbackPlan } from "./fallbackPlanGenerator";
 
 export function handleDeterministicFallback(
   ctx: ResolvedChatContext,
@@ -19,125 +20,24 @@ export function handleDeterministicFallback(
 
   if (isInitialAudit) {
     const macroPhase = ctx.promptContext.macrocyclePhase;
-    const hasSwim = Object.values(safeAvailability).some((v: any) =>
-      Array.isArray(v) ? v.includes("Natacion") : v === "Natacion"
-    );
-    const resolvedDist = (macroPhase?.primaryRace?.distance as any) || (hasSwim ? "triathlon_short" : "42k");
-
-    const totalWeeksCount = macroPhase?.blueprint?.totalWeeks || 16;
-    const defaultWeekBlueprint = {
-      weekNumber: targetPlanningWeekNum, countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
-      totalWeeks: totalWeeksCount, startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
-      phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
-      focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
-      targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
-      microcycleType: isDeload ? ("RECOVERY" as const) : ("LOAD" as const),
-      maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
-    };
-
-    const runningOpts = {
-      mode: macroPhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
-      raceGoal: macroPhase?.primaryRace?.goalTarget,
-    };
-    const rawFallbackPlan = generateWeekTemplate(
-      defaultWeekBlueprint as any, profile.run_ftp || 0, profile.bike_ftp || 0,
-      safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts
-    );
-
-    const fallbackGeneratedPlan = rawFallbackPlan.map((p, pIdx) => {
-      const dateInfo = planningWeekDates[pIdx] || { date: "", formattedDate: "" };
-      const itemDate = dateInfo.date || p.date;
-      const isPast = ctx.isCurrentWeek && Boolean(itemDate && itemDate < ctx.todayDateStr);
-
-      if (isPast) {
-        const execData = ctx.effectiveExecutedMap[itemDate];
-        if (execData && execData.activities.length > 0) {
-          const act = execData.activities[0];
-          const isRide = /ride|cycling|bike|virtualride/i.test(act.type);
-          const isWeight = /weight|strength|fuerza/i.test(act.type);
-          const disc: PlanItem["discipline"] = isRide ? "Ciclismo" : isWeight ? "Fuerza" : "Carrera";
-          return {
-            ...p, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: disc,
-            workoutName: act.name || `${disc} Completada`, action: "MANTENER" as const,
-            powerTarget: act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada"),
-            tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
-            justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
-          };
-        }
-
-        const plannedSession = Array.isArray(currentPlan) ? currentPlan[pIdx] : null;
-        const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
-        const fallbackDisc: PlanItem["discipline"] = (isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera")) as PlanItem["discipline"];
-        return {
-          ...p, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: fallbackDisc,
-          workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || "Entrenamiento"})`,
-          action: "MANTENER" as const, powerTarget: isRestPlanned ? "0W" : "0 TSS", tss: 0, durationMinutes: 0,
-          justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
-        };
-      }
-
-      const isRest = p.discipline === "Descanso" || p.action === "DESCANSO_ACTIVO";
-      const dayName = p.day || (planningWeekDates[pIdx]?.day) || "Día";
-      let workoutName = p.workoutName || p.title;
-      if (isRest) {
-        workoutName = "Descanso Pasivo Total";
-      } else if (!workoutName || workoutName === "Entrenamiento" || /rodaje de activaci|aer[oó]bica continua z2/i.test(workoutName)) {
-        if (p.discipline === "Ciclismo") {
-          workoutName = dayName === "Sábado" ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia" : "Ciclismo - Resistencia Base Z2 & Cadencia Dinámica";
-        } else if (p.discipline === "Fuerza") {
-          workoutName = "Fuerza Neuromuscular, Core & Cadena Posterior";
-        } else {
-          if (dayName === "Martes") workoutName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
-          else if (dayName === "Jueves") workoutName = "Carrera - Fartlek Progresivo Z2-Z4";
-          else if (dayName === "Viernes") workoutName = "Carrera - Trote Regenerativo Z1 & Capilarización";
-          else if (dayName === "Domingo") workoutName = "Carrera - Tirada Larga Progresiva con Bloque Maratón";
-          else workoutName = "Carrera - Rodaje Base Aeróbico Z2";
-        }
-      }
-
-      const dur = p.durationMinutes || (isRest ? 0 : p.discipline === "Ciclismo" ? 55 : p.discipline === "Fuerza" ? 30 : 45);
-      const tssVal = p.tss || (isRest ? 0 : Math.round(dur * 0.75));
-      return {
-        ...p, date: itemDate, formattedDate: dateInfo.formattedDate || p.formattedDate,
-        workoutName, title: workoutName, durationMinutes: dur, tss: tssVal,
-      };
-    });
-
+    const fallbackGeneratedPlan = generateInitialFallbackPlan(ctx, currentPlan);
     const fallbackPlannedTss = fallbackGeneratedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
     const masterLabel = profile.age && profile.age >= 40 ? "Categoría Máster" : "Categoría Senior";
     const wkgRun = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
     const isContinuityViable = hasExistingPlan && physioStatus.tsb >= -12 && compliancePct >= 80;
 
-    const decisionHeader = isContinuityViable
-      ? `### 📋 Decisión del Microciclo: 🟢 CONTINUIDAD DEL PLAN PROGRAMADO\nTu asimilación biológica es óptima (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Mantenemos el plan previsto para los días restantes.`
-      : `### 📋 Decisión del Microciclo: ⚠️ PROPUESTA DE RECALIBRACIÓN / NUEVO PLAN\n${hasExistingPlan ? "Debido a la fatiga acumulada o sesiones omitidas, sugiero reestructurar la carga." : "No se encontró un plan previo activo; generamos una propuesta estructurada a medida respetando tu matriz semanal."}`;
+    const estadoBloque = `[ESTADO DEL PROCESO]: Semana ${targetPlanningWeekNum} (${macroPhase?.phase || "Construcción"}) • Cumplimiento: ${compliancePct}% (${actualTss}/${fallbackPlannedTss} TSS) • Rampa: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem`;
+    const diagBloque = isContinuityViable
+      ? `[DIAGNÓSTICO]: Continuidad del Plan. Balance fisiológico funcional (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Sin signos de sobrecarga no funcional.`
+      : `[DIAGNÓSTICO]: Propuesta de Calibración Táctica. ${hasExistingPlan ? `Fatiga residual detectada (TSB ${physioStatus.tsb.toFixed(1)}). Conviene modular la carga semanal.` : "Sin plan previo activo; se genera una estructura optimizada según tu matriz."}`;
+    const tradHumanaBloque = isContinuityViable
+      ? `[TRADUCCIÓN HUMANA]: Tus números demuestran que estás asimilando el volumen a la perfección. Tus piernas están respondiendo con frescura y el corazón no sufre sobrecalentamiento. Mantén el plan tal como está para llegar fuerte al fin de semana.`
+      : `[TRADUCCIÓN HUMANA]: ${hasExistingPlan ? "Tu cuerpo pide un respiro táctico para evitar sobrecargar tendones o acumular cansancio innecesario. Aligerar un poco ahora te permitirá rendir mucho mejor en las sesiones clave." : "Hemos distribuido los días de entrenamiento y descanso respetando tus deportes habituales para que comiences la semana con orden y seguridad."}`;
+    const accionBloque = isContinuityViable
+      ? `[ACCIÓN PRESCRIPTIVA]: Continuamos con tu sesión programada para hoy. Revisa abajo la estructura completa de tu microciclo.`
+      : `[ACCIÓN PRESCRIPTIVA]: Revisa la propuesta adaptada en la tarjeta inferior y haz clic en 'Aprobar y Sincronizar' para actualizar tu reloj y calendario de Intervals.icu.`;
 
-    const actionPlanText = isContinuityViable
-      ? `🎯 **Plan de Acción:**\nContinuamos con las sesiones ya programadas en tu calendario sin necesidad de cambios.`
-      : hasExistingPlan
-        ? `🎯 **Recomendación:**\n¿Deseas que adaptemos el plan de esta semana para balancear la fatiga?`
-        : `🎯 **Propuesta Adaptada del Microciclo (~${fallbackPlannedTss} TSS):**\nSemana estructurada con estímulos diferenciados evaluados según tu matriz semanal.`;
-
-    const auditText = `${decisionHeader}
-
-🧬 **Contexto Biológico & Demográfico:**
-- **Atleta:** ${profile.name || "Atleta"}${profile.age ? ` (${profile.age} años - ${masterLabel})` : ""}${profile.weight ? ` | **Peso:** ${profile.weight} kg` : ""}
-- **Potencia Relativa:** Carrera ${profile.run_ftp ? `${profile.run_ftp}W${wkgRun}` : "—"} | Ciclismo ${profile.bike_ftp ? `${profile.bike_ftp}W` : "—"}
-
-⚡ **Auditoría Fisiológica & TSS por Actividad:**
-- Carga acumulada ejecutada: **${actualTss} TSS** (${compliancePct}% de cumplimiento sobre el objetivo).
-- Balance de fatiga (TSB): **${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}** | ATL: **${physioStatus.atl.toFixed(1)}** | CTL: **${physioStatus.ctl.toFixed(1)}**.
-- Recuperación del sistema nervioso (HRV): **${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "Estable"}** (balance adecuado para asimilar calidad).
-
-🟢 **Fortalezas & Disciplina:**
-- Cumplimiento de carga acumulada en el rango fisiológico programado.
-- Respeto de los descansos pasivos para asimilación neuromuscular.
-
-⚠️ **Puntos de Atención & Control de Carga:**
-- ${physioStatus.tsb < -15 ? "Tu TSB ha caído a zona de sobrecarga. Vigila el descanso nocturno e hidratación para evitar fatiga residual." : "Ramp Rate en rango controlado. Mantén la disciplina en los ritmos y no te aceleres en los días de trote suave Z1."}
-- En atletas ${masterLabel.toLowerCase()}, el tiempo de asimilación articular exige no encadenar dos días de calidad consecutivos.
-
-${actionPlanText}`;
+    const auditText = `${estadoBloque}\n\n${diagBloque}\n\n${tradHumanaBloque}\n\n${accionBloque}`;
 
     const fallbackSmartActions: SmartActionItem[] = [
       { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
@@ -211,7 +111,7 @@ ${actionPlanText}`;
         safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts
       );
       const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-      modifiedPlan = rawTemplate.map((p) => {
+      modifiedPlan = rawTemplate.map((p: any) => {
         const dayIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === p.day?.toLowerCase());
         const dateInfo = dayIdx >= 0 && planningWeekDates[dayIdx] ? planningWeekDates[dayIdx] : { date: "", formattedDate: "" };
         return {
@@ -310,6 +210,68 @@ ${actionPlanText}`;
     smartActions = [
       { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
       { label: "Reorganizar", icon: "calendar-sync", variant: "secondary" },
+    ];
+  }
+  // FLUJO ENFERMEDAD / RETORNO PROGRESIVO
+  else if (lowerMsg.includes("enferm") || lowerMsg.includes("retorno") || lowerMsg.includes("salté") || lowerMsg.includes("salte")) {
+    actionType = "ADAPT_WORKOUT";
+    const targetIdx = ctx.todayDayIndex;
+    if (modifiedPlan[targetIdx]) {
+      modifiedPlan[targetIdx] = {
+        ...modifiedPlan[targetIdx],
+        workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)",
+        durationMinutes: 30, tss: 20, action: "MODIFICAR",
+      };
+    }
+    replyMsg = "[ESTADO DEL PROCESO]: Protocolo de Retorno Seguro • Prioridad: Cero Lesiones\n\n[DIAGNÓSTICO]: Retorno tras indisposición física. Queda prohibido intentar recuperar kilómetros perdidos.\n\n[TRADUCCIÓN HUMANA]: Tranquilidad total: unos días de descanso forzado no borran tus adaptaciones de semanas, pero querer recuperar entrenos perdidos sí te lesiona. Vamos a rodar suave para que el corazón y tendones despierten sin estrés.\n\n[ACCIÓN PRESCRIPTIVA]: He suavizado tu sesión a 30m regenerativos en Zona 1. ¿Aprobamos este ajuste progresivo?";
+    smartActions = [
+      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
+      { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
+    ];
+  }
+  // FLUJO POCO TIEMPO HOY
+  else if (lowerMsg.includes("poco tiempo") || lowerMsg.includes("30m") || lowerMsg.includes("45m")) {
+    actionType = "ADAPT_WORKOUT";
+    const targetIdx = ctx.todayDayIndex;
+    if (modifiedPlan[targetIdx]) {
+      modifiedPlan[targetIdx] = {
+        ...modifiedPlan[targetIdx],
+        workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`,
+        durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR",
+      };
+    }
+    replyMsg = "[ESTADO DEL PROCESO]: Sesión Comprimida por Tiempo • Enfoque Concentrado\n\n[DIAGNÓSTICO]: Adaptación por agenda limitada. Se preserva el estímulo central acortando calentamiento y enfriamiento.\n\n[TRADUCCIÓN HUMANA]: Mucho mejor 35 minutos bien aprovechados que saltarse el día. Concentramos el trabajo clave para que sume a tu motor sin consumir tiempo de más.\n\n[ACCIÓN PRESCRIPTIVA]: Sesión comprimida a 35 minutos lista. ¿Aprobamos el cambio en tu calendario?";
+    smartActions = [
+      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
+      { label: "Descartar", variant: "secondary", icon: "x" },
+    ];
+  }
+  // FLUJO RUMBO A LA META
+  else if (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal")) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const raceName = ctx.promptContext.macrocyclePhase?.primaryRace?.name || "tu Meta Principal";
+    replyMsg = `[ESTADO DEL PROCESO]: Rumbo a ${raceName} • Semana ${targetPlanningWeekNum}\n\n[DIAGNÓSTICO]: Fitness actual en ${physioStatus.ctl.toFixed(1)} CTL con ${profile.run_ftp ? `Stryd CP de ${profile.run_ftp}W` : "ritmo umbral sólido"}. Progresión Banister controlada.\n\n[TRADUCCIÓN HUMANA]: Vas en la trayectoria correcta. Tienes la caja aeróbica y la fuerza muscular necesarias para sostener tu ritmo de carrera. La clave en las semanas que vienen es no inventar entrenamientos extra y respetar los descansos.\n\n[ACCIÓN PRESCRIPTIVA]: Continuamos enfocados en la semana en curso. Cada sesión planificada está sumando a tu día de competición.`;
+    smartActions = [
+      { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
+    ];
+  }
+  // FLUJO AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD
+  else if (lowerMsg.includes("audita") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión")) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    replyMsg = `[ESTADO DEL PROCESO]: Auditoría de Sesión • Asimilación y Telemetría\n\n[DIAGNÓSTICO]: Potencia y ritmo ejecutados en concordancia con tus umbrales biológicos. Desacoplamiento cardíaco bajo control.\n\n[TRADUCCIÓN HUMANA]: Clavaste el objetivo de la sesión. Tu corazón no se sobrecalentó al final y mantuviste la fuerza en cada repetición sin quemar reservas innecesarias. Estímulo completado con éxito.\n\n[ACCIÓN PRESCRIPTIVA]: Hidratación y descanso activo para consolidar la adaptación. Tu cuerpo está listo para la siguiente sesión.`;
+    smartActions = [
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
+      { label: "Reorganizar", variant: "secondary", icon: "calendar-sync" },
+    ];
+  }
+  // FLUJO BALANCE DE SEMANA Y VOLUMEN
+  else if (lowerMsg.includes("balance") || lowerMsg.includes("volumen")) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    replyMsg = `[ESTADO DEL PROCESO]: Balance Semanal • Semana ${targetPlanningWeekNum} (${actualTss}/${plannedWeekTss} TSS • ${compliancePct}% cumplimiento)\n\n[DIAGNÓSTICO]: Rampa de fitness en ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem con TSB en ${physioStatus.tsb.toFixed(1)} (ATL: ${physioStatus.atl.toFixed(1)}, CTL: ${physioStatus.ctl.toFixed(1)}).\n\n[TRADUCCIÓN HUMANA]: Vas en el rango ideal de adaptación. Tu cuerpo está absorbiendo el volumen sin caer en fatiga destructiva. El trabajo de esta semana sumó calidad directamente a tu fondo aeróbico.\n\n[ACCIÓN PRESCRIPTIVA]: Mantén la constancia en tus sesiones restantes y cuida la hidratación para consolidar las adaptaciones.`;
+    smartActions = [
+      { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
     ];
   }
   // Default de continuidad

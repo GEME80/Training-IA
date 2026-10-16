@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Footprints, Bike, Dumbbell, Waves, Clock, Target, CheckCircle2 } from "lucide-react";
 import { MacrocycleBlueprint, MacrocycleWeek } from "@/lib/physiology/macrocycle";
 import { WeeklyAvailabilityMap, PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, CalendarEvent } from "@/lib/intervals/types";
@@ -19,7 +19,7 @@ interface AthleteCalendarWeekRowProps {
   dailyExecutedActivities: DailyExecutedMap; calendarEvents?: CalendarEvent[];
   runningOpts?: { mode?: "POWER" | "PACE" | "HYBRID"; thresholdPaceSec?: number; thresholdPaceStr?: string; lthr?: number; };
   todayStr: string; gridTemplate: string; currentWeekRef: React.RefObject<HTMLDivElement | null>;
-  onSelectWeek: (idx: number) => void; onOpenAICoach: (weekIdx?: number) => void;
+  onSelectWeek: (idx: number) => void; onOpenAICoach?: (weekIdx?: number) => void;
   onSyncWeekToIntervals?: (plan: PlanItem[]) => Promise<void>;
   onSyncTriweeklyBlock?: (weekIdx: number) => Promise<void>;
   onSelectWorkoutModal: (item: PlanItem) => void;
@@ -292,14 +292,6 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
             )}
           </div>
           <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => onOpenAICoach(wIdx)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 text-slate-950 text-xs font-black shadow-xs transition hover:scale-[1.02] cursor-pointer"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Head Coach IA</span>
-            </button>
             {isWithinGarminBuffer && (
               <>
                 <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">

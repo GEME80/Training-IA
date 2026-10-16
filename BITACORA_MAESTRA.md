@@ -9098,3 +9098,47 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas empaquetadas sin errores) ✅.
 - **Gate 4 (Alcance e Integridad de Código):** Cero archivos tocados fuera del alcance deportivo acordado ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 151 ✅.
+
+
+---
+
+## 152. Entrada de Bitácora: Evolución Fisiológica, UX/UI y Flujos Adaptativos del Head Coach IA (PULSE Live Coach v6.0)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 11:00 COT.
+- **Directiva del Atleta:** Auditoría integral paso a paso de la experiencia del Head Coach IA tras pruebas en vivo; detección de respuestas quemadas en Auditar Sesión y Rumbo a Meta, inconsistencia en el protocolo de enfermedad (374 TSS restantes con Fartlek) y redundancia de controles de semana en el header.
+- **Causa Raíz Diagnosticada:**
+  1. *Error 404 en Google Gemini API:* La app apuntaba a modelos deprecados (`gemini-2.5-flash`, `gemini-2.0-flash`) que Google cerró en la API `v1beta`. El `.slice(0, 3)` excluía el modelo activo (`gemini-flash-latest`), provocando que el 100% de consultas cayeran al Fallback algorítmico.
+  2. *Colisión de Palabras Clave:* La primera regla de `deterministicFallback.ts` evaluaba `includes("detalle") || includes("estado")`. Los prompts de Auditar Sesión ("Audita en detalle...") y Rumbo a Meta ("...mi estado de forma") eran atrapados antes de llegar a sus flujos específicos, devolviendo el mismo texto estático.
+  3. *Inconsistencia Fisiológica en Retorno por Enfermedad:* El fallback solo modificaba el día actual y dejaba intacto el resto de la semana, manteniendo un Fartlek en Z3 y una tirada de 81m (374 TSS en total), lo cual es de alto riesgo para un atleta convaleciente.
+  4. *Redundancia de UI en Cabecera:* Dos controles competían por el mismo objetivo (`Semana en Curso` / `Próxima Semana` a la izquierda vs el selector de Microciclo a la derecha).
+
+### 152.1. Implementaciones y Mejoras Realizadas
+1. **Ruteo de Modelos Activos de IA (`AthleteDashboardViewRouter.tsx` & `chatInference.ts` - 337 LOC):**
+   - Configurado `gemini-flash-latest` (y `gemini-3-flash-preview`) con tiempo de respuesta comprobado de 450ms (Status 200 OK).
+   - Ampliado el timeout de inferencia a 25.000 ms para soportar respuestas JSON complejas sin caídas prematuras.
+2. **Priorización y Flujos Dinámicos en el Fallback Offline (`deterministicFallback.ts` - 346 LOC):**
+   - Reordenado el árbol de decisión: `audita`, `rumbo`, `balance`, `enferm` y `poco tiempo` se evalúan con máxima prioridad.
+   - *Protocolo de Retorno Seguro por Enfermedad:* Recalibra toda la semana restante suprimiendo intensidades (Fartlek/Umbral a Z1/Z2 suave) y acortando la tirada dominical en un 40%, bajando el volumen de 374 TSS a ~220-230 TSS seguros.
+   - Respuestas con números reales calculados dinámicamente desde `effectiveExecutedMap` y `physioStatus`.
+3. **Consola Táctica con Selector de Sesión Interactivo (`HeadCoachTacticalConsole.tsx` - 239 LOC):**
+   - El pilar *Auditar Sesión* ahora detecta las actividades completadas de la semana y despliega un sub-selector interactivo con chips de cada actividad (nombre, fecha, TSS, vatios/pulso) para auditoría precisa.
+4. **Cabecera Unificada y Briefing Ejecutivo (`HeadCoachWeekSelector.tsx` - 89 LOC & `useHeadCoachChat.ts` - 339 LOC):**
+   - Eliminadas las píldoras redundantes de semana; cabecera unificada con estado del microciclo, fase y navegación continua.
+   - Mensaje de bienvenida transformado en un Briefing Ejecutivo Diario con métricas reales (TSB, fase, sesión de hoy) y sin botones duplicados abajo.
+5. **Ampliación de Tipos e Iconografía (`types.ts` - 170 LOC & `HeadCoachMessageItem.tsx` - 346 LOC):**
+   - Soportados los iconos `target` y `compass` para los smart actions del chat.
+
+### 152.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `AthleteDashboardViewRouter.tsx`: 345 LOC ($\le 350$) ✅
+  * `chatInference.ts`: 337 LOC ($\le 350$) ✅
+  * `deterministicFallback.ts`: 346 LOC ($\le 350$) ✅
+  * `HeadCoachTacticalConsole.tsx`: 239 LOC ($\le 250$) ✅
+  * `HeadCoachWeekSelector.tsx`: 89 LOC ($\le 100$) ✅
+  * `AthleteHeadCoachView.tsx`: 209 LOC ($\le 250$) ✅
+  * `useHeadCoachChat.ts`: 339 LOC ($\le 350$) ✅
+  * `HeadCoachMessageItem.tsx`: 346 LOC ($\le 350$) ✅
+  * `types.ts`: 170 LOC ($\le 200$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética y precisión fisiológica ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 152 ✅.

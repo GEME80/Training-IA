@@ -6,15 +6,18 @@ import { Activity, Target, Compass, Sliders, Thermometer, Clock, Bike, CalendarS
 interface HeadCoachTacticalConsoleProps {
   onSelectAction: (prompt: string, options?: any) => void;
   onOpenTemporaryMatrix?: () => void;
+  completedActivities?: { id: string; name: string; date: string; type?: string; tss?: number; movingTimeMin?: number; watts?: number; heartrate?: number }[];
   isLoading?: boolean;
 }
 
 export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> = ({
   onSelectAction,
   onOpenTemporaryMatrix,
+  completedActivities = [],
   isLoading = false,
 }) => {
   const [reorgOpen, setReorgOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   const handleAction = (prompt: string, opts?: any) => {
     if (isLoading) return;
@@ -29,6 +32,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           type="button"
           onClick={() => {
             setReorgOpen(false);
+            setAuditOpen(false);
             handleAction(
               "Analiza el balance y volumen de esta semana: evalúa el cumplimiento de TSS real vs planificado, mi estado de fatiga y frescura (TSB), y si la carga va acorde a lo programado.",
               { isWeekKickoffAudit: true }
@@ -55,12 +59,21 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           type="button"
           onClick={() => {
             setReorgOpen(false);
-            handleAction(
-              "Audita en detalle mi última sesión completada: analiza mi potencia/ritmo, frecuencia cardíaca, desacoplamiento aeróbico (drift) y explícame con datos y traducción humana si cumplí el objetivo."
-            );
+            if (completedActivities && completedActivities.length > 0) {
+              setAuditOpen((prev) => !prev);
+            } else {
+              setAuditOpen(false);
+              handleAction(
+                "Audita la planificación de esta semana: aún no he registrado actividades completadas. Analiza las sesiones programadas y qué objetivos de potencia/ritmo debo cuidar."
+              );
+            }
           }}
           disabled={isLoading}
-          className="text-left rounded-2xl p-2.5 sm:p-3 border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 dark:bg-cyan-950/20 dark:hover:bg-cyan-950/30 transition-all cursor-pointer group disabled:opacity-50 shadow-2xs"
+          className={`text-left rounded-2xl p-2.5 sm:p-3 border transition-all cursor-pointer group disabled:opacity-50 shadow-2xs ${
+            auditOpen
+              ? "border-cyan-500/40 bg-cyan-500/15 dark:bg-cyan-950/40 ring-1 ring-cyan-400/30"
+              : "border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 dark:bg-cyan-950/20 dark:hover:bg-cyan-950/30"
+          }`}
         >
           <div className="flex items-center gap-2 mb-1">
             <div className="h-7 w-7 rounded-xl bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -71,7 +84,9 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
             </span>
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">
-            Potencia, pulso y desacople
+            {completedActivities && completedActivities.length > 0
+              ? `${completedActivities.length} completada${completedActivities.length > 1 ? "s" : ""} • Ver selector`
+              : "Potencia, pulso y desacople"}
           </p>
         </button>
 
@@ -80,6 +95,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           type="button"
           onClick={() => {
             setReorgOpen(false);
+            setAuditOpen(false);
             handleAction(
               "Evalúa mi rumbo hacia mi carrera principal: revisa mis semanas restantes, mi estado de forma (CTL y Stryd CP / FTP) y explícame cómo se proyecta mi ritmo objetivo para el día de la carrera."
             );
@@ -103,7 +119,10 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
         {/* PILAR 4: Reagendar o Adaptar */}
         <button
           type="button"
-          onClick={() => setReorgOpen((prev) => !prev)}
+          onClick={() => {
+            setAuditOpen(false);
+            setReorgOpen((prev) => !prev);
+          }}
           disabled={isLoading}
           className={`text-left rounded-2xl p-2.5 sm:p-3 border transition-all cursor-pointer group disabled:opacity-50 shadow-2xs ${
             reorgOpen
@@ -124,6 +143,38 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           </p>
         </button>
       </div>
+
+      {/* Sub-Opciones Desplegables de Auditoría de Sesiones */}
+      {auditOpen && completedActivities && completedActivities.length > 0 && (
+        <div className="p-2 sm:p-2.5 rounded-2xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-500/25 flex flex-wrap items-center gap-1.5 sm:gap-2 animate-fadeIn">
+          <span className="text-[11px] font-bold text-cyan-800 dark:text-cyan-300 mr-1 flex items-center gap-1">
+            <Target className="h-3 w-3" />
+            <span>Selecciona sesión:</span>
+          </span>
+          {completedActivities.map((act, aIdx) => {
+            const isRide = /ride|bike|ciclismo/i.test(act.type || act.name || "");
+            return (
+              <button
+                key={act.id || `${act.date}-${aIdx}`}
+                type="button"
+                onClick={() => {
+                  setAuditOpen(false);
+                  handleAction(
+                    `Audita en detalle mi sesión de ${act.name || act.type} realizada el ${act.date}: analiza mi potencia/ritmo, frecuencia cardíaca, desacoplamiento aeróbico (drift) y explícame con datos y traducción humana si cumplí el objetivo.`
+                  );
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-cyan-200 dark:border-cyan-800 text-[11px] font-bold text-cyan-900 dark:text-cyan-200 hover:border-cyan-400 hover:bg-cyan-50/80 dark:hover:bg-cyan-950/40 transition cursor-pointer"
+              >
+                {isRide ? <Bike className="h-3 w-3 text-sky-500" /> : <Activity className="h-3 w-3 text-emerald-500" />}
+                <span className="truncate max-w-[140px] sm:max-w-[180px]">{act.name || act.type}</span>
+                <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-normal">
+                  {act.tss ? `${act.tss} TSS` : `${act.movingTimeMin || 0}m`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Sub-Opciones Desplegables de Reagendamiento */}
       {reorgOpen && (

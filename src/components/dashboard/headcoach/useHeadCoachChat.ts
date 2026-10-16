@@ -16,10 +16,10 @@ export interface QuickActionOptions {
 }
 
 export const INITIAL_SMART_ACTIONS: SmartActionItem[] = [
-  { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+  { label: "Balance de Semana", icon: "activity", variant: "secondary" },
+  { label: "Auditar Sesión", icon: "target", variant: "secondary" },
+  { label: "Rumbo a mi Meta", icon: "compass", variant: "secondary" },
   { label: "Reorganizar", icon: "calendar-sync", variant: "secondary" },
-  { label: "Siento mucha fatiga hoy", icon: "trending-down", variant: "secondary" },
-  { label: "El plan está muy suave", icon: "trending-up", variant: "secondary" },
 ];
 
 export interface UseHeadCoachChatProps {
@@ -41,9 +41,9 @@ export interface UseHeadCoachChatProps {
 }
 
 export function useHeadCoachChat({
-  profile, effectiveBlueprint, activeWeekNumber, realCurrentWeekNumber, selectedWeekData,
+  profile, physioStatus, macrocyclePhase, effectiveBlueprint, activeWeekNumber, realCurrentWeekNumber, selectedWeekData,
   weeklyAvailability, currentPlan, dailyExecutedActivities = {}, apiKey, geminiApiKey,
-  selectedModel = "gemini-3.5-flash", temperature = 0.0, uid, email,
+  selectedModel = "gemini-flash-latest", temperature = 0.0, uid, email,
   onApplyPlanAndSync, onPlanUpdate, onSelectWeek,
 }: UseHeadCoachChatProps) {
   const [isApplying, setIsApplying] = useState(false);
@@ -55,7 +55,10 @@ export function useHeadCoachChat({
 
   const getWelcomeText = (name?: string) => {
     const firstName = (name || "Atleta").trim().split(" ")[0];
-    return `Hola ${firstName}, soy tu Head Coach Fisiológico. Estoy conectado a tu telemetría en tiempo real (CTL, ATL, TSB y umbrales de potencia). Utiliza la consola táctica de arriba para auditar tu semana, analizar una sesión o adaptar tu calendario según tus necesidades.`;
+    const tsbNum = physioStatus?.tsb !== undefined ? Number(physioStatus.tsb) : 0;
+    const tsbSign = tsbNum >= 0 ? `+${tsbNum.toFixed(1)}` : tsbNum.toFixed(1);
+    const phaseStr = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Base";
+    return `Hola ${firstName}. Microciclo ${activeWeekNumber} (${phaseStr}). Tu balance fisiológico hoy está en TSB ${tsbSign} (${tsbNum >= -10 ? "Frescura Óptima" : "Fatiga Acumulada"}). Elige una acción en la consola táctica superior para auditar tu semana, revisar una sesión o ajustar tu calendario.`;
   };
 
   const [messages, setMessages] = useState<HeadCoachMessageData[]>([
@@ -64,7 +67,6 @@ export function useHeadCoachChat({
       role: "assistant",
       text: getWelcomeText(profile.name),
       timestamp: "Ahora",
-      smartActions: INITIAL_SMART_ACTIONS,
     },
   ]);
 
@@ -75,7 +77,7 @@ export function useHeadCoachChat({
       }
       return prev;
     });
-  }, [profile.name]);
+  }, [profile.name, activeWeekNumber, physioStatus?.tsb]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

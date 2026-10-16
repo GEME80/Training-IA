@@ -201,7 +201,9 @@ const renderActionIcon = (action: SmartActionItem | string) => {
   const icon = typeof action === "string" ? undefined : action.icon;
   const label = typeof action === "string" ? action : action.label;
 
-  if (icon === "activity" || /detalle|estado|fisiol[oó]g/i.test(label)) return <Activity className="h-3.5 w-3.5" />;
+  if (icon === "target" || /auditar|sesi[oó]n/i.test(label)) return <Target className="h-3.5 w-3.5" />;
+  if (icon === "compass" || /rumbo|meta|carrera/i.test(label)) return <Compass className="h-3.5 w-3.5" />;
+  if (icon === "activity" || /detalle|estado|fisiol[oó]g|balance/i.test(label)) return <Activity className="h-3.5 w-3.5" />;
   if (icon === "calendar-sync" || /reorganizar/i.test(label)) return <CalendarSync className="h-3.5 w-3.5" />;
   if (icon === "trending-down" || /fatiga|cansad/i.test(label)) return <TrendingDown className="h-3.5 w-3.5" />;
   if (icon === "trending-up" || /suave|aumentar|mayor carga/i.test(label)) return <TrendingUp className="h-3.5 w-3.5" />;

@@ -60,9 +60,9 @@ export async function executeGeminiInference(
     normalizedContents.push({ role: "user", parts: [{ text: `${userPrompt}${smartBrevityInstruction}` }] });
   }
 
-  const primaryModel = selectedModel || "gemini-2.5-flash";
+  const primaryModel = selectedModel || "gemini-flash-latest";
   const userFallbacks = Array.isArray(fallbackModels) ? fallbackModels : [];
-  const candidateModels = Array.from(new Set([primaryModel, ...userFallbacks, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"].filter(Boolean) as string[])).slice(0, 3);
+  const candidateModels = Array.from(new Set([primaryModel, ...userFallbacks, "gemini-flash-latest", "gemini-3-flash-preview", "gemini-pro-latest"].filter(Boolean) as string[])).slice(0, 3);
   const safeTemp = typeof temperature === "number" ? Math.max(0, Math.min(1, temperature)) : 0.0;
 
   const cleanJson = (str: string) => {
@@ -91,7 +91,7 @@ export async function executeGeminiInference(
               maxOutputTokens: 6144,
             },
           }),
-          signal: AbortSignal.timeout(12000),
+          signal: AbortSignal.timeout(25000),
         }
       );
 

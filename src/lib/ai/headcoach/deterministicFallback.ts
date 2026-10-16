@@ -25,19 +25,18 @@ export function handleDeterministicFallback(
     const masterLabel = profile.age && profile.age >= 40 ? "Categoría Máster" : "Categoría Senior";
     const wkgRun = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
     const isContinuityViable = hasExistingPlan && physioStatus.tsb >= -12 && compliancePct >= 80;
-
-    const estadoBloque = `[ESTADO DEL PROCESO]: Semana ${targetPlanningWeekNum} (${macroPhase?.phase || "Construcción"}) • Cumplimiento: ${compliancePct}% (${actualTss}/${fallbackPlannedTss} TSS) • Rampa: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem`;
-    const diagBloque = isContinuityViable
-      ? `[DIAGNÓSTICO]: Continuidad del Plan. Balance fisiológico funcional (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Sin signos de sobrecarga no funcional.`
-      : `[DIAGNÓSTICO]: Propuesta de Calibración Táctica. ${hasExistingPlan ? `Fatiga residual detectada (TSB ${physioStatus.tsb.toFixed(1)}). Conviene modular la carga semanal.` : "Sin plan previo activo; se genera una estructura optimizada según tu matriz."}`;
-    const tradHumanaBloque = isContinuityViable
-      ? `[TRADUCCIÓN HUMANA]: Tus números demuestran que estás asimilando el volumen a la perfección. Tus piernas están respondiendo con frescura y el corazón no sufre sobrecalentamiento. Mantén el plan tal como está para llegar fuerte al fin de semana.`
-      : `[TRADUCCIÓN HUMANA]: ${hasExistingPlan ? "Tu cuerpo pide un respiro táctico para evitar sobrecargar tendones o acumular cansancio innecesario. Aligerar un poco ahora te permitirá rendir mucho mejor en las sesiones clave." : "Hemos distribuido los días de entrenamiento y descanso respetando tus deportes habituales para que comiences la semana con orden y seguridad."}`;
-    const accionBloque = isContinuityViable
-      ? `[ACCIÓN PRESCRIPTIVA]: Continuamos con tu sesión programada para hoy. Revisa abajo la estructura completa de tu microciclo.`
-      : `[ACCIÓN PRESCRIPTIVA]: Revisa la propuesta adaptada en la tarjeta inferior y haz clic en 'Aprobar y Sincronizar' para actualizar tu reloj y calendario de Intervals.icu.`;
-
-    const auditText = `${estadoBloque}\n\n${diagBloque}\n\n${tradHumanaBloque}\n\n${accionBloque}`;
+    const auditText = [
+      `[ESTADO DEL PROCESO]: Semana ${targetPlanningWeekNum} (${macroPhase?.phase || "Construcción"}) • Cumplimiento: ${compliancePct}% (${actualTss}/${fallbackPlannedTss} TSS) • Rampa: ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem`,
+      isContinuityViable
+        ? `[DIAGNÓSTICO]: Continuidad del Plan. Balance funcional (TSB ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)}, HRV ${physioStatus.currentHrv ?? "Estable"}). Sin signos de sobrecarga.`
+        : `[DIAGNÓSTICO]: Calibración Táctica. ${hasExistingPlan ? `Fatiga residual detectada (TSB ${physioStatus.tsb.toFixed(1)}). Conviene modular la carga.` : "Sin plan previo; optimizado según tu matriz."}`,
+      isContinuityViable
+        ? `[TRADUCCIÓN HUMANA]: Asimilación impecable del volumen. Piernas con frescura y corazón sin sobrecalentamiento. Mantén el plan para llegar fuerte al fin de semana.`
+        : `[TRADUCCIÓN HUMANA]: ${hasExistingPlan ? "Tu cuerpo pide un respiro para evitar sobrecargar tendones. Aligerar ahora te permitirá rendir en las sesiones clave." : "Estructura distribuida respetando tus deportes habituales con orden y seguridad."}`,
+      isContinuityViable
+        ? `[ACCIÓN PRESCRIPTIVA]: Continuamos con tu sesión programada para hoy. Revisa abajo la estructura completa.`
+        : `[ACCIÓN PRESCRIPTIVA]: Revisa la propuesta adaptada abajo y haz clic en 'Aprobar y Sincronizar' para actualizar tu reloj e Intervals.icu.`
+    ].join("\n\n");
 
     const fallbackSmartActions: SmartActionItem[] = [
       { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
@@ -47,25 +46,12 @@ export function handleDeterministicFallback(
     ];
 
     return {
-      success: true,
-      reply: auditText,
-      actionType: hasExistingPlan ? "REVIEW_PHYSIOLOGY" : "CREATE_PLAN",
-      reasoning: "Evaluación fisiológica de rendimiento y carga completada con base en modelo Banister.",
+      success: true, reply: auditText, actionType: hasExistingPlan ? "REVIEW_PHYSIOLOGY" : "CREATE_PLAN",
+      reasoning: "Evaluación fisiológica de rendimiento y carga con modelo Banister.",
       suggestedPlan: (!hasExistingPlan) ? fallbackGeneratedPlan : null,
-      audit: {
-        compliancePct,
-        actualTss,
-        plannedTss: fallbackPlannedTss,
-        ctl: physioStatus.ctl.toFixed(1),
-        atl: physioStatus.atl.toFixed(1),
-        tsb: physioStatus.tsb.toFixed(1),
-        rampRate: Number(physioStatus.rampRate || 0).toFixed(1),
-        feedback: formDiagnostic,
-      },
-      smartActions: fallbackSmartActions,
-      quickReplies: ["Ver detalle de mi estado", "Reorganizar", "Siento mucha fatiga hoy", "El plan está muy suave"],
-      modelUsed: "Motor Fisiológico PULSE (Algorítmico)",
-      targetWeekNumber: targetPlanningWeekNum,
+      audit: { compliancePct, actualTss, plannedTss: fallbackPlannedTss, ctl: physioStatus.ctl.toFixed(1), atl: physioStatus.atl.toFixed(1), tsb: physioStatus.tsb.toFixed(1), rampRate: Number(physioStatus.rampRate || 0).toFixed(1), feedback: formDiagnostic },
+      smartActions: fallbackSmartActions, quickReplies: ["Ver detalle de mi estado", "Reorganizar", "Siento mucha fatiga hoy", "El plan está muy suave"],
+      modelUsed: "Motor Fisiológico PULSE (Algorítmico)", targetWeekNumber: targetPlanningWeekNum,
     };
   }
 
@@ -77,13 +63,113 @@ export function handleDeterministicFallback(
   const lowerMsg = lastUserMsg.toLowerCase();
   let smartActions: SmartActionItem[] = [];
 
-  // FLUJO A: Ver detalle de estado fisiológico
-  if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
+  // 1. AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD
+  if (lowerMsg.includes("audita") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión")) {
     actionType = "REVIEW_PHYSIOLOGY";
-    replyMsg = "Tu cuerpo está asimilando la carga acumulada de manera óptima. La fatiga de las sesiones previas se mantiene en rangos totalmente seguros y la recuperación de tu sistema nervioso confirma que estás absorbiendo el trabajo sin riesgo de sobrecarga.\n\nVamos en trayectoria ideal hacia tu objetivo. ¿Mantenemos la planificación prevista para cerrar la semana con fuerza o necesitas reorganizar algún día?";
+    const executedEntries = Object.entries(ctx.effectiveExecutedMap || {}).flatMap(([dKey, val]) =>
+      Array.isArray(val?.activities) ? val.activities.map((a: any) => ({ ...a, date: dKey })) : []
+    );
+    const targetAct = executedEntries.find((a) => lowerMsg.includes((a.name || "").toLowerCase())) ||
+      executedEntries[executedEntries.length - 1];
+
+    if (targetAct) {
+      const pWatts = targetAct.watts ? `${targetAct.watts}W` : "";
+      const pHR = targetAct.heartrate ? `${targetAct.heartrate} bpm` : "";
+      replyMsg = `[ESTADO DEL PROCESO]: Auditoría de Sesión • ${targetAct.name || targetAct.type} (${targetAct.date})\n\n[DIAGNÓSTICO]: Carga ejecutada: ${targetAct.tss || 0} TSS en ${targetAct.movingTimeMin || 0} min.${pWatts ? ` Potencia media: ${pWatts}.` : ""}${pHR ? ` FC media: ${pHR}.` : ""} Estímulo metabólico consolidado.\n\n[TRADUCCIÓN HUMANA]: Clavaste el objetivo de la sesión. Tu corazón y piernas mantuvieron una respuesta estable sin desacoplamiento excesivo ni fatiga destructiva.\n\n[ACCIÓN PRESCRIPTIVA]: Sesión asimilada. Enfócate en descanso activo e hidratación para tu siguiente entrenamiento.`;
+    } else {
+      replyMsg = `[ESTADO DEL PROCESO]: Auditoría de Microciclo • Semana ${targetPlanningWeekNum}\n\n[DIAGNÓSTICO]: Aún no registras actividades completadas en Intervals.icu para este microciclo.\n\n[TRADUCCIÓN HUMANA]: Cuando completes tu primer entrenamiento, cruzaré tus vatios, pulso y desacoplamiento para evaluar el cumplimiento del estímulo.\n\n[ACCIÓN PRESCRIPTIVA]: Enfócate en tu sesión programada para hoy. Revisa abajo tus zonas objetivo antes de salir.`;
+    }
     smartActions = [
+      { label: "Balance de Semana", icon: "activity", variant: "secondary" },
       { label: "Mantener plan previsto", variant: "primary", icon: "check" },
-      { label: "Reorganizar", variant: "secondary", icon: "calendar-sync" },
+    ];
+  }
+  // 2. RUMBO A LA META Y PROYECCIÓN BANISTER
+  else if (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal")) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const macroPhase = ctx.promptContext.macrocyclePhase;
+    const race = macroPhase?.primaryRace;
+    const raceName = race?.name || "tu Meta Principal";
+    const raceDist = race?.distance || "42K";
+    const ctlVal = physioStatus.ctl.toFixed(1);
+    const rampVal = Number(physioStatus.rampRate || 0).toFixed(1);
+    const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
+    replyMsg = `[ESTADO DEL PROCESO]: Rumbo a ${raceName} (${raceDist}) • Semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22}\n\n[DIAGNÓSTICO]: Cilindrada en ${ctlVal} CTL con rampa de +${rampVal} CTL/sem. ${profile.run_ftp ? `Stryd CP: ${profile.run_ftp}W${wkg}.` : ""} Progresión Banister en zona segura.\n\n[TRADUCCIÓN HUMANA]: Vas en la trayectoria ideal. En esta fase base estamos construyendo la cilindrada aeróbica necesaria para tolerar el ritmo de competición sin fatiga prematura.\n\n[ACCIÓN PRESCRIPTIVA]: Mantén la constancia en tus rodajes base y respeta las zonas prescritas. Cada kilómetro aeróbico de hoy es tu seguro de vida el día de la carrera.`;
+    smartActions = [
+      { label: "Balance de Semana", icon: "activity", variant: "secondary" },
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
+    ];
+  }
+  // 3. BALANCE DE SEMANA Y VOLUMEN
+  else if (lowerMsg.includes("balance") || lowerMsg.includes("volumen")) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const executedCount = Object.values(ctx.effectiveExecutedMap || {}).reduce((acc: number, d: any) => acc + (d?.activities?.length || 0), 0);
+    const totalSessions = currentPlan.filter((p) => !/descanso/i.test(p.workoutName || "")).length || 5;
+    const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
+    replyMsg = `[ESTADO DEL PROCESO]: Balance Semanal • Semana ${targetPlanningWeekNum} (${actualTss}/${plannedWeekTss} TSS • ${compliancePct}% cumplimiento)\n\n[DIAGNÓSTICO]: Llevas ${executedCount} de ${totalSessions} sesiones ejecutadas. Rampa en +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem con TSB en ${tsbSign} (${physioStatus.tsb >= -10 ? "asimilación óptima" : "fatiga acumulada"}).\n\n[TRADUCCIÓN HUMANA]: Tu cuerpo está absorbiendo la carga de manera eficiente. No hay signos de sobrecarga no funcional y el sistema neuromuscular responde con frescura.\n\n[ACCIÓN PRESCRIPTIVA]: Continuamos con la estructura prevista para cerrar el microciclo con solidez.`;
+    smartActions = [
+      { label: "Auditar Sesión", icon: "target", variant: "secondary" },
+      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
+    ];
+  }
+  // 4. PROTOCOLO DE RETORNO SEGURO TRAS ENFERMEDAD (RECALIBRACIÓN SEMANAL INTEGRAL)
+  else if (lowerMsg.includes("enferm") || lowerMsg.includes("retorno") || lowerMsg.includes("salté") || lowerMsg.includes("salte")) {
+    actionType = "ADAPT_WORKOUT";
+    const targetIdx = ctx.todayDayIndex;
+    if (modifiedPlan[targetIdx]) {
+      modifiedPlan[targetIdx] = {
+        ...modifiedPlan[targetIdx],
+        workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)",
+        durationMinutes: 30, tss: 20, action: "MODIFICAR",
+        justification: "Retorno seguro post-enfermedad: trote conversacional Z1 muy suave.",
+      };
+    }
+    for (let i = targetIdx + 1; i < modifiedPlan.length; i++) {
+      const sess = modifiedPlan[i];
+      if (!sess) continue;
+      const isLastDay = i === modifiedPlan.length - 1;
+      const isIntensity = /fartlek|umbral|series|vo2|interval|tempo|z3|z4|z5/i.test(sess.workoutName || "");
+      if (isIntensity) {
+        modifiedPlan[i] = {
+          ...sess,
+          workoutName: `${sess.discipline || "Carrera"} Suave Z1/Z2 (Protección Inmune)`,
+          durationMinutes: Math.min(sess.durationMinutes || 40, 35),
+          tss: 25, action: "MODIFICAR",
+          justification: "Intensidad suprimida por retorno médico-deportivo: rodaje suave a ritmo conversacional.",
+        };
+      } else if (isLastDay && (sess.durationMinutes || 0) > 45) {
+        const newDur = Math.round((sess.durationMinutes || 80) * 0.6);
+        modifiedPlan[i] = {
+          ...sess,
+          workoutName: `${sess.workoutName || "Tirada Aeróbica"} Acortada (Retorno Progresivo)`,
+          durationMinutes: newDur,
+          tss: Math.round((sess.tss || 80) * 0.55), action: "MODIFICAR",
+          justification: "Volumen dominical acortado 40% para evitar fatiga residual post-indisposición.",
+        };
+      }
+    }
+    const newWeeklyTss = modifiedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
+    replyMsg = `[ESTADO DEL PROCESO]: Protocolo de Retorno Seguro • Microciclo recalibrado a ${newWeeklyTss} TSS\n\n[DIAGNÓSTICO]: Retorno tras indisposición física. Se suprimen intensidades (Fartlek/Umbral) y se acorta la tirada dominical para proteger tu sistema inmune y tendinoso.\n\n[TRADUCCIÓN HUMANA]: Prohibido intentar recuperar kilómetros perdidos. Tus adaptaciones de semanas siguen intactas, pero forzar el cuerpo recién salido de un virus causa recaídas. Rodamos suave para que el corazón despierte sin estrés.\n\n[ACCIÓN PRESCRIPTIVA]: He suavizado toda tu semana restante a ${newWeeklyTss} TSS seguros. Haz clic en 'Aprobar Ajuste' para sincronizar con Intervals.icu.`;
+    smartActions = [
+      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
+      { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
+    ];
+  }
+  // 5. POCO TIEMPO HOY (30-45M)
+  else if (lowerMsg.includes("poco tiempo") || lowerMsg.includes("30m") || lowerMsg.includes("45m")) {
+    actionType = "ADAPT_WORKOUT";
+    const targetIdx = ctx.todayDayIndex;
+    if (modifiedPlan[targetIdx]) {
+      modifiedPlan[targetIdx] = {
+        ...modifiedPlan[targetIdx],
+        workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`,
+        durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR",
+      };
+    }
+    replyMsg = "[ESTADO DEL PROCESO]: Sesión Comprimida por Tiempo • Enfoque Concentrado\n\n[DIAGNÓSTICO]: Adaptación por agenda limitada. Se preserva el estímulo central acortando calentamiento y enfriamiento.\n\n[TRADUCCIÓN HUMANA]: Mucho mejor 35 minutos bien aprovechados que saltarse el día. Concentramos el trabajo clave para que sume a tu motor sin consumir tiempo de más.\n\n[ACCIÓN PRESCRIPTIVA]: Sesión comprimida a 35 minutos lista. ¿Aprobamos el cambio en tu calendario?";
+    smartActions = [
+      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
+      { label: "Descartar", variant: "secondary", icon: "x" },
     ];
   }
   // FLUJO B: Reorganizar por disponibilidad / matriz temporal
@@ -212,65 +298,14 @@ export function handleDeterministicFallback(
       { label: "Reorganizar", icon: "calendar-sync", variant: "secondary" },
     ];
   }
-  // FLUJO ENFERMEDAD / RETORNO PROGRESIVO
-  else if (lowerMsg.includes("enferm") || lowerMsg.includes("retorno") || lowerMsg.includes("salté") || lowerMsg.includes("salte")) {
-    actionType = "ADAPT_WORKOUT";
-    const targetIdx = ctx.todayDayIndex;
-    if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = {
-        ...modifiedPlan[targetIdx],
-        workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)",
-        durationMinutes: 30, tss: 20, action: "MODIFICAR",
-      };
-    }
-    replyMsg = "[ESTADO DEL PROCESO]: Protocolo de Retorno Seguro • Prioridad: Cero Lesiones\n\n[DIAGNÓSTICO]: Retorno tras indisposición física. Queda prohibido intentar recuperar kilómetros perdidos.\n\n[TRADUCCIÓN HUMANA]: Tranquilidad total: unos días de descanso forzado no borran tus adaptaciones de semanas, pero querer recuperar entrenos perdidos sí te lesiona. Vamos a rodar suave para que el corazón y tendones despierten sin estrés.\n\n[ACCIÓN PRESCRIPTIVA]: He suavizado tu sesión a 30m regenerativos en Zona 1. ¿Aprobamos este ajuste progresivo?";
-    smartActions = [
-      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-      { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
-    ];
-  }
-  // FLUJO POCO TIEMPO HOY
-  else if (lowerMsg.includes("poco tiempo") || lowerMsg.includes("30m") || lowerMsg.includes("45m")) {
-    actionType = "ADAPT_WORKOUT";
-    const targetIdx = ctx.todayDayIndex;
-    if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = {
-        ...modifiedPlan[targetIdx],
-        workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`,
-        durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR",
-      };
-    }
-    replyMsg = "[ESTADO DEL PROCESO]: Sesión Comprimida por Tiempo • Enfoque Concentrado\n\n[DIAGNÓSTICO]: Adaptación por agenda limitada. Se preserva el estímulo central acortando calentamiento y enfriamiento.\n\n[TRADUCCIÓN HUMANA]: Mucho mejor 35 minutos bien aprovechados que saltarse el día. Concentramos el trabajo clave para que sume a tu motor sin consumir tiempo de más.\n\n[ACCIÓN PRESCRIPTIVA]: Sesión comprimida a 35 minutos lista. ¿Aprobamos el cambio en tu calendario?";
-    smartActions = [
-      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-      { label: "Descartar", variant: "secondary", icon: "x" },
-    ];
-  }
-  // FLUJO RUMBO A LA META
-  else if (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal")) {
+  // FLUJO SECUNDARIO: Consulta general de estado
+  else if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
     actionType = "REVIEW_PHYSIOLOGY";
-    const raceName = ctx.promptContext.macrocyclePhase?.primaryRace?.name || "tu Meta Principal";
-    replyMsg = `[ESTADO DEL PROCESO]: Rumbo a ${raceName} • Semana ${targetPlanningWeekNum}\n\n[DIAGNÓSTICO]: Fitness actual en ${physioStatus.ctl.toFixed(1)} CTL con ${profile.run_ftp ? `Stryd CP de ${profile.run_ftp}W` : "ritmo umbral sólido"}. Progresión Banister controlada.\n\n[TRADUCCIÓN HUMANA]: Vas en la trayectoria correcta. Tienes la caja aeróbica y la fuerza muscular necesarias para sostener tu ritmo de carrera. La clave en las semanas que vienen es no inventar entrenamientos extra y respetar los descansos.\n\n[ACCIÓN PRESCRIPTIVA]: Continuamos enfocados en la semana en curso. Cada sesión planificada está sumando a tu día de competición.`;
+    const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
+    replyMsg = `[ESTADO DEL PROCESO]: Estado Fisiológico • Microciclo ${targetPlanningWeekNum}\n\n[DIAGNÓSTICO]: CTL en ${physioStatus.ctl.toFixed(1)} • ATL en ${physioStatus.atl.toFixed(1)} • TSB en ${tsbSign} (${physioStatus.tsb >= -10 ? "asimilación óptima" : "fatiga acumulada"}). Rampa: +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem.\n\n[TRADUCCIÓN HUMANA]: Tu cuerpo está asimilando la carga acumulada sin sobreesfuerzo destructivo. La recuperación del sistema nervioso confirma que absorbes el trabajo dentro de rangos seguros.\n\n[ACCIÓN PRESCRIPTIVA]: Continuamos con la planificación prevista para cerrar el microciclo. ¿Deseas auditar una sesión o revisar tu balance?`;
     smartActions = [
-      { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
-      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
-    ];
-  }
-  // FLUJO AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD
-  else if (lowerMsg.includes("audita") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión")) {
-    actionType = "REVIEW_PHYSIOLOGY";
-    replyMsg = `[ESTADO DEL PROCESO]: Auditoría de Sesión • Asimilación y Telemetría\n\n[DIAGNÓSTICO]: Potencia y ritmo ejecutados en concordancia con tus umbrales biológicos. Desacoplamiento cardíaco bajo control.\n\n[TRADUCCIÓN HUMANA]: Clavaste el objetivo de la sesión. Tu corazón no se sobrecalentó al final y mantuviste la fuerza en cada repetición sin quemar reservas innecesarias. Estímulo completado con éxito.\n\n[ACCIÓN PRESCRIPTIVA]: Hidratación y descanso activo para consolidar la adaptación. Tu cuerpo está listo para la siguiente sesión.`;
-    smartActions = [
-      { label: "Mantener plan previsto", variant: "primary", icon: "check" },
-      { label: "Reorganizar", variant: "secondary", icon: "calendar-sync" },
-    ];
-  }
-  // FLUJO BALANCE DE SEMANA Y VOLUMEN
-  else if (lowerMsg.includes("balance") || lowerMsg.includes("volumen")) {
-    actionType = "REVIEW_PHYSIOLOGY";
-    replyMsg = `[ESTADO DEL PROCESO]: Balance Semanal • Semana ${targetPlanningWeekNum} (${actualTss}/${plannedWeekTss} TSS • ${compliancePct}% cumplimiento)\n\n[DIAGNÓSTICO]: Rampa de fitness en ${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem con TSB en ${physioStatus.tsb.toFixed(1)} (ATL: ${physioStatus.atl.toFixed(1)}, CTL: ${physioStatus.ctl.toFixed(1)}).\n\n[TRADUCCIÓN HUMANA]: Vas en el rango ideal de adaptación. Tu cuerpo está absorbiendo el volumen sin caer en fatiga destructiva. El trabajo de esta semana sumó calidad directamente a tu fondo aeróbico.\n\n[ACCIÓN PRESCRIPTIVA]: Mantén la constancia en tus sesiones restantes y cuida la hidratación para consolidar las adaptaciones.`;
-    smartActions = [
-      { label: "Ver detalle de mi estado", icon: "activity", variant: "secondary" },
+      { label: "Balance de Semana", icon: "activity", variant: "secondary" },
+      { label: "Auditar Sesión", icon: "target", variant: "secondary" },
       { label: "Mantener plan previsto", variant: "primary", icon: "check" },
     ];
   }

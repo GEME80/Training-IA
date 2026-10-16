@@ -128,7 +128,7 @@ export interface HeadCoachChatResponse {
 export interface SmartActionItem {
   label: string;
   variant?: "primary" | "secondary" | "tertiary" | "default";
-  icon?: "activity" | "calendar-sync" | "trending-down" | "trending-up" | "sliders" | "check" | "x" | "undo";
+  icon?: "activity" | "calendar-sync" | "trending-down" | "trending-up" | "sliders" | "check" | "x" | "undo" | "target" | "compass";
   actionType?: "message" | "open_matrix_modal" | "undo_changes";
   customPayload?: any;
 }

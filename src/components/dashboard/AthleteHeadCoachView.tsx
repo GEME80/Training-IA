@@ -121,6 +121,23 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
     endStr = weekDates[6]?.formattedDate;
   }
 
+  const completedActivitiesList = React.useMemo(() => {
+    return Object.entries(dailyExecutedActivities || {}).flatMap(([dKey, val]: [string, any]) =>
+      Array.isArray(val?.activities)
+        ? val.activities.map((a: any) => ({
+            id: a?.id || `${dKey}-${a?.name}`,
+            name: a?.name || a?.type || "Actividad",
+            date: dKey,
+            type: a?.type || "Run",
+            tss: a?.tss || 0,
+            movingTimeMin: a?.movingTimeMin || 0,
+            watts: a?.watts,
+            heartrate: a?.heartrate,
+          }))
+        : []
+    );
+  }, [dailyExecutedActivities]);
+
   return (
     <div className="card-gradient rounded-3xl p-3 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[520px]">
       {/* CABECERA ATLÉTICA PRO & SEMÁFORO PMC */}
@@ -143,6 +160,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
       <HeadCoachTacticalConsole
         onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
         onOpenTemporaryMatrix={() => handleSelectSmartAction("Reorganizar")}
+        completedActivities={completedActivitiesList}
         isLoading={isLoading}
       />
 

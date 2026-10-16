@@ -196,7 +196,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         weekNumber={season.calculatedWeekNumber}
         apiKey={telemetry.apiKeyCache}
         geminiApiKey={telemetry.geminiKeyCache}
-        selectedModel="gemini-2.5-flash"
+        selectedModel="gemini-flash-latest"
         temperature={0.0}
         weeklyAvailability={season.weeklyAvailability}
         uid={user?.uid}

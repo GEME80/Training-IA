@@ -198,37 +198,6 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const renderActionIcon = (action: SmartActionItem | string) => {
-  const icon = typeof action === "string" ? undefined : action.icon;
-  const label = typeof action === "string" ? action : action.label;
-
-  if (icon === "target" || /auditar|sesi[oó]n/i.test(label)) return <Target className="h-3.5 w-3.5" />;
-  if (icon === "compass" || /rumbo|meta|carrera/i.test(label)) return <Compass className="h-3.5 w-3.5" />;
-  if (icon === "activity" || /detalle|estado|fisiol[oó]g|balance/i.test(label)) return <Activity className="h-3.5 w-3.5" />;
-  if (icon === "calendar-sync" || /reorganizar/i.test(label)) return <CalendarSync className="h-3.5 w-3.5" />;
-  if (icon === "trending-down" || /fatiga|cansad/i.test(label)) return <TrendingDown className="h-3.5 w-3.5" />;
-  if (icon === "trending-up" || /suave|aumentar|mayor carga/i.test(label)) return <TrendingUp className="h-3.5 w-3.5" />;
-  if (icon === "sliders" || /matriz temporal/i.test(label)) return <Sliders className="h-3.5 w-3.5" />;
-  if (icon === "check" || /aprobar|confirmar|aplicar/i.test(label)) return <Check className="h-3.5 w-3.5" />;
-  if (icon === "undo" || /deshacer/i.test(label)) return <Undo2 className="h-3.5 w-3.5" />;
-  if (icon === "x" || /descartar|descansar/i.test(label)) return <X className="h-3.5 w-3.5" />;
-  if (/mantener/i.test(label)) return <RotateCcw className="h-3.5 w-3.5" />;
-  return null;
-};
-
-const getActionVariantClasses = (variant?: string, label?: string) => {
-  if (variant === "primary" || (!variant && /confirmar|aprobar|aplicar|mantener/i.test(label || ""))) {
-    return "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold active:scale-95 shadow-md shadow-emerald-500/20 border border-emerald-400";
-  }
-  if (variant === "secondary" || (!variant && /descartar|descansar|reorganizar/i.test(label || ""))) {
-    return "bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-semibold";
-  }
-  if (variant === "tertiary" || (!variant && /deshacer/i.test(label || ""))) {
-    return "text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 text-[11px] underline decoration-dotted bg-transparent border-0 p-1 font-medium";
-  }
-  return "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200/60 dark:border-slate-700";
-};
-
 export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   message,
   weekNumber,
@@ -242,7 +211,6 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 }) => {
   if (message.hidden) return null;
   const isAssistant = message.role === "assistant";
-  const actionsList = message.smartActions || message.quickReplies || [];
 
   return (
     <div className={`flex items-start gap-3 ${isAssistant ? "justify-start" : "justify-end"}`}>
@@ -268,12 +236,9 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
               <span className="font-black text-slate-900 dark:text-white text-xs tracking-tight">
                 PULSE Head Coach
               </span>
-              <span className={`text-[9px] font-mono px-2 py-0.2 rounded-full font-bold border ${
-                message.modelUsed && message.modelUsed.includes("gemini")
-                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
-                  : "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20"
-              }`}>
-                {message.modelUsed || "Resistencia Pro"}
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                PULSE Coach Pro
               </span>
             </div>
             {message.timestamp && (
@@ -286,34 +251,6 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
 
         {/* Texto Formateado */}
         <FormattedMessageBody text={message.text} />
-
-        {/* Acciones Tácticas Dinámicas (Smart Replies con Iconos Lucide & Jerarquía) */}
-        {isAssistant && actionsList.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-slate-800 items-center">
-            {actionsList.map((action, idx) => {
-              const rawLabel = typeof action === "string" ? action : action.label;
-              const label = rawLabel.replace(/^[📊✈️📉📈]\s*/, "");
-              const variant = typeof action === "string" ? undefined : action.variant;
-              const isTertiary = variant === "tertiary" || /deshacer/i.test(label);
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    if (onSelectSmartAction) onSelectSmartAction(action);
-                    else if (onSelectQuickReply) onSelectQuickReply(label);
-                  }}
-                  className={`inline-flex items-center gap-1 sm:gap-1.5 transition cursor-pointer ${
-                    isTertiary ? "px-1 py-0.5 text-[10px]" : "px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs"
-                  } ${getActionVariantClasses(variant, label)}`}
-                >
-                  {renderActionIcon(action)}
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Matriz Temporal Deportiva Inline (100% en el Chat) */}
         {isAssistant && message.showInlineMatrix && message.inlineMatrixAvailability && onApplyInlineMatrix && (

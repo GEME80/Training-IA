@@ -45,13 +45,13 @@ export async function executeGeminiInference(
   });
 
   const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
-1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, profesional y motivador):
-   - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 2 a 3 párrafos conversacionales fluidos.
-   - Párrafo 1 (Lectura técnica con argumentos): Cumplimiento, TSS, W/kg, Stryd CP, CTL, TSB o desacoplamiento.
-   - Párrafo 2 (Traducción humana clara): Qué significan esos números para sus sensaciones, fatiga y asimilación. Si auditas un test o sesión, evalúa explícitamente si "pudo dar más / correr más rápido" (margen en el tanque) y si está en sus potencias target.
-   - Párrafo 3 (Pauta inmediata): Instrucción clara para hoy o el fin de semana.
-   - En "Rumbo a mi meta": enfócate exclusivamente en la visión macro (cuenta regresiva, ritmo proyectado vs meta, CTL Banister). Sin tocar la rutina diaria.
-2. "quickReplies": 2 a 4 botones directos de acción deportiva (sin emojis).
+1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, firme y empático):
+   - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos:
+   - Párrafo 1 (Diagnóstico Numérico con TSS Delta): Indica valores exactos: TSS ejecutado vs planeado (ej. 300 vs 400 TSS), % cumplimiento, rampa CTL, TSB, potencia Stryd/FTP y pulso vs LTHR. Dictamina claramente si hay déficit de volumen (-TSS), sobrecarga (+TSS) o si clavó el plan.
+   - Párrafo 2 (Traducción al Día a Día: ¿Estoy bien o estoy mal?): Declara sin rodeos el veredicto ("estás bien y asimilando con soltura", "te quedaste corto", o "te pasaste de rosca"). Tradúcelo a sensaciones cotidianas (pesadez de piernas al subir escaleras, soltura en sóleo/isquios, demanda de descanso y asimilación). En tests de campo, evalúa si "pudo haber dado más / corrido más rápido" y si está en sus potencias target.
+   - Párrafo 3 (El Siguiente Paso Inmediato): Instrucción obligatoria e inequívoca: qué hacer hoy y cómo encarar la siguiente sesión (sin compensaciones lesivas de doblar entrenamientos si hubo déficit).
+   - En "Rumbo a mi meta": enfócate exclusivamente en visión macro (semanas a carrera, ritmo proyectado vs objetivo, CTL Banister).
+2. "quickReplies": [] (devolver array vacío para no generar botones residuales).
 3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario null.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
@@ -131,11 +131,7 @@ export async function executeGeminiInference(
               if (ctx.isWeekCompleted || (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment))) {
                 parsed.actionType = "REVIEW_PHYSIOLOGY";
                 parsed.suggestedPlan = null;
-                if (!parsed.quickReplies || parsed.quickReplies.length === 0) {
-                  parsed.quickReplies = ctx.isWeekCompleted
-                    ? ["Planificar Próxima Semana", "Mantener plan previsto", "Ver detalle de mi estado"]
-                    : ["🎯 Pautas & Vatios de Hoy", "🌙 Confirmar Fin de Semana", "🔍 Ver Zonas de Potencia"];
-                }
+                parsed.quickReplies = [];
               } else if (Array.isArray(parsed.suggestedPlan)) {
                 const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
                 parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {

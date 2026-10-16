@@ -9220,3 +9220,46 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética, feedback de rendimiento y naturalidad ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 154 ✅.
+
+---
+
+## 155. Entrada de Bitácora: Erradicación de Botones Residuales, Tríada de Comunicación Deportiva (Métricas con Diferencial TSS + Traducción Humana + Siguiente Paso) e Insignia Deportiva PULSE Coach Pro (PULSE Live Coach v6.3)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 16:50 COT.
+- **Directiva del Atleta:**
+  1. *Tríada Obligatoria de Comunicación del Head Coach:*
+     - **Capa 1 (Datos Fisiológicos Precisos):** Números reales (TSS real vs planeado, diferencial de TSS / TSS Delta, potencia Stryd/FTP, FC vs LTHR, rampa CTL, TSB).
+     - **Capa 2 (Traducción Humana al Día a Día):** Responder sin ambigüedades: "¿Estoy bien o estoy mal?". Explicar qué significan esos números en el cuerpo del deportista (piernas, articulaciones como sóleo/Aquiles, subir escaleras, descanso y asimilación).
+     - **Capa 3 (El Siguiente Paso Inmediato):** Instrucción obligatoria y clara: qué hacer hoy, cómo encarar el fin de semana, o si hay que modular/mantener (prohibición estricta de compensar kilómetros perdidos doblando entrenamientos).
+  2. *Diferencial de Carga en Balance de Semana (TSS Delta):*
+     - Evaluar si el atleta está en déficit (<75% TSS, ej. 300 de 400 TSS, -100 TSS), sobrecarga (>115% TSS, ej. 500 de 400 TSS, +100 TSS) o rango óptimo, adaptando el diagnóstico, la traducción y el siguiente paso en consecuencia.
+  3. *Erradicación de Botones Residuales al Final de las Respuestas:*
+     - Eliminar por completo los chip buttons desconectados (`quickReplies` / `smartActions` como "Confirmar continuidad", "Consultar tirada dominical", "Ver proyección de forma física") que aparecían al final de cada burbuja del coach, compitiendo con la Consola Táctica superior.
+  4. *Insignia Deportiva PULSE Coach Pro:*
+     - Erradicar la mención de APIs o modelos de ingeniería como `[gemini-flash-latest]` en la interfaz del atleta; sustituir por una insignia deportiva institucional elegante: `PULSE Coach Pro` con semáforo verde `En Vivo` (`animate-pulse`).
+
+### 155.1. Implementaciones y Mejoras Realizadas
+1. **Limpieza Visual en Burbujas y Supresión de Botones Residuales (`HeadCoachMessageItem.tsx` - 285 LOC):**
+   - Eliminado el bloque de botones `actionsList` al pie de las respuestas del Head Coach.
+   - Reemplazado el badge de modelo crudo `gemini-flash-latest` por la insignia deportiva institucional `PULSE Coach Pro` con punto verde pulsante.
+   - Depuradas funciones de soporte obsoletas (`renderActionIcon`, `getActionVariantClasses`), reduciendo el archivo de 349 a 285 LOC.
+2. **Inferencia Agéntica con Tríada de Comunicación & Vaciamiento de QuickReplies (`chatInference.ts` - 334 LOC):**
+   - Actualizado `smartBrevityInstruction` imponiendo la estructura de 3 párrafos obligatorios: Métricas con TSS Delta, Traducción Humana "¿Estoy bien o mal?" y Siguiente Paso Inmediato.
+   - `quickReplies` forzado a array vacío `[]` para evitar que el modelo genere botones residuales.
+3. **Motor Determinístico Fisiológico con TSS Delta y Cero Botones Innecesarios (`deterministicFallback.ts` - 324 LOC):**
+   - En *Balance de Semana*, implementado el cálculo de `tssDiff = actualTss - plannedWeekTss` distinguiendo déficit (<75%), sobrecarga (>115%) y rango óptimo, con traducción y siguiente paso adaptados.
+   - Vaciados los arrays `smartActions = []` en los flujos de auditoría, rumbo a la meta, balance semanal, mantener plan, consulta de estado y bienvenida inicial, dejando el archivo en 324 LOC.
+4. **Directrices del Head Coach en Prompts de Sistema (`defaultPrompts.ts` - 149 LOC & `prompts.ts` - 344 LOC):**
+   - Regla 9 de comunicación humana enriquecida con la tríada obligatoria de respuesta.
+   - Regla 12 de formato JSON actualizada para exigir `quickReplies: []` sin botones residuales.
+
+### 155.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeadCoachMessageItem.tsx`: 285 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 334 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 324 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 149 LOC ($\le 348$) ✅
+  * `prompts.ts`: 344 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética, feedback de rendimiento, claridad técnica y erradicación de ruido visual ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 155 ✅.

@@ -203,7 +203,7 @@ ${directiveBlock}
     - Cruza potencia entregada vs CP/FTP, pulso medio vs LTHR y RPE. En tests de campo (Stryd CP 3/9m o FTP) y series:
       * Dictamina claramente si "pudo dar más / correr más rápido" con margen en el tanque (ej. si su pulso quedó lejos del LTHR o RPE <= 6/10 en un test que debía ser al límite), o si fue al máximo.
       * Valida si "está en sus potencias target" o si sus umbrales siguen vigentes.
-13. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies.`;
+13. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies (quickReplies debe ser siempre []).`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

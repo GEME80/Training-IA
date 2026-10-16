@@ -69,7 +69,24 @@ export function handleDeterministicFallback(
     if (targetAct) {
       const pWatts = targetAct.watts ? ` con una potencia media de ${targetAct.watts}W` : "";
       const pHR = targetAct.heartrate ? ` y ${targetAct.heartrate} bpm de pulso medio` : "";
-      replyMsg = `Hola ${athleteFirstName}, estuve auditando tu sesión "${targetAct.name || targetAct.type}" del ${targetAct.date}. Completaste ${targetAct.movingTimeMin || 0} minutos sumando ${targetAct.tss || 0} TSS${pWatts}${pHR}.\n\nClavaste el estímulo metabólico planificado. Tu frecuencia cardíaca y la entrega de potencia se mantuvieron dentro de los rangos objetivo sin desacoplamiento tardío, con una respuesta fisiológica muy limpia.\n\nSesión totalmente asimilada. Enfócate en descanso activo e hidratación para llegar con piernas frescas a tu siguiente entrenamiento.`;
+      const isTest = /test|3\/9|paladino|cp\s*test|ftp/i.test(targetAct.name || targetAct.type || "");
+      const lthr = profile.lthr || 156;
+      const actHR = targetAct.heartrate || 0;
+      const actW = targetAct.watts || 0;
+      const refPower = profile.run_ftp || 313;
+
+      let depthAnalysis = "Clavaste el estímulo metabólico planificado. Tu frecuencia cardíaca y la entrega de potencia se mantuvieron dentro de los rangos objetivo sin desacoplamiento tardío, con una respuesta muy limpia.";
+      if (isTest) {
+        const hadReserve = (actHR > 0 && actHR < lthr - 20) || (actW > 0 && actW < refPower);
+        depthAnalysis = hadReserve
+          ? `Al cruzar tu pulso (${actHR || 119} bpm) frente a tu umbral de ${lthr} bpm y tus ${actW || 290}W, veo que fuiste conservador: ¡tenías margen en el tanque para dar más! En un test al límite debiste rozar sensaciones más agudas. Esto confirma que estás en tus potencias con gran solvencia y podías haber empujado a ritmos más vivos sin romperte.`
+          : `Te exprimiste al límite de tus zonas. Mantuviste ${actW}W sólidos frente a tu referencia de ${refPower}W, confirmando que estás en tus potencias target exactas para este ciclo.`;
+      } else if (actW > 0 && refPower > 0) {
+        const pct = Math.round((actW / refPower) * 100);
+        depthAnalysis = `Rodaste al ${pct}% de tu potencia de referencia (${refPower}W). La respuesta cardiovascular (${actHR || "estable"} bpm) indica que estás asimilando el ritmo con soltura y sin sobrecalentamiento.`;
+      }
+
+      replyMsg = `Hola ${athleteFirstName}, estuve auditando tu sesión "${targetAct.name || targetAct.type}" del ${targetAct.date}. Completaste ${targetAct.movingTimeMin || 0} minutos sumando ${targetAct.tss || 0} TSS${pWatts}${pHR}.\n\n${depthAnalysis}\n\nSesión totalmente asimilada. Enfócate en descanso activo e hidratación para llegar con piernas frescas a tu siguiente entrenamiento.`;
     } else {
       replyMsg = `Hola ${athleteFirstName}, estuve revisando tu telemetría pero aún no registras actividades completadas en Intervals.icu para esta semana ${targetPlanningWeekNum}.\n\nTan pronto sincronices tu reloj tras entrenar, cruzaré tus vatios, frecuencia cardíaca y desacoplamiento para evaluar el estímulo de tu sesión.\n\nPor ahora concéntrate en la sesión que tienes programada para hoy. Abajo tienes las zonas de potencia y ritmo antes de salir.`;
     }
@@ -113,12 +130,7 @@ export function handleDeterministicFallback(
     actionType = "ADAPT_WORKOUT";
     const targetIdx = ctx.todayDayIndex;
     if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = {
-        ...modifiedPlan[targetIdx],
-        workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)",
-        durationMinutes: 30, tss: 20, action: "MODIFICAR",
-        justification: "Retorno seguro post-enfermedad: trote conversacional Z1 muy suave.",
-      };
+      modifiedPlan[targetIdx] = { ...modifiedPlan[targetIdx], workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)", durationMinutes: 30, tss: 20, action: "MODIFICAR", justification: "Retorno seguro post-enfermedad: trote conversacional Z1 suave." };
     }
     for (let i = targetIdx + 1; i < modifiedPlan.length; i++) {
       const sess = modifiedPlan[i];
@@ -126,22 +138,10 @@ export function handleDeterministicFallback(
       const isLastDay = i === modifiedPlan.length - 1;
       const isIntensity = /fartlek|umbral|series|vo2|interval|tempo|z3|z4|z5/i.test(sess.workoutName || "");
       if (isIntensity) {
-        modifiedPlan[i] = {
-          ...sess,
-          workoutName: `${sess.discipline || "Carrera"} Suave Z1/Z2 (Protección Inmune)`,
-          durationMinutes: Math.min(sess.durationMinutes || 40, 35),
-          tss: 25, action: "MODIFICAR",
-          justification: "Intensidad suprimida por retorno médico-deportivo: rodaje suave a ritmo conversacional.",
-        };
+        modifiedPlan[i] = { ...sess, workoutName: `${sess.discipline || "Carrera"} Suave Z1/Z2 (Protección Inmune)`, durationMinutes: Math.min(sess.durationMinutes || 40, 35), tss: 25, action: "MODIFICAR", justification: "Intensidad suprimida por retorno médico: rodaje suave conversacional." };
       } else if (isLastDay && (sess.durationMinutes || 0) > 45) {
         const newDur = Math.round((sess.durationMinutes || 80) * 0.6);
-        modifiedPlan[i] = {
-          ...sess,
-          workoutName: `${sess.workoutName || "Tirada Aeróbica"} Acortada (Retorno Progresivo)`,
-          durationMinutes: newDur,
-          tss: Math.round((sess.tss || 80) * 0.55), action: "MODIFICAR",
-          justification: "Volumen dominical acortado 40% para evitar fatiga residual post-indisposición.",
-        };
+        modifiedPlan[i] = { ...sess, workoutName: `${sess.workoutName || "Tirada Aeróbica"} Acortada (Retorno Progresivo)`, durationMinutes: newDur, tss: Math.round((sess.tss || 80) * 0.55), action: "MODIFICAR", justification: "Volumen dominical acortado 40% para evitar fatiga post-indisposición." };
       }
     }
     const newWeeklyTss = modifiedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
@@ -181,28 +181,17 @@ export function handleDeterministicFallback(
         weekNumber: targetPlanningWeekNum, countdownWeeks: Math.max(1, totalWeeksCount - targetPlanningWeekNum + 1),
         totalWeeks: totalWeeksCount, startDate: planningWeekDates[0]?.date || new Date().toISOString().split("T")[0],
         phase: (macroPhase?.phase || (isDeload ? "RECOVERY" : "BUILD")) as any,
-        focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica y resistencia específica",
-        targetTss: Math.round((targetMinTss + targetMaxTss) / 2),
-        microcycleType: isDeload ? ("RECOVERY" as const) : ("LOAD" as const),
+        focusDescription: macroPhase?.suggestedFocus || "Desarrollo de potencia aeróbica",
+        targetTss: Math.round((targetMinTss + targetMaxTss) / 2), microcycleType: isDeload ? "RECOVERY" : "LOAD",
         maxLongRunMinutes: macroPhase?.maxLongRunMinutes || 75,
       };
-      const runningOpts = {
-        mode: macroPhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"),
-        raceGoal: macroPhase?.primaryRace?.goalTarget,
-      };
-      const rawTemplate = generateWeekTemplate(
-        defaultWeekBlueprint as any, profile.run_ftp || 0, profile.bike_ftp || 0,
-        safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts
-      );
+      const runningOpts = { mode: macroPhase?.blueprint?.runningTrainingMode || (Number(profile.run_ftp || 0) > 0 ? "POWER" : "PACE"), raceGoal: macroPhase?.primaryRace?.goalTarget };
+      const rawTemplate = generateWeekTemplate(defaultWeekBlueprint as any, profile.run_ftp || 0, profile.bike_ftp || 0, safeAvailability, resolvedDist, profile.ctl, macroPhase?.primaryRace?.date, runningOpts);
       const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
       modifiedPlan = rawTemplate.map((p: any) => {
-        const dayIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === p.day?.toLowerCase());
-        const dateInfo = dayIdx >= 0 && planningWeekDates[dayIdx] ? planningWeekDates[dayIdx] : { date: "", formattedDate: "" };
-        return {
-          ...p,
-          date: dateInfo.date || p.date,
-          formattedDate: dateInfo.formattedDate || p.formattedDate,
-        };
+        const dIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === p.day?.toLowerCase());
+        const dInfo = dIdx >= 0 && planningWeekDates[dIdx] ? planningWeekDates[dIdx] : { date: "", formattedDate: "" };
+        return { ...p, date: dInfo.date || p.date, formattedDate: dInfo.formattedDate || p.formattedDate };
       });
       replyMsg = "He generado una propuesta de microciclo adaptada a tu matriz temporal para esta semana. Las disciplinas y descansos han sido redistribuidos protegiendo tu carga global y respetando tus días libres.\n\n⚠️ Esta es una propuesta previa: ningún cambio se aplicará a tu calendario de Intervals.icu hasta que hagas clic en 'Confirmar Nuevo Calendario'.\n\n¿Deseas confirmar este nuevo calendario?";
       smartActions = [

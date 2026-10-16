@@ -24,6 +24,7 @@ export interface HeadCoachMessageData {
   smartActions?: (string | SmartActionItem)[] | null;
   showInlineMatrix?: boolean;
   inlineMatrixAvailability?: WeeklyAvailabilityMap;
+  hidden?: boolean;
 }
 
 interface HeadCoachMessageItemProps {
@@ -239,6 +240,7 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   onCancelInlineMatrix,
   isGeneratingFromMatrix = false,
 }) => {
+  if (message.hidden) return null;
   const isAssistant = message.role === "assistant";
   const actionsList = message.smartActions || message.quickReplies || [];
 

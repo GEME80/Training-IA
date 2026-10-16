@@ -13,6 +13,7 @@ export interface QuickActionOptions {
   targetTssAdjustmentPct?: number;
   temporaryAvailability?: WeeklyAvailabilityMap;
   isWeekKickoffAudit?: boolean;
+  skipUserBubble?: boolean;
 }
 
 export const INITIAL_SMART_ACTIONS: SmartActionItem[] = [
@@ -54,11 +55,13 @@ export function useHeadCoachChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getWelcomeText = (name?: string) => {
-    const firstName = (name || "Atleta").trim().split(" ")[0];
+    const firstName = (name || "Germán").trim().split(" ")[0];
     const tsbNum = physioStatus?.tsb !== undefined ? Number(physioStatus.tsb) : 0;
     const tsbSign = tsbNum >= 0 ? `+${tsbNum.toFixed(1)}` : tsbNum.toFixed(1);
-    const phaseStr = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Base";
-    return `Hola ${firstName}. Microciclo ${activeWeekNumber} (${phaseStr}). Tu balance fisiológico hoy está en TSB ${tsbSign} (${tsbNum >= -10 ? "Frescura Óptima" : "Fatiga Acumulada"}). Elige una acción en la consola táctica superior para auditar tu semana, revisar una sesión o ajustar tu calendario.`;
+    const rawPhase = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Base";
+    const phaseStr = rawPhase.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+    const race = effectiveBlueprint?.primaryRace?.name ? ` rumbo a ${effectiveBlueprint.primaryRace.name}` : "";
+    return `¡Hola ${firstName}! ¿Cómo te sientes hoy? Estamos en la semana ${activeWeekNumber} de tu fase ${phaseStr}${race}. Tu balance biológico marca una frescura de TSB ${tsbSign}, ideal para asimilar carga. Cuéntame qué revisamos: puedes auditar las sesiones de la semana, ver tu balance de volumen o consultar cómo vamos rumbo a tu meta.`;
   };
 
   const [messages, setMessages] = useState<HeadCoachMessageData[]>([
@@ -91,6 +94,7 @@ export function useHeadCoachChat({
       id: `user-${Date.now()}`,
       role: "user",
       text,
+      hidden: options?.skipUserBubble === true,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 

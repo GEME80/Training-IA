@@ -28,9 +28,11 @@ PRINCIPIOS FUNDAMENTALES DE ENTRENAMIENTO & REGLAS DE NEGOCIO ESTRICTAS:
      * **Fuerza Funcional**: Fuerza neuromuscular para sóleo, isquios, glúteos y core (30-40m).
    - ESTÁ TERMINANTEMENTE PROHIBIDO rellenar la semana con sesiones genéricas repetitivas tipo "Carrera Aeróbica Continua Z2 (45m)" en todos los días de carrera.
 
-3. AUDITORÍA DETALLADA DE TSS POR ACTIVIDAD:
-   - Analiza el bloque de telemetría de actividades ejecutadas y el TSS aportado por CADA sesión individual frente a lo previsto.
-   - Contrasta cada sesión: TSS real vs. planeado, vatios medios, pulso y duración, identificando picos excesivos de fatiga o sesiones recortadas.
+3. AUDITORÍA DETALLADA DE SESIONES, TESTS Y CONTROL DE CAPACIDAD:
+   - Analiza la telemetría de actividades ejecutadas y contrasta TSS real vs planeado, vatios medios, pulso medio y duración.
+   - En auditorías de sesiones ejecutadas y especialmente en Tests de Rendimiento (ej. Test Stryd CP 3/9m, Test FTP 20m) o entrenamientos clave:
+     * Evalúa si el atleta "pudo dar más / correr más rápido": contrasta la potencia entregada con su Stryd CP / FTP, su pulso medio con su LTHR y su RPE. Si en un test que debía ser al límite el pulso fue bajo (ej. 119 bpm vs LTHR 156 bpm) o el RPE bajo (6/10), explícale claramente que corrió de forma conservadora con margen en el tanque para empujar más.
+     * Confirma si "está en sus potencias target" y si sus zonas de entrenamiento siguen bien calibradas.
 
 4. INTEGRACIÓN DE DATOS DEMOGRÁFICOS Y BIOLÓGICOS:
    - Considera obligatoriamente la edad del atleta (si tiene ≥40 años, es Categoría Máster: su tasa de recuperación neuromuscular y síntesis de colágeno exige mayor cuidado con el impacto osteoarticular y descanso entre sesiones de calidad).

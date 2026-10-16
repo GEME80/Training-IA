@@ -48,7 +48,7 @@ export async function executeGeminiInference(
 1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, profesional y motivador):
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 2 a 3 párrafos conversacionales fluidos.
    - Párrafo 1 (Lectura técnica con argumentos): Cumplimiento, TSS, W/kg, Stryd CP, CTL, TSB o desacoplamiento.
-   - Párrafo 2 (Traducción humana clara): Qué significan esos números para sus sensaciones, fatiga y asimilación.
+   - Párrafo 2 (Traducción humana clara): Qué significan esos números para sus sensaciones, fatiga y asimilación. Si auditas un test o sesión, evalúa explícitamente si "pudo dar más / correr más rápido" (margen en el tanque) y si está en sus potencias target.
    - Párrafo 3 (Pauta inmediata): Instrucción clara para hoy o el fin de semana.
    - En "Rumbo a mi meta": enfócate exclusivamente en la visión macro (cuenta regresiva, ritmo proyectado vs meta, CTL Banister). Sin tocar la rutina diaria.
 2. "quickReplies": 2 a 4 botones directos de acción deportiva (sin emojis).

@@ -9179,3 +9179,44 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética y humanización del Head Coach ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 153 ✅.
+
+---
+
+## 154. Entrada de Bitácora: Experiencia Táctica Sin Burbuja Fake, Auditoría por Días de la Semana y Profundidad de Test Deportivo (PULSE Live Coach v6.2)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 16:35 COT.
+- **Directiva del Atleta:** Auditoría viva y refinamiento de interacciones clave:
+  1. *Auditar Sesión de la Semana:* Renombrar la tarjeta táctica a "Auditar Sesión Semana" y presentar los entrenamientos desglosados explícitamente por días (Lunes, Martes, Miércoles, etc.) con sus fechas, junto con la opción de auditar la semana completa.
+  2. *Supresión de la Burbuja Artificial de Germán:* Al pulsar una acción de la consola táctica, eliminar la inserción del mensaje de usuario ficticio ("Germán aquí. Audita en detalle mi sesión...") para que el Head Coach responda de inmediato y de forma natural.
+  3. *Mensaje de Bienvenida Natural:* Transformar el saludo inicial ("Hola Germán, Microciclo 2 (BASE_1)...") en una bienvenida cercana, motivadora y humana sin identificadores de base de datos.
+  4. *Profundidad en Auditoría de Tests y Rendimiento:* Responder explícitamente si el atleta "pudo haber dado más o corrido más rápido" (margen en el tanque cruzando FC vs LTHR y RPE) y si "estuvo en sus potencias target" según su Stryd CP / FTP.
+
+### 154.1. Implementaciones y Mejoras Realizadas
+1. **Consola Táctica con Selector por Días y Auditoría Semanal (`HeadCoachTacticalConsole.tsx` - 279 LOC):**
+   - Tarjeta renombrada a `Auditar Sesión Semana`.
+   - Sub-panel interactivo que formatea y ordena cada sesión con su día (`Lun 12:`, `Mié 14:` con `⚡` en la última sesión).
+   - Añadido botón directo `Auditar semana completa` para analizar el balance integral de lunes a domingo.
+   - Configurado `skipUserBubble: true` en todas las acciones tácticas directas.
+2. **Supresión Limpia de Burbujas Ficticias en el Chat (`useHeadCoachChat.ts` - 343 LOC & `HeadCoachMessageItem.tsx` - 348 LOC):**
+   - Añadido `hidden?: boolean` al modelo `HeadCoachMessageData`.
+   - `handleSendMessage` preserva el historial contextual completo para la IA pero omite el renderizado visual de la burbuja del usuario cuando proviene de una acción táctica predefinida.
+   - El Head Coach responde directamente a la acción pulsada sin fricción visual.
+3. **Bienvenida Cálida y Humana (`useHeadCoachChat.ts`):**
+   - `getWelcomeText` reescrito con saludo personalizado, fase limpia (sin `_`) y contexto del objetivo de maratón.
+4. **Evaluación de Margen de Rendimiento en Tests y Sesiones (`prompts.ts` - 344 LOC, `defaultPrompts.ts` - 148 LOC, `chatInference.ts` - 338 LOC & `deterministicFallback.ts` - 334 LOC):**
+   - En tests de campo (Stryd CP 3/9m, FTP 20m) y sesiones de calidad, el motor fisiológico cruza potencia entregada vs CP/FTP y pulso real vs LTHR (156 bpm).
+   - Si el atleta reporta pulso bajo o RPE $\le 6/10$, el coach declara explícitamente que corrió de forma conservadora con margen en el tanque y que podía haber empujado a ritmos más vivos.
+   - Valida si las potencias están en el rango target y el estado de calibración de sus zonas.
+
+### 154.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeadCoachTacticalConsole.tsx`: 279 LOC ($\le 350$) ✅
+  * `HeadCoachMessageItem.tsx`: 348 LOC ($\le 350$) ✅
+  * `useHeadCoachChat.ts`: 343 LOC ($\le 350$) ✅
+  * `prompts.ts`: 344 LOC ($\le 350$) ✅
+  * `defaultPrompts.ts`: 148 LOC ($\le 350$) ✅
+  * `chatInference.ts`: 338 LOC ($\le 350$) ✅
+  * `deterministicFallback.ts`: 334 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética, feedback de rendimiento y naturalidad ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 154 ✅.

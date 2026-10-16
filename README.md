@@ -1,9 +1,16 @@
-# ⚡ SGEA Pro (v5.80) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.81) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 📱 **Optimización Integral Responsiva & Ergonomía Móvil de Onboarding (v5.81):**
+  - **Contención Vertical Estricta y Scroll Seguro (`WatchSyncModal.tsx`, `WelcomePlanModal.tsx`, `IntervalsOnboardingModal.tsx`):** Límite `max-h-[90vh]` con scroll vertical en el cuerpo y encabezado/pie de acciones fijados con `shrink-0`. Los botones principales nunca quedan ocultos fuera del viewport móvil, incluso en pantallas pequeñas o con teclados y barras de navegación activas.
+  - **Touch Targets Ergonómicos ($\ge 44\text{px}$):** Botones con `w-full sm:w-auto` y padding táctil `py-3` o `py-3.5` para garantizar una pulsación natural y cómoda con el pulgar.
+  - **Pestaña de Integraciones Transmutable (`AthleteIntervalsTab.tsx`):** Flexbox adaptativo `flex-col sm:flex-row`, expandiendo el botón de conexión/desconexión al ancho completo en smartphones sin comprimir el nombre ni el ID del atleta ni provocar desbordamientos horizontales.
+  - **Banner Compacto Adaptativo (`OnboardingBanner.tsx`):** Botón `w-full sm:w-auto` para máxima ergonomía táctil en el dashboard móvil.
+  - **Erradicación Absoluta de Emojis Residuales:** Sustitución de `⚡` y `💡` por los iconos SVG tipados de Lucide (`Zap`, `Sparkles`).
 
 - 🧬 **Erradicación Total de Métricas Fantasma en Zonas y Focalización Exclusiva a Intervals.icu (v5.80):**
   - **Cero Datos Quemados en UI:** Erradicación definitiva de valores por defecto hardcodeados en el código (`336W CP`, `226W FTP`, `4:23/km`, `185 cm`, `46 años`, `54 ppm FC reposo`, `2:10/100m CSS`). Todo perfil sin configurar renderiza indicadores limpios (`"—"`, `"Sin Potencia"`, `"Sin CSS"`).

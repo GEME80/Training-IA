@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.80)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.81)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.80).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.81).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.81: Optimización Integral Responsiva y Ergonomía Móvil de Flujos de Onboarding e Integración:
+  * Contención Vertical Estricta y Scroll Seguro (`WatchSyncModal.tsx`, `WelcomePlanModal.tsx`, `IntervalsOnboardingModal.tsx`): Límite `max-h-[90vh]` con scroll vertical en el cuerpo y encabezado/pie de acciones fijados con `shrink-0`. Cero botones o acciones bloqueadas fuera del viewport móvil.
+  * Touch Targets Ergonómicos ($\ge 44\text{px}$): Botones con `w-full sm:w-auto` y padding táctil `py-3` o `py-3.5` para garantizar una pulsación natural con el pulgar.
+  * Pestaña de Integraciones Transmutable (`AthleteIntervalsTab.tsx`): Flexbox adaptativo `flex-col sm:flex-row`, expandiendo el botón de conexión/desconexión al ancho completo en smartphones sin comprimir el nombre ni el ID del atleta ni provocar desbordamientos horizontales.
+  * Banner Compacto Adaptativo (`OnboardingBanner.tsx`): Botón `w-full sm:w-auto` para máxima ergonomía táctil en el dashboard móvil.
+  * Erradicación Absoluta de Emojis Residuales: Sustitución de `⚡` y `💡` por los iconos SVG tipados de Lucide (`Zap`, `Sparkles`).
 - Versión 5.80: Erradicación Total de Métricas Fantasma en Zonas y Focalización Exclusiva a Intervals.icu en Perfil de Atleta:
   * Cero Métricas Quemadas en UI: Erradicación de fallbacks numéricos hardcodeados (`336W CP`, `226W FTP`, `4:23/km`, `185 cm`, `46 años`, `54 ppm FC reposo`, `2:10/100m CSS`). Todo perfil sin configurar renderiza indicadores limpios (`"—"`, `"Sin Potencia"`, `"Sin CSS"`).
   * Extracción Automática de Ritmo Umbral Real (`telemetryService.ts`): Ingesta de `runSport.threshold_pace` desde Intervals.icu y conversión matemática a formato `min:seg/km`.

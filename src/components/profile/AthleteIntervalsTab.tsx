@@ -142,13 +142,13 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
         )}
 
         {/* Item 1: Intervals.icu */}
-        <div className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-          <div className="flex items-center gap-3.5">
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center font-black shadow-md shadow-rose-500/20 shrink-0">
               <Activity className="h-5 w-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">Intervals.icu</h4>
                 {isConnected && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
@@ -157,18 +157,18 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                 Actividades · Virtuales · Salud {athleteId && <span className="font-mono text-[11px] text-slate-400">({athleteId})</span>}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-start sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/60">
             {isConnected ? (
               <button
                 type="button"
                 onClick={() => setShowConfirmDisconnect(true)}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800/50 transition cursor-pointer flex items-center gap-1.5"
+                className="w-full sm:w-auto justify-center px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-rose-800/50 sm:border-transparent transition cursor-pointer flex items-center gap-1.5"
               >
                 <Unlink className="h-3.5 w-3.5" />
                 <span>Desconectar</span>
@@ -180,7 +180,7 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
                   const returnTo = typeof window !== "undefined" ? window.location.pathname : "/profile";
                   window.location.href = `/api/auth/intervals/authorize?returnTo=${encodeURIComponent(returnTo)}`;
                 }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
               >
                 <Zap className="h-3.5 w-3.5" />
                 <span>Conectar con Intervals.icu</span>

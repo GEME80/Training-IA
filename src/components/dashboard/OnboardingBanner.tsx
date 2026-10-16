@@ -45,12 +45,12 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ uid, onOpenO
         </div>
 
         {/* Lado Derecho: Botón directo de 1 Clic */}
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end md:justify-center">
           <button
             type="button"
             onClick={handleConnect}
             disabled={isRedirecting}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
           >
             <Zap className="h-3.5 w-3.5" />
             <span>{isRedirecting ? "Conectando..." : "Conectar en 1 Clic"}</span>

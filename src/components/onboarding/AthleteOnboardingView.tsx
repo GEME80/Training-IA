@@ -26,23 +26,23 @@ export const AthleteOnboardingView: React.FC<AthleteOnboardingViewProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-4 sm:py-8 space-y-6 animate-in fade-in text-left">
+    <div className="max-w-3xl mx-auto py-2 sm:py-8 space-y-4 sm:space-y-6 animate-in fade-in text-left">
       {/* Tarjeta Hero Principal de Onboarding */}
-      <div className="rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white dark:to-slate-900 p-6 sm:p-8 shadow-xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/20 pb-4">
+      <div className="rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white dark:to-slate-900 p-4 sm:p-8 shadow-xl space-y-4 sm:space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/20 pb-3 sm:pb-4">
           <div className="flex items-center space-x-2.5">
             <PulseLogo size="sm" showSubtext={false} />
             <span className="text-xs font-bold text-slate-400">✕</span>
             <span className="text-xs font-black text-rose-600 tracking-tight">Intervals.icu</span>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-600 text-white shadow-xs uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5" />
             Paso 1 de 3
           </span>
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div className="space-y-1.5 sm:space-y-2">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             ¡Bienvenido a PULSE AI, {athleteName}!
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -131,9 +131,13 @@ export const AthleteOnboardingView: React.FC<AthleteOnboardingViewProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-        <ShieldCheck className="h-4 w-4 text-emerald-600" />
-        <span>Conexión oficial cifrada mediante OAuth 2.0. No almacenamos tus contraseñas.</span>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-400 text-center px-2">
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>Conexión oficial cifrada mediante OAuth 2.0.</span>
+        </div>
+        <span className="hidden sm:inline">•</span>
+        <span>No almacenamos tus contraseñas.</span>
       </div>
     </div>
   );

@@ -9001,3 +9001,45 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Cero Métricas Fantasma & UI Exclusiva):** Solo Intervals.icu en integraciones y datos 100% reales del atleta ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 149 ✅.
 
+---
+
+## 150. Optimización Integral Responsiva y Ergonomía Móvil de Flujos de Onboarding e Integración (v5.81)
+
+### 150.1. Diagnóstico y Ergonomía Móvil
+1. **Desbordamientos Horizontales en Pantallas Estrechas:** En pantallas móviles (< 375px), las filas de integración con botones largos ("Conectar con Intervals.icu") comprimían la cabecera y el ID del atleta al compartir una sola línea flex horizontal sin envoltura (`flex-row`).
+2. **Visibilidad de Botones de Acción en Modales de Baja Altura:** En dispositivos móviles con barra inferior de navegador o pantallas de menor altura vertical (ej. iPhone SE con 667px), los modales `WatchSyncModal` y `WelcomePlanModal` carecían de un control estricto de altura (`max-h-[90vh]`) con scroll interno en el cuerpo y botones anclados (`shrink-0`), arriesgando que el CTA principal quedara fuera del viewport.
+3. **Erradicación de Emojis Residuales:** Se detectaron emojis no estandarizados (`⚡`, `💡`) en los diálogos de sincronización y selector de onboarding, que debían sustituirse por iconos vectoriales SVG de `lucide-react`.
+
+### 150.2. Implementaciones Realizadas
+1. **Vista de Onboarding Responsiva (`AthleteOnboardingView.tsx` - 144 LOC):**
+   - Padding perimetral adaptativo (`p-4 sm:p-8`), márgenes compactos en móvil (`py-2 sm:py-8`) y botones táctiles ergonómicos (`py-3.5`).
+   - Pie de página de seguridad adaptativo (`flex-col sm:flex-row`) con textos de tamaño optimizado para legibilidad móvil.
+2. **Modales con Scroll Seguro y Botones Fijados (`WatchSyncModal.tsx` - 156 LOC & `WelcomePlanModal.tsx` - 112 LOC):**
+   - Diálogos con contención vertical estricta (`max-h-[90vh] flex flex-col`).
+   - Encabezados y barras de acción con `shrink-0` permanente y cuerpo con `overflow-y-auto`, asegurando que el atleta siempre pueda pulsar los botones sin importar el tamaño de pantalla.
+   - Botones con ancho completo responsivo (`w-full sm:w-auto` y `py-3`) para un área de pulsación táctil óptima ($\ge 44\text{px}$).
+   - Reemplazo de emoji `⚡` por icono vectorial `<Zap className="h-3 w-3 text-amber-500 fill-amber-500" />`.
+3. **Pestaña de Integraciones en Perfil (`AthleteIntervalsTab.tsx` - 233 LOC):**
+   - La tarjeta de Intervals.icu ahora transmuta fluidamente entre móvil y escritorio (`flex-col sm:flex-row`), permitiendo que el botón de conexión o desconexión ocupe el ancho completo en pantallas móviles con separación visual limpia.
+4. **Banner Compacto de Onboarding (`OnboardingBanner.tsx` - 63 LOC):**
+   - Botón *"Conectar en 1 Clic"* responsivo con `w-full sm:w-auto` para máxima ergonomía táctil en el dashboard móvil.
+5. **Selector de Onboarding (`OnboardingPathSelector.tsx` - 75 LOC):**
+   - Reemplazado `💡` por el icono SVG `<Sparkles className="h-3.5 w-3.5 shrink-0" />`.
+6. **Modal Contenedor de Onboarding (`IntervalsOnboardingModal.tsx` - 61 LOC):**
+   - Asegurado `max-h-[90vh]` y `overflow-y-auto` en el contenedor.
+
+### 150.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  - `AthleteOnboardingView.tsx`: 144 LOC ($\le 350$) ✅
+  - `WatchSyncModal.tsx`: 156 LOC ($\le 350$) ✅
+  - `WelcomePlanModal.tsx`: 112 LOC ($\le 350$) ✅
+  - `AthleteIntervalsTab.tsx`: 233 LOC ($\le 350$) ✅
+  - `OnboardingBanner.tsx`: 63 LOC ($\le 350$) ✅
+  - `OnboardingPathSelector.tsx`: 75 LOC ($\le 350$) ✅
+  - `IntervalsOnboardingModal.tsx`: 61 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas OK) ✅.
+- **Gate 4 (Ergonomía Móvil Certificada):** Touch targets $\ge 44\text{px}$, contención `max-h-[90vh]`, cero desbordamientos horizontales en dispositivos pequeños ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 150 ✅.
+
+

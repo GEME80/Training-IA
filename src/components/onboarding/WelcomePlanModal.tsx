@@ -20,27 +20,27 @@ export const WelcomePlanModal: React.FC<WelcomePlanModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Botón cerrar */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          className="absolute top-3.5 right-3.5 z-10 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Banner Superior Celebratorio */}
-        <div className="relative p-6 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-b border-emerald-500/20 text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30">
-            <Sparkles className="h-6 w-6" />
+        <div className="relative p-4 sm:p-6 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-b border-emerald-500/20 text-center space-y-2 shrink-0">
+          <div className="mx-auto w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
               Onboarding Completado
             </span>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               ¡Conexión Exitosa con PULSE AI!
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mx-auto">
@@ -50,7 +50,7 @@ export const WelcomePlanModal: React.FC<WelcomePlanModalProps> = ({
         </div>
 
         {/* Estado y Checklist de Inicio */}
-        <div className="p-6 space-y-5 text-left">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 text-left">
           <div className="space-y-2.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
               Estado de tu cuenta
@@ -87,7 +87,7 @@ export const WelcomePlanModal: React.FC<WelcomePlanModalProps> = ({
         </div>
 
         {/* Acciones */}
-        <div className="p-6 pt-0 space-y-2.5">
+        <div className="p-4 sm:p-6 pt-0 space-y-2.5 shrink-0">
           <button
             type="button"
             onClick={onStartPlan}

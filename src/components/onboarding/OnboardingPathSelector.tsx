@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, Sparkles } from "lucide-react";
 
 interface OnboardingPathSelectorProps {
   onSelectPath?: (path: "new" | "existing") => void;
@@ -46,7 +46,8 @@ export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
 
         <div className="rounded-xl p-3 bg-amber-500/10 border border-amber-500/20 text-left space-y-1">
           <div className="text-[11px] font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-            <span>💡 ¿No tienes cuenta en Intervals todavía?</span>
+            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+            <span>¿No tienes cuenta en Intervals todavía?</span>
           </div>
           <p className="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed">
             Al pulsar el botón serás llevado a Intervals. Si aún no tienes cuenta, haz clic en <strong>"¿No está registrado? Haga clic para registrarse"</strong> (toma 5 segundos con Google) y autorizas la conexión de inmediato.

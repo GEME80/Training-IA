@@ -122,21 +122,26 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   }
 
   const completedActivitiesList = React.useMemo(() => {
-    return Object.entries(dailyExecutedActivities || {}).flatMap(([dKey, val]: [string, any]) =>
-      Array.isArray(val?.activities)
-        ? val.activities.map((a: any) => ({
-            id: a?.id || `${dKey}-${a?.name}`,
-            name: a?.name || a?.type || "Actividad",
-            date: dKey,
-            type: a?.type || "Run",
-            tss: a?.tss || 0,
-            movingTimeMin: a?.movingTimeMin || 0,
-            watts: a?.watts,
-            heartrate: a?.heartrate,
-          }))
-        : []
-    );
-  }, [dailyExecutedActivities]);
+    const wStart = selectedWeekData?.startDate || getWeekDates(activeWeekNumber - realCurrentWeekNumber)[0]?.date;
+    const wEnd = selectedWeekData?.endDate || getWeekDates(activeWeekNumber - realCurrentWeekNumber)[6]?.date;
+
+    return Object.entries(dailyExecutedActivities || {})
+      .filter(([dKey]) => (!wStart || dKey >= wStart) && (!wEnd || dKey <= wEnd))
+      .flatMap(([dKey, val]: [string, any]) =>
+        Array.isArray(val?.activities)
+          ? val.activities.map((a: any) => ({
+              id: a?.id || `${dKey}-${a?.name}`,
+              name: a?.name || a?.type || "Actividad",
+              date: dKey,
+              type: a?.type || "Run",
+              tss: a?.tss || 0,
+              movingTimeMin: a?.movingTimeMin || 0,
+              watts: a?.watts,
+              heartrate: a?.heartrate,
+            }))
+          : []
+      );
+  }, [dailyExecutedActivities, selectedWeekData?.startDate, selectedWeekData?.endDate, activeWeekNumber, realCurrentWeekNumber]);
 
   return (
     <div className="card-gradient rounded-3xl p-3 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 sm:space-y-4 animate-fadeIn flex flex-col h-[calc(100dvh-175px)] md:h-[calc(100vh-140px)] min-h-[520px]">

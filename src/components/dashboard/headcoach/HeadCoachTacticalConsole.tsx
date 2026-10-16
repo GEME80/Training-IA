@@ -34,7 +34,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
             setReorgOpen(false);
             setAuditOpen(false);
             handleAction(
-              "Analiza el balance y volumen de esta semana: evalúa el cumplimiento de TSS real vs planificado, mi estado de fatiga y frescura (TSB), y si la carga va acorde a lo programado.",
+              "Germán aquí. Dame el balance de volumen y carga de esta semana: cuántas sesiones llevo ejecutadas vs planificadas, mi TSS acumulado y cómo asimila mi cuerpo la fatiga (TSB) para los días restantes.",
               { isWeekKickoffAudit: true }
             );
           }}
@@ -85,7 +85,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           </div>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">
             {completedActivities && completedActivities.length > 0
-              ? `${completedActivities.length} completada${completedActivities.length > 1 ? "s" : ""} • Ver selector`
+              ? `${completedActivities.length} de esta semana • Elegir`
               : "Potencia, pulso y desacople"}
           </p>
         </button>
@@ -97,7 +97,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
             setReorgOpen(false);
             setAuditOpen(false);
             handleAction(
-              "Evalúa mi rumbo hacia mi carrera principal: revisa mis semanas restantes, mi estado de forma (CTL y Stryd CP / FTP) y explícame cómo se proyecta mi ritmo objetivo para el día de la carrera."
+              "Germán aquí. Hazme un análisis estratégico de mi rumbo hacia mi carrera principal: revisa mis semanas restantes, mi estado de forma (CTL y Stryd CP / FTP) y explícame cómo se proyecta mi ritmo objetivo para el día de la carrera. No alteres mi microciclo ni me hables de la rutina del día a día, dame una visión estratégica macro."
             );
           }}
           disabled={isLoading}
@@ -149,10 +149,11 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
         <div className="p-2 sm:p-2.5 rounded-2xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-500/25 flex flex-wrap items-center gap-1.5 sm:gap-2 animate-fadeIn">
           <span className="text-[11px] font-bold text-cyan-800 dark:text-cyan-300 mr-1 flex items-center gap-1">
             <Target className="h-3 w-3" />
-            <span>Selecciona sesión:</span>
+            <span>Auditar sesión:</span>
           </span>
           {completedActivities.map((act, aIdx) => {
             const isRide = /ride|bike|ciclismo/i.test(act.type || act.name || "");
+            const isLatest = aIdx === completedActivities.length - 1;
             return (
               <button
                 key={act.id || `${act.date}-${aIdx}`}
@@ -160,13 +161,17 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
                 onClick={() => {
                   setAuditOpen(false);
                   handleAction(
-                    `Audita en detalle mi sesión de ${act.name || act.type} realizada el ${act.date}: analiza mi potencia/ritmo, frecuencia cardíaca, desacoplamiento aeróbico (drift) y explícame con datos y traducción humana si cumplí el objetivo.`
+                    `Germán aquí. Audita en detalle mi sesión de ${act.name || act.type} realizada el ${act.date}: analiza mi potencia/ritmo, frecuencia cardíaca, desacoplamiento aeróbico (drift) y explícame con tono de entrenador si cumplí el objetivo.`
                   );
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-cyan-200 dark:border-cyan-800 text-[11px] font-bold text-cyan-900 dark:text-cyan-200 hover:border-cyan-400 hover:bg-cyan-50/80 dark:hover:bg-cyan-950/40 transition cursor-pointer"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
+                  isLatest
+                    ? "bg-cyan-500/15 border-cyan-400 text-cyan-950 dark:text-cyan-100 hover:bg-cyan-500/25"
+                    : "bg-white dark:bg-slate-900 border-cyan-200 dark:border-cyan-800 text-cyan-900 dark:text-cyan-200 hover:border-cyan-400 hover:bg-cyan-50/80 dark:hover:bg-cyan-950/40"
+                }`}
               >
                 {isRide ? <Bike className="h-3 w-3 text-sky-500" /> : <Activity className="h-3 w-3 text-emerald-500" />}
-                <span className="truncate max-w-[140px] sm:max-w-[180px]">{act.name || act.type}</span>
+                <span className="truncate max-w-[140px] sm:max-w-[180px]">{isLatest ? `⚡ ${act.name || act.type}` : (act.name || act.type)}</span>
                 <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-normal">
                   {act.tss ? `${act.tss} TSS` : `${act.movingTimeMin || 0}m`}
                 </span>

@@ -44,14 +44,15 @@ export async function executeGeminiInference(
     }
   });
 
-  const smartBrevityInstruction = `\n\n[DIRECTRICES ESTRICTAS DEL HEAD COACH FISIOLÓGICO PULSE]:
-1. "reply": Estructura tu respuesta estrictamente en los bloques canónicos de comunicación de élite (120-180 palabras, sin emojis infantiles):
-   - [ESTADO DEL PROCESO]: 1 sola línea sintetizando semana del bloque, fase activa, adherencia y rampa de fitness.
-   - [DIAGNÓSTICO]: 1 a 2 oraciones con el veredicto fisiológico (continuidad vs ajuste) y argumento técnico (TSB, CTL, HRV, W/kg, desacoplamiento o vatios).
-   - [TRADUCCIÓN HUMANA]: 2 oraciones en cristiano explicando qué significa para las sensaciones del atleta, su recuperación y asimilación muscular.
-   - [ACCIÓN PRESCRIPTIVA]: 1 a 2 oraciones con la instrucción inmediata para hoy o días restantes.
-2. "quickReplies": Proporciona de 2 a 4 botones directos de acción deportiva (sin emojis).
-3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario debe ser null.`;
+  const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
+1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, profesional y motivador):
+   - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 2 a 3 párrafos conversacionales fluidos.
+   - Párrafo 1 (Lectura técnica con argumentos): Cumplimiento, TSS, W/kg, Stryd CP, CTL, TSB o desacoplamiento.
+   - Párrafo 2 (Traducción humana clara): Qué significan esos números para sus sensaciones, fatiga y asimilación.
+   - Párrafo 3 (Pauta inmediata): Instrucción clara para hoy o el fin de semana.
+   - En "Rumbo a mi meta": enfócate exclusivamente en la visión macro (cuenta regresiva, ritmo proyectado vs meta, CTL Banister). Sin tocar la rutina diaria.
+2. "quickReplies": 2 a 4 botones directos de acción deportiva (sin emojis).
+3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario null.`;
 
   const finalTurn = normalizedContents[normalizedContents.length - 1];
   if (finalTurn && finalTurn.role === "user") {
@@ -110,9 +111,9 @@ export async function executeGeminiInference(
             if (parsed && typeof parsed === "object" && parsed.reply) {
               if (typeof parsed.reply === "string") {
                 parsed.reply = parsed.reply
-                  .replace(/\[\s*ESTADO DEL PROCESO\s*\]:?\s*/gi, "**Estado de la semana:**\n")
-                  .replace(/\[\s*DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?\s*\]:?\s*/gi, "\n\n**Diagnóstico:**\n")
-                  .replace(/\[\s*ACCI[OÓ]N PRESCRIPTIVA\s*\]:?\s*/gi, "\n\n**Pauta para hoy:**\n")
+                  .replace(/\[\s*(?:ESTADO DEL PROCESO|DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?|TRADUCCI[OÓ]N HUMANA|ACCI[OÓ]N PRESCRIPTIVA)\s*\]:?\s*/gi, "")
+                  .replace(/\*\*(?:Estado de la semana|Diagn[oó]stico|Traducci[oó]n humana|Pauta para hoy)\*\*:\s*/gi, "")
+                  .replace(/\n{3,}/g, "\n\n")
                   .trim();
               }
 

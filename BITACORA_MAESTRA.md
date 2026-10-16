@@ -9142,3 +9142,40 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética y precisión fisiológica ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 152 ✅.
+
+---
+
+## 153. Entrada de Bitácora: Humanización Integral de Voz del Head Coach IA y Acotamiento Estricto de Auditoría por Microciclo (PULSE Live Coach v6.1)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 12:40 COT.
+- **Directiva del Atleta:** Auditoría viva y retroalimentación post-prueba en vivo:
+  1. *Erradicar el tono robótico / de máquina:* Eliminar los subtítulos burocráticos (`Estado de la semana:`, `Diagnóstico:`, `[TRADUCCIÓN HUMANA]`, `Pauta para hoy:`) y adoptar una narrativa conversacional, en primera persona, empática y de entrenador personal de élite ("Germán, estuve revisando tus números...").
+  2. *Acotamiento de "Auditar Sesión":* Filtrar estrictamente la lista de actividades al microciclo activo (evitando traer todo el año histórico de Intervals.icu) y destacar la última sesión completada con un botón `⚡`.
+  3. *Enfoque Macro en "Rumbo a mi Meta":* Eliminar la dispersión táctica que hablaba de la rutina del día a día; enfocarse 100% en la perspectiva estratégica (cuenta regresiva de semanas, ritmo proyectado vs objetivo y evolución Banister de CTL).
+  4. *Balance de Semana Conversacional:* Explicar con naturalidad el progreso del microciclo (sesiones ejecutadas vs planificadas, TSS y TSB).
+
+### 153.1. Implementaciones y Mejoras Realizadas
+1. **Acotamiento Temporal de Actividades en Vista Principal (`AthleteHeadCoachView.tsx` - 214 LOC):**
+   - El selector de sesiones ahora filtra `completedActivitiesList` estrictamente entre las fechas de inicio (`startDate` / `wStart`) y fin (`endDate` / `wEnd`) de la semana activa.
+   - Erradicado el desbordamiento de actividades de meses pasados.
+2. **Consola Táctica con Prompts Humanizados y Botón `⚡` (`HeadCoachTacticalConsole.tsx` - 244 LOC):**
+   - En *Auditar Sesión*, se destaca la última actividad ejecutada con una píldora prominente `⚡ Última sesión: [Nombre] ([TSS] TSS)`.
+   - Se humanizan los disparadores de *Balance de Semana* y *Rumbo a mi Meta*, instruyendo explícitamente a la IA hablar como entrenador personal y centrarse en la visión macro sin proponer modificaciones innecesarias de microciclo.
+3. **Inferencia y Limpieza Estricta de Subtítulos Robóticos (`chatInference.ts` - 338 LOC):**
+   - `smartBrevityInstruction` actualizado para exigir narrativa en primera persona dirigida a Germán, en 2 o 3 párrafos conversacionales fluidos sin etiquetas visibles.
+   - Purgado de cualquier residuo de etiquetas (`[ESTADO...]`, `**Estado de la semana:**`, `[DIAGNÓSTICO...]`, `[TRADUCCIÓN HUMANA]`, etc.) en el post-procesamiento de `parsed.reply`.
+4. **Regla Canónica 9 en Prompts Predeterminados (`defaultPrompts.ts` - 146 LOC):**
+   - Redactada la directriz de entrenador humano de élite: argumentos técnicos precisos combinados con traducción a sensaciones reales de carrera y fatiga muscular, sin encabezados de corchetes.
+5. **Humanización Integral del Fallback Determinístico (`deterministicFallback.ts` - 345 LOC):**
+   - Respuestas de *Auditar Sesión*, *Rumbo a mi Meta*, *Balance de Semana*, *Protocolo de Retorno Seguro por Enfermedad* y *Poco Tiempo* completamente reescritas en prosa cálida, motivadora y profesional en primera persona ("Hola Germán...", "Germán, estuve auditando...").
+
+### 153.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `AthleteHeadCoachView.tsx`: 214 LOC ($\le 350$) ✅
+  * `HeadCoachTacticalConsole.tsx`: 244 LOC ($\le 350$) ✅
+  * `chatInference.ts`: 338 LOC ($\le 350$) ✅
+  * `defaultPrompts.ts`: 146 LOC ($\le 350$) ✅
+  * `deterministicFallback.ts`: 345 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética y humanización del Head Coach ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 153 ✅.

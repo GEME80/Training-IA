@@ -49,9 +49,10 @@ export function handleDeterministicFallback(
   const lowerMsg = lastUserMsg.toLowerCase();
   let smartActions: SmartActionItem[] = [];
 
-  const isGoal = lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal") || lowerMsg.includes("semanas restantes") || lowerMsg.includes("desde que inicio") || lowerMsg.includes("desde que inició");
-  const isWeekBalance = !isGoal && (lowerMsg.includes("balance") || lowerMsg.includes("volumen") || lowerMsg.includes("semana completa") || lowerMsg.includes("toda la semana") || lowerMsg.includes("resumen semanal") || lowerMsg.includes("cierre de semana") || (lowerMsg.includes("semana") && !lowerMsg.includes("audita") && !lowerMsg.includes("sesión") && !lowerMsg.includes("sesion")));
-  const isSessionAudit = !isGoal && !isWeekBalance && (lowerMsg.includes("audita a fondo") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión") || lowerMsg.includes("audita") || lowerMsg.includes("sesión"));
+  const isTimeShort = lowerMsg.includes("poco tiempo") || lowerMsg.includes("comprime") || lowerMsg.includes("tiempo limitado") || lowerMsg.includes("express") || (lowerMsg.includes("reduc") && (lowerMsg.includes("20%") || lowerMsg.includes("30%")));
+  const isGoal = !isTimeShort && (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal") || lowerMsg.includes("semanas restantes") || lowerMsg.includes("desde que inicio") || lowerMsg.includes("desde que inició"));
+  const isWeekBalance = !isTimeShort && !isGoal && (lowerMsg.includes("balance") || lowerMsg.includes("volumen") || lowerMsg.includes("semana completa") || lowerMsg.includes("toda la semana") || lowerMsg.includes("resumen semanal") || lowerMsg.includes("cierre de semana") || (lowerMsg.includes("semana") && !lowerMsg.includes("audita") && !lowerMsg.includes("sesión") && !lowerMsg.includes("sesion")));
+  const isSessionAudit = !isTimeShort && !isGoal && !isWeekBalance && (lowerMsg.includes("audita a fondo") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión") || lowerMsg.includes("audita") || lowerMsg.includes("sesión"));
 
   // 1. RUMBO A LA META Y PROYECCIÓN BANISTER (ANÁLISIS MACRO DEL MACROCICLO)
   if (isGoal) {
@@ -160,6 +161,26 @@ export function handleDeterministicFallback(
       replyMsg = `Hola ${athleteFirstName}, estuve revisando tu telemetría pero aún no registras actividades completadas en Intervals.icu para esta semana ${targetPlanningWeekNum}.\n\nTan pronto sincronices tu reloj tras entrenar, cruzaré vatios, frecuencia cardíaca y desacoplamiento para evaluar el estímulo de tu sesión.\n\nPor ahora concéntrate en tu siguiente sesión programada.`;
     }
     smartActions = [];
+  }
+  // PROTOCOLO DE TIEMPO LIMITADO / COMPRESIÓN DE SESIÓN
+  else if (isTimeShort) {
+    actionType = "ADAPT_WORKOUT";
+    const isTomorrow = lowerMsg.includes("mañana") || lowerMsg.includes("manana");
+    const tIdx = isTomorrow ? Math.min(6, (ctx.todayDayIndex + 1) % 7) : (ctx.todayDayIndex >= 0 && ctx.todayDayIndex < 7 ? ctx.todayDayIndex : 0);
+    const sess = modifiedPlan[tIdx];
+    const origMins = sess?.durationMinutes || 60, origName = sess?.workoutName || sess?.title || "Entrenamiento";
+    let newMins = Math.round(origMins * 0.75);
+    if (lowerMsg.includes("30%") || lowerMsg.includes("-30%")) newMins = Math.max(15, Math.round(origMins * 0.7));
+    else if (lowerMsg.includes("20%") || lowerMsg.includes("-20%")) newMins = Math.max(20, Math.round(origMins * 0.8));
+    else if (lowerMsg.includes("30 min") || lowerMsg.includes("30m")) newMins = 30;
+    else if (lowerMsg.includes("45 min") || lowerMsg.includes("45m")) newMins = 45;
+    const newTss = Math.round((sess?.tss || 45) * (newMins / origMins));
+    if (modifiedPlan[tIdx]) {
+      modifiedPlan[tIdx] = { ...modifiedPlan[tIdx], workoutName: `${origName} (Comprimida ${newMins}m)`, durationMinutes: newMins, tss: newTss, action: "MODIFICAR", justification: `Sesión comprimida a ${newMins} min por tiempo limitado, manteniendo los vatios clave.` };
+    }
+    const dayLabel = isTomorrow ? "mañana" : "hoy";
+    replyMsg = `Germán, he adaptado tu sesión de ${dayLabel} (${origName}) acortando el tiempo de ${origMins}m a ${newMins}m. Mantengo intacto el bloque central en tus zonas de potencia objetivo para asegurar la asimilación del estímulo y recorté el volumen secundario en calentamiento y soltura.\n\nRevisa la tarjeta abajo con la nueva estructura y pulsa "Aprobar y Sincronizar" para actualizar tu calendario.`;
+    smartActions = [{ label: "Confirmar Nuevo Calendario", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
   }
   // 4. PROTOCOLO DE RETORNO SEGURO TRAS ENFERMEDAD (RECALIBRACIÓN SEMANAL INTEGRAL)
   else if (lowerMsg.includes("enferm") || lowerMsg.includes("retorno") || lowerMsg.includes("salté") || lowerMsg.includes("salte")) {
@@ -289,50 +310,30 @@ export function handleDeterministicFallback(
   // FASE 3: Confirmación / Aprobación
   else if (lowerMsg.includes("confirmar") || lowerMsg.includes("aprobar") || lowerMsg.includes("aplicar")) {
     replyMsg = "¡Microciclo actualizado con éxito! Tus sesiones ya están sincronizadas. Que tengas un excelente entrenamiento.";
-    smartActions = [
-      { label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" },
-    ];
-  }
-  // FLUJO: Mantener plan original
-  else if (lowerMsg.includes("mantener plan original") || lowerMsg.includes("mantener plan") || lowerMsg.includes("mantener")) {
+    smartActions = [{ label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" }];
+  } else if (lowerMsg.includes("mantener")) {
     replyMsg = "Excelente decisión. Mantener la constancia y respetar los ritmos programados es la base para asimilar este bloque sin sobrecargas. Tu plan previsto sigue activo con normalidad.";
     smartActions = [];
-  }
-  // FLUJO SECUNDARIO: Consulta general de estado
-  else if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
+  } else if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
     actionType = "REVIEW_PHYSIOLOGY";
     const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
     const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
     replyMsg = `Hola ${athleteFirstName}, tu estado biológico para la semana ${targetPlanningWeekNum} está muy bien equilibrado: tu fitness (CTL) se sitúa en ${physioStatus.ctl.toFixed(1)}, tu fatiga aguda (ATL) en ${physioStatus.atl.toFixed(1)} y tu frescura (TSB) en ${tsbSign}, con una rampa ascendente de +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem.\n\nEsto confirma que estás asimilando el volumen con buena tolerancia neuromuscular y sin sobreesfuerzo destructivo. El sistema nervioso responde favorablemente al estímulo.\n\nMi recomendación es continuar con el plan previsto para consolidar el bloque del fin de semana con solidez.`;
     smartActions = [];
-  }
-  // Default de continuidad
-  else {
+  } else {
     replyMsg = `He registrado tus indicaciones ("${lastUserMsg}"). Los parámetros fisiológicos están equilibrados. Si deseas modular la carga o revisar una sesión específica, indícamelo directamente.`;
     smartActions = [];
   }
 
-  // SUGGESTED_PLAN SOLO se incluye cuando hay una adaptación activa y la semana NO está concluida
-  const hasActiveProposal =
-    !ctx.isWeekCompleted && (actionType === "ADAPT_WORKOUT" || (actionType as any) === "MODIFY_WORKOUT");
-
+  const hasActiveProposal = !ctx.isWeekCompleted && (actionType === "ADAPT_WORKOUT" || (actionType as any) === "MODIFY_WORKOUT");
   const finalPlan = (hasActiveProposal && modifiedPlan && modifiedPlan.length > 0)
-    ? (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0
-        ? applyTssAdjustmentToPlan(modifiedPlan, ctx.targetTssAdjustmentPct)
-        : modifiedPlan)
+    ? (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 ? applyTssAdjustmentToPlan(modifiedPlan, ctx.targetTssAdjustmentPct) : modifiedPlan)
     : null;
 
   return {
-    success: true,
-    reply: replyMsg,
-    actionType,
-    workoutDiff,
-    previousWeekSummary: ctx.previousWeekSummary || null,
-    suggestedPlan: finalPlan,
-    reasoning: "Ajuste algorítmico fisiológico determinístico completado.",
-    smartActions,
-    quickReplies: smartActions.map((s) => s.label),
-    modelUsed: "Motor Fisiológico PULSE (Algorítmico)",
-    targetWeekNumber: targetPlanningWeekNum,
+    success: true, reply: replyMsg, actionType, workoutDiff,
+    previousWeekSummary: ctx.previousWeekSummary || null, suggestedPlan: finalPlan,
+    reasoning: "Ajuste algorítmico fisiológico determinístico completado.", smartActions,
+    quickReplies: smartActions.map((s) => s.label), modelUsed: "Motor Fisiológico PULSE (Algorítmico)", targetWeekNumber: targetPlanningWeekNum,
   };
 }

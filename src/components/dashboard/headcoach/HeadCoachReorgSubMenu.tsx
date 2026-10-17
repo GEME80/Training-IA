@@ -12,6 +12,9 @@ interface HeadCoachReorgSubMenuProps {
   todayName: string;
   isRunToday: boolean;
   isBikeToday: boolean;
+  todaySession?: any;
+  tomorrowSession?: any;
+  hasTrainedToday?: boolean;
   onClose: () => void;
   onAction: (prompt: string, opts?: any) => void;
   onSelectWeek?: (weekNum: number) => void;
@@ -24,12 +27,29 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
   todayName,
   isRunToday,
   isBikeToday,
+  todaySession,
+  tomorrowSession,
+  hasTrainedToday = false,
   onClose,
   onAction,
   onSelectWeek,
   onOpenTemporaryMatrix,
 }) => {
-  const [subMode, setSubMode] = useState<"sick" | "matrix" | "swap" | null>(null);
+  const [subMode, setSubMode] = useState<"sick" | "matrix" | "swap" | "short_time" | null>(null);
+  const [targetDay, setTargetDay] = useState<"today" | "tomorrow">(() => (hasTrainedToday ? "tomorrow" : "today"));
+
+  const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const todayIdx = CANONICAL_DAYS.indexOf(todayName);
+  const tomorrowIdx = (todayIdx + 1) % 7;
+  const tomorrowName = CANONICAL_DAYS[tomorrowIdx];
+
+  const activeDayName = targetDay === "today" ? todayName : tomorrowName;
+  const activeSession = targetDay === "today" ? todaySession : tomorrowSession;
+  const activeWorkoutName = activeSession?.workoutName || activeSession?.title || (targetDay === "today" && isRunToday ? "Carrera en Z2" : targetDay === "today" && isBikeToday ? "Ciclismo en Z2" : "Entrenamiento");
+  const activeDuration = activeSession?.durationMinutes || 60;
+  const activeMins20 = Math.max(20, Math.round(activeDuration * 0.8));
+  const activeMins30 = Math.max(15, Math.round(activeDuration * 0.7));
+  const isRestSelected = !activeSession || activeSession.discipline === "Descanso" || (activeSession.durationMinutes === 0 && activeSession.tss === 0);
 
   const handleFinish = (prompt: string, opts: any = { skipUserBubble: true }) => {
     onClose();
@@ -70,15 +90,11 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
 
           <button
             type="button"
-            onClick={() =>
-              handleFinish(
-                "Hoy tengo tiempo muy limitado (30 a 45 minutos). Comprime mi sesión manteniendo el estímulo principal y reduciendo volumen no esencial."
-              )
-            }
+            onClick={() => setSubMode("short_time")}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-900 dark:text-amber-200 hover:border-amber-400 transition cursor-pointer"
           >
             <Clock className="h-3 w-3 text-amber-500" />
-            <span>Tengo poco tiempo hoy (30m/45m)</span>
+            <span>Tengo poco tiempo hoy</span>
           </button>
         </>
       ) : subMode === "sick" ? (
@@ -161,7 +177,7 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
             <span>Próxima semana (Semana {nextWeek})</span>
           </button>
         </div>
-      ) : (
+      ) : subMode === "swap" ? (
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
           <button
             type="button"
@@ -217,6 +233,109 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
               </span>
             )}
           </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
+          <button
+            type="button"
+            onClick={() => setSubMode(null)}
+            className="p-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer flex items-center gap-1"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>Volver</span>
+          </button>
+
+          {/* Selector de Día: Hoy vs Mañana */}
+          <div className="flex items-center rounded-xl bg-amber-100/70 dark:bg-amber-900/40 p-0.5 border border-amber-300/40 dark:border-amber-700/50">
+            <button
+              type="button"
+              onClick={() => setTargetDay("today")}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                targetDay === "today"
+                  ? "bg-white dark:bg-slate-900 text-amber-950 dark:text-amber-100 shadow-xs border border-amber-300 dark:border-amber-700"
+                  : "text-amber-800 dark:text-amber-300 hover:text-amber-950"
+              }`}
+            >
+              <span>Hoy ({todayName})</span>
+              {hasTrainedToday && <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-black">✓</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetDay("tomorrow")}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                targetDay === "tomorrow"
+                  ? "bg-white dark:bg-slate-900 text-amber-950 dark:text-amber-100 shadow-xs border border-amber-300 dark:border-amber-700"
+                  : "text-amber-800 dark:text-amber-300 hover:text-amber-950"
+              }`}
+            >
+              <span>Mañana ({tomorrowName})</span>
+            </button>
+          </div>
+
+          {/* Tarjeta de la Sesión del Día Seleccionado */}
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[10px] font-semibold">
+            <span className="font-bold truncate max-w-[130px] sm:max-w-[180px]">{activeWorkoutName}</span>
+            <span className="font-mono text-amber-700 dark:text-amber-300 font-bold">
+              {isRestSelected ? "(Descanso)" : `(${activeDuration}m)`}
+            </span>
+          </div>
+
+          {!isRestSelected ? (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  handleFinish(
+                    `${targetDay === "today" ? `Hoy (${todayName})` : `Mañana (${tomorrowName})`} tengo tiempo limitado. Mi sesión programada es '${activeWorkoutName}' de ${activeDuration} min. Comprime esta sesión recortando un 20% su duración a aproximadamente ${activeMins20} minutos, manteniendo la intensidad de los vatios clave y recortando volumen no esencial de calentamiento y enfriamiento. Presenta la propuesta de sesión adaptada para mi aprobación.`
+                  )
+                }
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer"
+              >
+                <span>-20% ({activeMins20}m)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleFinish(
+                    `${targetDay === "today" ? `Hoy (${todayName})` : `Mañana (${tomorrowName})`} tengo tiempo limitado. Mi sesión programada es '${activeWorkoutName}' de ${activeDuration} min. Comprime esta sesión recortando un 30% su duración a aproximadamente ${activeMins30} minutos, manteniendo la intensidad de los vatios clave y recortando volumen no esencial de calentamiento y enfriamiento. Presenta la propuesta de sesión adaptada para mi aprobación.`
+                  )
+                }
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-400 text-amber-950 dark:text-amber-100 text-[11px] font-bold hover:bg-amber-500/25 transition cursor-pointer"
+              >
+                <span>-30% ({activeMins30}m)</span>
+              </button>
+              {activeDuration >= 40 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleFinish(
+                      `${targetDay === "today" ? `Hoy (${todayName})` : `Mañana (${tomorrowName})`} tengo tiempo muy limitado. Comprime mi sesión prevista '${activeWorkoutName}' a una versión express de exactamente 30 minutos, manteniendo la potencia en tu zona y recortando al mínimo calentamiento y vuelta a la calma. Presenta la propuesta adaptada para mi aprobación.`
+                    )
+                  }
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer"
+                >
+                  <span>Express (30m)</span>
+                </button>
+              )}
+              {activeDuration >= 55 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleFinish(
+                      `${targetDay === "today" ? `Hoy (${todayName})` : `Mañana (${tomorrowName})`} tengo tiempo limitado. Comprime mi sesión prevista '${activeWorkoutName}' a una versión de 45 minutos manteniendo el estímulo central. Presenta la propuesta adaptada para mi aprobación.`
+                    )
+                  }
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer"
+                >
+                  <span>Express (45m)</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <span className="text-[10px] text-amber-700 dark:text-amber-300 italic">
+              {targetDay === "today" ? "Hoy es día de descanso pasivo." : "Mañana es día de descanso pasivo."}
+            </span>
+          )}
         </div>
       )}
     </div>

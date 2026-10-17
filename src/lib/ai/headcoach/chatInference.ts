@@ -146,15 +146,15 @@ export async function executeGeminiInference(
                 (typeof parsed.reply === "string" && /continuidad/i.test(parsed.reply) && !/ajuste t[aá]ctico/i.test(parsed.reply));
 
               const isMatrixRequest = allUserText.includes("matriz") || allUserText.includes("temporal") || allUserText.includes("disponibilidad") || allUserText.includes("reorganizar");
+              const isTimeCompression = allUserText.includes("poco tiempo") || allUserText.includes("comprime") || allUserText.includes("tiempo limitado") || allUserText.includes("express") || allUserText.includes("-20%") || allUserText.includes("-30%");
               const userExplicitlyRequestedAdjustment =
-                isMatrixRequest || allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
+                isMatrixRequest || isTimeCompression || allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
                 allUserText.includes("+10%") || allUserText.includes("viaje") || allUserText.includes("cambia") ||
                 allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta") ||
                 allUserText.includes("intercambi") || allUserText.includes("sustitu") || allUserText.includes("enferm") ||
-                allUserText.includes("retorno") || allUserText.includes("rodillo") || allUserText.includes("poco tiempo") ||
-                allUserText.includes("salté") || allUserText.includes("salte");
+                allUserText.includes("retorno") || allUserText.includes("rodillo") || allUserText.includes("salté") || allUserText.includes("salte");
 
-              if (ctx.isWeekCompleted || (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment))) {
+              if (ctx.isWeekCompleted || (!isMatrixRequest && !isTimeCompression && (isContinuityVerdict || !userExplicitlyRequestedAdjustment))) {
                 parsed.actionType = "REVIEW_PHYSIOLOGY";
                 parsed.suggestedPlan = null;
                 parsed.quickReplies = [];
@@ -164,7 +164,7 @@ export async function executeGeminiInference(
                   const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
                   const dName = dateInfo.day || dayNamesList[idx % 7] || "Lunes";
                   const itemDate = p.date || dateInfo.date;
-                  const isPast = ctx.isCurrentWeek && Boolean(itemDate && (itemDate < ctx.todayDateStr || (itemDate === ctx.todayDateStr && ctx.hasTrainedToday)));
+                  const isPast = ctx.isCurrentWeek && Boolean(itemDate && (itemDate < ctx.todayDateStr || (itemDate === ctx.todayDateStr && ctx.hasTrainedToday && !isTimeCompression)));
 
                   // 1. DÍAS ANTERIORES O HOY EJECUTADO: CONGELAMIENTO HISTÓRICO INMUTABLE
                   if (isPast) {

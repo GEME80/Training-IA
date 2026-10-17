@@ -241,6 +241,9 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           todayName={todayName}
           isRunToday={isRunToday}
           isBikeToday={isBikeToday}
+          todaySession={todaySession}
+          tomorrowSession={Array.isArray(currentPlan) ? currentPlan[(todayIdx + 1) % 7] : null}
+          hasTrainedToday={completedActivities.some((a) => a.date === new Date().toISOString().split("T")[0])}
           onClose={() => setReorgOpen(false)}
           onAction={handleAction}
           onSelectWeek={onSelectWeek}

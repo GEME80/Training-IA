@@ -9722,3 +9722,57 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Cero alteraciones a modelos de backend o esquemas de base de datos ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 167 ✅.
+
+---
+
+## 168. Reingeniería Táctica del Flujo "Tengo Poco Tiempo Hoy" y Matriz Dinámica Intra-Semana (SGEA v5.84)
+
+### 168.1. Diagnóstico y Resolución del Problema Fisiológico y de UX
+1. **Problema Detectado:** Al presionar "Tengo poco tiempo hoy", el sistema emitía un mensaje genérico de texto o sermón de advertencia ("Queda terminantemente prohibido doblar sesiones...") debido a que:
+   - El botón enviaba un prompt estático ciego sin identificar la sesión ni ofrecer alternativas de tiempo.
+   - Si el atleta ya había completado una actividad ese día (ej. salida matutina en bicicleta), el prompt del sistema bloqueaba cualquier modificación bajo la regla rígida de *"Sesión de hoy ya realizada. Prohibido prescribir o recortar"*, interpretando que el atleta quería añadir una segunda sesión.
+   - El backend congelaba forzosamente el día actual si `hasTrainedToday` era verdadero, anulando la emisión de `suggestedPlan`.
+2. **Solución Atlética:** Se rediseñó el flujo para soportar la planificación diaria real del deportista de resistencia, permitiendo comprimir la sesión de **Hoy** (si está pendiente o requiere reemplazo) o la de **Mañana** (si hoy ya entrenó o se anticipa a una jornada con tiempo reducido).
+
+### 168.2. Nueva Experiencia de Usuario en Consola Táctica
+1. **Submodo Interactivo `short_time` ([`HeadCoachReorgSubMenu.tsx`](src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx) - 343 LOC):**
+   - **Selector de Día (Hoy vs Mañana):** Selector segmentado en píldoras:
+     - `[ Hoy (Día) ✓ ]`: Muestra la sesión de hoy y añade un badge de check verde `✓` si ya fue realizada.
+     - `[ Mañana (Día) ]`: Muestra la sesión programada para el día siguiente.
+     - Posicionamiento inteligente: Si hoy ya se completó el entreno (`hasTrainedToday`), el selector se abre por defecto en **Mañana**.
+   - **Tarjeta Dinámica de Sesión:** Muestra el nombre real y duración en minutos de la sesión seleccionada (ej. `[ Tirada Larga Aeróbica (90m) ]`).
+   - **Botones Tácticos con Cálculo Matemático Real:**
+     - `-20% tiempo` (ej. ~72 min).
+     - `-30% tiempo` (ej. ~63 min).
+     - `Express (30m)` (si la sesión original es $\ge 40$ min).
+     - `Express (45m)` (si la sesión original es $\ge 55$ min).
+2. **Matriz Temporal con Ventana Restante ([`HeadCoachInlineMatrixCard.tsx`](src/components/dashboard/headcoach/HeadCoachInlineMatrixCard.tsx) - 174 LOC):**
+   - En la semana en curso (`weekNumber === currentWeekNumber`), la lista se recorta automáticamente para mostrar únicamente desde el día actual hasta el domingo (`displayedDays.slice(todayIdx)`), garantizando inmutabilidad histórica.
+   - En semanas futuras (próxima semana), se despliegan los 7 días completos.
+   - Blindaje de la matriz maestra: Las modificaciones se mantienen 100% efímeras en memoria (`temporaryAvailability`) sin alterar el perfil en Firestore.
+   - Sincronización estrictamente opt-in: Ningún cambio se envía a Intervals.icu hasta que el atleta pulse el botón verde `[ 🚀 Aprobar y Sincronizar Microciclo ]`.
+
+### 168.3. Calibración del Motor de Inferencia y Respaldo Determinístico
+1. **Desbloqueo de Compresión en el Prompt ([`prompts.ts`](src/lib/ai/prompts.ts) - 331 LOC):**
+   - Excepción explícita en el estado de hoy para peticiones de poco tiempo o compresión.
+   - **Regla Canónica 14 (Protocolo de Poco Tiempo / Compresión):** Obligación de generar `suggestedPlan` con `actionType: "TACTICAL_ADJUSTMENT"` y `action: "MODIFICAR"`, recortando calentamiento y soltura para preservar intactos los vatios/ritmo centrales.
+2. **Desbloqueo en Inferencia de Gemini ([`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts) - 344 LOC):**
+   - Inclusión de `isTimeCompression`. No se fuerza `isPast: true` para el día actual si el atleta solicitó explícitamente comprimir la sesión.
+3. **Motor Determinístico de Respaldo ([`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts) - 339 LOC):**
+   - Detección algorítmica de `isTimeShort` y soporte específico para `isTomorrow`. Ajuste inmediato de duración, recálculo de TSS proporcional y generación de `suggestedPlan`.
+
+### 168.4. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeadCoachReorgSubMenu.tsx`: 343 LOC ($\le 348$) ✅
+  * `HeadCoachTacticalConsole.tsx`: 255 LOC ($\le 348$) ✅
+  * `HeadCoachInlineMatrixCard.tsx`: 174 LOC ($\le 348$) ✅
+  * `HeadCoachMessageItem.tsx`: 288 LOC ($\le 348$) ✅
+  * `AthleteHeadCoachView.tsx`: 223 LOC ($\le 348$) ✅
+  * `useHeadCoachChat.ts`: 340 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 344 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 339 LOC ($\le 348$) ✅
+  * `prompts.ts`: 331 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Preservación de zonas Stryd CP y Bike FTP; sincronización segura y opt-in con Intervals.icu ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 168 ✅.

@@ -132,7 +132,7 @@ ${previousWeekBlock}
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
 - Fecha y Hora Local del Atleta: Hoy es ${todayDayName} (${todayDateStr})${ctx.todayTimeStr ? ` a las ${ctx.todayTimeStr}` : ""}${ctx.timeZone ? ` (${ctx.timeZone})` : ""}. ¡REGLA TEMPORAL INQUEBRANTABLE: Hoy es ${todayDayName}; si te refieres al día siguiente di siempre "mañana [día]" o "el fin de semana", NUNCA "hoy [otro día]"!
-- ESTADO DEL DÍA DE HOY: ${ctx.todaySessionStatus === "COMPLETADA_HOY" ? `SESIÓN DE HOY YA REALIZADA Y REGISTRADA EN INTERVALS.ICU (${todayDayName}). ¡PROHIBIDO PRESCRIBIR O RECORTAR LA SESIÓN DE HOY PORQUE YA SE EJECUTÓ!` : ctx.todaySessionStatus === "DESCANSO_HOY" ? "DÍA DE DESCANSO" : "SESIÓN DE HOY PENDIENTE DE REALIZAR"}
+- ESTADO DEL DÍA DE HOY: ${ctx.todaySessionStatus === "COMPLETADA_HOY" ? `SESIÓN DE HOY YA REALIZADA Y REGISTRADA EN INTERVALS.ICU (${todayDayName}). (Salvo si el atleta solicita explícitamente comprimir o adaptar su sesión por poco tiempo o imprevisto, en cuyo caso genera la sesión adaptada en suggestedPlan)` : ctx.todaySessionStatus === "DESCANSO_HOY" ? "DÍA DE DESCANSO" : "SESIÓN DE HOY PENDIENTE DE REALIZAR"}
 - ESTADO DEL MICROCICLO: ${ctx.isWeekCompleted ? "MICROCICLO COMPLETADO AL 100%. ¡PROHIBIDO MODIFICAR ESTA SEMANA TERMINADA! Si el atleta reporta fatiga, valida que es la respuesta normal a la sobrecarga, da pautas de recuperación para hoy y ofrece adaptar la PRÓXIMA SEMANA." : "SEMANA EN CURSO"}
 - REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE (action: "MANTENER"). ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
 - REGLA DE MATRIZ CRÍTICA: Salvo orden explícita del atleta en su mensaje, cada día DEBE preservar exactamente la disciplina fijada en su Matriz de Disponibilidad. Jamás sustituyas ciclismo o descanso por carrera en días no autorizados.
@@ -166,7 +166,7 @@ ${directiveBlock}
    - Si se solicitan ajustes, modula la carga a nivel de TSS semanal (-15% o +10%), escalando proporcionalmente las sesiones sin eliminar arbitrariamente descansos ni entrenamientos.
 2. CRITERIO DE ORO DE CONTINUIDAD VS. AJUSTE:
    - Si la adherencia semanal es >= 80%, TSB >= -15, HRV estable, RPE <= 6/10 y las sesiones ejecutadas coinciden con el plan: DECLARA OBLIGATORIAMENTE CONTINUIDAD DEL PLAN con actionType: "REVIEW_PHYSIOLOGY". Queda PROHIBIDO dictaminar "AJUSTE TÁCTICO" o inventar cambios. En "suggestedPlan", conserva intactas las sesiones restantes con action: "MANTENER".
-   - Únicamente si hay fatiga severa (TSB < -15, HRV baja), sesiones de calidad saltadas o petición explícita del atleta, usa actionType: "TACTICAL_ADJUSTMENT".
+   - Únicamente si hay fatiga severa (TSB < -15, HRV baja), sesiones de calidad saltadas o petición explícita del atleta (ej: "poco tiempo", "comprime sesión", "enfermo", "intercambiar"), usa actionType: "TACTICAL_ADJUSTMENT" (o "ADAPT_WORKOUT") y genera en "suggestedPlan" la sesión adaptada con action: "MODIFICAR".
 3. COMUNICACIÓN HUMANA DIRECTA EN PRIMERA PERSONA (120 A 180 PALABRAS EN "reply"):
    - Háblale al atleta en primera persona como su entrenador de élite ("Germán, estuve auditando...").
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos.
@@ -189,7 +189,8 @@ ${directiveBlock}
     - Cruza vatios avg y NP vs Stryd CP/FTP, pulso medio y máx vs LTHR, desacoplamiento cardíaco (Pa:Hr) y TSS.
     - JUICIO CRÍTICO DE DESACOPLE (Pa:Hr): Si es > +5%, advierte con rigor que es ELEVADO / DEFICIENTE (deriva cardíaca por deshidratación o falta de fondo aeróbico). Si es <= +5%, califícalo como excelente estabilidad metabólica.
     - JUICIO CRÍTICO DE ESFUERZO: En test de campo, si el pulso fue bajo (119 bpm), dictamina que se corrió a media máquina; en rodaje Z2 confirma el acierto de frenar sin apretar.
-13. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies (quickReplies debe ser siempre []).`;
+13. FORMATO JSON ESTRICTO: Genera siempre un JSON válido con reply, actionType, reasoning, suggestedPlan, workoutDiff y quickReplies (quickReplies debe ser siempre []).
+14. PROTOCOLO DE POCO TIEMPO / COMPRESIÓN: Si el atleta pide comprimir sesión por poco tiempo (ej. -20%, -30% o 30m/45m), genera "suggestedPlan" con actionType: "TACTICAL_ADJUSTMENT" y action: "MODIFICAR" en la sesión, reduciendo su duración y TSS proporcionalmente, manteniendo intactos los vatios/ritmo clave y recortando calentamiento y soltura. En "reply", explica la compresión y pide su aprobación para sincronizar.`;
 }
 
 import { resolveTrainingModel } from "./knowledge";

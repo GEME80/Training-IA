@@ -202,6 +202,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         uid={user?.uid}
         email={user?.email || userProfile?.email}
         dailyExecutedActivities={telemetry.dailyExecutedActivities}
+        calendarEvents={telemetry.calendarEvents}
         currentPlan={
           activePlan.length > 0
             ? activePlan

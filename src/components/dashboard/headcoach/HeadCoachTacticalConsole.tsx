@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { Activity, Target, Compass, Sliders, Bike } from "lucide-react";
+import { formatLocalDateToYMD } from "@/lib/dateUtils";
 import { HeadCoachReorgSubMenu } from "./HeadCoachReorgSubMenu";
 
 interface HeadCoachTacticalConsoleProps {
   onSelectAction: (prompt: string, options?: any) => void;
   onOpenTemporaryMatrix?: (targetWeekNum?: number) => void;
   completedActivities?: { id: string; name: string; date: string; type?: string; tss?: number; movingTimeMin?: number; watts?: number; heartrate?: number }[];
+  calendarEvents?: any[];
   isLoading?: boolean;
   currentWeekNumber?: number;
   selectedWeekNumber?: number;
@@ -20,6 +22,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
   onSelectAction,
   onOpenTemporaryMatrix,
   completedActivities = [],
+  calendarEvents = [],
   isLoading = false,
   currentWeekNumber = 1,
   selectedWeekNumber,
@@ -32,10 +35,79 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
 
   const currWeek = currentWeekNumber;
   const nextWeek = Math.min(totalWeeks, currWeek + 1);
-  const todayIdx = (new Date().getDay() + 6) % 7;
+
+  const now = new Date();
+  const todayIdx = (now.getDay() + 6) % 7;
+  const tomorrowIdx = (todayIdx + 1) % 7;
   const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const todayName = CANONICAL_DAYS[todayIdx];
-  const todaySession = Array.isArray(currentPlan) ? currentPlan[todayIdx] : null;
+  const tomorrowName = CANONICAL_DAYS[tomorrowIdx];
+
+  const todayDateStr = formatLocalDateToYMD(now);
+  const tomorrowObj = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const tomorrowDateStr = formatLocalDateToYMD(tomorrowObj);
+
+  const findSessionForDay = (targetDayName: string, targetDateStr: string) => {
+    const normTarget = targetDayName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    // 1. Buscar primero en calendarEvents de Intervals.icu si hay un evento programado para targetDateStr
+    if (targetDateStr && Array.isArray(calendarEvents) && calendarEvents.length > 0) {
+      const calEvts = calendarEvents.filter((evt) => {
+        const evtDate = evt.start_date_local?.split("T")[0];
+        return evtDate === targetDateStr && evt.category !== "NOTE";
+      });
+      if (calEvts.length > 0) {
+        const primaryEvt = calEvts.find((e: any) => /run|carrera|trote|ride|bike|ciclismo/i.test(e.type || e.name || "")) || calEvts[0];
+        const matchPlan = Array.isArray(currentPlan)
+          ? currentPlan.find((p) => p.date === targetDateStr || (p.day || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() === normTarget)
+          : null;
+        const mins = Math.round((primaryEvt.moving_time || 0) / 60) || matchPlan?.durationMinutes || 60;
+        const cleanName = primaryEvt.name ? primaryEvt.name.replace(/^\[(?:PULSE AI|SGEA)\]\s*/i, "").trim() : (matchPlan?.workoutName || "Entrenamiento");
+        return {
+          ...(matchPlan || {}),
+          id: primaryEvt.id ? String(primaryEvt.id) : matchPlan?.id,
+          day: targetDayName,
+          date: targetDateStr,
+          formattedDate: matchPlan?.formattedDate || "",
+          discipline: matchPlan?.discipline || (/ride|bike/i.test(primaryEvt.type) ? "Ciclismo" : "Carrera"),
+          workoutName: cleanName,
+          durationMinutes: mins,
+          tss: primaryEvt.icu_training_load || matchPlan?.tss || 0,
+          isRestDay: false,
+        };
+      }
+    }
+
+    // 2. Buscar en currentPlan
+    if (!Array.isArray(currentPlan) || currentPlan.length === 0) return null;
+
+    const matches = currentPlan.filter((p) => {
+      if (targetDateStr && p.date && p.date === targetDateStr) return true;
+      const pNorm = (p.day || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      return pNorm === normTarget || pNorm.startsWith(normTarget.slice(0, 3));
+    });
+
+    if (matches.length === 0) return null;
+
+    // Priorizar resistencia aeróbica (Carrera / Ciclismo / Natación) sobre descanso y fuerza
+    const endurance = matches.find((p) =>
+      !p.isRestDay && p.discipline !== "Descanso" && p.discipline !== "Fuerza" &&
+      /run|carrera|ride|bike|ciclismo|swim|nataci/i.test(p.discipline || p.workoutName || "")
+    );
+    if (endurance) return endurance;
+
+    const strength = matches.find((p) => !p.isRestDay && p.discipline === "Fuerza");
+    if (strength) return strength;
+
+    const nonRest = matches.find((p) => !p.isRestDay && p.discipline !== "Descanso");
+    if (nonRest) return nonRest;
+
+    return matches[0];
+  };
+
+  const todaySession = findSessionForDay(todayName, todayDateStr);
+  const tomorrowSession = findSessionForDay(tomorrowName, tomorrowDateStr);
+
   const isRunToday = /run|carrera|trote|atletismo/i.test(todaySession?.discipline || todaySession?.workoutName || "");
   const isBikeToday = /bike|ride|ciclismo|rodillo|bici/i.test(todaySession?.discipline || todaySession?.workoutName || "");
 
@@ -242,7 +314,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
           isRunToday={isRunToday}
           isBikeToday={isBikeToday}
           todaySession={todaySession}
-          tomorrowSession={Array.isArray(currentPlan) ? currentPlan[(todayIdx + 1) % 7] : null}
+          tomorrowSession={tomorrowSession}
           hasTrainedToday={completedActivities.some((a) => a.date === new Date().toISOString().split("T")[0])}
           onClose={() => setReorgOpen(false)}
           onAction={handleAction}

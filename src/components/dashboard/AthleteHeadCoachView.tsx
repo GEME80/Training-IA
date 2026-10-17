@@ -27,6 +27,7 @@ interface AthleteHeadCoachViewProps {
   weeklyAvailability?: WeeklyAvailabilityMap;
   currentPlan: PlanItem[];
   dailyExecutedActivities?: Record<string, any>;
+  calendarEvents?: any[];
   uid?: string;
   email?: string;
   onApplyPlanAndSync?: (plan?: PlanItem[]) => Promise<void>;
@@ -46,6 +47,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
   weeklyAvailability,
   currentPlan,
   dailyExecutedActivities = {},
+  calendarEvents = [],
   uid,
   email,
   onApplyPlanAndSync,
@@ -169,6 +171,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
           handleSelectSmartAction("Reorganizar", wNum);
         }}
         completedActivities={completedActivitiesList}
+        calendarEvents={calendarEvents}
         isLoading={isLoading}
         currentWeekNumber={realCurrentWeekNumber}
         selectedWeekNumber={activeWeekNumber}

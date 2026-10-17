@@ -45,7 +45,9 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
 
   const activeDayName = targetDay === "today" ? todayName : tomorrowName;
   const activeSession = targetDay === "today" ? todaySession : tomorrowSession;
-  const activeWorkoutName = activeSession?.workoutName || activeSession?.title || (targetDay === "today" && isRunToday ? "Carrera en Z2" : targetDay === "today" && isBikeToday ? "Ciclismo en Z2" : "Entrenamiento");
+  const isRunActive = /run|carrera|trote|atletismo/i.test(activeSession?.discipline || activeSession?.workoutName || (targetDay === "today" && isRunToday ? "run" : ""));
+  const isBikeActive = /bike|ride|ciclismo|rodillo|bici/i.test(activeSession?.discipline || activeSession?.workoutName || (targetDay === "today" && isBikeToday ? "bike" : ""));
+  const activeWorkoutName = activeSession?.workoutName || activeSession?.title || (isRunActive ? "Carrera en Z2" : isBikeActive ? "Ciclismo en Z2" : "Entrenamiento");
   const activeDuration = activeSession?.durationMinutes || 60;
   const activeMins20 = Math.max(20, Math.round(activeDuration * 0.8));
   const activeMins30 = Math.max(15, Math.round(activeDuration * 0.7));

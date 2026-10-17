@@ -166,9 +166,15 @@ export function handleDeterministicFallback(
   else if (isTimeShort) {
     actionType = "ADAPT_WORKOUT";
     const isTomorrow = lowerMsg.includes("mañana") || lowerMsg.includes("manana");
-    const tIdx = isTomorrow ? Math.min(6, (ctx.todayDayIndex + 1) % 7) : (ctx.todayDayIndex >= 0 && ctx.todayDayIndex < 7 ? ctx.todayDayIndex : 0);
-    const sess = modifiedPlan[tIdx];
-    const origMins = sess?.durationMinutes || 60, origName = sess?.workoutName || sess?.title || "Entrenamiento";
+    const targetDay = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"][(ctx.todayDayIndex + (isTomorrow ? 1 : 0)) % 7].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const qMatch = lastUserMsg.match(/'([^']+)'/);
+    let tIdx = qMatch ? modifiedPlan.findIndex((p: any) => (p.workoutName || p.title || "").toLowerCase().includes(qMatch[1].trim().toLowerCase())) : -1;
+    if (tIdx === -1) {
+      tIdx = modifiedPlan.findIndex((p: any) => (p.day || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(targetDay.slice(0, 3)) && !p.isRestDay && p.discipline !== "Fuerza");
+    }
+    if (tIdx === -1) tIdx = modifiedPlan.findIndex((p: any) => (p.day || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(targetDay.slice(0, 3)));
+    if (tIdx === -1) tIdx = isTomorrow ? Math.min(modifiedPlan.length - 1, 6) : 0;
+    const sess = modifiedPlan[tIdx], origMins = sess?.durationMinutes || 60, origName = sess?.workoutName || sess?.title || "Entrenamiento";
     let newMins = Math.round(origMins * 0.75);
     if (lowerMsg.includes("30%") || lowerMsg.includes("-30%")) newMins = Math.max(15, Math.round(origMins * 0.7));
     else if (lowerMsg.includes("20%") || lowerMsg.includes("-20%")) newMins = Math.max(20, Math.round(origMins * 0.8));

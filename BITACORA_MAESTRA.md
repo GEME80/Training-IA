@@ -9776,3 +9776,41 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Preservación de zonas Stryd CP y Bike FTP; sincronización segura y opt-in con Intervals.icu ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 168 ✅.
+
+---
+
+## 169. SGEA v5.85: Corrección de Indexación en Consola Táctica para Selección de Sesión Hoy vs Mañana y Vinculación Directa con Calendario Real de Intervals.icu (2026-10-17)
+
+### 169.1. Diagnóstico del Error de Indexación Plano
+1. **Problema Detectado:** Al seleccionar la pestaña **"Mañana"** en el submenú táctico de *"Tengo poco tiempo hoy"*, el componente mostraba una sesión ajena (`Fartlek Aeróbico Dinámico Z2-Z3 (40m)` perteneciente al Viernes) en lugar de la sesión real programada en el calendario de Germán Morales para el Domingo (`Tirada Larga Aeróbica`).
+2. **Causa Raíz:**
+   - `HeadCoachTacticalConsole.tsx` calculaba las sesiones de hoy y mañana mediante indexación plana en arreglo: `todaySession = currentPlan[todayIdx]` y `tomorrowSession = currentPlan[(todayIdx + 1) % 7]`.
+   - El microciclo semanal no es un arreglo denso de exactamente 7 elementos $0\dots6$. Días con múltiples entrenamientos (ej. Viernes con Carrera + Fuerza) provocan que `currentPlan` contenga 8 o más elementos.
+   - En consecuencia, en Sábado (`todayIdx = 5`), `(todayIdx + 1) % 7 = 6` apuntaba al índice 6 (Viernes o Sábado) en lugar de Domingo, y un día de fuerza o descanso desplazaba todos los índices posteriores.
+
+### 169.2. Arquitectura de Resolución Robusta por Fecha y Día Canónico
+1. **Búsqueda Fisiológica Resiliente ([`HeadCoachTacticalConsole.tsx`](src/components/dashboard/headcoach/HeadCoachTacticalConsole.tsx) - 327 LOC):**
+   - Cálculo de fechas locales: `todayDateStr = formatLocalDateToYMD(now)` y `tomorrowDateStr = formatLocalDateToYMD(tomorrowObj)` utilizando la utilidad local `dateUtils.ts` (blindada contra desfases UTC).
+   - Función `findSessionForDay(targetDayName, targetDateStr)`:
+     - **Paso 1:** Inspecciona prioritariamente `calendarEvents` de Intervals.icu para la fecha solicitada (`start_date_local.startsWith(targetDateStr)`). Si existe un evento programado por el atleta en Intervals.icu, extrae el nombre limpio y duración real en minutos.
+     - **Paso 2:** Si no hay evento en calendario, busca en `currentPlan` por coincidencia exacta de fecha (`p.date === targetDateStr`) o coincidencia del nombre de día canónico normalizado sin tildes (`normTarget`).
+     - **Paso 3:** En días con múltiples sesiones (ej. Carrera + Fuerza), prioriza automáticamente disciplinas de resistencia aeróbica (`Carrera`, `Ciclismo`, `Natacion`) para que la compresión temporal de tiempo aplique sobre el entrenamiento principal de resistencia.
+2. **Propagación de `calendarEvents` en la Jerarquía de Componentes:**
+   - [`AthleteDashboardViewRouter.tsx`](src/components/dashboard/AthleteDashboardViewRouter.tsx) (346 LOC): Inyección de `calendarEvents={telemetry.calendarEvents}` hacia `AthleteHeadCoachView`.
+   - [`AthleteHeadCoachView.tsx`](src/components/dashboard/AthleteHeadCoachView.tsx) (226 LOC): Recepción de `calendarEvents` y paso directo a `<HeadCoachTacticalConsole />`.
+3. **Sincronización del Respaldo Determinístico ([`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts) - 345 LOC):**
+   - Eliminada la indexación plana `modifiedPlan[tIdx]`.
+   - La sesión a comprimir se localiza primero analizando si el mensaje del usuario incluye el nombre entrecomillado del entreno (`lastUserMsg.match(/'([^']+)'/)`). Si no, se resuelve buscando la sesión de resistencia para el día objetivo (`targetDay`), garantizando que la propuesta de microciclo comprima con exactitud el día y entrenamiento programado.
+
+### 169.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `AthleteDashboardViewRouter.tsx`: 346 LOC ($\le 348$) ✅
+  * `AthleteHeadCoachView.tsx`: 226 LOC ($\le 348$) ✅
+  * `HeadCoachTacticalConsole.tsx`: 327 LOC ($\le 348$) ✅
+  * `HeadCoachReorgSubMenu.tsx`: 345 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 345 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** La sesión del día siguiente corresponde de manera exacta al calendario y al plan del atleta, calculando los recortes del 20%, 30% y Express sobre su duración real ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 169 ✅.
+

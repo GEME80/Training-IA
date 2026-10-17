@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.81)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.82)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.81).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.82).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.82: Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión de Intenciones y Auditoría SSOT de Cargas:
+  * Jerarquía Anticolisión de Intenciones (`chatInference.ts`, `deterministicFallback.ts`): Cascada estricta de evaluación: `isGoalProgress` (Prioridad 1) > `isWeekBalance` (Prioridad 2) > `isSessionAudit` (Prioridad 3). Erradicación de falsos positivos donde `"semanas restantes"` secuestraba el flujo hacia balance de semana, o `"cuántas sesiones"` secuestraba el balance hacia auditoría de sesión individual.
+  * Análisis Macro de Temporada para "Rumbo a mi Meta": Evaluación longitudinal desde el inicio del macrociclo (Semana 2 de 22 hacia Maratón Tokio, 20 semanas restantes), contraste de condición física (41.2 CTL real vs 39.5 CTL proyectado por modelo Banister rumbo al pico de 70 CTL), relación peso-potencia (4.10 W/kg Stryd CP, 2.76 W/kg FTP bici), balance semanal vs plan (180 TSS de 366 TSS objetivo, 263 al corte de viernes con -83 TSS por fuerza omitida en categoría Máster), crítica técnica de desacople cardíaco (> +5%) y directrices estratégicas de la fase BASE 1.
+  * Auditoría Fisiológica Exigente de Semana: Desglose canónico SSOT (180 TSS ejecutados vs 263 TSS previstos al corte de viernes, déficit de -83 TSS atribuible a omisión de sesiones de fortalecimiento), análisis de frescura (TSB -0.3 neutro, HRV 54 ms), protección articular y prohibición categórica de doblar entrenamientos el fin de semana.
+  * Fallback Determinístico Espejo con Criterio de Entrenador Experto: Réplica exacta del criterio fisiológico en contingencia sin fallbacks genéricos o vagos, preservando el tono de Head Coach exigente en caso de latencia o degradación de red.
+  * Presupuesto Estricto de Código (≤ 348 LOC): `chatInference.ts` (339 LOC), `deterministicFallback.ts` (344 LOC) y `chatContext.ts` (346 LOC), con compilación limpia Next.js (21/21 rutas).
 - Versión 5.81: Optimización Integral Responsiva y Ergonomía Móvil de Flujos de Onboarding e Integración:
   * Contención Vertical Estricta y Scroll Seguro (`WatchSyncModal.tsx`, `WelcomePlanModal.tsx`, `IntervalsOnboardingModal.tsx`): Límite `max-h-[90vh]` con scroll vertical en el cuerpo y encabezado/pie de acciones fijados con `shrink-0`. Cero botones o acciones bloqueadas fuera del viewport móvil.
   * Touch Targets Ergonómicos ($\ge 44\text{px}$): Botones con `w-full sm:w-auto` y padding táctil `py-3` o `py-3.5` para garantizar una pulsación natural con el pulgar.
@@ -96,7 +102,7 @@ Por favor, confirma que leíste el Prompt Maestro de PROJECT_RULES.md y la últi
 
 ---
 
-## 🧭 ÍNDICE ESTRUCTURAL DE REGLAS Y GOBERNANZA (SGEA v5.81)
+## 🧭 ÍNDICE ESTRUCTURAL DE REGLAS Y GOBERNANZA (SGEA v5.82)
 
 Para navegar sin desperdiciar tokens de lectura, utiliza este índice temático:
 - **Bloque I — Arquitectura Base, Seguridad y Operación (Secciones 1 a 8):**
@@ -438,9 +444,9 @@ Todo agente debe verificar secuencialmente antes de dar por cerrada cualquier ta
 
 ---
 
-## 🧠 11. GOBERNANZA DEL HEAD COACH FISIOLÓGICO, FINOPS & EXPERIENCIA ATLÉTICA (v3.52)
+## 🧠 11. GOBERNANZA DEL HEAD COACH FISIOLÓGICO, FINOPS & EXPERIENCIA ATLÉTICA (v5.82)
 
-Todo agente o desarrollador que intervenga en el Agente 01 (`PULSE Live Coach`), en `/api/headcoach/chat` o en las vistas `AthleteHeadCoachView.tsx`, `HeadCoachQuickActions.tsx`, `HeadCoachMessageItem.tsx` y `HeadCoachMicrocycleCard.tsx` debe cumplir estrictamente estas 5 leyes:
+Todo agente o desarrollador que intervenga en el Agente 01 (`PULSE Live Coach`), en `/api/headcoach/chat` o en las vistas `AthleteHeadCoachView.tsx`, `HeadCoachQuickActions.tsx`, `HeadCoachMessageItem.tsx` y `HeadCoachMicrocycleCard.tsx` debe cumplir estrictamente estas 6 leyes:
 
 1. **Blindaje FinOps & Supresión del Input Abierto de Texto Libre:**
    - Queda **terminantemente prohibido** exponer campos `<input type="text">` o `<textarea>` abiertos sin restricciones para interactuar con el Head Coach.
@@ -474,6 +480,13 @@ Todo agente o desarrollador que intervenga en el Agente 01 (`PULSE Live Coach`),
      * Feel (1: Excelente a 5: Agotado).
      * Dolor muscular localizado (`soreness`), fatiga acumulada y calidad del sueño extraídos del Wellness diario de Intervals.icu.
    - Si una sesión aeróbica Z1/Z2 tuvo un RPE elevado ($\ge 7/10$) o sensación "Exigente/Agotado", se prioriza regeneración biológica al día siguiente. Si se cumplieron los vatios con RPE bajo ($\le 5/10$), se confirma asimilación positiva.
+
+6. **Jerarquía Anticolisión de Intenciones y Criterio Fisiológico de Respuestas Tácticas (v5.82):**
+   - **Enrutamiento Estricto en Cascada (`chatInference.ts` y `deterministicFallback.ts`):**
+     * **Prioridad 1 (`isGoalProgress`):** Captura inequívoca de "rumbo a mi meta", "carrera principal", "visión estratégica", "semanas restantes", "inicio del ciclo". Debe evaluar la temporada completa desde la Semana 1 hasta la fecha (ej. Semana 2 de 22 hacia Tokio), contrastar el CTL actual contra la curva teórica Banister (ej. 41.2 CTL real vs 39.5 proyectado rumbo a pico de 70 CTL), relación potencia-peso ($W/\text{kg}$), estado semanal vs plan (180 TSS de 366 TSS) y dictaminar alertas críticas como deriva cardíaca ($> +5\%$) y objetivos de la fase BASE 1.
+     * **Prioridad 2 (`isWeekBalance`, condicionada a `!isGoalProgress`):** Captura "balance de semana", "volumen semanal" o `isWeekKickoffAudit`. Debe auditar con rigor de Head Coach el corte semanal: 180 TSS de 366 TSS objetivo (49% global), corte a viernes (263 TSS previstos, déficit de -83 TSS por fuerza omitida en atleta Máster), frescura biológica (TSB -0.3, HRV 54 ms) y prohibición categórica de compensar o doblar entrenamientos el fin de semana.
+     * **Prioridad 3 (`isSessionAudit`, condicionada a `!isGoalProgress && !isWeekBalance`):** Auditoría técnica profunda de la última sesión individual ejecutada, sin secuestrar consultas semanales o de macrociclo.
+   - **Espejo Determinístico en Fallback:** En caso de contingencia o latencia de red, `deterministicFallback.ts` replica con idéntico rigor matemático y directrices fisiológicas las respuestas estructuradas, garantizando cero respuestas genéricas o inconsistentes para el atleta.
 
 ---
 

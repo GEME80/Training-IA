@@ -1,4 +1,4 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.81)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.82)
 
 Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas sin generar reprocesos.
 
@@ -8,7 +8,7 @@ Este documento contiene la **auditoría forense de la arquitectura actual del si
 
 ```mermaid
 xychart-beta
-    title "Evaluación de Madurez Arquitectónica (SGEA v5.81)"
+    title "Evaluación de Madurez Arquitectónica (SGEA v5.82)"
     x-axis ["Modularidad", "Type Safety", "Seguridad/OAuth", "18 Modelos SSOT", "Motor Híbrido", "Hooks/Servicios", "Zod API", "FinOps/Tokens", "Mobile UX", "Observabilidad"]
     y-axis "Cumplimiento (%)" 0 --> 100
     bar [96, 100, 100, 100, 100, 100, 100, 100, 100, 75]
@@ -16,7 +16,7 @@ xychart-beta
 
 | Dimensión de Ingeniería | Estado Actual | Cumplimiento | Diagnóstico Arquitectónico |
 | :--- | :---: | :---: | :--- |
-| **Modularidad de Componentes y Modelos** | 🟢 Excelente | **96%** | 100% de los nuevos módulos, APIs, servicios y 18 modelos científicos cumplen $\le 350\text{ LOC}$. Solo restan 8 contenedores legados en cola de descomposición (Mejora 16). |
+| **Modularidad de Componentes y Modelos** | 🟢 Excelente | **96%** | 100% de los nuevos módulos, APIs, servicios y 18 modelos científicos cumplen $\le 350\text{ LOC}$. Solo restan 8 contenedores legados en cola de descomposición (Mejora 17). |
 | **Type Safety & Compilación** | 🟢 Excelente | **100%** | `./node_modules/.bin/tsc --noEmit` y `npm run build` pasan al 100% con cero errores (código 0). Contratos unificados en todo el stack. |
 | **Seguridad, OAuth2, Multiusuario & Legal** | 🟢 Excelente | **100%** | Flujo OAuth2 nativo con Intervals.icu, cifrado AES-256-GCM en Cloud Firestore, consentimiento Clickwrap mandatorio (`termsAcceptedAt`), aislamiento Read-Only en memoria para auditoría y cero métricas quemadas. |
 | **Ciencia Deportiva & Escalabilidad Universal** | 🟢 Excelente | **100%** | 18 modelos SSOT modulares (5K, 10K, 21K, 42K, Trail, Ciclismo, Triatlón Short/70.3/140.6, Salud/CaCo) con sintaxis canónica `mtr`/`km`/`m` y adaptación dual Potencia (`% CP`) vs Ritmo (`% Pace`). |
@@ -192,7 +192,18 @@ xychart-beta
 
 ---
 
-### 🟡 MEJORA 16: Descomposición Modular Quirúrgica de Contenedores Legados (> 350 LOC) [📋 PROGRAMADA EN BACKLOG]
+### 🟢 MEJORA 16: Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión de Intenciones y Auditoría SSOT de Cargas [✅ COMPLETADA AL 100% v5.82]
+* **Estado:** ✅ **COMPLETADA EN v5.82**.
+* **Impacto:**
+  - Enrutamiento jerárquico anticolisión en `chatInference.ts` y `deterministicFallback.ts`: `isGoalProgress` (Prioridad 1) > `isWeekBalance` (Prioridad 2) > `isSessionAudit` (Prioridad 3). Eliminación total de colisiones cruzadas derivadas de palabras polisémicas (`"semanas restantes"`, `"cuántas sesiones"`).
+  - Visión macro de temporada ("Rumbo a mi Meta"): análisis longitudinal desde el inicio del macrociclo (Semana 2 de 22 hacia Tokio, 20 semanas restantes), contraste de condición física (41.2 CTL real vs 39.5 proyectado por modelo Banister rumbo al pico de 70 CTL), relación potencia-peso (4.10 W/kg Stryd CP, 2.76 W/kg FTP bici), balance semanal vs plan (180 TSS de 366 TSS objetivo, 263 al corte de viernes con -83 TSS por fuerza omitida en categoría Máster), crítica técnica de desacople cardíaco (> +5%) y directrices de fase BASE 1.
+  - Auditoría fisiológica semanal SSOT con 366 TSS canónicos, desglose exacto de cargas, frescura biológica (TSB -0.3, HRV 54 ms) y prohibición categórica de doblar o compensar entrenamientos.
+  - Fallback determinístico espejo con idéntico rigor fisiológico en caso de degradación de red o latencia de LLM.
+  - Modularidad estricta respetando LOC Budgets: `chatInference.ts` (339 LOC), `deterministicFallback.ts` (344 LOC), `chatContext.ts` (346 LOC) $\le 348$ LOC.
+
+---
+
+### 🟡 MEJORA 17: Descomposición Modular Quirúrgica de Contenedores Legados (> 350 LOC) [📋 PROGRAMADA EN BACKLOG]
 * **Prioridad:** MEDIA-ALTA.
 * **Objetivo:** Alcanzar el 100% absoluto de cumplimiento en los 9 archivos históricos que superan las 350 líneas:
   1. `src/components/HeadCoachChatDrawer.tsx` (1.000 LOC): Extraer visor de mensajes y barra de acciones.

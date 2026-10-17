@@ -9582,3 +9582,18 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 
 
 
+---
+
+## 164. Sincronización Integral de Documentación Arquitectónica y Gobernanza (SGEA v5.82)
+
+### 164.1. Alcance de la Sincronización
+- **`PROJECT_RULES.md`**: Actualizado a versión `v5.82` en encabezado principal, índice estructural y Prompt Maestro integral (con resumen de jerarquía anticolisión, visión macro longitudinal para "Rumbo a mi meta", auditoría de cargas SSOT y fallback determinístico espejo). En Sección 11 se formalizó la **Ley 6 de Gobernanza del Head Coach Fisiológico** con la cascada estricta de intenciones.
+- **`README.md`**: Actualizado a versión `v5.82`, incorporando en la sección de características principales la suite del Head Coach Conversacional con visión macro, blindaje anticolisión y auditoría semanal SSOT, así como la actualización del mapa del repositorio.
+- **`BACKLOG_MEJORAS_ARQUITECTURA.md`**: Actualizado a versión `v5.82`, registrando como 100% completada la **MEJORA 16 (Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión de Intenciones y Auditoría SSOT de Cargas)** y renumerando la descomposición de contenedores legados a **MEJORA 17**.
+
+### 164.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Todos los archivos de código fuente (`chatInference.ts`: 339 LOC, `deterministicFallback.ts`: 344 LOC, `chatContext.ts`: 346 LOC) cumplen estrictamente $\le 348$ LOC ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Solo modificados archivos de documentación y gobernanza arquitectónica sin tocar rutas API ni esquemas de base de datos ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 164 ✅.

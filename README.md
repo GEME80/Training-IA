@@ -1,9 +1,16 @@
-# ⚡ SGEA Pro (v5.81) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.82) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🧠 **Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión & Auditoría SSOT de Cargas (v5.82):**
+  - **Jerarquía Anticolisión de Intenciones (`chatInference.ts`, `deterministicFallback.ts`):** Cascada estricta de evaluación: `isGoalProgress` (Prioridad 1) > `isWeekBalance` (Prioridad 2) > `isSessionAudit` (Prioridad 3). Erradicación de falsos positivos donde expresiones como `"semanas restantes"` secuestraban el flujo de meta hacia balance de semana, o `"cuántas sesiones llevo"` secuestraban el balance hacia auditoría de sesión individual.
+  - **Visión Macro de Temporada ("Rumbo a mi Meta"):** Evaluación longitudinal desde el inicio del macrociclo (Semana 2 de 22 hacia Maratón Tokio, 20 semanas restantes), contrastando la condición física actual (41.2 CTL real vs 39.5 CTL proyectado por modelo Banister rumbo al pico de 70 CTL), relación peso-potencia (4.10 W/kg Stryd CP, 2.76 W/kg FTP bici), balance semanal vs plan (180 TSS de 366 TSS objetivo, 263 al corte de viernes con -83 TSS por fuerza omitida en categoría Máster), crítica técnica de desacople cardíaco ($> +5\%$) y directrices estratégicas de la fase BASE 1.
+  - **Auditoría Fisiológica Exigente de Semana:** Desglose canónico SSOT (180 TSS ejecutados vs 263 TSS previstos al corte de viernes, déficit de -83 TSS atribuible a omisión de sesiones de fortalecimiento), análisis de frescura (TSB -0.3 neutro, HRV 54 ms), protección articular y prohibición categórica de doblar entrenamientos el fin de semana.
+  - **Fallback Determinístico Espejo con Criterio de Entrenador Experto:** Réplica exacta del criterio fisiológico en contingencia sin respuestas genéricas, manteniendo el tono de Head Coach exigente en caso de degradación de red o latencia de LLM.
+  - **Presupuesto Estricto de Código y Modularidad:** Todos los módulos cumplen con el límite de $\le 348$ LOC (`chatInference.ts`: 339 LOC, `deterministicFallback.ts`: 344 LOC, `chatContext.ts`: 346 LOC) con compilación limpia Next.js (21/21 rutas).
 
 - 📱 **Optimización Integral Responsiva & Ergonomía Móvil de Onboarding (v5.81):**
   - **Contención Vertical Estricta y Scroll Seguro (`WatchSyncModal.tsx`, `WelcomePlanModal.tsx`, `IntervalsOnboardingModal.tsx`):** Límite `max-h-[90vh]` con scroll vertical en el cuerpo y encabezado/pie de acciones fijados con `shrink-0`. Los botones principales nunca quedan ocultos fuera del viewport móvil, incluso en pantallas pequeñas o con teclados y barras de navegación activas.
@@ -372,7 +379,7 @@ Abre tu navegador en [http://localhost:3000](http://localhost:3000).
 
 ```text
 IA Training/
-├── BITACORA_MAESTRA.md             # Dossier histórico y changelog (v1.0 - v5.81, política Tail-Only)
+├── BITACORA_MAESTRA.md             # Dossier histórico y changelog (v1.0 - v5.82, política Tail-Only)
 ├── PROJECT_RULES.md                # Leyes de gobernanza inmutables, índice estructural y matriz canónica
 ├── BACKLOG_MEJORAS_ARQUITECTURA.md # Backlog de auditoría técnica, refactorizaciones y modularidad
 ├── README.md                       # Resumen visual, arquitectura multi-agente y puesta en marcha

@@ -239,7 +239,7 @@ export function useHeadCoachChat({
     }
   };
 
-  const handleSelectSmartAction = (action: SmartActionItem | string) => {
+  const handleSelectSmartAction = (action: SmartActionItem | string, targetWeekNum?: number) => {
     const rawLabel = typeof action === "string" ? action : action.label;
     const actionType = typeof action === "string" ? undefined : action.actionType;
 
@@ -249,11 +249,12 @@ export function useHeadCoachChat({
     }
 
     if (/^reorganizar$/i.test(rawLabel.trim())) {
+      const effectiveWk = targetWeekNum || activeWeekNumber;
       const initialMatrix = temporaryAvailability || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability || {};
       setMessages((prev) => [...prev, {
         id: `reorg-prompt-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        text: "Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en esta matriz. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso:",
-        showInlineMatrix: true, inlineMatrixAvailability: initialMatrix, targetWeekNumber: activeWeekNumber, smartActions: [],
+        text: `Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en esta matriz para la Semana ${effectiveWk}. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso:`,
+        showInlineMatrix: true, inlineMatrixAvailability: initialMatrix, targetWeekNumber: effectiveWk, smartActions: [],
       }]);
       return;
     }

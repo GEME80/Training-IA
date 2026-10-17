@@ -6,6 +6,7 @@ import { WeeklyAvailabilityMap, CANONICAL_DAYS, getDayDisciplines, DisciplineTyp
 
 interface HeadCoachInlineMatrixCardProps {
   weekNumber: number;
+  currentWeekNumber?: number;
   initialAvailability: WeeklyAvailabilityMap;
   onApplyMatrix: (tempAvailability: WeeklyAvailabilityMap) => void;
   onCancel?: () => void;
@@ -22,6 +23,7 @@ const DISCIPLINES: Array<{ id: DisciplineType; label: string; icon: React.ReactN
 
 export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps> = ({
   weekNumber,
+  currentWeekNumber,
   initialAvailability,
   onApplyMatrix,
   onCancel,
@@ -34,6 +36,11 @@ export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps>
     });
     return copy;
   });
+
+  const isCurrentWeek = Boolean(currentWeekNumber && weekNumber === currentWeekNumber);
+  // (getDay() + 6) % 7 -> Lunes = 0, ..., Sábado = 5, Domingo = 6
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const displayedDays = isCurrentWeek ? CANONICAL_DAYS.slice(todayIdx) : CANONICAL_DAYS;
 
   const handleToggleDiscipline = (day: string, discipline: DisciplineType) => {
     setMatrix((prev) => {
@@ -60,28 +67,49 @@ export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps>
       {/* Cabecera & Banner Informativo */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-200/80 dark:border-slate-800">
         <div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Matriz Temporal · Semana {weekNumber}
-          </h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-            Selecciona tus deportes o descansos para cada día. Tu matriz maestra de perfil no cambiará.
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Matriz Temporal · Semana {weekNumber}
+            </h4>
+            {isCurrentWeek ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                {displayedDays.length === 1 ? "Solo hoy Domingo" : `Días restantes (${displayedDays[0]} a Domingo)`}
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                Semana completa (7 días)
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+            {isCurrentWeek
+              ? `Reorganiza únicamente los días restantes de esta semana sin alterar las sesiones ya ejecutadas. Tu matriz maestra de perfil no cambiará.`
+              : `Configura tu disponibilidad para la próxima semana. Tu matriz maestra de perfil no cambiará.`}
           </p>
         </div>
       </div>
 
-      {/* Lista de Días en Filas Horizontales Amplias (Sin saltos de línea ni recortes) */}
+      {/* Lista de Días Dinámica (Opción A: Solo días restantes si es semana en curso) */}
       <div className="divide-y divide-slate-100 dark:divide-slate-800/80 my-2">
-        {CANONICAL_DAYS.map((day) => {
+        {displayedDays.map((day, idx) => {
+          const isToday = isCurrentWeek && idx === 0;
           const currentSelected = matrix[day] ? (Array.isArray(matrix[day]) ? (matrix[day] as string[]) : [matrix[day] as string]) : ["Descanso"];
           return (
             <div
               key={day}
               className="py-2.5 px-2 sm:px-3 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-900/50 transition-colors flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap"
             >
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 w-24 shrink-0">
-                {day}
-              </span>
+              <div className="flex items-center gap-2 w-28 shrink-0">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {day}
+                </span>
+                {isToday && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                    Hoy
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap py-0.5 justify-end">
                 {DISCIPLINES.map((d) => {
                   const isSelected = currentSelected.includes(d.id);
@@ -115,7 +143,7 @@ export const HeadCoachInlineMatrixCard: React.FC<HeadCoachInlineMatrixCardProps>
         })}
       </div>
 
-      {/* Acciones Inline (Botón Verde Atlético de Alto Impacto) */}
+      {/* Acciones Inline */}
       <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-2">
         {onCancel && (
           <button

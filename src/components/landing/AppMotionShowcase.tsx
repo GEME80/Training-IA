@@ -198,7 +198,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
               Toda la Ciencia de la Resistencia en la Palma de tu Mano
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed font-normal">
-              Olvídate de contratar planes estáticos en PDF o entrenadores que no ajustan tu carga diaria. PULSE AI vigila tu fisiología las 24 horas y sincroniza cada sesión al instante.
+              Erradica la rigidez de las hojas de cálculo y los planes de papel que no saben si dormiste mal o tuviste un viaje de trabajo. PULSE AI modela tu estrés biológico diario y recalibra tu microciclo en segundos.
             </p>
           </div>
 
@@ -224,7 +224,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
                 Directo a Garmin & Coros
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Las series viajan por API a tu reloj deportivo en segundo plano. Sales a entrenar y tu reloj pita en cada cambio de zona o potencia.
+                Las series viajan por API a tu reloj deportivo en segundo plano. Sales a entrenar y el reloj te guía en tu muñeca marcando cada intervalo exacto de potencia o ritmo.
               </p>
             </div>
 
@@ -233,10 +233,10 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
                 <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
               </div>
               <h4 className="text-sm font-bold text-slate-950">
-                Pico de Forma Garantizado
+                Pico de Forma Modelado Matemáticamente
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Modelado matemático de 22 semanas (Banister/Coggan) para que llegues a tu maratón o triatlón con frescura (+TSB) y máxima aptitud.
+                Algoritmo de 22 semanas (impulso-respuesta Banister/Coggan) para que alcances tu día de carrera con máxima aptitud neuromuscular y balance de estrés positivo (+TSB).
               </p>
             </div>
 
@@ -248,7 +248,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
                 Head Coach con IA 24/7
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Pregunta cualquier duda sobre ritmos con viento, nutrición o dolores musculares. Respuestas fisiológicas fundamentadas en segundos.
+                Pregunta cualquier duda sobre ritmos con viento, nutrición o sobrecarga aguda y fatiga neuromuscular residual. Respuestas fisiológicas fundamentadas en segundos.
               </p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
               onClick={() => onOpenAuthModal?.("register")}
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-emerald-950 font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
             >
-              <span>Probar Gratis Ahora</span>
+              <span>Comenzar Prueba de 7 Días</span>
               <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} />
             </button>
           </div>

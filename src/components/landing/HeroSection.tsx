@@ -67,15 +67,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Titular Principal H1 (Claro, Humano y Enfocado) */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-[1.12]">
-            Tu Head Coach Inteligente que{" "}
+            Tu Head Coach Fisiológico que{" "}
             <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-              Adapta tu Entrenamiento.
+              Adapta Cada Sesión a tu Fatiga Real.
             </span>
           </h1>
 
           {/* Subtítulo Empático y Accesible para Cualquier Deportista */}
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal max-w-2xl">
-            Entrena según tu vida real, sin sentirte culpable. Planes independientes de alto rendimiento que prescriben ritmos y vatios exactos para tu nivel, calculan tu recuperación al despertar por HRV (Variabilidad de la Frecuencia Cardíaca) y sincronizan tus series directo a tu reloj deportivo (Garmin, Coros o Apple Watch).
+            Entrena al compás de tu vida real, sin culpa por omitir una sesión. Planes independientes de alto rendimiento que prescriben ritmos VDOT y vatios Stryd/FTP exactos para tu nivel, evalúan tu asimilación biológica matutina por HRV y sincronizan cada serie directo a tu reloj deportivo (Garmin, Coros o Apple Watch).
           </p>
 
           {/* Trilogía de Especialidades Deportivas con Salto Reactivo al Video */}

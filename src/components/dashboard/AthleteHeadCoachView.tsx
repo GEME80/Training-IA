@@ -166,7 +166,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
         onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
         onOpenTemporaryMatrix={(wNum) => {
           if (wNum && wNum !== activeWeekNumber) setActiveWeekNumber(wNum);
-          handleSelectSmartAction("Reorganizar");
+          handleSelectSmartAction("Reorganizar", wNum);
         }}
         completedActivities={completedActivitiesList}
         isLoading={isLoading}
@@ -194,6 +194,7 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
             key={m.id}
             message={m}
             weekNumber={activeWeekNumber}
+            currentWeekNumber={realCurrentWeekNumber}
             onApplyAndSync={handleApplyAndSync}
             isApplying={isApplying}
             onSelectQuickReply={(qr) => handleSelectSmartAction(qr)}

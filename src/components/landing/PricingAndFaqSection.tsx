@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: "¿Qué pasa si un día no puedo entrenar o duermo mal?",
-    a: "PULSE AI recalibra tu semana en tiempo real. Al registrar tu nivel de descanso matutino por HRV (Variabilidad Cardíaca) o notar que omitiste una sesión, el entrenador inteligente reestructura los días siguientes para evitar sobrecargas y mantener tu progreso.",
+    a: "PULSE AI recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica.",
   },
   {
     q: "¿Necesito sensores costosos o potenciómetro obligatoriamente?",
@@ -120,7 +120,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
               {[
                 "Macrociclo adaptativo de 22 semanas",
                 "Recalibración diaria por HRV al despertar",
-                "Tope biomecánico de 3h para evitar lesiones",
+                "Tope biomecánico de 3h para preservar tendón de Aquiles y sóleos (Canova)",
                 "Prescripción por vatios Stryd y FTP Coggan",
                 "Sincronización directa con Garmin & Coros",
                 "Head Coach IA Fisiológico 24/7 con Gemini",

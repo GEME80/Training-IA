@@ -30,6 +30,7 @@ export interface HeadCoachMessageData {
 interface HeadCoachMessageItemProps {
   message: HeadCoachMessageData;
   weekNumber: number;
+  currentWeekNumber?: number;
   onApplyAndSync?: (plan: PlanItem[]) => Promise<void>;
   isApplying?: boolean;
   onSelectQuickReply?: (replyText: string) => void;
@@ -201,6 +202,7 @@ const FormattedMessageBody: React.FC<{ text: string }> = ({ text }) => {
 export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
   message,
   weekNumber,
+  currentWeekNumber,
   onApplyAndSync,
   isApplying = false,
   onSelectQuickReply,
@@ -256,6 +258,7 @@ export const HeadCoachMessageItem: React.FC<HeadCoachMessageItemProps> = ({
         {isAssistant && message.showInlineMatrix && message.inlineMatrixAvailability && onApplyInlineMatrix && (
           <HeadCoachInlineMatrixCard
             weekNumber={message.targetWeekNumber || weekNumber}
+            currentWeekNumber={currentWeekNumber}
             initialAvailability={message.inlineMatrixAvailability}
             onApplyMatrix={onApplyInlineMatrix}
             onCancel={onCancelInlineMatrix}

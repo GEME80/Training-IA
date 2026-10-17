@@ -9440,3 +9440,41 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Alcance e Integridad Deportiva):** Auditoría de sesión 100% individualizada sin contaminación de métricas semanales, preservando balance de semana y rumbo a meta con precisión fisiológica ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 159 ✅.
 
+---
+
+## 160. Juicio Crítico de Entrenador de Resistencia, Evaluación Rigurosa de Desacople (Pa:Hr) y Erradicación de Clichés
+
+### 160.1. Diagnóstico y Requerimiento de Usuario
+1. **Falta de Criterio Crítico de Head Coach:**
+   - En las respuestas anteriores, el modelo actuaba como un relator complaciente: mencionaba métricas como `desacople de +11.6%` o `180 de 263 TSS al corte (-83 TSS)` sin explicar si eran buenas o malas ni qué impacto tenían para el atleta.
+   - En fisiología deportiva de resistencia:
+     * Un desacoplamiento cardíaco (Pa:Hr) $> +5\%$ (ej. +9.5% o +11.6%) es **ELEVADO / DEFICIENTE**: denota **deriva cardíaca** (el corazón tiene que bombear más rápido al final para sostener los mismos vatios), síntoma claro de pérdida de eficiencia aeróbica, fatiga térmica o deshidratación que debe corregirse de cara a un maratón.
+     * En un test de campo de potencia máxima (Test Stryd CP 3/9m), registrar una FC media de 119 bpm frente a un LTHR de 156 bpm con RPE 6/10 significa que **se corrió a media máquina**: no se testeó el umbral real y la calibración queda sesgada.
+     * Un déficit acumulado de -83 TSS por saltarse la fuerza **es una alerta**: en un corredor Máster, omitir la fuerza deja desprotegidas las articulaciones y debilita la estabilidad pélvica para soportar el impacto acumulado de 42 km.
+2. **Repetición Robótica de Frases Cliché:**
+   - Las respuestas de los distintos modales repetían casi textualmente los mismos párrafos sobre *"subir escaleras", "síntesis de colágeno", "sóleos y rodillas", "mañana sábado ciclismo 45m soltura para el fondo dominical"*.
+   - Causa raíz: En `chatInference.ts`, los párrafos 2 y 3 eran bloques estáticos comunes para todos los modos, lo que forzaba al LLM a rellenar con esa plantilla.
+3. **Colisión de Detección de Modos:**
+   - El texto del botón de "Rumbo a mi meta" (`"Germán aquí. Hazme un análisis estratégico de mi rumbo hacia mi carrera principal..."`) contenía la palabra `"carrera"`, provocando que la regla simple `pLower.includes("carrera")` lo clasificara erróneamente como auditoría de sesión.
+
+### 160.2. Implementaciones Realizadas
+1. **Diferenciación Integral de los 3 Párrafos por Modo (`chatInference.ts` - 337 LOC):**
+   - Corregida la clasificación: `isGoalProgress` prioriza frases inequívocas (`"rumbo a mi meta"`, `"carrera principal"`, `"visión estratégica macro"`, `"maratón tokio"`), evitando falsos positivos con entrenamientos.
+   - Los 3 párrafos ahora son 100% personalizados por flujo:
+     * **Auditoría de Sesión:** Párrafo 1 enfocado en telemetría y juicio crítico del desacople Pa:Hr (deficiente si $> +5\%$, excelente si $\le +5\%$) y del esfuerzo (crítica honesta en tests a medio gas). Párrafo 2 de análisis biomecánico específico de esa sesión (cero clichés). Párrafo 3 de conexión directa con la sesión siguiente.
+     * **Balance de Semana:** Párrafo 1 de diagnóstico honesto del déficit (-83 TSS no es bueno: saltarse la fuerza desprotege articulaciones). Párrafo 2 con prohibición estricta de doblar entrenamientos para "recuperar" TSS. Párrafo 3 de plan de cierre de fin de semana con coherencia temporal.
+     * **Rumbo a mi meta:** Párrafo 1 con rampa Banister y pico 70 CTL. Párrafo 2 con evaluación realista de viabilidad del ritmo maratón. Párrafo 3 con foco de la fase Base 1.
+2. **Sincronización en Prompts SSOT (`prompts.ts` - 330 LOC & `defaultPrompts.ts` - 153 LOC):**
+   - Actualizadas las Reglas 3 y 12 en `prompts.ts` y las Reglas 3 y 9 en `defaultPrompts.ts`, incorporando la directriz obligatoria de calificar el desacople Pa:Hr, juzgar el esfuerzo en tests y erradicar los clichés de plantilla.
+
+### 160.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `chatInference.ts`: 337 LOC ($\le 348$) ✅
+  * `prompts.ts`: 330 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 153 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Tono de Head Coach auténtico, crítico y técnico; evaluación profunda de telemetría (Pa:Hr, W, LTHR, TSS deficit) sin frases cliché repetitivas ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 160 ✅.
+
+

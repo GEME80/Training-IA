@@ -164,47 +164,59 @@ export function handleDeterministicFallback(
   // 4. PROTOCOLO DE RETORNO SEGURO TRAS ENFERMEDAD (RECALIBRACIÓN SEMANAL INTEGRAL)
   else if (lowerMsg.includes("enferm") || lowerMsg.includes("retorno") || lowerMsg.includes("salté") || lowerMsg.includes("salte")) {
     actionType = "ADAPT_WORKOUT";
-    const targetIdx = ctx.todayDayIndex;
-    if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = { ...modifiedPlan[targetIdx], workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)", durationMinutes: 30, tss: 20, action: "MODIFICAR", justification: "Retorno seguro post-enfermedad: trote conversacional Z1 suave." };
+    const isNext = lowerMsg.includes("próxima semana") || lowerMsg.includes("proxima semana");
+    const startIdx = isNext ? 0 : ctx.todayDayIndex;
+    if (modifiedPlan[startIdx]) {
+      modifiedPlan[startIdx] = { ...modifiedPlan[startIdx], workoutName: "Carrera Regenerativa Z1 (Retorno Progresivo)", durationMinutes: 30, tss: 20, action: "MODIFICAR", justification: "Retorno seguro post-enfermedad: trote conversacional Z1 suave." };
     }
-    for (let i = targetIdx + 1; i < modifiedPlan.length; i++) {
+    for (let i = startIdx + 1; i < modifiedPlan.length; i++) {
       const sess = modifiedPlan[i];
       if (!sess) continue;
-      const isLastDay = i === modifiedPlan.length - 1;
-      const isIntensity = /fartlek|umbral|series|vo2|interval|tempo|z3|z4|z5/i.test(sess.workoutName || "");
-      if (isIntensity) {
+      const isLast = i === modifiedPlan.length - 1, isInt = /fartlek|umbral|series|vo2|interval|tempo|z3|z4|z5/i.test(sess.workoutName || "");
+      if (isInt) {
         modifiedPlan[i] = { ...sess, workoutName: `${sess.discipline || "Carrera"} Suave Z1/Z2 (Protección Inmune)`, durationMinutes: Math.min(sess.durationMinutes || 40, 35), tss: 25, action: "MODIFICAR", justification: "Intensidad suprimida por retorno médico: rodaje suave conversacional." };
-      } else if (isLastDay && (sess.durationMinutes || 0) > 45) {
-        const newDur = Math.round((sess.durationMinutes || 80) * 0.6);
-        modifiedPlan[i] = { ...sess, workoutName: `${sess.workoutName || "Tirada Aeróbica"} Acortada (Retorno Progresivo)`, durationMinutes: newDur, tss: Math.round((sess.tss || 80) * 0.55), action: "MODIFICAR", justification: "Volumen dominical acortado 40% para evitar fatiga post-indisposición." };
+      } else if (isLast && (sess.durationMinutes || 0) > 45) {
+        const newDur = Math.round((sess.durationMinutes || 80) * 0.65);
+        modifiedPlan[i] = { ...sess, workoutName: `${sess.workoutName || "Tirada Aeróbica"} Acortada (Retorno Progresivo)`, durationMinutes: newDur, tss: Math.round((sess.tss || 80) * 0.6), action: "MODIFICAR", justification: "Volumen dominical acortado 35% para evitar fatiga post-indisposición." };
       }
     }
     const newWeeklyTss = modifiedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
     const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
-    replyMsg = `Hola ${athleteFirstName}, comprendo perfectamente tu situación. Tras una indisposición o días enfermo, la regla de oro es no intentar recuperar el volumen perdido: tus adaptaciones aeróbicas siguen vivas y forzar el cuerpo ahora solo dispararía una recaída.\n\nHe recalibrado tu semana restante a ${newWeeklyTss} TSS seguros, suprimiendo las intensidades altas (fartlek y umbral) y acortando la tirada dominical un 40% para cuidar tu sistema inmune y tendinoso.\n\nRodaremos en Zona 1 conversacional muy suave para despertar el corazón sin fatiga. Revisa la propuesta abajo y haz clic en 'Aprobar Ajuste' para sincronizarla.`;
-    smartActions = [
-      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-      { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
-    ];
+    replyMsg = isNext
+      ? `Hola ${athleteFirstName}, comprendo perfectamente tu situación. Para la próxima semana diseñé un microciclo de reintroducción progresiva a ${newWeeklyTss} TSS seguros, suprimiendo intensidades anaeróbicas y acortando la tirada larga para que tu sistema inmune consolide tu recuperación sin sobrecargas.\n\nRevisa la propuesta abajo y haz clic en 'Aprobar Ajuste' para sincronizarla.`
+      : `Hola ${athleteFirstName}, comprendo perfectamente tu situación. Tras días enfermo, la regla de oro es no intentar recuperar el volumen perdido. He recalibrado tus días restantes a ${newWeeklyTss} TSS seguros en Zona 1 conversacional suave para cuidar articulaciones y sistema inmune.\n\nRevisa la propuesta abajo y haz clic en 'Aprobar Ajuste' para sincronizarla.`;
+    smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Mantener plan previsto", variant: "secondary", icon: "check" }];
   }
-  // 5. POCO TIEMPO HOY (30-45M)
+  // 5. INTERCAMBIAR DISCIPLINA HOY (Carrera ⇄ Ciclismo/Rodillo Z2)
+  else if (lowerMsg.includes("intercambi") || lowerMsg.includes("sustitu") || lowerMsg.includes("rodillo") || lowerMsg.includes("pasar a carrera")) {
+    actionType = "ADAPT_WORKOUT";
+    const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
+    const targetIdx = ctx.todayDayIndex;
+    const isToBike = lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici");
+    if (modifiedPlan[targetIdx]) {
+      const orig = modifiedPlan[targetIdx], dur = orig.durationMinutes || 45;
+      if (isToBike) {
+        const targetW = Math.round((profile.bike_ftp || 220) * 0.68);
+        modifiedPlan[targetIdx] = { ...orig, discipline: "Ciclismo", workoutName: "Ciclismo Rodillo Z2 (Sin Impacto Articular)", durationMinutes: Math.round(dur * 1.15), powerTarget: `65-72% Bike FTP (${targetW}W)`, tss: orig.tss || 45, action: "MODIFICAR", justification: "Sustitución cruzada: rodillo Z2 para proteger articulaciones y preservar base aeróbica." };
+        replyMsg = `Excelente decisión, ${athleteFirstName}. Cambiar la carrera por rodillo en Zona 2 protege tus articulaciones y sóleos manteniendo intacto el estímulo cardiovascular de base aeróbica.\n\nSesión configurada en Ciclismo a ${targetW}W (${modifiedPlan[targetIdx].durationMinutes}m). ¿Aprobamos el cambio para tu reloj?`;
+      } else {
+        const targetW = Math.round((profile.run_ftp || 300) * 0.75);
+        modifiedPlan[targetIdx] = { ...orig, discipline: "Carrera", workoutName: "Carrera Aeróbica Continua Z2 (Suave)", durationMinutes: Math.round(dur * 0.85), powerTarget: `70-78% Stryd CP (${targetW}W)`, tss: orig.tss || 45, action: "MODIFICAR", justification: "Sustitución cruzada: rodaje suave a pie en Z2 para sumar volumen específico sin sobrecarga." };
+        replyMsg = `Perfecto, ${athleteFirstName}. Cambiar la bici por carrera continua suave en Zona 2 te permite sumar volumen específico protegiendo articulaciones.\n\nSesión configurada a pie a ${targetW}W (${modifiedPlan[targetIdx].durationMinutes}m). ¿Aprobamos el cambio para tu reloj?`;
+      }
+    }
+    smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
+  }
+  // 6. POCO TIEMPO HOY (30-45M)
   else if (lowerMsg.includes("poco tiempo") || lowerMsg.includes("30m") || lowerMsg.includes("45m")) {
     actionType = "ADAPT_WORKOUT";
     const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
     const targetIdx = ctx.todayDayIndex;
     if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = {
-        ...modifiedPlan[targetIdx],
-        workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`,
-        durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR",
-      };
+      modifiedPlan[targetIdx] = { ...modifiedPlan[targetIdx], workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`, durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR" };
     }
-    replyMsg = `Comprendido, ${athleteFirstName}. Mucho mejor hacer 35 minutos de calidad bien aprovechados que saltarse el día de entrenamiento. He comprimido la sesión de hoy reduciendo el calentamiento y enfriamiento pero preservando el estímulo metabólico principal.\n\nDe esta forma sumamos carga a tu motor aeróbico sin interferir en tu agenda del día. ¿Aprobamos este ajuste para actualizar tu reloj?`;
-    smartActions = [
-      { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-      { label: "Descartar", variant: "secondary", icon: "x" },
-    ];
+    replyMsg = `Comprendido, ${athleteFirstName}. Mucho mejor hacer 35 minutos de calidad bien aprovechados que saltarse el día de entrenamiento. He comprimido la sesión de hoy reduciendo el calentamiento y enfriamiento pero preservando el estímulo metabólico principal.\n\n¿Aprobamos este ajuste para actualizar tu reloj?`;
+    smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
   }
   // FLUJO B: Reorganizar por disponibilidad / matriz temporal
   else if (lowerMsg.includes("reorganizar") || lowerMsg.includes("matriz") || lowerMsg.includes("temporal") || lowerMsg.includes("viaje")) {
@@ -230,10 +242,7 @@ export function handleDeterministicFallback(
         return { ...p, date: dInfo.date || p.date, formattedDate: dInfo.formattedDate || p.formattedDate };
       });
       replyMsg = "He generado una propuesta de microciclo adaptada a tu matriz temporal para esta semana. Las disciplinas y descansos han sido redistribuidos protegiendo tu carga global y respetando tus días libres.\n\n⚠️ Esta es una propuesta previa: ningún cambio se aplicará a tu calendario de Intervals.icu hasta que hagas clic en 'Confirmar Nuevo Calendario'.\n\n¿Deseas confirmar este nuevo calendario?";
-      smartActions = [
-        { label: "Confirmar Nuevo Calendario", variant: "primary", icon: "check" },
-        { label: "Descartar", variant: "secondary", icon: "x" },
-      ];
+      smartActions = [{ label: "Confirmar Nuevo Calendario", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
     } else {
       replyMsg = "Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en la matriz del chat. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso.";
       smartActions = [];
@@ -244,17 +253,11 @@ export function handleDeterministicFallback(
     if (ctx.isWeekCompleted) {
       actionType = "REVIEW_PHYSIOLOGY";
       replyMsg = `¡Gran trabajo completando tu semana y tu tirada larga! Es totalmente normal sentir una fatiga profunda en este momento: tu fatiga aguda (ATL) está en ${Number(ctx.physioStatus.atl || 0).toFixed(1)} y tu frescura (TSB) en ${Number(ctx.physioStatus.tsb || 0).toFixed(1)}. Esto confirma que lograste el estímulo de sobrecarga necesario para tu adaptación biológica.\n\nPara el resto de hoy: descanso pasivo total, hidratación con electrolitos y recarga de carbohidratos. Tu Semana ${targetPlanningWeekNum} está completada con éxito.\n\n¿Deseas que preparemos la Semana ${targetPlanningWeekNum + 1} (Próxima Semana) con un inicio suave (descanso o rodaje regenerativo) por si la fatiga persiste?`;
-      smartActions = [
-        { label: "Planificar Próxima Semana", variant: "primary", icon: "calendar-sync" },
-        { label: "Mantener plan previsto", variant: "secondary", icon: "check" },
-      ];
+      smartActions = [{ label: "Planificar Próxima Semana", variant: "primary", icon: "calendar-sync" }, { label: "Mantener plan previsto", variant: "secondary", icon: "check" }];
     } else if (ctx.hasTrainedToday) {
       actionType = "REVIEW_PHYSIOLOGY";
       replyMsg = `Comprendido. Ya completaste tu sesión de hoy (${ctx.todayDayName}), por lo que esta fatiga es una respuesta biológica normal al esfuerzo realizado. Para hoy lo primordial es la asimilación y descanso.\n\nNo tocaremos tu sesión de hoy porque ya fue ejecutada. Si mañana aún sientes pesadez en las piernas, podemos suavizar la sesión siguiente. ¿Deseas que adaptemos la sesión de mañana o evaluamos al despertar?`;
-      smartActions = [
-        { label: "Suavizar sesión de mañana", variant: "primary", icon: "trending-down" },
-        { label: "Evaluar mañana al despertar", variant: "secondary", icon: "check" },
-      ];
+      smartActions = [{ label: "Suavizar sesión de mañana", variant: "primary", icon: "trending-down" }, { label: "Evaluar mañana al despertar", variant: "secondary", icon: "check" }];
     } else {
       actionType = "ADAPT_WORKOUT";
       const targetDayIdx = ctx.todayDayIndex;
@@ -263,10 +266,7 @@ export function handleDeterministicFallback(
         modifiedPlan[targetDayIdx] = { ...prevSession, workoutName: "Carrera Regenerativa Z1/Z2 (Descarga Activa)", durationMinutes: Math.max(25, (prevSession.durationMinutes || 50) - 20), tss: Math.max(15, (prevSession.tss || 50) - 20), action: "MODIFICAR" };
       }
       replyMsg = `Comprendido. Escuchar al cuerpo antes de entrenar es clave. He bajado la intensidad de tu sesión de hoy (${ctx.todayDayName}) a un rodaje regenerativo (Zona 1/2) acortado en 20 minutos para limpiar fatiga acumulada sin perder constancia.\n\n¿Aprobamos el ajuste para hoy o prefieres descanso total?`;
-      smartActions = [
-        { label: "Aprobar Ajuste", variant: "primary", icon: "check" },
-        { label: "Prefiero descansar hoy", variant: "secondary", icon: "x" },
-      ];
+      smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Prefiero descansar hoy", variant: "secondary", icon: "x" }];
     }
   }
   // FLUJO D: El plan está muy suave
@@ -274,10 +274,7 @@ export function handleDeterministicFallback(
     if (ctx.isWeekCompleted) {
       actionType = "REVIEW_PHYSIOLOGY";
       replyMsg = `Has asimilado la Semana ${targetPlanningWeekNum} con un nivel de rendimiento sobresaliente. Dado que la semana actual ya concluyó con éxito, si deseas mayor estímulo podemos programar una sobrecarga progresiva (+10% TSS) para la Semana ${targetPlanningWeekNum + 1}.\n\n¿Deseas proyectar mayor carga para la Próxima Semana?`;
-      smartActions = [
-        { label: "Planificar Próxima Semana (+10% TSS)", variant: "primary", icon: "trending-up" },
-        { label: "Mantener progresión actual", variant: "secondary", icon: "check" },
-      ];
+      smartActions = [{ label: "Planificar Próxima Semana (+10% TSS)", variant: "primary", icon: "trending-up" }, { label: "Mantener progresión actual", variant: "secondary", icon: "check" }];
     } else {
       actionType = "ADAPT_WORKOUT";
       const targetDayIdx = ctx.hasTrainedToday ? Math.min(6, ctx.todayDayIndex + 1) : ctx.todayDayIndex;
@@ -286,10 +283,7 @@ export function handleDeterministicFallback(
         modifiedPlan[targetDayIdx] = { ...prevSession, workoutName: "Carrera de Intervalos + 2 Bloques Extra de Umbral", durationMinutes: (prevSession.durationMinutes || 50) + 15, tss: (prevSession.tss || 50) + 25, action: "MODIFICAR" };
       }
       replyMsg = `Me alegra ver que estás asimilando tan bien la carga. He añadido 2 bloques extra de umbral a la sesión de ${ctx.hasTrainedToday ? "mañana" : "hoy"} para generar un mayor estímulo, subiendo el TSS semanal en 25 puntos de forma segura.\n\n¿Aplicamos la mayor carga al microciclo?`;
-      smartActions = [
-        { label: "Aplicar Mayor Carga", variant: "primary", icon: "check" },
-        { label: "Mantener plan original", variant: "secondary", icon: "x" },
-      ];
+      smartActions = [{ label: "Aplicar Mayor Carga", variant: "primary", icon: "check" }, { label: "Mantener plan original", variant: "secondary", icon: "x" }];
     }
   }
   // FASE 3: Confirmación / Aprobación

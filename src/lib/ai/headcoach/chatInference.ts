@@ -149,7 +149,10 @@ export async function executeGeminiInference(
               const userExplicitlyRequestedAdjustment =
                 isMatrixRequest || allUserText.includes("reduc") || allUserText.includes("-15%") || allUserText.includes("-25%") ||
                 allUserText.includes("+10%") || allUserText.includes("viaje") || allUserText.includes("cambia") ||
-                allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta");
+                allUserText.includes("sí, adaptar") || allUserText.includes("si, adaptar") || allUserText.includes("ajusta") ||
+                allUserText.includes("intercambi") || allUserText.includes("sustitu") || allUserText.includes("enferm") ||
+                allUserText.includes("retorno") || allUserText.includes("rodillo") || allUserText.includes("poco tiempo") ||
+                allUserText.includes("salté") || allUserText.includes("salte");
 
               if (ctx.isWeekCompleted || (!isMatrixRequest && (isContinuityVerdict || !userExplicitlyRequestedAdjustment))) {
                 parsed.actionType = "REVIEW_PHYSIOLOGY";
@@ -194,10 +197,12 @@ export async function executeGeminiInference(
 
                   // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL O CONTINUIDAD DEL PLAN
                   const dLower = (dName || "").toLowerCase();
-                  const userRequestedChange = allUserText.includes(dLower) && (
+                  const isTodayItem = dLower === (ctx.todayDayName || "").toLowerCase();
+                  const userRequestedChange = (allUserText.includes(dLower) || (isTodayItem && (allUserText.includes("hoy") || allUserText.includes("intercambi") || allUserText.includes("sustitu") || allUserText.includes("rodillo") || allUserText.includes("poco tiempo")))) && (
                     allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
                     allUserText.includes("ciclismo") || allUserText.includes("descanso") || allUserText.includes("rodillo") ||
-                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("nado") || allUserText.includes("natacion")
+                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("intercambi") ||
+                    allUserText.includes("sustitu") || allUserText.includes("nado") || allUserText.includes("natacion")
                   );
 
                   const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;

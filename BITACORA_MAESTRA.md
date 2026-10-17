@@ -9597,3 +9597,45 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Solo modificados archivos de documentación y gobernanza arquitectónica sin tocar rutas API ni esquemas de base de datos ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 164 ✅.
+
+---
+
+## 165. Reingeniería Integral de UX y Flujos Deportivos para "Reagendar / Imprevisto" (Horizonte Temporal y Swap Bidireccional)
+
+### 165.1. Diagnóstico y Necesidad del Atleta
+1. **El Problema en la Versión Previa:**
+   - La tarjeta desplegaba 4 botones planos (`"estuve enfermo"`, `"tengo poco tiempo hoy"`, `"ajuste día de la semana matriz"`, `"pasar a rodillo zona 2 sin impacto"`).
+   - "Pasar a rodillo" era unilateral (solo de carrera a bici) y rígido; no permitía el intercambio inverso (de rodillo/ciclismo a carrera) para sumar volumen a pie.
+   - "Estuve enfermo" y "Ajustar matriz" asumían ciegamente la semana activa, sin permitir al atleta decidir si el ajuste aplicaba a los días restantes de la semana en curso o a la reintroducción progresiva en la próxima semana.
+2. **Requerimiento del Usuario:**
+   - Permitir elegir la semana a reagendar (semana actual vs. próxima semana) en caso de enfermedad o ajuste de disponibilidad.
+   - Transformar "pasar a rodillo" en un **intercambio bidireccional y contextual de ejercicios** (`Carrera ⇄ Ciclismo/Rodillo Z2`) reconociendo lo programado para hoy.
+
+### 165.2. Implementaciones Realizadas
+1. **Arquitectura Modular de Consola Táctica y Submenú Contextual:**
+   - Creación de [`HeadCoachReorgSubMenu.tsx`](src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx) (224 LOC, $\le 348$):
+     * **Nivel Principal:** 4 píldoras tácticas claras (`Estuve enfermo / Me salté días`, `Ajustar días (Matriz)`, `Intercambiar ejercicio hoy`, `Tengo poco tiempo hoy (30m/45m)`).
+     * **Submodo Enfermedad (`sick`):** Selector de 1 toque entre `Días restantes (Semana actual)` y `Próxima semana` (con navegación reactiva a la semana siguiente).
+     * **Submodo Matriz (`matrix`):** Selector de 1 toque entre `Esta semana` y `Próxima semana` para desplegar la matriz temporal en el horizonte deseado.
+     * **Submodo Intercambio (`swap`):** Detección dinámica de la sesión de hoy (`todayName`, `isRunToday`, `isBikeToday`), ofreciendo `🚴 Pasar a Rodillo Z2 (Sin impacto)` o `🏃 Pasar a Carrera Z2 (Aeróbico suave)`.
+     * **Poco tiempo hoy (30m/45m):** Disparo inmediato de compresión conservando el estímulo metabólico principal.
+   - Refactorización de [`HeadCoachTacticalConsole.tsx`](src/components/dashboard/headcoach/HeadCoachTacticalConsole.tsx) (252 LOC, $\le 348$): Integración de props `currentWeekNumber`, `selectedWeekNumber`, `totalWeeks`, `onSelectWeek` y `currentPlan`.
+   - Conexión en [`AthleteHeadCoachView.tsx`](src/components/dashboard/AthleteHeadCoachView.tsx) (222 LOC, $\le 348$): Enrutamiento de callbacks de cambio de semana y apertura de matriz.
+2. **Refuerzo en Backend e Inferencia Gemini (`chatInference.ts` - 344 LOC):**
+   - Expansión de `userExplicitlyRequestedAdjustment` para capturar términos de intercambio, sustitución, enfermedad, retorno y rodillo, evitando que el plan sugerido sea descartado erróneamente.
+   - Soporte para que `userRequestedChange` identifique la sesión de hoy aunque el usuario no escriba el nombre explícito del día de la semana.
+3. **Contingencia Espejo Determinística (`deterministicFallback.ts` - 338 LOC):**
+   - Rama para **Intercambiar disciplina hoy** con recalibración de potencia exacta: `65-72% Bike FTP` al pasar a rodillo o `70-78% Stryd CP` al pasar a carrera suave.
+   - Bifurcación para retorno médico de **Próxima semana** (reintroducción progresiva con reducción del 30-35% de volumen) vs. días restantes de la semana actual.
+
+### 165.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeadCoachTacticalConsole.tsx`: 252 LOC ($\le 348$) ✅
+  * `HeadCoachReorgSubMenu.tsx`: 224 LOC ($\le 348$) ✅
+  * `AthleteHeadCoachView.tsx`: 222 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 344 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 338 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Cero regresiones en modelos Banister ni esquemas de base de datos ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 165 ✅.

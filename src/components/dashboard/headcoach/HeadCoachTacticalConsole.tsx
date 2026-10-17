@@ -1,13 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { Activity, Target, Compass, Sliders, Thermometer, Clock, Bike, CalendarSync } from "lucide-react";
+import { Activity, Target, Compass, Sliders, Bike } from "lucide-react";
+import { HeadCoachReorgSubMenu } from "./HeadCoachReorgSubMenu";
 
 interface HeadCoachTacticalConsoleProps {
   onSelectAction: (prompt: string, options?: any) => void;
-  onOpenTemporaryMatrix?: () => void;
+  onOpenTemporaryMatrix?: (targetWeekNum?: number) => void;
   completedActivities?: { id: string; name: string; date: string; type?: string; tss?: number; movingTimeMin?: number; watts?: number; heartrate?: number }[];
   isLoading?: boolean;
+  currentWeekNumber?: number;
+  selectedWeekNumber?: number;
+  totalWeeks?: number;
+  onSelectWeek?: (weekNum: number) => void;
+  currentPlan?: any[];
 }
 
 export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> = ({
@@ -15,9 +21,23 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
   onOpenTemporaryMatrix,
   completedActivities = [],
   isLoading = false,
+  currentWeekNumber = 1,
+  selectedWeekNumber,
+  totalWeeks = 22,
+  onSelectWeek,
+  currentPlan = [],
 }) => {
   const [reorgOpen, setReorgOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
+
+  const currWeek = currentWeekNumber;
+  const nextWeek = Math.min(totalWeeks, currWeek + 1);
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const todayName = CANONICAL_DAYS[todayIdx];
+  const todaySession = Array.isArray(currentPlan) ? currentPlan[todayIdx] : null;
+  const isRunToday = /run|carrera|trote|atletismo/i.test(todaySession?.discipline || todaySession?.workoutName || "");
+  const isBikeToday = /bike|ride|ciclismo|rodillo|bici/i.test(todaySession?.discipline || todaySession?.workoutName || "");
 
   const handleAction = (prompt: string, opts?: any) => {
     if (isLoading) return;
@@ -215,64 +235,17 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
 
       {/* Sub-Opciones Desplegables de Reagendamiento */}
       {reorgOpen && (
-        <div className="p-2 sm:p-2.5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-500/25 flex flex-wrap gap-1.5 sm:gap-2 animate-fadeIn">
-          <button
-            type="button"
-            onClick={() => {
-              setReorgOpen(false);
-              handleAction(
-                "Estuve enfermo y me salté algunos días de entrenamiento. Activa el protocolo de retorno progresivo sin sobrecargarme ni intentar recuperar los kilómetros perdidos.",
-                { skipUserBubble: true }
-              );
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-900 dark:text-amber-200 hover:border-amber-400 transition"
-          >
-            <Thermometer className="h-3 w-3 text-rose-500" />
-            <span>Estuve enfermo / Me salté días</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setReorgOpen(false);
-              handleAction(
-                "Hoy tengo tiempo muy limitado (30 a 45 minutos). Comprime mi sesión manteniendo el estímulo principal y reduciendo volumen no esencial.",
-                { skipUserBubble: true }
-              );
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-900 dark:text-amber-200 hover:border-amber-400 transition"
-          >
-            <Clock className="h-3 w-3 text-amber-500" />
-            <span>Tengo poco tiempo hoy (30m/45m)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setReorgOpen(false);
-              if (onOpenTemporaryMatrix) onOpenTemporaryMatrix();
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-900 dark:text-amber-200 hover:border-amber-400 transition"
-          >
-            <CalendarSync className="h-3 w-3 text-indigo-500" />
-            <span>Ajustar días de la semana (Matriz)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setReorgOpen(false);
-              handleAction(
-                "Deseo sustituir la sesión de carrera por rodillo en Zona 2 sin impacto articular para proteger articulaciones.",
-                { skipUserBubble: true }
-              );
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-900 dark:text-amber-200 hover:border-amber-400 transition"
-          >
-            <Bike className="h-3 w-3 text-sky-500" />
-            <span>Pasar a Rodillo Z2 sin impacto</span>
-          </button>
-        </div>
+        <HeadCoachReorgSubMenu
+          currWeek={currWeek}
+          nextWeek={nextWeek}
+          todayName={todayName}
+          isRunToday={isRunToday}
+          isBikeToday={isBikeToday}
+          onClose={() => setReorgOpen(false)}
+          onAction={handleAction}
+          onSelectWeek={onSelectWeek}
+          onOpenTemporaryMatrix={onOpenTemporaryMatrix}
+        />
       )}
     </div>
   );

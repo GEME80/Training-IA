@@ -164,9 +164,17 @@ export const AthleteHeadCoachView: React.FC<AthleteHeadCoachViewProps> = ({
       {/* CONSOLA TÁCTICA DE ACCIONES DIRECTAS (4 PILARES) */}
       <HeadCoachTacticalConsole
         onSelectAction={(prompt, opts) => handleSendMessage(prompt, opts)}
-        onOpenTemporaryMatrix={() => handleSelectSmartAction("Reorganizar")}
+        onOpenTemporaryMatrix={(wNum) => {
+          if (wNum && wNum !== activeWeekNumber) setActiveWeekNumber(wNum);
+          handleSelectSmartAction("Reorganizar");
+        }}
         completedActivities={completedActivitiesList}
         isLoading={isLoading}
+        currentWeekNumber={realCurrentWeekNumber}
+        selectedWeekNumber={activeWeekNumber}
+        totalWeeks={effectiveBlueprint?.totalWeeks || macrocyclePhase?.blueprint?.totalWeeks || 16}
+        onSelectWeek={setActiveWeekNumber}
+        currentPlan={currentPlan}
       />
 
       {/* FEEDBACK DE SINCRONIZACIÓN */}

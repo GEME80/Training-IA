@@ -9639,3 +9639,86 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Cero regresiones en modelos Banister ni esquemas de base de datos ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 165 ✅.
+
+---
+
+## 166. Constitución de Identidad de Marca PULSE AI™ y Refactorización del Motor Metodológico Científico (Seiler 80/20 y Tabs Reactivos)
+
+### 166.1. Documento Rector de Identidad de Marca y Filosofía Fisiológica
+1. **Creación de [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md):**
+   - Se estableció como lectura obligatoria para cualquier agente o desarrollador que intervenga en el repositorio.
+   - **Misión Fundacional:** Erradicar la rigidez de los planes de papel y la incertidumbre en los atletas de resistencia, sincronizando la ciencia de los entrenadores más laureados del mundo con la fatiga real del atleta cada mañana.
+   - **Resolución a los Tres Dolores Críticos:**
+     1. *La tiranía del plan rígido (PDFs y Hojas de Cálculo):* Incapaces de adaptarse ante mal sueño, viajes o enfermedad; generan lesiones por sobreentrenamiento.
+     2. *La culpa psicológica por la sesión omitida:* El atleta aficionado tiende a duplicar sesiones o forzar ritmos. PULSE AI recalibra el microciclo sin castigo biológico.
+     3. *Islas de datos desconectadas:* Unifica Garmin, Coros, Stryd e Intervals.icu para prescribir potencia y ritmos exactos al despertar.
+   - **Arquetipo "El Sabio Atlético" (The Sage + The Hero):** Prohibición categórica de frases motivacionales vacías de gimnasio comercial; tono de laboratorio de fisiología de élite y biomecánica deportiva.
+   - **Diccionario Editorial Inviolable:** Tabla oficial de términos prohibidos vs. oficiales de PULSE AI.
+   - **Design System PULSE AI:** Estandarización de Verde Esmeralda (`#10B981` / `emerald-500`, `emerald-600`), negro azabache (`#020617`), tipografía tabular `tabular-nums font-mono` y prohibición total de emojis planos del sistema operativo en favor de Lucide React vectoriales (`strokeWidth: 1.75`).
+
+### 166.2. Refactorización Fisiológica del Motor Metodológico
+1. **Sincronización Reactiva de Tabs (`UnifiedPhysioEngine.tsx` - 203 LOC):**
+   - Unificación del estado en `selectedCoachId: 'canova' | 'seiler' | 'coggan' | 'daniels'`.
+   - Corrección del bug donde el borde verde (`border-emerald-500 ring-1 ring-emerald-500/30`) permanecía anclado en Andrew Coggan; ahora el tab activo se corresponde con el panel inferior y la rotación automática suave (5s), pausándose al interactuar o pasar el cursor (`hover`).
+   - Sustitución del emoji `👁️` por el icono vectorial Lucide `<Eye className="w-4 h-4 text-emerald-600" />`.
+   - Sintaxis gramatical corregida en el botón del modal: `"Conocer más sobre el método de {coach.name}"`.
+2. **Corrección Fisiológica Crítica de Stephen Seiler:**
+   - Se sustituyó "Recuperación Diaria (HRV)" por **"Entrenamiento Polarizado (80/20)"** en [`coachScienceData.ts`](src/components/landing/coachScienceData.ts) (107 LOC).
+   - *Fundamento científico:* El Dr. Stephen Seiler es el investigador pionero mundial de la regla 80/20 (80% del tiempo construyendo base mitocondrial y densidad capilar en Z1/Z2 conversacional y 20% en alta intensidad por encima de VT2/FTP), no del HRV (cuyo modelado de fatiga/aptitud corresponde a Eric Banister).
+3. **Modal Biográfico Accesible (`CoachBioModal.tsx` - 151 LOC):**
+   - Interfaz con credenciales, base científica y la implementación algorítmica específica dentro de PULSE AI para Canova, Seiler, Coggan y Daniels.
+   - Soporte para cierre con tecla `Escape` y bloqueo de scroll de fondo.
+
+### 166.3. Purga Estructural de Componentes Legados
+- Eliminación de `src/components/landing/CoachesScienceSection.tsx` (reemplazado por `UnifiedPhysioEngine.tsx`).
+- Eliminación de `src/components/landing/physioEngineData.ts` (reemplazado por `coachScienceData.ts`).
+- Copia y verificación de retratos fotográficos oficiales en `public/images/coaches/` (`renato-canova.jpg`, `renato-canova.png`, `stephen-seiler.jpg`, `andrew-coggan.jpg`, `jack-daniels.jpg`).
+
+### 166.4. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `UnifiedPhysioEngine.tsx`: 203 LOC ($\le 350$) ✅
+  * `CoachBioModal.tsx`: 151 LOC ($\le 350$) ✅
+  * `coachScienceData.ts`: 107 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Cero modificaciones en backend, modelos o APIs ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 166 ✅.
+
+---
+
+## 167. Elevación Integral de Copywriting y Textos de la Landing Page según el Diccionario Inviolable de Marca (SGEA v5.83)
+
+### 167.1. Auditoría y Erradicación de Términos Prohibidos del Marketing Comercial
+Tras auditar todos los componentes de la portada contra el Diccionario Editorial Inviolable de [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md), se identificaron y erradicaron las siguientes infracciones:
+1. *"el reloj pita en cada cambio de zona"* $\rightarrow$ Prohibido por la marca. Reemplazado por: **`"...el reloj te guía en tu muñeca marcando cada intervalo exacto de potencia o ritmo."`**
+2. *"Pico de Forma Garantizado"* $\rightarrow$ Prohibido por asociarse a promesas vacías de gimnasio comercial. Reemplazado por: **`"Pico de Forma Modelado Matemáticamente"`** (modelo impulso-respuesta Banister/Coggan).
+3. *"dolores musculares"* $\rightarrow$ Prohibido por simplista. Reemplazado por: **`"sobrecarga aguda y fatiga neuromuscular residual"`**.
+4. *"Probar Gratis Ahora"* $\rightarrow$ Genérico. Reemplazado por: **`"Comenzar Prueba de 7 Días"`**.
+
+### 167.2. Elevación Sección por Sección
+1. **Hero Principal ([`HeroSection.tsx`](src/components/landing/HeroSection.tsx) - 210 LOC):**
+   - **H1:** *"Tu Head Coach Fisiológico que Adapta Cada Sesión a tu Fatiga Real."*
+   - **Subtítulo:** *"Entrena al compás de tu vida real, sin culpa por omitir una sesión. Planes independientes de alto rendimiento que prescriben ritmos VDOT y vatios Stryd/FTP exactos para tu nivel, evalúan tu asimilación biológica matutina por HRV y sincronizan cada serie directo a tu reloj deportivo (Garmin, Coros o Apple Watch)."*
+2. **HUD de Telemetría Multideporte ([`HeroAthleteTelemetryCard.tsx`](src/components/landing/HeroAthleteTelemetryCard.tsx) - 332 LOC):**
+   - Sustitución de la etiqueta *"Forma Óptima (Descanso)"* por la denominación fisiológica canónica **`"Frescura Modelada"`** (`+12 TSB`).
+3. **Showcase Móvil de la App ([`AppMotionShowcase.tsx`](src/components/landing/AppMotionShowcase.tsx) - 281 LOC):**
+   - Bajada comercial enfocada en la tiranía del plan rígido: *"Erradica la rigidez de las hojas de cálculo y los planes de papel que no saben si dormiste mal o tuviste un viaje de trabajo. PULSE AI modela tu estrés biológico diario y recalibra tu microciclo en segundos."*
+   - Cuatro tarjetas de valor con léxico fisiológico exacto (Adaptación por HRV, Guía en muñeca sin pitidos, Pico modelado matemáticamente a 22 semanas, Head Coach IA 24/7).
+4. **Precios y Preguntas Frecuentes ([`PricingAndFaqSection.tsx`](src/components/landing/PricingAndFaqSection.tsx) - 219 LOC):**
+   - Bullet de Membresía: *"Tope biomecánico de 3h para preservar tendón de Aquiles y sóleos (Canova)"*.
+   - FAQ 2 (Resolución explícita del dolor de la culpa): *"PULSE AI recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica."*
+
+### 167.3. Optimización de Matriz Temporal en Head Coach (`HeadCoachInlineMatrixCard.tsx` - 180 LOC)
+- Detección inteligente de la semana activa: si la matriz corresponde a la semana en curso (`isCurrentWeek`), renderiza y permite editar únicamente los días restantes (`displayedDays.slice(todayIdx)`: Hoy a Domingo), con un badge visual `[ Días restantes (X a Domingo) ]` y el indicador `[ Hoy ]`, impidiendo reescribir retrospectivamente sesiones ya ejecutadas.
+
+### 167.4. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeroSection.tsx`: 210 LOC ($\le 350$) ✅
+  * `HeroAthleteTelemetryCard.tsx`: 332 LOC ($\le 350$) ✅
+  * `AppMotionShowcase.tsx`: 281 LOC ($\le 350$) ✅
+  * `PricingAndFaqSection.tsx`: 219 LOC ($\le 350$) ✅
+  * `HeadCoachInlineMatrixCard.tsx`: 180 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Cero alteraciones a modelos de backend o esquemas de base de datos ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 167 ✅.

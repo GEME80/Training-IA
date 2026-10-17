@@ -1,9 +1,21 @@
-# ⚡ SGEA Pro (v5.82) — Sistema Adaptativo de Entrenamiento Inteligente
+# ⚡ SGEA Pro (v5.83) — Sistema Adaptativo de Entrenamiento Inteligente
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🛡️ **Identidad de Marca PULSE AI, Rigor Científico Seiler 80/20 & Elevación Editorial Inviolable (v5.83):**
+  - **Documento Rector Institucional (`BRAND_IDENTITY_PULSE_AI.md`):** Formalización de los principios fundacionales, arquetipo "El Sabio Atlético" (laboratorio de fisiología de élite vs. animador comercial de gimnasio), resolución explícita a los tres dolores (tiranía del plan rígido, culpa psicológica por la sesión omitida, e islas de datos desconectadas), y Diccionario Editorial Inviolable.
+  - **Rigor Metodológico Fisiológico (`UnifiedPhysioEngine.tsx`, `coachScienceData.ts`, `CoachBioModal.tsx`):**
+    * *Dr. Stephen Seiler:* Corrección fisiológica crítica asignándole el **"Entrenamiento Polarizado (80/20)"** (80% del tiempo construyendo base mitocondrial en Z1/Z2 conversacional y 20% en alta intensidad) en sustitución del HRV.
+    * *Sincronización Reactiva de Tabs:* Estado reactivo único `selectedCoachId` que garantiza la correspondencia perfecta del borde verde esmeralda y la rotación fluida (5s) con pausa interactiva al interactuar o pasar el cursor.
+    * *Matriz Maestra Tipada (`COACHES_SCIENCE_DATA`):* Documentación de credenciales, base biológica y aplicación algorítmica exacta en PULSE AI para Renato Canova (tope seguro de 3h), Stephen Seiler (polarizado 80/20), Andrew Coggan (potencia FTP, TSS y Stryd) y Jack Daniels (fórmula VDOT).
+    * *Limpieza Estructural:* Erradicación de componentes obsoletos redundantes (`CoachesScienceSection.tsx`, `physioEngineData.ts`).
+  - **Elevación Editorial y Copywriting Fisiológico:**
+    * Erradicación total de términos comerciales prohibidos (*"el reloj pita"*, *"pico de forma garantizado"*, *"dolores musculares"*, *"probar gratis ahora"*).
+    * Nomenclatura oficial de laboratorio de rendimiento en Hero (`HeroSection.tsx`), Telemetría (`HeroAthleteTelemetryCard.tsx` con *"Frescura Modelada"*), Showcase (`AppMotionShowcase.tsx`) y Precios/FAQ (`PricingAndFaqSection.tsx`).
+  - **Matriz Temporal Inteligente en Head Coach (`HeadCoachInlineMatrixCard.tsx`):** Detección dinámica de la semana activa para desplegar y reorganizar únicamente los días restantes (Hoy a Domingo) sin alterar las sesiones pasadas.
 
 - 🧠 **Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión & Auditoría SSOT de Cargas (v5.82):**
   - **Jerarquía Anticolisión de Intenciones (`chatInference.ts`, `deterministicFallback.ts`):** Cascada estricta de evaluación: `isGoalProgress` (Prioridad 1) > `isWeekBalance` (Prioridad 2) > `isSessionAudit` (Prioridad 3). Erradicación de falsos positivos donde expresiones como `"semanas restantes"` secuestraban el flujo de meta hacia balance de semana, o `"cuántas sesiones llevo"` secuestraban el balance hacia auditoría de sesión individual.

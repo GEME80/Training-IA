@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.82)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.83)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.82).
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema Pulse AI / SGEA (v5.83).
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.83: Documento Rector de Identidad de Marca, Sistema de Diseño, Filosofía Fisiológica y Rigor Científico (Seiler 80/20 y Copywriting Inviolable):
+  * Documento Rector Institucional (`BRAND_IDENTITY_PULSE_AI.md`): Definición formal de la misión, los 3 dolores que resolvemos (tiranía del plan rígido, culpa psicológica por sesión omitida, islas de datos desconectadas), el arquetipo "El Sabio Atlético", y el Diccionario Editorial Inviolable.
+  * Rigor Científico del Motor Metodológico (`UnifiedPhysioEngine.tsx`, `CoachBioModal.tsx`, `coachScienceData.ts`): Corrección fisiológica crítica asignando al Dr. Stephen Seiler el "Entrenamiento Polarizado (80/20)" en sustitución del HRV. Sincronización reactiva del tab activo con `selectedCoachId`. Matriz tipada `COACHES_SCIENCE_DATA` con credenciales de élite, base científica y aplicación algorítmica. Supresión de componentes legados (`CoachesScienceSection.tsx`, `physioEngineData.ts`).
+  * Elevación Editorial de la Landing Page: Erradicación absoluta de términos comerciales vulgares ("el reloj pita", "pico de forma garantizado", "dolores musculares", "probar gratis ahora") sustituidos por nomenclatura oficial de laboratorio de rendimiento en `HeroSection.tsx`, `HeroAthleteTelemetryCard.tsx` ("Frescura Modelada"), `AppMotionShowcase.tsx` y `PricingAndFaqSection.tsx`.
+  * Optimización de Matriz Temporal en Head Coach (`HeadCoachInlineMatrixCard.tsx`): Detección inteligente de la semana activa para desplegar y reorganizar únicamente los días restantes (Hoy a Domingo) sin alterar las sesiones pasadas.
+  * Presupuesto Estricto de Código (≤ 350 LOC): 100% de los componentes cumplen la restricción y Next.js compila limpiamente (21/21 rutas).
 - Versión 5.82: Head Coach Conversacional de Resistencia con Visión Macro, Blindaje Anticolisión de Intenciones y Auditoría SSOT de Cargas:
   * Jerarquía Anticolisión de Intenciones (`chatInference.ts`, `deterministicFallback.ts`): Cascada estricta de evaluación: `isGoalProgress` (Prioridad 1) > `isWeekBalance` (Prioridad 2) > `isSessionAudit` (Prioridad 3). Erradicación de falsos positivos donde `"semanas restantes"` secuestraba el flujo hacia balance de semana, o `"cuántas sesiones"` secuestraba el balance hacia auditoría de sesión individual.
   * Análisis Macro de Temporada para "Rumbo a mi Meta": Evaluación longitudinal desde el inicio del macrociclo (Semana 2 de 22 hacia Maratón Tokio, 20 semanas restantes), contraste de condición física (41.2 CTL real vs 39.5 CTL proyectado por modelo Banister rumbo al pico de 70 CTL), relación peso-potencia (4.10 W/kg Stryd CP, 2.76 W/kg FTP bici), balance semanal vs plan (180 TSS de 366 TSS objetivo, 263 al corte de viernes con -83 TSS por fuerza omitida en categoría Máster), crítica técnica de desacople cardíaco (> +5%) y directrices estratégicas de la fase BASE 1.

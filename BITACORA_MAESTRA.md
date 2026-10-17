@@ -9547,6 +9547,38 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Alcance e Integridad Deportiva):** Enrutamiento de intención 100% blindado; balance de semana entregado con criterio estricto de auditor y entrenador de resistencia ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 162 ✅.
 
+---
+
+## 163. Priorización Absoluta de "Rumbo a mi Meta" y Análisis Integral del Ciclo vs. Modelo Teórico
+
+### 163.1. Diagnóstico y Causa Raíz
+1. **El Síntoma:**
+   - Al pulsar el botón "Rumbo a mi meta", el Head Coach respondió erróneamente con el texto de "Balance de Semana" (*"Germán, al corte de este viernes sumas 180 TSS ejecutados de los 376 TSS semanales..."*).
+2. **Causa Raíz Identificada:**
+   - El prompt táctico de Rumbo a mi Meta incluye: `"revisa mis semanas restantes"`.
+   - La regla previa de `isWeekBalance` contenía `pLower.includes("semana")` y se evaluaba antes que `isGoalProgress`.
+   - Como `"semanas"` contiene `"semana"`, la consulta era catalogada falsamente como balance semanal, derivando al modelo a repetir las pautas de fin de semana en lugar de dar la perspectiva macro del ciclo.
+   - En `deterministicFallback.ts`, la variable `isWeekBalance` también evaluaba primero que `isGoal`.
+
+### 163.2. Implementaciones Realizadas
+1. **Prioridad 1 para Rumbo a mi Meta (`chatInference.ts` - 339 LOC & `deterministicFallback.ts` - 344 LOC):**
+   - `isGoalProgress` se evalúa en primer lugar capturando términos inequívocos: `"rumbo a mi meta"`, `"carrera principal"`, `"visión estratégica macro"`, `"maratón tokio"`, `"semanas restantes"`, `"desde que inicio el ciclo"`.
+   - `isWeekBalance` queda estrictamente condicionado a `!isGoalProgress`.
+2. **Estructura Fisiológica Exhaustiva de "Rumbo a mi Meta":**
+   - **Párrafo 1 (Perspectiva Macro desde el Inicio del Ciclo):** Semana 2 de 22 hacia Tokio (restan 20 semanas). Progreso del fitness acumulado: arrancó en base y hoy se sitúa en 41.2 CTL frente a 39.5 CTL proyectados por el macrociclo (+1.7 CTL por encima del modelo teórico Banister hacia el pico de 70 CTL), con 336W Stryd CP (4.10 W/kg) y 226W FTP Bici (2.76 W/kg).
+   - **Párrafo 2 (Diagnóstico de la Semana y Datos Reales vs. Plan):** Integración de los 180 TSS ejecutados vs 263 al corte (-83 TSS de déficit por fuerza omitida), TSB -0.3 y HRV 54 ms. Cruce crítico con el ritmo maratón: los rodajes en Z2 (252W a 114 bpm) confirman economía, pero los desacoples cardíacos (> +5%) alertan sobre la necesidad de afianzar el fondo aeróbico y recuperar la fuerza.
+   - **Párrafo 3 (Dirección Estratégica Rumbo a Tokio):** Foco de la fase Base 1 en volumen limpio Z2, tiradas largas dominicales y fuerza funcional como escudo biomecánico sin obsesionarse con velocidad.
+
+### 163.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `chatInference.ts`: 339 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 344 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Visión estratégica macro hacia Tokio sincronizada desde el inicio del macrociclo hasta la meta, integrando semana actual y datos vs. esperado del plan ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 163 ✅.
+
+
 
 
 

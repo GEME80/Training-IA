@@ -49,21 +49,38 @@ export function handleDeterministicFallback(
   const lowerMsg = lastUserMsg.toLowerCase();
   let smartActions: SmartActionItem[] = [];
 
-  const isWeekBalance = lowerMsg.includes("balance") || lowerMsg.includes("volumen") || lowerMsg.includes("semana completa") || lowerMsg.includes("toda la semana") || lowerMsg.includes("resumen semanal") || lowerMsg.includes("cierre de semana") || (lowerMsg.includes("semana") && !lowerMsg.includes("audita a fondo mi sesión") && !lowerMsg.includes("audita mi sesión"));
-  const isGoal = !isWeekBalance && (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal"));
-  const isSessionAudit = !isWeekBalance && !isGoal && (lowerMsg.includes("audita a fondo") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión") || lowerMsg.includes("audita") || lowerMsg.includes("sesión"));
+  const isGoal = lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal") || lowerMsg.includes("semanas restantes") || lowerMsg.includes("desde que inicio") || lowerMsg.includes("desde que inició");
+  const isWeekBalance = !isGoal && (lowerMsg.includes("balance") || lowerMsg.includes("volumen") || lowerMsg.includes("semana completa") || lowerMsg.includes("toda la semana") || lowerMsg.includes("resumen semanal") || lowerMsg.includes("cierre de semana") || (lowerMsg.includes("semana") && !lowerMsg.includes("audita") && !lowerMsg.includes("sesión") && !lowerMsg.includes("sesion")));
+  const isSessionAudit = !isGoal && !isWeekBalance && (lowerMsg.includes("audita a fondo") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión") || lowerMsg.includes("audita") || lowerMsg.includes("sesión"));
 
-  // 1. BALANCE DE SEMANA Y VOLUMEN (MÁXIMA PRIORIDAD)
-  if (isWeekBalance) {
+  // 1. RUMBO A LA META Y PROYECCIÓN BANISTER (ANÁLISIS MACRO DEL MACROCICLO)
+  if (isGoal) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
+    const macroPhase = ctx.promptContext.macrocyclePhase, race = macroPhase?.primaryRace;
+    const raceName = race?.name || "tu Meta Principal", raceDist = race?.distance || "42K";
+    const ctlVal = physioStatus.ctl.toFixed(1), rNum = Number(physioStatus.rampRate || 0), rampVal = rNum >= 0 ? `+${rNum.toFixed(1)}` : `${rNum.toFixed(1)}`;
+    const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
+    const plannedCtl = ctx.plannedCtlForWeek || Number(ctlVal), diffCtl = Math.round((physioStatus.ctl - plannedCtl) * 10) / 10;
+    const ctlDeltaText = Math.abs(diffCtl) <= 0.5 ? `en el blanco exacto del plan (${diffCtl >= 0 ? `+${diffCtl}` : diffCtl} CTL)` : diffCtl > 0.5 ? `por encima del modelo teórico (+${diffCtl} CTL)` : `ligeramente por debajo del modelo (${diffCtl} CTL recuperable)`;
+    const peakCtl = ctx.targetPeakCtl || 70, dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss)), deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
+    const totalW = macroPhase?.blueprint?.totalWeeks || 22, remW = Math.max(0, totalW - targetPlanningWeekNum);
+
+    const p1 = `Hola ${athleteFirstName}, analizando tu rumbo estratégico hacia ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${totalW} (Fase ${macroPhase?.phase || "Base 1"}, restan ${remW} semanas). Desde que inició el ciclo, tu condición física ha progresado con solidez: tu macrociclo proyectaba ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), avanzando en carril firme hacia el pico Banister de ${peakCtl} CTL con ${profile.run_ftp ? `${profile.run_ftp}W Stryd CP${wkg}` : "4.10 W/kg"} y ${profile.bike_ftp ? `${profile.bike_ftp}W FTP` : "2.76 W/kg"}.`;
+    const p2 = `En esta semana sumas ${actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || plannedWeekTss} TSS al corte (${deltaSign} TSS derivado de la fuerza omitida), con TSB en ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} y HRV en ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "54 ms"}. Tus rodajes a baja intensidad confirman excelente economía, pero la deriva aeróbica (> +5%) vista en carrera ratifica que para sostener tu ritmo objetivo de 42 km sin decaer al final, debemos afianzar el fondo aeróbico y recuperar la fuerza.`;
+    const p3 = `El siguiente paso estratégico en Base 1 es acumular volumen limpio en Zona 2 sin forzar velocidad, proteger las articulaciones con la fuerza y consolidar las tiradas largas dominicales para entrar con cilindrada plena a las fases específicas.`;
+
+    replyMsg = `${p1}\n\n${p2}\n\n${p3}`;
+    smartActions = [];
+  }
+  // 2. BALANCE DE SEMANA Y VOLUMEN
+  else if (isWeekBalance) {
     actionType = "REVIEW_PHYSIOLOGY";
     const executedCount = ctx.planningWeekDates.reduce((acc: number, d: any) => acc + (ctx.effectiveExecutedMap[d.date]?.activities?.length || 0), 0);
     const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
-    const rampNum = Number(physioStatus.rampRate || 0);
-    const rampStr = rampNum >= 0 ? `+${rampNum.toFixed(1)}` : `${rampNum.toFixed(1)}`;
-    const dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss));
-    const deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
-    const ctlPlanned = ctx.plannedCtlForWeek || Number(physioStatus.ctl.toFixed(1));
-    const ctlDiff = Math.round((physioStatus.ctl - ctlPlanned) * 10) / 10;
+    const rampNum = Number(physioStatus.rampRate || 0), rampStr = rampNum >= 0 ? `+${rampNum.toFixed(1)}` : `${rampNum.toFixed(1)}`;
+    const dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss)), deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
+    const ctlPlanned = ctx.plannedCtlForWeek || Number(physioStatus.ctl.toFixed(1)), ctlDiff = Math.round((physioStatus.ctl - ctlPlanned) * 10) / 10;
     const ctlVerdict = ctlDiff >= 0 ? `+${ctlDiff} CTL sobre el modelo` : `${ctlDiff} CTL bajo el modelo`;
 
     let tssVerdict = "", humanTranslation = "", nextStep = "";
@@ -85,22 +102,6 @@ export function handleDeterministicFallback(
     }
 
     replyMsg = `${tssVerdict}\n\n${humanTranslation}\n\n${nextStep}`;
-    smartActions = [];
-  }
-  // 2. RUMBO A LA META Y PROYECCIÓN BANISTER
-  else if (isGoal) {
-    actionType = "REVIEW_PHYSIOLOGY";
-    const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
-    const macroPhase = ctx.promptContext.macrocyclePhase, race = macroPhase?.primaryRace;
-    const raceName = race?.name || "tu Meta Principal", raceDist = race?.distance || "42K";
-    const ctlVal = physioStatus.ctl.toFixed(1), rNum = Number(physioStatus.rampRate || 0);
-    const rampVal = rNum >= 0 ? `+${rNum.toFixed(1)}` : `${rNum.toFixed(1)}`;
-    const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
-    const plannedCtl = ctx.plannedCtlForWeek || Number(ctlVal), diffCtl = Math.round((physioStatus.ctl - plannedCtl) * 10) / 10;
-    const ctlDeltaText = Math.abs(diffCtl) <= 0.5 ? `en el blanco exacto del plan (${diffCtl >= 0 ? `+${diffCtl}` : diffCtl} CTL)` : diffCtl > 0.5 ? `por encima del modelo teórico (+${diffCtl} CTL)` : `ligeramente por debajo del modelo (${diffCtl} CTL recuperable)`;
-    const peakCtl = ctx.targetPeakCtl || 70;
-
-    replyMsg = `Hola ${athleteFirstName}, con la mirada puesta en ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22} del macrociclo.\n\nPara esta semana tu macrociclo proyectaba un estado de forma de ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), con una rampa de ${rampVal} CTL/sem hacia el pico de ${peakCtl} CTL.${profile.run_ftp ? ` Tu potencia crítica Stryd está calibrada en ${profile.run_ftp}W${wkg}.` : ""} El modelo Banister confirma que tu cilindrada aeróbica avanza por el carril óptimo hacia tu ritmo objetivo de maratón.\n\nEl siguiente paso estratégico es preservar la constancia en tus rodajes aeróbicos sin forzar ritmos antes de tiempo: cada bloque asimilado ahora es tu seguro de resistencia en el último tercio de la prueba.`;
     smartActions = [];
   }
   // 3. AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD

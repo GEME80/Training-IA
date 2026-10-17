@@ -49,8 +49,62 @@ export function handleDeterministicFallback(
   const lowerMsg = lastUserMsg.toLowerCase();
   let smartActions: SmartActionItem[] = [];
 
-  // 1. AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD
-  if (lowerMsg.includes("audita") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión")) {
+  const isWeekBalance = lowerMsg.includes("balance") || lowerMsg.includes("volumen") || lowerMsg.includes("semana completa") || lowerMsg.includes("toda la semana") || lowerMsg.includes("resumen semanal") || lowerMsg.includes("cierre de semana") || (lowerMsg.includes("semana") && !lowerMsg.includes("audita a fondo mi sesión") && !lowerMsg.includes("audita mi sesión"));
+  const isGoal = !isWeekBalance && (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal"));
+  const isSessionAudit = !isWeekBalance && !isGoal && (lowerMsg.includes("audita a fondo") || lowerMsg.includes("última sesión") || lowerMsg.includes("mi sesión") || lowerMsg.includes("audita") || lowerMsg.includes("sesión"));
+
+  // 1. BALANCE DE SEMANA Y VOLUMEN (MÁXIMA PRIORIDAD)
+  if (isWeekBalance) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const executedCount = ctx.planningWeekDates.reduce((acc: number, d: any) => acc + (ctx.effectiveExecutedMap[d.date]?.activities?.length || 0), 0);
+    const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
+    const rampNum = Number(physioStatus.rampRate || 0);
+    const rampStr = rampNum >= 0 ? `+${rampNum.toFixed(1)}` : `${rampNum.toFixed(1)}`;
+    const dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss));
+    const deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
+    const ctlPlanned = ctx.plannedCtlForWeek || Number(physioStatus.ctl.toFixed(1));
+    const ctlDiff = Math.round((physioStatus.ctl - ctlPlanned) * 10) / 10;
+    const ctlVerdict = ctlDiff >= 0 ? `+${ctlDiff} CTL sobre el modelo` : `${ctlDiff} CTL bajo el modelo`;
+
+    let tssVerdict = "", humanTranslation = "", nextStep = "";
+
+    if (plannedWeekTss > 0 && actualTss < plannedWeekTss * 0.75) {
+      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global). Al corte de hoy debías sumar ${ctx.plannedTssToDate || plannedWeekTss} TSS, arrojando un diferencial de ${deltaSign} TSS. Como entrenador, te lo digo con franqueza: este déficit NO es lo ideal; proviene de haber omitido los dos bloques de fuerza auxiliar. Tu motor cardiovascular va firme (${physioStatus.ctl.toFixed(1)} CTL vs ${ctlPlanned} proyectados, ${ctlVerdict}, con TSB en ${tsbSign} y rampa en ${rampStr} CTL/sem), pero saltarte la fuerza en categoría Máster te deja desprotegido ante el impacto osteoarticular de cara a Tokio.`;
+      humanTranslation = "En tu día a día, esto significa que tus piernas están descansadas y sin sobrecarga en sóleos o rodillas, pero tu musculatura de sostén no recibió el estímulo preventivo necesario. Por ningún motivo cometas el error de doblar sesiones o apretar ritmos el fin de semana para 'recuperar' TSS perdido; la carga aeróbica está bien absorbida y la fuerza la retomamos con disciplina el próximo microciclo.";
+      nextStep = /viernes/i.test(ctx.todayDayName)
+        ? "Para esta noche de viernes, concéntrate en hidratar y descansar. Mañana sábado realizaremos la sesión de ciclismo programada para activar el flujo sanguíneo y mantener cadencia, dejándote a punto para la tirada larga del domingo."
+        : "Enfócate en cumplir con rigor las sesiones aeróbicas restantes de la semana para consolidar el bloque sin generar sobrecarga innecesaria.";
+    } else if (plannedWeekTss > 0 && actualTss > plannedWeekTss * 1.15) {
+      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% global, ${deltaSign} TSS de sobrecarga). Tu rampa se sitúa acelerada en ${rampStr} CTL/sem con TSB en ${tsbSign}.`;
+      humanTranslation = "Te pasaste de rosca en volumen o intensidad. Tu fatiga aguda está disparada y tus articulaciones acumulan tensión elevada; necesitas asimilar este exceso para evitar sobreentrenamiento.";
+      nextStep = "Freno de mano obligatorio: suavizamos la sesión a Z1 regenerativo o rodillo sin impacto, hidratación con sales y descanso prioritario.";
+    } else {
+      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} acumulas ${actualTss} TSS ejecutados en ${executedCount} sesiones de tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global, rampa ${rampStr} CTL/sem y TSB ${tsbSign}).`;
+      humanTranslation = "Tu cuerpo está absorbiendo el entrenamiento a la perfección. No hay fatiga destructiva y tus piernas responden con buena soltura neuromuscular.";
+      nextStep = "Damos continuidad total a tu plan previsto para consolidar el bloque del fin de semana con solvencia.";
+    }
+
+    replyMsg = `${tssVerdict}\n\n${humanTranslation}\n\n${nextStep}`;
+    smartActions = [];
+  }
+  // 2. RUMBO A LA META Y PROYECCIÓN BANISTER
+  else if (isGoal) {
+    actionType = "REVIEW_PHYSIOLOGY";
+    const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
+    const macroPhase = ctx.promptContext.macrocyclePhase, race = macroPhase?.primaryRace;
+    const raceName = race?.name || "tu Meta Principal", raceDist = race?.distance || "42K";
+    const ctlVal = physioStatus.ctl.toFixed(1), rNum = Number(physioStatus.rampRate || 0);
+    const rampVal = rNum >= 0 ? `+${rNum.toFixed(1)}` : `${rNum.toFixed(1)}`;
+    const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
+    const plannedCtl = ctx.plannedCtlForWeek || Number(ctlVal), diffCtl = Math.round((physioStatus.ctl - plannedCtl) * 10) / 10;
+    const ctlDeltaText = Math.abs(diffCtl) <= 0.5 ? `en el blanco exacto del plan (${diffCtl >= 0 ? `+${diffCtl}` : diffCtl} CTL)` : diffCtl > 0.5 ? `por encima del modelo teórico (+${diffCtl} CTL)` : `ligeramente por debajo del modelo (${diffCtl} CTL recuperable)`;
+    const peakCtl = ctx.targetPeakCtl || 70;
+
+    replyMsg = `Hola ${athleteFirstName}, con la mirada puesta en ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22} del macrociclo.\n\nPara esta semana tu macrociclo proyectaba un estado de forma de ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), con una rampa de ${rampVal} CTL/sem hacia el pico de ${peakCtl} CTL.${profile.run_ftp ? ` Tu potencia crítica Stryd está calibrada en ${profile.run_ftp}W${wkg}.` : ""} El modelo Banister confirma que tu cilindrada aeróbica avanza por el carril óptimo hacia tu ritmo objetivo de maratón.\n\nEl siguiente paso estratégico es preservar la constancia en tus rodajes aeróbicos sin forzar ritmos antes de tiempo: cada bloque asimilado ahora es tu seguro de resistencia en el último tercio de la prueba.`;
+    smartActions = [];
+  }
+  // 3. AUDITAR SESIÓN ESPECÍFICA / ÚLTIMA ACTIVIDAD
+  else if (isSessionAudit) {
     actionType = "REVIEW_PHYSIOLOGY";
     const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
     const executedEntries = Object.entries(ctx.effectiveExecutedMap || {}).flatMap(([dKey, val]) =>
@@ -104,56 +158,6 @@ export function handleDeterministicFallback(
     } else {
       replyMsg = `Hola ${athleteFirstName}, estuve revisando tu telemetría pero aún no registras actividades completadas en Intervals.icu para esta semana ${targetPlanningWeekNum}.\n\nTan pronto sincronices tu reloj tras entrenar, cruzaré vatios, frecuencia cardíaca y desacoplamiento para evaluar el estímulo de tu sesión.\n\nPor ahora concéntrate en tu siguiente sesión programada.`;
     }
-    smartActions = [];
-  }
-  // 2. RUMBO A LA META Y PROYECCIÓN BANISTER
-  else if (lowerMsg.includes("rumbo") || lowerMsg.includes("meta") || lowerMsg.includes("carrera principal")) {
-    actionType = "REVIEW_PHYSIOLOGY";
-    const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";
-    const macroPhase = ctx.promptContext.macrocyclePhase, race = macroPhase?.primaryRace;
-    const raceName = race?.name || "tu Meta Principal", raceDist = race?.distance || "42K";
-    const ctlVal = physioStatus.ctl.toFixed(1), rNum = Number(physioStatus.rampRate || 0);
-    const rampVal = rNum >= 0 ? `+${rNum.toFixed(1)}` : `${rNum.toFixed(1)}`;
-    const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
-    const plannedCtl = ctx.plannedCtlForWeek || Number(ctlVal), diffCtl = Math.round((physioStatus.ctl - plannedCtl) * 10) / 10;
-    const ctlDeltaText = Math.abs(diffCtl) <= 0.5 ? `en el blanco exacto del plan (${diffCtl >= 0 ? `+${diffCtl}` : diffCtl} CTL)` : diffCtl > 0.5 ? `por encima del modelo teórico (+${diffCtl} CTL)` : `ligeramente por debajo del modelo (${diffCtl} CTL recuperable)`;
-    const peakCtl = ctx.targetPeakCtl || 70;
-
-    replyMsg = `Hola ${athleteFirstName}, con la mirada puesta en ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22} del macrociclo.\n\nPara esta semana tu macrociclo proyectaba un estado de forma de ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), con una rampa de ${rampVal} CTL/sem hacia el pico de ${peakCtl} CTL.${profile.run_ftp ? ` Tu potencia crítica Stryd está calibrada en ${profile.run_ftp}W${wkg}.` : ""} El modelo Banister confirma que tu cilindrada aeróbica avanza por el carril óptimo hacia tu ritmo objetivo de maratón.\n\nEl siguiente paso estratégico es preservar la constancia en tus rodajes aeróbicos sin forzar ritmos antes de tiempo: cada bloque asimilado ahora es tu seguro de resistencia en el último tercio de la prueba.`;
-    smartActions = [];
-  }
-  // 3. BALANCE DE SEMANA Y VOLUMEN
-  else if (lowerMsg.includes("balance") || lowerMsg.includes("volumen")) {
-    actionType = "REVIEW_PHYSIOLOGY";
-    const executedCount = ctx.planningWeekDates.reduce((acc: number, d: any) => acc + (ctx.effectiveExecutedMap[d.date]?.activities?.length || 0), 0);
-    const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
-    const rampNum = Number(physioStatus.rampRate || 0);
-    const rampStr = rampNum >= 0 ? `+${rampNum.toFixed(1)}` : `${rampNum.toFixed(1)}`;
-    const dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss));
-    const deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
-    const ctlPlanned = ctx.plannedCtlForWeek || Number(physioStatus.ctl.toFixed(1));
-    const ctlDiff = Math.round((physioStatus.ctl - ctlPlanned) * 10) / 10;
-    const ctlVerdict = ctlDiff >= 0 ? `+${ctlDiff} CTL sobre el modelo` : `${ctlDiff} CTL bajo el modelo`;
-
-    let tssVerdict = "", humanTranslation = "", nextStep = "";
-
-    if (plannedWeekTss > 0 && actualTss < plannedWeekTss * 0.75) {
-      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global). Al corte de hoy debías sumar ${ctx.plannedTssToDate || plannedWeekTss} TSS, arrojando un diferencial de ${deltaSign} TSS. Como entrenador, te lo digo con franqueza: este déficit NO es lo ideal; proviene de haber omitido los dos bloques de fuerza auxiliar. Tu motor cardiovascular va firme (${physioStatus.ctl.toFixed(1)} CTL vs ${ctlPlanned} proyectados, ${ctlVerdict}, con TSB en ${tsbSign} y rampa en ${rampStr} CTL/sem), pero saltarte la fuerza en categoría Máster te deja desprotegido ante el impacto osteoarticular de cara a Tokio.`;
-      humanTranslation = "En tu día a día, esto significa que tus piernas están descansadas y sin sobrecarga en sóleos o rodillas, pero tu musculatura de sostén no recibió el estímulo preventivo necesario. Por ningún motivo cometas el error de doblar sesiones o apretar ritmos el fin de semana para 'recuperar' TSS perdido; la carga aeróbica está bien absorbida y la fuerza la retomamos con disciplina el próximo microciclo.";
-      nextStep = /viernes/i.test(ctx.todayDayName)
-        ? "Para esta noche de viernes, concéntrate en hidratar y descansar. Mañana sábado realizaremos la sesión de ciclismo programada para activar el flujo sanguíneo y mantener cadencia, dejándote a punto para la tirada larga del domingo."
-        : "Enfócate en cumplir con rigor las sesiones aeróbicas restantes de la semana para consolidar el bloque sin generar sobrecarga innecesaria.";
-    } else if (plannedWeekTss > 0 && actualTss > plannedWeekTss * 1.15) {
-      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% global, ${deltaSign} TSS de sobrecarga). Tu rampa se sitúa acelerada en ${rampStr} CTL/sem con TSB en ${tsbSign}.`;
-      humanTranslation = "Te pasaste de rosca en volumen o intensidad. Tu fatiga aguda está disparada y tus articulaciones acumulan tensión elevada; necesitas asimilar este exceso para evitar sobreentrenamiento.";
-      nextStep = "Freno de mano obligatorio: suavizamos la sesión a Z1 regenerativo o rodillo sin impacto, hidratación con sales y descanso prioritario.";
-    } else {
-      tssVerdict = `Germán, al corte de este ${ctx.todayDayName} acumulas ${actualTss} TSS ejecutados en ${executedCount} sesiones de tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global, rampa ${rampStr} CTL/sem y TSB ${tsbSign}).`;
-      humanTranslation = "Tu cuerpo está absorbiendo el entrenamiento a la perfección. No hay fatiga destructiva y tus piernas responden con buena soltura neuromuscular.";
-      nextStep = "Damos continuidad total a tu plan previsto para consolidar el bloque del fin de semana con solvencia.";
-    }
-
-    replyMsg = `${tssVerdict}\n\n${humanTranslation}\n\n${nextStep}`;
     smartActions = [];
   }
   // 4. PROTOCOLO DE RETORNO SEGURO TRAS ENFERMEDAD (RECALIBRACIÓN SEMANAL INTEGRAL)

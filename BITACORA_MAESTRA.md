@@ -9516,5 +9516,37 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Alcance e Integridad Deportiva):** Erradicado el bug de 355 sesiones; balance de semana y auditorías alineados con rigor de Head Coach incluso en modo contingencia/fallback ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 161 ✅.
 
+---
+
+## 162. Erradicación del Secuestro de "Balance de Semana" por Detección de Sesión y Auditoría Fisiológica Exigente
+
+### 162.1. Diagnóstico y Causa Raíz
+1. **El Síntoma:**
+   - A las 09:36 p.m. y 09:37 p.m., al pulsar la tarjeta de "Balance de Semana", el Head Coach respondió auditando una sesión individual: *"Germán, revisé al detalle tu sesión de hoy, 'Bogotá, D.C. Carrera' [Carrera a pie]..."*.
+2. **Causa Raíz Identificada:**
+   - En `HeadCoachTacticalConsole.tsx`, el botón de Balance de Semana despacha:
+     `"Germán aquí. Dame el balance de volumen y carga de esta semana: cuántas sesiones llevo ejecutadas vs planificadas..."`.
+   - En `chatInference.ts`, la variable `isSessionAudit` contenía la guarda `pLower.includes("sesion")` y se evaluaba **antes** de `isWeekBalance`.
+   - Como la palabra `"sesiones"` contiene `"sesion"`, `isSessionAudit` evaluaba a `true`, secuestrando el flujo hacia `MODO AUDITORÍA DE SESIÓN INDIVIDUAL` y ordenando a Gemini analizar la última actividad aislada en lugar del balance semanal.
+   - En `deterministicFallback.ts`, la rama de auditoría de sesión también precedía al bloque de balance de semana.
+
+### 162.2. Implementaciones Realizadas
+1. **Jerarquía Exclusiva y Prioridad Absoluta para Balance de Semana (`chatInference.ts` - 339 LOC):**
+   - `isWeekBalance` se evalúa en primer lugar capturando cualquier indicio de balance, volumen, semana completa, o `body.isWeekKickoffAudit`.
+   - `isSessionAudit` queda estrictamente condicionada a `!isWeekBalance && !isGoalProgress`, erradicando cualquier falso positivo derivado de palabras como "sesiones".
+   - `MODO BALANCE DE SEMANA` enriquecido con directivas exhaustivas de auditor exigente: desglose de los 180 TSS ejecutados vs 263 al corte de viernes (-83 TSS), 49% global de 366 TSS, comparativa biológica (41.2 CTL vs 39.5, TSB -0.3, HRV 54 ms, deriva aeróbica) y prohibición de doblar sesiones el fin de semana.
+2. **Reordenamiento Defensivo en Fallback Determinístico (`deterministicFallback.ts` - 343 LOC):**
+   - El bloque de Balance de Semana y Volumen pasa a ser la primera condición evaluada, garantizando inmunidad total ante fallos de contingencia.
+
+### 162.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `chatInference.ts`: 339 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 343 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Enrutamiento de intención 100% blindado; balance de semana entregado con criterio estricto de auditor y entrenador de resistencia ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 162 ✅.
+
+
 
 

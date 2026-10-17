@@ -47,9 +47,9 @@ export async function executeGeminiInference(
   const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
 1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, firme y empático):
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos:
-   - Párrafo 1 (Diagnóstico Numérico con TSS Delta): Indica valores exactos: TSS ejecutado vs planeado (ej. 300 vs 400 TSS), % cumplimiento, rampa CTL, TSB, potencia Stryd/FTP y pulso vs LTHR. Dictamina claramente si hay déficit de volumen (-TSS), sobrecarga (+TSS) o si clavó el plan.
-   - Párrafo 2 (Traducción al Día a Día: ¿Estoy bien o estoy mal?): Declara sin rodeos el veredicto ("estás bien y asimilando con soltura", "te quedaste corto", o "te pasaste de rosca"). Tradúcelo a sensaciones cotidianas (pesadez de piernas al subir escaleras, soltura en sóleo/isquios, demanda de descanso y asimilación). En tests de campo, evalúa si "pudo haber dado más / corrido más rápido" y si está en sus potencias target.
-   - Párrafo 3 (El Siguiente Paso Inmediato & Precisión Temporal): Qué hacer hoy o cómo encarar la siguiente sesión respetando estrictamente el día local (${ctx.todayDayName}); si es de noche, pauta para "mañana sábado", prohibido decir "hoy sábado".
+   - Párrafo 1 (Diagnóstico Numérico con TSS Delta & Cumplimiento): TSS ejecutado vs planeado, % cumplimiento de sesión y semana, rampa CTL, TSB, vatios Stryd/FTP y pulso vs LTHR.
+   - Párrafo 2 (Traducción al Día a Día & Datos Avanzados del Workout): Veredicto claro ("estás asimilando con soltura", etc.). En auditoría de sesión: USA EL NOMBRE REAL DE LA SESIÓN (ej. "Fartlek", "Test Stryd") y disciplina explícita ([Carrera a pie] / [Ciclismo]), % cumplimiento, potencia normalizada (NP), pulso medio y desacople cardíaco. En tests, evalúa si pudo dar más.
+   - Párrafo 3 (El Siguiente Paso Inmediato & Coherencia Temporal): Qué hacer hoy o cómo encarar la siguiente sesión. Si hoy es ${ctx.todayDayName} por la noche, hoy es descanso/hidratación y la sesión siguiente es de "mañana sábado" (TERMINANTEMENTE PROHIBIDO escribir "hoy sábado").
    - En "Rumbo a mi meta": contrasta tu CTL actual (${ctx.physioStatus.ctl.toFixed(1)}) vs el CTL proyectado por el macrociclo (${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco), ritmo meta y pico Banister (${ctx.targetPeakCtl || 70} CTL).
 2. "quickReplies": [] (devolver array vacío para no generar botones residuales).
 3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario null.`;
@@ -110,11 +110,17 @@ export async function executeGeminiInference(
             const parsed = JSON.parse(cleanJson(text));
             if (parsed && typeof parsed === "object" && parsed.reply) {
               if (typeof parsed.reply === "string") {
-                parsed.reply = parsed.reply
+                let cleanRep = parsed.reply
                   .replace(/\[\s*(?:ESTADO DEL PROCESO|DIAGN[OÓ]STICO(?:\s*\/\s*VEREDICTO)?|TRADUCCI[OÓ]N HUMANA|ACCI[OÓ]N PRESCRIPTIVA)\s*\]:?\s*/gi, "")
                   .replace(/\*\*(?:Estado de la semana|Diagn[oó]stico|Traducci[oó]n humana|Pauta para hoy)\*\*:\s*/gi, "")
-                  .replace(/\n{3,}/g, "\n\n")
-                  .trim();
+                  .replace(/\n{3,}/g, "\n\n");
+                if (/viernes/i.test(ctx.todayDayName)) {
+                  cleanRep = cleanRep
+                    .replace(/(?:para\s+)?hoy\s+s[aá]bado/gi, "mañana sábado")
+                    .replace(/Para hoy sábado/gi, "Para mañana sábado")
+                    .replace(/Hoy sábado/gi, "Mañana sábado");
+                }
+                parsed.reply = cleanRep.trim();
               }
 
               const allUserText = (messages.map((m) => m.content || "").join(" ") + " " + (userPrompt || "")).toLowerCase();

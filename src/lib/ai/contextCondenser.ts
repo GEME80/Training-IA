@@ -11,8 +11,12 @@ export interface CompactActivity {
   tss: number;
   movingTimeMin: number;
   watts?: number;
+  weightedWatts?: number;
   heartrate?: number;
+  maxHeartrate?: number;
   distanceKm?: number;
+  paceStr?: string;
+  cardiacDecoupling?: number;
   rpe?: number;
   feel?: string;
 }
@@ -56,8 +60,12 @@ export function buildCondensedExecutedMap(
             tss: Math.round(Number(a.tss || 0)),
             movingTimeMin: Math.round(Number(a.movingTimeMin || 0)),
             watts: typeof a.watts === "number" ? Math.round(a.watts) : undefined,
+            weightedWatts: typeof a.weightedWatts === "number" ? Math.round(a.weightedWatts) : undefined,
             heartrate: typeof a.heartrate === "number" ? Math.round(a.heartrate) : undefined,
+            maxHeartrate: typeof a.maxHeartrate === "number" ? Math.round(a.maxHeartrate) : undefined,
             distanceKm: typeof a.distanceKm === "number" ? a.distanceKm : undefined,
+            paceStr: a.paceStr,
+            cardiacDecoupling: typeof a.cardiacDecoupling === "number" ? Number(a.cardiacDecoupling.toFixed(1)) : undefined,
             rpe: typeof a.rpe === "number" ? a.rpe : (typeof a.icu_rpe === "number" ? a.icu_rpe : undefined),
             feel: resolveFeelLabel(a.feel),
           }))
@@ -77,7 +85,11 @@ export function buildCondensedExecutedMap(
     const tss = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
     const movingTimeMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
     const watts = act.icu_weighted_avg_watts ?? act.icu_average_watts ?? act.weighted_average_watts ?? act.average_watts ?? act.device_watts;
+    const weightedWatts = act.icu_weighted_avg_watts ?? act.weighted_average_watts;
     const hr = act.average_heartrate;
+    const maxHr = act.max_heartrate;
+    const rawDecoupling = act.decoupling ?? act.icu_decoupling ?? act.cardiacDecoupling;
+    const decoupling = typeof rawDecoupling === "number" ? Number(rawDecoupling.toFixed(1)) : undefined;
     const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
     const rawRpe = act.icu_rpe ?? act.perceived_exertion ?? act.rpe;
     const rpe = typeof rawRpe === "number" ? rawRpe : undefined;
@@ -97,7 +109,10 @@ export function buildCondensedExecutedMap(
         tss,
         movingTimeMin,
         watts: typeof watts === "number" ? Math.round(watts) : undefined,
+        weightedWatts: typeof weightedWatts === "number" ? Math.round(weightedWatts) : undefined,
         heartrate: typeof hr === "number" ? Math.round(hr) : undefined,
+        maxHeartrate: typeof maxHr === "number" && maxHr > 35 ? Math.round(maxHr) : undefined,
+        cardiacDecoupling: decoupling,
         distanceKm,
         rpe,
         feel,
@@ -113,12 +128,17 @@ export function buildCondensedExecutedMap(
  */
 export function formatCompactActivitySummary(a: CompactActivity): string {
   const parts: string[] = [`${a.movingTimeMin}m`, `${a.tss} TSS`];
-  if (a.watts) parts.push(`${a.watts}W`);
-  if (a.heartrate) parts.push(`${a.heartrate} bpm`);
+  if (a.watts) parts.push(`${a.watts}W avg`);
+  if (a.weightedWatts && a.weightedWatts !== a.watts) parts.push(`${a.weightedWatts}W NP`);
+  if (a.heartrate) parts.push(`FC ${a.heartrate} bpm avg`);
+  if (a.maxHeartrate) parts.push(`FC máx ${a.maxHeartrate} bpm`);
+  if (a.cardiacDecoupling !== undefined) parts.push(`Desacople: ${a.cardiacDecoupling > 0 ? `+${a.cardiacDecoupling}%` : `${a.cardiacDecoupling}%`}`);
+  if (a.paceStr) parts.push(a.paceStr);
   if (a.distanceKm) parts.push(`${a.distanceKm} km`);
   if (a.rpe) parts.push(`RPE ${a.rpe}/10`);
   if (a.feel) parts.push(`Sensación: ${a.feel}`);
-  return `"${a.name || a.type}" (${parts.join(", ")})`;
+  const discipline = /run|carrera/i.test(a.type) ? "Carrera a pie" : /ride|ciclismo|bike/i.test(a.type) ? "Ciclismo" : a.type;
+  return `"${a.name || a.type}" [${discipline}] (${parts.join(" • ")})`;
 }
 
 /**
@@ -128,12 +148,15 @@ export function formatActivitiesTssBreakdown(map: Record<string, DayActivitySumm
   const lines = Object.entries(map).flatMap(([dKey, val]) =>
     val.activities.map((a) => {
       const extra: string[] = [];
-      if (a.watts) extra.push(`@ ${a.watts}W`);
-      if (a.heartrate) extra.push(`FC ${a.heartrate} bpm`);
+      if (a.watts) extra.push(`@ ${a.watts}W avg${a.weightedWatts && a.weightedWatts !== a.watts ? ` (${a.weightedWatts}W NP)` : ""}`);
+      if (a.heartrate) extra.push(`FC ${a.heartrate} bpm${a.maxHeartrate ? ` (máx ${a.maxHeartrate})` : ""}`);
+      if (a.cardiacDecoupling !== undefined) extra.push(`Desacople: ${a.cardiacDecoupling > 0 ? `+${a.cardiacDecoupling}%` : `${a.cardiacDecoupling}%`}`);
+      if (a.paceStr) extra.push(a.paceStr);
       if (a.rpe) extra.push(`RPE ${a.rpe}/10`);
       if (a.feel) extra.push(`Sensación: ${a.feel}`);
       const extraStr = extra.length > 0 ? ` (${extra.join(" • ")})` : "";
-      return `  - [${dKey}] "${a.name || a.type}" (${a.type}): ${a.tss} TSS en ${a.movingTimeMin}m${extraStr}`;
+      const disc = /run|carrera/i.test(a.type) ? "Carrera a pie" : /ride|ciclismo|bike/i.test(a.type) ? "Ciclismo" : a.type;
+      return `  - [${dKey}] "${a.name || a.type}" [${disc}]: ${a.tss} TSS en ${a.movingTimeMin}m${extraStr}`;
     })
   );
   return lines.length > 0 ? lines.join("\n") : "  (No hay actividades registradas en el periodo)";

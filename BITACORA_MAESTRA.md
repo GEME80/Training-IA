@@ -9306,3 +9306,42 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Precisión temporal impecable (cero desfasaje UTC) y profundidad métrica en la evolución del macrociclo ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 156 ✅.
+
+## 157. Entrada de Bitácora: Blindaje Temporal Anti-Desliz ("Hoy Sábado"), Auditoría de Sesión con Nombre Real del Workout & Métricas Avanzadas (NP, Desacoplamiento Pa:Hr y FC Máx) (PULSE Live Coach v6.5)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 19:30 COT.
+- **Directiva del Atleta:**
+  1. *Erradicación Definitiva de "Para hoy sábado" / "Hoy sábado" un Viernes por la Noche:*
+     - A las 07:21-07:22 p.m. del viernes, el Head Coach seguía formulando en el tercer párrafo: *"Para hoy sábado, ejecuta la soltura en bicicleta..."*.
+     - Se requirió blindar infaliblemente el pipeline con un guardián de sanitización regex post-procesador que intercepte y transforme activamente cualquier expresión de "hoy [día siguiente]" en "mañana [día siguiente]" o "el resto de hoy [día actual]".
+  2. *Auditoría de Sesión con Nombre Real y Disciplina Explícita:*
+     - Erradicar etiquetas genéricas que causen ambigüedad (ej. llamar "rodaje del viernes" a una sesión que fue un Fartlek, lo que se confunde con ciclismo).
+     - Identificar el entrenamiento por su nombre real exacto (ej. `"Fartlek 8x 2m Z4 / 1m Z2"`) y su disciplina deportiva explícita (`[Carrera a pie]` vs `[Ciclismo]`).
+     - Calcular el porcentaje de cumplimiento real de la sesión (% Compliance de TSS vs previsto, delta de TSS).
+  3. *Inyección de Telemetría Avanzada (Potencia Normalizada NP, FC Media/Máx y Desacople Cardíaco):*
+     - Incorporar en el condensador de contexto y en la respuesta del coach: Potencia Normalizada (NP) junto a los vatios promedio (`252W avg (268W NP)`), FC media y máxima frente a LTHR (`FC 114 bpm avg, máx 138 bpm`) y Desacoplamiento Cardíaco Aeróbico (`Pa:Hr / Pw:Hr`, ej. `+1.8%`).
+     - Dictaminar con precisión si el atleta "pudo dar más / correr más rápido con margen en el tanque" o si estuvo en sus potencias target.
+
+### 157.1. Implementaciones y Mejoras Realizadas
+1. **Condensador de Contexto Enriquecido (`contextCondenser.ts` - 197 LOC):**
+   - Interfaz `CompactActivity` ampliada con `weightedWatts` (Potencia Normalizada / NP), `maxHeartrate`, `cardiacDecoupling` (Pa:Hr) y `paceStr`.
+   - `buildCondensedExecutedMap` ahora captura y propaga fielmente `weightedWatts`, `max_heartrate` y `cardiacDecoupling` tanto desde `dailyExecutedActivities` como desde `pastActivities`.
+   - Formateadores `formatCompactActivitySummary` y `formatActivitiesTssBreakdown` actualizados para volcar al LLM el nombre real exacto de la actividad, disciplina explícita (`[Carrera a pie]`), vatios promedio y NP, FC media y máx, desacoplamiento cardíaco y ritmo.
+2. **Guardián Post-Procesador Temporal y Reglas de Inferencia (`chatInference.ts` - 340 LOC):**
+   - `smartBrevityInstruction` actualizado con reglas estrictas de identificación de workout, disciplina explícita, NP, desacoplamiento y prohibición de mezclar días.
+   - Incorporado filtro regex de sanitización temporal antes de retornar la respuesta JSON: si `ctx.todayDayName === "Viernes"`, cualquier desliz del LLM (`"Para hoy sábado"`, `"Hoy sábado"`, etc.) es automáticamente reemplazado por `"Mañana sábado"` o `"Para mañana sábado"`.
+3. **Motor Algorítmico Determinístico Refinado (`deterministicFallback.ts` - 338 LOC):**
+   - La rama de auditoría de sesión ahora computa dinámicamente la disciplina (`[Carrera a pie]` vs `[Ciclismo]`), vatios avg y NP, FC media y máx, desacoplamiento cardíaco, cumplimiento de sesión (% y delta TSS), dictamen de reserva en el tanque vs potencias target, y pauta temporal blindada para viernes noche.
+4. **Sincronización SSOT en Prompts (`prompts.ts` - 323 LOC & `defaultPrompts.ts` - 149 LOC):**
+   - Regla 9 de comunicación humana y Regla 12 de auditoría actualizadas para instruir el uso innegociable del nombre real del workout, disciplina explícita entre corchetes, vatios promedio y NP, FC media y máx, desacoplamiento cardíaco y veredicto de margen de esfuerzo.
+
+### 157.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `contextCondenser.ts`: 197 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 340 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 338 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 149 LOC ($\le 348$) ✅
+  * `prompts.ts`: 323 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas estáticas/dinámicas generadas sin advertencias) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Auditorías con nombres reales de workout, disciplina explícita, telemetría avanzada (NP, desacople, FC máx) y blindaje temporal 100% libre de "hoy sábado" un viernes ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 157 ✅.

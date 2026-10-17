@@ -114,7 +114,7 @@ export function isSameRace(r1: Partial<TargetRace>, r2: Partial<TargetRace>): bo
   return false;
 }
 
-function inferRaceDistance(name: string, type?: string): TargetRace["distance"] {
+function inferRaceDistance(name: string, type?: string): TargetRace["distance"] | undefined {
   const n = (name + " " + (type || "")).toLowerCase();
   if (n.includes("70.3") || n.includes("medio iron") || n.includes("half iron")) return "triathlon_703";
   if (n.includes("140.6") || n.includes("ironman") || n.includes("full iron")) return "triathlon_1406" as any;
@@ -125,7 +125,7 @@ function inferRaceDistance(name: string, type?: string): TargetRace["distance"] 
   if (n.includes("5k") || n.includes("cinco k")) return "5k";
   if (n.includes("ultra") || n.includes("trail") || n.includes("montaña")) return "ultra" as any;
   if (n.includes("marat") || n.includes("42k") || n.includes("marathon") || n.includes("tokio") || n.includes("valencia") || n.includes("boston") || n.includes("berlin") || n.includes("chicago")) return "42k";
-  return "10k";
+  return undefined;
 }
 
 /**
@@ -182,23 +182,27 @@ export function mergeTargetRacesList(
     if (isWorkoutSession(evt.name, evt.category, evt.type)) return;
 
     const cleanName = evt.name.replace(/^\[(?:PULSE AI|SGEA)\]\s*/i, "").trim();
+    const hasRaceKeyword = /\b(marat[oó]n|media\s*marat[oó]n|half\s*marathon|gran\s*fondo|giro\s*de\s*rigo|ironman|70\.3|140\.6|triatl[oó]n|triathlon|duatl[oó]n|ultra\s*trail|ultramarat[oó]n|carrera|race|10k|21k|42k|5k)\b/i.test(cleanName);
     const isRaceEvent =
       evt.category === "RACE" ||
-      evt.category === "TARGET" ||
       (evt.type as string) === "Race" ||
-      /\b(marat[oó]n|media\s*marat[oó]n|half\s*marathon|gran\s*fondo|giro\s*de\s*rigo|ironman|70\.3|140\.6|triatl[oó]n|triathlon|duatl[oó]n|ultra\s*trail|ultramarat[oó]n)\b/i.test(cleanName);
+      (evt.category === "TARGET" && hasRaceKeyword) ||
+      hasRaceKeyword;
 
     if (isRaceEvent) {
-      const dateStr = evt.start_date_local.split("T")[0];
-      const key = `race_evt_${dateStr}_${cleanName.toLowerCase().replace(/\s+/g, "_")}`;
-      addOrUpdateRace({
-        id: key,
-        name: cleanName,
-        date: dateStr,
-        distance: inferRaceDistance(cleanName, evt.type),
-        priority: "B",
-        goalTarget: "Pico de forma óptimo",
-      });
+      const dist = inferRaceDistance(cleanName, evt.type);
+      if (dist) {
+        const dateStr = evt.start_date_local.split("T")[0];
+        const key = `race_evt_${dateStr}_${cleanName.toLowerCase().replace(/\s+/g, "_")}`;
+        addOrUpdateRace({
+          id: key,
+          name: cleanName,
+          date: dateStr,
+          distance: dist,
+          priority: "B",
+          goalTarget: "Pico de forma óptimo",
+        });
+      }
     }
   });
 

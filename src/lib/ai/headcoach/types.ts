@@ -183,5 +183,12 @@ export interface ResolvedChatContext {
   targetPeakCtl?: number;
   plannedTssToDate?: number;
   toDateTssDelta?: number;
+  hasCycling: boolean;
+  hasRunning: boolean;
+  hasSwimming: boolean;
+  hasStrength: boolean;
+  isCompetitiveRace: boolean;
+  cycleGoalTitle: string;
+  disciplinesSummary: string;
 }
 

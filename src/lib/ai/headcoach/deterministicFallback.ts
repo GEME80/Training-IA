@@ -18,16 +18,13 @@ export function handleDeterministicFallback(
     targetPlanningWeekNum, planningWeekDates, isDeload,
   } = ctx;
   const athleteFirstName = (profile.name && profile.name !== "Atleta" ? profile.name : "").split(" ")[0] || "Atleta";
-  const macroPhase = ctx.promptContext.macrocyclePhase;
-  const race = macroPhase?.primaryRace;
-  const raceName = race?.name || "tu Meta Principal";
-  const raceDist = race?.distance || "42K";
+  const macroPhase = ctx.promptContext.macrocyclePhase, race = macroPhase?.primaryRace, isCompetitive = ctx.isCompetitiveRace;
+  const raceName = isCompetitive ? (race?.name || "tu Meta Principal") : ctx.cycleGoalTitle;
+  const raceDist = isCompetitive ? (race?.distance || "tu carrera") : ctx.cycleGoalTitle;
 
   if (isInitialAudit) {
     const fallbackGeneratedPlan = generateInitialFallbackPlan(ctx, currentPlan);
     const fallbackPlannedTss = fallbackGeneratedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
-    const masterLabel = profile.age && profile.age >= 40 ? "Categoría Máster" : "Categoría Senior";
-    const wkgRun = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
     const isContinuityViable = hasExistingPlan && physioStatus.tsb >= -12 && compliancePct >= 80;
     const tsbStr = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
     const auditText = isContinuityViable
@@ -45,9 +42,7 @@ export function handleDeterministicFallback(
   }
 
   const lastUserMsg = messages[messages.length - 1]?.content || "";
-  let modifiedPlan = [...currentPlan];
-  let workoutDiff: WorkoutDiff | null = null;
-  let replyMsg = "";
+  let modifiedPlan = [...currentPlan], workoutDiff: WorkoutDiff | null = null, replyMsg = "";
   let actionType: "ADAPT_WORKOUT" | "CREATE_PLAN" | "REVIEW_PHYSIOLOGY" | "CONVERSATION" = "CONVERSATION";
   const lowerMsg = lastUserMsg.toLowerCase();
   let smartActions: SmartActionItem[] = [];
@@ -67,9 +62,20 @@ export function handleDeterministicFallback(
     const peakCtl = ctx.targetPeakCtl || 70, dDelta = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (actualTss - (ctx.plannedTssToDate || plannedWeekTss)), deltaSign = dDelta >= 0 ? `+${dDelta}` : `${dDelta}`;
     const totalW = macroPhase?.blueprint?.totalWeeks || 22, remW = Math.max(0, totalW - targetPlanningWeekNum);
 
-    const p1 = `Hola ${athleteFirstName}, analizando tu rumbo estratégico hacia ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${totalW} (Fase ${macroPhase?.phase || "Base 1"}, restan ${remW} semanas). Desde que inició el ciclo, tu condición física ha progresado con solidez: tu macrociclo proyectaba ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), avanzando en carril firme hacia el pico Banister de ${peakCtl} CTL con ${profile.run_ftp ? `${profile.run_ftp}W Stryd CP${wkg}` : "4.10 W/kg"} y ${profile.bike_ftp ? `${profile.bike_ftp}W FTP` : "2.76 W/kg"}.`;
-    const p2 = `En esta semana sumas ${actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || plannedWeekTss} TSS al corte (${deltaSign} TSS derivado de la fuerza omitida), con TSB en ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} y HRV en ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "54 ms"}. Tus rodajes a baja intensidad confirman excelente economía, pero la deriva aeróbica (> +5%) vista en carrera ratifica que para sostener tu ritmo objetivo de ${raceDist} sin decaer al final, debemos afianzar el fondo aeróbico y recuperar la fuerza.`;
-    const p3 = `El siguiente paso estratégico en ${macroPhase?.phase || "este bloque"} es acumular volumen limpio en Zona 2 sin forzar velocidad, proteger las articulaciones con la fuerza y consolidar las tiradas largas dominicales para entrar con cilindrada plena a las fases específicas.`;
+    const powerProfileStr = [
+      ctx.hasRunning ? (profile.run_ftp ? `${profile.run_ftp}W Stryd CP${wkg}` : "ritmo aeróbico calibrado") : null,
+      ctx.hasCycling ? (profile.bike_ftp ? `${profile.bike_ftp}W FTP` : "potencia en bici calibrada") : null,
+    ].filter(Boolean).join(" y ") || "potencia calibrada";
+
+    const p1 = isCompetitive
+      ? `Hola ${athleteFirstName}, analizando tu rumbo estratégico hacia ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${totalW} (Fase ${macroPhase?.phase || "Base 1"}, restan ${remW} semanas). Desde que inició el ciclo, tu condición física ha progresado con solidez: tu macrociclo proyectaba ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), avanzando en carril firme hacia el pico Banister de ${peakCtl} CTL con ${powerProfileStr}.`
+      : `Hola ${athleteFirstName}, analizando tu plan de ${raceName}, nos encontramos en la semana ${targetPlanningWeekNum} de ${totalW} (Fase ${macroPhase?.phase || "Base 1"}). Desde que inició el ciclo, tu condición física progresa con solidez: tu macrociclo proyectaba ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), consolidando tu base aeróbica y longevidad con ${powerProfileStr}.`;
+    const p2 = isCompetitive
+      ? `En esta semana sumas ${actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || plannedWeekTss} TSS al corte (${deltaSign} TSS derivado de la fuerza omitida), con TSB en ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} y HRV en ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "54 ms"}. Tus rodajes a baja intensidad confirman excelente economía, pero la deriva aeróbica (> +5%) vista en carrera ratifica que para sostener tu ritmo objetivo de ${raceDist} sin decaer al final, debemos afianzar el fondo aeróbico y recuperar la fuerza.`
+      : `En esta semana sumas ${actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || plannedWeekTss} TSS al corte (${deltaSign} TSS delta), con TSB en ${physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1)} y HRV en ${physioStatus.currentHrv ? `${physioStatus.currentHrv} ms` : "54 ms"}. Tus entrenamientos confirman excelente asimilación aeróbica, asegurando progreso constante y adaptaciones limpias.`;
+    const p3 = isCompetitive
+      ? `El siguiente paso estratégico en ${macroPhase?.phase || "este bloque"} es acumular volumen limpio en Zona 2 sin forzar velocidad, proteger las articulaciones con la fuerza y consolidar las tiradas largas dominicales para entrar con cilindrada plena a las fases específicas.`
+      : `El siguiente paso en ${macroPhase?.phase || "este bloque"} es sostener la constancia en Zona 2, priorizar la fuerza funcional para prevenir molestias articulares y afianzar tu bienestar continuo.`;
 
     replyMsg = `${p1}\n\n${p2}\n\n${p3}`;
     smartActions = [];
@@ -90,12 +96,12 @@ export function handleDeterministicFallback(
       tssVerdict = `${athleteFirstName}, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global). Al corte de hoy debías sumar ${ctx.plannedTssToDate || plannedWeekTss} TSS, arrojando un diferencial de ${deltaSign} TSS. Como entrenador, te lo digo con franqueza: este déficit NO es lo ideal; proviene de haber omitido los dos bloques de fuerza auxiliar. Tu motor cardiovascular va firme (${physioStatus.ctl.toFixed(1)} CTL vs ${ctlPlanned} proyectados, ${ctlVerdict}, con TSB en ${tsbSign} y rampa en ${rampStr} CTL/sem), pero saltarte la fuerza en ${profile.age && profile.age >= 40 ? "categoría Máster" : "tu categoría"} te deja desprotegido ante el impacto osteoarticular de cara a ${raceName}.`;
       humanTranslation = "En tu día a día, esto significa que tus piernas están descansadas y sin sobrecarga en sóleos o rodillas, pero tu musculatura de sostén no recibió el estímulo preventivo necesario. Por ningún motivo cometas el error de doblar sesiones o apretar ritmos el fin de semana para 'recuperar' TSS perdido; la carga aeróbica está bien absorbida y la fuerza la retomamos con disciplina el próximo microciclo.";
       nextStep = /viernes/i.test(ctx.todayDayName)
-        ? "Para esta noche de viernes, concéntrate en hidratar y descansar. Mañana sábado realizaremos la sesión de ciclismo programada para activar el flujo sanguíneo y mantener cadencia, dejándote a punto para la tirada larga del domingo."
+        ? "Para esta noche de viernes, concéntrate en hidratar y descansar. Mañana sábado cumpliremos la sesión programada para mantener continuidad y frescura de cara al cierre de semana."
         : "Enfócate en cumplir con rigor las sesiones aeróbicas restantes de la semana para consolidar el bloque sin generar sobrecarga innecesaria.";
     } else if (plannedWeekTss > 0 && actualTss > plannedWeekTss * 1.15) {
       tssVerdict = `${athleteFirstName}, al corte de este ${ctx.todayDayName} registras ${actualTss} TSS ejecutados en ${executedCount} sesiones frente a tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% global, ${deltaSign} TSS de sobrecarga). Tu rampa se sitúa acelerada en ${rampStr} CTL/sem con TSB en ${tsbSign}.`;
       humanTranslation = "Te pasaste de rosca en volumen o intensidad. Tu fatiga aguda está disparada y tus articulaciones acumulan tensión elevada; necesitas asimilar este exceso para evitar sobreentrenamiento.";
-      nextStep = "Freno de mano obligatorio: suavizamos la sesión a Z1 regenerativo o rodillo sin impacto, hidratación con sales y descanso prioritario.";
+      nextStep = "Freno de mano obligatorio: suavizamos la sesión a Z1 regenerativo o descanso activo sin impacto, hidratación con sales y descanso prioritario.";
     } else {
       tssVerdict = `${athleteFirstName}, al corte de este ${ctx.todayDayName} acumulas ${actualTss} TSS ejecutados en ${executedCount} sesiones de tu objetivo de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global, rampa ${rampStr} CTL/sem y TSB ${tsbSign}).`;
       humanTranslation = "Tu cuerpo está absorbiendo el entrenamiento a la perfección. No hay fatiga destructiva y tus piernas responden con buena soltura neuromuscular.";

@@ -9859,3 +9859,50 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores en 2.9s) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Cualquier atleta autenticado recibe análisis de carga, métricas y proyecciones basados exclusivamente en su propio nombre, datos biométricos, carrera objetivo y macrociclo activo ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 170 ✅.
+
+---
+
+## 171. SGEA v5.87: Contextualización Dinámica de Disciplinas Reales y Objetivos No Competitivos (Mantenimiento, Base y Salud) (2026-10-17)
+
+### 171.1. Diagnóstico de la Anomalía Fisiológica
+1. **Problema Detectado en Atletas en Mantenimiento / No Ciclistas (ej. Silvia Rey):**
+   - A atletas cuyo macrociclo está configurado en *"Mantenimiento y Construcción de Forma"* o *"Salud y Longevidad"* sin objetivos de carrera, el Head Coach IA les imputaba metas competitivas inexistentes de "10K" o ritmos de carrera.
+   - Adicionalmente, a atletas que **no practican ciclismo** (solo corren, nadan o hacen fuerza), el sistema les citaba vatios de Bike FTP (`profile.bike_ftp`), ratios de vatios/kg en bici e incluso les prescribía sesiones de ciclismo o rodillo los viernes/sábados.
+2. **Causa Raíz:**
+   - **Inferencia de Distancia en Calendario ([`seasonPlanHelpers.ts`](src/lib/physiology/seasonPlanHelpers.ts)):** `inferRaceDistance` finalizaba con un fallback incondicional `return "10k";`. Cualquier evento con categoría `TARGET` o no reconocido era convertido artificialmente en una carrera de 10K.
+   - **Resolución de Modelo Curado ([`macrocycleTemplateHelpers.ts`](src/lib/physiology/macrocycleTemplateHelpers.ts)):** En `resolveCuratedModelForWeek`, si el atleta no tenía distancia competitiva explícita, la cláusula final asignaba `else resolved = "10k";` en vez de un modelo de construcción de base o mantenimiento (`base_building`).
+   - **Inyección Incondicional de Bike FTP ([`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts) y [`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts)):** Los templates de telemetría imprimían siempre `${ctx.profile.bike_ftp}W FTP` o `"2.76 W/kg"`, y los viernes en `deterministicFallback.ts` se prescribía hardcodeadamente *"Mañana sábado realizaremos la sesión de ciclismo programada..."*.
+   - **Falta de Detección de Disciplinas Activas y Tipo de Macrociclo ([`chatContext.ts`](src/lib/ai/headcoach/chatContext.ts)):** No se contrastaba si el atleta realmente practicaba ciclismo (`hasCycling`), carrera (`hasRunning`), etc., ni si el macrociclo era competitivo vs. no competitivo (`isCompetitiveRace`).
+
+### 171.2. Arquitectura de Resolución y Adaptación Fisiológica
+1. **Detección Dinámica de Disciplinas y Meta Real ([`chatContext.ts`](src/lib/ai/headcoach/chatContext.ts) - 323 LOC):**
+   - Análisis de disponibilidad (`safeAvailability`) y plan actual (`currentPlan`) para calcular `hasCycling`, `hasRunning`, `hasSwimming`, `hasStrength` y generar `disciplinesSummary`.
+   - Evaluación de macrociclo: `isNonComp` identifica planes de mantenimiento, base aeróbica, salud y rehabilitación, calculando `isCompetitiveRace` y `cycleGoalTitle`.
+2. **Prompt del Sistema Especializado ([`prompts.ts`](src/lib/ai/prompts.ts) - 328 LOC):**
+   - Incorporación de directivas estrictas en `buildHeadCoachSystemPrompt`:
+     * Si `!hasCycling`, se suprime Bike FTP y se marca: *"Ciclismo / Bike FTP: NO APLICA (El atleta NO practica ciclismo; PROHIBIDO mencionar rodillo, FTP de ciclismo o vatios en bicicleta)"*.
+     * Si `!isCompetitiveRace`, se prohíbe taxativamente inventar carreras o ritmos de 10k/maratón, enfocando todo el análisis en salud metabólica, zona 2, prevención lesional y longevidad.
+3. **Inferencia Adaptativa con Gemini ([`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts) - 341 LOC):**
+   - `powerProfileStr` se compone dinámicamente según las disciplinas reales del atleta. Si no hace ciclismo, el FTP de bici es omitido al 100%.
+   - Los modos `isGoalProgress`, `isWeekBalance` y `isSessionAudit` cambian su instrucción para dirigirse al objetivo de salud/mantenimiento (`cycleGoalTitle`) cuando `!isCompetitiveRace`.
+4. **Motor Determinístico Fisiológico ([`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts) - 346 LOC):**
+   - Dinamización de `p1`, `p2`, `p3` en `isGoal` y `isWeekBalance`.
+   - Neutralización del consejo del viernes: *"Mañana sábado cumpliremos la sesión programada para mantener continuidad y frescura de cara al cierre de semana"*, eliminando el ciclismo forzado.
+5. **Corrección de Distancia y Modelos ([`seasonPlanHelpers.ts`](src/lib/physiology/seasonPlanHelpers.ts) - 262 LOC & [`macrocycleTemplateHelpers.ts`](src/lib/physiology/macrocycleTemplateHelpers.ts) - 334 LOC):**
+   - `inferRaceDistance` devuelve `undefined` si no hay coincidencia de carrera, y `isRaceEvent` exige palabras clave de carrera antes de convertir un evento `TARGET` en competencia.
+   - `resolveCuratedModelForWeek` cae por defecto en `base_building` en lugar de `10k`.
+
+### 171.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `types.ts`: 194 LOC ($\le 348$) ✅
+  * `prompts.ts`: 328 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 323 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 341 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 346 LOC ($\le 348$) ✅
+  * `seasonPlanHelpers.ts`: 262 LOC ($\le 348$) ✅
+  * `macrocycleTemplateHelpers.ts`: 334 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores en 3.1s) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Atletas en mantenimiento (como Silvia Rey) reciben dictámenes enfocados al 100% en salud, base y adherencia sin menciones de carreras 10k ni vatios de ciclismo si no montan bicicleta ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 171 ✅.
+

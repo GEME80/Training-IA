@@ -123,17 +123,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
             currentPaceStr: (profile as any).runThresholdPaceStr,
             lthr: profile.lthr, maxHR: profile.maxHR,
           });
-          if (bResults.recentFtpCalibration?.detected) {
-            profile.bike_ftp = bResults.recentFtpCalibration.newFtp;
-            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD CICLISMO (FTP): ${bResults.recentFtpCalibration.message}`;
-          }
-          if (bResults.recentPaceCalibration?.detected) {
-            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}🏃 NOVEDAD RITMO CARRERA: ${bResults.recentPaceCalibration.message}`;
-          }
-          if (bResults.recentRunPowerCalibration?.detected) {
-            profile.run_ftp = bResults.recentRunPowerCalibration.newWatts;
-            customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD POTENCIA CARRERA: ${bResults.recentRunPowerCalibration.message}`;
-          }
+          if (bResults.recentFtpCalibration?.detected) { profile.bike_ftp = bResults.recentFtpCalibration.newFtp; customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD CICLISMO (FTP): ${bResults.recentFtpCalibration.message}`; }
+          if (bResults.recentPaceCalibration?.detected) customPrompt = `${customPrompt ? customPrompt + "\n" : ""}🏃 NOVEDAD RITMO CARRERA: ${bResults.recentPaceCalibration.message}`;
+          if (bResults.recentRunPowerCalibration?.detected) { profile.run_ftp = bResults.recentRunPowerCalibration.newWatts; customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD POTENCIA CARRERA: ${bResults.recentRunPowerCalibration.message}`; }
         } catch {}
       }
     } catch (err) {
@@ -147,92 +139,52 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   profile.tsb = physioStatus.tsb;
   profile.rampRate = physioStatus.rampRate;
 
-  const effectiveAvailability = (temporaryAvailability && Object.keys(temporaryAvailability).length > 0)
-    ? temporaryAvailability
-    : weeklyAvailability;
+  const effectiveAvailability = (temporaryAvailability && Object.keys(temporaryAvailability).length > 0) ? temporaryAvailability : weeklyAvailability;
   const safeAvailability = resolveEffectiveAvailability(effectiveAvailability);
-  const availabilityFormatted = CANONICAL_DAYS
-    .map((day) => `  - ${day}: ${getDayDisciplines(safeAvailability, day).join(", ")}`)
-    .join("\n");
+  const availabilityFormatted = CANONICAL_DAYS.map((day) => `  - ${day}: ${getDayDisciplines(safeAvailability, day).join(", ")}`).join("\n");
 
   const hasExistingPlan = Array.isArray(currentPlan) && currentPlan.length > 0 && currentPlan.some((p) => p && ((p.tss || 0) > 0 || (p.durationMinutes || 0) > 0));
   const currentPlanSummary = hasExistingPlan
     ? currentPlan.filter(Boolean).map((p) => `  - ${p.day || p.dayOfWeek || "Día"}: [${p.discipline || "Carrera"}] ${p.workoutName || p.title || "Entrenamiento"} (${p.durationMinutes || 0} min, ~${p.tss || 0} TSS)`).join("\n")
     : "  (No hay un plan activo previo para esta semana; se debe proponer uno nuevo)";
 
-  const clientTime = body.clientTime;
-  const timeZone = clientTime?.timeZone || "America/Bogota";
-  const now = new Date();
-  let todayDayName: string;
-  let todayDateStr: string;
-  let todayTimeStr: string = clientTime?.localTimeStr || "";
-  let todayDayIndex: number;
-
-  if (clientTime?.localDateStr && clientTime?.localDayName) {
-    todayDateStr = clientTime.localDateStr;
-    todayDayName = clientTime.localDayName;
-    todayTimeStr = clientTime.localTimeStr || "";
-    const foundIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === todayDayName.toLowerCase());
-    todayDayIndex = foundIdx >= 0 ? foundIdx : (now.getDay() === 0 ? 6 : now.getDay() - 1);
-  } else {
-    const jsDay = now.getDay();
-    todayDayIndex = jsDay === 0 ? 6 : jsDay - 1;
-    todayDayName = CANONICAL_DAYS[todayDayIndex];
-    todayDateStr = now.toISOString().split("T")[0];
-  }
+  const clientTime = body.clientTime, timeZone = clientTime?.timeZone || "America/Bogota", now = new Date();
+  const defaultIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const todayDayName = clientTime?.localDayName || CANONICAL_DAYS[defaultIdx];
+  const todayDateStr = clientTime?.localDateStr || now.toISOString().split("T")[0];
+  const todayTimeStr = clientTime?.localTimeStr || "";
+  const foundIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === todayDayName.toLowerCase());
+  const todayDayIndex = foundIdx >= 0 ? foundIdx : defaultIdx;
 
   const baseLocalRef = clientTime?.localDateStr ? new Date(`${clientTime.localDateStr}T12:00:00`) : now;
   const weekDates = getWeekDates(safeOffset, baseLocalRef);
   const isCurrentWeek = safeOffset === 0;
 
   // Proyección de CTL del macrociclo para esta semana
-  const blueprint = macrocyclePhase?.blueprint;
-  const totalWeeks = blueprint?.totalWeeks || 16;
-  const targetPeakCtl = blueprint?.targetPeakCtl || 70;
+  const blueprint = macrocyclePhase?.blueprint, totalWeeks = blueprint?.totalWeeks || 16, targetPeakCtl = blueprint?.targetPeakCtl || 70;
   const startCtl = blueprint?.athleteCtlAtCreation || (profile.ctl ? Math.max(20, profile.ctl - 4) : 38);
   const rampRateWeekly = (targetPeakCtl - startCtl) / Math.max(1, totalWeeks - 2);
   const plannedCtlForWeek = Math.round((startCtl + Math.max(0, safeWeekNum - 1) * rampRateWeekly) * 10) / 10;
   const ctlDelta = Math.round((physioStatus.ctl - plannedCtlForWeek) * 10) / 10;
   const ctlDeltaStr = ctlDelta > 0 ? `+${ctlDelta.toFixed(1)}` : `${ctlDelta.toFixed(1)}`;
-  const ctlDeltaVerdict = Math.abs(ctlDelta) <= 0.6
-    ? "en el blanco exacto del plan"
-    : ctlDelta > 0.6
-    ? "por encima de la curva (+progreso acelerado seguro)"
-    : "ligeramente por debajo del modelo (-recuperable sin doblar sesiones)";
+  const ctlDeltaVerdict = Math.abs(ctlDelta) <= 0.6 ? "en el blanco exacto del plan" : ctlDelta > 0.6 ? "por encima de la curva (+progreso acelerado seguro)" : "ligeramente por debajo del modelo (-recuperable sin doblar sesiones)";
 
-  const targetPlanningWeekNum = safeWeekNum;
-  const planningWeekDates = weekDates;
-  const planningStartDateStr = planningWeekDates[0]?.formattedDate || "Inicio";
-  const planningEndDateStr = planningWeekDates[6]?.formattedDate || "Fin";
+  const targetPlanningWeekNum = safeWeekNum, planningWeekDates = weekDates;
+  const planningStartDateStr = planningWeekDates[0]?.formattedDate || "Inicio", planningEndDateStr = planningWeekDates[6]?.formattedDate || "Fin";
 
   // Mapeo unificado y optimizado de actividades ejecutadas por fecha (FinOps & High Density)
   const effectiveExecutedMap = buildCondensedExecutedMap(pastActivities, dailyExecutedActivities);
-
-  // Retrospectiva y balance de la semana anterior a la semana de planificación
-  const previousWeekSummary = computePreviousWeekRetrospective({
-    planningWeekDates,
-    effectiveExecutedMap,
-    macrocyclePhase,
-    targetPlanningWeekNum: safeWeekNum,
-  });
-
-  // TSS ejecutado real estrictamente dentro de los 7 días de la semana de planificación
-  const weekExecutedTss = planningWeekDates.reduce(
-    (acc, d) => acc + (effectiveExecutedMap[d.date]?.totalTss || 0),
-    0
-  );
-
+  const previousWeekSummary = computePreviousWeekRetrospective({ planningWeekDates, effectiveExecutedMap, macrocyclePhase, targetPlanningWeekNum: safeWeekNum });
+  const weekExecutedTss = planningWeekDates.reduce((acc, d) => acc + (effectiveExecutedMap[d.date]?.totalTss || 0), 0);
   const planSumTss = (Array.isArray(currentPlan) && currentPlan.length > 0) ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0) : 0;
   const bpTarget = macrocyclePhase?.blueprint?.weeks?.find((w: any) => w.weekNumber === safeWeekNum)?.targetTss || macrocyclePhase?.blueprint?.currentWeek?.targetTss;
   const rawPlannedTss = planSumTss > 0 ? planSumTss : (bpTarget || 366);
   const tssFactor = targetTssAdjustmentPct !== 0 ? (1 + targetTssAdjustmentPct / 100) : 1;
-  const plannedWeekTss = Math.round(rawPlannedTss * tssFactor);
-  const actualTss = Math.round(weekExecutedTss);
+  const plannedWeekTss = Math.round(rawPlannedTss * tssFactor), actualTss = Math.round(weekExecutedTss);
   const compliancePct = plannedWeekTss > 0 ? Math.round((actualTss / plannedWeekTss) * 100) : 0;
 
   const isDeload = safeWeekNum % 4 === 0;
-  const targetMinTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.65 : 0.95));
-  const targetMaxTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.8 : 1.15));
+  const targetMinTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.65 : 0.95)), targetMaxTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.8 : 1.15));
 
   // TSS planificado acumulado de Lunes a hoy (corte acumulado a la fecha)
   const plannedTssToDate = planningWeekDates.slice(0, todayDayIndex + 1).reduce((acc, wDate, dIdx) => {
@@ -308,19 +260,42 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   );
 
   const normalizedProfile = (coachProfile || "balanced").toLowerCase();
-  const coachStyleDescription =
-    normalizedProfile.includes("conserv")
-      ? "CONSERVADOR / PROTECCIÓN BIOLÓGICA: Prioriza recuperación y descanso activo (TSB > -10)."
-      : normalizedProfile.includes("agres") || normalizedProfile.includes("alto")
-      ? "ALTO RENDIMIENTO / ÉLITE: Estímulos de sobrecarga progresiva intensa y ramp rates de hasta +6 CTL/sem."
-      : "EQUILIBRADO / PROGRESIÓN 3:1 (RECOMENDADO): Equilibrio óptimo entre estímulo aeróbico y asimilación biológica.";
+  const coachStyleDescription = normalizedProfile.includes("conserv")
+    ? "CONSERVADOR / PROTECCIÓN BIOLÓGICA: Prioriza recuperación y descanso activo (TSB > -10)."
+    : normalizedProfile.includes("agres") || normalizedProfile.includes("alto")
+    ? "ALTO RENDIMIENTO / ÉLITE: Estímulos de sobrecarga intensa (hasta +6 CTL/sem)."
+    : "EQUILIBRADO / PROGRESIÓN 3:1 (RECOMENDADO): Equilibrio entre estímulo aeróbico y asimilación biológica.";
 
-  const formDiagnostic =
-    physioStatus.tsb >= 10
-      ? "Frescura sobresaliente y piernas ligeras. Momento ideal para absorber calidad sin fatiga residual."
-      : physioStatus.tsb >= -5
-      ? "Estado de forma equilibrado. Ritmo óptimo de progresión aeróbica y asimilación de volumen."
-      : "Fatiga acumulada moderada. Priorizaremos carreras continuas suaves y trabajo cruzado para proteger articulaciones.";
+  const formDiagnostic = physioStatus.tsb >= 10
+    ? "Frescura sobresaliente y piernas ligeras. Momento ideal para absorber calidad sin fatiga residual."
+    : physioStatus.tsb >= -5
+    ? "Estado de forma equilibrado. Ritmo óptimo de progresión aeróbica y asimilación de volumen."
+    : "Fatiga acumulada moderada. Priorizaremos carreras continuas suaves y trabajo regenerativo.";
+
+  // Disciplinas reales del atleta
+  const allDiscs = Object.values(safeAvailability || {}).flatMap((d: any) => (Array.isArray(d) ? d : [d]));
+  const planDiscs = Array.isArray(currentPlan) ? currentPlan.map((p: any) => (p?.discipline || p?.workoutName || "").toLowerCase()) : [];
+  const hasCycling = allDiscs.some((d: string) => /ciclismo|bike|ride|bici/i.test(d)) || planDiscs.some((d: string) => /ciclismo|bike|ride|bici|rodillo/i.test(d));
+  const hasRunning = allDiscs.some((d: string) => /carrera|run/i.test(d)) || planDiscs.some((d: string) => /carrera|run|trote/i.test(d));
+  const hasSwimming = allDiscs.some((d: string) => /nataci[oó]n|swim/i.test(d)) || planDiscs.some((d: string) => /nataci|swim/i.test(d));
+  const hasStrength = allDiscs.some((d: string) => /fuerza|strength|gym/i.test(d)) || planDiscs.some((d: string) => /fuerza|gym/i.test(d));
+  const sportsList: string[] = [];
+  if (hasRunning) sportsList.push("Carrera");
+  if (hasCycling) sportsList.push("Ciclismo");
+  if (hasSwimming) sportsList.push("Natación");
+  if (hasStrength) sportsList.push("Fuerza");
+  const disciplinesSummary = sportsList.length > 0 ? sportsList.join(", ") : "Resistencia aeróbica y fuerza";
+
+  // Objetivo del macrociclo: Competitivo vs Salud/Mantenimiento/Base
+  const bp = macrocyclePhase?.blueprint;
+  const race = macrocyclePhase?.primaryRace || bp?.primaryRace;
+  const distType = (bp?.distanceType || race?.distance || "").toLowerCase();
+  const rawTitle = (bp?.cycleTitle || macrocyclePhase?.phaseLabel || "").trim();
+  const isNonComp = !race?.date || distType === "maintenance" || distType === "base_building" || distType === "general_build" || distType === "post_race_recovery" || distType === "injury_rehab" || bp?.mode === "GENERAL_MAINTENANCE" || bp?.mode === "PRE_SEASON_MAINTENANCE" || /manten|salud|longev|base\s*aer|gpp|sin\s*carrera/i.test(`${rawTitle} ${macrocyclePhase?.guideline || ""} ${macrocyclePhase?.suggestedFocus || ""}`);
+  const isCompetitiveRace = !isNonComp;
+  const cycleGoalTitle = isNonComp
+    ? (/manten|salud|longev/i.test(rawTitle) ? "Mantenimiento y Salud Aeróbica" : /base|gpp|construcci/i.test(rawTitle) ? "Construcción de Base y Condición Física" : rawTitle || "Mantenimiento y Condición Física")
+    : (race?.name ? `${race.name}${race.distance ? ` (${race.distance})` : ""}` : rawTitle || "Competición Objetivo");
 
   const promptContext: HeadCoachPromptContext = {
     profile, physioStatus, targetPlanningWeekNum, planningStartDateStr, planningEndDateStr,
@@ -332,6 +307,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     isWeekKickoffAudit: Boolean(isWeekKickoffAudit), targetTssAdjustmentPct,
     todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl, ctlDeltaStr, ctlDeltaVerdict,
     plannedTssToDate, toDateTssDelta,
+    hasCycling, hasRunning, hasSwimming, hasStrength, isCompetitiveRace, cycleGoalTitle, disciplinesSummary,
   };
 
   return {
@@ -342,5 +318,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     isDeload, coachStyleDescription, promptContext, effectiveExecutedMap, previousWeekSummary, targetTssAdjustmentPct,
     isWeekKickoffAudit: Boolean(isWeekKickoffAudit), todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, ctlDeltaStr, ctlDeltaVerdict, targetPeakCtl,
     plannedTssToDate, toDateTssDelta,
+    hasCycling, hasRunning, hasSwimming, hasStrength, isCompetitiveRace, cycleGoalTitle, disciplinesSummary,
   };
 }

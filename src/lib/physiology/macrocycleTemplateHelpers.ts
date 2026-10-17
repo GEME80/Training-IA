@@ -325,7 +325,9 @@ export function resolveCuratedModelForWeek(
     else if (hasRide && !hasRun) resolved = "cycling_fondo";
     else if (/marat|marath|42k|tokio|boston|valencia/i.test(f)) resolved = "42k";
     else if (/media|half|21k/i.test(f)) resolved = "21k";
-    else resolved = "10k";
+    else if (/10k|diez k/i.test(f)) resolved = "10k";
+    else if (/5k|cinco k/i.test(f)) resolved = "5k";
+    else resolved = "base_building";
   }
   return resolveTrainingModel({ targetDistance: resolved, raceDistance: resolved, customGoal: weekFocus });
 }

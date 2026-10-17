@@ -15,18 +15,13 @@ export async function executeGeminiInference(
 
     if (!geminiKey) return { success: false };
 
-  const systemInstructions = buildHeadCoachSystemPrompt(
-    body.customPrompt || undefined,
-    ctx.promptContext
-  );
-
+  const systemInstructions = buildHeadCoachSystemPrompt(body.customPrompt || undefined, ctx.promptContext);
   const userPrompt = isInitialAudit
     ? `Realiza el Dictamen Fisiológico de la Semana ${body.weekNumber || 1} (${ctx.planningStartDateStr} al ${ctx.planningEndDateStr}). Evalúa adherencia y carga. Si el plan es idóneo declara continuidad (sin suggestedPlan). Si requiere ajuste pregunta primero si desea adaptar la semana.`
     : (messages[messages.length - 1]?.content || "Analiza y ajusta mi microciclo");
 
   // Construcción Normalizada del Historial Multi-Turno (garantía estricta user ⇄ model)
   const normalizedContents: { role: "user" | "model"; parts: { text: string }[] }[] = [];
-
   normalizedContents.push({
     role: "user",
     parts: [{ text: isInitialAudit ? "Inicia la evaluación fisiológica y auditoría del microciclo de la semana." : "Inicia la conversación como Head Coach de resistencia." }],
@@ -36,28 +31,27 @@ export async function executeGeminiInference(
     const gRole: "user" | "model" = m.role === "user" ? "user" : "model";
     const lastTurn = normalizedContents[normalizedContents.length - 1];
     if (mIdx === messages.length - 1 && m.role === "user") return;
-
-    if (lastTurn && lastTurn.role === gRole) {
-      lastTurn.parts[0].text += `\n\n${m.content}`;
-    } else {
-      normalizedContents.push({ role: gRole, parts: [{ text: m.content }] });
-    }
+    if (lastTurn && lastTurn.role === gRole) lastTurn.parts[0].text += `\n\n${m.content}`;
+    else normalizedContents.push({ role: gRole, parts: [{ text: m.content }] });
   });
 
   const pLower = userPrompt.toLowerCase();
   const athleteFirstName = (ctx.profile.name && ctx.profile.name !== "Atleta" ? ctx.profile.name : "").trim().split(" ")[0] || "Atleta";
-  const athleteAge = ctx.profile.age;
-  const isMaster = athleteAge && athleteAge >= 40;
-  const categoryStr = isMaster ? "en categoría Máster" : "";
+  const categoryStr = (ctx.profile.age && ctx.profile.age >= 40) ? "en categoría Máster" : "";
   const macroPhase = ctx.promptContext.macrocyclePhase;
   const race = macroPhase?.primaryRace || macroPhase?.blueprint?.primaryRace;
-  const raceName = race?.name || "tu carrera principal";
-  const raceDist = race?.distance || macroPhase?.blueprint?.distanceType || "tu meta";
-  const totalWeeks = macroPhase?.blueprint?.totalWeeks || 16;
-  const remainingWeeks = Math.max(0, totalWeeks - ctx.targetPlanningWeekNum);
+  const isCompetitive = ctx.isCompetitiveRace;
+  const raceName = isCompetitive ? (race?.name || "tu carrera principal") : ctx.cycleGoalTitle;
+  const raceDist = isCompetitive ? (race?.distance || macroPhase?.blueprint?.distanceType || "tu meta") : ctx.cycleGoalTitle;
+  const totalWeeks = macroPhase?.blueprint?.totalWeeks || 16, remainingWeeks = Math.max(0, totalWeeks - ctx.targetPlanningWeekNum);
   const phaseLabel = macroPhase?.phaseLabel || macroPhase?.phase || "Construcción";
   const deltaVal = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (ctx.actualTss - (ctx.plannedTssToDate || ctx.plannedWeekTss));
   const deltaStr = deltaVal >= 0 ? `+${deltaVal}` : `${deltaVal}`;
+
+  const powerProfileStr = [
+    ctx.hasRunning && ctx.profile.run_ftp ? `${ctx.profile.run_ftp}W Stryd CP (${(ctx.profile.run_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : null,
+    ctx.hasCycling && ctx.profile.bike_ftp ? `${ctx.profile.bike_ftp}W FTP (${(ctx.profile.bike_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : null,
+  ].filter(Boolean).join(" y ") || "potencia calibrada";
 
   const isGoalProgress = pLower.includes("rumbo a mi meta") || pLower.includes("rumbo hacia mi carrera") || pLower.includes("visión estratégica macro") || pLower.includes("carrera principal") || pLower.includes("semanas restantes") || pLower.includes("desde que inicio") || pLower.includes("desde que inició") || (pLower.includes("meta") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion"));
   const isWeekBalance = !isGoalProgress && (Boolean(body.isWeekKickoffAudit) || pLower.includes("balance") || pLower.includes("volumen") || pLower.includes("semana completa") || pLower.includes("toda la semana") || pLower.includes("resumen semanal") || pLower.includes("resumen de la semana") || pLower.includes("cierre de semana") || pLower.includes("cómo van mis cargas") || pLower.includes("mis cargas") || pLower.includes("indicadores fisiológicos") || pLower.includes("cuántas sesiones llevo") || (pLower.includes("semana") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion")));
@@ -66,20 +60,26 @@ export async function executeGeminiInference(
   const modeInstruction = isSessionAudit
     ? `MODO AUDITORÍA DE SESIÓN INDIVIDUAL (TONO CRÍTICO, TÉCNICO Y DIRECTO DE HEAD COACH):
    - PROHIBICIÓN TAXATIVA: CERO mención del objetivo de ${ctx.plannedWeekTss} TSS semanal, CERO mención del ${ctx.compliancePct}% ni del corte acumulado. Prohibido usar clichés ("subir escaleras", "síntesis de colágeno").
-   - Párrafo 1 (Telemetría & Crítica de Desacople): Nombre real y disciplina ([Carrera a pie] o [Ciclismo]), duración, TSS real vs planeado y delta. Potencia media (W), NP o % de Stryd CP (${ctx.profile.run_ftp || 0}W) / FTP (${ctx.profile.bike_ftp || 0}W), pulso medio y máx vs LTHR (${ctx.profile.lthr || 156} bpm), desacople Pa:Hr y ritmo. ¡CRÍTICA DEL DESACOPLE: Si Pa:Hr > +5% (ej. +9.5% o +11.6%), advierte que es ELEVADO / DEFICIENTE (deriva cardíaca por deshidratación, calor o falta de eficiencia aeróbica para ${raceName}); si es <= +5% califícalo como excelente! ¡CRÍTICA DE ESFUERZO: En test a pulso bajo sé crítico (se corrió a media máquina); en rodaje Z2 valida la contención sin acelerar!
+   - Párrafo 1 (Telemetría & Crítica de Desacople): Nombre real y disciplina (${ctx.disciplinesSummary || "[Carrera a pie]"}), duración, TSS real vs planeado y delta. Potencia media (W), NP o % de ${powerProfileStr}, pulso medio y máx vs LTHR (${ctx.profile.lthr || 156} bpm), desacople Pa:Hr y ritmo. ¡CRÍTICA DEL DESACOPLE: Si Pa:Hr > +5% (ej. +9.5% o +11.6%), advierte que es ELEVADO / DEFICIENTE (deriva cardíaca por deshidratación, calor o falta de eficiencia aeróbica para ${raceName}); si es <= +5% califícalo como excelente! ¡CRÍTICA DE ESFUERZO: En test a pulso bajo sé crítico (se corrió a media máquina); en rodaje Z2 valida la contención sin acelerar!
    - Párrafo 2 (Análisis Fisiológico Específico): Explica la respuesta metabólica real de esta sesión puntual (gestión de glucógeno, fatiga cardíaca o costo neuromuscular). Cero frases genéricas.
    - Párrafo 3 (Ajuste Táctico Inmediato): Conexión directa con la sesión de mañana. Si hoy ${ctx.todayDayName} es noche, pauta de recuperación para llegar a punto.`
     : isGoalProgress
-    ? `MODO RUMBO A MI META (ANÁLISIS MACRO DESDE INICIO DE CICLO, SEMANA Y DATOS VS ESPERADO DEL PLAN):
+    ? (isCompetitive
+      ? `MODO RUMBO A MI META (ANÁLISIS MACRO COMPETITIVO HACIA ${raceName}):
    - PROHIBICIÓN TAXATIVA: CERO pautas de recuperación para hoy ni rutina del día a día; perspectiva macro hacia ${raceName}.
-   - Párrafo 1 (Perspectiva Macro desde el Inicio del Ciclo): Marco general: Semana ${ctx.targetPlanningWeekNum} de ${totalWeeks} (Fase ${phaseLabel} rumbo a ${raceName}, restan ${remainingWeeks} semanas). Desde que arrancó el plan, tu condición física (CTL) ha progresado con solidez: hoy estás en ${ctx.physioStatus.ctl.toFixed(1)} CTL frente a los ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL proyectados por el macrociclo (${ctx.ctlDeltaVerdict || "en trayectoria planificada"}), marchando en trayectoria firme hacia el pico Banister de ${ctx.targetPeakCtl || 70} CTL con ${ctx.profile.run_ftp ? `${ctx.profile.run_ftp}W Stryd CP (${(ctx.profile.run_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "buen ratio de potencia"} y ${ctx.profile.bike_ftp ? `${ctx.profile.bike_ftp}W FTP (${(ctx.profile.bike_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "FTP calibrado"}.
-   - Párrafo 2 (Diagnóstico de la Semana y Datos Reales vs Plan): En esta semana sumas ${ctx.actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS al corte (${deltaStr} TSS delta), con TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)} y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "nivel estable"}. Analiza objetivamente la asimilación aeróbica según los datos reales vs el plan para sostener el ritmo en ${raceDist}.
-   - Párrafo 3 (Dirección Estratégica Rumbo a ${raceName}): En esta fase ${phaseLabel}, el foco innegociable es consolidar el estímulo metabólico target (${raceDist}), acumular volumen limpio en Zona 2 y proteger las articulaciones con la fuerza${categoryStr ? ` (${categoryStr})` : ""}, garantizando llegar con la cilindrada óptima.`
+   - Párrafo 1 (Perspectiva Macro): Semana ${ctx.targetPlanningWeekNum} de ${totalWeeks} (Fase ${phaseLabel} rumbo a ${raceName}, restan ${remainingWeeks} sem). Fitness: ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "en trayectoria"}), hacia pico Banister ${ctx.targetPeakCtl || 70} CTL con ${powerProfileStr}.
+   - Párrafo 2 (Diagnóstico Semanal): Sumas ${ctx.actualTss} TSS de ${ctx.plannedTssToDate || ctx.plannedWeekTss} al corte (${deltaStr} delta), TSB ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, HRV ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Analiza asimilación aeróbica para sostener ritmo en ${raceDist}.
+   - Párrafo 3 (Dirección Estratégica): En ${phaseLabel}, foco en estímulo target (${raceDist}), volumen Zona 2 y fuerza${categoryStr ? ` (${categoryStr})` : ""}.`
+      : `MODO RUMBO A MI META (PLAN DE SALUD Y MANTENIMIENTO: ${raceName}):
+   - PROHIBICIÓN TAXATIVA: CERO mención de 10k, carreras ni ritmos de competición. El atleta entrena por salud y mantenimiento (${raceName}).
+   - Párrafo 1 (Perspectiva Macro de Salud y Base): Semana ${ctx.targetPlanningWeekNum} de ${totalWeeks} (Fase ${phaseLabel}: ${raceName}). Fitness: ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "en trayectoria"}), consolidando base aeróbica y longevidad con ${powerProfileStr}.
+   - Párrafo 2 (Diagnóstico Semanal de Carga): Sumas ${ctx.actualTss} TSS ejecutados de ${ctx.plannedTssToDate || ctx.plannedWeekTss} al corte (${deltaStr} delta), TSB ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, HRV ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Analiza asimilación sin estrés competitivo.
+   - Párrafo 3 (Dirección Estratégica): En ${phaseLabel}, foco en salud Zona 2, consistencia y fuerza${categoryStr ? ` (${categoryStr})` : ""}, garantizando bienestar físico.`)
     : `MODO BALANCE DE SEMANA (AUDITORÍA EXIGENTE DE CARGAS E INDICADORES FISIOLÓGICOS):
-   - PROHIBICIÓN TAXATIVA: CERO foco en una única sesión aislada; analiza el conjunto del microciclo.
-   - Párrafo 1 (Auditoría Numérica de Cargas al Corte): Balance global: ${ctx.actualTss} TSS ejecutados de tu objetivo semanal de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% global). Al corte de este ${ctx.todayDayName}, debías sumar ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS, arrojando un diferencial de ${deltaStr} TSS. Dictamina con criterio de entrenador si el volumen va en línea con el microciclo o si hay déficit por sesiones pendientes/omitidas.
-   - Párrafo 2 (Comparativa de Indicadores Fisiológicos vs Modelo): Contrasta todos los indicadores a la fecha frente a su referencia: Fitness en ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "acorde al modelo"}), TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, rampa en ${(ctx.physioStatus.rampRate >= 0 ? "+" : "") + Number(ctx.physioStatus.rampRate || 0).toFixed(1)} CTL/sem y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Evalúa si el corazón y las piernas asimilan la carga y si la musculatura de sostén está protegida de cara a ${raceName}.
-   - Párrafo 3 (Directriz Táctica de Cierre): ¡PROHIBIDO doblar sesiones o inventar kilometraje extra para "recuperar" TSS! La carga aeróbica debe asimilarse progresivamente. Siendo ${ctx.todayDayName}, define la pauta de descanso o las sesiones restantes del microciclo.`;
+   - PROHIBICIÓN TAXATIVA: CERO foco en una sesión aislada; analiza el microciclo.${!isCompetitive ? ` Prohibido inventar carreras o 10k; el plan es de salud/mantenimiento (${raceName}).` : ""}
+   - Párrafo 1 (Auditoría Numérica de Cargas al Corte): Balance global: ${ctx.actualTss} TSS ejecutados de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% global). Al corte de este ${ctx.todayDayName}, debías sumar ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS, arrojando un diferencial de ${deltaStr} TSS. Dictamina si el volumen va en línea con el microciclo o si hay déficit.
+   - Párrafo 2 (Comparativa de Indicadores Fisiológicos vs Modelo): Contrasta indicadores frente a referencia: Fitness en ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "acorde al modelo"}), TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, rampa en ${(ctx.physioStatus.rampRate >= 0 ? "+" : "") + Number(ctx.physioStatus.rampRate || 0).toFixed(1)} CTL/sem y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Evalúa asimilación muscular y de sostén de cara a ${raceName}.
+   - Párrafo 3 (Directriz Táctica de Cierre): ¡PROHIBIDO doblar sesiones o inventar kilometraje extra para "recuperar" TSS! La carga debe asimilarse progresivamente. Siendo ${ctx.todayDayName}, define la pauta de descanso o sesiones restantes.`;
 
   const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
 1. "reply": Habla en primera persona directamente a ${athleteFirstName} (120-180 palabras, tono cercano, firme, crítico y honesto como entrenador de alto rendimiento):

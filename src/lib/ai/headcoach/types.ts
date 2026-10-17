@@ -62,6 +62,13 @@ export interface HeadCoachChatRequest {
   temporaryAvailability?: WeeklyAvailabilityMap;
   targetTssAdjustmentPct?: number;
   isWeekKickoffAudit?: boolean;
+  clientTime?: {
+    localDateStr?: string;
+    localDayName?: string;
+    localTimeStr?: string;
+    timeZone?: string;
+    hour24?: number;
+  };
 }
 
 export interface PreviousWeekSummary {
@@ -166,5 +173,10 @@ export interface ResolvedChatContext {
   previousWeekSummary: PreviousWeekSummary;
   targetTssAdjustmentPct: number;
   isWeekKickoffAudit: boolean;
+  todayTimeStr?: string;
+  timeZone?: string;
+  plannedCtlForWeek?: number;
+  ctlDelta?: number;
+  targetPeakCtl?: number;
 }
 

@@ -49,8 +49,8 @@ export async function executeGeminiInference(
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos:
    - Párrafo 1 (Diagnóstico Numérico con TSS Delta): Indica valores exactos: TSS ejecutado vs planeado (ej. 300 vs 400 TSS), % cumplimiento, rampa CTL, TSB, potencia Stryd/FTP y pulso vs LTHR. Dictamina claramente si hay déficit de volumen (-TSS), sobrecarga (+TSS) o si clavó el plan.
    - Párrafo 2 (Traducción al Día a Día: ¿Estoy bien o estoy mal?): Declara sin rodeos el veredicto ("estás bien y asimilando con soltura", "te quedaste corto", o "te pasaste de rosca"). Tradúcelo a sensaciones cotidianas (pesadez de piernas al subir escaleras, soltura en sóleo/isquios, demanda de descanso y asimilación). En tests de campo, evalúa si "pudo haber dado más / corrido más rápido" y si está en sus potencias target.
-   - Párrafo 3 (El Siguiente Paso Inmediato): Instrucción obligatoria e inequívoca: qué hacer hoy y cómo encarar la siguiente sesión (sin compensaciones lesivas de doblar entrenamientos si hubo déficit).
-   - En "Rumbo a mi meta": enfócate exclusivamente en visión macro (semanas a carrera, ritmo proyectado vs objetivo, CTL Banister).
+   - Párrafo 3 (El Siguiente Paso Inmediato & Precisión Temporal): Qué hacer hoy o cómo encarar la siguiente sesión respetando estrictamente el día local (${ctx.todayDayName}); si es de noche, pauta para "mañana sábado", prohibido decir "hoy sábado".
+   - En "Rumbo a mi meta": contrasta tu CTL actual (${ctx.physioStatus.ctl.toFixed(1)}) vs el CTL proyectado por el macrociclo (${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco), ritmo meta y pico Banister (${ctx.targetPeakCtl || 70} CTL).
 2. "quickReplies": [] (devolver array vacío para no generar botones residuales).
 3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario null.`;
 

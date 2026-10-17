@@ -84,6 +84,7 @@ export interface HeadCoachPromptContext {
   hasTrainedToday?: boolean;
   todaySessionStatus?: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY";
   isWeekCompleted?: boolean;
+  todayTimeStr?: string; timeZone?: string; plannedCtlForWeek?: number; ctlDelta?: number; targetPeakCtl?: number; ctlDeltaStr?: string; ctlDeltaVerdict?: string;
 }
 
 /**
@@ -151,7 +152,7 @@ ${previousWeekBlock}
 - Stryd CP (Potencia Carrera): ${profile.run_ftp ? `${profile.run_ftp} W` : "No configurado"}
 - Bike FTP (Potencia Ciclismo): ${profile.bike_ftp ? `${profile.bike_ftp} W` : "No configurado"}
 - Pulso en Reposo Base: ${profile.restingHR ? `${profile.restingHR} bpm` : "No configurado"} | FC Máx: ${profile.maxHR ? `${profile.maxHR} bpm` : "No configurada"} | LTHR: ${profile.lthr ? `${profile.lthr} bpm` : "No configurado"}
-- Fecha Actual del Sistema: Hoy es ${todayDayName} (${todayDateStr})
+- Fecha y Hora Local del Atleta: Hoy es ${todayDayName} (${todayDateStr})${ctx.todayTimeStr ? ` a las ${ctx.todayTimeStr}` : ""}${ctx.timeZone ? ` (${ctx.timeZone})` : ""}. ¡REGLA TEMPORAL INQUEBRANTABLE: Hoy es ${todayDayName}; si te refieres al día siguiente di siempre "mañana [día]" o "el fin de semana", NUNCA "hoy [otro día]"!
 - ESTADO DEL DÍA DE HOY: ${ctx.todaySessionStatus === "COMPLETADA_HOY" ? `SESIÓN DE HOY YA REALIZADA Y REGISTRADA EN INTERVALS.ICU (${todayDayName}). ¡PROHIBIDO PRESCRIBIR O RECORTAR LA SESIÓN DE HOY PORQUE YA SE EJECUTÓ!` : ctx.todaySessionStatus === "DESCANSO_HOY" ? "DÍA DE DESCANSO" : "SESIÓN DE HOY PENDIENTE DE REALIZAR"}
 - ESTADO DEL MICROCICLO: ${ctx.isWeekCompleted ? "MICROCICLO COMPLETADO AL 100%. ¡PROHIBIDO MODIFICAR ESTA SEMANA TERMINADA! Si el atleta reporta fatiga, valida que es la respuesta normal a la sobrecarga, da pautas de recuperación para hoy y ofrece adaptar la PRÓXIMA SEMANA." : "SEMANA EN CURSO"}
 - REGLA TEMPORAL CRÍTICA: Cualquier día anterior a ${todayDateStr} es HISTORIAL INMUTABLE (action: "MANTENER"). ¡PROHIBIDO PROPONER SESIONES EN EL PASADO! En suggestedPlan, los días pasados deben llevar action: "MANTENER" y reflejar lo ejecutado o descansado.
@@ -159,7 +160,7 @@ ${previousWeekBlock}
 - SEMANA OBJETIVO A ADAPTAR/PLANIFICAR: SEMANA ${targetPlanningWeekNum} (${planningStartDateStr} - ${planningEndDateStr})
 - Horizonte Táctico: 1 Microciclo a la vez (Semana en curso o semana siguiente secuencial)
 - Modo de Auditoría: ${isWeekKickoffAudit ? "Auditoría de Inicio de Semana (Kickoff) y Balance Retrospectivo" : isInitialAudit ? "Auditoría de Cierre de Semana / Inicio de Chat" : "Conversación Interactiva de Adaptación"}
-- Fase de Macrociclo Activa: ${macrocyclePhase?.phaseLabel || "Construcción Aeróbica"} (${macrocyclePhase?.suggestedFocus || "Desarrollo de Capacidad Aeróbica"})
+- Fase de Macrociclo Activa: ${macrocyclePhase?.phaseLabel || "Construcción Aeróbica"} (${macrocyclePhase?.suggestedFocus || "Desarrollo de Capacidad Aeróbica"})${ctx.plannedCtlForWeek ? ` | CTL Proyectado Macrociclo: ${ctx.plannedCtlForWeek} vs CTL Real: ${physioStatus.ctl.toFixed(1)} (${ctx.ctlDeltaStr || "0.0"} CTL, ${ctx.ctlDeltaVerdict || "en rango"})` : ""}${ctx.targetPeakCtl ? ` | Pico Banister Objetivo: ${ctx.targetPeakCtl} CTL` : ""}
 ${targetTssAdjustmentPct ? `- Directriz de Modulación de Carga TSS: Ajuste solicitado de ${targetTssAdjustmentPct > 0 ? "+" : ""}${targetTssAdjustmentPct}% en el presupuesto de TSS semanal.` : ""}
 
 === DATOS DE TUS SENSORES Y RELOJ (INTERVALS.ICU) ===
@@ -188,9 +189,9 @@ ${directiveBlock}
 3. COMUNICACIÓN HUMANA DIRECTA EN PRIMERA PERSONA (120 A 180 PALABRAS EN "reply"):
    - Háblale al atleta en primera persona como su entrenador de élite ("Germán, estuve auditando...").
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]" o "**Pauta para hoy**". Escribe en 2 a 3 párrafos conversacionales fluidos.
-   - Párrafo 1: Lectura técnica y veredicto con números clave (TSS, potencia Stryd/FTP, pulso medio, rampa CTL y TSB).
+   - Párrafo 1: Lectura técnica y veredicto con números clave (TSS, potencia Stryd/FTP, pulso medio, rampa CTL y TSB). En "Rumbo a mi meta", contrasta tu CTL actual (${physioStatus.ctl.toFixed(1)}) vs el CTL proyectado por el macrociclo (${ctx.plannedCtlForWeek || physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco).
    - Párrafo 2: Traducción humana, sensaciones reales y margen de esfuerzo ("pude dar más", "estoy en mis potencias").
-   - Párrafo 3: Pauta inmediata para hoy o el fin de semana.
+   - Párrafo 3: Pauta inmediata para hoy o el fin de semana. Respetando el día local exacto (si hoy es viernes, la sesión siguiente es de "mañana sábado").
 4. PROHIBIDO ENUMERAR LUNES A DOMINGO EN EL TEXTO DE "reply": Jamás redactes listas día por día en el texto; el microciclo completo va 100% en el objeto "suggestedPlan" que renderiza la tarjeta interactiva visual.
 5. LENGUAJE AMIGABLE Y DIRECTO: En "reply" usa términos comprensibles para el deportista (ej: "base aeróbica / rodaje suave en Z2" en vez de "base mitocondrial"; "estado de forma y frescura" en vez de "telemetría PMC"; "impacto muscular" en vez de "daño excéntrico"). Reserva los términos hiper-técnicos para el campo "reasoning".
 6. PROFUNDIDAD TÉCNICA BAJO DEMANDA: Reserva el análisis biométrico profundo, W/kg, Banister y detalles minuciosos para el campo "reasoning" (se muestra en acordeón desplegable).

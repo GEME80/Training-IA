@@ -96,7 +96,16 @@ export function handleDeterministicFallback(
     const ctlVal = physioStatus.ctl.toFixed(1);
     const rampVal = Number(physioStatus.rampRate || 0).toFixed(1);
     const wkg = profile.run_ftp && profile.weight ? ` (${(profile.run_ftp / profile.weight).toFixed(2)} W/kg)` : "";
-    replyMsg = `Hola ${athleteFirstName}, con la mirada puesta en ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22} del macrociclo.\n\nTu cilindrada aeróbica (CTL) se encuentra en ${ctlVal} con una rampa ascendente y segura de +${rampVal} CTL/sem.${profile.run_ftp ? ` Tu potencia crítica Stryd está calibrada en ${profile.run_ftp}W${wkg}.` : ""} El modelo Banister proyecta que llegaremos al pico de forma en la ventana ideal de tapering sin riesgo de sobreentrenamiento.\n\nEn esta fase base estamos forjando el motor que te sostendrá en el último tercio de la prueba. Mantén la constancia en tus rodajes aeróbicos: cada kilómetro asimilado hoy es tu seguro el día de la carrera.`;
+    const plannedCtl = ctx.plannedCtlForWeek || Number(ctlVal);
+    const diffCtl = Math.round((physioStatus.ctl - plannedCtl) * 10) / 10;
+    const ctlDeltaText = Math.abs(diffCtl) <= 0.5
+      ? `en el blanco exacto del plan (${diffCtl >= 0 ? `+${diffCtl}` : diffCtl} CTL)`
+      : diffCtl > 0.5
+      ? `por encima del modelo teórico (+${diffCtl} CTL)`
+      : `ligeramente por debajo del modelo (${diffCtl} CTL recuperable)`;
+    const peakCtl = ctx.targetPeakCtl || 70;
+
+    replyMsg = `Hola ${athleteFirstName}, con la mirada puesta en ${raceName} (${raceDist}), nos encontramos en la semana ${targetPlanningWeekNum} de ${macroPhase?.blueprint?.totalWeeks || 22} del macrociclo.\n\nPara esta semana tu macrociclo proyectaba un estado de forma de ${plannedCtl} CTL y actualmente registras ${ctlVal} CTL (${ctlDeltaText}), con una rampa ascendente de +${rampVal} CTL/sem hacia el pico de ${peakCtl} CTL.${profile.run_ftp ? ` Tu potencia crítica Stryd está calibrada en ${profile.run_ftp}W${wkg}.` : ""} El modelo Banister confirma que tu cilindrada aeróbica avanza por el carril óptimo hacia tu ritmo objetivo de maratón.\n\nEl siguiente paso estratégico es preservar la constancia en tus rodajes aeróbicos sin forzar ritmos antes de tiempo: cada bloque asimilado ahora es tu seguro de resistencia en el último tercio de la prueba.`;
     smartActions = [];
   }
   // 3. BALANCE DE SEMANA Y VOLUMEN

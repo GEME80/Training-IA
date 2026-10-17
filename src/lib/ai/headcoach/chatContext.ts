@@ -160,14 +160,45 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     ? currentPlan.filter(Boolean).map((p) => `  - ${p.day || p.dayOfWeek || "Día"}: [${p.discipline || "Carrera"}] ${p.workoutName || p.title || "Entrenamiento"} (${p.durationMinutes || 0} min, ~${p.tss || 0} TSS)`).join("\n")
     : "  (No hay un plan activo previo para esta semana; se debe proponer uno nuevo)";
 
-  const weekDates = getWeekDates(safeOffset);
+  const clientTime = body.clientTime;
+  const timeZone = clientTime?.timeZone || "America/Bogota";
   const now = new Date();
-  const jsDay = now.getDay();
-  const todayDayIndex = jsDay === 0 ? 6 : jsDay - 1;
-  const dayNames = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const todayDayName = dayNames[todayDayIndex];
-  const todayDateStr = now.toISOString().split("T")[0];
+  let todayDayName: string;
+  let todayDateStr: string;
+  let todayTimeStr: string = clientTime?.localTimeStr || "";
+  let todayDayIndex: number;
+
+  if (clientTime?.localDateStr && clientTime?.localDayName) {
+    todayDateStr = clientTime.localDateStr;
+    todayDayName = clientTime.localDayName;
+    todayTimeStr = clientTime.localTimeStr || "";
+    const foundIdx = CANONICAL_DAYS.findIndex((d) => d.toLowerCase() === todayDayName.toLowerCase());
+    todayDayIndex = foundIdx >= 0 ? foundIdx : (now.getDay() === 0 ? 6 : now.getDay() - 1);
+  } else {
+    const jsDay = now.getDay();
+    todayDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    todayDayName = CANONICAL_DAYS[todayDayIndex];
+    todayDateStr = now.toISOString().split("T")[0];
+  }
+
+  const baseLocalRef = clientTime?.localDateStr ? new Date(`${clientTime.localDateStr}T12:00:00`) : now;
+  const weekDates = getWeekDates(safeOffset, baseLocalRef);
   const isCurrentWeek = safeOffset === 0;
+
+  // Proyección de CTL del macrociclo para esta semana
+  const blueprint = macrocyclePhase?.blueprint;
+  const totalWeeks = blueprint?.totalWeeks || 16;
+  const targetPeakCtl = blueprint?.targetPeakCtl || 70;
+  const startCtl = blueprint?.athleteCtlAtCreation || (profile.ctl ? Math.max(20, profile.ctl - 4) : 38);
+  const rampRateWeekly = (targetPeakCtl - startCtl) / Math.max(1, totalWeeks - 2);
+  const plannedCtlForWeek = Math.round((startCtl + Math.max(0, safeWeekNum - 1) * rampRateWeekly) * 10) / 10;
+  const ctlDelta = Math.round((physioStatus.ctl - plannedCtlForWeek) * 10) / 10;
+  const ctlDeltaStr = ctlDelta > 0 ? `+${ctlDelta.toFixed(1)}` : `${ctlDelta.toFixed(1)}`;
+  const ctlDeltaVerdict = Math.abs(ctlDelta) <= 0.6
+    ? "en el blanco exacto del plan"
+    : ctlDelta > 0.6
+    ? "por encima de la curva (+progreso acelerado seguro)"
+    : "ligeramente por debajo del modelo (-recuperable sin doblar sesiones)";
 
   const targetPlanningWeekNum = safeWeekNum;
   const planningWeekDates = weekDates;
@@ -205,7 +236,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
 
   // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
   const auditLines = planningWeekDates.map((wDate, idx) => {
-    const dName = dayNames[idx];
+    const dName = CANONICAL_DAYS[idx];
     const plannedSession = Array.isArray(currentPlan) ? currentPlan[idx] : null;
     const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
     const planTss = plannedSession?.tss || 0;
@@ -278,72 +309,22 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
       : "Fatiga acumulada moderada. Priorizaremos carreras continuas suaves y trabajo cruzado para proteger articulaciones.";
 
   const promptContext: HeadCoachPromptContext = {
-    profile,
-    physioStatus,
-    targetPlanningWeekNum,
-    planningStartDateStr,
-    planningEndDateStr,
-    isInitialAudit: Boolean(isInitialAudit),
-    isCurrentWeek,
-    todayDayName,
-    todayDateStr,
-    todayDayIndex,
-    hasTrainedToday,
-    todaySessionStatus,
-    isWeekCompleted,
-    macrocyclePhase,
-    weeklyAvailability: safeAvailability,
-    availabilityFormatted,
-    currentPlanSummary,
-    dailyActivitiesReport,
-    activitiesTssBreakdown,
-    hasExistingPlan,
-    plannedWeekTss,
-    actualTss,
-    compliancePct,
-    targetMinTss,
-    targetMaxTss,
-    formDiagnostic,
-    coachProfile,
-    customPromptDirective: customPrompt,
-    recentWellnessSummary,
-    previousWeekReport: previousWeekSummary.summaryText,
-    isWeekKickoffAudit: Boolean(isWeekKickoffAudit),
-    targetTssAdjustmentPct,
+    profile, physioStatus, targetPlanningWeekNum, planningStartDateStr, planningEndDateStr,
+    isInitialAudit: Boolean(isInitialAudit), isCurrentWeek, todayDayName, todayDateStr, todayDayIndex,
+    hasTrainedToday, todaySessionStatus, isWeekCompleted, macrocyclePhase, weeklyAvailability: safeAvailability,
+    availabilityFormatted, currentPlanSummary, dailyActivitiesReport, activitiesTssBreakdown, hasExistingPlan,
+    plannedWeekTss, actualTss, compliancePct, targetMinTss, targetMaxTss, formDiagnostic, coachProfile,
+    customPromptDirective: customPrompt, recentWellnessSummary, previousWeekReport: previousWeekSummary.summaryText,
+    isWeekKickoffAudit: Boolean(isWeekKickoffAudit), targetTssAdjustmentPct,
+    todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl, ctlDeltaStr, ctlDeltaVerdict,
   };
 
   return {
-    profile,
-    physioStatus,
-    plannedWeekTss,
-    actualTss,
-    compliancePct,
-    targetMinTss,
-    targetMaxTss,
-    formDiagnostic,
-    hasExistingPlan,
-    currentPlanSummary,
-    availabilityFormatted,
-    safeAvailability,
-    targetPlanningWeekNum,
-    planningWeekDates,
-    planningStartDateStr,
-    planningEndDateStr,
-    todayDayName,
-    todayDateStr,
-    todayDayIndex,
-    isCurrentWeek,
-    hasTrainedToday,
-    todayExecutedTss,
-    todaySessionStatus,
-    isWeekCompleted,
-    remainingPendingDaysCount,
-    isDeload,
-    coachStyleDescription,
-    promptContext,
-    effectiveExecutedMap,
-    previousWeekSummary,
-    targetTssAdjustmentPct,
-    isWeekKickoffAudit: Boolean(isWeekKickoffAudit),
+    profile, physioStatus, plannedWeekTss, actualTss, compliancePct, targetMinTss, targetMaxTss, formDiagnostic,
+    hasExistingPlan, currentPlanSummary, availabilityFormatted, safeAvailability, targetPlanningWeekNum,
+    planningWeekDates, planningStartDateStr, planningEndDateStr, todayDayName, todayDateStr, todayDayIndex,
+    isCurrentWeek, hasTrainedToday, todayExecutedTss, todaySessionStatus, isWeekCompleted, remainingPendingDaysCount,
+    isDeload, coachStyleDescription, promptContext, effectiveExecutedMap, previousWeekSummary, targetTssAdjustmentPct,
+    isWeekKickoffAudit: Boolean(isWeekKickoffAudit), todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl,
   };
 }

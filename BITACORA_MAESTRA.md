@@ -9263,3 +9263,46 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** 100% enfocado en UX atlética, feedback de rendimiento, claridad técnica y erradicación de ruido visual ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 155 ✅.
+
+---
+
+## 156. Entrada de Bitácora: Precisión Temporal Local del Atleta (Cero Desfases Horarios UTC) y Contraste de Condición Física Macrociclo (CTL Actual vs Proyectado Banister) (PULSE Live Coach v6.4)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 19:15 COT.
+- **Directiva del Atleta:**
+  1. *Precisión Temporal y Consciencia de Horario Local:*
+     - Corregir la discrepancia temporal en la que una comunicación un viernes a las 7:00 p.m. era respondida diciendo "Hoy sábado" en el tercer párrafo, provocado por la conversión a medianoche UTC en el runtime del servidor.
+     - Pasar la telemetría horaria del navegador del atleta (`clientTime`: fecha local `YYYY-MM-DD`, día de la semana en español, hora formateada `07:05 p.m.`, zona horaria `America/Bogota` y hora 24h).
+     - Establecer como regla inquebrantable que el Head Coach conozca el día y hora exactos: si es viernes por la noche, la sesión siguiente es de "mañana sábado" o del domingo, con prohibición estricta de llamar "hoy sábado" a una conversación de viernes.
+  2. *Rumbo a mi Meta con Contraste de Condición Física Macrociclo (Delta de CTL):*
+     - Enriquecer el análisis macro para comparar el estado de forma real (`physioStatus.ctl`, ej. 41.2 CTL) contra el CTL proyectado por la arquitectura del macrociclo para la semana en curso (`plannedCtlForWeek`), reportando explícitamente el diferencial ($\Delta\text{CTL}$), si va en el blanco, por encima o ligeramente por debajo del modelo, y la progresión hacia el pico Banister objetivo.
+
+### 156.1. Implementaciones y Mejoras Realizadas
+1. **Captura y Transmisión de Telemetría Temporal Local (`useHeadCoachChat.ts` - 339 LOC & `types.ts` - 182 LOC):**
+   - El cliente extrae en tiempo de envío la zona horaria (`Intl.DateTimeFormat().resolvedOptions().timeZone`), día de la semana local ("Viernes"), fecha local ("2026-10-16"), hora local ("07:05 p.m.") y hora 24h.
+   - Añadido el campo `clientTime` a `HeadCoachChatRequest` y propagado en el cuerpo de la llamada POST.
+2. **Resolución Temporal y Motor de Proyección de CTL (`chatContext.ts` - 330 LOC):**
+   - `chatContext.ts` prioriza `clientTime.localDateStr` y `clientTime.localDayName` sobre el reloj UTC del servidor, anclando `getWeekDates` a las 12:00 del mediodía local del atleta para erradicar cualquier desfasaje.
+   - Cálculo del CTL proyectado por el macrociclo para la semana activa:
+     $$\text{plannedCtl} = \text{startCtl} + (\text{weekNum} - 1) \times \text{rampRate}$$
+     $$\Delta\text{CTL} = \text{ctl}_{\text{real}} - \text{plannedCtl}$$
+   - Diagnóstico automático del diferencial: en el blanco ($\pm 0.5$ CTL), por encima o ligeramente por debajo.
+3. **Inyección en Prompts del Head Coach (`prompts.ts` - 345 LOC & `defaultPrompts.ts` - 149 LOC):**
+   - Contextualizada la fecha, hora exacta y zona horaria local en el prompt de sistema.
+   - Regla 9 de comunicación humana actualizada para imponer el contraste obligatorio de CTL proyectado vs real en "Rumbo a mi meta" y la coherencia temporal estricta de días ("mañana sábado" vs "hoy viernes").
+4. **Refuerzo en Inferencia Agéntica y Motor Algorítmico (`chatInference.ts` - 334 LOC & `deterministicFallback.ts` - 333 LOC):**
+   - En `chatInference.ts`, `smartBrevityInstruction` exige la coherencia del día local y la comparación de CTL macro.
+   - En `deterministicFallback.ts`, la respuesta de "Rumbo a la meta" ahora contrasta detalladamente el CTL proyectado del plan vs el CTL real de telemetría y la rampa hacia el pico Banister.
+
+### 156.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `types.ts`: 182 LOC ($\le 348$) ✅
+  * `useHeadCoachChat.ts`: 339 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 330 LOC ($\le 348$) ✅
+  * `prompts.ts`: 345 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 149 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 334 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 333 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Precisión temporal impecable (cero desfasaje UTC) y profundidad métrica en la evolución del macrociclo ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 156 ✅.

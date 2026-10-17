@@ -91,10 +91,7 @@ export function useHeadCoachChat({
     if (!text || isLoading) return;
 
     const userMsg: HeadCoachMessageData = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text,
-      hidden: options?.skipUserBubble === true,
+      id: `user-${Date.now()}`, role: "user", text, hidden: options?.skipUserBubble === true,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -123,6 +120,18 @@ export function useHeadCoachChat({
           )
         : currentPlan;
 
+      const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Bogota";
+      const nowC = new Date();
+      const localDayRaw = nowC.toLocaleDateString("es-ES", { weekday: "long", timeZone: clientTz });
+      const localDayName = localDayRaw.charAt(0).toUpperCase() + localDayRaw.slice(1);
+      const clientTime = {
+        localDateStr: nowC.toLocaleDateString("en-CA", { timeZone: clientTz }),
+        localDayName,
+        localTimeStr: nowC.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: clientTz }),
+        timeZone: clientTz,
+        hour24: nowC.getHours(),
+      };
+
       const res = await fetch("/api/headcoach/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -136,6 +145,7 @@ export function useHeadCoachChat({
           restingHR: profile.restingHR, maxHR: profile.maxHR, lthr: profile.lthr, isInitialAudit: false,
           temporaryAvailability: options?.temporaryAvailability || temporaryAvailability || undefined,
           targetTssAdjustmentPct: options?.targetTssAdjustmentPct, isWeekKickoffAudit: options?.isWeekKickoffAudit,
+          clientTime,
         }),
       });
 
@@ -217,14 +227,10 @@ export function useHeadCoachChat({
       setSyncFeedback("Cambios deshechos. Tu plan original ha sido restaurado.");
       setTimeout(() => setSyncFeedback(null), 4000);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `restore-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          text: "Cambios deshechos. Tu plan original ha sido restaurado con éxito.",
-          smartActions: INITIAL_SMART_ACTIONS,
-        },
-      ]);
+      setMessages((prev) => [...prev, {
+        id: `restore-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        text: "Cambios deshechos. Tu plan original ha sido restaurado con éxito.", smartActions: INITIAL_SMART_ACTIONS,
+      }]);
       setPreviousPlanSnapshot(null);
     } catch (e: any) {
       setSyncFeedback(`Error al restaurar: ${e.message || "Error al revertir"}`);
@@ -244,17 +250,11 @@ export function useHeadCoachChat({
 
     if (/^reorganizar$/i.test(rawLabel.trim())) {
       const initialMatrix = temporaryAvailability || (effectiveBlueprint?.availabilitySnapshot as any) || weeklyAvailability || {};
-      const reorgPromptMsg: HeadCoachMessageData = {
-        id: `reorg-prompt-${Date.now()}`,
-        role: "assistant",
+      setMessages((prev) => [...prev, {
+        id: `reorg-prompt-${Date.now()}`, role: "assistant", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         text: "Para reorganizar tu microciclo sin alterar tu planificación habitual, ajusta tu disponibilidad temporal directamente en esta matriz. Selecciona qué deportes deseas realizar cada día y cuáles necesitas de descanso:",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        showInlineMatrix: true,
-        inlineMatrixAvailability: initialMatrix,
-        targetWeekNumber: activeWeekNumber,
-        smartActions: [],
-      };
-      setMessages((prev) => [...prev, reorgPromptMsg]);
+        showInlineMatrix: true, inlineMatrixAvailability: initialMatrix, targetWeekNumber: activeWeekNumber, smartActions: [],
+      }]);
       return;
     }
 
@@ -267,14 +267,10 @@ export function useHeadCoachChat({
     }
 
     if (/descartar/i.test(rawLabel)) {
-      const discardMsg: HeadCoachMessageData = {
-        id: `discard-${Date.now()}`,
-        role: "assistant",
-        text: "Entendido, descartamos la propuesta y mantenemos tu microciclo tal como estaba previsto.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        smartActions: INITIAL_SMART_ACTIONS,
-      };
-      setMessages((prev) => [...prev, discardMsg]);
+      setMessages((prev) => [...prev, {
+        id: `discard-${Date.now()}`, role: "assistant", text: "Entendido, descartamos la propuesta y mantenemos tu microciclo tal como estaba previsto.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), smartActions: INITIAL_SMART_ACTIONS,
+      }]);
       return;
     }
 

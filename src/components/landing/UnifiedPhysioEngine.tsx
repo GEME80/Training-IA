@@ -1,39 +1,39 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import {
-  CheckCircle2,
-  Eye,
-  Quote,
-  ShieldCheck,
-} from "lucide-react";
-import { CoachBioModal, CoachData } from "./CoachBioModal";
-import { PHYSIO_PILLARS } from "./physioEngineData";
+import { CheckCircle2, Eye, Quote, ShieldCheck } from "lucide-react";
+import { CoachBioModal } from "./CoachBioModal";
+import { COACHES_SCIENCE_DATA, CoachId, CoachMethodology } from "./coachScienceData";
 
 const AUTO_PLAY_INTERVAL = 5000; // 5 segundos por entrenador
 
 export const UnifiedPhysioEngine: React.FC = () => {
-  const [activeTabIdx, setActiveTabIdx] = useState<number>(0);
-  const [selectedCoach, setSelectedCoach] = useState<CoachData | null>(null);
+  const [selectedCoachId, setSelectedCoachId] = useState<CoachId>("daniels");
+  const [selectedCoachForModal, setSelectedCoachForModal] = useState<CoachMethodology | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Rotación automática continua cada 5 segundos (solo se detiene si se abre el modal biográfico)
   useEffect(() => {
-    if (selectedCoach !== null) {
+    if (selectedCoachForModal !== null) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
 
     timerRef.current = setInterval(() => {
-      setActiveTabIdx((prev) => (prev + 1) % PHYSIO_PILLARS.length);
+      setSelectedCoachId((prevId) => {
+        const currentIndex = COACHES_SCIENCE_DATA.findIndex((c) => c.id === prevId);
+        const nextIndex = (currentIndex + 1) % COACHES_SCIENCE_DATA.length;
+        return COACHES_SCIENCE_DATA[nextIndex].id;
+      });
     }, AUTO_PLAY_INTERVAL);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [selectedCoach, activeTabIdx]);
+  }, [selectedCoachForModal, selectedCoachId]);
 
-  const activePillar = PHYSIO_PILLARS[activeTabIdx];
+  const activeCoach =
+    COACHES_SCIENCE_DATA.find((c) => c.id === selectedCoachId) || COACHES_SCIENCE_DATA[0];
 
   return (
     <section id="metodologia" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
@@ -57,23 +57,23 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
       {/* Selector Visual de los 4 Entrenadores con Indicador de Progreso */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto mb-8">
-        {PHYSIO_PILLARS.map((pillar, idx) => {
-          const isActive = activeTabIdx === idx;
+        {COACHES_SCIENCE_DATA.map((coach) => {
+          const isActive = selectedCoachId === coach.id;
           return (
             <button
-              key={pillar.id}
+              key={coach.id}
               type="button"
-              onClick={() => setActiveTabIdx(idx)}
-              className={`relative text-left p-3 rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden flex items-center gap-3 ${
+              onClick={() => setSelectedCoachId(coach.id)}
+              className={`relative text-left p-3 rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden flex items-center gap-3 ${
                 isActive
-                  ? "bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 scale-[1.02]"
-                  : "bg-slate-50/80 hover:bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
+                  ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 shadow-md ring-1 ring-emerald-500/30 scale-[1.02]"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 shadow-2xs"
               }`}
             >
               {/* Barra de Progreso Activa en el Carrusel */}
               {isActive && (
                 <span
-                  key={`progress-${activeTabIdx}`}
+                  key={`progress-${selectedCoachId}`}
                   className="absolute bottom-0 left-0 h-1 bg-emerald-500 rounded-full animate-[progress_5s_linear]"
                   style={{ animationDuration: `${AUTO_PLAY_INTERVAL}ms` }}
                 />
@@ -82,18 +82,18 @@ export const UnifiedPhysioEngine: React.FC = () => {
               {/* Avatar Compacto del Entrenador */}
               <div className="w-10 h-10 min-w-10 max-w-10 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-2xs shrink-0">
                 <img
-                  src={pillar.coach.imageUrl}
-                  alt={pillar.coach.name}
+                  src={coach.avatarUrl}
+                  alt={coach.name}
                   className="w-full h-full object-cover object-top"
                 />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-black text-slate-900 truncate">
-                  {pillar.coach.name}
+                  {coach.name}
                 </div>
                 <div className="text-[11px] text-slate-500 truncate font-medium">
-                  {pillar.tabTitle}
+                  {coach.tabSubtitle}
                 </div>
               </div>
             </button>
@@ -103,7 +103,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
       {/* Tarjeta Principal del Entrenador Activo con Transición Fluida */}
       <div
-        key={activePillar.id}
+        key={activeCoach.id}
         className="bg-white rounded-3xl border border-slate-200/90 hover:border-emerald-400 shadow-xl p-6 sm:p-10 transition-all duration-300 relative group"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -111,20 +111,20 @@ export const UnifiedPhysioEngine: React.FC = () => {
           <div className="lg:col-span-7 space-y-5 text-left">
             <div>
               <div className="inline-flex items-center gap-2 text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                <activePillar.tabIcon className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
-                <span>Principio de Entrenamiento Activo</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
+                <span>{activeCoach.badgeLabel}</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-950 mt-2 tracking-tight group-hover:text-emerald-900 transition-colors">
-                {activePillar.ruleTitle}
+                {activeCoach.headline}
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                {activePillar.ruleDescription}
+                {activeCoach.description}
               </p>
             </div>
 
             {/* 3 Viñetas con checks verde esmeralda */}
             <div className="space-y-3 pt-1">
-              {activePillar.bullets.map((bullet, bIdx) => (
+              {activeCoach.bullets.map((bullet, bIdx) => (
                 <div key={bIdx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.75} />
                   <span className="leading-snug">{bullet}</span>
@@ -141,24 +141,24 @@ export const UnifiedPhysioEngine: React.FC = () => {
           {/* Columna Derecha: Tarjeta Clickeable del Entrenador (lg:col-span-5) */}
           <div className="lg:col-span-5">
             <div
-              onClick={() => setSelectedCoach(activePillar.coach)}
+              onClick={() => setSelectedCoachForModal(activeCoach)}
               className="bg-slate-50/90 hover:bg-emerald-50/50 rounded-2xl border border-slate-200 hover:border-emerald-300 p-6 space-y-4 text-left shadow-2xs transition-all cursor-pointer hover:scale-[1.01]"
             >
               {/* Foto compacta y datos del entrenador */}
               <div className="flex items-center gap-3.5">
                 <div className="w-14 h-14 min-w-14 max-w-14 rounded-2xl overflow-hidden border-2 border-emerald-500/50 shadow-xs shrink-0 bg-white">
                   <img
-                    src={activePillar.coach.imageUrl}
-                    alt={activePillar.coach.name}
+                    src={activeCoach.avatarUrl}
+                    alt={activeCoach.name}
                     className="w-full h-full object-cover object-top"
                   />
                 </div>
                 <div>
                   <h4 className="text-base font-black text-slate-950">
-                    {activePillar.coach.name}
+                    {activeCoach.name}
                   </h4>
                   <p className="text-xs text-slate-500 font-medium">
-                    {activePillar.coach.title}
+                    {activeCoach.roleTitle}
                   </p>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
               <div className="relative pl-4 border-l-2 border-emerald-400 py-0.5">
                 <Quote className="w-3.5 h-3.5 text-emerald-600/50 absolute -top-1 left-0 -translate-x-1/2 bg-slate-50" strokeWidth={1.75} />
                 <p className="text-xs text-slate-600 italic leading-relaxed">
-                  &ldquo;{activePillar.coach.quote}&rdquo;
+                  &ldquo;{activeCoach.quote}&rdquo;
                 </p>
               </div>
 
@@ -177,12 +177,14 @@ export const UnifiedPhysioEngine: React.FC = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedCoach(activePillar.coach);
+                    setSelectedCoachForModal(activeCoach);
                   }}
                   className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  <span>Conocer más sobre el método de {activePillar.coach.name}</span>
+                  <Eye className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
+                  <span>
+                    Conocer más sobre el método {activeCoach.name.startsWith("Dr.") ? "del" : "de"} {activeCoach.name}
+                  </span>
                 </button>
               </div>
             </div>
@@ -192,9 +194,9 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
       {/* Modal Biográfico Detallado */}
       <CoachBioModal
-        coach={selectedCoach}
-        isOpen={selectedCoach !== null}
-        onClose={() => setSelectedCoach(null)}
+        coach={selectedCoachForModal}
+        isOpen={selectedCoachForModal !== null}
+        onClose={() => setSelectedCoachForModal(null)}
       />
     </section>
   );

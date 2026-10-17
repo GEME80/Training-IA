@@ -222,8 +222,9 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     0
   );
 
+  const planSumTss = (Array.isArray(currentPlan) && currentPlan.length > 0) ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0) : 0;
   const bpTarget = macrocyclePhase?.blueprint?.weeks?.find((w: any) => w.weekNumber === safeWeekNum)?.targetTss || macrocyclePhase?.blueprint?.currentWeek?.targetTss;
-  const rawPlannedTss = bpTarget || ((Array.isArray(currentPlan) && currentPlan.length > 0) ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0) : 366);
+  const rawPlannedTss = planSumTss > 0 ? planSumTss : (bpTarget || 366);
   const tssFactor = targetTssAdjustmentPct !== 0 ? (1 + targetTssAdjustmentPct / 100) : 1;
   const plannedWeekTss = Math.round(rawPlannedTss * tssFactor);
   const actualTss = Math.round(weekExecutedTss);

@@ -9477,4 +9477,44 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 4 (Alcance e Integridad Deportiva):** Tono de Head Coach auténtico, crítico y técnico; evaluación profunda de telemetría (Pa:Hr, W, LTHR, TSS deficit) sin frases cliché repetitivas ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 160 ✅.
 
+---
+
+## 161. Erradicación del Bug "355 Sesiones", Sincronización SSOT de 366 TSS y Elevación de Calidad en el Fallback Determinístico
+
+### 161.1. Diagnóstico y Causa Raíz
+1. **Activación del Fallback Determinístico:**
+   - A las 08:55 p.m., al pulsar "Balance de Semana", una contingencia de red/latencia en Gemini activó `handleDeterministicFallback` (`deterministicFallback.ts`).
+   - El mensaje devuelto exhibió fallos evidentes:
+     * *"llevas 355 sesiones con 180 de tu objetivo semanal de 338 TSS"* $\rightarrow$ Absurdo matemático para un microciclo de una semana.
+     * *"rampa en +-1.2 CTL/sem"* $\rightarrow$ Error de formateo de signos encimados.
+     * *"el martes arrancamos con disciplina"* $\rightarrow$ Incoherencia temporal total para un viernes en la noche.
+     * *"análisis malo que no dice nada"* $\rightarrow$ Complacencia vacía sin juzgar el impacto del déficit de -83 TSS por haber omitido las rutinas de fuerza.
+2. **Causa Raíz Identificada:**
+   - **Bug 355 sesiones:** `Object.values(ctx.effectiveExecutedMap || {}).reduce(...)` sumaba indiscriminadamente todas las actividades de toda la historia del atleta en Intervals.icu en lugar de filtrar por los 7 días de la semana activa (`ctx.planningWeekDates`).
+   - **Divergencia de 338 TSS vs 366 TSS:** En `chatContext.ts`, el `bpTarget` (338 TSS del blueprint) tomaba precedencia sobre `planSumTss` (366 TSS de la semana planificada en curso).
+   - **Formateo `+-1.2`:** Concatenación estática de `+${rampRate}` cuando el valor era negativo.
+   - **Textos obsoletos de fallback:** Plantillas genéricas redactadas antes de la unificación fisiológica, sin criterio de entrenador ni evaluación de la fuerza omitida.
+
+### 161.2. Implementaciones Realizadas
+1. **Conteo Semanal Estricto en Fallback (`deterministicFallback.ts` - 339 LOC):**
+   - El conteo de sesiones completadas se calcula estrictamente sumando las actividades de las fechas comprendidas en `ctx.planningWeekDates`. Da exactamente **4 sesiones** (Lunes a Viernes).
+   - Corrección del formateo de rampa: `(physioStatus.rampRate >= 0 ? "+" : "") + rampRate.toFixed(1)`.
+   - Reescritura completa del veredicto determinístico con criterio de Head Coach de resistencia:
+     * Párrafo 1: 180 TSS en 4 sesiones de 366 TSS (49% global), corte de 263 TSS (-83 TSS). Juicio categórico: este déficit NO es lo ideal porque omitir la fuerza en un atleta Máster desprotege ante el impacto osteoarticular rumbo a Tokio.
+     * Párrafo 2: Explicación biomecánica y prohibición rotunda de doblar sesiones o apretar ritmos el fin de semana para "compensar" TSS.
+     * Párrafo 3: Pauta temporal precisa (hidratación/descanso viernes noche, soltura en ciclismo sábado y tirada larga domingo).
+   - Incorporación de juicio crítico de desacople cardíaco ($> +5\%$ denota deriva) y evaluación honesta de esfuerzos en tests dentro del fallback de auditoría.
+2. **Priorización Canónica de 366 TSS en Contexto (`chatContext.ts` - 346 LOC):**
+   - Priorizado `planSumTss` sobre `bpTarget`, garantizando que tanto Gemini como el fallback utilicen unívocamente **366 TSS** como meta semanal.
+
+### 161.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `deterministicFallback.ts`: 339 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 346 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Erradicado el bug de 355 sesiones; balance de semana y auditorías alineados con rigor de Head Coach incluso en modo contingencia/fallback ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 161 ✅.
+
+
 

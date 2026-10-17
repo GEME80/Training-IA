@@ -84,7 +84,7 @@ export interface HeadCoachPromptContext {
   hasTrainedToday?: boolean;
   todaySessionStatus?: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY";
   isWeekCompleted?: boolean;
-  todayTimeStr?: string; timeZone?: string; plannedCtlForWeek?: number; ctlDelta?: number; targetPeakCtl?: number; ctlDeltaStr?: string; ctlDeltaVerdict?: string;
+  todayTimeStr?: string; timeZone?: string; plannedCtlForWeek?: number; ctlDelta?: number; targetPeakCtl?: number; ctlDeltaStr?: string; ctlDeltaVerdict?: string; plannedTssToDate?: number; toDateTssDelta?: number;
 }
 
 /**
@@ -101,6 +101,7 @@ export function buildHeadCoachSystemPrompt(
     activitiesTssBreakdown, hasExistingPlan, plannedWeekTss, actualTss, compliancePct,
     targetMinTss, targetMaxTss, formDiagnostic, coachProfile, customPromptDirective,
     recentWellnessSummary, previousWeekReport, isWeekKickoffAudit, targetTssAdjustmentPct,
+    plannedTssToDate, toDateTssDelta,
   } = ctx;
 
   const directiveBlock = customPromptDirective?.trim()
@@ -113,7 +114,7 @@ export function buildHeadCoachSystemPrompt(
 
   const activitiesBlock = dailyActivitiesReport?.trim()
     ? `\n=== AUDITORÍA DETALLADA DE ACTIVIDADES Y DESGLOSE DE TSS POR SESIÓN ===\n${dailyActivitiesReport.trim()}\n${activitiesTssBreakdown ? `\nDesglose Individual de TSS por Actividad:\n${activitiesTssBreakdown}\n` : ""}`
-    : `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA ===\nCarga ejecutada total: ${actualTss} TSS (${compliancePct}% de cumplimiento sobre ${plannedWeekTss} TSS previstos).\n`;
+    : `\n=== ACTIVIDADES EJECUTADAS EN LA SEMANA ===\nCarga ejecutada total: ${actualTss} TSS (${compliancePct}% de cumplimiento sobre ${plannedWeekTss} TSS objetivo semanal).\n`;
 
   const wkgRunStr = profile.run_ftp && profile.weight ? `${(profile.run_ftp / profile.weight).toFixed(2)} W/kg` : "—";
   const wkgBikeStr = profile.bike_ftp && profile.weight ? `${(profile.bike_ftp / profile.weight).toFixed(2)} W/kg` : "—";
@@ -153,6 +154,8 @@ ${activitiesBlock}
 ${availabilityFormatted}
 
 === ESTADO DEL PLAN ACTUAL DE LA SEMANA ===
+- Objetivo Semanal Total: ${plannedWeekTss} TSS (${actualTss} TSS ejecutados, ${compliancePct}% de cumplimiento global).
+${plannedTssToDate ? `- Programado acumulado de Lunes a ${todayDayName}: ${plannedTssToDate} TSS previstos a la fecha (Diferencial al corte: ${toDateTssDelta && toDateTssDelta > 0 ? `+${toDateTssDelta}` : toDateTssDelta} TSS).` : ""}
 ${hasExistingPlan ? `Plan Activo Cargado (${plannedWeekTss} TSS):\n${currentPlanSummary}` : "No hay plan estructurado previo. Se debe generar la propuesta completa."}
 ${directiveBlock}
 === INSTRUCCIONES DE EJECUCIÓN INMEDIATA PARA EL HEAD COACH ===
@@ -167,7 +170,7 @@ ${directiveBlock}
 3. COMUNICACIÓN HUMANA DIRECTA EN PRIMERA PERSONA (120 A 180 PALABRAS EN "reply"):
    - Háblale al atleta en primera persona como su entrenador de élite ("Germán, estuve auditando...").
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos.
-   - Párrafo 1: Lectura técnica y veredicto con números clave (TSS ejecutado vs previsto, delta de TSS). En auditoría de sesión: usa SIEMPRE el NOMBRE REAL del workout (ej. "Fartlek 8x 2m Z4 / 1m Z2") y su DISCIPLINA EXPLÍCITA ([Carrera a pie] vs [Ciclismo]; NUNCA llames rodaje a un fartlek), reportando vatios avg y NP, FC media y máx vs LTHR, desacople y % cumplimiento. En "Rumbo a mi meta", contrasta tu CTL actual (${physioStatus.ctl.toFixed(1)}) vs el CTL proyectado (${ctx.plannedCtlForWeek || physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco).
+   - Párrafo 1: Lectura técnica y veredicto con números clave. Reporta SIEMPRE en primer lugar la métrica global del panel: "${actualTss} TSS ejecutados de tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global)". Si desglosas el corte a la fecha (${todayDayName}), reporta los ${plannedTssToDate || plannedWeekTss} TSS previstos y el diferencial (${toDateTssDelta || 0} TSS). ¡NUNCA digas un porcentaje parcial sin vincularlo al total semanal de ${plannedWeekTss} TSS! En auditoría de sesión: usa SIEMPRE el NOMBRE REAL del workout (ej. "Fartlek 8x 2m Z4 / 1m Z2") y su DISCIPLINA EXPLÍCITA ([Carrera a pie] vs [Ciclismo]; NUNCA llames rodaje a un fartlek), reportando vatios avg y NP, FC media y máx vs LTHR, desacople y % cumplimiento. En "Rumbo a mi meta", contrasta tu CTL actual (${physioStatus.ctl.toFixed(1)}) vs el CTL proyectado (${ctx.plannedCtlForWeek || physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco).
    - Párrafo 2: Traducción humana y sensaciones biológicas (sóleo, Aquiles, rodillas, piernas ligeras al subir escaleras). En tests o sesiones clave dictamina si "pudo dar más con margen en el tanque" o "está en sus potencias target".
    - Párrafo 3: Pauta inmediata para hoy o el fin de semana. Respetando el día local exacto (si hoy es viernes, la sesión siguiente es de "mañana sábado"; TERMINANTEMENTE PROHIBIDO llamar "hoy sábado" un viernes).
 4. PROHIBIDO ENUMERAR LUNES A DOMINGO EN EL TEXTO DE "reply": Jamás redactes listas día por día en el texto; el microciclo completo va 100% en el objeto "suggestedPlan" que renderiza la tarjeta interactiva visual.

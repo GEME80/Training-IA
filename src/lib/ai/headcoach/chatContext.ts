@@ -234,29 +234,38 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const targetMinTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.65 : 0.95));
   const targetMaxTss = Math.round((plannedWeekTss || 350) * (isDeload ? 0.8 : 1.15));
 
-  // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado)
+  // TSS planificado acumulado de Lunes a hoy (corte acumulado a la fecha)
+  const plannedTssToDate = planningWeekDates.slice(0, todayDayIndex + 1).reduce((acc, wDate, dIdx) => {
+    const dName = CANONICAL_DAYS[dIdx];
+    const items = Array.isArray(currentPlan)
+      ? currentPlan.filter((p) => (p?.date && p.date === wDate.date) || (p?.day && p.day.toLowerCase() === dName.toLowerCase()))
+      : [];
+    return acc + items.reduce((s, p) => s + (p?.tss || 0), 0);
+  }, 0);
+  const toDateTssDelta = actualTss - plannedTssToDate;
+
+  // Construcción del reporte analítico Día a Día (Plan vs. Ejecutado) soportando dobles sesiones
   const auditLines = planningWeekDates.map((wDate, idx) => {
     const dName = CANONICAL_DAYS[idx];
-    const plannedSession = Array.isArray(currentPlan) ? currentPlan[idx] : null;
-    const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
-    const planTss = plannedSession?.tss || 0;
-    const planTitle = plannedSession?.workoutName || plannedSession?.title || (isRestPlanned ? "Descanso Pasivo" : "Entrenamiento");
-    const planDur = plannedSession?.durationMinutes || 0;
+    const dayPlanItems = Array.isArray(currentPlan)
+      ? currentPlan.filter((p) => (p?.date && p.date === wDate.date) || (p?.day && p.day.toLowerCase() === dName.toLowerCase()))
+      : [];
+    const isRestPlanned = dayPlanItems.length === 0 || dayPlanItems.every((p) => !p || p.discipline === "Descanso" || (p.tss || 0) === 0);
+    const planTss = dayPlanItems.reduce((acc, p) => acc + (p?.tss || 0), 0);
+    const planDur = dayPlanItems.reduce((acc, p) => acc + (p?.durationMinutes || 0), 0);
+    const planTitle = dayPlanItems.length > 0
+      ? dayPlanItems.map((p) => `[${p.discipline || "Carrera"}] ${p.workoutName || p.title || "Entrenamiento"} (${p.tss || 0} TSS)`).join(" + ")
+      : "Descanso Pasivo";
 
     const execData = effectiveExecutedMap[wDate.date];
     const execTss = execData?.totalTss || 0;
-    const isPast = wDate.date < todayDateStr;
-    const isToday = wDate.date === todayDateStr;
+    const isPast = wDate.date < todayDateStr, isToday = wDate.date === todayDateStr;
 
     if (execData && execData.activities.length > 0) {
-      const actSummaries = execData.activities
-        .map((a) => formatCompactActivitySummary(a))
-        .join("; ");
+      const actSummaries = execData.activities.map((a) => formatCompactActivitySummary(a)).join("; ");
       const complianceStatus = isRestPlanned
         ? "[ACTIVIDAD EN DIA DE DESCANSO]"
-        : execTss >= Math.round(planTss * 0.85)
-        ? "[COMPLETADO]"
-        : "[PARCIAL / RECORTADO]";
+        : execTss >= Math.round(planTss * 0.85) ? "[COMPLETADO]" : "[PARCIAL / RECORTADO]";
       return `- ${dName} (${wDate.formattedDate}): Plan: ${planTitle} (${planDur}m, ${planTss} TSS) | Real: ${actSummaries} -> Total Real: ${execTss} TSS ${complianceStatus}`;
     }
 
@@ -273,8 +282,10 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
   const todayExecData = effectiveExecutedMap[todayDateStr];
   const hasTrainedToday = isCurrentWeek && Boolean(todayExecData && todayExecData.activities && todayExecData.activities.length > 0);
   const todayExecutedTss = hasTrainedToday ? (todayExecData?.totalTss || 0) : 0;
-  const todayPlannedSession = Array.isArray(currentPlan) ? currentPlan[todayDayIndex] : null;
-  const isTodayPlannedRest = !todayPlannedSession || todayPlannedSession.discipline === "Descanso" || (todayPlannedSession.tss || 0) === 0;
+  const todayDayItems = Array.isArray(currentPlan)
+    ? currentPlan.filter((p) => (p?.date && p.date === todayDateStr) || (p?.day && p.day.toLowerCase() === todayDayName.toLowerCase()))
+    : [];
+  const isTodayPlannedRest = todayDayItems.length === 0 || todayDayItems.every((p) => !p || p.discipline === "Descanso" || (p.tss || 0) === 0);
   const todaySessionStatus: "COMPLETADA_HOY" | "PENDIENTE_HOY" | "DESCANSO_HOY" =
     hasTrainedToday ? "COMPLETADA_HOY" : isTodayPlannedRest ? "DESCANSO_HOY" : "PENDIENTE_HOY";
 
@@ -282,8 +293,11 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     if (!isCurrentWeek) return false;
     if (idx < todayDayIndex) return false;
     if (idx === todayDayIndex) return !hasTrainedToday && !isTodayPlannedRest;
-    const pSession = Array.isArray(currentPlan) ? currentPlan[idx] : null;
-    const isRest = !pSession || pSession.discipline === "Descanso" || (pSession.tss || 0) === 0;
+    const dName = CANONICAL_DAYS[idx];
+    const items = Array.isArray(currentPlan)
+      ? currentPlan.filter((p) => (p?.date && p.date === wDate.date) || (p?.day && p.day.toLowerCase() === dName.toLowerCase()))
+      : [];
+    const isRest = items.length === 0 || items.every((p) => !p || p.discipline === "Descanso" || (p.tss || 0) === 0);
     const hasExec = Boolean(effectiveExecutedMap[wDate.date]?.activities?.length);
     return !isRest && !hasExec;
   });
@@ -317,6 +331,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     customPromptDirective: customPrompt, recentWellnessSummary, previousWeekReport: previousWeekSummary.summaryText,
     isWeekKickoffAudit: Boolean(isWeekKickoffAudit), targetTssAdjustmentPct,
     todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl, ctlDeltaStr, ctlDeltaVerdict,
+    plannedTssToDate, toDateTssDelta,
   };
 
   return {
@@ -326,5 +341,6 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     isCurrentWeek, hasTrainedToday, todayExecutedTss, todaySessionStatus, isWeekCompleted, remainingPendingDaysCount,
     isDeload, coachStyleDescription, promptContext, effectiveExecutedMap, previousWeekSummary, targetTssAdjustmentPct,
     isWeekKickoffAudit: Boolean(isWeekKickoffAudit), todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl,
+    plannedTssToDate, toDateTssDelta,
   };
 }

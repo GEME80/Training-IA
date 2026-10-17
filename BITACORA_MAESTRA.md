@@ -9345,3 +9345,60 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas estáticas/dinámicas generadas sin advertencias) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Auditorías con nombres reales de workout, disciplina explícita, telemetría avanzada (NP, desacople, FC máx) y blindaje temporal 100% libre de "hoy sábado" un viernes ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 157 ✅.
+
+## 158. Entrada de Bitácora: Resolución de Emparejamiento Cruzado en Mobile (Ciclismo vs Fuerza) y Transparencia Métrica de TSS Semanal (366 TSS Obj & 49% vs Corte Acumulado) (PULSE Live Coach v6.6)
+- **Fecha y Hora:** 16 de Octubre de 2026 - 19:55 COT.
+- **Directiva del Atleta:**
+  1. *Anomalía de Emparejamiento en Modo Responsive (Mobile):*
+     - En la vista móvil/responsive, la sesión de bicicleta del jueves aparecía erróneamente marcada como "⚠️ Omitida" y su telemetría real (vatios, FC y TSS) se cargaba indebidamente a la sesión de entrenamiento de fortalecimiento/fuerza.
+     - En desktop, en cambio, la bicicleta aparecía correctamente chequeada en verde. Se requirió auditar y blindar el motor de emparejamiento para que cada actividad ejecutada se asigne inquebrantablemente a la disciplina que le corresponde.
+  2. *Coherencia de Métricas de TSS en el Head Coach Chat:*
+     - En el panel del atleta figura claramente: `TSS OBJ: 366`, `180 TSS real | 366 TSS obj` y `49% de cumplimiento`.
+     - El coach respondía mencionando "180 TSS ejecutados frente a 263 TSS planificados", desconcertando al usuario con una cifra que parecía arbitraria o desconectada de la semana completa.
+     - Se solicitó unificar la telemetría del chat para que el Head Coach hable siempre del objetivo semanal total de 366 TSS (49% de cumplimiento global) y clarifique de dónde proviene el subtotal a la fecha (263 TSS de lunes a viernes con delta de -83 TSS por la fuerza omitida).
+
+### 158.1. Causa Raíz Fisiológica y de Software
+1. **Falso Positivo en Regex por Título de Entrenamiento (`matchDailyActivities.ts`):**
+   - La sesión de ciclismo en rodillo del jueves 15 se titulaba `"[PULSE AI] Fuerza Resistencia & Torque en Subida (4x 6...)"`. Su tipo técnico en Intervals era `"Ride"`.
+   - En `matchDailyActivities.ts`, el matcher para sesiones de `"Fuerza"` ejecutaba:
+     `a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type) || /fuerza|gym|pesas|fortalec/i.test(a.name)`
+   - Al contener la palabra `"Fuerza"` en el título, la sesión de gimnasio evaluada primero capturaba la actividad de ciclismo y la marcaba como suya (`usedActIds.add(match.id)`).
+   - Cuando el loop llegaba a la sesión de Ciclismo, la actividad ya estaba consumida, marcando la bicicleta como omitida. En desktop no ocurría porque `AthleteCalendarDayColumn.tsx` evaluaba únicamente `a.type` sin buscar en `a.name`.
+2. **Indexación Posicional Rota ante Dobles Sesiones (`chatContext.ts`):**
+   - En `chatContext.ts`, el reporte día a día hacía `currentPlan[idx]` asumiendo un plan de 7 elementos (1 por día).
+   - Al tener dobles sesiones en el microciclo (miércoles: carrera + fuerza, jueves: fuerza + bici, viernes: carrera + fuerza), `currentPlan` contiene 9 elementos.
+   - La indexación posicional desfasaba las sesiones hacia días posteriores y solo sumaba las primeras sesiones en el prompt (263 TSS de lunes a viernes), ignorando la relación con el objetivo global de 366 TSS de la semana completa.
+
+### 158.2. Implementaciones Realizadas
+1. **Blindaje de Emparejamiento por Disciplina (`matchDailyActivities.ts` - 55 LOC, `AthleteCalendarDayTile.tsx` - 344 LOC, `useWorkoutDetailData.tsx` - 190 LOC & `AthleteCalendarDayColumn.tsx` - 347 LOC):**
+   - Se estableció como regla inviolable que ninguna actividad con tipo aeróbico (`Ride`, `VirtualRide`, `Bike`, `Run`, `VirtualRun`, `TrailRun`, `Swim`) pueda ser capturada por una sesión de disciplina `"Fuerza"`, sin importar que su título incluya la palabra "Fuerza" o "Resistencia".
+   - Las sesiones de carrera y ciclismo priorizan su tipo nativo y descartan tipos opuestos.
+2. **Soporte Nativo de Dobles Sesiones y Agrupación por Fecha (`chatContext.ts` - 346 LOC):**
+   - Sustituida la indexación posicional `currentPlan[idx]` por búsqueda y agrupación estricta por fecha y día (`p.date === wDate.date || p.day === dName`).
+   - `dayPlanItems` ahora consolida todas las sesiones del día, sumando su TSS y duración combinadas (`planTitle` concatena las sesiones con `+`).
+   - Cálculo desacoplado y explícito de:
+     * `plannedWeekTss`: **366 TSS** (Objetivo semanal completo Lunes a Domingo).
+     * `actualTss`: **180 TSS** (Carga real ejecutada al momento).
+     * `compliancePct`: **49%** ($180 / 366$).
+     * `plannedTssToDate`: **263 TSS** (Planificado acumulado de Lunes a Hoy).
+     * `toDateTssDelta`: **-83 TSS** ($180 - 263$).
+3. **Propagación SSOT en Contextos y Prompts (`types.ts` - 184 LOC, `prompts.ts` - 326 LOC, `defaultPrompts.ts` - 149 LOC, `chatInference.ts` - 340 LOC & `deterministicFallback.ts` - 340 LOC):**
+   - Incorporados `plannedTssToDate` y `toDateTssDelta` en `ResolvedChatContext` y `HeadCoachPromptContext`.
+   - Instrucción mandataria para el coach: reportar SIEMPRE en primer lugar la métrica global del panel (`180 de 366 TSS objetivo semanal, 49% de cumplimiento global`), y añadir transparentemente el desglose del corte a la fecha (`al corte de Viernes sumas 180 frente a 263 TSS previstos a hoy, delta de -83 TSS concentrado en los trabajos de fuerza no realizados`).
+
+### 158.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `matchDailyActivities.ts`: 55 LOC ($\le 348$) ✅
+  * `AthleteCalendarDayTile.tsx`: 344 LOC ($\le 348$) ✅
+  * `useWorkoutDetailData.tsx`: 190 LOC ($\le 348$) ✅
+  * `AthleteCalendarDayColumn.tsx`: 347 LOC ($\le 348$) ✅
+  * `types.ts`: 184 LOC ($\le 348$) ✅
+  * `prompts.ts`: 326 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 149 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 346 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 340 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 340 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Emparejamiento móvil 100% fiel (ciclismo no se confunde con fuerza) y total transparencia métrica de TSS (366 TSS obj, 49% de cumplimiento global y -83 TSS a la fecha) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 158 ✅.

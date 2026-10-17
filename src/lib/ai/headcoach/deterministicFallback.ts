@@ -123,19 +123,21 @@ export function handleDeterministicFallback(
     const executedCount = Object.values(ctx.effectiveExecutedMap || {}).reduce((acc: number, d: any) => acc + (d?.activities?.length || 0), 0);
     const totalSessions = currentPlan.filter((p) => !/descanso/i.test(p.workoutName || "")).length || 5;
     const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1), tssDiff = actualTss - plannedWeekTss;
-
     let tssVerdict = "", humanTranslation = "", nextStep = "";
+    const toDateContext = ctx.plannedTssToDate
+      ? ` (al corte de ${ctx.todayDayName}: ${actualTss} de ${ctx.plannedTssToDate} TSS previstos, delta de ${ctx.toDateTssDelta && ctx.toDateTssDelta > 0 ? `+${ctx.toDateTssDelta}` : ctx.toDateTssDelta} TSS)`
+      : "";
 
     if (plannedWeekTss > 0 && actualTss < plannedWeekTss * 0.75) {
-      tssVerdict = `llevas ${executedCount} de ${totalSessions} sesiones con ${actualTss} de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento). Estás por debajo del volumen previsto (${tssDiff} TSS de déficit), con rampa en +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
+      tssVerdict = `llevas ${executedCount} sesiones con ${actualTss} de tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global)${toDateContext}. Estás por debajo del volumen previsto (${tssDiff} TSS de déficit semanal), con rampa en +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
       humanTranslation = "Esto significa que tus piernas están más descansadas de lo proyectado y sin sobrecarga articular, pero tu motor aeróbico no recibió el estímulo de sobrecarga para progresar al ritmo previsto.";
       nextStep = "El siguiente paso es cerrar la semana con calma: prohibido doblar entrenamientos para compensar kilómetros perdidos. Completamos lo que queda y el martes arrancamos con disciplina.";
     } else if (plannedWeekTss > 0 && actualTss > plannedWeekTss * 1.15) {
-      tssVerdict = `llevas ${executedCount} de ${totalSessions} sesiones con ${actualTss} de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento). Estás por encima de la carga prevista (+${tssDiff} TSS de sobrecarga), con rampa acelerada en +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
+      tssVerdict = `llevas ${executedCount} sesiones con ${actualTss} de tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de cumplimiento global)${toDateContext}. Estás por encima de la carga prevista (+${tssDiff} TSS de sobrecarga), con rampa acelerada en +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
       humanTranslation = "Te pasaste de rosca en volumen o intensidad. Tu fatiga aguda está disparada y tus tendones (sóleo/Aquiles) acumulan tensión excéntrica elevada; necesitas descanso para que el cuerpo asimile este exceso sin lesionarse.";
       nextStep = "El siguiente paso es meter freno de mano: suavizamos la sesión de hoy a Z1 regenerativo o rodillo sin impacto, hidratación con sales y descanso pasivo prioritario.";
     } else {
-      tssVerdict = `llevas ${executedCount} de ${totalSessions} sesiones con ${actualTss} de ${plannedWeekTss} TSS (${compliancePct}% de adherencia). Estás en el rango óptimo de carga con rampa de +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
+      tssVerdict = `llevas ${executedCount} sesiones con ${actualTss} de tu objetivo semanal de ${plannedWeekTss} TSS (${compliancePct}% de adherencia global)${toDateContext}. Estás en el rango óptimo de carga con rampa de +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem y TSB en ${tsbSign}.`;
       humanTranslation = "Tu cuerpo está absorbiendo el entrenamiento a la perfección. No hay fatiga destructiva y tus piernas responden con buena soltura neuromuscular al esfuerzo diario.";
       nextStep = "El siguiente paso es dar continuidad total a tu plan previsto para consolidar el bloque del fin de semana con solvencia.";
     }

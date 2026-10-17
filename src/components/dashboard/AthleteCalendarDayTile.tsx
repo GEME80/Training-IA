@@ -40,7 +40,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
       if (match) return match;
     }
     if (item.discipline === "Fuerza") {
-      const match = allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength|pesas/i.test(`${a.type} ${a.name}`));
+      const match = allActs.find((a) => !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type) && (a.type === "WeightTraining" || /weight|gym|strength|pesas|fuerza/i.test(a.type) || /gym|pesas|fortalec|s&c/i.test(a.name)));
       if (match) return match;
     }
     if (item.discipline === "Natacion") {

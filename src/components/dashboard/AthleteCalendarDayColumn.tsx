@@ -77,7 +77,7 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
     else if (item.discipline === "Ciclismo")
       match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type)));
     else if (item.discipline === "Fuerza")
-      match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type)));
+      match = allActs.find((a) => !usedActIds.has(a.id) && !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type) && (a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type)));
     if (match) { usedActIds.add(match.id); return { item, matchedAct: match, isRest: false }; }
     return { item, matchedAct: null as DailyExecutedActivity | null, isRest: false };
   });

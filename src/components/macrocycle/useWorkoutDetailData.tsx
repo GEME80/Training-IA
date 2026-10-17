@@ -64,7 +64,7 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
     if (isExtraActivity) return allActs.find((a) => workout.id === `extra-${a.id}` || a.name === workout.workoutName) || allActs[0];
     if (workout.discipline === "Carrera") return allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail|fondo/i.test(`${a.type} ${a.name}`)) || null;
     if (workout.discipline === "Ciclismo") return allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(`${a.type} ${a.name}`)) || null;
-    if (workout.discipline === "Fuerza") return allActs.find((a) => a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(`${a.type} ${a.name}`)) || null;
+    if (workout.discipline === "Fuerza") return allActs.find((a) => !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type) && (a.type === "WeightTraining" || /weight|gym|strength|pesas|fuerza/i.test(a.type) || /gym|pesas|fortalec|s&c/i.test(a.name))) || null;
     if (workout.discipline === "Natacion") return allActs.find((a) => a.type === "Swim" || /swim|nataci|piscina|aguas/i.test(`${a.type} ${a.name}`)) || null;
     return allActs.find((a) => a.type === "Run" || a.type === "Ride") || null;
   };

@@ -45,30 +45,44 @@ export async function executeGeminiInference(
   });
 
   const pLower = userPrompt.toLowerCase();
-  const isGoalProgress = pLower.includes("rumbo a mi meta") || pLower.includes("rumbo hacia mi carrera") || pLower.includes("visión estratégica macro") || pLower.includes("carrera principal") || pLower.includes("maratón tokio") || pLower.includes("maraton tokio") || pLower.includes("semanas restantes") || pLower.includes("desde que inicio") || pLower.includes("desde que inició") || (pLower.includes("meta") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion"));
+  const athleteFirstName = (ctx.profile.name && ctx.profile.name !== "Atleta" ? ctx.profile.name : "").trim().split(" ")[0] || "Atleta";
+  const athleteAge = ctx.profile.age;
+  const isMaster = athleteAge && athleteAge >= 40;
+  const categoryStr = isMaster ? "en categoría Máster" : "";
+  const macroPhase = ctx.promptContext.macrocyclePhase;
+  const race = macroPhase?.primaryRace || macroPhase?.blueprint?.primaryRace;
+  const raceName = race?.name || "tu carrera principal";
+  const raceDist = race?.distance || macroPhase?.blueprint?.distanceType || "tu meta";
+  const totalWeeks = macroPhase?.blueprint?.totalWeeks || 16;
+  const remainingWeeks = Math.max(0, totalWeeks - ctx.targetPlanningWeekNum);
+  const phaseLabel = macroPhase?.phaseLabel || macroPhase?.phase || "Construcción";
+  const deltaVal = ctx.toDateTssDelta !== undefined ? ctx.toDateTssDelta : (ctx.actualTss - (ctx.plannedTssToDate || ctx.plannedWeekTss));
+  const deltaStr = deltaVal >= 0 ? `+${deltaVal}` : `${deltaVal}`;
+
+  const isGoalProgress = pLower.includes("rumbo a mi meta") || pLower.includes("rumbo hacia mi carrera") || pLower.includes("visión estratégica macro") || pLower.includes("carrera principal") || pLower.includes("semanas restantes") || pLower.includes("desde que inicio") || pLower.includes("desde que inició") || (pLower.includes("meta") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion"));
   const isWeekBalance = !isGoalProgress && (Boolean(body.isWeekKickoffAudit) || pLower.includes("balance") || pLower.includes("volumen") || pLower.includes("semana completa") || pLower.includes("toda la semana") || pLower.includes("resumen semanal") || pLower.includes("resumen de la semana") || pLower.includes("cierre de semana") || pLower.includes("cómo van mis cargas") || pLower.includes("mis cargas") || pLower.includes("indicadores fisiológicos") || pLower.includes("cuántas sesiones llevo") || (pLower.includes("semana") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion")));
-  const isSessionAudit = !isGoalProgress && !isWeekBalance && (pLower.includes("audita a fondo mi sesión") || pLower.includes("audita mi sesión") || pLower.includes("auditar sesión") || pLower.includes("audita sesión") || pLower.includes("mi test") || pLower.includes("test oficial") || pLower.includes("última sesión") || pLower.includes("esta sesión") || pLower.includes("bogotá, d.c. carrera") || pLower.includes("fartlek") || pLower.includes("rodaje") || pLower.includes("sesión") || pLower.includes("sesion") || pLower.includes("audita"));
+  const isSessionAudit = !isGoalProgress && !isWeekBalance && (pLower.includes("audita a fondo mi sesión") || pLower.includes("audita mi sesión") || pLower.includes("auditar sesión") || pLower.includes("audita sesión") || pLower.includes("mi test") || pLower.includes("test oficial") || pLower.includes("última sesión") || pLower.includes("esta sesión") || pLower.includes("fartlek") || pLower.includes("rodaje") || pLower.includes("sesión") || pLower.includes("sesion") || pLower.includes("audita"));
 
   const modeInstruction = isSessionAudit
     ? `MODO AUDITORÍA DE SESIÓN INDIVIDUAL (TONO CRÍTICO, TÉCNICO Y DIRECTO DE HEAD COACH):
    - PROHIBICIÓN TAXATIVA: CERO mención del objetivo de ${ctx.plannedWeekTss} TSS semanal, CERO mención del ${ctx.compliancePct}% ni del corte acumulado. Prohibido usar clichés ("subir escaleras", "síntesis de colágeno").
-   - Párrafo 1 (Telemetría & Crítica de Desacople): Nombre real y disciplina ([Carrera a pie] o [Ciclismo]), duración, TSS real vs planeado y delta. Potencia media (W), NP o % de Stryd CP (${ctx.profile.run_ftp || 0}W) / FTP (${ctx.profile.bike_ftp || 0}W), pulso medio y máx vs LTHR (${ctx.profile.lthr || 156} bpm), desacople Pa:Hr y ritmo. ¡CRÍTICA DEL DESACOPLE: Si Pa:Hr > +5% (ej. +9.5% o +11.6%), advierte que es ELEVADO / DEFICIENTE (deriva cardíaca por deshidratación, calor o falta de eficiencia aeróbica para Tokio); si es <= +5% califícalo como excelente! ¡CRÍTICA DE ESFUERZO: En test a 119 bpm sé crítico (fue a media máquina y no sirve para recalibrar CP); en rodaje Z2 valida la contención sin acelerar!
+   - Párrafo 1 (Telemetría & Crítica de Desacople): Nombre real y disciplina ([Carrera a pie] o [Ciclismo]), duración, TSS real vs planeado y delta. Potencia media (W), NP o % de Stryd CP (${ctx.profile.run_ftp || 0}W) / FTP (${ctx.profile.bike_ftp || 0}W), pulso medio y máx vs LTHR (${ctx.profile.lthr || 156} bpm), desacople Pa:Hr y ritmo. ¡CRÍTICA DEL DESACOPLE: Si Pa:Hr > +5% (ej. +9.5% o +11.6%), advierte que es ELEVADO / DEFICIENTE (deriva cardíaca por deshidratación, calor o falta de eficiencia aeróbica para ${raceName}); si es <= +5% califícalo como excelente! ¡CRÍTICA DE ESFUERZO: En test a pulso bajo sé crítico (se corrió a media máquina); en rodaje Z2 valida la contención sin acelerar!
    - Párrafo 2 (Análisis Fisiológico Específico): Explica la respuesta metabólica real de esta sesión puntual (gestión de glucógeno, fatiga cardíaca o costo neuromuscular). Cero frases genéricas.
    - Párrafo 3 (Ajuste Táctico Inmediato): Conexión directa con la sesión de mañana. Si hoy ${ctx.todayDayName} es noche, pauta de recuperación para llegar a punto.`
     : isGoalProgress
     ? `MODO RUMBO A MI META (ANÁLISIS MACRO DESDE INICIO DE CICLO, SEMANA Y DATOS VS ESPERADO DEL PLAN):
-   - PROHIBICIÓN TAXATIVA: CERO pautas de recuperación para hoy ni rutina del día a día; perspectiva macro hacia Tokio.
-    - Párrafo 1 (Perspectiva Macro desde el Inicio del Ciclo): Marco general: Semana ${ctx.targetPlanningWeekNum} de ${ctx.promptContext.macrocyclePhase?.blueprint?.totalWeeks || 22} (Fase ${ctx.promptContext.macrocyclePhase?.phaseLabel || "Base 1"} rumbo a Tokio, restan ${(ctx.promptContext.macrocyclePhase?.blueprint?.totalWeeks || 22) - ctx.targetPlanningWeekNum} semanas). Desde que arrancó el plan, tu condición física (CTL) ha progresado con solidez: hoy estás en ${ctx.physioStatus.ctl.toFixed(1)} CTL frente a los ${ctx.plannedCtlForWeek || 39.5} CTL proyectados por el macrociclo (${ctx.ctlDeltaVerdict || "+1.7 CTL por encima del modelo teórico"}), marchando en trayectoria firme hacia el pico Banister de ${ctx.targetPeakCtl || 70} CTL con ${ctx.profile.run_ftp ? `${ctx.profile.run_ftp}W Stryd CP (${(ctx.profile.run_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "4.10 W/kg"} y ${ctx.profile.bike_ftp ? `${ctx.profile.bike_ftp}W FTP (${(ctx.profile.bike_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "2.76 W/kg"}.
-   - Párrafo 2 (Diagnóstico de la Semana y Datos Reales vs Plan): En esta semana registras 180 TSS ejecutados frente a los 263 TSS al corte (-83 TSS por fuerza auxiliar omitida), mientras que tu motor cardiovascular absorbió 4 sesiones con TSB neutro de ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)} y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "54 ms"}. La telemetría en rodajes Z2 (252W a 114 bpm) demuestra gran eficiencia metabólica, pero los desacoples cardíacos (> +5%) alertan que para sostener el ritmo maratón en 42K sin decaer en los últimos 10 km, debemos afianzar la base aeróbica y no desatender la fuerza.
-   - Párrafo 3 (Dirección Estratégica Rumbo a Tokio): En esta fase Base 1, el foco innegociable no es la velocidad, sino acumular volumen limpio en Zona 2, consolidar las tiradas largas dominicales y proteger articulaciones con la fuerza, garantizando que entres a la fase de Construcción con la cilindrada adecuada para tu meta en Tokio.`
+   - PROHIBICIÓN TAXATIVA: CERO pautas de recuperación para hoy ni rutina del día a día; perspectiva macro hacia ${raceName}.
+   - Párrafo 1 (Perspectiva Macro desde el Inicio del Ciclo): Marco general: Semana ${ctx.targetPlanningWeekNum} de ${totalWeeks} (Fase ${phaseLabel} rumbo a ${raceName}, restan ${remainingWeeks} semanas). Desde que arrancó el plan, tu condición física (CTL) ha progresado con solidez: hoy estás en ${ctx.physioStatus.ctl.toFixed(1)} CTL frente a los ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL proyectados por el macrociclo (${ctx.ctlDeltaVerdict || "en trayectoria planificada"}), marchando en trayectoria firme hacia el pico Banister de ${ctx.targetPeakCtl || 70} CTL con ${ctx.profile.run_ftp ? `${ctx.profile.run_ftp}W Stryd CP (${(ctx.profile.run_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "buen ratio de potencia"} y ${ctx.profile.bike_ftp ? `${ctx.profile.bike_ftp}W FTP (${(ctx.profile.bike_ftp / (ctx.profile.weight || 72)).toFixed(2)} W/kg)` : "FTP calibrado"}.
+   - Párrafo 2 (Diagnóstico de la Semana y Datos Reales vs Plan): En esta semana sumas ${ctx.actualTss} TSS ejecutados frente a los ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS al corte (${deltaStr} TSS delta), con TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)} y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "nivel estable"}. Analiza objetivamente la asimilación aeróbica según los datos reales vs el plan para sostener el ritmo en ${raceDist}.
+   - Párrafo 3 (Dirección Estratégica Rumbo a ${raceName}): En esta fase ${phaseLabel}, el foco innegociable es consolidar el estímulo metabólico target (${raceDist}), acumular volumen limpio en Zona 2 y proteger las articulaciones con la fuerza${categoryStr ? ` (${categoryStr})` : ""}, garantizando llegar con la cilindrada óptima.`
     : `MODO BALANCE DE SEMANA (AUDITORÍA EXIGENTE DE CARGAS E INDICADORES FISIOLÓGICOS):
    - PROHIBICIÓN TAXATIVA: CERO foco en una única sesión aislada; analiza el conjunto del microciclo.
-   - Párrafo 1 (Auditoría Numérica de Cargas al Corte): Balance global: ${ctx.actualTss} TSS ejecutados de tu objetivo semanal de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% global). Al corte de este ${ctx.todayDayName}, debías sumar ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS, arrojando un diferencial de ${ctx.toDateTssDelta || -83} TSS. Dictamina que estás POR DEBAJO del volumen previsto; este déficit no es fortuito, se originó en omitir los dos bloques de fuerza auxiliar.
-   - Párrafo 2 (Comparativa de Indicadores Fisiológicos vs Modelo): Contrasta todos los indicadores a la fecha frente a su referencia: Fitness en ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || 39.5} proyectados (${ctx.ctlDeltaVerdict || "+1.7 CTL por encima del modelo"}, marcha impecable), TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)} (frescura neutra por el déficit en lugar de sobrecarga controlada -10), rampa en ${(ctx.physioStatus.rampRate >= 0 ? "+" : "") + Number(ctx.physioStatus.rampRate || 0).toFixed(1)} CTL/sem y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "54 ms"}. Advierte que aunque el corazón asimila la carga, la deriva cardíaca (> +5%) vista en carrera y la falta de fuerza en categoría Máster dejan la musculatura de sostén vulnerable ante 42 km.
-   - Párrafo 3 (Directriz Táctica de Cierre): ¡PROHIBIDO doblar sesiones o inventar kilometraje extra el fin de semana para "recuperar" TSS! La carga aeróbica está asimilada; la fuerza se retoma el próximo microciclo. Siendo ${ctx.todayDayName} noche, descanso e hidratación; mañana sábado soltura en ciclismo para cadencia y domingo tirada larga progresiva.`;
+   - Párrafo 1 (Auditoría Numérica de Cargas al Corte): Balance global: ${ctx.actualTss} TSS ejecutados de tu objetivo semanal de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% global). Al corte de este ${ctx.todayDayName}, debías sumar ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS, arrojando un diferencial de ${deltaStr} TSS. Dictamina con criterio de entrenador si el volumen va en línea con el microciclo o si hay déficit por sesiones pendientes/omitidas.
+   - Párrafo 2 (Comparativa de Indicadores Fisiológicos vs Modelo): Contrasta todos los indicadores a la fecha frente a su referencia: Fitness en ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "acorde al modelo"}), TSB en ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, rampa en ${(ctx.physioStatus.rampRate >= 0 ? "+" : "") + Number(ctx.physioStatus.rampRate || 0).toFixed(1)} CTL/sem y HRV en ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Evalúa si el corazón y las piernas asimilan la carga y si la musculatura de sostén está protegida de cara a ${raceName}.
+   - Párrafo 3 (Directriz Táctica de Cierre): ¡PROHIBIDO doblar sesiones o inventar kilometraje extra para "recuperar" TSS! La carga aeróbica debe asimilarse progresivamente. Siendo ${ctx.todayDayName}, define la pauta de descanso o las sesiones restantes del microciclo.`;
 
   const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
-1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, firme, crítico y honesto como entrenador de alto rendimiento):
+1. "reply": Habla en primera persona directamente a ${athleteFirstName} (120-180 palabras, tono cercano, firme, crítico y honesto como entrenador de alto rendimiento):
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos:
    ${modeInstruction}
 2. "quickReplies": [] (devolver array vacío para no generar botones residuales).
@@ -292,17 +306,10 @@ export async function executeGeminiInference(
                   }
 
                   return {
-                    day: dName,
-                    date: itemDate,
-                    formattedDate: p.formattedDate || dateInfo.formattedDate,
-                    discipline: safeDiscipline,
-                    workoutName: safeName,
-                    action: p.action || "MANTENER",
-                    powerTarget: safePower,
-                    tss: safeTss,
-                    durationMinutes: safeDuration,
-                    justification: p.justification || p.description || "",
-                    workoutStructure: safeStructure,
+                    day: dName, date: itemDate, formattedDate: p.formattedDate || dateInfo.formattedDate,
+                    discipline: safeDiscipline, workoutName: safeName, action: p.action || "MANTENER",
+                    powerTarget: safePower, tss: safeTss, durationMinutes: safeDuration,
+                    justification: p.justification || p.description || "", workoutStructure: safeStructure,
                     mobilityWarmup: p.mobilityWarmup || plannedSession?.mobilityWarmup,
                     fuelingStrategy: p.fuelingStrategy || plannedSession?.fuelingStrategy,
                   };
@@ -311,20 +318,10 @@ export async function executeGeminiInference(
                   parsed.suggestedPlan = applyTssAdjustmentToPlan(parsed.suggestedPlan, ctx.targetTssAdjustmentPct);
                 }
               }
-              return {
-                success: true,
-                data: parsed,
-                successfulModel: model,
-              };
+              return { success: true, data: parsed, successfulModel: model };
             }
           } catch (pErr) {
-            const candidate = raw.candidates?.[0];
-            console.warn(`Error al parsear JSON devuelto por Gemini (${model}):`, pErr);
-            console.warn(`FinishReason: ${candidate?.finishReason} | Longitud texto: ${text.length}`);
-            console.warn(`Texto crudo recibido (${model}):`, text.slice(0, 1000));
-            if (text.length > 1000) {
-              console.warn(`Cola de texto recibido (${model}):`, text.slice(-500));
-            }
+            console.warn(`Error al parsear JSON devuelto por Gemini (${model}):`, pErr, text.slice(0, 500));
           }
         }
       } else {

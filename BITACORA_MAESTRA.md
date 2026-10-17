@@ -9814,3 +9814,48 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** La sesión del día siguiente corresponde de manera exacta al calendario y al plan del atleta, calculando los recortes del 20%, 30% y Express sobre su duración real ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 169 ✅.
 
+---
+
+## 170. SGEA v5.86: Dinamización Integral de Perfil de Atleta y Meta de Competición en Head Coach IA (Eliminación de Hardcode Germán Morales y Maratón Tokio) (2026-10-17)
+
+### 170.1. Diagnóstico de la Anomalía Multiatleta
+1. **Problema Detectado:** Al consultar al Head Coach IA desde cuentas de atletas distintos (ej. Lucas, Juan Pablo u otros perfiles), el agente respondía sistemáticamente llamando al usuario *"Germán"* y evaluando métricas como si estuviera preparando el *"Maratón de Tokio"*, ignorando el nombre del atleta autenticado, sus objetivos de carrera, fase de macrociclo y potencias de referencia.
+2. **Causa Raíz:**
+   - **Omisión en Payload de Chat ([`useHeadCoachChat.ts`](src/components/dashboard/headcoach/useHeadCoachChat.ts)):** La petición POST hacia `/api/headcoach/chat` enviaba telemetría pero omitía enviar `athleteName`, `macrocyclePhase` y `targetRaces`. Por ende, en el servidor `ctx.promptContext.macrocyclePhase` resultaba frecuentemente `null`.
+   - **Hardcode en Inferencia ([`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):** Las directrices de `modeInstruction` y `smartBrevityInstruction` contenían cadenas estáticas literales: *"Habla en primera persona directamente a Germán"*, *"de cara a Tokio"*, *"rumbo a Tokio"*, *"en categoría Máster"* y números de ejemplo fijos.
+   - **Hardcode en Motor Determinístico ([`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts)):** Las ramas de `isWeekBalance`, `isInitialAudit`, `isGoal` y `isTimeShort` tenían asignaciones estáticas como `const athleteFirstName = profile.name ? profile.name.split(" ")[0] : "Germán";` y textos directos con `"Germán, al corte de este..."` y `"de cara a Tokio."`.
+   - **Hardcode en Prompts ([`prompts.ts`](src/lib/ai/prompts.ts), [`defaultPrompts.ts`](src/lib/ai/defaultPrompts.ts)):** Las instrucciones para el modelo citaban `"Germán, estuve auditando..."` y `"para Tokio"`.
+   - **Botones de Consola Táctica ([`HeadCoachTacticalConsole.tsx`](src/components/dashboard/headcoach/HeadCoachTacticalConsole.tsx)):** Los prompts automáticos de los botones de los Pilares 1 y 3 enviaban `"Germán aquí. Dame el balance..."` y `"Germán aquí. Hazme un análisis estratégico..."`.
+
+### 170.2. Arquitectura de Resolución y Dinamización 100%
+1. **Contrato de Tipos y Payload de Chat:**
+   - [`src/lib/ai/headcoach/types.ts`](src/lib/ai/headcoach/types.ts) (187 LOC): Incorporado `athleteName?: string;` en `HeadCoachChatRequest`.
+   - [`src/components/dashboard/headcoach/useHeadCoachChat.ts`](src/components/dashboard/headcoach/useHeadCoachChat.ts) (342 LOC): Inyección explícita de `athleteName: profile.name`, `macrocyclePhase` y `targetRaces` en la petición fetch a `/api/headcoach/chat`.
+2. **Resolución de Contexto en Servidor ([`chatContext.ts`](src/lib/ai/headcoach/chatContext.ts) - 346 LOC):**
+   - Resolución resiliente de identidad: `profile.name = body.athleteName || ath?.name || profile.name || "Atleta"`.
+   - Normalización de macrociclo y carrera objetivo asociada.
+3. **Inferencia Adaptativa con Gemini ([`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts) - 341 LOC):**
+   - Extracción de variables dinámicas: `athleteFirstName`, `athleteAge`, `isMaster`, `categoryStr`, `macroPhase`, `raceName`, `raceDist`, `totalWeeks`, `remainingWeeks` y `phaseLabel`.
+   - Redacción 100% parametrizada para `isSessionAudit`, `isGoalProgress` y `isWeekBalance`.
+   - Manejo seguro de `deltaStr` previniendo errores de `undefined` en TypeScript.
+4. **Respaldo Determinístico Fisiológico ([`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts) - 340 LOC):**
+   - Definición única en la raíz de `handleDeterministicFallback` de `athleteFirstName`, `macroPhase`, `race`, `raceName` y `raceDist`.
+   - Erradicación de todas las ocurrencias fijas de `"Germán"` y `"Tokio"`.
+5. **Alineación de Prompts e Interfaz:**
+   - [`src/lib/ai/prompts.ts`](src/lib/ai/prompts.ts) (331 LOC) & [`src/lib/ai/defaultPrompts.ts`](src/lib/ai/defaultPrompts.ts) (153 LOC): Dinamización de nombres y objetivos en las directrices canónicas de Head Coach.
+   - [`src/components/dashboard/headcoach/HeadCoachTacticalConsole.tsx`](src/components/dashboard/headcoach/HeadCoachTacticalConsole.tsx) (327 LOC): Botones tácticos actualizados con lenguaje profesional neutro (`"Hola Coach, dame el balance..."` y `"Hola Coach, hazme un análisis estratégico de mi rumbo hacia mi carrera principal..."`).
+
+### 170.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeadCoachTacticalConsole.tsx`: 327 LOC ($\le 348$) ✅
+  * `useHeadCoachChat.ts`: 342 LOC ($\le 348$) ✅
+  * `types.ts`: 187 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 346 LOC ($\le 348$) ✅
+  * `chatInference.ts`: 341 LOC ($\le 348$) ✅
+  * `deterministicFallback.ts`: 340 LOC ($\le 348$) ✅
+  * `prompts.ts`: 331 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 153 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores en 2.9s) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Cualquier atleta autenticado recibe análisis de carga, métricas y proyecciones basados exclusivamente en su propio nombre, datos biométricos, carrera objetivo y macrociclo activo ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 170 ✅.

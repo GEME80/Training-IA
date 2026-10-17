@@ -138,7 +138,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
             setReorgOpen(false);
             setAuditOpen(false);
             handleAction(
-              "Germán aquí. Dame el balance de volumen y carga de esta semana: cuántas sesiones llevo ejecutadas vs planificadas, mi TSS acumulado y cómo asimila mi cuerpo la fatiga (TSB) para los días restantes.",
+              "Hola Coach, dame el balance de volumen y carga de esta semana: cuántas sesiones llevo ejecutadas vs planificadas, mi TSS acumulado y cómo asimila mi cuerpo la fatiga (TSB) para los días restantes.",
               { isWeekKickoffAudit: true, skipUserBubble: true }
             );
           }}
@@ -202,7 +202,7 @@ export const HeadCoachTacticalConsole: React.FC<HeadCoachTacticalConsoleProps> =
             setReorgOpen(false);
             setAuditOpen(false);
             handleAction(
-              "Germán aquí. Hazme un análisis estratégico de mi rumbo hacia mi carrera principal: revisa mis semanas restantes, mi estado de forma (CTL y Stryd CP / FTP) y explícame cómo se proyecta mi ritmo objetivo para el día de la carrera. No alteres mi microciclo ni me hables de la rutina del día a día, dame una visión estratégica macro.",
+              "Hola Coach, hazme un análisis estratégico de mi rumbo hacia mi carrera principal: revisa mis semanas restantes, mi estado de forma (CTL y Stryd CP / FTP) y explícame cómo se proyecta mi ritmo objetivo para el día de la carrera. No alteres mi microciclo ni me hables de la rutina del día a día, dame una visión estratégica macro.",
               { skipUserBubble: true }
             );
           }}

@@ -55,7 +55,7 @@ export function useHeadCoachChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getWelcomeText = (name?: string) => {
-    const firstName = (name || "Germán").trim().split(" ")[0];
+    const firstName = (name && name !== "Atleta" ? name : "").trim().split(" ")[0] || "Atleta";
     const tsbNum = physioStatus?.tsb !== undefined ? Number(physioStatus.tsb) : 0;
     const tsbSign = tsbNum >= 0 ? `+${tsbNum.toFixed(1)}` : tsbNum.toFixed(1);
     const rawPhase = selectedWeekData?.phase || macrocyclePhase?.phaseLabel || "Base";
@@ -137,8 +137,10 @@ export function useHeadCoachChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: updatedHistory.map((m) => ({ role: m.role, content: m.text })),
-          athleteId: profile.id, apiKey, uid, email, customGeminiKey: geminiApiKey,
+          athleteId: profile.id, athleteName: profile.name, apiKey, uid, email, customGeminiKey: geminiApiKey,
           selectedModel, temperature, weekOffset: calculatedOffset, weekNumber: activeWeekNumber,
+          macrocyclePhase: macrocyclePhase || (effectiveBlueprint ? { phase: selectedWeekData?.phase || "Construcción", phaseLabel: selectedWeekData?.phase || "Construcción", primaryRace: effectiveBlueprint.primaryRace, blueprint: effectiveBlueprint } : null),
+          targetRaces: effectiveBlueprint?.primaryRace ? [effectiveBlueprint.primaryRace] : undefined,
           currentPlan: effectivePlanForWeek, dailyExecutedActivities,
           runFtp: profile.run_ftp, bikeFtp: profile.bike_ftp, weight: profile.weight,
           height: profile.heightCm, birthDate: profile.birthDate, gender: profile.gender,

@@ -30,6 +30,7 @@ export interface WorkoutDiff {
 
 export interface HeadCoachChatRequest {
   athleteId?: string;
+  athleteName?: string;
   apiKey?: string;
   uid?: string;
   email?: string;

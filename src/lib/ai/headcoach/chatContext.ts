@@ -50,7 +50,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
   let profile: AthleteProfile = {
-    id: effectiveAthleteId, name: "Atleta", ctl: 0, atl: 0, tsb: 0, rampRate: 0,
+    id: effectiveAthleteId, name: body.athleteName || "Atleta", ctl: 0, atl: 0, tsb: 0, rampRate: 0,
     run_ftp: runFtp ? Number(runFtp) : undefined, bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
     weight: weight ? Number(weight) : undefined, heightCm: height ? Number(height) : undefined,
     birthDate, gender: (gender === "M" || gender === "F" || gender === "OTHER") ? gender : undefined,
@@ -104,7 +104,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const safeLthr = rawL && rawM && Number(rawL) > Number(rawM) ? rawM : rawL;
 
         profile = {
-          ...ath, id: ath?.id || effectiveAthleteId || "", name: ath?.name || profile.name || "Atleta",
+          ...ath, id: ath?.id || effectiveAthleteId || "", name: body.athleteName || ath?.name || profile.name || "Atleta",
           birthDate: birthDate || icuDob, age: computedAge, gender: resolvedSex,
           weight: resolvedWeight ? Number(resolvedWeight) : undefined, heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
           restingHR: restingHR || garminWel.restingHR || runSport?.resting_hr || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,

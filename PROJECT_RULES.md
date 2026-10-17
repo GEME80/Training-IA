@@ -1,5 +1,5 @@
 # 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.82)
-> **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento y cumplirlo sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
+> **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
 

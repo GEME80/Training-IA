@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **PROTOCOLO DE 3 PASOS OBLIGATORIO PARA NUEVOS CHATS/AGENTES:**
-> 1. **Paso 1 (Arranque):** Leer [`PROJECT_RULES.md`](./PROJECT_RULES.md) y la última sección de esta Bitácora antes de proponer cambios.
+> 1. **Paso 1 (Arranque):** Leer [`PROJECT_RULES.md`](./PROJECT_RULES.md), [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md) y la última sección de esta Bitácora antes de proponer cambios.
 > 2. **Paso 2 (Desarrollo):** Trabajar en submódulos atómicos (< 350 líneas) respetando el puerto `3000` (`npm run dev:clean`) y las reglas de workouts Stryd (% FTP + tiempo).
 > 3. **Paso 3 (Cierre & Validación):** Validar con `npx tsc --noEmit` (código 0) y `npm run build`, y registrar el avance en esta Bitácora.
 

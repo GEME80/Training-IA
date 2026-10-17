@@ -177,6 +177,8 @@ export interface ResolvedChatContext {
   timeZone?: string;
   plannedCtlForWeek?: number;
   ctlDelta?: number;
+  ctlDeltaStr?: string;
+  ctlDeltaVerdict?: string;
   targetPeakCtl?: number;
   plannedTssToDate?: number;
   toDateTssDelta?: number;

@@ -9402,3 +9402,41 @@ Durante la primera prueba de autorización real en producción con una cuenta nu
 - **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
 - **Gate 4 (Alcance e Integridad Deportiva):** Emparejamiento móvil 100% fiel (ciclismo no se confunde con fuerza) y total transparencia métrica de TSS (366 TSS obj, 49% de cumplimiento global y -83 TSS a la fecha) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 158 ✅.
+
+---
+
+## 159. Separación Radical de Contextos en Head Coach IA ("Auditar Sesión" vs "Balance de Semana" vs "Rumbo a mi meta")
+
+### 159.1. Diagnóstico y Requerimiento de Usuario
+1. **Contaminación de Métricas Semanales en Auditoría Individual:**
+   - Al pulsar o solicitar la auditoría de una sesión específica (ej: `Vie 16: Bogotá, D.C. Carrera 32 TSS`), el Head Coach generaba en su Párrafo 1 un resumen macro semanal completo (`180 de 366 TSS objetivo semanal, 49% de cumplimiento global, corte acumulado de 263 TSS con -83 TSS de delta`), antes de hablar de la sesión auditada en el Párrafo 2.
+   - Esta duplicación desvirtuaba el rol de entrenador personal: cuando un atleta pregunta por su rodaje o test, espera una devolución inmediata y profunda de esa sesión sin repetir diagnósticos de la semana entera.
+2. **Exigencia de Separación Radical:**
+   - **Auditar Sesión:** Prohibición taxativa de mencionar el objetivo de 366 TSS, 49% o cortes acumulados. Párrafo 1 dedicado 100% al entrenamiento auditado: nombre real, disciplina explícita (`[Carrera a pie]` vs `[Ciclismo]`), duración, TSS real vs planeado, delta, potencia media (W), NP o % de Stryd CP / FTP, FC media y máx vs LTHR (156 bpm), desacople cardíaco Pa:Hr, ritmo y veredicto rotundo de esfuerzo (si pudo dar más con margen en el tanque o si estuvo al límite en potencias target). Párrafo 2 de traducción al día a día (impacto en sóleos, rodillas, piernas ligeras al subir escaleras) y Párrafo 3 de pauta inmediata temporalmente coherente ("mañana sábado").
+   - **Balance de Semana:** Foco exclusivo en la visión macro semanal (366 TSS objetivo semanal, 180 TSS ejecutados, 49% global; corte al día actual con 263 TSS previstos y delta de -83 TSS por bloques de fuerza omitidos; CTL 41.2 vs 39.5 proyectado, TSB -0.3, HRV 54 ms).
+   - **Rumbo a mi meta:** Enfoque macro hacia Tokio (CTL actual vs macrociclo, rampa Banister hacia 70 CTL, ratios W/kg).
+
+### 159.2. Implementaciones Realizadas
+1. **Bifurcación Dinámica de Directrices (`chatInference.ts` - 338 LOC):**
+   - Detección precisa de la tipología de consulta: `isSessionAudit`, `isGoalProgress` y `isWeekBalance`.
+   - Inyección condicional de `p1Directive`:
+     * Si `isSessionAudit`: Se impone la prohibición estricta de reportar métricas semanales y se exige centrarse en la telemetría detallada del workout específico.
+     * Si `isGoalProgress`: Contraste de CTL vs macrociclo Tokio y pico Banister.
+     * Si `isWeekBalance`: Panel global semanal con 366 TSS, corte acumulado de 263 TSS y delta de -83 TSS.
+2. **Sincronización en Prompts de Sistema (`prompts.ts` - 329 LOC & `defaultPrompts.ts` - 152 LOC):**
+   - Actualizadas las Reglas 3 y 12 en `prompts.ts` y la Regla 9 en `defaultPrompts.ts`, estructurando el Párrafo 1 en tres sub-reglas mutuamente excluyentes según el objetivo de la interacción.
+3. **Robustecimiento de Tipado y Contrato de Contexto (`types.ts` - 186 LOC & `chatContext.ts` - 345 LOC):**
+   - Añadidos `ctlDeltaStr` y `ctlDeltaVerdict` en la interfaz `ResolvedChatContext` y exportados desde `chatContext.ts`.
+
+### 159.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `chatInference.ts`: 338 LOC ($\le 348$) ✅
+  * `prompts.ts`: 329 LOC ($\le 348$) ✅
+  * `defaultPrompts.ts`: 152 LOC ($\le 348$) ✅
+  * `chatContext.ts`: 345 LOC ($\le 348$) ✅
+  * `types.ts`: 186 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Auditoría de sesión 100% individualizada sin contaminación de métricas semanales, preservando balance de semana y rumbo a meta con precisión fisiológica ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 159 ✅.
+

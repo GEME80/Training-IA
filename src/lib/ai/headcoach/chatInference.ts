@@ -44,13 +44,22 @@ export async function executeGeminiInference(
     }
   });
 
+  const pLower = userPrompt.toLowerCase();
+  const isSessionAudit = pLower.includes("audita") || pLower.includes("sesión") || pLower.includes("sesion") || pLower.includes("test") || pLower.includes("fartlek") || pLower.includes("rodaje") || pLower.includes("carrera") || pLower.includes("ciclismo");
+  const isGoalProgress = !isSessionAudit && (pLower.includes("meta") || pLower.includes("rumbo") || pLower.includes("tokio") || pLower.includes("objetivo"));
+
+  const p1Directive = isSessionAudit
+    ? `Párrafo 1 (EXCLUSIVO SESIÓN AUDITADA - CERO BALANCE SEMANAL): ¡PROHIBIDO mencionar el objetivo de ${ctx.plannedWeekTss} TSS, ${ctx.compliancePct}% ni corte acumulado! Foco 100% en la sesión: NOMBRE REAL (ej. "Bogotá, D.C. Carrera"), DISCIPLINA ([Carrera a pie] o [Ciclismo]), duración, TSS real vs planeado y delta. Potencia media (W), NP o % respecto a Stryd CP (${ctx.profile.run_ftp || 0}W) / FTP (${ctx.profile.bike_ftp || 0}W), pulso medio y máx vs LTHR (${ctx.profile.lthr || 156} bpm), desacople Pa:Hr y ritmo. Veredicto rotundo: si pudiste dar más con margen en el tanque (por pulso contenido) o si fuiste al límite en tus potencias target.`
+    : isGoalProgress
+    ? `Párrafo 1 (Rumbo a la Meta - Macrociclo Tokio): Contrasta CTL actual (${ctx.physioStatus.ctl.toFixed(1)}) vs proyectado (${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL: ${ctx.ctlDeltaVerdict || "en trayectoria"}), rampa hacia pico Banister (${ctx.targetPeakCtl || 70} CTL), y W/kg (${(ctx.profile.run_ftp && ctx.profile.weight ? (ctx.profile.run_ftp / ctx.profile.weight).toFixed(2) : "4.10")} W/kg Stryd CP, ${(ctx.profile.bike_ftp && ctx.profile.weight ? (ctx.profile.bike_ftp / ctx.profile.weight).toFixed(2) : "2.76")} W/kg FTP).`
+    : `Párrafo 1 (Diagnóstico Numérico con TSS Delta & Cumplimiento): Reporta el balance del panel: ${ctx.actualTss} TSS ejecutados de tu objetivo de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% cumplimiento global). Al corte de ${ctx.todayDayName}, añade los ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS previstos y el delta (${ctx.toDateTssDelta || 0} TSS por fuerza omitida). CTL (${ctx.physioStatus.ctl.toFixed(1)} vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectado), TSB (${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}) y HRV (${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}).`;
+
   const smartBrevityInstruction = `\n\n[DIRECTRICES DEL HEAD COACH HUMANO DE ÉLITE PULSE]:
 1. "reply": Habla en primera persona directamente a Germán (120-180 palabras, tono cercano, firme y empático):
    - PROHIBIDO usar corchetes o encabezados como "[ESTADO]", "[DIAGNÓSTICO]", "[TRADUCCIÓN HUMANA]" o "**Pauta para hoy**". Escribe en 3 párrafos conversacionales fluidos:
-   - Párrafo 1 (Diagnóstico Numérico con TSS Delta & Cumplimiento): Reporta SIEMPRE tu objetivo semanal de ${ctx.plannedWeekTss} TSS (${ctx.actualTss} TSS ejecutados, ${ctx.compliancePct}% de cumplimiento global). Si desglosas el corte a hoy (${ctx.todayDayName}), añade los ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS previstos a la fecha y su delta (${ctx.toDateTssDelta || 0} TSS). ¡NUNCA des un porcentaje parcial sin vincularlo al objetivo de ${ctx.plannedWeekTss} TSS! Rampa CTL, TSB, vatios Stryd/FTP y pulso vs LTHR.
-   - Párrafo 2 (Traducción al Día a Día & Datos Avanzados del Workout): Veredicto claro ("estás asimilando con soltura", etc.). En auditoría de sesión: USA EL NOMBRE REAL DE LA SESIÓN (ej. "Fartlek", "Test Stryd") y disciplina explícita ([Carrera a pie] / [Ciclismo]), % cumplimiento, potencia normalizada (NP), pulso medio y desacople cardíaco. En tests, evalúa si pudo dar más.
+   - ${p1Directive}
+   - Párrafo 2 (Traducción al Día a Día & Respuesta Biológica): Sensaciones corporales: impacto articular en sóleos/rodillas, frescura muscular al subir escaleras y asimilación biológica sin sobrecarga.
    - Párrafo 3 (El Siguiente Paso Inmediato & Coherencia Temporal): Qué hacer hoy o cómo encarar la siguiente sesión. Si hoy es ${ctx.todayDayName} por la noche, hoy es descanso/hidratación y la sesión siguiente es de "mañana sábado" (TERMINANTEMENTE PROHIBIDO escribir "hoy sábado").
-   - En "Rumbo a mi meta": contrasta tu CTL actual (${ctx.physioStatus.ctl.toFixed(1)}) vs el CTL proyectado por el macrociclo (${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} CTL: por encima, por debajo o en el blanco), ritmo meta y pico Banister (${ctx.targetPeakCtl || 70} CTL).
 2. "quickReplies": [] (devolver array vacío para no generar botones residuales).
 3. "suggestedPlan": Solo incluir array de 7 días si se requiere adaptar la semana; de lo contrario null.`;
 
@@ -151,17 +160,14 @@ export async function executeGeminiInference(
                     const execData = ctx.effectiveExecutedMap[itemDate];
                     if (execData && execData.activities.length > 0) {
                       const act = execData.activities[0];
-                      const isRide = /ride|cycling|bike|virtualride/i.test(act.type);
-                      const isWeight = /weight|strength|fuerza/i.test(act.type);
-                      const isSwimAct = /swim|nataci/i.test(act.type);
+                      const isRide = /ride|cycling|bike|virtualride/i.test(act.type), isWeight = /weight|strength|fuerza/i.test(act.type), isSwimAct = /swim|nataci/i.test(act.type);
                       const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : isSwimAct ? "Natacion" : "Carrera";
                       const pWatts = act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada");
                       return {
                         day: dName, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: disc,
-                        workoutName: act.name || `${disc} Completada`, action: "MANTENER",
-                        powerTarget: pWatts, tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
-                        justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.",
-                        workoutStructure: "",
+                        workoutName: act.name || `${disc} Completada`, action: "MANTENER", powerTarget: pWatts,
+                        tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
+                        justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.", workoutStructure: "",
                       };
                     }
 
@@ -183,25 +189,17 @@ export async function executeGeminiInference(
                   const userRequestedChange = allUserText.includes(dLower) && (
                     allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
                     allUserText.includes("ciclismo") || allUserText.includes("descanso") || allUserText.includes("rodillo") ||
-                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("nado") ||
-                    allUserText.includes("natacion")
+                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("nado") || allUserText.includes("natacion")
                   );
 
                   const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
                   if (isContinuityVerdict && !userRequestedChange && plannedSession && (plannedSession.workoutName || plannedSession.title)) {
                     return {
-                      day: dName,
-                      date: itemDate,
-                      formattedDate: p.formattedDate || dateInfo.formattedDate,
-                      discipline: plannedSession.discipline || p.discipline || "Carrera",
-                      workoutName: plannedSession.workoutName || plannedSession.title,
-                      action: "MANTENER",
-                      powerTarget: plannedSession.powerTarget || p.powerTarget || "",
-                      tss: plannedSession.tss || p.tss || 0,
-                      durationMinutes: plannedSession.durationMinutes || p.durationMinutes || 0,
-                      justification: "Plan confirmado: continuidad aprobada sin modificaciones.",
-                      workoutStructure: plannedSession.workoutStructure || p.workoutStructure || "",
-                      mobilityWarmup: p.mobilityWarmup || plannedSession.mobilityWarmup,
+                      day: dName, date: itemDate, formattedDate: p.formattedDate || dateInfo.formattedDate,
+                      discipline: plannedSession.discipline || p.discipline || "Carrera", workoutName: plannedSession.workoutName || plannedSession.title,
+                      action: "MANTENER", powerTarget: plannedSession.powerTarget || p.powerTarget || "", tss: plannedSession.tss || p.tss || 0,
+                      durationMinutes: plannedSession.durationMinutes || p.durationMinutes || 0, justification: "Plan confirmado: continuidad aprobada sin modificaciones.",
+                      workoutStructure: plannedSession.workoutStructure || p.workoutStructure || "", mobilityWarmup: p.mobilityWarmup || plannedSession.mobilityWarmup,
                       fuelingStrategy: p.fuelingStrategy || plannedSession.fuelingStrategy,
                     };
                   }

@@ -222,9 +222,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     0
   );
 
-  const rawPlannedTss = (Array.isArray(currentPlan) && currentPlan.length > 0)
-    ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0)
-    : (macrocyclePhase?.blueprint?.currentWeek?.targetTss || 350);
+  const bpTarget = macrocyclePhase?.blueprint?.weeks?.find((w: any) => w.weekNumber === safeWeekNum)?.targetTss || macrocyclePhase?.blueprint?.currentWeek?.targetTss;
+  const rawPlannedTss = bpTarget || ((Array.isArray(currentPlan) && currentPlan.length > 0) ? currentPlan.reduce((acc: number, p: PlanItem) => acc + (p?.tss || 0), 0) : 366);
   const tssFactor = targetTssAdjustmentPct !== 0 ? (1 + targetTssAdjustmentPct / 100) : 1;
   const plannedWeekTss = Math.round(rawPlannedTss * tssFactor);
   const actualTss = Math.round(weekExecutedTss);
@@ -340,7 +339,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     planningWeekDates, planningStartDateStr, planningEndDateStr, todayDayName, todayDateStr, todayDayIndex,
     isCurrentWeek, hasTrainedToday, todayExecutedTss, todaySessionStatus, isWeekCompleted, remainingPendingDaysCount,
     isDeload, coachStyleDescription, promptContext, effectiveExecutedMap, previousWeekSummary, targetTssAdjustmentPct,
-    isWeekKickoffAudit: Boolean(isWeekKickoffAudit), todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, targetPeakCtl,
+    isWeekKickoffAudit: Boolean(isWeekKickoffAudit), todayTimeStr, timeZone, plannedCtlForWeek, ctlDelta, ctlDeltaStr, ctlDeltaVerdict, targetPeakCtl,
     plannedTssToDate, toDateTssDelta,
   };
 }

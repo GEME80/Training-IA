@@ -1,10 +1,15 @@
-# ⚡ SGEA Pro (v5.84) — PULSE ENDURANCE™
+# ⚡ SGEA Pro (v5.85) — PULSE ENDURANCE™
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial en producción: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🔐 **Dominio de Autenticación Canónico `pulseendurance.co`, Reverse Proxy OAuth y Unificación GCP (v5.85):**
+  - **Custom Auth Domain Canónico:** Erradicación total de subdominios técnicos huérfanos (`training-ia-8f67f.firebaseapp.com`) en la ventana emergente de inicio de sesión de Google (OAuth Consent Screen). Ahora los atletas inician sesión directamente bajo `pulseendurance.co`.
+  - **Reverse Proxy OAuth en Next.js (`next.config.mjs`):** Regla `async rewrites()` que redirige de forma transparente `/__/auth/:path*` hacia el backend de Firebase con salvaguarda en `X-Frame-Options` para garantizar la compatibilidad con el handshake OAuth de Google sin bloqueos.
+  - **Inyección en Servidor (`apphosting.yaml`):** Actualización de `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "pulseendurance.co"` asegurando que el código compilado para el navegador utilice el dominio canónico.
+  - **Consolidación en Google Cloud Platform:** Proyecto renombrado a `PULSE ENDURANCE`, cliente web OAuth 2.0 actualizado con Javascript origin y redirect URI oficiales (`https://pulseendurance.co/__/auth/handler`), y depuración de proyectos de prueba huérfanos de AI Studio.
 - 🌐 **Despliegue en Dominio Canónico `pulseendurance.co`, DNS GoDaddy, OAuth Intervals.icu y Actualización de Textos (v5.84):**
   - **Dominio Canónico Oficial:** Compra y activación de `pulseendurance.co` en GoDaddy.
   - **Zona DNS Productiva:** Registro A (`35.219.200.4`), TXT (`fah-claim=002-02-226ad19b-3311-4fa7-be5e-b411fef90aaa`) y CNAME (`_acme-challenge`) con emisión de certificados SSL/TLS automáticos por Google Cloud Certificate Manager bajo protocolo HTTP/2 y 2FA activo en GoDaddy.

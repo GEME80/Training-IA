@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.84)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.85)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.84). Dominio oficial en producción: pulseendurance.co.
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.85). Dominio oficial en producción: pulseendurance.co.
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.85: Dominio de Autenticación Canónico pulseendurance.co, Reverse Proxy OAuth en Next.js y Unificación de Infraestructura GCP/Firebase:
+  * Custom Auth Domain Canónico: Reemplazo absoluto del subdominio técnico `training-ia-8f67f.firebaseapp.com` en la ventana emergente de inicio de sesión con Google (OAuth Consent Screen). Ahora la experiencia del atleta es 100% nativa bajo `pulseendurance.co`.
+  * Reverse Proxy OAuth en Next.js (`next.config.mjs`): Implementación de regla `async rewrites()` que túnelea `/__/auth/:path*` hacia `https://training-ia-8f67f.firebaseapp.com/__/auth/:path*` con exclusión segura de `X-Frame-Options: DENY` para permitir los popups e iframes de autenticación de Google.
+  * Inyección Segura en Firebase App Hosting (`apphosting.yaml`): Sincronización de `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "pulseendurance.co"` en el bundle cliente compilado de Next.js.
+  * Consola Google Cloud (GCP) & Firebase: Nombre de proyecto unificado oficialmente a `PULSE ENDURANCE`, cliente OAuth Web configurado con Javascript origin `https://pulseendurance.co` y redirect URI `https://pulseendurance.co/__/auth/handler`, depuración del proyecto huérfano de AI Studio (`gen-lang-client-...`) y nominative fair use legal shield en términos y condiciones.
 - Versión 5.84: Despliegue en Dominio Canónico pulseendurance.co, DNS GoDaddy, OAuth Intervals.icu y Actualización Integral de Textos:
   * Dominio Oficial y DNS: Compra y activación de `pulseendurance.co` en GoDaddy con registro A (`35.219.200.4`), TXT (`fah-claim`) y CNAME (`_acme-challenge`) hacia Google Cloud Certificate Manager con SSL/TLS HTTP/2 en producción y 2FA activo.
   * Intervals.icu OAuth 2.0 (Cliente 1371): Configuración de nombre de app (`PULSE ENDURANCE`), sitio web (`https://pulseendurance.co`), política de privacidad (`/privacy`) y redirect URI oficial (`https://pulseendurance.co/api/auth/intervals/callback`).

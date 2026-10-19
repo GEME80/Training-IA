@@ -121,9 +121,21 @@ La plataforma integra los principios de cuatro figuras históricas del entrenami
 * **Protocolo:** HTTPS estricto con negociación HTTP/2.
 * **Proveedor de Certificado:** Google Cloud Certificate Manager (ACME administrado).
 
-### 5.4 Autenticación y Autorización en Firebase
-* **Proyecto Firebase:** `training-ia-8f67f`
-* **Dominios Autorizados para Google Sign-In:**
+### 5.4 Autenticación, Dominio Personalizado (Custom Auth Domain) y Proxy OAuth
+* **Proyecto Firebase & Google Cloud:** `PULSE ENDURANCE` (ID de proyecto: `training-ia-8f67f`).
+* **Dominio de Autenticación Canónico (`authDomain`):** `pulseendurance.co`.
+* **Proxy Inverso en Next.js (`next.config.mjs`):** Regla `async rewrites()` que mapea `/__/auth/:path*` de forma transparente hacia `https://training-ia-8f67f.firebaseapp.com/__/auth/:path*`, erradicando la exposición de URLs técnicas para los atletas.
+* **Cabeceras de Seguridad:** Exclusión de `/__/auth` en `X-Frame-Options: DENY` para asegurar compatibilidad con iframes y popups de Google OAuth.
+* **Inyección en Firebase App Hosting (`apphosting.yaml`):** `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "pulseendurance.co"`.
+* **Google Cloud Console (Cliente OAuth 2.0 Web):**
+  * **Nombre:** `Web client (auto created by Google Service)`
+  * **Orígenes autorizados de JavaScript:**
+    * `https://pulseendurance.co`
+    * `https://training-ia-8f67f.firebaseapp.com`
+  * **URIs de redireccionamiento autorizados:**
+    * `https://pulseendurance.co/__/auth/handler`
+    * `https://training-ia-8f67f.firebaseapp.com/__/auth/handler`
+* **Dominios Autorizados en Firebase Console (Authentication > Configuración):**
   * `pulseendurance.co`
   * `www.pulseendurance.co`
   * `pulse-ia--training-ia-8f67f.us-central1.hosted.app`

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { AlertTriangle, ShieldAlert, HeartPulse, Brain, ArrowLeft, FileCheck, CheckCircle2 } from "lucide-react";
 
 export const metadata = {
-  title: "Términos de Servicio y Exención Médica — PULSE AI",
-  description: "Contrato de Términos de Uso, Exención de Responsabilidad Médica y Descargo de IA de PULSE AI.",
+  title: "Términos de Servicio y Exención Médica — PULSE ENDURANCE",
+  description: "Contrato de Términos de Uso, Exención de Responsabilidad Médica y Condiciones de PULSE ENDURANCE.",
 };
 
 export default function TermsAndConditionsPage() {

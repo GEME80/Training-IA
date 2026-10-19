@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Shield, Lock, Activity, Eye, FileText, CheckCircle2, ArrowLeft, Mail } from "lucide-react";
 
 export const metadata = {
-  title: "Política de Privacidad — PULSE AI",
-  description: "Política de Privacidad y Tratamiento de Datos Personales y Biométricos de PULSE AI.",
+  title: "Política de Privacidad — PULSE ENDURANCE",
+  description: "Política de Privacidad y Tratamiento de Datos Personales y Biométricos de PULSE ENDURANCE.",
 };
 
 export default function PrivacyPolicyPage() {

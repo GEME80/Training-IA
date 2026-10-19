@@ -14,11 +14,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pulseendurance.co"),
-  title: "PULSE AI — Smart Endurance & Performance Coach",
+  title: "PULSE ENDURANCE — Smart Performance Coach",
   description:
-    "Plataforma inteligente y adaptativa de entrenamiento deportivo de resistencia impulsada por IA, integrada con Intervals.icu, Stryd y Garmin.",
+    "Plataforma inteligente y adaptativa de periodización y entrenamiento deportivo de resistencia para Carrera, Ciclismo y Triatlón, integrada con Garmin, Coros e Intervals.icu.",
   openGraph: {
-    title: "PULSE AI — Smart Endurance & Performance Coach",
+    title: "PULSE ENDURANCE — Smart Performance Coach",
     description: "Plataforma inteligente y adaptativa de entrenamiento deportivo de resistencia para Carrera, Ciclismo y Triatlón.",
     url: "https://pulseendurance.co",
     siteName: "PULSE ENDURANCE",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         url: "/pulse-logo.jpg",
         width: 1200,
         height: 630,
-        alt: "PULSE AI Endurance Engine",
+        alt: "PULSE ENDURANCE Engine",
       },
     ],
     locale: "es_CO",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PULSE AI",
+    title: "PULSE ENDURANCE",
   },
 };
 

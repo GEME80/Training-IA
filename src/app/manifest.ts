@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PULSE AI — Smart Coach",
-    short_name: "PULSE AI",
-    description: "Entrenamiento adaptativo de resistencia impulsado por IA con telemetría en vivo.",
+    name: "PULSE ENDURANCE — Smart Performance Coach",
+    short_name: "PULSE ENDURANCE",
+    description: "Periodización y entrenamiento adaptativo de resistencia para Carrera, Ciclismo y Triatlón.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fafc",

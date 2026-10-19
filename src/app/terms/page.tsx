@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, HeartPulse, Brain, ArrowLeft, FileCheck, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ShieldAlert, HeartPulse, Brain, ArrowLeft, FileCheck, CheckCircle2, Award } from "lucide-react";
 
 export const metadata = {
   title: "Términos de Servicio y Exención Médica — PULSE ENDURANCE",
@@ -18,12 +18,12 @@ export default function TermsAndConditionsPage() {
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-emerald-400 transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Volver a PULSE AI</span>
+            <span>Volver a PULSE ENDURANCE</span>
           </Link>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">
-              Contrato Legal v1.0
+              Contrato Legal v1.1
             </span>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function TermsAndConditionsPage() {
             Términos de Servicio y Exención de Responsabilidad
           </h1>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            Por favor, lee con detenimiento este contrato antes de acceder o utilizar <strong className="text-white">PULSE AI</strong>. Al iniciar sesión, registrarte o ejecutar cualquier sesión prescrita, declaras haber leído, comprendido y aceptado en su totalidad las siguientes cláusulas de exención de responsabilidad y asunción de riesgo.
+            Por favor, lee con detenimiento este contrato antes de acceder o utilizar <strong className="text-white">PULSE ENDURANCE</strong>. Al iniciar sesión, registrarte o ejecutar cualquier sesión prescrita, declaras haber leído, comprendido y aceptado en su totalidad las siguientes cláusulas de exención de responsabilidad y asunción de riesgo.
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export default function TermsAndConditionsPage() {
             <span>ADVERTENCIA MÉDICA Y DE SEGURIDAD CRÍTICA</span>
           </div>
           <p className="text-xs sm:text-sm leading-relaxed text-amber-100/90">
-            PULSE AI NO es un proveedor de atención médica, médico especialista ni centro de diagnóstico cardiológico. La práctica de deportes de alta intensidad como atletismo de fondo, ciclismo y triatlón conlleva riesgos físicos graves. Nunca inicies un programa de entrenamiento sin la aprobación médica previa de un profesional de la salud.
+            PULSE ENDURANCE NO es un proveedor de atención médica, médico especialista ni centro de diagnóstico cardiológico. La práctica de deportes de alta intensidad como atletismo de fondo, ciclismo y triatlón conlleva riesgos físicos graves. Nunca inicies un programa de entrenamiento sin la aprobación médica previa de un profesional de la salud.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function TermsAndConditionsPage() {
           </div>
           <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2">
             <p>
-              PULSE AI es una herramienta de asistencia tecnológica que combina cálculos matemáticos deterministas (modelo Banister, potencia Stryd, umbrales de lactato estimados) con modelos de lenguaje de Inteligencia Artificial (IA Generativa como Google Gemini).
+              PULSE ENDURANCE es una herramienta de asistencia tecnológica que combina cálculos matemáticos deterministas (modelo Banister, potencia Stryd, umbrales de lactato estimados) con modelos de lenguaje de Inteligencia Artificial (IA Generativa como Google Gemini).
             </p>
             <p>
               El usuario reconoce expresamente que los modelos de Inteligencia Artificial proporcionan sugerencias automatizadas basadas en telemetría histórica, pero carecen de capacidad diagnóstica humana directa y pueden presentar aproximaciones o desvíos. Las rutinas, ritmos, potencias y volúmenes generados tienen carácter estrictamente informativo y orientativo.
@@ -92,7 +92,7 @@ export default function TermsAndConditionsPage() {
               </ul>
             </div>
             <p>
-              Al utilizar el servicio, el usuario <strong>exonera de manera irrevocable y definitiva</strong> a PULSE AI, a su creador y director técnico Germán Morales, a sus desarrolladores, directivos y entrenadores de cualquier reclamo legal, demanda judicial, indemnización por perjuicios materiales o morales, incapacidad física o fallecimiento.
+              Al utilizar el servicio, el usuario <strong>exonera de manera irrevocable y definitiva</strong> a PULSE ENDURANCE, a su creador y director técnico Germán Morales, a sus desarrolladores, directivos y entrenadores de cualquier reclamo legal, demanda judicial, indemnización por perjuicios materiales o morales, incapacidad física o fallecimiento.
             </p>
           </div>
         </section>
@@ -121,7 +121,7 @@ export default function TermsAndConditionsPage() {
           </div>
           <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2">
             <p>
-              PULSE AI no se hace responsable por:
+              PULSE ENDURANCE no se hace responsable por:
             </p>
             <ul className="space-y-1.5 list-disc list-inside text-slate-300">
               <li>Averías mecánicas o roturas de bicicletas, sensores de potencia (Stryd), pulsómetros o relojes deportivos (Garmin, Coros, Apple Watch).</li>
@@ -131,11 +131,27 @@ export default function TermsAndConditionsPage() {
           </div>
         </section>
 
-        {/* Cláusula 5: Aceptación Electrónica y Jurisdicción */}
+        {/* Cláusula 5: Propiedad Intelectual, Marcas de Terceros y Atribución Científica */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2.5 text-emerald-400">
+            <Award className="w-5 h-5 shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold text-white">5. Propiedad Intelectual, Marcas de Terceros y Atribución Científica</h2>
+          </div>
+          <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2">
+            <p>
+              PULSE ENDURANCE aplica principios biomecánicos, fisiológicos y modelos algorítmicos de dominio público desarrollados e investigados por destacadas figuras de las ciencias del deporte (Renato Canova, Dr. Stephen Seiler, Dr. Andrew Coggan, Dr. Jack Daniels, Eric Banister). La mención de sus nombres, citas pedagógicas o metodologías en esta plataforma tiene fines exclusivamente informativos, académicos y de reconocimiento de autoría científica. Dicha mención no implica patrocinio, certificación oficial, aval comercial ni vínculo societario directo entre dichos autores y PULSE ENDURANCE.
+            </p>
+            <p>
+              Todas las marcas comerciales, nombres de producto y logotipos de terceros citados en la plataforma (incluyendo, sin limitación, Garmin®, Coros®, Apple Watch®, Strava®, Stryd®, Intervals.icu®, TrainingPeaks®, VDOT®, TSS®, FTP) son propiedad exclusiva de sus respectivos titulares. Su uso en esta plataforma se realiza bajo el principio de <strong>Uso Justo Nominativo (Nominative Fair Use)</strong> con el único propósito de identificar la compatibilidad técnica de hardware, protocolos de comunicación y estándares de la industria del rendimiento deportivo.
+            </p>
+          </div>
+        </section>
+
+        {/* Cláusula 6: Aceptación Electrónica y Jurisdicción */}
         <section className="space-y-3">
           <div className="flex items-center gap-2.5 text-emerald-400">
             <ShieldAlert className="w-5 h-5 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold text-white">5. Aceptación Vinculante y Validez Legal</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">6. Aceptación Vinculante y Validez Legal</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
             La marcación de la casilla de consentimiento electrónico durante el inicio de sesión o registro constituye una firma electrónica con pleno valor probatorio y vinculación contractual. Si no estás de acuerdo con alguna de estas disposiciones, debes abstenerte de utilizar la plataforma y suspender tu cuenta.
@@ -144,7 +160,7 @@ export default function TermsAndConditionsPage() {
 
         {/* Pie de Página */}
         <footer className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500 space-y-2">
-          <p>© 2026 PULSE AI™ — Todos los derechos reservados.</p>
+          <p>© 2026 PULSE ENDURANCE™ — Todos los derechos reservados.</p>
           <div className="flex items-center justify-center gap-4 text-slate-400">
             <Link href="/privacy" className="hover:text-emerald-400 transition underline underline-offset-2">
               Política de Privacidad

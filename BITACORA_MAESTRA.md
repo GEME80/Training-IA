@@ -10065,6 +10065,36 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** Dominio `https://pulseendurance.co` en vivo sobre HTTPS/2 y sincronización OAuth blindada ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 174 ✅.
 
+---
+
+## 175. Blindaje de Propiedad Intelectual, Atribución Científica y Uso Justo Nominativo (Fair Use)
+
+- **Fecha:** 2026-10-19
+- **Objetivo:** Blindar legal y contractualmente a PULSE ENDURANCE ante eventuales reclamaciones de derechos de autor o marcas registradas derivadas de la mención de metodologías deportivas (Renato Canova, Dr. Stephen Seiler, Dr. Andrew Coggan, Dr. Jack Daniels, Eric Banister) y marcas de hardware/ecosistema (Garmin, Coros, Stryd, Strava, Intervals.icu, TrainingPeaks, VDOT, TSS, FTP).
+
+### 175.1. Implementaciones Realizadas
+1. **Nota Discreta de Atribución Científica en Landing ([`src/components/landing/UnifiedPhysioEngine.tsx`](src/components/landing/UnifiedPhysioEngine.tsx)):**
+   - Inserción de caja informativa con icono `Info` declarando expresamente que los principios fisiológicos y modelos matemáticos aplicados son de dominio público investigados por Renato Canova, Dr. Stephen Seiler, Dr. Andrew Coggan y Dr. Jack Daniels.
+   - Declaración taxativa de que la mención tiene fines estrictamente informativos y de atribución de autoría científica, sin sugerir patrocinio, certificación oficial ni relación contractual directa.
+2. **Cláusula 5 en Términos y Condiciones ([`src/app/terms/page.tsx`](src/app/terms/page.tsx)):**
+   - Incorporación de la cláusula formal: *"5. Propiedad Intelectual, Marcas de Terceros y Atribución Científica"*.
+   - Consagración del principio legal de **Uso Justo Nominativo (Nominative Fair Use)** para compatibilidad técnica de hardware y estándares deportivos (Garmin®, Coros®, Apple Watch®, Strava®, Stryd®, Intervals.icu®, TrainingPeaks®, VDOT®, TSS®, FTP).
+   - Renumeración de la cláusula de validez contractual a *"6. Aceptación Vinculante y Validez Legal"*.
+3. **Depuración Exhaustiva de Textos Legales ([`src/app/terms/page.tsx`](src/app/terms/page.tsx) y [`src/app/privacy/page.tsx`](src/app/privacy/page.tsx)):**
+   - Sustitución del 100% de las menciones residuales de "PULSE AI" por la identidad oficial **PULSE ENDURANCE**.
+   - Actualización de vigencia contractual a `Contrato Legal v1.1`.
+
+### 175.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `UnifiedPhysioEngine.tsx`: 214 LOC ($\le 350$) ✅
+  * `terms/page.tsx`: 178 LOC ($\le 350$) ✅
+  * `privacy/page.tsx`: 190 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente en 3.4s (21/21 rutas compiladas) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Blindaje legal y de propiedad intelectual 100% activo en producción ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 175 ✅.
+
+
 
 
 

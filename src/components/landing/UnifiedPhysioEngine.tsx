@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { CheckCircle2, Eye, Quote, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Eye, Info, Quote, ShieldCheck } from "lucide-react";
 import { CoachBioModal } from "./CoachBioModal";
 import { COACHES_SCIENCE_DATA, CoachId, CoachMethodology } from "./coachScienceData";
 
@@ -189,6 +189,16 @@ export const UnifiedPhysioEngine: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Nota Discreta de Atribución Científica y Uso Justo */}
+      <div className="mt-10 pt-6 border-t border-slate-200/70 max-w-5xl mx-auto">
+        <div className="flex items-start gap-3 text-[11px] text-slate-500 leading-relaxed font-sans bg-slate-50/80 p-3.5 sm:p-4 rounded-2xl border border-slate-200/60 shadow-2xs">
+          <Info className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.75} />
+          <p>
+            <strong className="text-slate-700">Atribución Científica &amp; Uso Justo Nominativo:</strong> PULSE ENDURANCE aplica principios fisiológicos y modelos matemáticos de dominio público formulados por Renato Canova, el Dr. Stephen Seiler, el Dr. Andrew Coggan y el Dr. Jack Daniels. La mención de sus nombres, investigaciones o métricas tiene fines estrictamente informativos y de reconocimiento de autoría científica; no implica patrocinio, certificación oficial ni relación contractual o comercial directa de los autores con esta plataforma.
+          </p>
         </div>
       </div>
 

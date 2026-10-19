@@ -18,12 +18,12 @@ export default function PrivacyPolicyPage() {
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-emerald-400 transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Volver a PULSE AI</span>
+            <span>Volver a PULSE ENDURANCE</span>
           </Link>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">
-              Vigencia: Octubre 2026 (v1.0)
+              Vigencia: Octubre 2026 (v1.1)
             </span>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
             Política de Privacidad y Tratamiento de Datos
           </h1>
           <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-            En <strong className="text-slate-200">PULSE AI</strong> nos tomamos con total rigor la privacidad de tu información personal, biológica y de telemetría de rendimiento deportivo. Este documento detalla cómo recolectamos, procesamos, custodiamos y protegemos tus datos cuando utilizas nuestra plataforma de entrenamiento inteligente.
+            En <strong className="text-slate-200">PULSE ENDURANCE</strong> nos tomamos con total rigor la privacidad de tu información personal, biológica y de telemetría de rendimiento deportivo. Este documento detalla cómo recolectamos, procesamos, custodiamos y protegemos tus datos cuando utilizas nuestra plataforma de entrenamiento inteligente.
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-lg sm:text-xl font-bold text-white">1. Responsable del Tratamiento</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
-            La plataforma tecnológica <strong className="text-slate-100">PULSE AI</strong> es operada bajo la dirección técnica de Germán Morales. Para cualquier duda, ejercicio de derechos de privacidad o supresión de datos, puedes comunicarte directamente al correo institucional:{" "}
+            La plataforma tecnológica <strong className="text-slate-100">PULSE ENDURANCE</strong> es operada bajo la dirección técnica de Germán Morales. Para cualquier duda, ejercicio de derechos de privacidad o supresión de datos, puedes comunicarte directamente al correo institucional:{" "}
             <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
               gerkof@gmail.com
             </a>.
@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
               <li>Calcular alertas tempranas de sobreentrenamiento, fatiga aguda excesiva o desacoplamiento aeróbico.</li>
             </ul>
             <p className="text-slate-400 pt-1">
-              <strong>Compromiso FinOps y Ética de Datos:</strong> PULSE AI <strong className="text-slate-200">NO vende, NO arrienda, NO comercializa ni cede</strong> tus datos biométricos ni de rendimiento a agencias publicitarias ni a terceros.
+              <strong>Compromiso FinOps y Ética de Datos:</strong> PULSE ENDURANCE <strong className="text-slate-200">NO vende, NO arrienda, NO comercializa ni cede</strong> tus datos biométricos ni de rendimiento a agencias publicitarias ni a terceros.
             </p>
           </div>
         </section>
@@ -172,7 +172,7 @@ export default function PrivacyPolicyPage() {
 
         {/* Pie de Página */}
         <footer className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500 space-y-2">
-          <p>© 2026 PULSE AI™ — Todos los derechos reservados.</p>
+          <p>© 2026 PULSE ENDURANCE™ — Todos los derechos reservados.</p>
           <div className="flex items-center justify-center gap-4 text-slate-400">
             <Link href="/terms" className="hover:text-emerald-400 transition underline underline-offset-2">
               Términos de Servicio y Exención Médica

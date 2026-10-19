@@ -1,10 +1,16 @@
-# ⚡ SGEA Pro (v5.83) — PULSE ENDURANCE™
-> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial: [pulseendurance.co](https://pulseendurance.co)**
+# ⚡ SGEA Pro (v5.84) — PULSE ENDURANCE™
+> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial en producción: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🌐 **Despliegue en Dominio Canónico `pulseendurance.co`, DNS GoDaddy, OAuth Intervals.icu y Actualización de Textos (v5.84):**
+  - **Dominio Canónico Oficial:** Compra y activación de `pulseendurance.co` en GoDaddy.
+  - **Zona DNS Productiva:** Registro A (`35.219.200.4`), TXT (`fah-claim=002-02-226ad19b-3311-4fa7-be5e-b411fef90aaa`) y CNAME (`_acme-challenge`) con emisión de certificados SSL/TLS automáticos por Google Cloud Certificate Manager bajo protocolo HTTP/2 y 2FA activo en GoDaddy.
+  - **Integración OAuth 2.0 en Intervals.icu (Cliente 1371):** Configuración de la aplicación como `PULSE ENDURANCE`, sitio web oficial `https://pulseendurance.co`, política de privacidad `https://pulseendurance.co/privacy` y Redirect URI autorizada `https://pulseendurance.co/api/auth/intervals/callback`.
+  - **Metadatos SEO y PWA (`layout.tsx`, `manifest.ts`):** Título oficial del navegador actualizado a `"PULSE ENDURANCE — Smart Performance Coach"`, OpenGraph y PWA Manifest.
+  - **Actualización Integral de Textos en la Landing Page:** Erradicación del etiquetado frontal ruidoso "IA / AI" a favor de `PULSE ENDURANCE` y `Motor Fisiológico Adaptativo` en Navbar, Hero, Telemetría HUD, Showcase de Maquetas, Motor Unificado, Biografía de Coaches y Precios.
 - 🛡️ **Identidad de Marca PULSE ENDURANCE, Dominio Oficial `pulseendurance.co` & Rigor Fisiológico Seiler 80/20 (v5.83):**
   - **Documento Rector Institucional ([`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md)):** Formalización de los principios fundacionales de **PULSE ENDURANCE** (erradicando la sigla "IA / AI" del nombre comercial frontal para afianzar la credibilidad deportiva y evitar la percepción de "chatbot"; la inteligencia artificial actúa como motor adaptativo invisible 24/7). Dominio canónico de producción: `https://pulseendurance.co`. Resolución explícita a los tres dolores (tiranía del plan rígido, culpa psicológica por la sesión omitida, e islas de datos desconectadas).
   - **Rigor Metodológico Fisiológico (`UnifiedPhysioEngine.tsx`, `coachScienceData.ts`, `CoachBioModal.tsx`):**

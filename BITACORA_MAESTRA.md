@@ -10022,5 +10022,49 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** Cero menciones frontales a "PULSE AI" en la landing page; terminología orientada 100% a atletas de resistencia (Running, Ciclismo, Triatlón) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 173 ✅.
 
+---
+
+## 174. Consolidación de Infraestructura de Dominio Oficial, DNS (GoDaddy) y OAuth Intervals.icu (v5.84)
+
+- **Fecha:** 2026-10-19
+- **Objetivo:** Documentar formalmente la arquitectura completa del dominio canónico de producción `pulseendurance.co`, los registros DNS en GoDaddy, la emisión de certificados SSL/TLS administrados, la autorización en Firebase y la configuración de OAuth 2.0 en Intervals.icu.
+
+### 174.1. Datos Técnicos del Dominio e Infraestructura
+1. **Dominio Oficial y Registrador:**
+   - Dominio: `pulseendurance.co` (con variante canónica `www.pulseendurance.co`).
+   - Registrador: GoDaddy.
+   - Seguridad: 2FA habilitado con App de Autenticación TOTP (Google Authenticator / 1Password) para protección estricta contra secuestro o transferencias no autorizadas.
+2. **Zona DNS Configurada en GoDaddy:**
+   - **Registro A:** `@` $\rightarrow$ `35.219.200.4` (IP Anycast de Google Cloud Envoy / Firebase App Hosting).
+   - **Registro TXT:** `@` $\rightarrow$ `fah-claim=002-02-226ad19b-3311-4fa7-be5e-b411fef90aaa` (Prueba criptográfica de propiedad para App Hosting).
+   - **Registro CNAME:** `_acme-challenge` $\rightarrow$ `537d80f9-d372-4d2c-8cb4-e58f273e86c0.17.authorize.certificatemanager.goog.` (Emisión y renovación automática de certificados SSL/TLS con Google Certificate Manager).
+3. **Certificados TLS/SSL y Protocolo:**
+   - Estado: 100% activo y sirviendo tráfico cifrado en producción.
+   - Protocolo: HTTPS estricto con negociación HTTP/2 mediante Google Cloud Proxies.
+4. **Firebase Authentication (Proyecto `training-ia-8f67f`):**
+   - Incorporación de `pulseendurance.co` y `www.pulseendurance.co` en la lista blanca de **Dominios Autorizados** para Google Sign-In.
+
+### 174.2. Integración OAuth 2.0 en Intervals.icu (Cliente ID 1371)
+1. **Nombre de la Aplicación:** `PULSE ENDURANCE`.
+2. **Sitio Web Oficial:** `https://pulseendurance.co`.
+3. **Política de Privacidad:** `https://pulseendurance.co/privacy`.
+4. **Redirect URIs Autorizadas:**
+   - `https://pulseendurance.co/api/auth/intervals/callback` (Canónica principal de producción).
+   - `https://pulse-ia--training-ia-8f67f.us-central1.hosted.app/api/auth/intervals/callback` (Respaldo técnico de App Hosting).
+5. **Scopes Fisiológicos:** `ACTIVITY`, `CALENDAR`, `WELLNESS`, `SETTINGS`.
+
+### 174.3. Metadatos de Cabecera y SEO Consagrados
+1. **`<title>` del Navegador:** `PULSE ENDURANCE — Smart Performance Coach` (`src/app/layout.tsx`).
+2. **PWA Manifest (`src/app/manifest.ts`):** `PULSE ENDURANCE — Smart Performance Coach` (Nombre corto: `PULSE ENDURANCE`).
+3. **Páginas Legales:** Títulos actualizados en `terms/page.tsx` y `privacy/page.tsx`.
+
+### 174.4. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Todos los archivos cumplen estrictamente la regla modular ($\le 350$ LOC) ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente en 2.3s (21/21 rutas compiladas) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Dominio `https://pulseendurance.co` en vivo sobre HTTPS/2 y sincronización OAuth blindada ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 174 ✅.
+
+
 
 

@@ -99,3 +99,47 @@ La plataforma integra los principios de cuatro figuras históricas del entrenami
 * **Prohibición de Emojis Planos:** Prohibido el uso de emojis planos del sistema operativo (`🚀`, `✨`, `👁️`, etc.) en interfaces de usuario.
 * **Iconografía Vectorial:** Utilizar exclusivamente iconos SVG de **Lucide React** con `strokeWidth={1.75}` o `{2}` para asegurar una estética deportiva de alta gama.
 * **Tipografía Numérica:** Toda métrica de vatios, ritmo, frecuencia cardíaca o tiempo debe renderizarse con clases monoespaciadas (`font-mono tabular-nums`) para evitar oscilaciones visuales.
+
+---
+
+## 5. Infraestructura de Dominio Oficial, DNS y Servicios Conectados
+
+### 5.1 Dominio y Proveedor de Registro
+* **Dominio Oficial:** `pulseendurance.co`
+* **Subdominio Web Canónico:** `www.pulseendurance.co`
+* **Registrador Oficial:** GoDaddy
+* **Seguridad de Acceso:** Verificación de Dos Pasos (2FA) activa con Aplicación de Autenticación (Google Authenticator / 1Password) para blindaje contra secuestro de dominio.
+
+### 5.2 Configuración de Zona DNS en GoDaddy
+| Tipo de Registro | Host / Nombre | Valor / Destino | Propósito / Servicio |
+| :--- | :--- | :--- | :--- |
+| **A** | `@` | `35.219.200.4` | IP Anycast de Google Cloud Envoy / Firebase App Hosting |
+| **TXT** | `@` | `fah-claim=002-02-226ad19b-3311-4fa7-be5e-b411fef90aaa` | Validación de propiedad de dominio para Firebase App Hosting |
+| **CNAME** | `_acme-challenge` | `537d80f9-d372-4d2c-8cb4-e58f273e86c0.17.authorize.certificatemanager.goog.` | Emisión y renovación automática de certificados SSL/TLS con Google Certificate Manager |
+
+### 5.3 Certificados TLS/SSL y Protocolo
+* **Protocolo:** HTTPS estricto con negociación HTTP/2.
+* **Proveedor de Certificado:** Google Cloud Certificate Manager (ACME administrado).
+
+### 5.4 Autenticación y Autorización en Firebase
+* **Proyecto Firebase:** `training-ia-8f67f`
+* **Dominios Autorizados para Google Sign-In:**
+  * `pulseendurance.co`
+  * `www.pulseendurance.co`
+  * `pulse-ia--training-ia-8f67f.us-central1.hosted.app`
+
+### 5.5 Integración de Telemetría con Intervals.icu (OAuth 2.0)
+* **ID de Cliente OAuth:** `1371`
+* **Nombre de la Aplicación:** `PULSE ENDURANCE`
+* **Sitio Web Oficial:** `https://pulseendurance.co`
+* **Política de Privacidad:** `https://pulseendurance.co/privacy`
+* **Redirect URIs Registradas:**
+  1. `https://pulseendurance.co/api/auth/intervals/callback` (Producción canónica)
+  2. `https://pulse-ia--training-ia-8f67f.us-central1.hosted.app/api/auth/intervals/callback` (Respaldo)
+* **Permisos / Scopes Requeridos:** `ACTIVITY`, `CALENDAR`, `WELLNESS`, `SETTINGS`.
+
+### 5.6 Metadatos SEO y PWA de Producción
+* **`<title>` del Navegador:** `PULSE ENDURANCE — Smart Performance Coach`
+* **Descripción:** `Plataforma inteligente y adaptativa de periodización y entrenamiento deportivo de resistencia para Carrera, Ciclismo y Triatlón, integrada con Garmin, Coros e Intervals.icu.`
+* **Nombre de Aplicación PWA (Manifest):** `PULSE ENDURANCE — Smart Performance Coach` (Nombre corto: `PULSE ENDURANCE`)
+* **Color de Tema:** `#10b981` (Verde Esmeralda Fisiológico)

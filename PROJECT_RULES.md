@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.83)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.84)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.83). Dominio oficial en producción: pulseendurance.co.
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.84). Dominio oficial en producción: pulseendurance.co.
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.84: Despliegue en Dominio Canónico pulseendurance.co, DNS GoDaddy, OAuth Intervals.icu y Actualización Integral de Textos:
+  * Dominio Oficial y DNS: Compra y activación de `pulseendurance.co` en GoDaddy con registro A (`35.219.200.4`), TXT (`fah-claim`) y CNAME (`_acme-challenge`) hacia Google Cloud Certificate Manager con SSL/TLS HTTP/2 en producción y 2FA activo.
+  * Intervals.icu OAuth 2.0 (Cliente 1371): Configuración de nombre de app (`PULSE ENDURANCE`), sitio web (`https://pulseendurance.co`), política de privacidad (`/privacy`) y redirect URI oficial (`https://pulseendurance.co/api/auth/intervals/callback`).
+  * Metadatos SEO y Cabecera de Navegador (`layout.tsx`, `manifest.ts`): Título oficial consagrado como "PULSE ENDURANCE — Smart Performance Coach", OpenGraph a `pulseendurance.co` y nombre de app PWA.
+  * Actualización Integral de la Landing Page: Erradicación del etiquetado frontal ruidoso "IA / AI" en logotipo (`PulseLogo.tsx`), hero (`HeroSection.tsx`), telemetría (`HeroAthleteTelemetryCard.tsx`), ecosistema (`EcosystemTicker.tsx`), maquetas móviles (`AppMotionShowcase.tsx`), motor unificado (`UnifiedPhysioEngine.tsx`), bio de coaches (`coachScienceData.ts`), precios (`PricingAndFaqSection.tsx`) y pie de página (`LandingFooter.tsx`).
 - Versión 5.83: Consagración de Marca PULSE ENDURANCE, Dominio Oficial pulseendurance.co, Rigor Fisiológico Seiler 80/20 y Copywriting Inviolable:
   * Documento Rector Institucional (`BRAND_IDENTITY_PULSE_ENDURANCE.md`): Definición formal de PULSE ENDURANCE (erradicación de la sigla "IA/AI" del nombre frontal comercial para mayor cercanía y confianza en atletas de fondo; la IA permanece como motor invisible de inferencia fisiológica adaptativa 24/7). Dominio canónico: `pulseendurance.co`.
   * Rigor Científico del Motor Metodológico (`UnifiedPhysioEngine.tsx`, `CoachBioModal.tsx`, `coachScienceData.ts`): Corrección fisiológica crítica asignando al Dr. Stephen Seiler el "Entrenamiento Polarizado (80/20)" en sustitución del HRV. Sincronización reactiva del tab activo con `selectedCoachId`. Matriz tipada `COACHES_SCIENCE_DATA` con credenciales de élite, base científica y aplicación algorítmica. Supresión de componentes legados (`CoachesScienceSection.tsx`, `physioEngineData.ts`).

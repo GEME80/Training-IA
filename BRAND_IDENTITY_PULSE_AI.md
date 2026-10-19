@@ -1,36 +1,41 @@
-# 🛡️ PULSE AI™ — Documento Rector de Identidad de Marca, Sistema de Diseño y Filosofía Fisiológica
+# 🛡️ PULSE ENDURANCE™ — Documento Rector de Identidad de Marca, Sistema de Diseño y Filosofía Fisiológica
 
 > **MANDATO DE LECTURA OBLIGATORIA PARA AGENTES:**  
-> Este archivo define el contexto de marca, la dirección de arte, el sistema de diseño y las reglas editoriales inviolables de **PULSE AI**. Todo agente de desarrollo, diseñador o modelo de código (Antigravity) debe regirse estrictamente por estos principios al construir componentes visuales, páginas o micro-copys.
+> Este archivo define el contexto de marca, la dirección de arte, el sistema de diseño y las reglas editoriales inviolables de **PULSE ENDURANCE** (dominio oficial: `pulseendurance.co`). Todo agente de desarrollo, diseñador o modelo de código (Antigravity) debe regirse estrictamente por estos principios al construir componentes visuales, páginas o micro-copys.
 
 ---
 
 ## 1. Fundamentos de Marca: ¿Por qué existimos?
 
 ### 1.1 El Origen del Nombre
-* **PULSE (El Pulso Biológico):** La señal de adaptación fisiológica por excelencia. No son solo pulsaciones por minuto ($bpm$); es la variabilidad de la frecuencia cardíaca ($HRV$), el balance del sistema nervioso autónomo, la zancada sobre el asfalto y la capacidad biológica del atleta de asimilar estrés físico sin destruirse.
-* **AI (Inteligencia Fisiológica en Tiempo Real):** Un motor de inferencia determinista y científico (impulsado por Google Gemini y modelado fisiológico) que traduce millones de puntos de datos de telemetría (vatios Stryd, fatiga Banister, curvas FTP) en decisiones diarias antes de que suene el despertador.
+* **PULSE (El Pulso Biológico):** La señal de adaptación fisiológica por excelencia. No son solo pulsaciones por minuto ($bpm$); es la variabilidad de la frecuencia cardíaca ($HRV$), el balance del sistema nervioso autónomo, la zancada sobre el asfalto, la potencia en vatios y la capacidad biológica del atleta de asimilar estrés físico sin destruirse.
+* **ENDURANCE (La Especialización en Resistencia de Alto Rendimiento):** El hogar exclusivo de los deportes de fondo y media/larga distancia: **Carrera a Pie (5K a 42K y Trail), Ciclismo (Ruta y Gran Fondo) y Triatlón (Sprint a 140.6)**. No somos una app de fitness genérico, ni de gimnasio comercial, ni de conteo pasivo de pasos; somos una plataforma de fisiología aplicada y biomecánica deportiva.
+* **El Rol de la Inteligencia Fisiológica (Motor Silencioso vs. Etiqueta Publicitaria):**  
+  * *Evolución de Identidad:* Erradicamos la sigla "IA / AI" del nombre comercial frontal para no generar desconfianza ni parecer un "chatbot o invento de ChatGPT".
+  * *Dónde vive la tecnología:* La inteligencia adaptativa (impulsada por Google Gemini y algoritmos deterministas de Banister, Coggan y Daniels) actúa como el **motor invisible en segundo plano**. Trabaja silenciosamente cada madrugada procesando telemetría para recalibrar los microciclos antes de que el atleta despierte.
 
 ### 1.2 La Misión
-Erradicar la rigidez de los planes de papel y la incertidumbre en los atletas de resistencia, sincronizando la ciencia de los entrenadores más laureados del mundo con la fatiga real del atleta cada mañana.
+Erradicar la rigidez de los planes de papel y la incertidumbre en los atletas de resistencia, sincronizando la ciencia de los entrenadores más laureados del mundo con la fatiga real del atleta cada mañana en **pulseendurance.co**.
 
 ### 1.3 Los Tres Dolores que Resolvemos
 1. **La tiranía del plan rígido (PDFs y Hojas de Cálculo):** Los planes estáticos no saben si el atleta durmió mal, tuvo un viaje de trabajo o está incubando un virus. Seguir un plan rígido en un cuerpo fatigado causa roturas musculares y sobreentrenamiento.
-2. **La culpa psicológica por la sesión perdida:** Cuando un atleta aficionado no puede entrenar un día por compromisos familiares o laborales, el impulso común es "doblar sesión al día siguiente" o acelerar ritmos. PULSE AI elimina la culpa: recalcula el microciclo sin castigar al cuerpo.
-3. **Islas de datos desconectadas:** El atleta tiene reloj Garmin/Coros, potenciómetro Stryd y sensores, pero nadie unifica los datos para responder la pregunta esencial: *¿A cuántos vatios exactos debo rodar hoy?*
+2. **La culpa psicológica por la sesión perdida:** Cuando un atleta aficionado no puede entrenar un día por compromisos familiares o laborales, el impulso común es "doblar sesión al día siguiente" o acelerar ritmos. PULSE ENDURANCE elimina la culpa: recalcula el microciclo sin castigar al cuerpo.
+3. **Islas de datos desconectadas:** El atleta tiene reloj Garmin/Coros, potenciómetro Stryd y sensores, pero nadie unifica los datos para responder la pregunta esencial: *¿A cuántos vatios y ritmos exactos debo rodar hoy?*
 
 ---
 
 ## 2. Arquetipo, Tono y Reglas Editoriales (Copywriting)
 
 ### 2.1 Arquetipo de Marca: "El Sabio Atlético" (The Sage + The Hero)
-* **No somos:** Un animador de gimnasio comercial con frases vacías de autoayuda ("el dolor es temporal, la gloria es eterna").
+* **No somos:** Un animador de gimnasio comercial con frases vacías de autoayuda ("el dolor es temporal, la gloria es eterna") ni una herramienta tecnológica fría llena de jerga informática.
 * **Somos:** Un equipo de fisiología de laboratorio y biomecánica de élite. Hablamos el lenguaje de la potencia mecánica, la asimilación mitocondrial y la especificidad de carrera, tratando al atleta amateur con el respeto con el que se entrena a un atleta olímpico.
 
 ### 2.2 Diccionario Editorial Inviolable
 
-| Concepto | Términos PROHIBIDOS (Genéricos / Vulgares) | Términos OFICIALES PULSE AI |
+| Concepto | Términos PROHIBIDOS (Genéricos / Comerciales) | Términos OFICIALES PULSE ENDURANCE |
 | :--- | :--- | :--- |
+| **Nombre de Marca** | "Pulse IA", "Pulse AI Pro", "App de IA" | **"PULSE ENDURANCE"**, **"PULSE ENDURANCE PRO"** |
+| **Tecnología** | "Robot entrenador", "Chatbot de IA", "Algoritmo mágico" | **"Motor fisiológico adaptativo"**, **"Head Coach inteligente"** |
 | **Aviso del Reloj** | "El reloj pita", "hace un beep", "vibra" | "El reloj te guía", "notifica en tu muñeca", "marca el intervalo" |
 | **Resultados** | "Pico de forma garantizado", "éxito seguro" | "Pico de forma modelado matemáticamente", "adaptación biológica" |
 | **Salud & Dolor** | "Dolores musculares", "si te duele la pierna" | "Sobrecarga aguda", "fatiga neuromuscular residual", "asimilación" |
@@ -42,7 +47,7 @@ Erradicar la rigidez de los planes de papel y la incertidumbre en los atletas de
 
 ## 3. La Metodología Científica (Los 4 Pilares Inviolables)
 
-La plataforma integra los principios de cuatro figuras históricas del entrenamiento de resistencia. Antigravity debe preservar siempre la atribución correcta de cada metodología:
+La plataforma integra los principios de cuatro figuras históricas del entrenamiento de resistencia:
 
 ### 1. Renato Canova (Fondo, Maratón & Cap Biomecánico)
 * **Concepto:** *Resistencia a la velocidad específica y límite de seguridad articular.*
@@ -66,7 +71,11 @@ La plataforma integra los principios de cuatro figuras históricas del entrenami
 
 ## 4. Sistema de Diseño Visual (Design System)
 
-### 4.1 Paleta de Color Oficial
+### 4.1 Dominio y URLs Oficiales
+* **Dominio Primario de Producción:** `https://pulseendurance.co`
+* **Subdominio Canónico Web:** `https://www.pulseendurance.co`
+
+### 4.2 Paleta de Color Oficial
 
 ```css
 /* Color Primario / Acento Fisiológico */
@@ -86,7 +95,7 @@ La plataforma integra los principios de cuatro figuras históricas del entrenami
 --pulse-rose-fatigue:#f43f5e; /* Indicador de fatiga aguda, desacople o zonas rojas */
 ```
 
-### 4.2 Reglas de Iconografía y Componentes UI
+### 4.3 Reglas de Iconografía y Componentes UI
 * **Prohibición de Emojis Planos:** Prohibido el uso de emojis planos del sistema operativo (`🚀`, `✨`, `👁️`, etc.) en interfaces de usuario.
 * **Iconografía Vectorial:** Utilizar exclusivamente iconos SVG de **Lucide React** con `strokeWidth={1.75}` o `{2}` para asegurar una estética deportiva de alta gama.
 * **Tipografía Numérica:** Toda métrica de vatios, ritmo, frecuencia cardíaca o tiempo debe renderizarse con clases monoespaciadas (`font-mono tabular-nums`) para evitar oscilaciones visuales.

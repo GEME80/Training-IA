@@ -1,12 +1,12 @@
-# ⚡ SGEA Pro (v5.83) — Sistema Adaptativo de Entrenamiento Inteligente
-> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE AI y Gestión Deportiva SSOT con IA para Deportes de Resistencia (Carrera, Ciclismo y Triatlón).**
+# ⚡ SGEA Pro (v5.83) — PULSE ENDURANCE™
+> **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
 
-- 🛡️ **Identidad de Marca PULSE AI, Rigor Científico Seiler 80/20 & Elevación Editorial Inviolable (v5.83):**
-  - **Documento Rector Institucional (`BRAND_IDENTITY_PULSE_AI.md`):** Formalización de los principios fundacionales, arquetipo "El Sabio Atlético" (laboratorio de fisiología de élite vs. animador comercial de gimnasio), resolución explícita a los tres dolores (tiranía del plan rígido, culpa psicológica por la sesión omitida, e islas de datos desconectadas), y Diccionario Editorial Inviolable.
+- 🛡️ **Identidad de Marca PULSE ENDURANCE, Dominio Oficial `pulseendurance.co` & Rigor Fisiológico Seiler 80/20 (v5.83):**
+  - **Documento Rector Institucional ([`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md)):** Formalización de los principios fundacionales de **PULSE ENDURANCE** (erradicando la sigla "IA / AI" del nombre comercial frontal para afianzar la credibilidad deportiva y evitar la percepción de "chatbot"; la inteligencia artificial actúa como motor adaptativo invisible 24/7). Dominio canónico de producción: `https://pulseendurance.co`. Resolución explícita a los tres dolores (tiranía del plan rígido, culpa psicológica por la sesión omitida, e islas de datos desconectadas).
   - **Rigor Metodológico Fisiológico (`UnifiedPhysioEngine.tsx`, `coachScienceData.ts`, `CoachBioModal.tsx`):**
     * *Dr. Stephen Seiler:* Corrección fisiológica crítica asignándole el **"Entrenamiento Polarizado (80/20)"** (80% del tiempo construyendo base mitocondrial en Z1/Z2 conversacional y 20% en alta intensidad) en sustitución del HRV.
     * *Sincronización Reactiva de Tabs:* Estado reactivo único `selectedCoachId` que garantiza la correspondencia perfecta del borde verde esmeralda y la rotación fluida (5s) con pausa interactiva al interactuar o pasar el cursor.

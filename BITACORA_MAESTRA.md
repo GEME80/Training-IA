@@ -9906,3 +9906,52 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** Atletas en mantenimiento (como Silvia Rey) reciben dictámenes enfocados al 100% en salud, base y adherencia sin menciones de carreras 10k ni vatios de ciclismo si no montan bicicleta ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 171 ✅.
 
+---
+
+## 172. Consagración de Marca PULSE ENDURANCE™, Dominio Oficial `pulseendurance.co` y Despliegue en Producción
+
+### 172.1. Diagnóstico Estratégico de Marca y Evolución Nominal
+1. **La Decisión de Marca:**
+   - La proliferación de apps con la sigla "AI / IA" en su nombre frontal genera escepticismo en los atletas de resistencia (miedo a "alucinaciones de ChatGPT" o planes genéricos de gimnasio).
+   - Para un corredor, ciclista o triatleta, la inteligencia artificial no es el producto que compra; el producto es **asimilación de fatiga, ritmos exactos y la ciencia de Canova, Seiler, Coggan y Daniels**.
+   - Se tomó la decisión estratégica de erradicar la sigla "IA / AI" del nombre comercial frontal, adoptando **PULSE ENDURANCE™** como el nombre rector definitivo de la plataforma.
+   - La inteligencia artificial permanece como el **motor fisiológico invisible de inferencia 24/7** en segundo plano (impulsado por Google Gemini y algoritmos deterministas).
+
+### 172.2. Adquisición y Arquitectura de Dominio en GoDaddy
+1. **Selección del Dominio Oficial:**
+   - Se evaluó el riesgo fonético y ortográfico de fusiones incorrectas (`pulsendurance.com` perdía la "E" de Pulse y conducía a dominios ajenos registrados en 2008).
+   - Se adquirió oficialmente el dominio limpio y perfectamente escrito: **`pulseendurance.co`**.
+2. **Configuración DNS de Alta Disponibilidad:**
+   - **Registro A (`@`):** `35.219.200.4` (apuntando a Google Cloud / Firebase App Hosting).
+   - **Registro TXT (`@`):** `fah-claim=002-02-226ad19b-3311-4fa7-be5e-b411fef90aaa` (verificación de propiedad).
+   - **Registro CNAME (`_acme-challenge_...`):** Validación para Google Cloud Certificate Manager.
+   - **Subdominio WWW:** Apuntado directamente a `pulseendurance.co`.
+3. **Blindaje de Cuenta:**
+   - Habilitación de verificación de dos pasos (2FA) con aplicación de autenticación para protección absoluta del dominio contra transferencias no autorizadas.
+
+### 172.3. Despliegue en Firebase App Hosting y Autorización OAuth
+1. **Emisión de Certificado SSL (HTTPS):**
+   - Google Cloud Certificate Manager emitió exitosamente el certificado TLS/SSL para `pulseendurance.co`, sirviendo tráfico cifrado bajo HTTP/2 a través de Envoy proxies.
+2. **Autorización en Firebase Authentication:**
+   - Incorporación de `pulseendurance.co` y `www.pulseendurance.co` a la lista de **Dominios Autorizados** para garantizar el flujo OAuth de Google Sign-In sin bloqueos de origen cruzado.
+3. **Actualización de Endpoints Internos (`authorize/route.ts` y `callback/route.ts`):**
+   - Configuración de `pulseendurance.co` como el host canónico principal de producción para la vinculación con Intervals.icu.
+
+### 172.4. Actualización de Documentos Rectores y SEO
+1. **Documento Rector [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y actualización espejo de [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)):**
+   - Formalización de los fundamentos de PULSE (el pulso biológico) y ENDURANCE (resistencia de alto rendimiento: carrera, ciclismo y triatlón).
+   - Actualización del Diccionario Editorial Inviolable consagrando **PULSE ENDURANCE** y **PULSE ENDURANCE PRO**.
+2. **Optimización de Metadatos y OpenGraph ([`src/app/layout.tsx`](src/app/layout.tsx)):**
+   - Inclusión de `metadataBase: new URL("https://pulseendurance.co")` y tarjetas de previsualización enriquecida para redes sociales y mensajería (WhatsApp, Instagram, Twitter).
+
+### 172.5. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/app/layout.tsx`: 102 LOC ($\le 350$) ✅
+  * `authorize/route.ts`: 49 LOC ($\le 350$) ✅
+  * `callback/route.ts`: 121 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas en producción sin errores) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** `https://pulseendurance.co` 100% activo en producción sobre HTTPS/2 ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 172 ✅.
+
+

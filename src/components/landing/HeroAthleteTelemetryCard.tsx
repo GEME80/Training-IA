@@ -63,8 +63,8 @@ const SPORTS_TELEMETRY: SportTelemetry[] = [
   },
   {
     id: "run",
-    sportLabel: "Carrera",
-    badgeLabel: "CARRERA · RITMOS VDOT & POTENCIA",
+    sportLabel: "Atletismo",
+    badgeLabel: "ATLETISMO · RITMOS VDOT & POTENCIA",
     badgeIcon: Flame,
     primaryValue: "336",
     primaryUnit: "W",

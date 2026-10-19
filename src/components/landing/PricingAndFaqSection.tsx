@@ -9,8 +9,8 @@ interface PricingAndFaqSectionProps {
 
 const FAQS = [
   {
-    q: "¿Cómo se sincroniza con mi reloj deportivo (Garmin, Coros o Apple Watch)?",
-    a: "Tus entrenamientos viajan automáticamente a tu reloj. Al salir a entrenar, tu reloj te guiará en cada serie, intervalo de ritmo y descanso sin que tengas que programar nada manualmente.",
+    q: "¿Cómo se sincroniza con mi reloj deportivo?",
+    a: "Tus entrenamientos viajan automáticamente a tu reloj (Garmin o Coros). Al salir a entrenar, tu reloj te guiará en cada serie, intervalo de ritmo y descanso sin que tengas que programar nada manualmente.",
   },
   {
     q: "¿Qué pasa si un día no puedo entrenar o duermo mal?",

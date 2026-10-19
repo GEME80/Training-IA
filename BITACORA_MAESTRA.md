@@ -10094,6 +10094,36 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** Blindaje legal y de propiedad intelectual 100% activo en producción ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 175 ✅.
 
+---
+
+## 176. Refinamiento Editorial del Hero, Transición a "Atletismo" y Desacople de Apple Watch (v5.85)
+
+- **Fecha:** 2026-10-19
+- **Objetivo:** Retirar menciones a integraciones no desarrolladas (Apple Watch) en la Landing Page, consolidar la nomenclatura "Atletismo" en las tarjetas de especialidad deportiva y refinar el subtítulo principal del Hero hacia un lenguaje más genérico, empático y fluido.
+
+### 176.1. Cambios Implementados
+1. **Hero Section ([`src/components/landing/HeroSection.tsx`](src/components/landing/HeroSection.tsx)):**
+   - Transición de la tarjeta de especialidad de *"Carrera a Pie"* a **"Atletismo"** (`name: "Atletismo"`).
+   - Badge superior actualizado a: `PULSE ENDURANCE™ · Planes Fisiológicos para Atletismo, Ciclismo y Triatlón`.
+   - Subtítulo principal refinado con tono genérico, profesional y accesible:
+     > *"Entrena al compás de tu vida real, sin culpa por omitir una sesión. Planes independientes de alto rendimiento basados en ritmos y potencias exactos para tu nivel, que evalúan tu asimilación biológica matutina por frecuencia cardíaca, variabilidad y fatiga, y sincronizan cada serie directo a tu reloj deportivo."*
+   - Supresión de la mención a Apple Watch.
+2. **HUD de Telemetría ([`src/components/landing/HeroAthleteTelemetryCard.tsx`](src/components/landing/HeroAthleteTelemetryCard.tsx)):**
+   - Actualización de etiquetas de la disciplina a **"Atletismo"** (`sportLabel: "Atletismo"`, `badgeLabel: "ATLETISMO · RITMOS VDOT & POTENCIA"`).
+3. **Precios y Preguntas Frecuentes ([`src/components/landing/PricingAndFaqSection.tsx`](src/components/landing/PricingAndFaqSection.tsx)):**
+   - Pregunta 1 reformulada de manera genérica: *"¿Cómo se sincroniza con mi reloj deportivo?"*, especificando en la respuesta la compatibilidad activa para Garmin y Coros, sin referenciar a Apple Watch.
+
+### 176.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `HeroSection.tsx`: 210 LOC ($\le 350$) ✅
+  * `HeroAthleteTelemetryCard.tsx`: 332 LOC ($\le 350$) ✅
+  * `PricingAndFaqSection.tsx`: 219 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente en 2.9s (21/21 rutas compiladas) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Compatibilidad de hardware realista (Garmin/Coros) y término "Atletismo" consagrado ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 176 ✅.
+
+
 
 
 

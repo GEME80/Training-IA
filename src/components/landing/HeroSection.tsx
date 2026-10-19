@@ -15,7 +15,7 @@ const SPORT_DISCIPLINES = [
   {
     idx: 2, // Mapea a Carrera en video y telemetría
     id: "run",
-    name: "Carrera a Pie",
+    name: "Atletismo",
     scope: "5K, 10K, 21K, 42K & Trail",
     metric: "Ritmos VDOT & Potencia Stryd",
     icon: Footprints,
@@ -62,7 +62,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 border border-emerald-500/30">
               <img src="/pulse-icon.jpg" alt="PULSE ENDURANCE" className="w-full h-full object-cover" />
             </div>
-            <span>PULSE ENDURANCE™ · Planes Fisiológicos para Carrera, Ciclismo y Triatlón</span>
+            <span>PULSE ENDURANCE™ · Planes Fisiológicos para Atletismo, Ciclismo y Triatlón</span>
           </div>
 
           {/* Titular Principal H1 (Claro, Humano y Enfocado) */}
@@ -75,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Subtítulo Empático y Accesible para Cualquier Deportista */}
           <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal max-w-2xl">
-            Entrena al compás de tu vida real, sin culpa por omitir una sesión. Planes independientes de alto rendimiento que prescriben ritmos VDOT y vatios Stryd/FTP exactos para tu nivel, evalúan tu asimilación biológica matutina por HRV y sincronizan cada serie directo a tu reloj deportivo (Garmin, Coros o Apple Watch).
+            Entrena al compás de tu vida real, sin culpa por omitir una sesión. Planes independientes de alto rendimiento basados en ritmos y potencias exactos para tu nivel, que evalúan tu asimilación biológica matutina por frecuencia cardíaca, variabilidad y fatiga, y sincronizan cada serie directo a tu reloj deportivo.
           </p>
 
           {/* Trilogía de Especialidades Deportivas con Salto Reactivo al Video */}

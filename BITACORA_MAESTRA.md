@@ -10123,6 +10123,30 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** Compatibilidad de hardware realista (Garmin/Coros) y término "Atletismo" consagrado ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 176 ✅.
 
+---
+
+## 177. Dominio de Autenticación Personalizado (Custom Auth Domain `pulseendurance.co`) y Proxy OAuth
+
+- **Fecha:** 2026-10-19
+- **Objetivo:** Erradicar la visualización del subdominio técnico `training-ia-8f67f.firebaseapp.com` en la ventana emergente de inicio de sesión con Google (OAuth Consent Screen), reemplazándolo transparentemente por el dominio oficial `pulseendurance.co`.
+
+### 177.1. Cambios Implementados
+1. **Configuración de Firebase Client ([`src/lib/firebase/config.ts`](src/lib/firebase/config.ts)):**
+   - Actualizado `authDomain` por defecto a `pulseendurance.co` (con fallback de variable de entorno `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`).
+2. **Reverse Proxy de Autenticación ([`next.config.mjs`](next.config.mjs)):**
+   - Agregada regla `async rewrites()` en Next.js para mapear `/__/auth/:path*` directamente a `https://training-ia-8f67f.firebaseapp.com/__/auth/:path*`.
+   - Excluidas las rutas de autenticación `/__/auth` de la cabecera restrictiva `X-Frame-Options: DENY` para evitar colisiones de iframes cruzados durante el handshake OAuth de Google.
+
+### 177.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `next.config.mjs`: 75 LOC ($\le 350$) ✅
+  * `config.ts`: 22 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (21/21 rutas compiladas) ✅.
+- **Gate 4 (Seguridad y Privacidad):** Transmisión OAuth delegada con túnel seguro SSL sin fugas de dominios técnicos huérfanos ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 177 ✅.
+
+
 
 
 

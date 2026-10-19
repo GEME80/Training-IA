@@ -23,6 +23,14 @@ const nextConfig = {
     "@firebase/util",
     "@firebase/component",
   ],
+  async rewrites() {
+    return [
+      {
+        source: "/__/auth/:path*",
+        destination: "https://training-ia-8f67f.firebaseapp.com/__/auth/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -35,7 +43,7 @@ const nextConfig = {
         ],
       },
       {
-        source: "/((?!_next/static|_next/image|favicon.ico).*)",
+        source: "/((?!_next/static|_next/image|favicon.ico|__/auth).*)",
         headers: [
           {
             key: "Cache-Control",

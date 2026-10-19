@@ -13,9 +13,26 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pulseendurance.co"),
   title: "PULSE AI — Smart Endurance & Performance Coach",
   description:
     "Plataforma inteligente y adaptativa de entrenamiento deportivo de resistencia impulsada por IA, integrada con Intervals.icu, Stryd y Garmin.",
+  openGraph: {
+    title: "PULSE AI — Smart Endurance & Performance Coach",
+    description: "Plataforma inteligente y adaptativa de entrenamiento deportivo de resistencia para Carrera, Ciclismo y Triatlón.",
+    url: "https://pulseendurance.co",
+    siteName: "PULSE ENDURANCE",
+    images: [
+      {
+        url: "/pulse-logo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "PULSE AI Endurance Engine",
+      },
+    ],
+    locale: "es_CO",
+    type: "website",
+  },
   icons: {
     icon: "/icon.svg",
     apple: "/pulse-icon.jpg",

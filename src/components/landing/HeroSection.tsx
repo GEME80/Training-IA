@@ -57,12 +57,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Columna A: Mensaje, Autoridad y Conversión (lg:col-span-7) */}
         <div className="lg:col-span-7 space-y-5 text-left">
-          {/* Badge de Marca PULSE AI con foco multideporte claro */}
+          {/* Badge de Marca PULSE ENDURANCE con foco multideporte claro */}
           <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-2xs">
             <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 border border-emerald-500/30">
-              <img src="/pulse-icon.jpg" alt="PULSE AI" className="w-full h-full object-cover" />
+              <img src="/pulse-icon.jpg" alt="PULSE ENDURANCE" className="w-full h-full object-cover" />
             </div>
-            <span>PULSE AI™ · Planes Fisiológicos para Carrera, Ciclismo y Triatlón</span>
+            <span>PULSE ENDURANCE™ · Planes Fisiológicos para Carrera, Ciclismo y Triatlón</span>
           </div>
 
           {/* Titular Principal H1 (Claro, Humano y Enfocado) */}
@@ -141,7 +141,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
-              <span>IA Adaptativa con Google Gemini</span>
+              <span>Motor Fisiológico Adaptativo con Google Gemini</span>
             </span>
           </div>
 

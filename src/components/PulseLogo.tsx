@@ -31,7 +31,7 @@ export const PulseLogo: React.FC<PulseLogoProps> = ({
       >
         <img
           src="/pulse-icon.jpg"
-          alt="PULSE AI Icon"
+          alt="PULSE ENDURANCE Icon"
           className="w-full h-full object-cover object-center scale-110"
         />
       </div>
@@ -45,7 +45,7 @@ export const PulseLogo: React.FC<PulseLogoProps> = ({
           <span
             className={`font-black ${textSizes} bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent`}
           >
-            AI
+            ENDURANCE
           </span>
           <span className="px-1.5 py-0.5 text-[10px] font-black tracking-wider uppercase rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
             PRO

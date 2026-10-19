@@ -37,14 +37,14 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
   return (
     <section id="metodologia" className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
-      {/* Cabecera del Motor con Branding PULSE AI */}
+      {/* Cabecera del Motor con Branding PULSE ENDURANCE */}
       <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 shadow-2xs">
           <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-emerald-500/40">
             <img src="/pulse-icon.jpg" alt="PULSE" className="w-full h-full object-cover" />
           </div>
           <span className="font-mono uppercase tracking-wider text-[11px]">
-            PULSE AI™ · METODOLOGÍA CIENTÍFICA APLICADA
+            PULSE ENDURANCE™ · METODOLOGÍA CIENTÍFICA APLICADA
           </span>
         </div>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight">
@@ -134,7 +134,7 @@ export const UnifiedPhysioEngine: React.FC = () => {
 
             <div className="flex items-center gap-2 pt-2 text-xs font-mono text-emerald-800 font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
-              <span>Adaptado automáticamente a tu condición física por PULSE AI™</span>
+              <span>Adaptado automáticamente a tu condición física por PULSE ENDURANCE™</span>
             </div>
           </div>
 

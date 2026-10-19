@@ -219,7 +219,7 @@ export const HeroAthleteTelemetryCard: React.FC<HeroAthleteTelemetryCardProps> =
           className="absolute inset-0 pointer-events-none"
         />
 
-        {/* Barra Superior Flotante: Estado En Vivo + Branding PULSE AI */}
+        {/* Barra Superior Flotante: Estado En Vivo + Branding PULSE ENDURANCE */}
         <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20 pointer-events-none">
           {/* Badge En Vivo */}
           <div
@@ -233,7 +233,7 @@ export const HeroAthleteTelemetryCard: React.FC<HeroAthleteTelemetryCardProps> =
             <span className="tracking-wide text-white">EN VIVO: SESIÓN EN RUTA</span>
           </div>
 
-          {/* Insignia de Marca PULSE AI */}
+          {/* Insignia de Marca PULSE ENDURANCE */}
           <div
             style={{ backgroundColor: "rgba(6, 78, 59, 0.9)" }}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/50 text-[10px] font-mono font-black text-emerald-300 shadow-md"
@@ -241,7 +241,7 @@ export const HeroAthleteTelemetryCard: React.FC<HeroAthleteTelemetryCardProps> =
             <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 border border-emerald-400/50">
               <img src="/pulse-icon.jpg" alt="PULSE" className="w-full h-full object-cover" />
             </div>
-            <span className="text-emerald-300">PULSE AI™</span>
+            <span className="text-emerald-300">PULSE ENDURANCE™</span>
           </div>
         </div>
 

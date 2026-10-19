@@ -73,7 +73,7 @@ export const LandingComparisonTable: React.FC = () => {
                 <th className="py-5 px-6 text-xs font-black font-mono text-cyan-800 uppercase bg-cyan-50/70 text-center border-x border-cyan-200/60">
                   <div className="flex items-center justify-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-cyan-600" />
-                    <span>PULSE AI PRO</span>
+                    <span>PULSE ENDURANCE PRO</span>
                   </div>
                 </th>
               </tr>

@@ -95,7 +95,7 @@ export const LandingControlHub: React.FC = () => {
               </span>
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              Prueba cómo el Head Coach IA adapta las métricas y decisiones según tu fatiga real:
+              Prueba cómo el Head Coach Fisiológico adapta las métricas y decisiones según tu fatiga real:
             </div>
           </div>
 

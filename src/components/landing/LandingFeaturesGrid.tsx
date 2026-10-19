@@ -7,7 +7,7 @@ export const LandingFeaturesGrid: React.FC = () => {
   const features = [
     {
       title: "Planes Adaptativos Diarios",
-      subtitle: "Inferencia Matutina con IA",
+      subtitle: "Inferencia Fisiológica Adaptativa",
       desc: "Tu sesión se recalibra cada mañana según tu HRV, descanso nocturno y fatiga acumulada. Si dormiste mal o necesitas asimilación, el plan se adapta solo.",
       icon: Sparkles,
       tag: "Google Gemini",

@@ -120,11 +120,11 @@ export const CoachBioModal: React.FC<CoachBioModalProps> = ({ coach, isOpen, onC
           </p>
         </div>
 
-        {/* 5. Cómo lo Aplica PULSE AI en tu Plan */}
+        {/* 5. Cómo lo Aplica PULSE ENDURANCE en tu Plan */}
         <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-emerald-50/40 border border-emerald-300/80 shadow-xs space-y-2">
           <div className="flex items-center gap-2 text-emerald-950 font-bold text-xs tracking-wide uppercase">
             <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
-            <span>Cómo lo Aplica PULSE AI en tu Plan</span>
+            <span>Cómo lo Aplica PULSE ENDURANCE en tu Plan</span>
           </div>
           <p className="text-xs sm:text-sm text-emerald-900/90 leading-relaxed font-medium">
             {coach.modalBio.pulseAiImplementation}

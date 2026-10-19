@@ -16,7 +16,7 @@ const BRANDS: BrandItem[] = [
   { name: "Stryd", sub: "Potencia de Carrera (Vatios)", logoSrc: "/brands/stryd.png" },
   { name: "Intervals.icu", sub: "Sincronización Automática", logoSrc: "/brands/intervals.png" },
   { name: "Strava", sub: "Comunidad & Segmentos", isStrava: true },
-  { name: "Google Gemini", sub: "Inteligencia Artificial Adaptativa", isGemini: true },
+  { name: "Google Gemini", sub: "Motor Fisiológico Adaptativo", isGemini: true },
 ];
 
 export const EcosystemTicker: React.FC = () => {

@@ -9954,4 +9954,73 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Alcance e Integridad Deportiva):** `https://pulseendurance.co` 100% activo en producción sobre HTTPS/2 ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 172 ✅.
 
+---
+
+## 173. Actualización Integral de Textos y Branding en la Landing Page (PULSE ENDURANCE)
+
+- **Fecha:** 2026-10-19
+- **Objetivo:** Auditar y actualizar todos los componentes de la página de inicio (Landing Page) para desterrar el etiquetado frontal ruidoso "IA / AI", sustituyéndolo por la identidad consagrada **PULSE ENDURANCE** y posicionando la tecnología como el **Motor Fisiológico Adaptativo** y **Head Coach Fisiológico 24/7**.
+
+### 173.1. Auditoría y Actualizaciones Realizadas
+1. **Logotipo Maestro ([`src/components/PulseLogo.tsx`](src/components/PulseLogo.tsx)):**
+   - Sustitución de `AI` por `ENDURANCE` con gradiente `from-cyan-400 to-emerald-400`, insignia `PRO` y subtítulo refinado `Endurance Engine`.
+2. **Hero Section ([`src/components/landing/HeroSection.tsx`](src/components/landing/HeroSection.tsx)):**
+   - Actualización del badge principal a `PULSE ENDURANCE™ · Planes Fisiológicos para Carrera, Ciclismo y Triatlón`.
+   - Modificación del tercer check rápido de validación a `Motor Fisiológico Adaptativo con Google Gemini`.
+3. **HUD Telemetría del Atleta ([`src/components/landing/HeroAthleteTelemetryCard.tsx`](src/components/landing/HeroAthleteTelemetryCard.tsx)):**
+   - Insignia flotante actualizada de `PULSE AI™` a `PULSE ENDURANCE™`.
+4. **Carrusel de Ecosistema ([`src/components/landing/EcosystemTicker.tsx`](src/components/landing/EcosystemTicker.tsx)):**
+   - Subtítulo de Google Gemini actualizado de "Inteligencia Artificial Adaptativa" a `Motor Fisiológico Adaptativo`.
+5. **Showcase Móvil "La App en Movimiento" ([`src/components/landing/AppMotionShowcase.tsx`](src/components/landing/AppMotionShowcase.tsx)):**
+   - Pestaña de pantalla: `Head Coach Fisiológico 24/7`.
+   - Dynamic Island mockup: `PULSE ENDURANCE`.
+   - Argumentario comercial: "¿Por qué elegir PULSE ENDURANCE?" y "PULSE ENDURANCE modela tu estrés biológico diario y recalibra tu microciclo en segundos."
+   - Propuesta de valor 4: `Head Coach Fisiológico 24/7`.
+6. **Motor Científico Unificado ([`src/components/landing/UnifiedPhysioEngine.tsx`](src/components/landing/UnifiedPhysioEngine.tsx)):**
+   - Badge: `PULSE ENDURANCE™ · METODOLOGÍA CIENTÍFICA APLICADA`.
+   - Indicador inferior: `Adaptado automáticamente a tu condición física por PULSE ENDURANCE™`.
+7. **Datos Científicos de los Coaches ([`src/components/landing/coachScienceData.ts`](src/components/landing/coachScienceData.ts)):**
+   - Renato Canova: "PULSE ENDURANCE impone un límite matemático absoluto de 3 horas..."
+   - Dr. Stephen Seiler: "PULSE ENDURANCE audita el balance semanal para garantizar el 80%..."
+   - Dr. Andrew Coggan: "PULSE ENDURANCE calcula tus zonas de potencia funcional y traduce cada serie en vatios..."
+   - Dr. Jack Daniels: "PULSE ENDURANCE recalcula tu tabla VDOT tras cada test de campo..."
+8. **Modal de Biografía de Coaches ([`src/components/landing/CoachBioModal.tsx`](src/components/landing/CoachBioModal.tsx)):**
+   - Encabezado: "Cómo lo Aplica PULSE ENDURANCE en tu Plan".
+9. **Precios y Preguntas Frecuentes ([`src/components/landing/PricingAndFaqSection.tsx`](src/components/landing/PricingAndFaqSection.tsx)):**
+   - Price Anchoring: "Con PULSE ENDURANCE tienes periodización de élite mundial 24/7..."
+   - Nombre de la Membresía: `PULSE ENDURANCE Pro Plan`.
+   - Característica 6: `Head Coach Fisiológico 24/7 Adaptativo`.
+   - FAQ 2: "PULSE ENDURANCE recalibra tu microciclo en tiempo real..."
+10. **Footer Institucional ([`src/components/landing/LandingFooter.tsx`](src/components/landing/LandingFooter.tsx)):**
+    - Copyright: `PULSE ENDURANCE PRO © 2026 • Smart Endurance & Performance Coach`.
+    - Enlace: `Términos y Condiciones`.
+11. **Página Principal ([`src/app/page.tsx`](src/app/page.tsx)):**
+    - Loader de carga SSR: `PULSE ENDURANCE • Iniciando...`.
+    - Footer de consola admin: `PULSE ENDURANCE PRO © 2026 • Admin Console`.
+12. **Componentes Secundarios de Landing:**
+    - `LandingComparisonTable.tsx`: Encabezado de columna `PULSE ENDURANCE PRO`.
+    - `LandingHeadCoaches.tsx`: "...respaldada por las mayores eminencias de la ciencia deportiva en PULSE ENDURANCE."
+    - `EditorialStorytellingSection.tsx`: Narrativa editorial actualizada a `PULSE ENDURANCE`.
+    - `LandingFaq.tsx`: Pregunta 1 reformulada y respuesta centrada en `PULSE ENDURANCE`.
+    - `LandingPricingSection.tsx`, `LandingFeaturesGrid.tsx`, `LandingControlHub.tsx`, `LandingHowItWorks.tsx`: Eliminación de etiquetas ruidosas de IA a favor de "Inferencia Fisiológica Adaptativa" y "Head Coach Fisiológico".
+
+### 173.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/components/PulseLogo.tsx`: 63 LOC ($\le 350$) ✅
+  * `src/components/landing/HeroSection.tsx`: 210 LOC ($\le 350$) ✅
+  * `src/components/landing/HeroAthleteTelemetryCard.tsx`: 332 LOC ($\le 350$) ✅
+  * `src/components/landing/EcosystemTicker.tsx`: 83 LOC ($\le 350$) ✅
+  * `src/components/landing/AppMotionShowcase.tsx`: 281 LOC ($\le 350$) ✅
+  * `src/components/landing/UnifiedPhysioEngine.tsx`: 204 LOC ($\le 350$) ✅
+  * `src/components/landing/coachScienceData.ts`: 107 LOC ($\le 350$) ✅
+  * `src/components/landing/CoachBioModal.tsx`: 151 LOC ($\le 350$) ✅
+  * `src/components/landing/PricingAndFaqSection.tsx`: 219 LOC ($\le 350$) ✅
+  * `src/components/landing/LandingFooter.tsx`: 30 LOC ($\le 350$) ✅
+  * `src/app/page.tsx`: 198 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente en 3.6s (21/21 rutas compiladas sin advertencias ni fallos) ✅.
+- **Gate 4 (Alcance e Integridad Deportiva):** Cero menciones frontales a "PULSE AI" en la landing page; terminología orientada 100% a atletas de resistencia (Running, Ciclismo, Triatlón) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 173 ✅.
+
+
 

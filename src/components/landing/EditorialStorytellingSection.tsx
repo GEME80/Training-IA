@@ -36,7 +36,7 @@ export const EditorialStorytellingSection: React.FC<EditorialStorytellingSection
           </h2>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-            PULSE AI modela tu macrociclo completo de 22 semanas aplicando la periodización de Renato Canova y Eric Banister. Semanas de asimilación 3:1 y tope biomecánico estricto de 3 horas para llegar al día de la carrera sin roturas de sóleo ni rodilla.
+            PULSE ENDURANCE modela tu macrociclo completo de 22 semanas aplicando la periodización de Renato Canova y Eric Banister. Semanas de asimilación 3:1 y tope biomecánico estricto de 3 horas para llegar al día de la carrera sin roturas de sóleo ni rodilla.
           </p>
 
           <div className="pt-2">
@@ -174,7 +174,7 @@ export const EditorialStorytellingSection: React.FC<EditorialStorytellingSection
           </h2>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-            Los planes de papel asumen que nunca duermes mal ni te enfermas. PULSE AI lee tu variabilidad cardíaca (HRV) cada mañana al despertar y, si detecta fatiga aguda, recalibra los vatios y las series en menos de un segundo antes de que te pongas las zapatillas.
+            Los planes de papel asumen que nunca duermes mal ni te enfermas. PULSE ENDURANCE lee tu variabilidad cardíaca (HRV) cada mañana al despertar y, si detecta fatiga aguda, recalibra los vatios y las series en menos de un segundo antes de que te pongas las zapatillas.
           </p>
 
           <div className="pt-2">

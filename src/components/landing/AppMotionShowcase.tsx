@@ -55,11 +55,11 @@ const SHOWCASE_SCREENS: ShowcaseScreen[] = [
   },
   {
     id: "headcoach",
-    title: "Head Coach IA 24/7",
+    title: "Head Coach Fisiológico 24/7",
     icon: <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />,
     imageSrc: "/showcase/mobile-coach.png",
-    alt: "Captura Real del Chat con el Entrenador de Inteligencia Artificial",
-    highlightTitle: "Tu Entrenador Personal Inteligente 24/7",
+    alt: "Captura Real del Chat con el Head Coach Fisiológico",
+    highlightTitle: "Tu Head Coach Fisiológico 24/7",
     highlightDesc: "Pregúntale qué hacer si no pudiste entrenar hoy, cómo ajustar tus series si hace calor o cómo interpretar tu fatiga. Respuestas claras y adaptadas a tu nivel.",
   },
 ];
@@ -151,9 +151,9 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
               {/* Dynamic Island & Status Bar */}
               <div className="pt-2.5 px-6 pb-1.5 flex items-center justify-between text-[11px] font-mono text-slate-600 shrink-0 select-none bg-white/95 backdrop-blur-md z-20 border-b border-slate-100">
                 <span className="font-semibold">07:15</span>
-                <div className="h-5 w-24 rounded-full bg-black flex items-center justify-center gap-1.5 px-2">
+                <div className="h-5 w-32 rounded-full bg-black flex items-center justify-center gap-1.5 px-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[9px] text-emerald-300 font-mono font-bold">PULSE AI</span>
+                  <span className="text-[9px] text-emerald-300 font-mono font-bold">PULSE ENDURANCE</span>
                 </div>
                 <span className="font-semibold">5G 100%</span>
               </div>
@@ -184,7 +184,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
           </div>
 
           <p className="mt-3 text-[11px] text-slate-400 text-center font-mono">
-            Captura real de la versión móvil de PULSE AI
+            Captura real de la versión móvil de PULSE ENDURANCE
           </p>
         </div>
 
@@ -192,13 +192,13 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
         <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
           <div className="space-y-2">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              ¿Por qué elegir PULSE AI?
+              ¿Por qué elegir PULSE ENDURANCE?
             </span>
             <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
               Toda la Ciencia de la Resistencia en la Palma de tu Mano
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed font-normal">
-              Erradica la rigidez de las hojas de cálculo y los planes de papel que no saben si dormiste mal o tuviste un viaje de trabajo. PULSE AI modela tu estrés biológico diario y recalibra tu microciclo en segundos.
+              Erradica la rigidez de las hojas de cálculo y los planes de papel que no saben si dormiste mal o tuviste un viaje de trabajo. PULSE ENDURANCE modela tu estrés biológico diario y recalibra tu microciclo en segundos.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export const AppMotionShowcase: React.FC<AppMotionShowcaseProps> = ({ onOpenAuth
                 <Brain className="h-4 w-4" strokeWidth={1.75} />
               </div>
               <h4 className="text-sm font-bold text-slate-950">
-                Head Coach con IA 24/7
+                Head Coach Fisiológico 24/7
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Pregunta cualquier duda sobre ritmos con viento, nutrición o sobrecarga aguda y fatiga neuromuscular residual. Respuestas fisiológicas fundamentadas en segundos.

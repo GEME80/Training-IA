@@ -177,7 +177,7 @@ export const InteractiveHrvSimulator: React.FC = () => {
           </div>
         </div>
 
-        {/* Panel 2: Sesión Adaptada por PULSE AI */}
+        {/* Panel 2: Sesión Adaptada por PULSE ENDURANCE */}
         <div
           className={`p-4 rounded-2xl border transition-all duration-300 space-y-2 ${
             isHighFatigue

@@ -10,8 +10,8 @@ interface FaqItem {
 
 const FAQS: FaqItem[] = [
   {
-    q: "¿Cómo adapta la IA mi entrenamiento cada mañana?",
-    a: "PULSE AI analiza tu HRV matutino y descanso nocturno. Si detecta fatiga aguda, recalibra los vatios y duración de la sesión antes de que salgas a entrenar.",
+    q: "¿Cómo adapta el sistema mi entrenamiento cada mañana?",
+    a: "PULSE ENDURANCE analiza tu HRV matutino y descanso nocturno. Si detecta fatiga aguda, recalibra los vatios y duración de la sesión antes de que salgas a entrenar.",
   },
   {
     q: "¿Se descarga directamente en mi reloj Garmin o Coros?",

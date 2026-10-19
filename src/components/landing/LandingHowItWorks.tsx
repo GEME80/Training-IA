@@ -17,7 +17,7 @@ export const LandingHowItWorks: React.FC = () => {
     {
       step: "02",
       title: "Tu Fisiología Toma el Mando",
-      subtitle: "Evaluación Matutina con IA",
+      subtitle: "Evaluación Fisiológica Matutina",
       desc: "Google Gemini evalúa tu HRV, sueño y fatiga cada mañana. Si tu cuerpo necesita descanso o asimilación, recalibra la sesión al instante.",
       icon: Sparkles,
       color: "emerald",

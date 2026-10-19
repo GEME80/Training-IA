@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: "¿Qué pasa si un día no puedo entrenar o duermo mal?",
-    a: "PULSE AI recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica.",
+    a: "PULSE ENDURANCE recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica.",
   },
   {
     q: "¿Necesito sensores costosos o potenciómetro obligatoriamente?",
@@ -51,7 +51,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
         </h2>
         {/* Anclaje de Valor (Price Anchoring) */}
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-          Un entrenador presencial te cuesta entre <strong className="text-slate-900">$250.000</strong> y <strong className="text-slate-900">$450.000 COP</strong> al mes. Con PULSE AI tienes periodización de élite mundial 24/7 por solo <strong className="text-emerald-700">$50.000 COP/mes</strong> (menos de lo que gastas en dos geles energéticos a la semana).
+          Un entrenador presencial te cuesta entre <strong className="text-slate-900">$250.000</strong> y <strong className="text-slate-900">$450.000 COP</strong> al mes. Con PULSE ENDURANCE tienes periodización de élite mundial 24/7 por solo <strong className="text-emerald-700">$50.000 COP/mes</strong> (menos de lo que gastas en dos geles energéticos a la semana).
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 border-b border-slate-100 pb-6 pt-2">
             <div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-950">
-                PULSE AI Pro Plan
+                PULSE ENDURANCE Pro Plan
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Acceso total a todos los motores de Running, Ciclismo y Triatlón.
@@ -123,7 +123,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
                 "Tope biomecánico de 3h para preservar tendón de Aquiles y sóleos (Canova)",
                 "Prescripción por vatios Stryd y FTP Coggan",
                 "Sincronización directa con Garmin & Coros",
-                "Head Coach IA Fisiológico 24/7 con Gemini",
+                "Head Coach Fisiológico 24/7 Adaptativo",
               ].map((feat, idx) => (
                 <div key={idx} className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.75} />

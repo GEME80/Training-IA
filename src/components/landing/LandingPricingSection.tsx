@@ -43,7 +43,7 @@ export const LandingPricingSection: React.FC<LandingPricingSectionProps> = ({
           Un Solo Plan. Toda la Inteligencia Fisiológica.
         </h2>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-          Sin niveles recortados ni funciones bloqueadas. Accede a toda la potencia de la periodización adaptativa con IA, telemetría Stryd y Head Coach Digital.
+          Sin niveles recortados ni funciones bloqueadas. Accede a toda la potencia de la periodización adaptativa fisiológica, telemetría Stryd y Head Coach Digital.
         </p>
       </div>
 

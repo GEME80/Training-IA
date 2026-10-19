@@ -53,7 +53,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center space-y-4">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-        <span className="text-xs font-mono font-bold text-emerald-700">PULSE AI • Iniciando...</span>
+        <span className="text-xs font-mono font-bold text-emerald-700">PULSE ENDURANCE • Iniciando...</span>
       </div>
     );
   }
@@ -137,7 +137,7 @@ export default function HomePage() {
           </div>
           <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-center text-xs text-slate-500">
             <div className="w-full max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-              <p>PULSE AI PRO © 2026 • Admin Console</p>
+              <p>PULSE ENDURANCE PRO © 2026 • Admin Console</p>
               <button
                 type="button"
                 onClick={() => {

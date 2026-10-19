@@ -67,7 +67,7 @@ export const LandingHeadCoaches: React.FC = () => {
           Principios de Entrenadores de Élite
         </h2>
         <p className="text-sm text-slate-600 font-normal">
-          Cada regla y zona de potencia en PULSE AI está respaldada por las mayores eminencias de la ciencia deportiva.
+          Cada regla y zona de potencia en PULSE ENDURANCE está respaldada por las mayores eminencias de la ciencia deportiva.
         </p>
       </div>
 

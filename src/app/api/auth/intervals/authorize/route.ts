@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     // Determinar la URL base de redirección de forma dinámica según el host de la petición
     const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
-    const forwardedHost = rawHost && !rawHost.includes("0.0.0.0") ? rawHost : "pulse-ia--training-ia-8f67f.us-central1.hosted.app";
+    const forwardedHost = rawHost && !rawHost.includes("0.0.0.0") ? rawHost : "pulseendurance.co";
     const forwardedProto = req.headers.get("x-forwarded-proto") || (forwardedHost.includes("localhost") ? "http" : "https");
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
     const redirectUri = `${baseUrl}/api/auth/intervals/callback`;

@@ -4,6 +4,7 @@ import React from "react";
 import { X, Footprints, Bike, Dumbbell, Waves, Moon, Trophy } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { StatCard } from "./StatCard";
+import { formatDuration } from "@/lib/utils/formatters";
 
 export type SheetSnapPoint = "PEEK" | "EXPANDED";
 
@@ -86,7 +87,7 @@ export const WorkoutBottomSheetHero: React.FC<WorkoutBottomSheetHeroProps> = ({
               </h3>
             </div>
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate">
-              {workout.day} • {workout.formattedDate || workout.date} {durationMin ? `• ${Math.round(durationMin)} mins` : ""}
+              {workout.day} • {workout.formattedDate || workout.date} {durationMin ? `• ${formatDuration(durationMin)}` : ""}
             </p>
           </div>
         </div>
@@ -123,7 +124,7 @@ export const WorkoutBottomSheetHero: React.FC<WorkoutBottomSheetHeroProps> = ({
 
         <StatCard
           label="Volumen"
-          value={durationMin ? `${Math.round(durationMin)}m` : "—"}
+          value={durationMin ? formatDuration(durationMin, { compact: true }) : "—"}
           subValue={distanceKm ? `${distanceKm.toFixed(1)} km` : "Tiempo"}
           badge={{ text: "General", variant: "neutral" }}
           highlightColor="text-slate-900 dark:text-white"

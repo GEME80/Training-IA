@@ -1,4 +1,5 @@
 import { DailyExecutedActivity } from "@/lib/intervals/types";
+import { formatDuration } from "@/lib/utils/formatters";
 
 export interface TelemetryMetricItem {
   id: string;
@@ -140,7 +141,7 @@ export function buildTelemetryMetricItems(
     {
       id: "duration",
       label: "Duración Real",
-      value: `${act.movingTimeMin}m${act.distanceKm ? ` (${act.distanceKm}k)` : ""}`,
+      value: `${formatDuration(act.movingTimeMin, { compact: true })}${act.distanceKm ? ` (${act.distanceKm}k)` : ""}`,
       subtext: act.intensityPercent ? `Intensidad ${act.intensityPercent}%` : undefined,
       colorClass: "text-slate-800 dark:text-slate-200",
       badgeType: "duration",

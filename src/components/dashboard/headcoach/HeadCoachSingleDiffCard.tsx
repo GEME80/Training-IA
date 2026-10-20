@@ -9,6 +9,7 @@ import { PlanItem } from "@/lib/gemini/engine";
 import { WorkoutChart } from "@/components/WorkoutChart";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
 import { HeadCoachExpandedAerobic, HeadCoachExpandedGym } from "./headcoachCardHelpers";
+import { formatDuration } from "@/lib/utils/formatters";
 
 interface HeadCoachSingleDiffCardProps {
   plan: PlanItem[];
@@ -132,7 +133,7 @@ export const HeadCoachSingleDiffCard: React.FC<HeadCoachSingleDiffCardProps> = (
               </div>
 
               <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-slate-300">
-                <span>⏱️ {isRest ? "0 min" : `${item.durationMinutes || 0} min`}</span>
+                <span>⏱️ {isRest ? "0 min" : formatDuration(item.durationMinutes)}</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">⚡ {item.tss || 0} TSS</span>
                 {item.powerTarget && <span className="truncate max-w-[120px] font-semibold">{item.powerTarget}</span>}
               </div>
@@ -144,7 +145,7 @@ export const HeadCoachSingleDiffCard: React.FC<HeadCoachSingleDiffCardProps> = (
             <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-2.5 space-y-1.5">
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-1">
                 <span>Estructura de la nueva sesión adaptada:</span>
-                <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{item.durationMinutes} min • {item.tss} TSS</span>
+                <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{formatDuration(item.durationMinutes)} • {item.tss} TSS</span>
               </div>
               {item.workoutDoc ? (
                 <div className="w-full overflow-hidden rounded-lg">
@@ -178,7 +179,7 @@ export const HeadCoachSingleDiffCard: React.FC<HeadCoachSingleDiffCardProps> = (
               </div>
               <p className="font-black text-xs text-slate-900 dark:text-white line-clamp-1">{sess.workoutName}</p>
               <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                <span>{sess.durationMinutes || 0} min</span>
+                <span>{formatDuration(sess.durationMinutes)}</span>
                 <span className="font-bold text-emerald-600">⚡ {sess.tss || 0} TSS</span>
               </div>
             </div>

@@ -12,6 +12,7 @@ import { PlannedWorkoutPrescription } from "./PlannedWorkoutPrescription";
 import { ActivityZoneDistribution } from "./ActivityZoneDistribution";
 import { ActivityTelemetryChart } from "./ActivityTelemetryChart";
 import { WorkoutDetailData } from "./useWorkoutDetailData";
+import { formatDuration } from "@/lib/utils/formatters";
 
 interface WorkoutDialogDesktopProps {
   workout: PlanItem;
@@ -70,8 +71,16 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const icon = getDisciplineIcon(workout.discipline);
-  const badgeClass = getDisciplineBadgeClass(workout.discipline);
+  const isTriathlon =
+    workout.activityType === "Triatlón" ||
+    workout.activityType === "Triatlon" ||
+    (workout.discipline as string) === "Triatlón" ||
+    (workout.discipline as string) === "Triatlon" ||
+    /triatl|ironman|70\.3|140\.6/i.test(workout.workoutName || "") ||
+    /sector 1:\s*nataci/i.test(workout.workoutDoc || "");
+  const effectiveDiscipline = isTriathlon ? "Triatlón" : workout.discipline;
+  const icon = getDisciplineIcon(effectiveDiscipline);
+  const badgeClass = getDisciplineBadgeClass(effectiveDiscipline);
   const durationMin = matchedAct?.movingTimeMin || workout.durationMinutes;
   const distanceKm = matchedAct?.distanceKm;
 
@@ -94,14 +103,14 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border ${badgeClass} shrink-0`}>
-                  {isExtraActivity ? "Extra" : workout.discipline}
+                  {isExtraActivity ? "Extra" : effectiveDiscipline}
                 </span>
                 <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate max-w-[360px] sm:max-w-[500px]">
                   {workout.workoutName.replace(/\[.*?\]\s*/g, "")}
                 </h2>
               </div>
               <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 truncate">
-                {workout.day} • {workout.formattedDate || workout.date} {durationMin ? `• ${Math.round(durationMin)} mins` : ""}
+                {workout.day} • {workout.formattedDate || workout.date} {durationMin ? `• ${formatDuration(durationMin)}` : ""}
               </p>
             </div>
           </div>
@@ -134,7 +143,7 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
           />
           <StatCard
             label="Volumen"
-            value={durationMin ? `${Math.round(durationMin)}m` : "—"}
+            value={durationMin ? formatDuration(durationMin, { compact: true }) : "—"}
             subValue={distanceKm ? `${distanceKm.toFixed(1)} km` : "Tiempo"}
             badge={{ text: "General", variant: "neutral" }}
             highlightColor="text-slate-900 dark:text-white"

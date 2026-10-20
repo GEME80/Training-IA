@@ -209,7 +209,7 @@ export function resolveRaceWorkout(params: {
   return {
     day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: finalName,
     action: "MANTENER", durationMinutes: durMins, tss: raceTss, powerTarget: longRun.powerTarget,
-    justification: `🏆 DÍA DE COMPETICIÓN (${raceDist} km${goalTag}). Ejecutar nutrición (${Math.min(90, Math.round(durMins * 0.4))}g CHO/h) y ritmo objetivo para cruzar la meta en ~${durMins}m.`,
+    justification: `🏆 DÍA DE COMPETICIÓN (${raceDist} km${goalTag}). Ejecutar nutrición (${Math.min(90, Math.round(durMins * 0.4))}g CHO/h) y ritmo objetivo para cruzar la meta en ~${durMins >= 60 ? `${Math.floor(durMins / 60)}h ${durMins % 60 > 0 ? `${durMins % 60}m` : ""}`.trim() : `${durMins}m`}.`,
     workoutDoc: longRun.workoutDoc, isRestDay: false,
   };
 }

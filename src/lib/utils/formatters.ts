@@ -6,13 +6,14 @@
  */
 
 /**
- * Convierte minutos brutos a formato legible atlético (ej. 185 -> "3h 05m", 45 -> "45 min", 0 -> "--")
+ * Convierte minutos brutos a formato legible atlético (ej. 305 -> "5h 05m", 185 -> "3h 05m", 45 -> "45 min" o "45m", 0 -> "--")
  */
-export function formatDuration(minutes?: number | null): string {
-  if (!minutes || minutes <= 0) return "--";
-  if (minutes < 60) return `${minutes} min`;
-  const hrs = Math.floor(minutes / 60);
-  const mins = minutes % 60;
+export function formatDuration(minutes?: number | null, options?: { compact?: boolean }): string {
+  if (!minutes || minutes <= 0) return options?.compact ? "—" : "--";
+  const rounded = Math.round(minutes);
+  if (rounded < 60) return options?.compact ? `${rounded}m` : `${rounded} min`;
+  const hrs = Math.floor(rounded / 60);
+  const mins = rounded % 60;
   return mins > 0 ? `${hrs}h ${mins.toString().padStart(2, "0")}m` : `${hrs}h`;
 }
 

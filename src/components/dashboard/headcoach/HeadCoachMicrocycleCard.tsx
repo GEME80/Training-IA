@@ -9,6 +9,7 @@ import { WorkoutChart } from "@/components/WorkoutChart";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
 import { gymShortDesc, HeadCoachExpandedGym, HeadCoachExpandedAerobic } from "./headcoachCardHelpers";
 import { HeadCoachSingleDiffCard } from "./HeadCoachSingleDiffCard";
+import { formatDuration } from "@/lib/utils/formatters";
 
 interface HeadCoachMicrocycleCardProps {
   plan: PlanItem[];
@@ -221,7 +222,7 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
                           {item.workoutName || item.title || "Entrenamiento"}
                         </p>
                         <div className="flex items-center justify-between mt-1 text-[9px] font-mono text-slate-400 dark:text-slate-500">
-                          <span>{item.durationMinutes ? `${item.durationMinutes}m` : "0m"}</span>
+                          <span>{item.durationMinutes ? formatDuration(item.durationMinutes, { compact: true }) : "0m"}</span>
                           <span>{item.tss ? `${item.tss} TSS` : ""}</span>
                         </div>
                       </div>

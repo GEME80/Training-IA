@@ -11,6 +11,7 @@ import { SheetSnapPoint } from "./WorkoutBottomSheetHero";
 import { WorkoutModalTab } from "./WorkoutSegmentedTabs";
 import { MetricBar } from "./MetricBar";
 import { parsePaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
+import { formatDuration } from "@/lib/utils/formatters";
 
 export interface WorkoutDetailHookProps {
   workout: PlanItem | null;
@@ -157,7 +158,7 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
     <MetricBar
       label={parsedTargetRange?.label ? `Zona Objetivo: ${parsedTargetRange.label}` : "Cumplimiento de Sesión"}
       percent={compliancePercent}
-      valueText={matchedAct?.movingTimeMin ? `${Math.round(matchedAct.movingTimeMin)}m` : `${workout.durationMinutes || 45}m`}
+      valueText={matchedAct?.movingTimeMin ? formatDuration(matchedAct.movingTimeMin, { compact: true }) : formatDuration(workout.durationMinutes || 45, { compact: true })}
       barColor="#a855f7"
       isDominant
     />

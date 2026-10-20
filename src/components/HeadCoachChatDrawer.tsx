@@ -23,6 +23,7 @@ import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
+import { formatDuration } from "@/lib/utils/formatters";
 
 export interface WorkoutDiff {
   dayName: string;
@@ -225,7 +226,7 @@ const WorkoutDiffCard: React.FC<{
         <div className="rounded-lg bg-red-50/60 border border-red-200/80 p-2.5 space-y-1">
           <div className="flex items-center justify-between text-[10px] font-bold text-red-700">
             <span>🔴 ANTES</span>
-            <span>{diff.previous.durationMinutes} min</span>
+            <span>{formatDuration(diff.previous.durationMinutes)}</span>
           </div>
           <p className="font-bold text-slate-800 truncate">{diff.previous.title}</p>
           <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
@@ -238,7 +239,7 @@ const WorkoutDiffCard: React.FC<{
         <div className="rounded-lg bg-emerald-50/80 border border-emerald-300 p-2.5 space-y-1 ring-1 ring-emerald-400/30">
           <div className="flex items-center justify-between text-[10px] font-bold text-emerald-700">
             <span>🟢 PROPUESTA</span>
-            <span>{diff.proposed.durationMinutes} min</span>
+            <span>{formatDuration(diff.proposed.durationMinutes)}</span>
           </div>
           <p className="font-black text-slate-900 truncate">{diff.proposed.title}</p>
           <div className="flex items-center justify-between text-[10px] text-slate-600 font-mono">
@@ -364,7 +365,7 @@ const FullMicrocyclePlanCard: React.FC<{
               </div>
               <div className="flex items-center space-x-2 shrink-0 ml-2 font-mono text-[10px]">
                 {item.durationMinutes ? (
-                  <span className="text-slate-500">{item.durationMinutes}m</span>
+                  <span className="text-slate-500">{formatDuration(item.durationMinutes, { compact: true })}</span>
                 ) : null}
                 <span
                   className={`font-black ${

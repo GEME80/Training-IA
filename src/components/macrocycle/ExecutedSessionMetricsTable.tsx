@@ -26,7 +26,14 @@ export const ExecutedSessionMetricsTable: React.FC<ExecutedSessionMetricsTablePr
 
   // 1. Cálculos de métricas avanzadas (TrainingPeaks Specs)
   const durationStr = activity.movingTimeMin
-    ? `${Math.floor(activity.movingTimeMin)}:${String(Math.round((activity.movingTimeMin % 1) * 60)).padStart(2, "0")}`
+    ? (() => {
+        const totalSecs = Math.round(activity.movingTimeMin * 60);
+        const hrs = Math.floor(totalSecs / 3600);
+        const mins = Math.floor((totalSecs % 3600) / 60);
+        const secs = totalSecs % 60;
+        if (hrs > 0) return `${hrs}h ${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+        return `${mins}m ${String(secs).padStart(2, "0")}s`;
+      })()
     : "—";
 
   const distStr = activity.distanceKm ? `${activity.distanceKm.toFixed(2)} km` : "—";

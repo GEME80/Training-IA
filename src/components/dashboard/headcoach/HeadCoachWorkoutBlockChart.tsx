@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatDuration } from "@/lib/utils/formatters";
 
 interface WorkoutBlockChartProps {
   discipline: string;
@@ -91,7 +92,7 @@ export const HeadCoachWorkoutBlockChart: React.FC<WorkoutBlockChartProps> = ({
       {/* Leyenda minimalista compacta: duración, TSS y zona */}
       <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 px-0.5 gap-1 min-w-0">
         <span className="font-semibold text-slate-700 dark:text-slate-200 shrink-0">
-          {durationMinutes}m • {tss} TSS
+          {formatDuration(durationMinutes, { compact: true })} • {tss} TSS
         </span>
         <span className="truncate text-right text-[9px] text-slate-400 dark:text-slate-500 font-sans min-w-0">
           {intensity || `${discipline} Z2`}

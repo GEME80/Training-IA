@@ -10619,3 +10619,33 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
 - **Gate 4 (Ergonomía & Minimalismo Visual):** Interfaz limpia, sin enlaces duplicados y con foco en navegación esencial ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 189 ✅.
+
+---
+
+## 190. Formato Universal de Duraciones en Horas:Minutos (Erradicación de Minutos Brutos en Sesiones Largas y Competencias)
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Erradicar la presentación confusa de duraciones expresadas en cientos de minutos brutos (ej. "305 mins", "310m", "400 min", "660 mins"), transformándolas a la notación deportiva canónica en horas y minutos (ej. "5h 05m", "5h 10m", "6h 40m", "11h"), manteniendo minutos para sesiones menores a 60 min (ej. "45 min" o "45m") y formato preciso horas-minutos-segundos para actividades ejecutadas.
+
+### 190.1. Cambios Implementados
+1. **Utilidad Centralizada de Formateo ([`src/lib/utils/formatters.ts`](src/lib/utils/formatters.ts)):**
+   - Actualizada la función universal `formatDuration(minutes, options?: { compact?: boolean })` para soportar tanto modo estándar ("5h 10m", "45 min") como modo compacto ("5h 10m", "45m") con redondeo defensivo.
+2. **Encabezados y Tarjetas de Detalle del Entrenamiento:**
+   - **Móvil ([`WorkoutBottomSheetHero.tsx`](src/components/macrocycle/WorkoutBottomSheetHero.tsx)):** Subtítulo actualizado de `310 mins` a `5h 10m`; StatCard de volumen ahora muestra `5h 10m` en lugar de `310m`.
+   - **Desktop ([`WorkoutDialogDesktop.tsx`](src/components/macrocycle/WorkoutDialogDesktop.tsx)):** Subtítulo y StatCard de volumen actualizados con `formatDuration`.
+   - **Hook de Detalle ([`useWorkoutDetailData.tsx`](src/components/macrocycle/useWorkoutDetailData.tsx)):** Barra de progreso `valueText` unificada a `formatDuration`.
+3. **Métricas de Sesión Ejecutada & Telemetría:**
+   - **Tabla de Sesión Ejecutada ([`ExecutedSessionMetricsTable.tsx`](src/components/macrocycle/ExecutedSessionMetricsTable.tsx)):** Erradicado el bug de `MM:SS` para tiempos mayores a 60m (que mostraba `185:30`), calculando horas, minutos y segundos exactos (`3h 05m 30s`).
+   - **HUD de Telemetría ([`workoutTelemetryHelpers.ts`](src/components/macrocycle/workoutTelemetryHelpers.ts)):** Duración real adaptada a `formatDuration(act.movingTimeMin, { compact: true })`.
+4. **Calendario y Tarjetas del Head Coach:**
+   - **Mosaicos del Calendario ([`AthleteCalendarDayTile.tsx`](src/components/dashboard/AthleteCalendarDayTile.tsx)):** Cabecera de actividades planificadas, no realizadas y adicionales formateadas con `formatDuration`.
+   - **Head Coach ([`HeadCoachSingleDiffCard.tsx`](src/components/dashboard/headcoach/HeadCoachSingleDiffCard.tsx), [`HeadCoachWorkoutBlockChart.tsx`](src/components/dashboard/headcoach/HeadCoachWorkoutBlockChart.tsx), [`HeadCoachMicrocycleCard.tsx`](src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx), [`HeadCoachChatDrawer.tsx`](src/components/HeadCoachChatDrawer.tsx)):** Comparativas antes/después y etiquetas de microciclo actualizadas con `formatDuration`.
+5. **Justificaciones de Plantillas de Competición ([`macrocycleTemplateHelpers.ts`](src/lib/physiology/macrocycleTemplateHelpers.ts)):**
+   - Las metas de carrera ahora citan `~3h 15m` en lugar de `~195m`.
+
+### 190.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Todos los archivos $\le 350$ líneas ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
+- **Gate 4 (Ergonomía & Claridad Deportiva):** Tiempos legibles instantáneamente para atletas de ultradistancia, maratón y triatlón ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 190 ✅.

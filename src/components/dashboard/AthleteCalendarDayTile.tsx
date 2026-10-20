@@ -5,6 +5,7 @@ import { Footprints, Bike, Dumbbell, Waves, Moon, Check, X } from "lucide-react"
 import { PlanItem } from "@/lib/gemini/engine";
 import { DailyExecutedMap, DailyExecutedActivity } from "@/lib/intervals/types";
 import { WorkoutChart, parseWorkoutDoc } from "../WorkoutChart";
+import { formatDuration } from "@/lib/utils/formatters";
 
 interface AthleteCalendarDayTileProps {
   item: PlanItem;
@@ -203,7 +204,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
             <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-rose-100/70 dark:bg-rose-900/40 text-rose-900 dark:text-rose-300 border-b border-rose-200 dark:border-rose-800">
               <div className="flex items-center space-x-1">
                 {renderPlannedIcon()}
-                <span>{item.durationMinutes || 45}m</span>
+                <span>{formatDuration(item.durationMinutes || 45, { compact: true })}</span>
               </div>
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-2xs">
                 ✕
@@ -249,10 +250,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
             >
               <div className="flex items-center space-x-1">
                 {renderPlannedIcon()}
-                <span>{(() => {
-                  const m = item.durationMinutes || parsedDoc.totalMins || 45;
-                  return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 > 0 ? `${m % 60}m` : ""}` : `${m}m`;
-                })()}</span>
+                <span>{formatDuration(item.durationMinutes || parsedDoc.totalMins || 45, { compact: true })}</span>
                 {(() => {
                   const kmMatch = item.workoutName.match(/(\d+(?:\.\d+)?)\s*(?:km|k\b)/i);
                   return kmMatch ? <span className="text-[10px] opacity-80 font-normal">({kmMatch[1]}k)</span> : null;
@@ -305,7 +303,7 @@ export const AthleteCalendarDayTile: React.FC<AthleteCalendarDayTileProps> = ({
             <div className="px-2 py-1 flex items-center justify-between text-xs font-bold font-mono bg-slate-200/60 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700/60">
               <div className="flex items-center space-x-1">
                 {renderActivityIcon(extraAct.type, extraAct.name)}
-                <span>{extraAct.movingTimeMin}m</span>
+                <span>{formatDuration(extraAct.movingTimeMin, { compact: true })}</span>
                 {extraAct.distanceKm && <span className="text-[10px] opacity-80 font-normal">({extraAct.distanceKm}k)</span>}
               </div>
               <span className="px-1.5 py-0.2 rounded bg-slate-300/70 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] font-bold">

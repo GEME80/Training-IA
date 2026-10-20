@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Obtener precio oficial configurado por el Administrador
-    let planPrice = 50000;
+    let planPrice = 55000;
     if (adminDb) {
       try {
         const planDoc = await adminDb.collection('system_config').doc('subscription_plan').get();

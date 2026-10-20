@@ -100,7 +100,7 @@ export class GmcBillingEngine {
       redirectUrl: params.redirectUrl,
     });
 
-    const checkoutUrl = res.checkout_link || res.payment_method?.url;
+    const checkoutUrl = res.payment_method?.url || (res as any).checkout_link;
     if (!checkoutUrl) {
       throw new Error(`[GMC_ENGINE_ERROR] Openpay no devolvió la URL de redirección bancaria.`);
     }

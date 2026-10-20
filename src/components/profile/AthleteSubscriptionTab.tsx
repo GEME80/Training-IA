@@ -53,6 +53,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
 }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
+  const [planPrice, setPlanPrice] = useState<number>(55000);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState<boolean>(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -60,6 +61,17 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/subscription-plan")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.plan?.price) {
+          setPlanPrice(data.plan.price);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchStatus = async () => {
     if (!athleteId && !email) {
@@ -259,7 +271,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
 
             <div className="text-right shrink-0">
               <span className="text-xl font-mono font-black text-slate-900 dark:text-white block">
-                {formatMoney(50000, "COP")}
+                {formatMoney(planPrice, "COP")}
               </span>
               <span className="text-[10px] font-bold text-slate-400 uppercase">
                 Mensual
@@ -496,7 +508,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         athleteName={athleteName}
         athleteEmail={email}
         planName="Actualización de Medio de Pago"
-        planAmountCop={50000}
+        planAmountCop={planPrice}
         trialDays={0}
       />
     </div>

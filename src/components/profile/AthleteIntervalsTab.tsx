@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Check, AlertCircle, RefreshCw, Unlink, Activity, ShieldCheck, Zap } from "lucide-react";
+import { AthleteDeviceSyncNotice } from "./AthleteDeviceSyncNotice";
 
 interface AthleteIntervalsTabProps {
   athleteId: string;
@@ -189,6 +190,11 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 3. Notificación Pedagógica y Enlace a Configuración de Reloj / Dispositivos */}
+      {isConnected && (
+        <AthleteDeviceSyncNotice athleteId={athleteId} />
+      )}
 
       {/* Modal de Confirmación para Desconectar */}
       {showConfirmDisconnect && (

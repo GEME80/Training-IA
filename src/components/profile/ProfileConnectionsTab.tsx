@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { GeminiModelDto } from "@/app/api/gemini/models/route";
+import { AthleteDeviceSyncNotice } from "./AthleteDeviceSyncNotice";
 
 interface ProfileConnectionsTabProps {
   athleteId: string;
@@ -141,6 +142,9 @@ export const ProfileConnectionsTab: React.FC<ProfileConnectionsTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Aviso de sincronización de reloj deportivo */}
+      <AthleteDeviceSyncNotice athleteId={athleteId} />
 
       {/* Bloque Google Gemini AI */}
       <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-3 shadow-sm">

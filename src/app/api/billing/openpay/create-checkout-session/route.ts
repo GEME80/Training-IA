@@ -58,11 +58,30 @@ export async function POST(req: NextRequest) {
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
     const redirectUrl = `${baseUrl}/?payment=complete`;
 
-    // 3. Invocar al GMC Billing Engine para crear la orden y la sesión hospedada en Openpay BBVA
-    const engine = new GmcBillingEngine();
-    let checkoutUrl = '';
-    let orderId = '';
-    let transactionId = '';
+    // 3. Consultar si existen credenciales de Openpay configuradas en Firestore
+    let customConfig: any = undefined;
+    if (adminDb) {
+      try {
+        const credsDoc = await adminDb.collection('system_config').doc('openpay_credentials').get();
+        if (credsDoc.exists) {
+          const creds = credsDoc.data();
+          if (creds?.merchantId && creds?.privateKey) {
+            customConfig = {
+              OPENPAY_MERCHANT_ID: creds.merchantId,
+              OPENPAY_PRIVATE_KEY: creds.privateKey,
+              OPENPAY_PUBLIC_KEY: creds.publicKey || creds.merchantId,
+              OPENPAY_SANDBOX_MODE: creds.sandboxMode !== false,
+              apiBaseUrl: creds.sandboxMode !== false ? 'https://sandbox-api.openpay.co/v1' : 'https://api.openpay.co/v1',
+            };
+          }
+        }
+      } catch (cErr) {
+        console.warn('[OPENPAY_CUSTOM_CREDS_WARN]', cErr);
+      }
+    }
+
+    // 4. Invocar al GMC Billing Engine para crear la orden y la sesión hospedada en Openpay BBVA
+    const engine = new GmcBillingEngine(customConfig);
 
     try {
       const session = await engine.createHostedCheckoutSession({
@@ -75,49 +94,47 @@ export async function POST(req: NextRequest) {
         redirectUrl,
       });
 
-      checkoutUrl = session.checkoutUrl;
-      orderId = session.orderId;
-      transactionId = session.transactionId;
+      // Registrar la orden pendiente en Firestore para trazabilidad
+      if (adminDb && session.orderId) {
+        try {
+          await adminDb.collection('gmc_checkout_sessions').doc(session.orderId).set({
+            orderId: session.orderId,
+            subscriberId,
+            athleteEmail,
+            amountCop: planPrice,
+            currency: 'COP',
+            openpayTransactionId: session.transactionId,
+            status: 'PENDING_HOSTED_CHECKOUT',
+            createdAt: new Date().toISOString(),
+            redirectUrl,
+          });
+        } catch (logErr) {
+          console.warn('[CHECKOUT_SESSION_LOG_WARN]', logErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        checkoutUrl: session.checkoutUrl,
+        orderId: session.orderId,
+        transactionId: session.transactionId,
+      });
     } catch (openpayErr: any) {
-      console.warn('[OPENPAY_CHECKOUT_API_WARN]', openpayErr.message);
+      console.error('[OPENPAY_CHECKOUT_API_ERROR]', openpayErr);
+      const isPlaceholder = (process.env.OPENPAY_MERCHANT_ID || '').includes('placeholder');
+      const helpfulMsg = isPlaceholder
+        ? 'Aviso de Sandbox Openpay: Se requieren las credenciales reales de tu cuenta de Openpay Sandbox (Merchant ID y Llave Privada creadas en sandbox-dashboard.openpay.co).'
+        : `Error al conectar con la pasarela bancaria de Openpay BBVA: ${openpayErr.message}`;
 
-      // Si las credenciales en el entorno son de prueba o Sandbox no autenticadas en vivo
-      const isSandbox = (process.env.OPENPAY_SANDBOX_MODE || 'true').toLowerCase() === 'true';
-      if (isSandbox) {
-        orderId = `GMC-PULSE_ENDURANCE-SUB-${subscriberId.replace(/[^a-zA-Z0-9]/g, '')}-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}`;
-        transactionId = `sim_tx_${Date.now()}`;
-        // Redirigir de regreso al dashboard con confirmación en modo sandbox
-        checkoutUrl = `${redirectUrl}&order_id=${orderId}&sandbox_demo=true`;
-      } else {
-        throw openpayErr;
-      }
+      return NextResponse.json(
+        {
+          error: helpfulMsg,
+          rawError: openpayErr.message,
+          isPlaceholderCredentials: isPlaceholder,
+        },
+        { status: 400 }
+      );
     }
-
-    // 4. Registrar la orden pendiente en Firestore para trazabilidad
-    if (adminDb && orderId) {
-      try {
-        await adminDb.collection('gmc_checkout_sessions').doc(orderId).set({
-          orderId,
-          subscriberId,
-          athleteEmail,
-          amountCop: planPrice,
-          currency: 'COP',
-          openpayTransactionId: transactionId,
-          status: 'PENDING_HOSTED_CHECKOUT',
-          createdAt: new Date().toISOString(),
-          redirectUrl,
-        });
-      } catch (logErr) {
-        console.warn('[CHECKOUT_SESSION_LOG_WARN]', logErr);
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      checkoutUrl,
-      orderId,
-      transactionId,
-    });
   } catch (error: any) {
     console.error('[CREATE_CHECKOUT_SESSION_ERROR]', error);
     const statusCode = error.statusCode || 500;

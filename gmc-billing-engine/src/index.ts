@@ -18,6 +18,7 @@ export * from './agents/netflixLifecycleDunning';
 export * from './agents/forensicLedgerAuditor';
 
 import { OpenpayClient } from './providers/openpay/client';
+import { OpenpayServerConfig } from './core/config';
 import { SentinelAntiFraudAgent } from './agents/sentinelAntiFraud';
 import { IdempotencyLockGuardAgent } from './agents/idempotencyLockGuard';
 import { WebhookCryptoRouterAgent, OpenpayWebhookPayload } from './agents/webhookCryptoRouter';
@@ -30,8 +31,8 @@ import { TenantBillingConfig, AccessResolution, SubscriberBillingRecord } from '
 export class GmcBillingEngine {
   private client: OpenpayClient;
 
-  constructor() {
-    this.client = new OpenpayClient();
+  constructor(customConfig?: Partial<OpenpayServerConfig>) {
+    this.client = new OpenpayClient(customConfig);
   }
 
   /**

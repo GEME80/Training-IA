@@ -6,7 +6,7 @@
  * soporte para planes con trial_days parametrizable y cero secrets hardcodeados.
  */
 
-import { getOpenpayConfig } from '../../core/config';
+import { getOpenpayConfig, OpenpayServerConfig } from '../../core/config';
 
 export interface OpenpayCustomerResponse {
   id: string;
@@ -71,11 +71,11 @@ export class OpenpayClient {
   private privateKey: string;
   private apiBaseUrl: string;
 
-  constructor() {
+  constructor(customConfig?: Partial<OpenpayServerConfig>) {
     const config = getOpenpayConfig();
-    this.merchantId = config.OPENPAY_MERCHANT_ID;
-    this.privateKey = config.OPENPAY_PRIVATE_KEY;
-    this.apiBaseUrl = config.apiBaseUrl;
+    this.merchantId = customConfig?.OPENPAY_MERCHANT_ID || config.OPENPAY_MERCHANT_ID;
+    this.privateKey = customConfig?.OPENPAY_PRIVATE_KEY || config.OPENPAY_PRIVATE_KEY;
+    this.apiBaseUrl = customConfig?.apiBaseUrl || config.apiBaseUrl;
   }
 
   private getAuthHeader(): string {

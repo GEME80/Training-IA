@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.85)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.86)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.85). Dominio oficial en producción: pulseendurance.co.
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.86). Dominio oficial en producción: pulseendurance.co.
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.86: Reorganización Táctica, Tarjeta Comparativa y Preservación Estricta de Carga (TSS) en Head Coach:
+  * Selector Táctico [ Hoy ] / [ Mañana ] (`HeadCoachReorgSubMenu.tsx`): Unificación ergonómica del submenú de reagendamiento ("Intercambiar ejercicio" y "Poco tiempo") permitiendo planificar tácticamente el día activo o el día siguiente. Ocultamiento inteligente de la opción "Invertir" cuando la sesión de hoy ya ha sido completada (`hasTrainedToday`).
+  * Preservación Estricta de TSS en Sustituciones Multideporte: Al sustituir un ejercicio por otra disciplina (ciclismo, carrera o fuerza), el motor fisiológico calcula la equivalencia exacta de duración e intensidad según el Stryd CP o Bike FTP del atleta para entregar exactamente la misma carga (TSS) programada, erradicando degradaciones arbitrarias a Z2 o regenerativo.
+  * Tarjeta Comparativa Dual (`HeadCoachSingleDiffCard.tsx`): Renderizado focalizado cuando se modifican puntualemente 1 o 2 sesiones, desplegando en paralelo `🔴 Ejercicio actual programado` vs `🟢 Ejercicio que se va a cambiar` con métricas precisas (nombre, duración, vatios/ritmo, TSS con badge de carga), bloques de potencia y botón directo `[ Confirmar y Sincronizar Sesión ]`, evitando la sobrecarga cognitiva de proyectar la cuadrícula completa de 7 días.
+  * Purga de Auditorías Irrelevantes en Respuestas (Regla 15 en `prompts.ts` y sanitizador en `chatInference.ts`): Supresión absoluta de sermones o análisis de entrenamientos pasados cuando el atleta solicita un intercambio de ejercicio. La respuesta se estandariza y alinea directamente a la meta del atleta: "Hola {Nombre}, según tu objetivo hacia {Meta}, he configurado el cambio del ejercicio que está programado ({actual}) por el siguiente ejercicio: {nuevo} ({tss} TSS), manteniendo exactamente tu carga fisiológica programada. Por favor confirma para sincronizarlo con tu calendario."
+  * Blindaje de Presupuesto de Código (≤ 348 LOC): Todos los módulos en cumplimiento estricto (`HeadCoachSingleDiffCard.tsx`: 224 LOC, `HeadCoachMicrocycleCard.tsx`: 293 LOC, `HeadCoachReorgSubMenu.tsx`: 233 LOC, `deterministicFallback.ts`: 347 LOC, `chatInference.ts`: 246 LOC, `prompts.ts`: 332 LOC) con compilación limpia Next.js (29/29 rutas).
 - Versión 5.85: Dominio de Autenticación Canónico pulseendurance.co, Reverse Proxy OAuth en Next.js y Unificación de Infraestructura GCP/Firebase:
   * Custom Auth Domain Canónico: Reemplazo absoluto del subdominio técnico `training-ia-8f67f.firebaseapp.com` en la ventana emergente de inicio de sesión con Google (OAuth Consent Screen). Ahora la experiencia del atleta es 100% nativa bajo `pulseendurance.co`.
   * Reverse Proxy OAuth en Next.js (`next.config.mjs`): Implementación de regla `async rewrites()` que túnelea `/__/auth/:path*` hacia `https://training-ia-8f67f.firebaseapp.com/__/auth/:path*` con exclusión segura de `X-Frame-Options: DENY` para permitir los popups e iframes de autenticación de Google.
@@ -503,6 +509,11 @@ Todo agente o desarrollador que intervenga en el Agente 01 (`PULSE Live Coach`),
      * **Prioridad 2 (`isWeekBalance`, condicionada a `!isGoalProgress`):** Captura "balance de semana", "volumen semanal" o `isWeekKickoffAudit`. Debe auditar con rigor de Head Coach el corte semanal: 180 TSS de 366 TSS objetivo (49% global), corte a viernes (263 TSS previstos, déficit de -83 TSS por fuerza omitida en atleta Máster), frescura biológica (TSB -0.3, HRV 54 ms) y prohibición categórica de compensar o doblar entrenamientos el fin de semana.
      * **Prioridad 3 (`isSessionAudit`, condicionada a `!isGoalProgress && !isWeekBalance`):** Auditoría técnica profunda de la última sesión individual ejecutada, sin secuestrar consultas semanales o de macrociclo.
    - **Espejo Determinístico en Fallback:** En caso de contingencia o latencia de red, `deterministicFallback.ts` replica con idéntico rigor matemático y directrices fisiológicas las respuestas estructuradas, garantizando cero respuestas genéricas o inconsistentes para el atleta.
+
+7. **Protocolo Táctico de Intercambio de Ejercicio, Preservación de TSS y Tarjeta Comparativa (v5.86):**
+   - **Preservación Inviolable de TSS en Sustitución Cruzada:** Al sustituir una disciplina por otra (ej. de carrera a ciclismo de rodillo o fuerza funcional), la carga programada (TSS) no se degrada arbitrariamente a zonas regenerativas ni suaves. El motor recalcula la equivalencia exacta de duración y potencia según el FTP de bicicleta o CP de Stryd para mantener el estímulo fisiológico semanal previsto.
+   - **Tarjeta Comparativa Dual (`HeadCoachSingleDiffCard.tsx`):** Ante cambios tácticos puntuales ($\le 2$ sesiones), queda prohibido sobrecargar al atleta con la matriz semanal de 7 días. La interfaz debe presentar una tarjeta focalizada de contraste lado a lado: `🔴 Ejercicio actual programado` vs `🟢 Ejercicio que se va a cambiar`, con métricas directas (vatios, duración, TSS) y botón unificado `Confirmar y Sincronizar Sesión`.
+   - **Erradicación de Auditorías Pasadas en Solicitudes de Intercambio (Regla 15):** Cuando el atleta solicita reorganizar o intercambiar una sesión, el Head Coach tiene estrictamente prohibido sermonear, emitir auditorías de desacople cardíaco o evaluar entrenamientos ejecutados con anterioridad. La respuesta debe ser concisa, asertiva y orientada al objetivo: *"Según tu objetivo hacia [Meta], he configurado el cambio del ejercicio que está programado por el siguiente ejercicio... manteniendo exactamente tu carga fisiológica programada."*
 
 ---
 

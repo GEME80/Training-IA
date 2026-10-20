@@ -1,10 +1,16 @@
-# ⚡ SGEA Pro (v5.85) — PULSE ENDURANCE™
+# ⚡ SGEA Pro (v5.86) — PULSE ENDURANCE™
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial en producción: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
 
+- 🔄 **Reorganización Táctica, Tarjeta Comparativa y Preservación Estricta de Carga (TSS) en Head Coach (v5.86):**
+  - **Selector Táctico [ Hoy ] / [ Mañana ] (`HeadCoachReorgSubMenu.tsx`):** Unificación de los submenús de reagendamiento ("Intercambiar ejercicio" y "Poco tiempo") con navegación directa entre el día en curso y el día siguiente, y ocultamiento inteligente de "Invertir" cuando la sesión de hoy ya ha sido ejecutada.
+  - **Preservación Estricta de TSS en Sustituciones Multideporte:** Al intercambiar una sesión por otra disciplina (ciclismo, carrera o fuerza), el motor fisiológico calcula la equivalencia exacta de vatios, ritmo o duración para preservar el 100% del TSS programado original, erradicando degradaciones arbitrarias a Z2 o regenerativo.
+  - **Tarjeta Comparativa Dual (`HeadCoachSingleDiffCard.tsx`):** Renderizado focalizado de adaptación puntual cuando se modifican $\le 2$ sesiones, mostrando en paralelo `🔴 Ejercicio actual programado` vs `🟢 Ejercicio que se va a cambiar` con desglose de vatios, TSS, bloques de potencia y botón directo de `[ Confirmar y Sincronizar Sesión ]` (sin forzar la vista de 7 días).
+  - **Purga de Auditorías Irrelevantes y Enfoque al Objetivo:** Incorporación de la Regla 15 en `prompts.ts` y sanitizador en `chatInference.ts` para eliminar sermones o análisis de sesiones pasadas cuando el atleta solo solicita una sustitución, estandarizando la respuesta al objetivo: *"Según tu objetivo hacia [Meta], he configurado el cambio del ejercicio que está programado por el siguiente ejercicio... manteniendo exactamente tu carga programada."*
+  - **Blindaje de Presupuesto de Código:** 100% de los módulos en estricto cumplimiento $\le 348$ LOC (`HeadCoachSingleDiffCard.tsx`: 224 LOC, `HeadCoachMicrocycleCard.tsx`: 293 LOC, `HeadCoachReorgSubMenu.tsx`: 233 LOC, `deterministicFallback.ts`: 347 LOC, `chatInference.ts`: 246 LOC, `prompts.ts`: 332 LOC).
 - 🔐 **Dominio de Autenticación Canónico `pulseendurance.co`, Reverse Proxy OAuth y Unificación GCP (v5.85):**
   - **Custom Auth Domain Canónico:** Erradicación total de subdominios técnicos huérfanos (`training-ia-8f67f.firebaseapp.com`) en la ventana emergente de inicio de sesión de Google (OAuth Consent Screen). Ahora los atletas inician sesión directamente bajo `pulseendurance.co`.
   - **Reverse Proxy OAuth en Next.js (`next.config.mjs`):** Regla `async rewrites()` que redirige de forma transparente `/__/auth/:path*` hacia el backend de Firebase con salvaguarda en `X-Frame-Options` para garantizar la compatibilidad con el handshake OAuth de Google sin bloqueos.

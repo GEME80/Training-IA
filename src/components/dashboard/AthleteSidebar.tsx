@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  CreditCard,
 } from "lucide-react";
 import { PulseLogo } from "../PulseLogo";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +20,8 @@ export type AthleteSidebarNavSection =
   | "dashboard"
   | "season_studio"
   | "head_coach"
-  | "physiology";
+  | "physiology"
+  | "subscription";
 
 interface AthleteSidebarProps {
   activeSection: AthleteSidebarNavSection;
@@ -65,6 +67,12 @@ export const AthleteSidebar: React.FC<AthleteSidebarProps> = ({
       label: "Head Coach IA",
       sublabel: "Adaptación en Vivo",
       icon: Sparkles,
+    },
+    {
+      id: "subscription" as AthleteSidebarNavSection,
+      label: "Suscripción",
+      sublabel: "Membresía & Pagos",
+      icon: CreditCard,
     },
   ];
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PulseLogo } from "../PulseLogo";
-import { Shield, LayoutDashboard, Home, LogOut } from "lucide-react";
+import { Shield, LayoutDashboard, Home, LogOut, CreditCard } from "lucide-react";
 import { isMasterAdminEmail } from "@/lib/env";
 import { NotificationBellButton } from "../notifications/NotificationBellButton";
 import { UserStorage } from "@/lib/storage/userStorage";
@@ -15,6 +15,7 @@ interface AthleteDashboardHeaderProps {
   isRefreshingTelemetry: boolean;
   onRefreshTelemetry: () => void;
   onSelectView?: (view: "landing" | "dashboard" | "admin") => void;
+  onNavigateSection?: (section: "dashboard" | "season_studio" | "head_coach" | "physiology" | "subscription") => void;
   signOutUser: () => void;
   userStorage?: UserStorage;
 }
@@ -27,6 +28,7 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
   isRefreshingTelemetry,
   onRefreshTelemetry,
   onSelectView,
+  onNavigateSection,
   signOutUser,
   userStorage,
 }) => {
@@ -79,6 +81,19 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
                 <div className="text-[11px] text-slate-500 truncate font-mono">{email}</div>
               </div>
               <div className="py-1 space-y-0.5 text-xs">
+                {onNavigateSection && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigateSection("subscription");
+                      setShowUserDropdown(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold cursor-pointer"
+                  >
+                    <CreditCard className="h-4 w-4 text-emerald-600" />
+                    <span>Mi Suscripción & Pagos</span>
+                  </button>
+                )}
                 {isMasterAdmin && onSelectView && (
                   <>
                     <button type="button" onClick={() => { onSelectView("dashboard"); setShowUserDropdown(false); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold">

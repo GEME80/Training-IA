@@ -256,6 +256,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           isRefreshingTelemetry={telemetry.isRefreshingTelemetry}
           onRefreshTelemetry={() => telemetry.refreshTelemetry(telemetry.profile.id, telemetry.apiKeyCache, telemetry.profile.run_ftp, telemetry.profile.bike_ftp)}
           onSelectView={onSelectView}
+          onNavigateSection={(s) => setActiveNavSection(s)}
           signOutUser={signOutUser}
           userStorage={userStorage}
         />

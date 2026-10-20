@@ -5,6 +5,7 @@ import { AthleteDashboardOverview } from "./AthleteDashboardOverview";
 import { AthleteSeasonStudioView } from "./AthleteSeasonStudioView";
 import { AthleteHeadCoachView } from "./AthleteHeadCoachView";
 import { AthletePhysiologyView } from "./AthletePhysiologyView";
+import { AthleteSubscriptionTab } from "../profile/AthleteSubscriptionTab";
 import { AthleteSidebarNavSection } from "./AthleteSidebar";
 import { PlanItem, resolveEffectiveAvailability } from "@/lib/gemini/engine";
 import { useMacrocycleUpgrade } from "@/hooks/useMacrocycleUpgrade";
@@ -339,6 +340,26 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
           await telemetry.handleSaveSettings({ weeklyAvailability: newMap });
         }}
       />
+    );
+  }
+
+  if (activeNavSection === "subscription") {
+    return (
+      <div className="max-w-5xl mx-auto py-4 sm:py-6 px-3 sm:px-6">
+        <AthleteSubscriptionTab
+          athleteId={
+            userProfile?.intervalsAthleteId ||
+            (telemetry.profile.id && !telemetry.profile.id.startsWith("demo")
+              ? telemetry.profile.id
+              : "") ||
+            user?.uid ||
+            ""
+          }
+          athleteName={displayName}
+          email={user?.email || userProfile?.email || ""}
+          isMasterAdmin={Boolean(userProfile?.isSuperAdmin || userProfile?.billingExempt)}
+        />
+      </div>
     );
   }
 

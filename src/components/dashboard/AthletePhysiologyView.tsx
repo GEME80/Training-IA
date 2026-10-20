@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Check, Zap, CalendarDays, Radio } from "lucide-react";
+import { User, Check, Zap, CalendarDays, Radio, CreditCard } from "lucide-react";
 import { WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, DisciplineType, normalizeDisciplines } from "@/lib/gemini/engine";
 import { RunningTrainingMode } from "@/lib/db/types";
 import { parsePaceToSeconds, parseSwimPaceToSeconds } from "@/lib/physiology/runningWorkoutAdapter";
@@ -9,11 +9,12 @@ import { AthleteZonesTab } from "../profile/AthleteZonesTab";
 import { AthleteBioProfileTab } from "../profile/AthleteBioProfileTab";
 import { AthleteIntervalsTab } from "../profile/AthleteIntervalsTab";
 import { ProfileAvailabilityTab } from "../profile/ProfileAvailabilityTab";
+import { AthleteSubscriptionTab } from "../profile/AthleteSubscriptionTab";
 import { QuickThresholdModal, EditableThresholdMetric } from "../profile/QuickThresholdModal";
 import { RunningModeConfirmModal } from "../profile/RunningModeConfirmModal";
 import { AthletePhysiologyViewProps } from "./AthletePhysiologyView.types";
 
-export type AthleteViewTab = "zones" | "profile" | "availability" | "intervals";
+export type AthleteViewTab = "zones" | "profile" | "availability" | "intervals" | "subscription";
 
 export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   athleteId: initialAthleteId = "", athleteName: initialAthleteName = "Atleta", email = "",
@@ -24,9 +25,9 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
   swimCssStr: initialSwimCssStr, swimCssSecPer100m: initialSwimCssSec,
   apiKey: initialApiKey = "", ctl, atl, tsb, weeklyAvailability: initialAvailability, isLiveConnected = false,
   suggestedBikeFtp, suggestedRunPace, suggestedRunFtp, onApplySuggestion, onDismissSuggestion,
-  onTestConnection, onSave, onUpdateAvailability,
+  onTestConnection, onSave, onUpdateAvailability, initialTab = "zones",
 }) => {
-  const [activeTab, setActiveTab] = useState<AthleteViewTab>("zones");
+  const [activeTab, setActiveTab] = useState<AthleteViewTab>(initialTab);
   const [quickEditMetric, setQuickEditMetric] = useState<EditableThresholdMetric | null>(null);
   const [athleteId, setAthleteId] = useState<string>(initialAthleteId);
   const [athleteName, setAthleteName] = useState<string>(initialAthleteName);
@@ -220,6 +221,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           { id: "profile" as const, label: "Perfil & Biometría", icon: User, activeClass: "bg-sky-500 text-white font-black shadow-xs" },
           { id: "availability" as const, label: "Disponibilidad", icon: CalendarDays, activeClass: "bg-emerald-500 text-white font-black shadow-xs" },
           { id: "intervals" as const, label: "Conexión Intervals", icon: Radio, activeClass: "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black shadow-xs" },
+          { id: "subscription" as const, label: "Suscripción & Pago", icon: CreditCard, activeClass: "bg-emerald-700 text-white font-black shadow-xs" },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -283,6 +285,16 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
           <AthleteIntervalsTab
             athleteId={athleteId} apiKey={apiKey} isLiveConnected={isLiveConnected}
             onSaveCredentials={handleSaveIntervals} onTestConnection={onTestConnection}
+          />
+        </div>
+      )}
+
+      {activeTab === "subscription" && (
+        <div className="animate-fadeIn">
+          <AthleteSubscriptionTab
+            athleteId={athleteId}
+            athleteName={athleteName}
+            email={email}
           />
         </div>
       )}

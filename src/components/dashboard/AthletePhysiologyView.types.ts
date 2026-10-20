@@ -37,4 +37,5 @@ export interface AthletePhysiologyViewProps {
   onTestConnection?: (athleteId: string) => Promise<{ success: boolean; athleteName?: string; error?: string }>;
   onSave: (data: AthleteProfileFormData & { weeklyAvailability?: WeeklyAvailabilityMap }) => Promise<void>;
   onUpdateAvailability?: (newMap: WeeklyAvailabilityMap) => Promise<void>;
+  initialTab?: "zones" | "profile" | "availability" | "intervals" | "subscription";
 }

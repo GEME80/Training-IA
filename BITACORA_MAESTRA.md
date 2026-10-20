@@ -10429,5 +10429,58 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Arquitectura & Mejores Prácticas UX):** Comparativa "Ejercicio actual" vs "Ejercicio que se va a cambiar", mensaje directo alineado a la meta del atleta ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 184 ✅.
 
+---
+
+## 185. Arquitectura GMC FinSec Billing Engine: Pasarela Recurrente Openpay (BBVA), Módulo de Suscripción en Perfil y Diagnóstico de Hosted Checkout
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Documentar la implementación integral del motor financiero multitenant `@gmc/billing-engine` conectado a Openpay Colombia (BBVA), la certificación de las 15 pruebas de seguridad (TC-01 a TC-15), la creación del espacio de gestión de suscripción en el perfil del atleta, la unificación del precio oficial a $55.000 COP, y el diagnóstico detallado del entorno hospedado (Hosted Checkout) de Openpay.
+
+### 185.1. Implementaciones y Logros Realizados
+1. **Motor GMC FinSec Billing Engine (`gmc-billing-engine/`):**
+   - **Arquitectura Desacoplada Plug & Play:** Módulo agnóstico de dominio preparado para soportar múltiples tenants (`PULSE_ENDURANCE`, `HUBINFO`, etc.).
+   - **Escuadrón de 5 Agentes de Seguridad:**
+     - *Sentinel-AntiFraud:* Bloqueo total de campos PAN/CVV en servidor (PCI-DSS SAQ-A), exigencia de `device_session_id` y huella determinista.
+     - *IdempotencyLockGuard:* Prevención de doble cobro mediante semáforos atómicos y claves idempotentes (`GMC-PULSE_ENDURANCE-SUB-{ID}-YYYYMM`).
+     - *WebhookCryptoRouter:* Validación criptográfica de webhooks con firma HMAC / Basic Auth de Openpay BBVA.
+     - *NetflixLifecycleDunning:* Manejo estricto de cancelaciones programadas (`cancelAtPeriodEnd`), 72 horas de gracia dunning para clientes antiguos y revocación instantánea en reembolsos (`CANCELLED_LOCKED`).
+     - *ForensicLedgerAuditor:* Auditoría forense con cálculo exacto de comisiones Openpay (variable + fija) e IVA para liquidación semanal en BBVA.
+   - **Matriz de Certificación FinSec (47/47 Pruebas Aprobadas):**
+     - Fase 1 (Core Engine): 19/19 pruebas exitosas.
+     - Fase 2 (Pulse Lifecycle): 13/13 pruebas exitosas.
+     - Fase 3 (Sandbox Matrix TC-01 a TC-15): 15/15 pruebas superadas (`npm run test:finsec`).
+2. **Espacio de Suscripción en el Perfil del Atleta (`AthleteSubscriptionTab.tsx`):**
+   - Integrado en el menú izquierdo de Perfil (`/profile` o modal de ajustes).
+   - Muestra el estado en tiempo real (Prueba Activa, Suscripción Pro Activa, Periodo de Gracia, Vencido).
+   - Visualización de la tarjeta guardada (Franquicia y últimos 4 dígitos) y próxima fecha de corte.
+   - Acciones del atleta:
+     - **Modificar / Actualizar Tarjeta:** Invoca el checkout seguro para registrar el nuevo plástico.
+     - **Cancelar Suscripción:** Flujo con modal de confirmación respetando el acceso hasta el fin del periodo pagado (`cancelAtPeriodEnd: true`).
+3. **Unificación de Precios a $55.000 COP:**
+   - Sincronizado dinámicamente desde `/api/admin/subscription-plan` a través de Firestore (`system_config/subscription_plan`).
+   - El modal de checkout (`GmcCardCheckoutModal.tsx`) y la pestaña de suscripción muestran exactamente **$55.000 COP / mes**.
+4. **Política de Seguridad Estricta (Captura 100% en Openpay):**
+   - El modal de Pulse (`GmcCardCheckoutModal.tsx`) actúa exclusivamente como confirmación e iniciador de sesión hospedada.
+   - **Regla Inquebrantable:** Todos los campos de tarjeta (PAN, Fecha, CVV) deben ingresarse **única y exclusivamente en el entorno seguro hospedado de Openpay BBVA**, jamás dentro de la interfaz de Pulse.
+
+### 185.2. Diagnóstico Técnico del Sandbox de Openpay Colombia
+- **Incidencia Identificada:** En el checkout hospedado generado por Openpay (`POST /v1/{merchantId}/charges` con `method: 'card'`), la página de captura (`sandbox-api.openpay.co/card_capture?...`) emite un script con un atributo de integridad SRI erróneo:
+  `Failed to find a valid digest in the 'integrity' attribute for resource '...openpay-cardCapture-1.1.js?v=1.2.157.r947' with computed SHA-256 integrity '...'`
+- **Consecuencia en Sandbox:** Los navegadores modernos bloquean el script por seguridad, provocando `ReferenceError: OpenpayCardCapture is not defined` al presionar el botón "Realizar Pago".
+- **Líneas de Acción para el Siguiente Chat:**
+  1. Evaluar si la creación de sesión vía `/checkouts` (Webcheckout multiformulario de Openpay) o un ajuste en la configuración de la orden en Sandbox permite la carga del script sin conflicto de hash SRI.
+  2. Verificar si este problema de hash es exclusivo del entorno de pruebas Sandbox de Openpay Colombia y cómo opera en producción.
+  3. Asegurar que al completar el pago en Openpay, el retorno a `redirect_url` (`https://pulseendurance.co/?payment=complete`) confirme y sincronice inmediatamente el acceso en Firestore.
+
+### 185.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Componentes y rutas dentro de los límites modulares ✅.
+- **Gate 2 (TypeScript Estricto):** 0 errores de compilación ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
+- **Gate 4 (Arquitectura & Seguridad PCI-DSS):** Redirección 100% a Openpay sin captura local de datos financieros ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 185 ✅.
+
+---
+
+
 
 

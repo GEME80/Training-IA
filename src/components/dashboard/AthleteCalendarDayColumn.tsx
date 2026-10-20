@@ -17,10 +17,10 @@ interface AthleteCalendarDayColumnProps {
 }
 
 const fmtDuration = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? `${m % 60}m` : ""}` : `${m}m`);
-const disciplineIcon = (d: string, cls = "h-3.5 w-3.5") =>
+const disciplineIcon = (d?: string, cls = "h-3.5 w-3.5") =>
   d === "Carrera" ? <Footprints className={`${cls} text-amber-500`} /> : d === "Ciclismo" ? <Bike className={`${cls} text-sky-400`} /> : d === "Natacion" || d === "Natación" ? <Waves className={`${cls} text-teal-400`} /> : <Dumbbell className={`${cls} text-purple-500`} />;
-const activityIcon = (type: string, name = "", cls = "h-3.5 w-3.5") => {
-  const [t, n] = [type.toLowerCase(), name.toLowerCase()];
+const activityIcon = (type?: string, name = "", cls = "h-3.5 w-3.5") => {
+  const [t, n] = [(type || "").toLowerCase(), (name || "").toLowerCase()];
   if (/run|carrera/.test(t) || /carrera|run/.test(n)) return <Footprints className={`${cls} text-amber-600 dark:text-amber-400`} />;
   if (/ride|bike|ciclismo|virtualride/.test(t) || /ciclismo|bike/.test(n)) return <Bike className={`${cls} text-sky-600 dark:text-sky-400`} />;
   if (/swim|nataci/.test(t) || /nataci|swim/.test(n)) return <Waves className={`${cls} text-teal-500 dark:text-teal-400`} />;
@@ -28,12 +28,12 @@ const activityIcon = (type: string, name = "", cls = "h-3.5 w-3.5") => {
 };
 
 function resolveDisplayDuration(item: PlanItem): number {
-  const fromTitle = item.workoutName.match(/\((\d+)\s*m(?:in)?\)/i);
+  const fromTitle = (item.workoutName || "").match(/\((\d+)\s*m(?:in)?\)/i);
   if (fromTitle) return parseInt(fromTitle[1], 10);
   return item.discipline === "Fuerza" && item.durationMinutes && item.durationMinutes >= 15 ? item.durationMinutes : item.durationMinutes || 45;
 }
 
-const cleanName = (name: string) => name.replace(/\[.*?\]\s*/g, "").trim();
+const cleanName = (name?: string) => (name || "").replace(/\[.*?\]\s*/g, "").trim();
 
 const gymShortDesc = (doc: string) => doc ? (doc.split("\n").map(l => l.trim()).find(l => l && !l.startsWith("#") && !l.startsWith("---"))?.slice(0, 57) || "") : "";
 
@@ -73,11 +73,11 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
     if (isRest || allActs.length === 0) return { item, matchedAct: null as DailyExecutedActivity | null, isRest };
     let match: DailyExecutedActivity | undefined;
     if (item.discipline === "Carrera")
-      match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "Run" || /run|carrera|trote|trail/i.test(a.type) || /run|carrera|trote|marat|fondo/i.test(a.name)));
+      match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "Run" || /run|carrera|trote|trail/i.test(a.type || "") || /run|carrera|trote|marat|fondo/i.test(a.name || "")));
     else if (item.discipline === "Ciclismo")
-      match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type)));
+      match = allActs.find((a) => !usedActIds.has(a.id) && (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type || "")));
     else if (item.discipline === "Fuerza")
-      match = allActs.find((a) => !usedActIds.has(a.id) && !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type) && (a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type)));
+      match = allActs.find((a) => !usedActIds.has(a.id) && !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type || "") && (a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type || "")));
     if (match) { usedActIds.add(match.id); return { item, matchedAct: match, isRest: false }; }
     return { item, matchedAct: null as DailyExecutedActivity | null, isRest: false };
   });

@@ -102,9 +102,9 @@ export const AthleteCalendarWeekRow: React.FC<AthleteCalendarWeekRowProps> = ({
   weekPlan.forEach((item) => {
     const parsed = parseWorkoutDoc(item.workoutDoc, item.discipline);
     const m = item.durationMinutes || parsed.totalMins || 45, t = item.tss || parsed.estimatedTss || 0;
-    if (!item.isRestDay && item.discipline !== "Descanso") {
+    if (!item.isRestDay && item.discipline && item.discipline !== "Descanso") {
       totalMins += m; plannedTss += t;
-      const d = item.discipline.toLowerCase();
+      const d = (item.discipline || "").toLowerCase();
       if (/run|carrera/.test(d)) { runMins += m; runTss += t; }
       else if (/ride|ciclismo/.test(d)) { bikeMins += m; bikeTss += t; }
       else if (/swim|nataci/.test(d)) { swimMins += m; swimTss += t; }

@@ -24,13 +24,13 @@ export function matchDailyActivities(
       match = executedActivities.find(
         (a) =>
           !usedActIds.has(a.id) &&
-          (a.type === "Run" || /run|carrera|trote|trail/i.test(a.type) || (!/ride|bike|ciclismo|weight|gym/i.test(a.type) && /run|carrera|trote|marat|fondo/i.test(a.name)))
+          (a.type === "Run" || /run|carrera|trote|trail/i.test(a.type || "") || (!/ride|bike|ciclismo|weight|gym/i.test(a.type || "") && /run|carrera|trote|marat|fondo/i.test(a.name || "")))
       );
     } else if (item.discipline === "Ciclismo") {
       match = executedActivities.find(
         (a) =>
           !usedActIds.has(a.id) &&
-          (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type) || (!/run|carrera|weight|gym/i.test(a.type) && /ride|ciclismo|bike|rodaje|fondo/i.test(a.name)))
+          (a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(a.type || "") || (!/run|carrera|weight|gym/i.test(a.type || "") && /ride|ciclismo|bike|rodaje|fondo/i.test(a.name || "")))
       );
     } else if (item.discipline === "Fuerza") {
       match = executedActivities.find(
@@ -38,7 +38,7 @@ export function matchDailyActivities(
           if (usedActIds.has(a.id)) return false;
           const isAerobic = /ride|bike|ciclismo|virtualride|run|carrera|trote|trail|walk|swim|nataci/i.test(a.type || "");
           if (isAerobic) return false;
-          return a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type) || /gym|pesas|fortalec|s&c|core|funcional/i.test(a.name);
+          return a.type === "WeightTraining" || /weight|gym|fuerza|strength/i.test(a.type || "") || /gym|pesas|fortalec|s&c|core|funcional/i.test(a.name || "");
         }
       );
     }

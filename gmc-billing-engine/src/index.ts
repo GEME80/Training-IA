@@ -76,10 +76,12 @@ export class GmcBillingEngine {
     orderId: string;
     transactionId: string;
   }> {
+    const attemptNonce = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const orderId = generateDeterministicOrderId(
       params.tenantId,
       params.subscriberId,
-      new Date()
+      new Date(),
+      attemptNonce
     );
 
     const [firstName, ...restName] = (params.name || 'Atleta').split(' ');

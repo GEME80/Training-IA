@@ -22,12 +22,18 @@ export interface LockResult {
   error?: string;
 }
 
-export function generateDeterministicOrderId(tenantId: string, subscriberId: string, date: Date = new Date()): string {
+export function generateDeterministicOrderId(
+  tenantId: string,
+  subscriberId: string,
+  date: Date = new Date(),
+  suffix?: string
+): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const sanitizedTenant = tenantId.toUpperCase().replace(/[^A-Z0-9]/g, '_');
   const sanitizedSub = subscriberId.replace(/[^a-zA-Z0-9_]/g, '');
-  return `GMC-${sanitizedTenant}-SUB-${sanitizedSub}-${yyyy}${mm}`;
+  const base = `GMC-${sanitizedTenant}-SUB-${sanitizedSub}-${yyyy}${mm}`;
+  return suffix ? `${base}-${suffix}` : base;
 }
 
 export async function acquireBillingLock(options: LockOptions): Promise<LockResult> {

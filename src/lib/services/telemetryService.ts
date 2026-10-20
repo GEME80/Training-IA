@@ -172,8 +172,8 @@ export class TelemetryService {
             dailyExecutedActivities[dateKey].totalTss += tss;
             dailyExecutedActivities[dateKey].activities.push({
               id: String(act.id),
-              name: act.name,
-              type: act.type,
+              name: act.name || "Actividad",
+              type: act.type || "Other",
               tss,
               movingTimeMin,
               elapsedTimeMin: act.elapsed_time ? Math.round(act.elapsed_time / 60) : undefined,

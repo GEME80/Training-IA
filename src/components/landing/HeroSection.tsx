@@ -183,7 +183,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium pt-1">
                   <span className="flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
-                    Sin tarjeta de crédito requerida
+                    7 días de prueba con tarjeta ($0 COP hoy)
                   </span>
                   <span>•</span>
                   <span>Sincroniza en 60 segundos con tu reloj</span>

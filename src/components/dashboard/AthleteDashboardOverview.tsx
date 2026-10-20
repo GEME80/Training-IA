@@ -130,8 +130,8 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
           {/* Banner de Membresía & Pagos (Dual: Tarjeta Openpay 7d Gratis + Bre-B BBVA) */}
           <AthleteBillingBanner
             athleteUid={profile.id}
-            athleteEmail={profile.name}
-            athleteName={profile.name}
+            athleteEmail={profile.email || "atleta@pulse.com"}
+            athleteName={profile.name || "Atleta Pulse"}
             billingStatus={profile.billingStatus}
             planPrice={profile.planPrice}
             planCurrency={profile.planCurrency}

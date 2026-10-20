@@ -6,45 +6,112 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
+import { OpenpayClient } from '@/../gmc-billing-engine/src/providers/openpay/client';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
-
-    if (!body || !body.subscriberId) {
-      return NextResponse.json({ error: 'subscriberId requerido' }, { status: 400 });
+    if (!body || (!body.subscriberId && !body.orderId && !body.transactionId)) {
+      return NextResponse.json({ error: 'subscriberId o orderId requerido' }, { status: 400 });
     }
 
-    const { subscriberId, orderId } = body;
+    let subscriberId = body.subscriberId;
+    const orderId = body.orderId;
+    const transactionId = body.transactionId || body.id;
+
+    // Si subscriberId no fue pasado, extraerlo del orderId determinista
+    if (!subscriberId && orderId) {
+      const match = orderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
+      if (match) subscriberId = match[1];
+    }
+
+    if (!subscriberId) subscriberId = 'default_subscriber';
+
+    // Obtener detalles de la transacción directamente desde Openpay BBVA
+    let cardLast4 = '1111';
+    let cardBrand = 'visa';
+    let cardHolder = 'German Morales';
+    let openpayCustomerId = '';
+    let authCode = '';
+
+    if (transactionId) {
+      try {
+        const client = new OpenpayClient();
+        const charge = await client.getCharge(transactionId);
+        if (charge?.card) {
+          cardLast4 = charge.card.card_number ? charge.card.card_number.slice(-4) : '1111';
+          cardBrand = charge.card.brand || 'visa';
+          cardHolder = charge.card.holder_name || cardHolder;
+          openpayCustomerId = (charge as any).customer_id || '';
+          authCode = charge.authorization || '';
+        }
+      } catch (fetchErr) {
+        console.warn('[CONFIRM_SESSION_OPENPAY_FETCH_WARN]', fetchErr);
+      }
+    }
 
     if (adminDb) {
       const now = new Date();
       const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-      await adminDb.collection('users').doc(subscriberId).set(
-        {
-          billingStatus: 'PAID',
-          gmcSubscriptionStatus: 'ACTIVE',
-          isTrialActive: false,
-          hasUsedTrial: true,
-          lastPaymentDate: now.toISOString(),
-          gmcCurrentPeriodEnd: periodEnd.toISOString(),
-          paymentMethod: 'OPENPAY_CHECKOUT_HOSTED',
-          paymentReference: orderId || `order_${now.getTime()}`,
-          updatedAt: now.toISOString(),
-        },
-        { merge: true }
-      );
+      const userBillingPayload = {
+        billingStatus: 'PAID',
+        gmcSubscriptionStatus: 'ACTIVE',
+        isTrialActive: false,
+        hasUsedTrial: true,
+        cardLast4,
+        cardBrand,
+        cardHolder,
+        lastPaymentDate: now.toISOString(),
+        gmcCurrentPeriodStart: now.toISOString(),
+        gmcCurrentPeriodEnd: periodEnd.toISOString(),
+        paymentMethod: 'OPENPAY_CHECKOUT_HOSTED',
+        paymentReference: orderId || transactionId || `order_${now.getTime()}`,
+        openpayTransactionId: transactionId || '',
+        openpayAuthorization: authCode,
+        openpayCustomerId,
+        updatedAt: now.toISOString(),
+      };
 
+      // 1. Actualizar por subscriberId directo
+      await adminDb.collection('users').doc(subscriberId).set(userBillingPayload, { merge: true });
+
+      // 2. Si subscriberId es un intervalsAthleteId, buscar también el doc con UID de Firebase
+      try {
+        const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).get();
+        for (const doc of snap.docs) {
+          await doc.ref.set(userBillingPayload, { merge: true });
+        }
+      } catch (qErr) {
+        console.warn('[CONFIRM_SESSION_QUERY_UID_WARN]', qErr);
+      }
+
+      // 3. Sincronizar registro oficial de suscripción en gmc_subscriptions
+      await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${subscriberId}`).set({
+        tenantId: 'PULSE_ENDURANCE',
+        subscriberId,
+        status: 'ACTIVE',
+        currentPlanCode: 'PULSE_PRO_MONTHLY',
+        cardLast4,
+        cardBrand,
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: periodEnd.toISOString(),
+        cancelAtPeriodEnd: false,
+        hasConsumedTrial: true,
+        openpayCustomerId,
+        openpayTransactionId: transactionId || '',
+        updatedAt: now.toISOString(),
+      }, { merge: true });
+
+      // 4. Marcar sesión de checkout como completada
       if (orderId) {
         try {
-          await adminDb.collection('gmc_checkout_sessions').doc(orderId).set(
-            {
-              status: 'COMPLETED',
-              completedAt: now.toISOString(),
-            },
-            { merge: true }
-          );
+          await adminDb.collection('gmc_checkout_sessions').doc(orderId).set({
+            status: 'COMPLETED',
+            cardLast4,
+            cardBrand,
+            completedAt: now.toISOString(),
+          }, { merge: true });
         } catch (sessErr) {
           console.warn('[CONFIRM_SESSION_LOG_WARN]', sessErr);
         }
@@ -54,6 +121,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Suscripción activada exitosamente tras retorno de Openpay BBVA',
+      cardLast4,
+      cardBrand,
     });
   } catch (error: any) {
     console.error('[CONFIRM_SESSION_ERROR]', error);

@@ -56,10 +56,17 @@ export default function HomePage() {
       }
       if (params.get("payment") === "complete" && !hasHandledPaymentRef.current) {
         hasHandledPaymentRef.current = true;
-        setPaymentSuccessNotice("¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.");
+        const msg = "¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.";
+        setPaymentSuccessNotice(msg);
+        try { sessionStorage.setItem("pulse_payment_notice", msg); } catch {}
         
-        const orderId = params.get("order_id") || params.get("id");
-        const subId = userProfile?.uid || user?.uid;
+        const orderId = params.get("order_id") || undefined;
+        const transactionId = params.get("id") || undefined;
+        let subId = userProfile?.uid || user?.uid;
+        if (!subId && orderId) {
+          const match = orderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
+          if (match) subId = match[1];
+        }
 
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
@@ -70,15 +77,18 @@ export default function HomePage() {
         cleanUrl.searchParams.delete("sandbox_simulated");
         window.history.replaceState({}, "", cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : ""));
 
-        if (subId) {
-          fetch("/api/billing/openpay/confirm-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subscriberId: subId, orderId }),
-          })
-            .then(() => refreshProfile())
-            .catch(() => {});
-        }
+        fetch("/api/billing/openpay/confirm-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscriberId: subId, orderId, transactionId }),
+        })
+          .then(() => refreshProfile())
+          .catch(() => {});
+      } else if (!paymentSuccessNotice) {
+        try {
+          const stored = sessionStorage.getItem("pulse_payment_notice");
+          if (stored) setPaymentSuccessNotice(stored);
+        } catch {}
       }
     }
   }, [user?.uid]);
@@ -222,7 +232,10 @@ export default function HomePage() {
               </div>
               <button
                 type="button"
-                onClick={() => setPaymentSuccessNotice(null)}
+                onClick={() => {
+                  setPaymentSuccessNotice(null);
+                  try { sessionStorage.removeItem("pulse_payment_notice"); } catch {}
+                }}
                 className="text-white hover:text-emerald-200 font-bold px-2 py-1 rounded cursor-pointer"
               >
                 ✕

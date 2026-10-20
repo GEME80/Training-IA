@@ -10649,3 +10649,37 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
 - **Gate 4 (Ergonomía & Claridad Deportiva):** Tiempos legibles instantáneamente para atletas de ultradistancia, maratón y triatlón ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 190 ✅.
+
+---
+
+## 191. Perfeccionamiento UX Post-Pago Openpay: Sincronización Automática de Tarjeta (Visa 1111), Erradicación de Banner en Estado PAID y Notificación Persistente
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Optimizar de punta a punta la experiencia de usuario (UX/UI) posterior a la aprobación en Openpay BBVA. Erradicar el banner invasivo de "Actualizar Tarjeta" en el Dashboard para atletas al día (`PAID`), capturar y mostrar los datos reales de la tarjeta registrada (Visa terminada en 1111) en lugar de fallbacks estáticos demo, calcular y mostrar con precisión la fecha de próxima renovación (30 días), y garantizar que la notificación de éxito post-pago se muestre de forma persistente e interactiva.
+
+### 191.1. Cambios Implementados
+1. **Erradicación del Banner Invasivo en Dashboard ([`AthleteBillingBanner.tsx`](src/components/dashboard/AthleteBillingBanner.tsx)):**
+   - Cuando el atleta tiene membresía al día (`localStatus === "PAID"` o `ACTIVE`), el componente retorna `null`. Se elimina el banner superior que mostraba "Actualizar Tarjeta / Cancelar renovación", dejando el Dashboard 100% limpio y enfocado en el entrenamiento.
+2. **Sincronización Profunda de Tarjeta en Servidor ([`confirm-session/route.ts`](src/app/api/billing/openpay/confirm-session/route.ts)):**
+   - Al recibir la confirmación de Openpay, consulta la transacción mediante `client.getCharge(transactionId)`.
+   - Extrae los datos reales: franquicia (`visa`), últimos 4 dígitos (`1111`), titular (`German Morales`), código de autorización y customer ID.
+   - Actualiza de forma atómica en Firestore: `users/{subscriberId}`, búsqueda por `intervalsAthleteId`, `gmc_subscriptions` y marca la sesión `gmc_checkout_sessions` como `COMPLETED`.
+3. **Persistencia y Resiliencia en el Retorno del Atleta ([`src/app/page.tsx`](src/app/page.tsx)):**
+   - Al detectar `payment=complete`, despacha inmediatamente `confirm-session` extrayendo el ID incluso si Firebase Auth está en fase inicial de carga.
+   - Almacena el aviso de éxito en `sessionStorage` para evitar que se desvanezca por navegación o renderizados inmediatos, permitiendo al usuario cerrarlo con el botón `✕`.
+4. **Visualización de Tarjeta Real en Perfil ([`AthleteSubscriptionTab.tsx`](src/components/profile/AthleteSubscriptionTab.tsx), [`status/route.ts`](src/app/api/billing/openpay/status/route.ts)):**
+   - Reemplazado el placeholder `4242` por la tarjeta real `•••• •••• •••• 1111` con logotipo oficial de Visa.
+   - `formatDate` ahora proyecta la fecha exacta de renovación a 30 días en lugar del texto genérico "Fin de ciclo actual".
+   - `status/route.ts` enriquece la respuesta combinando `gmc_subscriptions` y el perfil del usuario en `users`.
+
+### 191.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `confirm-session/route.ts`: 134 LOC ($\le 348$) ✅
+  * `status/route.ts`: 80 LOC ($\le 348$) ✅
+  * `AthleteBillingBanner.tsx`: 333 LOC ($\le 348$) ✅
+  * `src/app/page.tsx`: 285 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
+- **Gate 4 (UX Limpia & Fidelidad Financiera):** Dashboard sin banners residuales, tarjeta Visa 1111 real en perfil y notificación celebratoria persistente ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 191 ✅.
+

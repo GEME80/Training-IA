@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GmcBillingEngine, NetflixLifecycleAgent } from '@/../gmc-billing-engine/src';
+import { adminDb } from '@/lib/firebase/admin';
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const engine = new GmcBillingEngine();
     const resolution = await engine.resolveAccess(tenantId, subscriberId);
-    let record = null;
+    let record: any = null;
     try {
       const rawRecord = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
       if (rawRecord) {
@@ -37,6 +38,34 @@ export async function GET(req: NextRequest) {
       }
     } catch (recErr) {
       console.warn('[STATUS_GET_RECORD_WARN] No se pudo leer record:', recErr);
+    }
+
+    // Si gmc_subscriptions no tenía la tarjeta, consultar en la colección users
+    if ((!record || !record.cardLast4) && adminDb) {
+      try {
+        let userDoc = await adminDb.collection('users').doc(subscriberId).get();
+        if (!userDoc.exists) {
+          const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).limit(1).get();
+          if (!snap.empty) userDoc = snap.docs[0];
+        }
+        if (userDoc.exists) {
+          const uData = userDoc.data();
+          if (uData) {
+            record = {
+              status: uData.gmcSubscriptionStatus || (uData.billingStatus === 'PAID' ? 'ACTIVE' : 'TRIAL_ACTIVE'),
+              currentPlanCode: 'PULSE_PRO_MONTHLY',
+              cardLast4: uData.cardLast4 || null,
+              cardBrand: uData.cardBrand || null,
+              currentPeriodStart: uData.gmcCurrentPeriodStart || uData.lastPaymentDate,
+              currentPeriodEnd: uData.gmcCurrentPeriodEnd,
+              cancelAtPeriodEnd: Boolean(uData.cancelAtPeriodEnd),
+              hasConsumedTrial: Boolean(uData.hasUsedTrial),
+            };
+          }
+        }
+      } catch (uErr) {
+        console.warn('[STATUS_GET_USER_DOC_WARN]', uErr);
+      }
     }
 
     return NextResponse.json({

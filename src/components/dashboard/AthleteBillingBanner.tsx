@@ -260,34 +260,8 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
       </div>
     );
   } else if (localStatus === "PAID") {
-    // CASO 4: SUSCRIPCIÓN ACTIVA REGULAR
-    bannerElement = (
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs">
-        <div className="flex items-center gap-2 text-emerald-900 font-bold">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <span>Membresía Al Día</span>
-          <span className="text-[11px] text-emerald-700 font-mono font-medium">({formatMoney(configuredPrice, planCurrency)} / mes)</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-emerald-700 font-mono">Día de corte: {billingCycleDay}</span>
-          <button
-            type="button"
-            onClick={() => setIsCardModalOpen(true)}
-            className="text-[11px] text-emerald-800 hover:text-emerald-900 font-bold underline cursor-pointer"
-          >
-            Actualizar Tarjeta
-          </button>
-          <button
-            type="button"
-            disabled={actionLoading}
-            onClick={handleCancelSubscription}
-            className="text-[10px] text-slate-400 hover:text-rose-600 underline cursor-pointer"
-          >
-            Cancelar renovación
-          </button>
-        </div>
-      </div>
-    );
+    // CASO 4: SUSCRIPCIÓN ACTIVA AL DÍA -> UX LIMPIA: Sin banner invasivo en el Dashboard
+    bannerElement = null;
   } else {
     // CASO 5: ATLETA SIN SUSCRIPCIÓN O PENDIENTE
     bannerElement = (

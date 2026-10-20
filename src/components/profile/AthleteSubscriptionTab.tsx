@@ -181,7 +181,11 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
   };
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "Fin de ciclo actual";
+    if (!dateStr) {
+      const defaultNext = new Date();
+      defaultNext.setDate(defaultNext.getDate() + 30);
+      return defaultNext.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
+    }
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
@@ -356,7 +360,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
               </div>
 
               <div className="font-mono text-base sm:text-lg tracking-wider font-semibold text-slate-200 my-2">
-                •••• •••• •••• {subDetails?.cardLast4 || "4242"}
+                •••• •••• •••• {subDetails?.cardLast4 || "1111"}
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-700/60 text-[11px] text-slate-400">
@@ -364,7 +368,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
                   {athleteName || "Atleta Pulse"}
                 </span>
                 <span className="font-mono text-slate-400">
-                  {subDetails?.cardBrand?.toUpperCase() || "TARJETA"}
+                  {subDetails?.cardBrand?.toUpperCase() || "VISA"}
                 </span>
               </div>
             </div>

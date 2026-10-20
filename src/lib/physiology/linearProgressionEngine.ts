@@ -271,13 +271,19 @@ export function generateLinearRunningWorkout(params: LinearWorkoutParams): Linea
       `- 10m ${isPower ? "60% CP" : "65% Pace"}`,
     ].join("\n");
 
+    const peakNote = isPower
+      ? "Potencia Objetivo Maratón"
+      : stagedRacePaceSec
+      ? `Ritmo Objetivo (${formatPaceSecToStr(stagedRacePaceSec)})`
+      : "Ritmo Objetivo Maratón";
+
     return {
-      name: "Especificidad Peak Canova: Bloques Extensos a Ritmo de Competición (3x 3000mtr)",
+      name: `Especificidad Peak Canova: Bloques Extensos a Ritmo de Competición (3x 3000mtr)${stagedRacePaceSec ? ` @ ${formatPaceSecToStr(stagedRacePaceSec)}` : ""}`,
       workoutDoc: doc,
       durationMinutes: 72,
       tss: 88,
-      powerTarget: fmtTarget(93, 93, isPower ? "Potencia Objetivo Maratón" : "Ritmo Objetivo Maratón"),
-      justification: "Bloque cumbre de Renato Canova: economía específica a ritmo de carrera para calibrar el consumo de glucógeno.",
+      powerTarget: fmtTarget(93, 93, peakNote),
+      justification: `Bloque cumbre de Renato Canova: economía específica a ritmo de carrera${stagedRacePaceSec ? ` (${formatPaceSecToStr(stagedRacePaceSec)})` : ""} para calibrar el consumo de glucógeno y la eficiencia neuromuscular.`,
     };
   }
 

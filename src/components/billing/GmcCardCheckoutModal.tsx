@@ -1,8 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, ShieldCheck, Lock, ExternalLink, Loader2, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { X, Lock, ExternalLink, Loader2, AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import {
+  OpenpayByBbvaLogo,
+  PciDssCertifiedBadge,
+  VisaLogo,
+  MastercardLogo,
+  AmexLogo,
+  PseLogo,
+} from "./PaymentLogos";
 
 interface GmcCardCheckoutModalProps {
   isOpen: boolean;
@@ -64,96 +72,143 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 text-white space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-8 text-slate-900 space-y-6 max-h-[95vh] overflow-y-auto">
         {/* Botón Cerrar */}
         <button
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+          aria-label="Cerrar modal"
         >
           <X className="h-5 w-5" />
         </button>
 
-        {/* Encabezado con Insignia de Seguridad Bancaria */}
-        <div className="text-center space-y-2 pt-1">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
-            <ShieldCheck className="h-6 w-6 text-emerald-400" />
+        {/* =========================================================
+            ENCABEZADO CON LOGOS OFICIALES (OPENPAY BBVA + PCI DSS)
+           ========================================================= */}
+        <div className="text-center space-y-3 pt-1">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <OpenpayByBbvaLogo />
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <PciDssCertifiedBadge />
           </div>
-          <h2 className="text-xl font-black text-white tracking-tight">
-            Checkout Seguro Openpay
-          </h2>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto">
-            Pasarela bancaria oficial de BBVA Colombia • Cumplimiento PCI-DSS SAQ-A
+
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black text-slate-950 tracking-tight">
+              Checkout Seguro Openpay
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Pasarela de pagos oficial de <strong>BBVA Colombia</strong> • Cumplimiento PCI-DSS SAQ-A
+            </p>
+          </div>
+        </div>
+
+        {/* =========================================================
+            RESUMEN DEL PLAN CON ALTO CONTRASTE (BLANCO / SLATE)
+           ========================================================= */}
+        <div className="rounded-2xl bg-slate-50 border border-slate-200/90 p-4 sm:p-5 space-y-3.5">
+          <div className="flex items-baseline justify-between gap-2 border-b border-slate-200/80 pb-3">
+            <div>
+              <span className="font-extrabold text-slate-950 text-base block">
+                {planName}
+              </span>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Suscripción mensual de rendimiento atlético
+              </span>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-mono font-black text-emerald-700 text-xl tracking-tight block">
+                {formatMoney(planAmountCop, "COP")}
+              </span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase">
+                Facturación mensual
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2 text-xs text-slate-700">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={2.5} />
+              <span className="font-medium text-slate-800">
+                Acceso total a <strong>IA Fisiológica, Métricas Stryd y Head Coach 24/7</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={2.5} />
+              <span className="font-medium text-slate-800">
+                Sincronización en vivo bidireccional con <strong>Intervals.icu, Garmin y Coros</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" strokeWidth={2.5} />
+              <span className="font-medium text-slate-800">
+                Sin contratos ni permanencia • Cancela con 1 clic desde tu perfil
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================================================
+            GARANTÍA DE SEGURIDAD PCI (EXENCIÓN TOTAL EN PULSE)
+           ========================================================= */}
+        <div className="rounded-2xl bg-blue-50/80 border border-blue-200/90 p-3.5 flex items-start gap-3 text-xs text-blue-950">
+          <div className="p-1.5 rounded-xl bg-blue-100 text-blue-700 shrink-0 mt-0.5">
+            <Lock className="h-4 w-4" />
+          </div>
+          <p className="text-[11px] leading-relaxed text-blue-900 font-medium">
+            Al presionar el botón serás transferido a los servidores bancarios de <strong>Openpay (BBVA)</strong>. Tus datos de tarjeta <strong>jamás tocan los servidores de Pulse</strong>, garantizando autenticación bancaria <strong>3D Secure</strong> y cero riesgo de clonación.
           </p>
         </div>
 
-        {/* Resumen del Plan */}
-        <div className="rounded-2xl bg-slate-950/70 border border-slate-800/80 p-4 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-300">{planName}</span>
-            <span className="font-mono font-bold text-white text-sm">
-              {formatMoney(planAmountCop, "COP")} / mes
-            </span>
-          </div>
-
-          <div className="space-y-1.5 text-[11px] text-slate-400 border-t border-slate-800/60 pt-2.5">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <span>Acceso total ilimitado a IA Fisiológica y Head Coach</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <span>Sincronización en vivo con Intervals.icu y Garmin</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <span>Cancela cuando quieras con 1 clic desde tu panel</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Garantía de Seguridad PCI */}
-        <div className="rounded-xl bg-blue-950/30 border border-blue-800/40 p-3 flex items-start gap-2.5 text-xs text-blue-200">
-          <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] leading-relaxed text-blue-300">
-            Serás transferido al portal bancario de <strong>Openpay (BBVA)</strong>. Tus datos financieros jamás tocan los servidores de Pulse, garantizando 100% de protección y autenticación 3D Secure.
-          </p>
-        </div>
-
-        {/* Mensaje de Error si ocurre */}
+        {/* Mensaje de Error Amigable si ocurre */}
         {errorMessage && (
-          <div className="rounded-xl bg-rose-950/40 border border-rose-800/60 p-3 flex items-start gap-2 text-xs text-rose-300">
-            <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
-            <p className="text-[11px]">{errorMessage}</p>
+          <div className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 flex items-start gap-2.5 text-xs text-rose-900">
+            <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+            <p className="text-[11px] font-medium leading-relaxed">{errorMessage}</p>
           </div>
         )}
 
-        {/* Botón de Acción Principal: Redirección a Openpay BBVA */}
-        <div className="space-y-2 pt-1">
+        {/* =========================================================
+            BOTÓN PRINCIPAL DE REDIRECCIÓN A OPENPAY BBVA
+           ========================================================= */}
+        <div className="space-y-3 pt-1">
           <button
             type="button"
             onClick={handleProceedToOpenpay}
             disabled={loading}
-            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-emerald-950 transition cursor-pointer flex items-center justify-center gap-2 group active:scale-[0.99]"
+            className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-black text-base shadow-lg shadow-emerald-700/25 transition cursor-pointer flex items-center justify-center gap-2.5 group active:scale-[0.99]"
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
                 <span>Conectando con Openpay BBVA...</span>
               </>
             ) : (
               <>
                 <span>Continuar a Openpay (BBVA)</span>
-                <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
               </>
             )}
           </button>
 
-          <span className="block text-center text-[10px] text-slate-500 font-mono">
-            Acepta Tarjetas Visa, Mastercard, American Express y PSE
-          </span>
+          {/* Insignias Oficiales de Medios de Pago */}
+          <div className="flex flex-col items-center gap-1.5 text-center">
+            <span className="text-[10px] text-slate-500 font-medium">
+              Acepta Tarjetas Débito, Crédito y Pagos en Línea
+            </span>
+            <div className="flex items-center justify-center gap-2 flex-wrap pt-0.5">
+              <div className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 flex items-center">
+                <VisaLogo className="h-3 w-8" />
+              </div>
+              <div className="px-2 py-1 rounded-md bg-slate-100 border border-slate-200 flex items-center">
+                <MastercardLogo className="h-4 w-6" />
+              </div>
+              <AmexLogo className="h-5" />
+              <PseLogo className="h-5" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

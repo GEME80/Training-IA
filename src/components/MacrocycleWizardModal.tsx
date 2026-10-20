@@ -80,6 +80,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
   const [raceDistance, setRaceDistance] = useState<any>("42k");
   const [raceDate, setRaceDate] = useState<string>(defaultSuggestedRaceDate);
   const [raceGoal, setRaceGoal] = useState<string>("");
+  const [customPrompt, setCustomPrompt] = useState<string>("");
 
   const [athleteMoment, setAthleteMoment] = useState<any>("maintenance");
   const [momentWeeks, setMomentWeeks] = useState<number>(8);
@@ -111,8 +112,9 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
       athleteMoment,
       bridgeStrategy,
       weeksCount: hasRace ? undefined : momentWeeks,
+      customPrompt: customPrompt.trim() || undefined,
     };
-  }, [hasRace, raceName, raceDistance, raceDate, raceGoal, athleteMoment, bridgeStrategy, momentWeeks]);
+  }, [hasRace, raceName, raceDistance, raceDate, raceGoal, athleteMoment, bridgeStrategy, momentWeeks, customPrompt]);
 
   // Blueprint base generado
   const currentBlueprint: MacrocycleBlueprint = useMemo(() => {
@@ -358,6 +360,17 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                       onChange={(e) => setRaceGoal(e.target.value)}
                       placeholder="Ej. Sub-3h00m, 280W Stryd, Completar"
                       className="mt-1 w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-300">Directrices Específicas para el Head Coach IA (Opcional)</label>
+                    <textarea
+                      rows={2}
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      placeholder="Ej: Tiradas largas los domingos, series de umbral los martes, no puedo los jueves..."
+                      className="mt-1 w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-xs text-white focus:border-amber-400 focus:outline-none resize-none font-mono"
                     />
                   </div>
                 </div>

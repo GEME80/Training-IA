@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Trophy, Flag, Plus, Check, ArrowRight, ShieldCheck, Layers, X } from "lucide-react";
+import { Trophy, Flag, Plus, Check, ArrowRight, ShieldCheck, Layers, X, Sparkles } from "lucide-react";
 import { TargetRace } from "@/lib/physiology/macrocycle";
+import { parseGoalTimeToMinutes, formatGoalMinutes } from "@/lib/physiology/goalFeasibilityEngine";
 
 interface SeasonWizardStep1TargetProps {
   primaryRace: TargetRace | null;
@@ -174,10 +175,7 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                     {targetRaces.map(r => <option key={r.id} value={r.id}>{r.name} ({r.distance})</option>)}
                   </select>
                 )}
-                <button type="button" onClick={() => setIsCreatingRace(true)}
-                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer">
-                  + Otra carrera
-                </button>
+                <button type="button" onClick={() => setIsCreatingRace(true)} className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer">+ Otra carrera</button>
               </div>
             </div>
           ) : !isCreatingRace ? (
@@ -224,8 +222,15 @@ export const SeasonWizardStep1Target: React.FC<SeasonWizardStep1TargetProps> = (
                   <input type="date" required value={inlineDate} onChange={e => setInlineDate(e.target.value)} className="w-full rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-mono font-bold text-slate-500 uppercase block">Objetivo / Marca</label>
-                  <input type="text" value={inlineGoal} onChange={e => setInlineGoal(e.target.value)} placeholder="Ej: Sub 3h30" className="w-full rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white" />
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9px] font-mono font-bold text-slate-500 uppercase block">Objetivo / Marca</label>
+                    {inlineGoal.trim() && parseGoalTimeToMinutes(inlineGoal) ? (
+                      <span className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        ✓ {formatGoalMinutes(parseGoalTimeToMinutes(inlineGoal)!)}
+                      </span>
+                    ) : null}
+                  </div>
+                  <input type="text" value={inlineGoal} onChange={e => setInlineGoal(e.target.value)} placeholder="Ej: Sub 3h30, 4h50, 3h03" className="w-full rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div className="space-y-1.5">

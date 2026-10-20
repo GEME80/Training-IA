@@ -146,6 +146,7 @@ export async function generateMacrocycleAiService(body: MacrocycleAiRequestBody)
       geminiApiKey: customGeminiKey,
       selectedModel,
       historicalProfile,
+      customPrompt: wizardConfig?.customPrompt || undefined,
     }
   );
 

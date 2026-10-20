@@ -40,6 +40,17 @@ export interface GoalFeasibilityResult {
   targetPowerPctCp?: number;
   coachAdvice: string;
   distanceKm: number;
+  cappedByProtection?: boolean;
+  maxSafeGoalMinutes?: number;
+  maxSafeGoalStr?: string;
+  sportCategory?: "Running" | "Triathlon" | "Cycling";
+  multisportBreakdown?: {
+    swimMinutes: number;
+    bikeMinutes: number;
+    runMinutes: number;
+    bikeWattsEstimate?: number;
+    runPaceStr?: string;
+  };
 }
 
 /**
@@ -106,42 +117,107 @@ export function predictCurrentFitnessTimeMinutes(
 
 /**
  * Motor central de evaluación de factibilidad y diseño de escalera adaptativa (Stepping Stones).
+ * Incluye soporte multideporte (Triatlón 70.3 / 140.6) y tope de mejora seguro del 10%.
  */
 export function evaluateGoalFeasibility(
   goalCandidate: string | number | undefined,
   distanceType: string | undefined,
   metrics: AthleteBiometricsInput
 ): GoalFeasibilityResult {
-  const distanceKm = resolveDistanceKm(distanceType);
+  const normDist = (distanceType || "").toLowerCase();
+  const isTri703 = normDist.includes("70_3") || normDist.includes("70.3") || normDist.includes("703");
+  const isTri1406 = normDist.includes("140_6") || normDist.includes("140.6") || normDist.includes("1406") || normDist.includes("ironman");
+  const isTriathlon = isTri703 || isTri1406 || normDist.includes("triathlon");
+  const isCycling = normDist.includes("cycling") || normDist.includes("fondo");
+
+  const runDistanceKm = isTri703 ? 21.097 : isTri1406 ? 42.195 : resolveDistanceKm(distanceType);
+  const totalEventKm = isTri703 ? 113 : isTri1406 ? 226 : isCycling ? (metrics.ctl ? 120 : 100) : runDistanceKm;
+
   const parsedTargetMins = typeof goalCandidate === "number"
     ? goalCandidate
     : parseGoalTimeToMinutes(goalCandidate) || null;
 
-  const predictedMins = predictCurrentFitnessTimeMinutes(metrics, distanceKm);
+  // Predicción global y específica de carrera
+  let predictedMins: number;
+  let predictedRunMins: number;
+  let multisportBreakdown: GoalFeasibilityResult["multisportBreakdown"] | undefined;
+
+  if (isTri703) {
+    const runPred = predictCurrentFitnessTimeMinutes(metrics, 21.097);
+    const bikeWatts = metrics.bikeFtp ? Math.round(metrics.bikeFtp * 0.80) : undefined;
+    const bikePred = metrics.bikeFtp && metrics.weightKg
+      ? Math.round((90 / Math.max(26, Math.min(42, 16 + (metrics.bikeFtp / metrics.weightKg) * 5.8))) * 60)
+      : 155;
+    const swimPred = 34; // Ritmo típico 1:47/100m
+    const t1t2 = 5;
+    predictedMins = swimPred + bikePred + runPred + t1t2;
+    predictedRunMins = runPred;
+    multisportBreakdown = {
+      swimMinutes: swimPred,
+      bikeMinutes: bikePred,
+      runMinutes: runPred,
+      bikeWattsEstimate: bikeWatts,
+      runPaceStr: formatPaceSecToStr((runPred * 60) / 21.097),
+    };
+  } else if (isTri1406) {
+    const runPred = predictCurrentFitnessTimeMinutes(metrics, 42.195);
+    const bikeWatts = metrics.bikeFtp ? Math.round(metrics.bikeFtp * 0.70) : undefined;
+    const bikePred = metrics.bikeFtp && metrics.weightKg
+      ? Math.round((180 / Math.max(25, Math.min(38, 15 + (metrics.bikeFtp / metrics.weightKg) * 5.2))) * 60)
+      : 330;
+    const swimPred = 75;
+    const t1t2 = 12;
+    predictedMins = swimPred + bikePred + runPred + t1t2;
+    predictedRunMins = runPred;
+    multisportBreakdown = {
+      swimMinutes: swimPred,
+      bikeMinutes: bikePred,
+      runMinutes: runPred,
+      bikeWattsEstimate: bikeWatts,
+      runPaceStr: formatPaceSecToStr((runPred * 60) / 42.195),
+    };
+  } else {
+    predictedMins = predictCurrentFitnessTimeMinutes(metrics, runDistanceKm);
+    predictedRunMins = predictedMins;
+  }
+
   const targetMins = parsedTargetMins && parsedTargetMins > 0 ? parsedTargetMins : predictedMins;
 
+  // Cálculo de minutos de carrera pedestre asignados a la meta
+  let targetRunMins = targetMins;
+  if (isTri703) {
+    targetRunMins = Math.round(targetMins * 0.355);
+  } else if (isTri1406) {
+    targetRunMins = Math.round(targetMins * 0.380);
+  }
+
   // Cálculo del Gap Fisiológico
-  // delta > 0 significa que la meta es más rápida que el fitness actual
   const gapPercentage = ((predictedMins - targetMins) / predictedMins) * 100;
 
+  // Clasificación del gap (Tope de seguridad fijado al 10%)
   let status: GoalFeasibilityStatus = "REALISTIC";
-  if (gapPercentage > 15) {
+  if (gapPercentage > 10) {
     status = "HIGHLY_ASPIRATIONAL";
   } else if (gapPercentage > 5) {
     status = "CHALLENGING";
   }
 
-  const targetRacePaceSec = (targetMins * 60) / distanceKm;
-  const currentSafePaceSec = (predictedMins * 60) / distanceKm;
+  const targetRacePaceSec = (targetRunMins * 60) / runDistanceKm;
+  const currentSafePaceSec = (predictedRunMins * 60) / runDistanceKm;
 
   // Staged Pace (Ritmo de Trabajo del Mesociclo Actual)
+  // Tope estricto de mejora fisiológica del 10% máximo por macrociclo para prevención de lesiones
   let stagedRacePaceSec = targetRacePaceSec;
+  let cappedByProtection = false;
+  const maxSafeGoalMins = Math.round(predictedMins * 0.90);
+
   if (status === "HIGHLY_ASPIRATIONAL") {
-    // Si la meta es hiper-ambiciosa (ej. 2h30 cuando el cuerpo está para 3h30),
-    // limitamos la progresión máxima del macrociclo al 8% de mejora para evitar desgarros
-    stagedRacePaceSec = Math.round(currentSafePaceSec * 0.92);
+    // Si la meta supera el 10% de brecha (ej. 2h10 cuando el cuerpo está para 3h10 = gap +31.6%),
+    // aplicamos el tope protector de seguridad del 10% de mejora máxima
+    stagedRacePaceSec = Math.round(currentSafePaceSec * 0.90);
+    cappedByProtection = true;
   } else if (status === "CHALLENGING") {
-    // Si es un reto exigente (5-15%), trabajamos en un ritmo puente (60% del gap cerrado)
+    // Si es un reto exigente (5-10%), trabajamos en un ritmo puente (65% del gap cerrado)
     stagedRacePaceSec = Math.round(currentSafePaceSec - (currentSafePaceSec - targetRacePaceSec) * 0.65);
   }
 
@@ -149,9 +225,9 @@ export function evaluateGoalFeasibility(
   let targetPowerWatts: number | undefined;
   let targetPowerPctCp: number | undefined;
   if (metrics.runFtp && metrics.runFtp > 0) {
-    const isMarathon = distanceKm >= 40;
-    const isHalf = distanceKm >= 20 && distanceKm < 40;
-    const is10k = distanceKm >= 9 && distanceKm < 20;
+    const isMarathon = runDistanceKm >= 40;
+    const isHalf = runDistanceKm >= 20 && runDistanceKm < 40;
+    const is10k = runDistanceKm >= 9 && runDistanceKm < 20;
 
     targetPowerPctCp = isMarathon ? 89 : isHalf ? 95 : is10k ? 100 : 105;
     targetPowerWatts = Math.round(metrics.runFtp * (targetPowerPctCp / 100));
@@ -168,7 +244,7 @@ export function evaluateGoalFeasibility(
   } else if (status === "CHALLENGING") {
     coachAdvice = `Meta desafiante pero viable (+${gapPercentage.toFixed(1)}% sobre tu fitness de partida ${predStr}). Aplicaremos una escalera bietápica: construiremos base a ${stagedPaceStr} y afinaremos con bloques específicos en las semanas pico.`;
   } else {
-    coachAdvice = `Tu aspiración de ${targetStr} es excelente como visión a largo plazo. Sin embargo, tu fitness actual predice ~${predStr}. Para evitar lesiones miofibrilares y sobreentrenamiento, este macrociclo construirá la plataforma para romper ${formatGoalMinutes(Math.round((stagedRacePaceSec * distanceKm) / 60))} con ritmo puente seguro (${stagedPaceStr}), evaluando tu progreso en los tests de control.`;
+    coachAdvice = `Aviso Fisiológico: Tu fitness actual predice ~${predStr}. Buscar un salto directo a ${targetStr} (brecha +${gapPercentage.toFixed(1)}%) eleva drásticamente el riesgo de sobreentrenamiento o lesión. Para proteger tu salud, este macrociclo graduará tus entrenamientos con el tope de mejora seguro del 10% (~${formatGoalMinutes(maxSafeGoalMins)} con ritmo puente ${stagedPaceStr}), preparándote para seguir progresando en futuros ciclos.`;
   }
 
   return {
@@ -185,6 +261,11 @@ export function evaluateGoalFeasibility(
     targetPowerWatts,
     targetPowerPctCp,
     coachAdvice,
-    distanceKm,
+    distanceKm: totalEventKm,
+    cappedByProtection,
+    maxSafeGoalMinutes: maxSafeGoalMins,
+    maxSafeGoalStr: formatGoalMinutes(maxSafeGoalMins),
+    sportCategory: isTriathlon ? "Triathlon" : isCycling ? "Cycling" : "Running",
+    multisportBreakdown,
   };
 }

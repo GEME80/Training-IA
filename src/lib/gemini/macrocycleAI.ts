@@ -140,8 +140,9 @@ export class MacrocycleAIEngine {
     }
 
     try {
+      const effectiveDirective = options?.customPrompt || (config as any)?.customPrompt;
       const prompt = buildMacrocycleArchitectSystemPrompt(
-        options?.customPrompt || DEFAULT_PROMPTS.macrocyclePrompt,
+        DEFAULT_PROMPTS.macrocyclePrompt,
         {
           profile,
           physioStatus,
@@ -149,7 +150,7 @@ export class MacrocycleAIEngine {
             ...config,
             weeksCount: baseBlueprint.weeks.length,
           },
-          customPromptDirective: options?.customPrompt,
+          customPromptDirective: effectiveDirective,
           historicalProfile: options?.historicalProfile,
           goalFeasibility: baseBlueprint.goalFeasibility,
         }

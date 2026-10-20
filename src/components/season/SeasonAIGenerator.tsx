@@ -160,7 +160,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
 
       const bp = generateCustomMacrocycleBlueprint({
         distanceType: distType, startDate, weeksCount,
-        customGoal: `${planTitle}. Enfoque: ${trainingApproach}.`,
+        customGoal: `${planTitle}. Enfoque: ${trainingApproach}.${customPromptText ? ` Directrices: ${customPromptText}` : ""}`,
         periodization: periodization as any, primaryRace: primaryRace || undefined,
         athleteMetrics: { ctl, runFtp, bikeFtp, lthr, weightKg, heightCm, gender, restingHR, maxHR, runningTrainingMode: runningTrainingMode || undefined, weeklyAvailability: localWeeklyAvailability, historicalMetrics },
       });

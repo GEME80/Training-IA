@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Rocket, Bot, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Sparkles, Rocket, Bot, CheckCircle2, ArrowLeft, ShieldAlert } from "lucide-react";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
+import { formatGoalMinutes } from "@/lib/physiology/goalFeasibilityEngine";
 import { SeasonCurveChart } from "./SeasonCurveChart";
 import { MacrocyclePhaseBreakdown } from "./MacrocyclePhaseBreakdown";
 import { SeasonMethodologyHighlights } from "./SeasonMethodologyHighlights";
@@ -98,6 +99,62 @@ export const SeasonWizardStep4Preview: React.FC<SeasonWizardStep4PreviewProps> =
           </div>
         </div>
       </div>
+
+      {/* 1.5. TARJETA DE FACTIBILIDAD Y TECHO FISIOLÓGICO */}
+      {blueprint.goalFeasibility && (
+        <div className={`rounded-2xl border p-4 space-y-2.5 transition ${
+          blueprint.goalFeasibility.status === "HIGHLY_ASPIRATIONAL"
+            ? "border-amber-400/80 bg-amber-50/50 dark:bg-amber-950/20"
+            : blueprint.goalFeasibility.status === "CHALLENGING"
+            ? "border-sky-400/80 bg-sky-50/50 dark:bg-sky-950/20"
+            : "border-emerald-400/80 bg-emerald-50/50 dark:bg-emerald-950/20"
+        }`}>
+          <div className="flex flex-wrap items-center justify-between gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono ${
+              blueprint.goalFeasibility.status === "HIGHLY_ASPIRATIONAL"
+                ? "bg-amber-500 text-white"
+                : blueprint.goalFeasibility.status === "CHALLENGING"
+                ? "bg-sky-600 text-white"
+                : "bg-emerald-600 text-white"
+            }`}>
+              <ShieldAlert className="h-3 w-3" />
+              {blueprint.goalFeasibility.status === "HIGHLY_ASPIRATIONAL"
+                ? "AVISO FISIOLÓGICO · TOPE DE PROTECCIÓN (10%)"
+                : blueprint.goalFeasibility.status === "CHALLENGING"
+                ? "META DESAFIANTE · ESCALERA ADAPTATIVA"
+                : "META ALINEADA CON TU CONDICIÓN"}
+            </span>
+            <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300">
+              Brecha: {blueprint.goalFeasibility.gapPercentage > 0 ? `+${blueprint.goalFeasibility.gapPercentage}%` : `${blueprint.goalFeasibility.gapPercentage}%`}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-center pt-1">
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 block uppercase font-bold">Meta Solicitada</span>
+              <strong className="text-xs font-black text-slate-900 dark:text-white">
+                {formatGoalMinutes(blueprint.goalFeasibility.targetGoalMinutes)} ({blueprint.goalFeasibility.targetRacePaceKmStr})
+              </strong>
+            </div>
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 block uppercase font-bold">Fitness Actual</span>
+              <strong className="text-xs font-black text-slate-700 dark:text-slate-300">
+                ~{formatGoalMinutes(blueprint.goalFeasibility.predictedGoalMinutes)} ({blueprint.goalFeasibility.currentSafePaceKmStr})
+              </strong>
+            </div>
+            <div className="col-span-2 sm:col-span-1 p-2 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800">
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 block uppercase font-bold">Ritmo de Trabajo</span>
+              <strong className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                {blueprint.goalFeasibility.stagedRacePaceKmStr} {blueprint.goalFeasibility.cappedByProtection ? "(Tope 10%)" : ""}
+              </strong>
+            </div>
+          </div>
+
+          <p className="text-[11px] font-mono text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
+            {blueprint.goalFeasibility.coachAdvice}
+          </p>
+        </div>
+      )}
 
       {/* 2. GRÁFICA VISUAL INTERACTIVA DE LA CURVA DE TEMPORADA */}
       <SeasonCurveChart weeks={blueprint.weeks} showPhasesRow={true} />

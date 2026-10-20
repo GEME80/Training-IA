@@ -33,4 +33,22 @@ env:
     value: "1371"
   - variable: INTERVALS_CLIENT_SECRET
     secret: intervals-client-secret
+  - variable: NEXT_PUBLIC_OPENPAY_MERCHANT_ID
+    value: "mtest_placeholder_gmc"
+  - variable: NEXT_PUBLIC_OPENPAY_PUBLIC_KEY
+    value: "pk_test_placeholder_gmc"
+  - variable: NEXT_PUBLIC_OPENPAY_SANDBOX_MODE
+    value: "true"
+  - variable: OPENPAY_MERCHANT_ID
+    value: "mtest_placeholder_gmc"
+  - variable: OPENPAY_PUBLIC_KEY
+    value: "pk_test_placeholder_gmc"
+  - variable: OPENPAY_PRIVATE_KEY
+    value: "sk_test_placeholder_gmc"
+  - variable: OPENPAY_SANDBOX_MODE
+    value: "true"
+  - variable: OPENPAY_WEBHOOK_USER
+    value: "gmc_webhook_user"
+  - variable: OPENPAY_WEBHOOK_PASSWORD
+    value: "gmc_webhook_secret_key"
 

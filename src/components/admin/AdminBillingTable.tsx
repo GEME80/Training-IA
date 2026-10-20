@@ -11,6 +11,7 @@ import {
   Edit3,
   RotateCcw,
   Smartphone,
+  Sparkles,
   X,
 } from "lucide-react";
 import { AdminUserListItem } from "@/lib/db/types";
@@ -209,10 +210,20 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
 
                   {/* Estado del Mes */}
                   <td className="py-3 px-4">
-                    {status === "PAID" ? (
+                    {athlete.isTrialActive ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                        <Sparkles className="h-3 w-3 text-purple-600" />
+                        <span>TRIAL 7 DÍAS</span>
+                      </span>
+                    ) : athlete.paymentMethod === "OPENPAY_CARD" && status === "PAID" ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        <span>PAGADO</span>
+                        <span>OPENPAY AUTO</span>
+                      </span>
+                    ) : status === "PAID" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <span>PAGADO (BRE-B)</span>
                       </span>
                     ) : status === "PENDING_VERIFICATION" ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
@@ -234,8 +245,12 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
 
                   {/* Último Pago / Ref */}
                   <td className="py-3 px-4 text-xs font-mono text-slate-500">
-                    {status === "PENDING_VERIFICATION" && athlete.paymentReference ? (
-                      <div className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block">
+                    {athlete.paymentMethod === "OPENPAY_CARD" ? (
+                      <div className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block text-[11px]">
+                        Openpay Tarjeta BBVA
+                      </div>
+                    ) : status === "PENDING_VERIFICATION" && athlete.paymentReference ? (
+                      <div className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block text-[11px]">
                         Ref: {athlete.paymentReference}
                       </div>
                     ) : athlete.lastPaymentDate ? (

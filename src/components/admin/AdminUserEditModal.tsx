@@ -44,7 +44,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [planCurrency, setPlanCurrency] = useState<"USD" | "COP" | "EUR">("USD");
   const [billingStatus, setBillingStatus] = useState<"PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION">("PENDING");
   const [billingCycleDay, setBillingCycleDay] = useState<number | "">(1);
-  const [paymentMethod, setPaymentMethod] = useState<"TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER">("TRANSFER");
+  const [paymentMethod, setPaymentMethod] = useState<"TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER">("TRANSFER");
   const [primaryGoalRace, setPrimaryGoalRace] = useState<string>("");
   const [primaryGoalDate, setPrimaryGoalDate] = useState<string>("");
 

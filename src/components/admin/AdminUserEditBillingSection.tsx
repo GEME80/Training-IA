@@ -12,8 +12,8 @@ interface AdminUserEditBillingSectionProps {
   setBillingStatus: (v: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION") => void;
   billingCycleDay: number | "";
   setBillingCycleDay: (v: number | "") => void;
-  paymentMethod: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
-  setPaymentMethod: (v: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER") => void;
+  paymentMethod: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
+  setPaymentMethod: (v: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER") => void;
   primaryGoalRace: string;
   setPrimaryGoalRace: (v: string) => void;
   primaryGoalDate: string;
@@ -101,10 +101,11 @@ export const AdminUserEditBillingSection: React.FC<AdminUserEditBillingSectionPr
           <label className="block text-[11px] font-bold text-slate-700 mb-1">Medio de Pago</label>
           <select
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER")}
+            onChange={(e) => setPaymentMethod(e.target.value as "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER")}
             className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
-            <option value="TRANSFER">Transferencia / Bancolombia</option>
+            <option value="OPENPAY_CARD">Openpay BBVA (Tarjeta Automática)</option>
+            <option value="TRANSFER">Transferencia / Bre-B BBVA</option>
             <option value="STRIPE">Stripe / Tarjeta</option>
             <option value="WOMPI">Wompi / PSE</option>
             <option value="CASH">Efectivo</option>

@@ -127,10 +127,11 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
       {/* CONTENIDO DE PESTAÑA 1: RESUMEN ACTUAL Y CALENDARIO */}
       {activeTab === "overview" && (
         <div className="space-y-3 animate-fadeIn">
-          {/* Banner de Membresía & Pagos Bre-B / BBVA */}
+          {/* Banner de Membresía & Pagos (Dual: Tarjeta Openpay 7d Gratis + Bre-B BBVA) */}
           <AthleteBillingBanner
             athleteUid={profile.id}
             athleteEmail={profile.name}
+            athleteName={profile.name}
             billingStatus={profile.billingStatus}
             planPrice={profile.planPrice}
             planCurrency={profile.planCurrency}

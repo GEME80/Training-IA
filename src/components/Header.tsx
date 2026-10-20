@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, LayoutDashboard, Home, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { Shield, LayoutDashboard, Home, LogOut, User as UserIcon, Sparkles, Building2 } from "lucide-react";
 import { PulseLogo } from "./PulseLogo";
 import { useAuth } from "@/context/AuthContext";
 import { isMasterAdminEmail } from "@/lib/env";
@@ -196,6 +196,15 @@ export const Header: React.FC<HeaderProps> = ({
                               <span>Panel Admin</span>
                             </button>
                           )}
+
+                          <a
+                            href="/admin/finsec"
+                            onClick={() => setShowUserMenu(false)}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-emerald-700 hover:bg-emerald-50 font-semibold transition cursor-pointer"
+                          >
+                            <Building2 className="h-4 w-4 text-emerald-600" />
+                            <span>GMC FinSec HQ</span>
+                          </a>
 
                           {onSelectView && (
                             <button

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, RotateCcw, RefreshCw, Calendar, Edit3, Smartphone, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle2, RotateCcw, RefreshCw, Calendar, Edit3, Smartphone, AlertCircle, Clock, Sparkles } from "lucide-react";
 import { AdminUserListItem } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
 
@@ -50,7 +50,17 @@ export const MobileBillingCard: React.FC<MobileBillingCardProps> = ({
       {/* 2. Estado de Suscripción & Último Pago */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
         <div>
-          {status === "PAID" ? (
+          {athlete.isTrialActive ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              <Sparkles className="h-3 w-3 text-purple-600" />
+              <span>TRIAL 7 DÍAS</span>
+            </span>
+          ) : athlete.paymentMethod === "OPENPAY_CARD" && status === "PAID" ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              <span>OPENPAY AUTO</span>
+            </span>
+          ) : status === "PAID" ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               <CheckCircle2 className="h-3 w-3 text-emerald-600" />
               <span>AL DÍA</span>

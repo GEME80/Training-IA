@@ -54,9 +54,13 @@ export interface UserProfileData {
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number;
   lastPaymentDate?: string;
-  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
   paymentReference?: string;
   paymentReportedAt?: string;
+  gmcSubscriptionStatus?: string;
+  gmcCurrentPeriodEnd?: string;
+  gmcTrialEndDate?: string;
+  isTrialActive?: boolean;
   primaryGoalRace?: string;
   primaryGoalDate?: string;
   weeklyAvailability?: WeeklyAvailabilityMap;
@@ -99,9 +103,13 @@ export interface AdminUserListItem {
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingCycleDay?: number;
   lastPaymentDate?: string;
-  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
   paymentReference?: string;
   paymentReportedAt?: string;
+  gmcSubscriptionStatus?: string;
+  gmcCurrentPeriodEnd?: string;
+  gmcTrialEndDate?: string;
+  isTrialActive?: boolean;
   primaryGoalRace?: string;
   primaryGoalDate?: string;
   createdAt: string;
@@ -117,6 +125,8 @@ export interface SubscriptionPlanConfig {
   currency: "USD" | "COP" | "EUR";
   billingPeriod: "monthly";
   billingCycleDaysText: string;
+  trialDays?: number; // Días de prueba gratis configurables (por defecto 7 en Pulse Pro)
+  dunningGraceHours?: number; // Horas de gracia para reintentos dunning (por defecto 72)
   features: string[];
   // Bre-B (Interoperable Instant Payments) & BBVA Colombia
   breBEnabled: boolean;
@@ -140,12 +150,14 @@ export interface SubscriptionPlanConfig {
 }
 
 export const DEFAULT_SUBSCRIPTION_PLAN: SubscriptionPlanConfig = {
-  id: "plan-elite-pro",
-  name: "Plan Élite Pro SGEA",
+  id: "plan-pulse-pro",
+  name: "Plan Atleta Pro",
   tagline: "Periodización Dinámica, Fisiología Stryd y Head Coach Digital",
   description: "Acceso total a la plataforma de entrenamiento inteligente adaptativo con IA, prescripción en vatios/ritmo y analítica fisiológica de élite.",
-  price: 80,
-  currency: "USD",
+  price: 99000,
+  currency: "COP",
+  trialDays: 7,
+  dunningGraceHours: 72,
   billingPeriod: "monthly",
   billingCycleDaysText: "Días 1 al 5 de cada mes",
   features: [

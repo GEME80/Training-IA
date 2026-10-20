@@ -78,8 +78,8 @@ export const AdminMobileBottomNav: React.FC<AdminMobileBottomNavProps> = ({
                     <CreditCard className="h-4 w-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold">Plan Único & Bre-B</h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Tarifas, datos bancarios BBVA y QR</p>
+                    <h4 className="text-xs font-bold">Plan & Suscripciones</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Tarifas, Trial de 7 días y Openpay</p>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-400" />

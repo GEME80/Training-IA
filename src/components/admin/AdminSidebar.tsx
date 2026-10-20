@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   CreditCard,
   ArrowLeft,
+  Building2,
+  ArrowUpRight,
 } from "lucide-react";
 import { AdminSidebarTab, LiveConnectionsData } from "./types";
 import { AdminStats } from "@/lib/db/types";
@@ -71,6 +73,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               <span>← Modo Atleta</span>
             </button>
           )}
+
+          {/* Botón de acceso directo a GMC FinSec Headquarters */}
+          <a
+            href="/admin/finsec"
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20 cursor-pointer active:scale-98"
+            title="Consola Ejecutiva de Pagos Multi-App"
+          >
+            <Building2 className="h-4 w-4" />
+            <span>GMC FinSec HQ</span>
+            <ArrowUpRight className="h-3.5 w-3.5 opacity-80" />
+          </a>
         </div>
 
         {/* Menú de Navegación Estructurado por Categorías */}
@@ -135,7 +148,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             >
               <div className="flex items-center space-x-2.5">
                 <CreditCard className={`h-4 w-4 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-500"}`} />
-                <span>Plan Único & Bre-B</span>
+                <span>Plan & Suscripciones</span>
               </div>
               <ChevronRight className={`h-3.5 w-3.5 ${activeTab === "plans" ? "text-emerald-400" : "text-slate-400"}`} />
             </button>

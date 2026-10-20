@@ -7,6 +7,7 @@ import { LandingHome } from "@/components/LandingHome";
 import { AthleteDashboard } from "@/components/AthleteDashboard";
 import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
+import { GmcPaywallLockView } from "@/components/billing/GmcPaywallLockView";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 import { AdminImpersonationBanner } from "@/components/admin/AdminImpersonationBanner";
@@ -46,6 +47,12 @@ export default function HomePage() {
   useEffect(() => {
     purgeLegacyGlobalStorage();
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "admin") {
+        setCurrentView("admin");
+      }
+    }
   }, []);
 
   // 1. SSR / Carga Inicial Segura (Evita Hydration Mismatch #418)
@@ -66,6 +73,30 @@ export default function HomePage() {
   // 3. Si el usuario está pendiente de aprobación -> Redirección a espera de aprobación
   if (user && isPending) {
     return <RestrictedAccessView status="pending" />;
+  }
+
+  // 3.5. Si el atleta no es admin y su membresía está vencida o bloqueada -> Paywall Bloqueante ("Efecto Netflix")
+  const isBillingBlocked =
+    user &&
+    !isAdmin &&
+    (userProfile?.billingStatus === "OVERDUE" ||
+      userProfile?.gmcSubscriptionStatus === "PAST_DUE_LOCKED" ||
+      userProfile?.gmcSubscriptionStatus === "CANCELLED_LOCKED" ||
+      userProfile?.gmcSubscriptionStatus === "SUSPENDED_FRAUD");
+
+  if (isBillingBlocked) {
+    return (
+      <GmcPaywallLockView
+        reason={
+          userProfile?.gmcSubscriptionStatus === "CANCELLED_LOCKED"
+            ? "Tu suscripción ha finalizado tras la cancelación. Reactívala cuando quieras continuar tu plan."
+            : userProfile?.gmcSubscriptionStatus === "SUSPENDED_FRAUD"
+            ? "Tu cuenta ha sido congelada preventivamente por una alerta bancaria. Contacta a soporte."
+            : "Tu periodo de membresía o tus 7 días de prueba han finalizado. Elige tu método de pago para continuar entrenando."
+        }
+        onRefresh={refreshProfile}
+      />
+    );
   }
 
   // 4. Si el usuario no está autenticado -> Mostrar Landing Page pública con LandingNavbar integrado y AuthModal

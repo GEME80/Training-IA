@@ -38,6 +38,7 @@ export default function HomePage() {
   const [isGeminiConnected, setIsGeminiConnected] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
+  const [paymentSuccessNotice, setPaymentSuccessNotice] = useState<string | null>(null);
 
   const handleOpenAuthModal = (tab: "login" | "register" = "login") => {
     setAuthModalTab(tab);
@@ -52,8 +53,22 @@ export default function HomePage() {
       if (params.get("view") === "admin") {
         setCurrentView("admin");
       }
+      if (params.get("payment") === "complete") {
+        setPaymentSuccessNotice("¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.");
+        const orderId = params.get("order_id");
+        const subId = userProfile?.uid || user?.uid;
+        if (subId) {
+          fetch("/api/billing/openpay/confirm-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subscriberId: subId, orderId }),
+          })
+            .then(() => refreshProfile())
+            .catch(() => {});
+        }
+      }
     }
-  }, []);
+  }, [user, userProfile]);
 
   // 1. SSR / Carga Inicial Segura (Evita Hydration Mismatch #418)
   if (!mounted || authLoading) {
@@ -186,6 +201,21 @@ export default function HomePage() {
       ) : (
         /* VISTA 3: DASHBOARD DEL ATLETA UNIFICADO (Sidebar Continuo de borde a borde) */
         <div className="flex flex-col min-h-screen">
+          {paymentSuccessNotice && (
+            <div className="bg-emerald-600 text-white px-4 py-3 text-xs sm:text-sm font-bold flex items-center justify-between shadow-md z-30">
+              <div className="flex items-center gap-2 max-w-5xl mx-auto">
+                <span className="text-base">🎉</span>
+                <span>{paymentSuccessNotice}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentSuccessNotice(null)}
+                className="text-white hover:text-emerald-200 font-bold px-2 py-1 rounded cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           {previewAthlete && (
             <AdminImpersonationBanner
               athlete={previewAthlete}

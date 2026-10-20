@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const forwardedHost = rawHost && !rawHost.includes('0.0.0.0') ? rawHost : 'pulseendurance.co';
     const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
-    const redirectUrl = `${baseUrl}/dashboard?payment=complete`;
+    const redirectUrl = `${baseUrl}/?payment=complete`;
 
     // 3. Invocar al GMC Billing Engine para crear la orden y la sesión hospedada en Openpay BBVA
     const engine = new GmcBillingEngine();

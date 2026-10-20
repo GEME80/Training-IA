@@ -26,6 +26,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: "/dashboard",
+        destination: "/",
+      },
+      {
         source: "/__/auth/:path*",
         destination: "https://training-ia-8f67f.firebaseapp.com/__/auth/:path*",
       },

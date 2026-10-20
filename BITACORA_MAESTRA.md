@@ -10331,3 +10331,41 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
   * Caso 2 (Maratón 3h10 -> 3h03): Brecha 8%, aceptada como viable sin tope forzado (4:28/km) ✅.
   * Caso 3 (Triatlón 70.3 4h50): Desglose multideporte 113 km (Swim 34m, Bike 156m @ 184W, Run 97m @ 4:36/km) validado exitosamente ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 181 ✅.
+
+---
+
+## 182. Renovación Táctica de 'Intercambiar Ejercicio' en Head Coach: Selector Hoy/Mañana y Opciones Fisiológicas Contextuales
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Renovar la experiencia de usuario y las directrices fisiológicas del submenú de reagendamiento táctico en Head Coach. Se simplifican las etiquetas a "Intercambiar ejercicio" y "Poco tiempo", se habilita la planificación táctica del día activo y del día siguiente con el selector [ Hoy ] / [ Mañana ], y se ofrecen alternativas de sustitución cruzada precisas (Invertir con el día adyacente, Rodillo Z2 sin impacto articular, Carrera Z2 suave, Fuerza & Core, Descanso Pasivo o Activación) respetando la carga semanal y previniendo bugs de evaluación de ceros.
+
+### 182.1. Cambios Implementados
+1. **Submenú Táctico Reorganizado ([`src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx`](src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx)):**
+   - Actualizadas las etiquetas de los botones principales a `"Intercambiar ejercicio"` y `"Poco tiempo"`.
+   - Unificada la barra superior entre los submodos `swap` y `short_time`, compartiendo el botón de retorno, el selector interactivo `[ Hoy (Día) ]` vs `[ Mañana (Día) ]` (con checkmark de sesión completada si aplica) y el badge de sesión activa con nombre y duración.
+   - Opciones contextuales para `"Intercambiar ejercicio"`:
+     * **Invertir con el día adyacente:** Permite intercambiar las sesiones de Hoy y Mañana preservando intacta la carga total de la semana.
+     * **Pasar a Rodillo Z2 (Sin impacto):** Sustitución cruzada para proteger articulaciones manteniendo volumen aeróbico calibrado al Bike FTP.
+     * **Pasar a Carrera Z2 (Aeróbico suave):** Sustitución por carrera continua suave en Z2.
+     * **Fuerza & Core (40m):** Refuerzo funcional y estabilidad articular.
+     * **Descanso Pasivo / Activación:** Permite convertir el día en descanso total o, si el día ya era de descanso, activar una sesión suave de carrera o rodillo.
+   - Optimización y reducción del archivo a **203 LOC** (muy por debajo del límite de 348 LOC).
+2. **Motor Determinístico Fisiológico ([`src/lib/ai/headcoach/deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts)):**
+   - Detección precisa de peticiones para hoy vs mañana (`isTomorrow`), así como intercambio simultáneo entre hoy y mañana (`isSwapDays`).
+   - Manejo de conversiones a Descanso (`isRestDay: true`, 0 min, 0 TSS), Fuerza, Ciclismo/Rodillo y Carrera con potencias objetivo acordes a los umbrales del perfil.
+   - Eliminado bloque redundante duplicado para mantener el archivo en **346 LOC** ($\le 348$).
+3. **Parser de Inferencia IA ([`src/lib/ai/headcoach/chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):**
+   - Corrección del bug de ceros falsy (`rawProposal.durationMinutes || fallbackItem.durationMinutes`): cuando se propone descanso con 0 minutos y 0 TSS, se asignan valores de 0 explícitos.
+   - Soporte para activación de descansos en propuestas específicas.
+   - Archivo en **232 LOC** ($\le 348$).
+
+### 182.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx`: 203 LOC ($\le 348$) ✅
+  * `src/lib/ai/headcoach/chatInference.ts`: 232 LOC ($\le 348$) ✅
+  * `src/lib/ai/headcoach/deterministicFallback.ts`: 346 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Arquitectura & Mejores Prácticas UX):** Selector Hoy/Mañana unificado, opciones contextuales fisiológicas de sustitución sin fricción ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 182 ✅.
+

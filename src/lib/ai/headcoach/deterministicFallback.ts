@@ -214,37 +214,40 @@ export function handleDeterministicFallback(
     }
     const newWeeklyTss = modifiedPlan.reduce((acc, p) => acc + (p.tss || 0), 0);
     replyMsg = isNext
-      ? `Hola ${athleteFirstName}, comprendo perfectamente tu situación. Para la próxima semana diseñé un microciclo de reintroducción progresiva a ${newWeeklyTss} TSS seguros, suprimiendo intensidades anaeróbicas y acortando la tirada larga para que tu sistema inmune consolide tu recuperación sin sobrecargas.\n\nRevisa la propuesta abajo y haz clic en 'Aprobar Ajuste' para sincronizarla.`
-      : `Hola ${athleteFirstName}, comprendo perfectamente tu situación. Tras días enfermo, la regla de oro es no intentar recuperar el volumen perdido. He recalibrado tus días restantes a ${newWeeklyTss} TSS seguros en Zona 1 conversacional suave para cuidar articulaciones y sistema inmune.\n\nRevisa la propuesta abajo y haz clic en 'Aprobar Ajuste' para sincronizarla.`;
+      ? `Hola ${athleteFirstName}, diseñé un microciclo de reintroducción progresiva para la próxima semana a ${newWeeklyTss} TSS seguros, suprimiendo intensidades anaeróbicas y acortando la tirada larga para cuidar tu sistema inmune.\n\nRevisa la propuesta y pulsa 'Aprobar Ajuste' para sincronizarla.`
+      : `Hola ${athleteFirstName}, tras días enfermo no buscaremos recuperar volumen perdido. Recalibré tus días restantes a ${newWeeklyTss} TSS seguros en Z1 conversacional suave para proteger articulaciones e inmunidad.\n\nRevisa la propuesta y pulsa 'Aprobar Ajuste' para sincronizarla.`;
     smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Mantener plan previsto", variant: "secondary", icon: "check" }];
   }
-  // 5. INTERCAMBIAR DISCIPLINA HOY (Carrera ⇄ Ciclismo/Rodillo Z2)
-  else if (lowerMsg.includes("intercambi") || lowerMsg.includes("sustitu") || lowerMsg.includes("rodillo") || lowerMsg.includes("pasar a carrera")) {
+  // 5. INTERCAMBIAR DISCIPLINA O DÍAS (Hoy/Mañana, Carrera ⇄ Rodillo/Fuerza/Descanso)
+  else if (lowerMsg.includes("intercambi") || lowerMsg.includes("sustitu") || lowerMsg.includes("rodillo") || lowerMsg.includes("pasar a ") || lowerMsg.includes("cambiar a ") || lowerMsg.includes("activar ")) {
     actionType = "ADAPT_WORKOUT";
-    const targetIdx = ctx.todayDayIndex;
-    const isToBike = lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici");
-    if (modifiedPlan[targetIdx]) {
-      const orig = modifiedPlan[targetIdx], dur = orig.durationMinutes || 45;
-      if (isToBike) {
+    const isSwapDays = (lowerMsg.includes("hoy") && lowerMsg.includes("mañana")) || lowerMsg.includes("invertir");
+    const isTomorrow = !isSwapDays && (lowerMsg.includes("mañana") || lowerMsg.includes("manana"));
+    const tIdx = isTomorrow ? (ctx.todayDayIndex + 1) % 7 : ctx.todayDayIndex, dayLbl = isTomorrow ? "mañana" : "hoy";
+    if (isSwapDays && modifiedPlan[ctx.todayDayIndex] && modifiedPlan[(ctx.todayDayIndex + 1) % 7]) {
+      const idxA = ctx.todayDayIndex, idxB = (idxA + 1) % 7;
+      const sA = { ...modifiedPlan[idxA] }, sB = { ...modifiedPlan[idxB] };
+      modifiedPlan[idxA] = { ...sB, day: sA.day, date: sA.date, formattedDate: sA.formattedDate, action: "MODIFICAR" };
+      modifiedPlan[idxB] = { ...sA, day: sB.day, date: sB.date, formattedDate: sB.formattedDate, action: "MODIFICAR" };
+      replyMsg = `He intercambiado las sesiones entre ${sA.day} y ${sB.day}. Mantienes la misma carga total de la semana redistribuida según tu conveniencia.\n\n¿Aprobamos el cambio para tu calendario?`;
+    } else if (modifiedPlan[tIdx]) {
+      const orig = modifiedPlan[tIdx], dur = orig.durationMinutes || 45;
+      if (lowerMsg.includes("descanso")) {
+        modifiedPlan[tIdx] = { ...orig, discipline: "Descanso", workoutName: "Descanso Pasivo", durationMinutes: 0, tss: 0, isRestDay: true, action: "MODIFICAR" };
+        replyMsg = `Entendido, ${athleteFirstName}. He configurado ${dayLbl} como descanso pasivo para permitir una asimilación biológica profunda.\n\n¿Aprobamos el cambio?`;
+      } else if (lowerMsg.includes("fuerza")) {
+        modifiedPlan[tIdx] = { ...orig, discipline: "Fuerza", workoutName: "Fuerza Funcional, Core y Estabilidad", durationMinutes: 40, tss: 25, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Excelente, ${athleteFirstName}. He configurado una sesión de Fuerza Funcional y Core de 40m para ${dayLbl} para fortalecer musculatura y tendones.\n\n¿Aprobamos el cambio?`;
+      } else if (lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici")) {
         const targetW = Math.round((profile.bike_ftp || 220) * 0.68);
-        modifiedPlan[targetIdx] = { ...orig, discipline: "Ciclismo", workoutName: "Ciclismo Rodillo Z2 (Sin Impacto Articular)", durationMinutes: Math.round(dur * 1.15), powerTarget: `65-72% Bike FTP (${targetW}W)`, tss: orig.tss || 45, action: "MODIFICAR", justification: "Sustitución cruzada: rodillo Z2 para proteger articulaciones y preservar base aeróbica." };
-        replyMsg = `Excelente decisión, ${athleteFirstName}. Cambiar la carrera por rodillo en Zona 2 protege tus articulaciones y sóleos manteniendo intacto el estímulo cardiovascular de base aeróbica.\n\nSesión configurada en Ciclismo a ${targetW}W (${modifiedPlan[targetIdx].durationMinutes}m). ¿Aprobamos el cambio para tu reloj?`;
+        modifiedPlan[tIdx] = { ...orig, discipline: "Ciclismo", workoutName: "Ciclismo Rodillo Z2 (Sin Impacto Articular)", durationMinutes: Math.round(dur * 1.15), powerTarget: `65-72% Bike FTP (${targetW}W)`, tss: orig.tss || 45, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Excelente decisión, ${athleteFirstName}. Cambiar la sesión de ${dayLbl} por rodillo en Zona 2 protege tus articulaciones manteniendo el estímulo aeróbico a ${targetW}W.\n\n¿Aprobamos el cambio?`;
       } else {
         const targetW = Math.round((profile.run_ftp || 300) * 0.75);
-        modifiedPlan[targetIdx] = { ...orig, discipline: "Carrera", workoutName: "Carrera Aeróbica Continua Z2 (Suave)", durationMinutes: Math.round(dur * 0.85), powerTarget: `70-78% Stryd CP (${targetW}W)`, tss: orig.tss || 45, action: "MODIFICAR", justification: "Sustitución cruzada: rodaje suave a pie en Z2 para sumar volumen específico sin sobrecarga." };
-        replyMsg = `Perfecto, ${athleteFirstName}. Cambiar la bici por carrera continua suave en Zona 2 te permite sumar volumen específico protegiendo articulaciones.\n\nSesión configurada a pie a ${targetW}W (${modifiedPlan[targetIdx].durationMinutes}m). ¿Aprobamos el cambio para tu reloj?`;
+        modifiedPlan[tIdx] = { ...orig, discipline: "Carrera", workoutName: "Carrera Aeróbica Continua Z2 (Suave)", durationMinutes: Math.max(30, Math.round(dur * 0.85)), powerTarget: `70-78% Stryd CP (${targetW}W)`, tss: orig.tss || 45, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Perfecto, ${athleteFirstName}. Sesión de carrera continua suave en Zona 2 configurada para ${dayLbl} a ${targetW}W.\n\n¿Aprobamos el cambio?`;
       }
     }
-    smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
-  }
-  // 6. POCO TIEMPO HOY (30-45M)
-  else if (lowerMsg.includes("poco tiempo") || lowerMsg.includes("30m") || lowerMsg.includes("45m")) {
-    actionType = "ADAPT_WORKOUT";
-    const targetIdx = ctx.todayDayIndex;
-    if (modifiedPlan[targetIdx]) {
-      modifiedPlan[targetIdx] = { ...modifiedPlan[targetIdx], workoutName: `${modifiedPlan[targetIdx].discipline || "Carrera"} Comprimida (Estímulo Clave)`, durationMinutes: 35, tss: Math.round((modifiedPlan[targetIdx].tss || 50) * 0.7), action: "MODIFICAR" };
-    }
-    replyMsg = `Comprendido, ${athleteFirstName}. Mucho mejor hacer 35 minutos de calidad bien aprovechados que saltarse el día de entrenamiento. He comprimido la sesión de hoy reduciendo el calentamiento y enfriamiento pero preservando el estímulo metabólico principal.\n\n¿Aprobamos este ajuste para actualizar tu reloj?`;
     smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
   }
   // FLUJO B: Reorganizar por disponibilidad / matriz temporal
@@ -321,15 +324,12 @@ export function handleDeterministicFallback(
     smartActions = [{ label: "Deshacer cambios", variant: "tertiary", icon: "undo", actionType: "undo_changes" }];
   } else if (lowerMsg.includes("mantener")) {
     replyMsg = "Excelente decisión. Mantener la constancia y respetar los ritmos programados es la base para asimilar este bloque sin sobrecargas. Tu plan previsto sigue activo con normalidad.";
-    smartActions = [];
   } else if (lowerMsg.includes("detalle") || lowerMsg.includes("estado") || lowerMsg.includes("fisiol")) {
     actionType = "REVIEW_PHYSIOLOGY";
     const tsbSign = physioStatus.tsb >= 0 ? `+${physioStatus.tsb.toFixed(1)}` : physioStatus.tsb.toFixed(1);
-    replyMsg = `Hola ${athleteFirstName}, tu estado biológico para la semana ${targetPlanningWeekNum} está muy bien equilibrado: tu fitness (CTL) se sitúa en ${physioStatus.ctl.toFixed(1)}, tu fatiga aguda (ATL) en ${physioStatus.atl.toFixed(1)} y tu frescura (TSB) en ${tsbSign}, con una rampa ascendente de +${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem.\n\nEsto confirma que estás asimilando el volumen con buena tolerancia neuromuscular y sin sobreesfuerzo destructivo. El sistema nervioso responde favorablemente al estímulo.\n\nMi recomendación es continuar con el plan previsto para consolidar el bloque del fin de semana con solidez.`;
-    smartActions = [];
+    replyMsg = `Hola ${athleteFirstName}, tu estado biológico para la semana ${targetPlanningWeekNum} está muy bien equilibrado: CTL en ${physioStatus.ctl.toFixed(1)}, ATL en ${physioStatus.atl.toFixed(1)} y TSB en ${tsbSign} (+${Number(physioStatus.rampRate || 0).toFixed(1)} CTL/sem).\n\nEsto confirma asimilación adecuada sin sobreesfuerzo destructivo. Mi recomendación es continuar con el plan previsto.`;
   } else {
     replyMsg = `He registrado tus indicaciones ("${lastUserMsg}"). Los parámetros fisiológicos están equilibrados. Si deseas modular la carga o revisar una sesión específica, indícamelo directamente.`;
-    smartActions = [];
   }
 
   const hasActiveProposal = !ctx.isWeekCompleted && (actionType === "ADAPT_WORKOUT" || (actionType as any) === "MODIFY_WORKOUT");

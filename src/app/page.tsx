@@ -39,6 +39,7 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   const [paymentSuccessNotice, setPaymentSuccessNotice] = useState<string | null>(null);
+  const hasHandledPaymentRef = React.useRef<boolean>(false);
 
   const handleOpenAuthModal = (tab: "login" | "register" = "login") => {
     setAuthModalTab(tab);
@@ -53,10 +54,21 @@ export default function HomePage() {
       if (params.get("view") === "admin") {
         setCurrentView("admin");
       }
-      if (params.get("payment") === "complete") {
+      if (params.get("payment") === "complete" && !hasHandledPaymentRef.current) {
+        hasHandledPaymentRef.current = true;
         setPaymentSuccessNotice("¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.");
+        
         const orderId = params.get("order_id");
         const subId = userProfile?.uid || user?.uid;
+
+        // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("payment");
+        cleanUrl.searchParams.delete("order_id");
+        cleanUrl.searchParams.delete("sandbox_demo");
+        cleanUrl.searchParams.delete("sandbox_simulated");
+        window.history.replaceState({}, "", cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : ""));
+
         if (subId) {
           fetch("/api/billing/openpay/confirm-session", {
             method: "POST",
@@ -68,7 +80,7 @@ export default function HomePage() {
         }
       }
     }
-  }, [user, userProfile]);
+  }, [user?.uid]);
 
   // 1. SSR / Carga Inicial Segura (Evita Hydration Mismatch #418)
   if (!mounted || authLoading) {

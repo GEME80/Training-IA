@@ -186,7 +186,9 @@ export async function executeGeminiInference(
 
                   const configuredList = getDayDisciplines(ctx.safeAvailability, dName);
                   const isRest = configuredList.length === 1 && configuredList[0] === "Descanso";
-                  if (isRest) return fallbackItem;
+                  if (isRest && (!rawProposal || rawProposal.discipline === "Descanso" || rawProposal.isRestDay)) return fallbackItem;
+
+                  const isProposalRest = rawProposal.discipline === "Descanso" || Boolean(rawProposal.isRestDay);
 
                   return {
                     ...fallbackItem,
@@ -196,10 +198,11 @@ export async function executeGeminiInference(
                     formattedDate: ctx.planningWeekDates[dayIdx]?.formattedDate || fallbackItem.formattedDate,
                     discipline: rawProposal.discipline || fallbackItem.discipline,
                     workoutName: rawProposal.workoutName || fallbackItem.workoutName,
-                    powerTarget: rawProposal.powerTarget || fallbackItem.powerTarget,
-                    durationMinutes: rawProposal.durationMinutes || fallbackItem.durationMinutes,
-                    tss: rawProposal.tss || fallbackItem.tss,
-                    workoutStructure: rawProposal.workoutStructure || fallbackItem.workoutStructure,
+                    powerTarget: isProposalRest ? "" : (rawProposal.powerTarget || fallbackItem.powerTarget),
+                    durationMinutes: isProposalRest ? 0 : (typeof rawProposal.durationMinutes === "number" ? rawProposal.durationMinutes : fallbackItem.durationMinutes),
+                    tss: isProposalRest ? 0 : (typeof rawProposal.tss === "number" ? rawProposal.tss : fallbackItem.tss),
+                    isRestDay: isProposalRest,
+                    workoutStructure: isProposalRest ? [] : (rawProposal.workoutStructure || fallbackItem.workoutStructure),
                   };
                 });
                 if (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && Array.isArray(parsed.suggestedPlan)) {

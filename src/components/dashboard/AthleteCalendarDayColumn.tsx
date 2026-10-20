@@ -273,8 +273,8 @@ export const AthleteCalendarDayColumn: React.FC<AthleteCalendarDayColumnProps> =
           </div>
         )}
 
-        {/* Actividades ejecutadas en modo histórico o adicionales */}
-        {extraActivities.map((extraAct, eIdx) => {
+        {/* Actividades ejecutadas en modo histórico o adicionales (filtrando registros vacíos/fantasmas) */}
+        {extraActivities.filter((a) => a.movingTimeMin > 0 || a.tss > 0 || (a.distanceKm && a.distanceKm > 0)).map((extraAct, eIdx) => {
           const isRealHistorical = isHistoricalOnly || matchedEntries.length === 0;
           return (
             <div

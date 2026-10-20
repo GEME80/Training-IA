@@ -101,23 +101,19 @@ export class TelemetryService {
 
           dailyExecutedActivities = {};
           (activitiesData || []).forEach((act: any) => {
-            if (!act.start_date_local) return;
+            if (!act.start_date_local || act.icu_ignore_time === true) return;
             const dateKey = act.start_date_local.split("T")[0];
             const tss = Math.round(act.icu_training_load ?? act.training_load ?? act.tss ?? 0);
             const movingTimeMin = Math.round((act.moving_time ?? act.elapsed_time ?? 0) / 60);
-            const rawWatts = [
-              act.icu_weighted_avg_watts,
-              act.icu_average_watts,
-              act.weighted_average_watts,
-              act.average_watts,
-              act.icu_power,
-              act.power,
-            ].find((w) => typeof w === "number" && !isNaN(w) && w > 0);
+            const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
+            // Descartar registros fantasma / vacíos (0 minutos, 0 TSS y sin distancia)
+            if (movingTimeMin <= 0 && tss <= 0 && (!distanceKm || distanceKm <= 0)) return;
+
+            const rawWatts = [act.icu_weighted_avg_watts, act.icu_average_watts, act.weighted_average_watts, act.average_watts, act.icu_power, act.power].find((w) => typeof w === "number" && !isNaN(w) && w > 0);
             const watts = typeof rawWatts === "number" ? Math.round(rawWatts) : undefined;
             const heartrate = typeof act.average_heartrate === "number" && act.average_heartrate > 35
               ? Math.round(act.average_heartrate)
               : undefined;
-            const distanceKm = act.distance ? Number((act.distance / 1000).toFixed(1)) : undefined;
 
             const isRide = /ride|ciclismo|bike|virtualride|indoor/i.test(act.type || "");
             const rawWeighted = [act.icu_weighted_avg_watts, act.weighted_average_watts].find(

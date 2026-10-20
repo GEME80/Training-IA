@@ -10223,3 +10223,38 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (28/28 rutas compiladas) ✅.
 - **Gate 4 (Universalidad para Todos los Atletas):** Verificado para perfiles de solo carrera, solo ciclismo (5 días de bici con 5 sesiones distintas), triatletas y fuerza funcional ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 179 ✅.
+
+---
+
+## 180. Arquitectura de Facturación Segura (GMC FinSec / Openpay BBVA): Reverse Trial Sin Tarjeta, Candado Deportivo Anti-Fraude y Checkout Hospedado (PCI-DSS SAQ-A)
+
+- **Fecha:** 2026-10-20
+- **Objetivo:**
+  1. Erradicar todo riesgo de fraude y eximir a PULSE ENDURANCE de cualquier responsabilidad sobre datos de tarjetas bancarias mediante el cumplimiento estricto de **PCI-DSS SAQ-A** (Redirección 100% alojada en Openpay de BBVA Colombia).
+  2. Implementar el modelo **Reverse Trial de 7 días sin tarjeta**: los atletas nuevos acceden inmediatamente sin digitar números bancarios ni generar fricción de entrada, eliminando ataques de *card testing* con tarjetas clonadas.
+  3. Proteger la plataforma contra el bucle de cuentas gratuitas infinitas (*Trial Looping*) mediante el **Candado de Identidad Deportiva** (`intervalsAthleteId`), anclando el periodo de prueba al perfil atlético inmutable de Intervals.icu / Garmin.
+  4. Reactivación y cobro al vencimiento (Día 8) mediante **Hard Paywall** con redirección al WebCheckout de Openpay por $50.000 COP/mes.
+
+### 180.1. Componentes y Servicios Implementados
+1. **GMC Billing Engine Core & Openpay Client ([`gmc-billing-engine/src/providers/openpay/client.ts`](gmc-billing-engine/src/providers/openpay/client.ts) y [`gmc-billing-engine/src/index.ts`](gmc-billing-engine/src/index.ts)):**
+   - Incorporado el método bancario `createHostedCheckout` con parámetros `confirm: false`, `currency: 'COP'`, `method: 'card'` y `redirect_url`.
+   - Creado `createHostedCheckoutSession` que genera órdenes deterministas (`generateDeterministicOrderId`) y devuelve el enlace seguro de redirección bancaria.
+2. **Endpoint de Creación de Sesiones de Checkout ([`src/app/api/billing/openpay/create-checkout-session/route.ts`](src/app/api/billing/openpay/create-checkout-session/route.ts)):**
+   - Consume dinámicamente el precio del plan configurado por el Administrador ($50.000 COP) y devuelve la URL del portal de Openpay BBVA.
+3. **Candado Anti-Abuso en Intervals ([`src/app/api/auth/intervals/callback/route.ts`](src/app/api/auth/intervals/callback/route.ts)):**
+   - Registro en la colección global `gmc_trial_registry/{effectiveAthleteId}`.
+   - Si otro usuario intenta registrar el mismo perfil deportivo, el sistema anula el periodo de prueba (`isTrialActive: false`, `gmcSubscriptionStatus: 'PAST_DUE_LOCKED'`), exigiendo activación Pro.
+4. **Onboarding sin Tarjeta ([`src/lib/db/userProfile.ts`](src/lib/db/userProfile.ts)):**
+   - Al registrarse un atleta nuevo con Email o Google, se activan 7 días de prueba sin pedir datos bancarios.
+   - Respeta el estado de beca / lista blanca (`billingExempt`) para acceso permanente de cortesía sin cobros.
+5. **Modernización UI y Erradicación de Inputs de Tarjeta en PULSE ([`src/components/billing/GmcCardCheckoutModal.tsx`](src/components/billing/GmcCardCheckoutModal.tsx)):**
+   - Se sustituyeron los formularios de captura de PAN/CVV por un modal informativo de redirección bancaria segura con sellos oficiales de BBVA / Openpay.
+   - Actualizados [`GmcPaywallLockView.tsx`](src/components/billing/GmcPaywallLockView.tsx), [`AthleteBillingBanner.tsx`](src/components/dashboard/AthleteBillingBanner.tsx) y [`PricingAndFaqSection.tsx`](src/components/landing/PricingAndFaqSection.tsx) para reflejar "7 Días de Prueba Gratis (Sin Tarjeta de Crédito)".
+6. **Webhook de Activación ([`src/app/api/billing/openpay/webhook/route.ts`](src/app/api/billing/openpay/webhook/route.ts)):**
+   - Sincroniza automáticamente en Firestore el estatus a `PAID` y `ACTIVE` extendiendo 30 días de ciclo al recibir la confirmación `charge.succeeded`.
+
+### 180.2. Certificación
+- **Matriz de Pruebas GMC FinSec:** 47/47 pruebas superadas (`npm run test:finsec`).
+- **Compilación de Producción:** `npm run build` completado exitosamente (28/28 rutas).
+- **Health Check Local:** `http://localhost:3000` con status `200 OK`.
+- **Git Commit:** Sincronizado y publicado en GitHub `main`.

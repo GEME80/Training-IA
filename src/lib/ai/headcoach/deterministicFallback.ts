@@ -218,8 +218,8 @@ export function handleDeterministicFallback(
       : `Hola ${athleteFirstName}, tras días enfermo no buscaremos recuperar volumen perdido. Recalibré tus días restantes a ${newWeeklyTss} TSS seguros en Z1 conversacional suave para proteger articulaciones e inmunidad.\n\nRevisa la propuesta y pulsa 'Aprobar Ajuste' para sincronizarla.`;
     smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Mantener plan previsto", variant: "secondary", icon: "check" }];
   }
-  // 5. INTERCAMBIAR DISCIPLINA O DÍAS (Hoy/Mañana, Carrera ⇄ Rodillo/Fuerza/Descanso)
-  else if (lowerMsg.includes("intercambi") || lowerMsg.includes("sustitu") || lowerMsg.includes("rodillo") || lowerMsg.includes("pasar a ") || lowerMsg.includes("cambiar a ") || lowerMsg.includes("activar ")) {
+  // 5. INTERCAMBIAR DISCIPLINA O DÍAS (Hoy/Mañana, Carrera ⇄ Ciclismo/Fuerza/Descanso manteniendo TSS)
+  else if (lowerMsg.includes("intercambi") || lowerMsg.includes("sustitu") || lowerMsg.includes("rodillo") || lowerMsg.includes("pasar a ") || lowerMsg.includes("cambiar a ") || lowerMsg.includes("cambiar mi sesión") || lowerMsg.includes("activar ")) {
     actionType = "ADAPT_WORKOUT";
     const isSwapDays = (lowerMsg.includes("hoy") && lowerMsg.includes("mañana")) || lowerMsg.includes("invertir");
     const isTomorrow = !isSwapDays && (lowerMsg.includes("mañana") || lowerMsg.includes("manana"));
@@ -229,26 +229,26 @@ export function handleDeterministicFallback(
       const sA = { ...modifiedPlan[idxA] }, sB = { ...modifiedPlan[idxB] };
       modifiedPlan[idxA] = { ...sB, day: sA.day, date: sA.date, formattedDate: sA.formattedDate, action: "MODIFICAR" };
       modifiedPlan[idxB] = { ...sA, day: sB.day, date: sB.date, formattedDate: sB.formattedDate, action: "MODIFICAR" };
-      replyMsg = `He intercambiado las sesiones entre ${sA.day} y ${sB.day}. Mantienes la misma carga total de la semana redistribuida según tu conveniencia.\n\n¿Aprobamos el cambio para tu calendario?`;
+      replyMsg = `Listo, te voy a intercambiar las sesiones de ${sA.day} y ${sB.day}, manteniendo intacta la carga total de tu semana. Por favor confirmar para sincronizarlo con tu calendario.`;
     } else if (modifiedPlan[tIdx]) {
-      const orig = modifiedPlan[tIdx], dur = orig.durationMinutes || 45;
+      const orig = modifiedPlan[tIdx], origTss = orig.tss || 45, dur = orig.durationMinutes || 50;
       if (lowerMsg.includes("descanso")) {
         modifiedPlan[tIdx] = { ...orig, discipline: "Descanso", workoutName: "Descanso Pasivo", durationMinutes: 0, tss: 0, isRestDay: true, action: "MODIFICAR" };
-        replyMsg = `Entendido, ${athleteFirstName}. He configurado ${dayLbl} como descanso pasivo para permitir una asimilación biológica profunda.\n\n¿Aprobamos el cambio?`;
+        replyMsg = `Listo, te voy a cambiar el ejercicio de ${dayLbl} (${orig.workoutName || "Entrenamiento"}) por Descanso Pasivo. Por favor confirmar para sincronizarlo con tu calendario.`;
       } else if (lowerMsg.includes("fuerza")) {
-        modifiedPlan[tIdx] = { ...orig, discipline: "Fuerza", workoutName: "Fuerza Funcional, Core y Estabilidad", durationMinutes: 40, tss: 25, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Excelente, ${athleteFirstName}. He configurado una sesión de Fuerza Funcional y Core de 40m para ${dayLbl} para fortalecer musculatura y tendones.\n\n¿Aprobamos el cambio?`;
+        modifiedPlan[tIdx] = { ...orig, discipline: "Fuerza", workoutName: `Fuerza Funcional y Core (${origTss} TSS)`, durationMinutes: 40, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Fuerza Funcional y Core (${origTss} TSS), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
       } else if (lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici")) {
-        const targetW = Math.round((profile.bike_ftp || 220) * 0.68);
-        modifiedPlan[tIdx] = { ...orig, discipline: "Ciclismo", workoutName: "Ciclismo Rodillo Z2 (Sin Impacto Articular)", durationMinutes: Math.round(dur * 1.15), powerTarget: `65-72% Bike FTP (${targetW}W)`, tss: orig.tss || 45, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Excelente decisión, ${athleteFirstName}. Cambiar la sesión de ${dayLbl} por rodillo en Zona 2 protege tus articulaciones manteniendo el estímulo aeróbico a ${targetW}W.\n\n¿Aprobamos el cambio?`;
+        const targetW = Math.round((profile.bike_ftp || 220) * 0.72);
+        modifiedPlan[tIdx] = { ...orig, discipline: "Ciclismo", workoutName: `Ciclismo en Rodillo (${origTss} TSS)`, durationMinutes: Math.max(35, Math.round(dur * 1.05)), powerTarget: `70-75% Bike FTP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Ciclismo en Rodillo (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
       } else {
-        const targetW = Math.round((profile.run_ftp || 300) * 0.75);
-        modifiedPlan[tIdx] = { ...orig, discipline: "Carrera", workoutName: "Carrera Aeróbica Continua Z2 (Suave)", durationMinutes: Math.max(30, Math.round(dur * 0.85)), powerTarget: `70-78% Stryd CP (${targetW}W)`, tss: orig.tss || 45, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Perfecto, ${athleteFirstName}. Sesión de carrera continua suave en Zona 2 configurada para ${dayLbl} a ${targetW}W.\n\n¿Aprobamos el cambio?`;
+        const targetW = Math.round((profile.run_ftp || 300) * 0.78);
+        modifiedPlan[tIdx] = { ...orig, discipline: "Carrera", workoutName: `Carrera Continua (${origTss} TSS)`, durationMinutes: Math.max(30, Math.round(dur * 0.95)), powerTarget: `75-80% Stryd CP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Carrera Continua (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
       }
     }
-    smartActions = [{ label: "Aprobar Ajuste", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
+    smartActions = [{ label: "Confirmar Cambio de Sesión", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];
   }
   // FLUJO B: Reorganizar por disponibilidad / matriz temporal
   else if (lowerMsg.includes("reorganizar") || lowerMsg.includes("matriz") || lowerMsg.includes("temporal") || lowerMsg.includes("viaje")) {

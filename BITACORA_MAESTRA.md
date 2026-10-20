@@ -10371,3 +10371,33 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Arquitectura & Mejores Prácticas UX):** Selector Hoy/Mañana unificado, opciones contextuales fisiológicas de sustitución sin fricción ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 182 ✅.
 
+---
+
+## 183. Tarjeta Focalizada de Adaptación de Sesión Puntual y Preservación Estricta de TSS en Sustituciones
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Resolver la sobrecarga cognitiva del atleta al intercambiar un ejercicio puntual (1 día). En vez de proyectar una cuadrícula completa de 7 días para toda la semana, el Head Coach presenta una tarjeta focalizada de adaptación de sesión (`HeadCoachSingleDiffCard`), manteniendo intacto el TSS de la sesión programada sin degradarla arbitrariamente a rodaje suave o regenerativo (preservación de carga deportiva).
+
+### 183.1. Cambios Implementados
+1. **Tarjeta Focalizada de Cambio de Sesión ([`HeadCoachSingleDiffCard.tsx`](src/components/dashboard/headcoach/HeadCoachSingleDiffCard.tsx)):**
+   - Nuevo componente atómico (163 LOC) que se renderiza automáticamente en `HeadCoachMicrocycleCard` cuando se detectan 1 o 2 sesiones modificadas (`isPunctualChange`).
+   - Muestra exclusivamente el día modificado, nombre de la nueva disciplina, métricas precisas (minutos, TSS y potencias objetivo en vatios), gráfica de bloques de entrenamiento, botón directo de aprobación (`Confirmar y Sincronizar Sesión`) y toggle expansible opcional para ver el microciclo completo de 7 días.
+2. **Preservación Estricta de Carga (TSS) en Sustitución ([`HeadCoachReorgSubMenu.tsx`](src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx) y [`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts)):**
+   - Sustitución de etiquetas restrictivas ("Rodillo Z2 sin impacto", "Carrera suave") por opciones de sustitución con mantenimiento de carga: `"Cambiar a Ciclismo ({tss} TSS)"`, `"Cambiar a Carrera ({tss} TSS)"`, `"Cambiar a Fuerza ({tss} TSS)"`.
+   - El motor determinístico calcula la potencia y duración equivalentes para entregar exactamente los mismos TSS programados para ese día según el Bike FTP o Stryd CP del atleta.
+   - Respuestas asertivas del Head Coach: `"Listo, te voy a cambiar este ejercicio para {día}: sustituimos '{sesión}' por {nueva_sesión} ({tss} TSS), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario."`
+3. **Optimización de Presupuesto de Código:**
+   - `HeadCoachMicrocycleCard.tsx`: Reducido de 340 a **293 LOC** ($\le 348$).
+   - `HeadCoachSingleDiffCard.tsx`: Creado en **163 LOC** ($\le 348$).
+   - `HeadCoachReorgSubMenu.tsx`: Optimizado en **233 LOC** ($\le 348$).
+   - `deterministicFallback.ts`: Manteniendo **346 LOC** ($\le 348$).
+   - `chatInference.ts`: Actualizado en **233 LOC** ($\le 348$).
+
+### 183.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Todos los 5 archivos $\le 348$ LOC ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Arquitectura & Mejores Prácticas UX):** Flujo focalizado de cambio de sesión, 0 ruido de 7 días cuando solo se cambia un día, preservación estricta de carga multideporte ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 183 ✅.
+
+

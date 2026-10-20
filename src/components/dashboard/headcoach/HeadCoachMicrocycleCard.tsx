@@ -2,21 +2,13 @@
 
 import React, { useState } from "react";
 import {
-  Footprints,
-  Bike,
-  Dumbbell,
-  Moon,
-  Sparkles,
-  Zap,
-  Clock,
-  Info,
-  CheckCircle2,
-  RefreshCw,
+  Footprints, Bike, Dumbbell, Moon, Sparkles, Zap, Clock, Info, CheckCircle2, RefreshCw
 } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { WorkoutChart } from "@/components/WorkoutChart";
 import { HeadCoachWorkoutBlockChart } from "./HeadCoachWorkoutBlockChart";
 import { gymShortDesc, HeadCoachExpandedGym, HeadCoachExpandedAerobic } from "./headcoachCardHelpers";
+import { HeadCoachSingleDiffCard } from "./HeadCoachSingleDiffCard";
 
 interface HeadCoachMicrocycleCardProps {
   plan: PlanItem[];
@@ -34,6 +26,24 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
   isApplying = false,
 }) => {
   const [expandedCardKey, setExpandedCardKey] = useState<string | null>(null);
+  const [showFullWeek, setShowFullWeek] = useState(false);
+
+  // Detección de adaptación puntual (1 o 2 sesiones modificadas en vez de la semana completa)
+  const modifiedSessions = plan.filter((p) => p.action === "MODIFICAR" || p.action === "REDUCIR_INTENSIDAD");
+  const isPunctualChange = modifiedSessions.length > 0 && modifiedSessions.length <= 2;
+
+  if (isPunctualChange && !showFullWeek) {
+    return (
+      <HeadCoachSingleDiffCard
+        plan={plan}
+        modifiedSessions={modifiedSessions}
+        weekNumber={weekNumber}
+        onApplyAndSync={onApplyAndSync}
+        isApplying={isApplying}
+        onToggleFullWeek={() => setShowFullWeek(true)}
+      />
+    );
+  }
 
   const totalTss = plan.reduce((acc, p) => acc + (p.tss || 0), 0);
   const totalMinutes = plan.reduce((acc, p) => acc + (p.durationMinutes || 0), 0);
@@ -52,43 +62,15 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
   const getActionBadge = (item: PlanItem) => {
     const todayStr = new Date().toISOString().split("T")[0];
     if (item.justification?.includes("Historial inmutable") || (item.date && item.date < todayStr)) {
-      return (
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shrink-0 truncate max-w-[65px]"
-          title="Historial inmutable"
-        >
-          Historial
-        </span>
-      );
+      return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shrink-0">Historial</span>;
     }
     if (item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0)) {
-      return (
-        <span
-          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 truncate max-w-[65px]"
-          title="Descanso"
-        >
-          Descanso
-        </span>
-      );
+      return <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">Descanso</span>;
     }
     if (item.action === "MODIFICAR" || item.action === "REDUCIR_INTENSIDAD") {
-      return (
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0 truncate max-w-[65px]"
-          title="Modificado"
-        >
-          Adaptado
-        </span>
-      );
+      return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0">Adaptado</span>;
     }
-    return (
-      <span
-        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0 truncate max-w-[65px]"
-        title="En Plan"
-      >
-        Confirmado
-      </span>
-    );
+    return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0">Confirmado</span>;
   };
 
   // Agrupamiento canónico por los 7 días de la semana con erradicación estricta de duplicados
@@ -128,95 +110,66 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
 
         {/* Resumen Métrico de la Semana */}
         <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
-            <Zap className="h-3.5 w-3.5 text-amber-500" />
+          <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
             {totalTss} TSS
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
-            <Clock className="h-3.5 w-3.5 text-slate-500" />
+          <span className="text-slate-400">•</span>
+          <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
             {timeFormatted}
           </span>
         </div>
       </div>
 
-      {/* Indicador de Visualización & Guía */}
-      <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-0.5">
-        <span className="inline-flex items-center gap-1">
-          <Sparkles className="h-3 w-3 text-emerald-500" />
-          <span className="hidden lg:inline">Semana completa visible (7 días fijos de Lunes a Domingo)</span>
-          <span className="lg:hidden">Desliza o toca cada día</span>
-        </span>
-        <span>Toca cualquier sesión para expandir</span>
-      </div>
-
-      {/* Rejilla Canónica de 7 Días (Sesiones dobles apiladas limpiamente dentro de su columna) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 pb-2 pt-1 px-0.5 items-start">
-        {daysGrouped.map((dayGroup, dayIdx) => {
-          const hasSessions = dayGroup.sessions.length > 0;
-
+      {/* Grid Canónico de 7 Días */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2.5">
+        {daysGrouped.map(({ dayName, shortName, formattedDate, sessions, dayTotalTss }) => {
           return (
             <div
-              key={dayIdx}
-              className="flex flex-col gap-2 rounded-xl p-2 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/80 min-h-[140px]"
+              key={dayName}
+              className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-2.5 flex flex-col justify-between space-y-2"
             >
-              {/* Cabecera de Columna de Día */}
-              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-slate-200/70 dark:border-slate-800/80">
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="font-black text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-                    {dayGroup.shortName}
-                  </span>
-                  {dayGroup.formattedDate && (
-                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
-                      • {dayGroup.formattedDate}
-                    </span>
-                  )}
-                </div>
-                {dayGroup.dayTotalTss > 0 ? (
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    {dayGroup.dayTotalTss} TSS
-                  </span>
-                ) : (
-                  <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
-                    0 TSS
-                  </span>
-                )}
+              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
+                <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                  {shortName}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                  {formattedDate}
+                </span>
               </div>
 
-              {/* Sesiones del Día */}
-              {!hasSessions ? (
-                <div className="flex-1 rounded-lg p-3 bg-white/50 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1 text-slate-400 py-6">
-                  <Moon className="h-4 w-4 text-slate-400/80" />
-                  <span className="text-[10px] font-medium">Descanso</span>
+              {sessions.length === 0 ? (
+                <div className="py-4 text-center">
+                  <Moon className="h-4 w-4 mx-auto text-slate-300 dark:text-slate-600 mb-1" />
+                  <span className="text-[10px] text-slate-400 font-mono">Descanso</span>
                 </div>
               ) : (
-                dayGroup.sessions.map((item, sIdx) => {
-                  const cardKey = `${dayGroup.dayName}-${sIdx}`;
-                  const isExpanded = expandedCardKey === cardKey;
-                  const isGym = item.discipline === "Fuerza";
+                sessions.map((item, sIdx) => {
                   const isRest = item.discipline === "Descanso" || (item.tss === 0 && item.durationMinutes === 0);
+                  const isGym = item.discipline === "Fuerza";
+                  const cardKey = `${dayName}-${sIdx}`;
+                  const isExpanded = expandedCardKey === cardKey;
 
-                  // ── TARJETA ESPECIALIZADA DE FUERZA (ESTILO GYM PURPLE) ──
                   if (isGym) {
-                    const gymDesc = gymShortDesc(item.workoutDoc, item.powerTarget || item.focus);
+                    const gymDesc = gymShortDesc(item.workoutDoc, item.focus);
                     return (
                       <div
                         key={sIdx}
                         onClick={() => setExpandedCardKey(isExpanded ? null : cardKey)}
-                        className="w-full rounded-xl border border-purple-200/90 dark:border-purple-800/80 bg-purple-50/30 dark:bg-purple-950/20 hover:border-purple-400 shadow-2xs overflow-hidden flex flex-col justify-between transition-all cursor-pointer p-2.5 space-y-1.5"
+                        className="w-full rounded-xl p-2.5 bg-purple-500/5 dark:bg-purple-950/20 border border-purple-300/40 dark:border-purple-800/40 space-y-2 transition-all cursor-pointer hover:border-purple-400 flex flex-col justify-between"
                       >
-                        <div className="flex items-center justify-between text-xs font-bold font-mono bg-purple-100/90 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 border-b border-purple-200/90 dark:border-purple-800/70 -mx-2.5 -mt-2.5 px-2.5 py-1.5 mb-0.5">
-                          <div className="flex items-center gap-1.5">
-                            <Dumbbell className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                            <span>{item.durationMinutes || 35}m</span>
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center space-x-1 min-w-0">
+                            {getDisciplineIcon("Fuerza")}
+                            <span className="font-bold text-[11px] text-purple-900 dark:text-purple-200 truncate">
+                              Fuerza
+                            </span>
                           </div>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200/70 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300">
-                            Gym
-                          </span>
+                          {getActionBadge(item)}
                         </div>
 
                         <div>
                           <p
-                            className="text-[11px] font-bold text-slate-800 dark:text-slate-200 line-clamp-2 min-h-[26px] leading-tight"
+                            className="text-[11px] font-bold text-purple-950 dark:text-purple-100 line-clamp-1 leading-tight"
                             title={item.workoutName || "Fortalecimiento"}
                           >
                             {item.workoutName || "Fortalecimiento"}

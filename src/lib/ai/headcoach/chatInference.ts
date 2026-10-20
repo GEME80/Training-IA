@@ -198,6 +198,7 @@ export async function executeGeminiInference(
                     formattedDate: ctx.planningWeekDates[dayIdx]?.formattedDate || fallbackItem.formattedDate,
                     discipline: rawProposal.discipline || fallbackItem.discipline,
                     workoutName: rawProposal.workoutName || fallbackItem.workoutName,
+                    action: rawProposal.action || (rawProposal.workoutName !== fallbackItem.workoutName || rawProposal.discipline !== fallbackItem.discipline ? "MODIFICAR" : fallbackItem.action),
                     powerTarget: isProposalRest ? "" : (rawProposal.powerTarget || fallbackItem.powerTarget),
                     durationMinutes: isProposalRest ? 0 : (typeof rawProposal.durationMinutes === "number" ? rawProposal.durationMinutes : fallbackItem.durationMinutes),
                     tss: isProposalRest ? 0 : (typeof rawProposal.tss === "number" ? rawProposal.tss : fallbackItem.tss),

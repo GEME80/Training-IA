@@ -46,6 +46,7 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
   const targetDayLabel = targetDay === "today" ? `Hoy (${todayName})` : `Mañana (${tomorrowName})`;
   const otherDayLabel = targetDay === "today" ? `Mañana (${tomorrowName})` : `Hoy (${todayName})`;
   const activeDuration = activeSession?.durationMinutes || 60;
+  const activeTss = activeSession?.tss || 45;
   const activeMins20 = Math.max(20, Math.round(activeDuration * 0.8)), activeMins30 = Math.max(15, Math.round(activeDuration * 0.7));
 
   // Solo se pueden invertir sesiones entre Hoy y Mañana si Hoy no ha sido ya ejecutada
@@ -155,42 +156,39 @@ export const HeadCoachReorgSubMenu: React.FC<HeadCoachReorgSubMenuProps> = ({
                 </button>
               )}
 
-              {/* Pasar a Rodillo Z2 */}
+              {/* Cambiar a Ciclismo manteniendo TSS */}
               {!isBikeActive && (
-                <button type="button" onClick={() => handleFinish(`${targetDayLabel} tengo programada la sesión '${activeWorkoutName}', pero deseo cambiarla por rodillo / ciclismo en Zona 2 sin impacto articular para cuidar mis articulaciones. Ajusta la sesión manteniendo la duración equivalente y potencia aeróbica adecuada a mi Bike FTP.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400 text-sky-950 dark:text-sky-100 text-xs font-bold hover:bg-sky-500/25 transition cursor-pointer">
-                  <Bike className="h-3.5 w-3.5 text-sky-500" /><span>Rodillo Z2 (Sin impacto)</span>
+                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}', ${activeDuration}m, ${activeTss} TSS) por una sesión de Ciclismo / Rodillo que mantenga la misma carga fisiológica (${activeTss} TSS) según mi Bike FTP. No deseo reducir carga, sino mantener el estímulo en ciclismo. Presenta la propuesta de cambio para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400 text-sky-950 dark:text-sky-100 text-xs font-bold hover:bg-sky-500/25 transition cursor-pointer">
+                  <Bike className="h-3.5 w-3.5 text-sky-500" /><span>Cambiar a Ciclismo ({activeTss} TSS)</span>
                 </button>
               )}
 
-              {/* Pasar a Carrera Z2 */}
+              {/* Cambiar a Carrera manteniendo TSS */}
               {!isRunActive && (
-                <button type="button" onClick={() => handleFinish(`${targetDayLabel} tengo programada la sesión '${activeWorkoutName}', pero deseo cambiarla por una sesión equivalente de carrera continua en Zona 2 suave. Ajusta la sesión manteniendo intensidad aeróbica controlada según mi Stryd CP / ritmo.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400 text-emerald-950 dark:text-emerald-100 text-xs font-bold hover:bg-emerald-500/25 transition cursor-pointer">
-                  <Footprints className="h-3.5 w-3.5 text-emerald-500" /><span>Carrera Z2 (Aeróbico suave)</span>
+                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}', ${activeDuration}m, ${activeTss} TSS) por una sesión de Carrera a pie que mantenga la misma carga fisiológica (${activeTss} TSS) según mi Stryd CP / potencia. No deseo reducir carga, sino mantener el estímulo en carrera. Presenta la propuesta de cambio para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400 text-emerald-950 dark:text-emerald-100 text-xs font-bold hover:bg-emerald-500/25 transition cursor-pointer">
+                  <Footprints className="h-3.5 w-3.5 text-emerald-500" /><span>Cambiar a Carrera ({activeTss} TSS)</span>
                 </button>
               )}
 
-              {/* Fuerza Funcional & Core */}
+              {/* Cambiar a Fuerza */}
               {activeSession?.discipline !== "Fuerza" && (
-                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}') por una sesión de Fuerza Funcional, Core y estabilidad articular de 40 minutos para prevención de lesiones.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-400 text-purple-950 dark:text-purple-100 text-xs font-bold hover:bg-purple-500/25 transition cursor-pointer">
-                  <Dumbbell className="h-3.5 w-3.5 text-purple-500" /><span>Fuerza & Core (40m)</span>
+                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}', ${activeDuration}m, ${activeTss} TSS) por una sesión de Fuerza Funcional manteniendo el estímulo de ${activeTss} TSS. Presenta la propuesta de cambio para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-400 text-purple-950 dark:text-purple-100 text-xs font-bold hover:bg-purple-500/25 transition cursor-pointer">
+                  <Dumbbell className="h-3.5 w-3.5 text-purple-500" /><span>Cambiar a Fuerza ({activeTss} TSS)</span>
                 </button>
               )}
 
               {/* Descanso Pasivo o Activar */}
               {!isRestSelected ? (
-                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}') por un día de Descanso Pasivo total para asimilar la carga y recuperar musculatura.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
-                  <Moon className="h-3.5 w-3.5 text-slate-500" /><span>Descanso Pasivo</span>
+                <button type="button" onClick={() => handleFinish(`${targetDayLabel} deseo cambiar mi sesión programada ('${activeWorkoutName}') por Descanso Pasivo total. Presenta la propuesta para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                  <Moon className="h-3.5 w-3.5 text-slate-500" /><span>Cambiar a Descanso</span>
                 </button>
               ) : (
                 <>
-                  <button type="button" onClick={() => handleFinish(`${targetDayLabel} está programado como descanso, pero deseo activar una sesión suave de Carrera continua en Zona 2 de 40 minutos sin sobrecargarme.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400 text-emerald-950 dark:text-emerald-100 text-xs font-bold hover:bg-emerald-500/25 transition cursor-pointer">
-                    <Footprints className="h-3.5 w-3.5 text-emerald-600" /><span>Activar Carrera Z2 (40m)</span>
+                  <button type="button" onClick={() => handleFinish(`${targetDayLabel} está programado como descanso, pero deseo activar una sesión de Carrera continua de 40 minutos. Presenta la propuesta para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-400 text-emerald-950 dark:text-emerald-100 text-xs font-bold hover:bg-emerald-500/25 transition cursor-pointer">
+                    <Footprints className="h-3.5 w-3.5 text-emerald-600" /><span>Activar Carrera (40m)</span>
                   </button>
-                  <button type="button" onClick={() => handleFinish(`${targetDayLabel} está programado como descanso, pero deseo activar una sesión suave de Rodillo / Ciclismo en Zona 2 de 45 minutos sin impacto articular.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400 text-sky-950 dark:text-sky-100 text-xs font-bold hover:bg-sky-500/25 transition cursor-pointer">
-                    <Bike className="h-3.5 w-3.5 text-sky-500" /><span>Activar Rodillo Z2 (45m)</span>
-                  </button>
-                  <button type="button" onClick={() => handleFinish(`${targetDayLabel} está programado como descanso, pero deseo activar una sesión de Fuerza Funcional y Core de 40 minutos para reforzar estabilidad.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-400 text-purple-950 dark:text-purple-100 text-xs font-bold hover:bg-purple-500/25 transition cursor-pointer">
-                    <Dumbbell className="h-3.5 w-3.5 text-purple-500" /><span>Activar Fuerza & Core (40m)</span>
+                  <button type="button" onClick={() => handleFinish(`${targetDayLabel} está programado como descanso, pero deseo activar una sesión de Ciclismo / Rodillo de 45 minutos. Presenta la propuesta para mi confirmación.`)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400 text-sky-950 dark:text-sky-100 text-xs font-bold hover:bg-sky-500/25 transition cursor-pointer">
+                    <Bike className="h-3.5 w-3.5 text-sky-500" /><span>Activar Ciclismo (45m)</span>
                   </button>
                 </>
               )}

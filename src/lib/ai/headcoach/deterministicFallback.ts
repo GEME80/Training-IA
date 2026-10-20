@@ -232,20 +232,21 @@ export function handleDeterministicFallback(
       replyMsg = `Listo, te voy a intercambiar las sesiones de ${sA.day} y ${sB.day}, manteniendo intacta la carga total de tu semana. Por favor confirmar para sincronizarlo con tu calendario.`;
     } else if (modifiedPlan[tIdx]) {
       const orig = modifiedPlan[tIdx], origTss = orig.tss || 45, dur = orig.durationMinutes || 50;
+      const prevInfo = { previousWorkoutName: orig.workoutName || orig.title || "Entrenamiento programado", previousDurationMinutes: orig.durationMinutes || 50, previousTss: origTss, previousDiscipline: orig.discipline || "Carrera", previousPowerTarget: orig.powerTarget || "" };
       if (lowerMsg.includes("descanso")) {
-        modifiedPlan[tIdx] = { ...orig, discipline: "Descanso", workoutName: "Descanso Pasivo", durationMinutes: 0, tss: 0, isRestDay: true, action: "MODIFICAR" };
-        replyMsg = `Listo, te voy a cambiar el ejercicio de ${dayLbl} (${orig.workoutName || "Entrenamiento"}) por Descanso Pasivo. Por favor confirmar para sincronizarlo con tu calendario.`;
+        modifiedPlan[tIdx] = { ...orig, ...prevInfo, discipline: "Descanso", workoutName: "Descanso Pasivo", durationMinutes: 0, tss: 0, isRestDay: true, action: "MODIFICAR" };
+        replyMsg = `Hola ${athleteFirstName}, según tu objetivo hacia ${raceName}, he configurado el cambio del ejercicio que está programado (${orig.workoutName || "Entrenamiento"}) por Descanso Pasivo. Por favor confirma para sincronizarlo con tu calendario.`;
       } else if (lowerMsg.includes("fuerza")) {
-        modifiedPlan[tIdx] = { ...orig, discipline: "Fuerza", workoutName: `Fuerza Funcional y Core (${origTss} TSS)`, durationMinutes: 40, tss: origTss, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Fuerza Funcional y Core (${origTss} TSS), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
+        modifiedPlan[tIdx] = { ...orig, ...prevInfo, discipline: "Fuerza", workoutName: `Fuerza Funcional y Core (${origTss} TSS)`, durationMinutes: 40, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Hola ${athleteFirstName}, según tu objetivo hacia ${raceName}, he configurado el cambio del ejercicio que está programado (${orig.workoutName || "Entrenamiento"}) por el siguiente ejercicio: Fuerza Funcional y Core (${origTss} TSS), manteniendo exactamente tu carga programada. Por favor confirma para sincronizarlo con tu calendario.`;
       } else if (lowerMsg.includes("rodillo") || lowerMsg.includes("ciclismo") || lowerMsg.includes("bici")) {
         const targetW = Math.round((profile.bike_ftp || 220) * 0.72);
-        modifiedPlan[tIdx] = { ...orig, discipline: "Ciclismo", workoutName: `Ciclismo en Rodillo (${origTss} TSS)`, durationMinutes: Math.max(35, Math.round(dur * 1.05)), powerTarget: `70-75% Bike FTP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Ciclismo en Rodillo (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
+        modifiedPlan[tIdx] = { ...orig, ...prevInfo, discipline: "Ciclismo", workoutName: `Ciclismo en Rodillo (${origTss} TSS)`, durationMinutes: Math.max(35, Math.round(dur * 1.05)), powerTarget: `70-75% Bike FTP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Hola ${athleteFirstName}, según tu objetivo hacia ${raceName}, he configurado el cambio del ejercicio que está programado (${orig.workoutName || "Entrenamiento"}) por el siguiente ejercicio: Ciclismo en Rodillo (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirma para sincronizarlo con tu calendario.`;
       } else {
         const targetW = Math.round((profile.run_ftp || 300) * 0.78);
-        modifiedPlan[tIdx] = { ...orig, discipline: "Carrera", workoutName: `Carrera Continua (${origTss} TSS)`, durationMinutes: Math.max(30, Math.round(dur * 0.95)), powerTarget: `75-80% Stryd CP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
-        replyMsg = `Listo, te voy a cambiar este ejercicio para ${dayLbl}: sustituimos '${orig.workoutName || "Entrenamiento"}' por Carrera Continua (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirmar para sincronizarlo con tu calendario.`;
+        modifiedPlan[tIdx] = { ...orig, ...prevInfo, discipline: "Carrera", workoutName: `Carrera Continua (${origTss} TSS)`, durationMinutes: Math.max(30, Math.round(dur * 0.95)), powerTarget: `75-80% Stryd CP (${targetW}W)`, tss: origTss, isRestDay: false, action: "MODIFICAR" };
+        replyMsg = `Hola ${athleteFirstName}, según tu objetivo hacia ${raceName}, he configurado el cambio del ejercicio que está programado (${orig.workoutName || "Entrenamiento"}) por el siguiente ejercicio: Carrera Continua (${origTss} TSS @ ${targetW}W), manteniendo exactamente tu carga programada. Por favor confirma para sincronizarlo con tu calendario.`;
       }
     }
     smartActions = [{ label: "Confirmar Cambio de Sesión", variant: "primary", icon: "check" }, { label: "Descartar", variant: "secondary", icon: "x" }];

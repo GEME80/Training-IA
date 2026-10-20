@@ -10400,4 +10400,34 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (Arquitectura & Mejores Prácticas UX):** Flujo focalizado de cambio de sesión, 0 ruido de 7 días cuando solo se cambia un día, preservación estricta de carga multideporte ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 183 ✅.
 
+---
+
+## 184. Tarjeta Comparativa "Ejercicio actual" vs "Ejercicio que se va a cambiar" y Purga de Auditorías Irrelevantes en Respuestas
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Perfeccionar la experiencia de usuario y la comunicación del Head Coach al solicitar un cambio de ejercicio. Se erradica por completo la tendencia de Gemini de ponerse a auditar sesiones ejecutadas del pasado al solicitar un cambio puntual, se estandariza el mensaje de respuesta orientado al objetivo del atleta, y se rediseña la tarjeta visual con una comparativa lado a lado entre "Ejercicio actual programado" y "Ejercicio que se va a cambiar".
+
+### 184.1. Cambios Implementados
+1. **Tarjeta Comparativa Dual en [`HeadCoachSingleDiffCard.tsx`](src/components/dashboard/headcoach/HeadCoachSingleDiffCard.tsx):**
+   - Panel Izquierdo (**🔴 Ejercicio actual programado**): Muestra la disciplina original, nombre de la sesión, duración en minutos, TSS previsto y potencia/ritmo objetivo original.
+   - Panel Derecho (**🟢 Ejercicio que se va a cambiar**): Muestra la nueva disciplina, nombre adaptado, vatios y TSS equivalente con badge "Misma Carga".
+   - Estructura visual de bloques de potencia del nuevo entrenamiento y botón de aprobación directa `Confirmar y Sincronizar Sesión`.
+   - Archivo en **224 LOC** ($\le 348$).
+2. **Purga de Respuestas Inadecuadas en [`chatInference.ts`](src/lib/ai/headcoach/chatInference.ts) y Regla 15 en [`prompts.ts`](src/lib/ai/prompts.ts):**
+   - Incorporada la Regla 15 en el system prompt prohibiendo terminantemente sermones o auditorías de entrenamientos previos cuando el atleta pide un intercambio de ejercicio.
+   - Filtro de seguridad en `chatInference.ts`: Si la respuesta devuelta por el modelo contiene auditorías no solicitadas de sesiones de hoy o ayer, se sustituye automáticamente por la respuesta estándar requerida:
+     *"Hola {Nombre}, según tu objetivo hacia {Meta}, he configurado el cambio del ejercicio que está programado ({actual}) por el siguiente ejercicio: {nuevo} ({tss} TSS), manteniendo exactamente tu carga fisiológica programada. Por favor confirma para sincronizarlo con tu calendario."*
+   - `chatInference.ts` en **246 LOC** ($\le 348$), `prompts.ts` en **332 LOC** ($\le 348$).
+3. **Propiedades de Historial en [`types.ts`](src/lib/gemini/types.ts) y [`deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts):**
+   - Agregadas las propiedades `previousWorkoutName`, `previousDurationMinutes`, `previousTss`, `previousDiscipline`, `previousPowerTarget` al contrato de `PlanItem`.
+   - `deterministicFallback.ts` preserva los datos originales y emite la respuesta alineada al objetivo en **347 LOC** ($\le 348$).
+
+### 184.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):** Todos los archivos $\le 348$ LOC ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Arquitectura & Mejores Prácticas UX):** Comparativa "Ejercicio actual" vs "Ejercicio que se va a cambiar", mensaje directo alineado a la meta del atleta ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 184 ✅.
+
+
 

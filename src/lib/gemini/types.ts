@@ -87,6 +87,11 @@ export interface PlanItem {
   fuelingStrategy?: string;
   isRestDay?: boolean;
   isCustomized?: boolean;
+  previousWorkoutName?: string;
+  previousDurationMinutes?: number;
+  previousTss?: number;
+  previousDiscipline?: string;
+  previousPowerTarget?: string;
 }
 
 export interface AgentDecisionOutput {

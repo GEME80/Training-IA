@@ -199,6 +199,11 @@ export async function executeGeminiInference(
                     discipline: rawProposal.discipline || fallbackItem.discipline,
                     workoutName: rawProposal.workoutName || fallbackItem.workoutName,
                     action: rawProposal.action || (rawProposal.workoutName !== fallbackItem.workoutName || rawProposal.discipline !== fallbackItem.discipline ? "MODIFICAR" : fallbackItem.action),
+                    previousWorkoutName: fallbackItem.workoutName,
+                    previousDurationMinutes: fallbackItem.durationMinutes,
+                    previousTss: fallbackItem.tss,
+                    previousDiscipline: fallbackItem.discipline,
+                    previousPowerTarget: fallbackItem.powerTarget,
                     powerTarget: isProposalRest ? "" : (rawProposal.powerTarget || fallbackItem.powerTarget),
                     durationMinutes: isProposalRest ? 0 : (typeof rawProposal.durationMinutes === "number" ? rawProposal.durationMinutes : fallbackItem.durationMinutes),
                     tss: isProposalRest ? 0 : (typeof rawProposal.tss === "number" ? rawProposal.tss : fallbackItem.tss),
@@ -206,6 +211,14 @@ export async function executeGeminiInference(
                     workoutStructure: isProposalRest ? [] : (rawProposal.workoutStructure || fallbackItem.workoutStructure),
                   };
                 });
+                const lastMsg = (body.messages?.[body.messages.length - 1]?.content || "").toLowerCase();
+                const isExchange = lastMsg.includes("deseo cambiar") || lastMsg.includes("intercambiar") || lastMsg.includes("cambiar a ") || lastMsg.includes("cambiar mi sesión");
+                if (isExchange && parsed.reply && (parsed.reply.includes("auditando tu sesión") || parsed.reply.includes("estuve auditando") || (parsed.reply.includes("Completaste") && parsed.reply.includes("desacoplamiento")))) {
+                  const mod = (parsed.suggestedPlan as any[]).find((p: any) => p.action === "MODIFICAR");
+                  const modName = mod?.workoutName || "la sesión propuesta", origName = mod?.previousWorkoutName || "la sesión programada";
+                  const athName = (ctx.profile.name && ctx.profile.name !== "Atleta" ? ctx.profile.name : "").split(" ")[0] || "Atleta";
+                  parsed.reply = `Hola ${athName}, según tu objetivo hacia ${ctx.cycleGoalTitle}, he configurado el cambio del ejercicio que está programado (${origName}) por el siguiente ejercicio: ${modName} (${mod?.tss || 0} TSS), manteniendo exactamente tu carga fisiológica programada. Por favor confirma para sincronizarlo con tu calendario.`;
+                }
                 if (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && Array.isArray(parsed.suggestedPlan)) {
                   parsed.suggestedPlan = applyTssAdjustmentToPlan(parsed.suggestedPlan, ctx.targetTssAdjustmentPct);
                 }

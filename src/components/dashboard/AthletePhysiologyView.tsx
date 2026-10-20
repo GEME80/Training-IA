@@ -284,6 +284,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         <div className="animate-fadeIn">
           <AthleteIntervalsTab
             athleteId={athleteId} apiKey={apiKey} isLiveConnected={isLiveConnected}
+            hasDeviceConnected={Boolean(restingHR || lthr || (bikeFtp && bikeFtp > 0) || (runFtp && runFtp > 0))}
             onSaveCredentials={handleSaveIntervals} onTestConnection={onTestConnection}
           />
         </div>

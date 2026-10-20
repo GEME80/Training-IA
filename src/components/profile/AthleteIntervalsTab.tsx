@@ -8,6 +8,7 @@ interface AthleteIntervalsTabProps {
   athleteId: string;
   apiKey: string;
   isLiveConnected: boolean;
+  hasDeviceConnected?: boolean;
   onSaveCredentials: (creds: { athleteId: string; apiKey: string }) => Promise<void>;
   onTestConnection?: (athleteId: string) => Promise<{ success: boolean; athleteName?: string; error?: string }>;
 }
@@ -16,6 +17,7 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
   athleteId,
   apiKey,
   isLiveConnected,
+  hasDeviceConnected = false,
   onSaveCredentials,
   onTestConnection,
 }) => {
@@ -193,7 +195,7 @@ export const AthleteIntervalsTab: React.FC<AthleteIntervalsTabProps> = ({
 
       {/* 3. Notificación Pedagógica y Enlace a Configuración de Reloj / Dispositivos */}
       {isConnected && (
-        <AthleteDeviceSyncNotice athleteId={athleteId} />
+        <AthleteDeviceSyncNotice athleteId={athleteId} hasDeviceConnected={hasDeviceConnected} />
       )}
 
       {/* Modal de Confirmación para Desconectar */}

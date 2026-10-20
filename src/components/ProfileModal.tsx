@@ -452,6 +452,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               availableModels={availableModels}
               loadingModels={loadingModels}
               onRefreshModels={() => fetchGeminiModels(true)}
+              hasDeviceConnected={Boolean(restingHR > 0 || lthr > 0 || bikeFtp > 0 || runFtp > 0)}
             />
           )}
 

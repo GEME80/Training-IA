@@ -31,6 +31,7 @@ interface ProfileConnectionsTabProps {
   availableModels: GeminiModelDto[];
   loadingModels: boolean;
   onRefreshModels: () => void;
+  hasDeviceConnected?: boolean;
 }
 
 export const ProfileConnectionsTab: React.FC<ProfileConnectionsTabProps> = ({
@@ -51,6 +52,7 @@ export const ProfileConnectionsTab: React.FC<ProfileConnectionsTabProps> = ({
   availableModels,
   loadingModels,
   onRefreshModels,
+  hasDeviceConnected = false,
 }) => {
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [showGeminiKey, setShowGeminiKey] = useState<boolean>(false);
@@ -144,7 +146,7 @@ export const ProfileConnectionsTab: React.FC<ProfileConnectionsTabProps> = ({
       </div>
 
       {/* Aviso de sincronización de reloj deportivo */}
-      <AthleteDeviceSyncNotice athleteId={athleteId} />
+      <AthleteDeviceSyncNotice athleteId={athleteId} hasDeviceConnected={hasDeviceConnected} />
 
       {/* Bloque Google Gemini AI */}
       <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-3 shadow-sm">

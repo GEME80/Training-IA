@@ -1,16 +1,18 @@
 "use client";
 
 import React from "react";
-import { Watch, ExternalLink, AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { Watch, ExternalLink, AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 
 interface AthleteDeviceSyncNoticeProps {
   athleteId?: string;
   isStravaDetected?: boolean;
+  hasDeviceConnected?: boolean;
 }
 
 export const AthleteDeviceSyncNotice: React.FC<AthleteDeviceSyncNoticeProps> = ({
   athleteId,
   isStravaDetected = true,
+  hasDeviceConnected = false,
 }) => {
   const handleOpenIntervals = () => {
     if (typeof window !== "undefined") {
@@ -18,6 +20,60 @@ export const AthleteDeviceSyncNotice: React.FC<AthleteDeviceSyncNoticeProps> = (
     }
   };
 
+  // CASO A: Dispositivo Deportivo ya Conectado y Verificado
+  if (hasDeviceConnected) {
+    return (
+      <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-50/60 via-white to-emerald-50/30 dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900/80 p-4 sm:p-5 shadow-xs space-y-3 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-emerald-200/60 dark:border-emerald-800/40">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <Watch className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                  Reloj Deportivo Sincronizado
+                </h4>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Garmin Connect Activo
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Transmisión bidireccional activa: telemetría de salud y recepción de entrenamientos guiados
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenIntervals}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition cursor-pointer"
+          >
+            <span>Gestionar en Intervals.icu</span>
+            <ExternalLink className="h-3.5 w-3.5 text-emerald-600" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-300">
+          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span>Datos de Salud (HRV, Sueño, FC)</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span>Upload Workouts Activado</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span>Zonas FTP & Umbral en vivo</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // CASO B: Usuario requiere vincular su reloj (proviene de Strava o sin Garmin)
   return (
     <div className="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900/80 p-5 shadow-xs space-y-4 text-left">
       {/* Encabezado */}

@@ -10258,3 +10258,34 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Compilación de Producción:** `npm run build` completado exitosamente (28/28 rutas).
 - **Health Check Local:** `http://localhost:3000` con status `200 OK`.
 - **Git Commit:** Sincronizado y publicado en GitHub `main`.
+
+
+## 180. Erradicación de Entrenamientos Gemelos y Unificación SSOT con las Librerías Fisiológicas del Macrociclo
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** 
+  1. Erradicar por completo los diccionarios paralelos y entrenamientos gemelos hardcodeados en el agente (`chatInference.ts`).
+  2. Unificar la reorganización de microciclos por matriz temporal para que beba directamente de la Fuente Única de Verdad (SSOT): las librerías científicas del macrociclo (`generateWeekTemplate` en [`macrocycleTemplates.ts`](src/lib/physiology/macrocycleTemplates.ts) y [`fallbackPlanGenerator.ts`](src/lib/ai/headcoach/fallbackPlanGenerator.ts)).
+  3. Preservar la integridad de los nombres científicos y estructuras paramétricas producidas por el motor (Daniels, Canova, Pfitzinger, Coggan/Friel, `AntiMonotonyMemoryBuffer`) sin sobreescrituras estáticas.
+  4. Reducir drásticamente la deuda técnica y complejidad del agente manteniendo la adaptabilidad para todos los atletas (corredores, ciclistas, triatletas y mantenimiento).
+
+### 180.1. Cambios Implementados
+1. **Limpieza y Unificación en Head Coach IA ([`src/lib/ai/headcoach/chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):**
+   - Eliminados todos los arreglos duplicados de arquetipos (`RUN_ARCHETYPES`, `BIKE_ARCHETYPES`, `STRENGTH_ARCHETYPES`, `SWIM_ARCHETYPES`) y las ramas condicionales repetitivas.
+   - Enrutamiento directo de adaptaciones por matriz temporal (`isMatrixRequest || isMatrixAdjustment`) a `generateInitialFallbackPlan(ctx, body.currentPlan || [])`.
+   - El microciclo resultante hereda 100% la progresión de carga, saltos coprimos, buffer anti-monotonía y calibración fisiológica a los vatios FTP y Stryd CP del atleta.
+   - Reducción del archivo de 346 a **229 LOC**.
+2. **Preservación de Metodologías en Generador ([`src/lib/ai/headcoach/fallbackPlanGenerator.ts`](src/lib/ai/headcoach/fallbackPlanGenerator.ts)):**
+   - Eliminadas las sobreescrituras de cadenas fijas por día de la semana (`Martes = Umbral`, `Sábado = SweetSpot`) que anulaban la variabilidad del motor de macrociclos.
+   - Preservados los nombres dinámicos calculados por `generateWeekTemplate`.
+   - Archivo optimizado a **76 LOC**.
+
+### 180.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/lib/ai/headcoach/chatInference.ts`: 229 LOC ($\le 348$) ✅
+  * `src/lib/ai/headcoach/fallbackPlanGenerator.ts`: 76 LOC ($\le 348$) ✅
+  * `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`: 340 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (28/28 rutas compiladas) ✅.
+- **Gate 4 (Arquitectura Limpia & Cero Duplicados):** Entrenamientos gemelos eliminados; conexión directa y transparente al motor de macrociclos para cualquier deporte ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 180 ✅.

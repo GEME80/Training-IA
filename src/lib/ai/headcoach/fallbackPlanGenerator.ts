@@ -65,23 +65,9 @@ export function generateInitialFallbackPlan(
     }
 
     const isRest = p.discipline === "Descanso" || p.action === "DESCANSO_ACTIVO";
-    const dayName = p.day || (planningWeekDates[pIdx]?.day) || "Día";
-    let workoutName = p.workoutName || p.title;
-    if (isRest) {
-      workoutName = "Descanso Pasivo Total";
-    } else if (!workoutName || workoutName === "Entrenamiento" || /rodaje de activaci|aer[oó]bica continua z2/i.test(workoutName)) {
-      if (p.discipline === "Ciclismo") workoutName = dayName === "Sábado" ? "Ciclismo - SweetSpot 2x15m en Rodillo" : "Ciclismo - Resistencia Base Z2";
-      else if (p.discipline === "Fuerza") workoutName = "Fuerza Neuromuscular, Core & Cadena Posterior";
-      else {
-        workoutName = dayName === "Martes" ? "Carrera - Series de Umbral 4x1200m @ 98-102% CP" :
-          dayName === "Jueves" ? "Carrera - Fartlek Progresivo Z2-Z4" :
-          dayName === "Viernes" ? "Carrera - Trote Regenerativo Z1" :
-          dayName === "Domingo" ? "Carrera - Tirada Larga Progresiva Maratón" : "Carrera - Rodaje Base Z2";
-      }
-    }
-
-    const dur = p.durationMinutes || (isRest ? 0 : p.discipline === "Ciclismo" ? 55 : p.discipline === "Fuerza" ? 30 : 45);
-    const tssVal = p.tss || (isRest ? 0 : Math.round(dur * 0.75));
+    const workoutName = isRest ? "Descanso Pasivo Total" : (p.workoutName || p.title || "Entrenamiento");
+    const dur = isRest ? 0 : (p.durationMinutes || (p.discipline === "Ciclismo" ? 60 : p.discipline === "Fuerza" ? 35 : 45));
+    const tssVal = isRest ? 0 : (p.tss || Math.round(dur * 0.75));
     return {
       ...p, date: itemDate, formattedDate: dateInfo.formattedDate || p.formattedDate,
       workoutName, title: workoutName, durationMinutes: dur, tss: tssVal,

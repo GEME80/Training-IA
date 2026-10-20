@@ -10513,3 +10513,42 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
 - **Gate 4 (Ergonomía & Consistencia Comercial):** Claridad total en pagos para los atletas al vincular la app con GMC (Germán Morales Consulting) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 186 ✅.
+
+---
+
+## 187. Rediseño Modular de la Tarjeta de Competición: Running, Ciclismo y Triatlón Multideporte
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Transformar la experiencia visual del día de competición oficial en el modal de detalles del entrenamiento (`WorkoutDetailModal` / `PlannedWorkoutPrescription`). Erradicar el bloque de texto crudo `<pre>` y estructurar planes de carrera enriquecidos para Running (3 bloques), Ciclismo (3 bloques) y Triatlón (3 sectores independientes + T1/T2), corrigiendo el bug donde el ciclismo en triatlón se convertía erróneamente en ritmo de running min/km.
+
+### 187.1. Cambios Implementados
+1. **Erradicación del Bug de Adaptación en Triatlón ([`useWorkoutDetailData.tsx`](src/components/macrocycle/useWorkoutDetailData.tsx)):**
+   - Se detecta de forma blindada si el evento es triatlón (`isTriathlon`) mediante `activityType === "Triatlón"`, nombre o estructura de sectores.
+   - Si es triatlón, se omite `adaptRunningWorkoutDoc`, preservando intactos los vatios de ciclismo (% FTP) y evitando que la bicicleta se transformara erróneamente en ritmo de carrera `(5:56-6:15/km)`.
+2. **Badge Canónico e Icono Oficial de Triatlón ([`WorkoutBottomSheetHero.tsx`](src/components/macrocycle/WorkoutBottomSheetHero.tsx)):**
+   - Sustituido el badge genérico "CARRERA" por el badge oficial "TRIATLÓN" con fondo índigo (`bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200`) e icono `Trophy` para eventos multisport.
+3. **Módulo Parser Universal de Competición ([`racePlanParser.ts`](src/lib/physiology/racePlanParser.ts)):**
+   - Parsea dinámicamente cualquier prescripción de competición oficial en splits de ritmo/potencia, estrategia de nutrición/hidratación, protocolos pre/post carrera, y sectores independientes para triatlón.
+   - Interpola vatios (% FTP / % CP) calculados al FTP del atleta y ritmos min/km calculados al umbral de carrera.
+4. **Componente de Ejecución Visual de Carrera ([`RaceDayExecutionPlan.tsx`](src/components/macrocycle/RaceDayExecutionPlan.tsx)):**
+   - **Running & Ciclismo:** Se divide en 3 bloques visuales independientes:
+     * *Bloque 1 (Activación Pre-Carrera):* Calentamiento y puesta a punto fuera de cronómetro.
+     * *Bloque 2 (Pacing Plan Oficial):* Splits por tramos, chips de distancia y métricas (Stryd CP / FTP / Ritmo) + tarjeta destacada de estrategia nutricional e hidratación.
+     * *Bloque 3 (Protocolo Post-Meta):* Recuperación inmediata, abrigo y reposición con recordatorio de detener el cronómetro.
+   - **Triatlón:** Visualización multisport con selector de sectores (`Natación` -> `T1` -> `Ciclismo` -> `T2` -> `Carrera a Pie`), con métricas específicas para cada disciplina (CSS para agua, vatios FTP sin errores para bici, potencia o ritmo para carrera).
+5. **Integración en Modal de Entrenamiento ([`PlannedWorkoutPrescription.tsx`](src/components/macrocycle/PlannedWorkoutPrescription.tsx), [`WorkoutDialogDesktop.tsx`](src/components/macrocycle/WorkoutDialogDesktop.tsx), [`WorkoutBottomSheetMobile.tsx`](src/components/macrocycle/WorkoutBottomSheetMobile.tsx)):**
+   - Detección automática de competiciones para renderizar `<RaceDayExecutionPlan />` con diseño responsivo móvil y desktop.
+
+### 187.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `racePlanParser.ts`: 219 LOC ($\le 350$) ✅
+  * `RaceDayExecutionPlan.tsx`: 282 LOC ($\le 350$) ✅
+  * `PlannedWorkoutPrescription.tsx`: 194 LOC ($\le 350$) ✅
+  * `useWorkoutDetailData.tsx`: 200 LOC ($\le 350$) ✅
+  * `WorkoutBottomSheetHero.tsx`: 134 LOC ($\le 350$) ✅
+  * `WorkoutDialogDesktop.tsx`: 286 LOC ($\le 350$) ✅
+  * `WorkoutBottomSheetMobile.tsx`: 228 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (UX Deportiva & Erradicación de Bugs):** Separación nítida de bloques pre/pacing/post, visualización multisport por deportes y vatios FTP en ciclismo garantizados ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 187 ✅.

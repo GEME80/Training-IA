@@ -54,8 +54,9 @@ export async function executeGeminiInference(
   ].filter(Boolean).join(" y ") || "potencia calibrada";
 
   const isGoalProgress = pLower.includes("rumbo a mi meta") || pLower.includes("rumbo hacia mi carrera") || pLower.includes("visión estratégica macro") || pLower.includes("carrera principal") || pLower.includes("semanas restantes") || pLower.includes("desde que inicio") || pLower.includes("desde que inició") || (pLower.includes("meta") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion"));
-  const isWeekBalance = !isGoalProgress && (Boolean(body.isWeekKickoffAudit) || pLower.includes("balance") || pLower.includes("volumen") || pLower.includes("semana completa") || pLower.includes("toda la semana") || pLower.includes("resumen semanal") || pLower.includes("resumen de la semana") || pLower.includes("cierre de semana") || pLower.includes("cómo van mis cargas") || pLower.includes("mis cargas") || pLower.includes("indicadores fisiológicos") || pLower.includes("cuántas sesiones llevo") || (pLower.includes("semana") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion")));
+  const isWeekBalance = !isGoalProgress && (Boolean(body.isWeekKickoffAudit) || pLower.includes("balance") || pLower.includes("volumen") || pLower.includes("semana completa") || pLower.includes("toda la semana") || pLower.includes("resumen semanal") || pLower.includes("resumen de la semana") || pLower.includes("cierre de semana") || pLower.includes("cómo van mis cargas") || pLower.includes("mis cargas") || pLower.includes("indicadores fisiológicos") || pLower.includes("cuántas sesiones llevo") || (pLower.includes("semana") && !pLower.includes("audita") && !pLower.includes("sesión") && !pLower.includes("sesion") && !pLower.includes("matriz") && !pLower.includes("disponibilidad")));
   const isSessionAudit = !isGoalProgress && !isWeekBalance && (pLower.includes("audita a fondo mi sesión") || pLower.includes("audita mi sesión") || pLower.includes("auditar sesión") || pLower.includes("audita sesión") || pLower.includes("mi test") || pLower.includes("test oficial") || pLower.includes("última sesión") || pLower.includes("esta sesión") || pLower.includes("fartlek") || pLower.includes("rodaje") || pLower.includes("sesión") || pLower.includes("sesion") || pLower.includes("audita"));
+  const isMatrixAdjustment = !isSessionAudit && !isGoalProgress && (pLower.includes("matriz") || pLower.includes("disponibilidad") || pLower.includes("reorganizar") || pLower.includes("temporal") || Boolean(body.temporaryAvailability));
 
   const modeInstruction = isSessionAudit
     ? `MODO AUDITORÍA DE SESIÓN INDIVIDUAL (TONO CRÍTICO, TÉCNICO Y DIRECTO DE HEAD COACH):
@@ -75,6 +76,13 @@ export async function executeGeminiInference(
    - Párrafo 1 (Perspectiva Macro de Salud y Base): Semana ${ctx.targetPlanningWeekNum} de ${totalWeeks} (Fase ${phaseLabel}: ${raceName}). Fitness: ${ctx.physioStatus.ctl.toFixed(1)} CTL vs ${ctx.plannedCtlForWeek || ctx.physioStatus.ctl.toFixed(1)} proyectados (${ctx.ctlDeltaVerdict || "en trayectoria"}), consolidando base aeróbica y longevidad con ${powerProfileStr}.
    - Párrafo 2 (Diagnóstico Semanal de Carga): Sumas ${ctx.actualTss} TSS ejecutados de ${ctx.plannedTssToDate || ctx.plannedWeekTss} al corte (${deltaStr} delta), TSB ${ctx.physioStatus.tsb >= 0 ? `+${ctx.physioStatus.tsb.toFixed(1)}` : ctx.physioStatus.tsb.toFixed(1)}, HRV ${ctx.physioStatus.currentHrv ? `${ctx.physioStatus.currentHrv} ms` : "estable"}. Analiza asimilación sin estrés competitivo.
    - Párrafo 3 (Dirección Estratégica): En ${phaseLabel}, foco en salud Zona 2, consistencia y fuerza${categoryStr ? ` (${categoryStr})` : ""}, garantizando bienestar físico.`)
+    : isMatrixAdjustment
+    ? `MODO ADAPTACIÓN POR MATRIZ TEMPORAL (REESTRUCTURACIÓN DE MICROCICLO):
+   - DIRECTRIZ SUPREMA: El atleta configuró su disponibilidad temporal para esta semana. Tu "suggestedPlan" DEBE contener exactamente 7 días respetando ESTRICTAMENTE la disciplina configurada para cada día en la matriz semanal.
+   - REGLA DE NO MONOTONÍA & VARIABILIDAD (INNEGOCIABLE): Si el atleta configuró múltiples días de Carrera (ej. 4 o 5 días de trote), PROHIBIDO repetir sesiones o dar puro rodaje Z2. Cada día de trote DEBE tener un estímulo metabólico DIFERENCIADO: (1) Calidad/Series Umbral 98-102% CP, (2) Base Aeróbica Z2 70-75% CP, (3) Regenerativo Z1 suave 65-70% CP (30-35m), (4) Fartlek Dinámico Z2-Z4, (5) Tirada Larga Progresiva Z2. Si un día es Fuerza, disciplina DEBE ser "Fuerza". Si es Ciclismo, "Ciclismo". Si es Descanso, "Descanso".
+   - Párrafo 1 (Explicación): Explica directamente a ${athleteFirstName} cómo redistribuiste los estímulos según su matriz sin alterar la carga global.
+   - Párrafo 2 (Diversificación Fisiológica): Detalla la variedad asignada (calidad, aeróbico Z2, fuerza, regeneración) para maximizar adaptación sin sobrecarga osteoarticular.
+   - Párrafo 3 (Directriz Táctica): Pauta para encarar la semana con disciplina respetando intensidades.`
     : `MODO BALANCE DE SEMANA (AUDITORÍA EXIGENTE DE CARGAS E INDICADORES FISIOLÓGICOS):
    - PROHIBICIÓN TAXATIVA: CERO foco en una sesión aislada; analiza el microciclo.${!isCompetitive ? ` Prohibido inventar carreras o 10k; el plan es de salud/mantenimiento (${raceName}).` : ""}
    - Párrafo 1 (Auditoría Numérica de Cargas al Corte): Balance global: ${ctx.actualTss} TSS ejecutados de ${ctx.plannedWeekTss} TSS (${ctx.compliancePct}% global). Al corte de este ${ctx.todayDayName}, debías sumar ${ctx.plannedTssToDate || ctx.plannedWeekTss} TSS, arrojando un diferencial de ${deltaStr} TSS. Dictamina si el volumen va en línea con el microciclo o si hay déficit.
@@ -173,145 +181,115 @@ export async function executeGeminiInference(
                 parsed.suggestedPlan = null;
                 parsed.quickReplies = [];
               } else if (Array.isArray(parsed.suggestedPlan)) {
-                const dayNamesList = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-                parsed.suggestedPlan = parsed.suggestedPlan.map((p: any, idx: number) => {
-                  const dateInfo = ctx.planningWeekDates[idx] || { day: dayNamesList[idx % 7], date: "", formattedDate: "" };
-                  const dName = dateInfo.day || dayNamesList[idx % 7] || "Lunes";
-                  const itemDate = p.date || dateInfo.date;
+                const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+                const RUN_ARCHETYPES = [
+                  { name: "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP", power: "98-102% Stryd CP", tss: 58, min: 55, struct: "- Calentamiento: 15m @ 65-70% Stryd CP\n- 4x:\n  - Intervalo Umbral: 5m @ 98-102% Stryd CP\n  - Recuperación: 2m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP" },
+                  { name: "Carrera - Base Aeróbica Z2 Constante", power: "70-75% Stryd CP", tss: 44, min: 50, struct: "- Rodaje Continuo Zona 2: 50m @ 70-75% Stryd CP (cadencia 88-92 spm)" },
+                  { name: "Carrera - Fartlek Progresivo Dinámico Z2-Z4", power: "Z2-Z4 (Cambios @ 95-98% CP)", tss: 50, min: 45, struct: "- Calentamiento: 15m @ 65% Stryd CP\n- 6x:\n  - Cambio de Ritmo: 2m @ 95-98% Stryd CP\n  - Recuperación: 1m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP" },
+                  { name: "Carrera - Rodaje Regenerativo Z1 de Descarga", power: "60-68% Stryd CP", tss: 28, min: 35, struct: "- Rodaje Regenerativo: 35m @ 60-68% Stryd CP (lavado de lactato)" },
+                  { name: "Carrera - Tirada Larga Progresiva Z2", power: "72-78% Stryd CP", tss: 75, min: 75, struct: "- Fondo Base Aeróbico: 55m @ 70-74% Stryd CP\n- Bloque Progresivo: 15m @ 78-82% Stryd CP\n- Enfriamiento: 5m @ 65% Stryd CP" },
+                ];
+
+                let runCount = 0;
+                const seenRunNames = new Set<string>();
+
+                parsed.suggestedPlan = CANONICAL_DAYS.map((dName, dayIdx) => {
+                  const dateInfo = ctx.planningWeekDates[dayIdx] || { day: dName, date: "", formattedDate: "" };
+                  const itemDate = dateInfo.date;
                   const isPast = ctx.isCurrentWeek && Boolean(itemDate && (itemDate < ctx.todayDateStr || (itemDate === ctx.todayDateStr && ctx.hasTrainedToday && !isTimeCompression)));
 
-                  // 1. DÍAS ANTERIORES O HOY EJECUTADO: CONGELAMIENTO HISTÓRICO INMUTABLE
                   if (isPast) {
                     const execData = ctx.effectiveExecutedMap[itemDate];
                     if (execData && execData.activities.length > 0) {
                       const act = execData.activities[0];
-                      const isRide = /ride|cycling|bike|virtualride/i.test(act.type), isWeight = /weight|strength|fuerza/i.test(act.type), isSwimAct = /swim|nataci/i.test(act.type);
-                      const disc = isRide ? "Ciclismo" : isWeight ? "Fuerza" : isSwimAct ? "Natacion" : "Carrera";
-                      const pWatts = act.watts ? `${act.watts}W` : (act.heartrate ? `${act.heartrate} bpm` : "Completada");
+                      const disc = /ride|cycling|bike/i.test(act.type) ? "Ciclismo" : /weight|strength|fuerza/i.test(act.type) ? "Fuerza" : /swim|nataci/i.test(act.type) ? "Natacion" : "Carrera";
                       return {
                         day: dName, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: disc,
-                        workoutName: act.name || `${disc} Completada`, action: "MANTENER", powerTarget: pWatts,
-                        tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0,
-                        justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.", workoutStructure: "",
+                        workoutName: act.name || `${disc} Completada`, action: "MANTENER", powerTarget: act.watts ? `${act.watts}W` : "Completada",
+                        tss: execData.totalTss, durationMinutes: act.movingTimeMin || 0, justification: "Historial inmutable: sesión realizada y registrada en Intervals.icu.", workoutStructure: "",
                       };
                     }
-
-                    const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
+                    const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan.find((cp: any) => cp?.day?.toLowerCase() === dName.toLowerCase()) : null;
                     const isRestPlanned = !plannedSession || plannedSession.discipline === "Descanso" || (plannedSession.tss || 0) === 0;
-
                     return {
-                      day: dName, date: itemDate, formattedDate: dateInfo.formattedDate,
-                      discipline: isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera"),
-                      workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || plannedSession?.title || "Entrenamiento"})`,
+                      day: dName, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: isRestPlanned ? "Descanso" : (plannedSession?.discipline || "Carrera"),
+                      workoutName: isRestPlanned ? "Descanso Pasivo Realizado" : `Sesión Saltada (${plannedSession?.workoutName || "Entrenamiento"})`,
                       action: "MANTENER", powerTarget: isRestPlanned ? "0W" : "0 TSS", tss: 0, durationMinutes: 0,
-                      justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada en Intervals.icu.",
-                      workoutStructure: "",
+                      justification: isRestPlanned ? "Historial inmutable: descanso respetado." : "Historial inmutable: sesión no registrada.", workoutStructure: "",
                     };
                   }
 
-                  // 2. DÍAS DE HOY EN ADELANTE: RESPETAR MATRIZ SEMANAL O CONTINUIDAD DEL PLAN
-                  const dLower = (dName || "").toLowerCase();
-                  const isTodayItem = dLower === (ctx.todayDayName || "").toLowerCase();
-                  const userRequestedChange = (allUserText.includes(dLower) || (isTodayItem && (allUserText.includes("hoy") || allUserText.includes("intercambi") || allUserText.includes("sustitu") || allUserText.includes("rodillo") || allUserText.includes("poco tiempo")))) && (
-                    allUserText.includes("cambia") || allUserText.includes("carrera") || allUserText.includes("bici") ||
-                    allUserText.includes("ciclismo") || allUserText.includes("descanso") || allUserText.includes("rodillo") ||
-                    allUserText.includes("fuerza") || allUserText.includes("modifica") || allUserText.includes("intercambi") ||
-                    allUserText.includes("sustitu") || allUserText.includes("nado") || allUserText.includes("natacion")
-                  );
-
-                  const plannedSession = Array.isArray(body.currentPlan) ? body.currentPlan[idx] : null;
-                  if (isContinuityVerdict && !userRequestedChange && plannedSession && (plannedSession.workoutName || plannedSession.title)) {
-                    return {
-                      day: dName, date: itemDate, formattedDate: p.formattedDate || dateInfo.formattedDate,
-                      discipline: plannedSession.discipline || p.discipline || "Carrera", workoutName: plannedSession.workoutName || plannedSession.title,
-                      action: "MANTENER", powerTarget: plannedSession.powerTarget || p.powerTarget || "", tss: plannedSession.tss || p.tss || 0,
-                      durationMinutes: plannedSession.durationMinutes || p.durationMinutes || 0, justification: "Plan confirmado: continuidad aprobada sin modificaciones.",
-                      workoutStructure: plannedSession.workoutStructure || p.workoutStructure || "", mobilityWarmup: p.mobilityWarmup || plannedSession.mobilityWarmup,
-                      fuelingStrategy: p.fuelingStrategy || plannedSession.fuelingStrategy,
-                    };
-                  }
+                  const rawProposal = (parsed.suggestedPlan as any[]).find((p: any) =>
+                    p && ((p.date && p.date === itemDate) || (p.day && (p.day.toLowerCase() === dName.toLowerCase() || p.day.toLowerCase().startsWith(dName.slice(0, 3).toLowerCase()))))
+                  ) || {};
 
                   const configuredList = getDayDisciplines(ctx.safeAvailability, dName);
-                  let safeDiscipline = p.discipline || p.type || "Carrera";
-
-                  if (!userRequestedChange && configuredList.length > 0) {
-                    if (configuredList.length === 1 && configuredList[0] === "Descanso") safeDiscipline = "Descanso";
-                    else if (configuredList.includes("Natacion") && !configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) safeDiscipline = "Natacion";
-                    else if (configuredList.includes("Ciclismo") && !configuredList.includes("Carrera")) safeDiscipline = "Ciclismo";
-                    else if (configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) safeDiscipline = "Carrera";
-                    else if (configuredList.includes("Fuerza") && !configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) safeDiscipline = "Fuerza";
-                    else if (configuredList.includes("Natacion") && (p.discipline === "Natacion" || p.discipline === "Swim")) safeDiscipline = "Natacion";
+                  let safeDiscipline = rawProposal.discipline || rawProposal.type;
+                  if (configuredList.length === 1) {
+                    safeDiscipline = configuredList[0];
+                  } else if (configuredList.length > 1) {
+                    const matchConfig = configuredList.find((c) => c.toLowerCase() === (safeDiscipline || "").toLowerCase());
+                    if (matchConfig) safeDiscipline = matchConfig;
+                    else if (/fuerza|gimnasio|pesas/i.test(rawProposal.workoutName || "") && configuredList.includes("Fuerza")) safeDiscipline = "Fuerza";
+                    else if (/ciclismo|bici|rodillo/i.test(rawProposal.workoutName || "") && configuredList.includes("Ciclismo")) safeDiscipline = "Ciclismo";
+                    else if (/nataci|nado|swim/i.test(rawProposal.workoutName || "") && configuredList.includes("Natacion")) safeDiscipline = "Natacion";
+                    else safeDiscipline = configuredList[0];
+                  } else {
+                    safeDiscipline = safeDiscipline || "Descanso";
                   }
 
                   const isRest = safeDiscipline === "Descanso";
-                  const isSwim = safeDiscipline === "Natacion";
-                  const safeTss = isRest ? 0 : (typeof p.tss === "number" && p.tss > 0 ? p.tss : (safeDiscipline === "Ciclismo" ? 50 : isSwim ? 38 : 45));
-                  const safeDuration = isRest ? 0 : (typeof p.durationMinutes === "number" && p.durationMinutes > 0 ? p.durationMinutes : (safeDiscipline === "Ciclismo" ? 60 : isSwim ? 45 : 45));
-
-                  let safePower = p.powerTarget || p.intensity || "";
-                  if (safeDiscipline === "Ciclismo" && (!safePower || safePower.includes("CP") || safePower.includes("Stryd"))) {
-                    const bikeFtp = ctx.profile.bike_ftp || 250;
-                    safePower = `65-72% Bike FTP (${Math.round(bikeFtp * 0.68)}W)`;
-                  } else if (safeDiscipline === "Carrera" && (!safePower || safePower.includes("Bike"))) {
-                    const runFtp = ctx.profile.run_ftp || 320;
-                    safePower = `70-75% Stryd CP (${Math.round(runFtp * 0.72)}W)`;
-                  } else if (isSwim && !safePower) {
-                    safePower = "Ritmo Aeróbico CSS";
-                  }
-
-                  let safeName = p.workoutName || p.title || p.name;
                   if (isRest) {
-                    safeName = "Descanso Pasivo Total";
-                  } else if (isSwim) {
-                    if (!safeName || safeName === "Entrenamiento" || /^(rodaje|sesi[oó]n|entrenamiento)$/i.test(safeName.trim())) {
-                      safeName = "Natación Técnica & Resistencia Aeróbica";
-                    }
-                  } else if (!safeName || safeName === "Entrenamiento" || /^(rodaje|sesi[oó]n|entrenamiento)$/i.test(safeName.trim())) {
-                    if (safeDiscipline === "Ciclismo") {
-                      safeName = dName === "Sábado"
-                        ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia"
-                        : "Ciclismo - Resistencia Base Z2 & Cadencia Dinámica";
-                    } else if (safeDiscipline === "Fuerza") {
-                      safeName = "Fuerza Neuromuscular, Core & Cadena Posterior";
-                    } else {
-                      if (dName === "Martes") safeName = "Carrera - Series de Umbral 4x1200m @ 98-102% Stryd CP";
-                      else if (dName === "Jueves") safeName = "Carrera - Fartlek Progresivo Z2-Z4";
-                      else if (dName === "Viernes") safeName = "Carrera - Fartlek Dinámico & Capilarización";
-                      else if (dName === "Domingo") safeName = `Carrera - Tirada Larga Progresiva (${safeDuration}m)`;
-                      else safeName = `Carrera - Rodaje de Capilarización (${safeDuration}m)`;
-                    }
+                    return {
+                      day: dName, date: itemDate, formattedDate: dateInfo.formattedDate, discipline: "Descanso",
+                      workoutName: "Descanso Pasivo Total", action: "MANTENER", powerTarget: "0W", tss: 0, durationMinutes: 0,
+                      justification: rawProposal.justification || "Descanso programado para regeneración biológica.", workoutStructure: "",
+                    };
                   }
 
-                  let safeStructure = p.workoutStructure || p.structure || "";
-                  if (!safeStructure && !isRest && safeDuration > 0) {
-                    if (safeDiscipline === "Carrera") {
-                      if (/umbral|series|interval/i.test(safeName)) {
-                        safeStructure = `- Calentamiento: 15m @ 65-70% Stryd CP\n- 4x:\n  - Intervalo Umbral: 6m @ 98-102% Stryd CP\n  - Recuperación: 2m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP`;
-                      } else if (/fartlek/i.test(safeName)) {
-                        safeStructure = `- Calentamiento: 15m @ 65% Stryd CP\n- 6x:\n  - Fartlek Cambio: 2m @ 95-98% Stryd CP\n  - Recuperación: 1m @ 60% Stryd CP\n- Enfriamiento: 10m @ 65% Stryd CP`;
-                      } else if (/larga|fondo|marat/i.test(safeName)) {
-                        safeStructure = `- Fondo Base Aeróbico: 55m @ 70-75% Stryd CP\n- Bloque Progresivo Maratón: 20m @ 80-84% Stryd CP\n- Enfriamiento: 15m @ 65% Stryd CP`;
-                      } else {
-                        safeStructure = `- Rodaje Continuo Z2: ${safeDuration}m @ ${safePower || "70-75% Stryd CP"}`;
-                      }
-                    } else if (safeDiscipline === "Ciclismo") {
-                      if (/sweetspot/i.test(safeName)) {
-                        safeStructure = `- Calentamiento: 15m @ 60% Bike FTP\n- 2x:\n  - SweetSpot: 15m @ 88-93% Bike FTP\n  - Recuperación: 5m @ 55% Bike FTP\n- Enfriamiento: 10m @ 55% Bike FTP`;
-                      } else {
-                        safeStructure = `- Rodillo / Ciclismo Z2: ${safeDuration}m @ ${safePower || "60-68% Bike FTP"}`;
-                      }
-                    } else if (safeDiscipline === "Fuerza") {
-                      safeStructure = `- Movilidad articular & Core: 10m\n- Fuerza Funcional (Sóleo, Isquios, Glúteos): 25m\n- Vuelta a la calma: 10m`;
+                  let safeDuration = (typeof rawProposal.durationMinutes === "number" && rawProposal.durationMinutes > 0) ? rawProposal.durationMinutes : (safeDiscipline === "Ciclismo" ? 60 : 45);
+                  let safeTss = (typeof rawProposal.tss === "number" && rawProposal.tss > 0) ? rawProposal.tss : (safeDiscipline === "Ciclismo" ? 50 : 45);
+                  let safePower = rawProposal.powerTarget || "";
+                  let safeName = (rawProposal.workoutName || rawProposal.title || "").trim();
+                  let safeStructure = rawProposal.workoutStructure || "";
+
+                  if (safeDiscipline === "Carrera") {
+                    const isLongDay = dName === "Domingo" || dName === "Sábado";
+                    const isRepetitive = !safeName || /^(carrera|rodaje|sesi[oó]n|entrenamiento|rodaje z2|rodaje continuo)$/i.test(safeName) || seenRunNames.has(safeName.toLowerCase());
+                    if (isRepetitive) {
+                      const arch = isLongDay ? RUN_ARCHETYPES[4] : RUN_ARCHETYPES[runCount % (RUN_ARCHETYPES.length - 1)];
+                      safeName = arch.name;
+                      safePower = safePower || arch.power;
+                      safeDuration = safeDuration || arch.min;
+                      safeTss = safeTss || arch.tss;
+                      safeStructure = safeStructure || arch.struct;
                     }
+                    runCount++;
+                    seenRunNames.add(safeName.toLowerCase());
+                    const runFtp = ctx.profile.run_ftp || 320;
+                    if (!safePower || safePower.includes("Bike")) safePower = `70-75% Stryd CP (${Math.round(runFtp * 0.72)}W)`;
+                    if (!safeStructure) safeStructure = `- Rodaje Continuo Z2: ${safeDuration}m @ ${safePower}`;
+                  } else if (safeDiscipline === "Ciclismo") {
+                    const bikeFtp = ctx.profile.bike_ftp || 250;
+                    if (!safePower || safePower.includes("CP")) safePower = `65-72% Bike FTP (${Math.round(bikeFtp * 0.68)}W)`;
+                    if (!safeName || /ciclismo|rodaje|sesion/i.test(safeName)) safeName = dName === "Sábado" ? "Ciclismo - SweetSpot 2x15m en Rodillo / Resistencia" : "Ciclismo - Resistencia Base Z2 & Cadencia Dinámica";
+                    if (!safeStructure) safeStructure = `- Rodillo / Ciclismo Z2: ${safeDuration}m @ ${safePower}`;
+                  } else if (safeDiscipline === "Fuerza") {
+                    safeName = safeName || "Fuerza Neuromuscular, Core & Cadena Posterior";
+                    safePower = "RPE 7-8 / Calistenia y Pesas";
+                    if (!safeStructure) safeStructure = "- Movilidad articular & Core: 10m\n- Fuerza Funcional (Sóleo, Isquios, Glúteos): 25m\n- Vuelta a la calma: 10m";
+                  } else if (safeDiscipline === "Natacion") {
+                    safeName = safeName || "Natación Técnica & Resistencia Aeróbica";
+                    safePower = safePower || "Ritmo CSS Aeróbico";
+                    if (!safeStructure) safeStructure = `- Nado continuo y técnica: ${safeDuration}m @ ${safePower}`;
                   }
 
                   return {
-                    day: dName, date: itemDate, formattedDate: p.formattedDate || dateInfo.formattedDate,
-                    discipline: safeDiscipline, workoutName: safeName, action: p.action || "MANTENER",
+                    day: dName, date: itemDate, formattedDate: rawProposal.formattedDate || dateInfo.formattedDate,
+                    discipline: safeDiscipline, workoutName: safeName, action: rawProposal.action || "MANTENER",
                     powerTarget: safePower, tss: safeTss, durationMinutes: safeDuration,
-                    justification: p.justification || p.description || "", workoutStructure: safeStructure,
-                    mobilityWarmup: p.mobilityWarmup || plannedSession?.mobilityWarmup,
-                    fuelingStrategy: p.fuelingStrategy || plannedSession?.fuelingStrategy,
+                    justification: rawProposal.justification || rawProposal.description || "Sesión calibrada a tu matriz temporal.", workoutStructure: safeStructure,
+                    mobilityWarmup: rawProposal.mobilityWarmup, fuelingStrategy: rawProposal.fuelingStrategy,
                   };
                 });
                 if (ctx.targetTssAdjustmentPct && ctx.targetTssAdjustmentPct !== 0 && Array.isArray(parsed.suggestedPlan)) {

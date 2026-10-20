@@ -10161,3 +10161,38 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 
 
 
+
+
+## 178. Respeto Estricto de Matriz Temporal, Erradicación de Tarjetas Duplicadas y Variabilidad Anti-Monotonía en Microciclos Head Coach IA
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** 
+  1. Aislar 100% la matriz deportiva temporal (`temporaryAvailability`) en el flujo de reorganización para que jamás altere ni sobreescriba la matriz maestra de perfil del atleta (`weeklyAvailability`).
+  2. Respetar estrictamente los deportes configurados por el atleta en su matriz temporal (ej. si asigna 5 días de Carrera, programar Carrera los 5 días; si asigna Fuerza, preservar Fuerza con su tarjeta morada Gym sin forzar a Carrera).
+  3. Erradicar de raíz las tarjetas duplicadas y tarjetas de descanso fantasma apiladas en días activos.
+  4. Garantizar el principio biológico de no monotonía y variabilidad de estímulos metabólicos cuando se programan múltiples días de trote (Series de Umbral 98-102% CP, Base Z2, Fartlek Dinámico Z2-Z4, Rodaje Regenerativo Z1 y Tirada Larga Progresiva Z2).
+
+### 178.1. Causa Raíz Identificada
+1. **Tarjetas Duplicadas & Desfase Modulo:** Al mapear `parsed.suggestedPlan`, se usaba `idx % 7` y el índice del array en lugar de macheo canónico por nombre de día. Cuando la inferencia devolvía días adicionales o subsesiones, el wrap-around generaba tarjetas duplicadas en Lunes y Martes.
+2. **Pisotón de Disciplinas (Discipline Stomping):** La regla previa `else if (configuredList.includes("Carrera") && !configuredList.includes("Ciclismo")) safeDiscipline = "Carrera"` sobreescribía sesiones de "Fuerza" a "Carrera" en días concurrentes.
+3. **Monotonía de Entrenamientos:** No se forzaba la rotación sistemática de estímulos si la inferencia devolvía nombres genéricos o repetidos ("Rodaje Z2") para 4 o 5 días continuos de trote.
+4. **Falta de Filtro de Descansos Concurrente:** En el componente de UI `HeadCoachMicrocycleCard`, si un día tenía tanto una sesión activa como una tarjeta de descanso, ambas se renderizaban.
+
+### 178.2. Cambios Implementados
+1. **Motor de Inferencia Head Coach ([`src/lib/ai/headcoach/chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):**
+   - Agregado el modo `isMatrixAdjustment` con directrices de variabilidad metabólica innegociables en el prompt del sistema.
+   - Reemplazado el mapeo indexado por iteración canónica sobre los 7 días exactos (`CANONICAL_DAYS.map`), garantizando exactamente 7 días sin duplicados.
+   - Resolución pura de disciplina respetando `safeAvailability` (matriz temporal) sin alterar la matriz principal.
+   - Implementado secuenciador anti-monotonía `RUN_ARCHETYPES` para rotar estímulos fisiológicos (Umbral, Base Z2, Fartlek, Regenerativo Z1, Fondo Progresivo) ante nombres genéricos o repetidos.
+2. **Componente de Tarjeta de Microciclo ([`src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`](src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx)):**
+   - Agregada defensa en profundidad en `daysGrouped`: si un día tiene al menos una sesión activa, se purgan automáticamente las tarjetas de descanso; si solo hay descanso, se colapsa a exactamente 1 tarjeta.
+   - Mantenido estrictamente $\le 348$ LOC (340 LOC).
+
+### 178.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/lib/ai/headcoach/chatInference.ts`: 319 LOC ($\le 348$) ✅
+  * `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`: 340 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (27/27 rutas compiladas) ✅.
+- **Gate 4 (Preservación de Principios de Entrenamiento & Aislamiento):** Matriz temporal no modifica `weeklyAvailability` maestro; tarjetas de running con 5 estímulos distintos; 0 duplicados visuales ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 178 ✅.

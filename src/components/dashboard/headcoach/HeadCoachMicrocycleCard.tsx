@@ -91,21 +91,14 @@ export const HeadCoachMicrocycleCard: React.FC<HeadCoachMicrocycleCardProps> = (
     );
   };
 
-  // Agrupamiento canónico por los 7 días de la semana
+  // Agrupamiento canónico por los 7 días de la semana con erradicación estricta de duplicados
   const daysGrouped = CANONICAL_DAYS.map((dayName) => {
-    const daySessions = plan.filter(
-      (p) => p.day?.toLowerCase() === dayName.toLowerCase() ||
-             p.day?.toLowerCase().startsWith(dayName.slice(0, 3).toLowerCase())
-    );
+    const raw = plan.filter((p) => p.day?.toLowerCase() === dayName.toLowerCase() || p.day?.toLowerCase().startsWith(dayName.slice(0, 3).toLowerCase()));
+    const hasActive = raw.some((s) => s.discipline !== "Descanso" && (s.durationMinutes || 0) > 0);
+    const daySessions = hasActive ? raw.filter((s) => s.discipline !== "Descanso") : (raw.length > 1 ? [raw[0]] : raw);
     const primaryDate = daySessions.find((s) => s.formattedDate)?.formattedDate || "";
     const dayTotalTss = daySessions.reduce((acc, s) => acc + (s.tss || 0), 0);
-    return {
-      dayName,
-      shortName: dayName.slice(0, 3),
-      formattedDate: primaryDate,
-      sessions: daySessions,
-      dayTotalTss,
-    };
+    return { dayName, shortName: dayName.slice(0, 3), formattedDate: primaryDate, sessions: daySessions, dayTotalTss };
   });
 
   return (

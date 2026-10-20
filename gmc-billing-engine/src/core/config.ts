@@ -32,9 +32,9 @@ export function getOpenpayConfig(): OpenpayServerConfig {
   }
 
   const rawEnv = {
-    OPENPAY_MERCHANT_ID: process.env.OPENPAY_MERCHANT_ID || process.env.NEXT_PUBLIC_OPENPAY_MERCHANT_ID || 'mtest_placeholder_gmc',
-    OPENPAY_PRIVATE_KEY: process.env.OPENPAY_PRIVATE_KEY || 'sk_test_placeholder_gmc',
-    OPENPAY_PUBLIC_KEY: process.env.OPENPAY_PUBLIC_KEY || process.env.NEXT_PUBLIC_OPENPAY_PUBLIC_KEY || 'pk_test_placeholder_gmc',
+    OPENPAY_MERCHANT_ID: process.env.OPENPAY_MERCHANT_ID || process.env.NEXT_PUBLIC_OPENPAY_MERCHANT_ID || 'muujkkywmqgrlisleaen',
+    OPENPAY_PRIVATE_KEY: process.env.OPENPAY_PRIVATE_KEY || 'sk_4044892efb524b9587761b419daf8c80',
+    OPENPAY_PUBLIC_KEY: process.env.OPENPAY_PUBLIC_KEY || process.env.NEXT_PUBLIC_OPENPAY_PUBLIC_KEY || 'pk_2c247078c0ac4fd2b5a8d1836300bf66',
     OPENPAY_SANDBOX_MODE: process.env.OPENPAY_SANDBOX_MODE || process.env.NEXT_PUBLIC_OPENPAY_SANDBOX_MODE || 'true',
     OPENPAY_WEBHOOK_USER: process.env.OPENPAY_WEBHOOK_USER || 'gmc_webhook_user',
     OPENPAY_WEBHOOK_PASSWORD: process.env.OPENPAY_WEBHOOK_PASSWORD || 'gmc_webhook_secret_key',

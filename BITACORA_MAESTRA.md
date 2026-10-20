@@ -10349,7 +10349,9 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
      * **Pasar a Carrera Z2 (Aeróbico suave):** Sustitución por carrera continua suave en Z2.
      * **Fuerza & Core (40m):** Refuerzo funcional y estabilidad articular.
      * **Descanso Pasivo / Activación:** Permite convertir el día en descanso total o, si el día ya era de descanso, activar una sesión suave de carrera o rodillo.
-   - Optimización y reducción del archivo a **203 LOC** (muy por debajo del límite de 348 LOC).
+   - Optimización y estructuración visual en dos niveles (Fila 1: Volver + Selector Hoy/Mañana + Sesión Programada no recortada; Fila 2: Título claro "Intercambiar por:" + botones de acción ampliados con padding táctil generoso `px-3 py-1.5` y `text-xs`).
+   - Ocultamiento inteligente de "Invertir" cuando la sesión de hoy ya fue completada (`hasTrainedToday`), evitando contradicciones lógicas.
+   - Archivo en **235 LOC** (muy por debajo del límite de 348 LOC).
 2. **Motor Determinístico Fisiológico ([`src/lib/ai/headcoach/deterministicFallback.ts`](src/lib/ai/headcoach/deterministicFallback.ts)):**
    - Detección precisa de peticiones para hoy vs mañana (`isTomorrow`), así como intercambio simultáneo entre hoy y mañana (`isSwapDays`).
    - Manejo de conversiones a Descanso (`isRestDay: true`, 0 min, 0 TSS), Fuerza, Ciclismo/Rodillo y Carrera con potencias objetivo acordes a los umbrales del perfil.
@@ -10361,7 +10363,7 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 
 ### 182.2. Certificación del Pipeline de 5 Puertas
 - **Gate 1 (Presupuesto de Líneas - LOC Budget):**
-  * `src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx`: 203 LOC ($\le 348$) ✅
+  * `src/components/dashboard/headcoach/HeadCoachReorgSubMenu.tsx`: 235 LOC ($\le 348$) ✅
   * `src/lib/ai/headcoach/chatInference.ts`: 232 LOC ($\le 348$) ✅
   * `src/lib/ai/headcoach/deterministicFallback.ts`: 346 LOC ($\le 348$) ✅
 - **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.

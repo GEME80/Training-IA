@@ -24,6 +24,7 @@ import { WebhookCryptoRouterAgent, OpenpayWebhookPayload } from './agents/webhoo
 import { NetflixLifecycleAgent } from './agents/netflixLifecycleDunning';
 import { ForensicLedgerAuditorAgent } from './agents/forensicLedgerAuditor';
 import { resolveSubscriberAccess } from './core/entitlementGuard';
+import { generateDeterministicOrderId } from './core/idempotencyLock';
 import { TenantBillingConfig, AccessResolution, SubscriberBillingRecord } from './core/types';
 
 export class GmcBillingEngine {
@@ -54,6 +55,58 @@ export class GmcBillingEngine {
     });
 
     return customer.id;
+  }
+
+  /**
+   * Crea una sesión de pago alojada (Hosted Checkout) en Openpay (BBVA)
+   * Cumplimiento PCI-DSS SAQ-A total: el atleta es redirigido al dominio oficial de Openpay.
+   * PULSE jamás toca ni procesa tarjetas ni datos sensibles.
+   */
+  async createHostedCheckoutSession(params: {
+    tenantId: string;
+    subscriberId: string;
+    name: string;
+    email: string;
+    amountCop: number;
+    description: string;
+    redirectUrl: string;
+  }): Promise<{
+    checkoutUrl: string;
+    orderId: string;
+    transactionId: string;
+  }> {
+    const orderId = generateDeterministicOrderId(
+      params.tenantId,
+      params.subscriberId,
+      new Date()
+    );
+
+    const [firstName, ...restName] = (params.name || 'Atleta').split(' ');
+    const lastName = restName.join(' ') || 'Pulse';
+
+    const res = await this.client.createHostedCheckout({
+      amount: params.amountCop,
+      currency: 'COP',
+      description: params.description,
+      orderId,
+      customer: {
+        name: firstName || 'Atleta',
+        lastName,
+        email: params.email,
+      },
+      redirectUrl: params.redirectUrl,
+    });
+
+    const checkoutUrl = res.payment_method?.url;
+    if (!checkoutUrl) {
+      throw new Error(`[GMC_ENGINE_ERROR] Openpay no devolvió la URL de redirección bancaria.`);
+    }
+
+    return {
+      checkoutUrl,
+      orderId,
+      transactionId: res.id,
+    };
   }
 
   /**

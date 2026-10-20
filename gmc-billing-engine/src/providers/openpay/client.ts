@@ -291,4 +291,63 @@ export class OpenpayClient {
       body: JSON.stringify(body),
     });
   }
+
+  // ==========================================
+  // HOSTED CHECKOUT (PCI-DSS SAQ-A Redirection)
+  // ==========================================
+  async createHostedCheckout(params: {
+    amount: number;
+    description: string;
+    orderId: string;
+    customer: {
+      name: string;
+      lastName?: string;
+      email: string;
+      phoneNumber?: string;
+    };
+    redirectUrl: string;
+    currency?: string;
+  }): Promise<{
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    order_id?: string;
+    payment_method?: {
+      type: string;
+      url: string;
+    };
+  }> {
+    const body = {
+      method: 'card',
+      amount: params.amount,
+      currency: params.currency || 'COP',
+      description: params.description,
+      order_id: params.orderId,
+      customer: {
+        name: params.customer.name,
+        last_name: params.customer.lastName || 'Atleta',
+        email: params.customer.email,
+        phone_number: params.customer.phoneNumber || '3000000000',
+      },
+      confirm: false,
+      send_email: false,
+      redirect_url: params.redirectUrl,
+    };
+
+    return this.request<{
+      id: string;
+      amount: number;
+      currency: string;
+      status: string;
+      order_id?: string;
+      payment_method?: {
+        type: string;
+        url: string;
+      };
+    }>('/charges', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveUserProfile } from "@/lib/db/userProfile";
 import { IntervalsClient } from "@/lib/intervals/client";
+import { adminDb } from "@/lib/firebase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,50 @@ export async function GET(req: NextRequest) {
       console.warn("Aviso al consultar perfil tras OAuth:", testErr);
     }
 
-    // 3. Persistir en Firestore si el usuario está autenticado en PULSE AI
+    // 3. CANDADO ANTI-ABUSO (Identity Anchor): Comprobar si el ID de Intervals ya disfrutó de trial previo
+    let trialBlocked = false;
+    if (uid && adminDb) {
+      try {
+        const registryRef = adminDb.collection("gmc_trial_registry").doc(effectiveAthleteId);
+        const registrySnap = await registryRef.get();
+
+        if (registrySnap.exists) {
+          const regData = registrySnap.data();
+          if (regData && regData.firstUserId !== uid) {
+            // Este Intervals ID ya fue registrado por otro usuario anteriormente
+            const userSnap = await adminDb.collection("users").doc(uid).get();
+            const userData = userSnap.data();
+            const isExemptOrPaid = userData?.billingExempt || userData?.billingStatus === "PAID" || userData?.role === "superadmin";
+
+            if (!isExemptOrPaid) {
+              trialBlocked = true;
+              await adminDb.collection("users").doc(uid).set(
+                {
+                  isTrialActive: false,
+                  hasUsedTrial: true,
+                  gmcSubscriptionStatus: "PAST_DUE_LOCKED",
+                  trialBlockedReason: "intervals_already_registered",
+                  updatedAt: new Date().toISOString(),
+                },
+                { merge: true }
+              );
+            }
+          }
+        } else {
+          // Primer registro de este ID de Intervals: registrar candado global
+          await registryRef.set({
+            intervalsAthleteId: effectiveAthleteId,
+            firstUserId: uid,
+            athleteName: detectedProfile.athleteName || athleteName,
+            registeredAt: new Date().toISOString(),
+          });
+        }
+      } catch (antiLoopErr) {
+        console.warn("[ANTI_LOOP_CHECK_WARN] Error validando candado de atleta:", antiLoopErr);
+      }
+    }
+
+    // 4. Persistir en Firestore si el usuario está autenticado en PULSE AI
     if (uid) {
       await saveUserProfile(uid, {
         intervalsAthleteId: effectiveAthleteId,
@@ -106,8 +150,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 4. Redireccionar al usuario de regreso a la interfaz de PULSE AI con éxito
-    const successUrl = `${returnTo}${separator}intervals_connected=true&athleteId=${effectiveAthleteId}&token=${encodeURIComponent(
+    // 5. Redireccionar al usuario de regreso a la interfaz de PULSE AI con éxito
+    const successUrl = `${returnTo}${separator}intervals_connected=true&athleteId=${effectiveAthleteId}${trialBlocked ? "&trial_blocked=intervals_already_used" : ""}&token=${encodeURIComponent(
       bearerKey
     )}`;
     return NextResponse.redirect(new URL(successUrl, baseUrl));

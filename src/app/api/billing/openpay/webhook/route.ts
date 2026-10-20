@@ -10,7 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GmcBillingEngine } from '@/../gmc-billing-engine/src';
+import { GmcBillingEngine, WebhookCryptoRouterAgent } from '@/../gmc-billing-engine/src';
+import { adminDb } from '@/lib/firebase/admin';
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,6 +39,34 @@ export async function POST(req: NextRequest) {
         { error: `Fallo procesando webhook: ${result.reason}` },
         { status: 422 }
       );
+    }
+
+    // Sincronizar usuario en Firestore si el cobro fue exitoso
+    if (payload.type === 'charge.succeeded' && payload.transaction?.order_id && adminDb) {
+      const parsed = WebhookCryptoRouterAgent.parseOrderId(payload.transaction.order_id);
+      if (parsed?.subscriberId) {
+        try {
+          const now = new Date();
+          const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          await adminDb.collection('users').doc(parsed.subscriberId).set(
+            {
+              billingStatus: 'PAID',
+              gmcSubscriptionStatus: 'ACTIVE',
+              isTrialActive: false,
+              hasUsedTrial: true,
+              lastPaymentDate: now.toISOString(),
+              gmcCurrentPeriodEnd: periodEnd.toISOString(),
+              paymentMethod: 'OPENPAY_CHECKOUT_HOSTED',
+              planPrice: payload.transaction.amount || 50000,
+              planCurrency: payload.transaction.currency || 'COP',
+              updatedAt: now.toISOString(),
+            },
+            { merge: true }
+          );
+        } catch (dbErr) {
+          console.warn('[WEBHOOK_FIRESTORE_SYNC_WARN]', dbErr);
+        }
+      }
     }
 
     return NextResponse.json({

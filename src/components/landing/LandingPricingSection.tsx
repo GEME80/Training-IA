@@ -107,12 +107,12 @@ export const LandingPricingSection: React.FC<LandingPricingSectionProps> = ({
             {/* Insignias de Pago y Confianza */}
             <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500 pt-1">
               <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-blue-600 shrink-0" />
-                <span>Aceptamos <strong>Bre-B (BBVA)</strong>, interoperable desde cualquier app o banco</span>
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>Procesado por <strong>Openpay BBVA</strong> (Tarjetas de Crédito, Débito y PSE)</span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-600">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Sin contratos forzosos</span>
+                <span>Sin contratos forzosos • Cancela con 1 clic</span>
               </div>
             </div>
           </div>

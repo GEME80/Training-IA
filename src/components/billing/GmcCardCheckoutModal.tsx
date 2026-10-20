@@ -1,13 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { X, CreditCard, ShieldCheck, Lock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-
-declare global {
-  interface Window {
-    Openpay?: any;
-  }
-}
+import React, { useState } from "react";
+import { X, ShieldCheck, Lock, ExternalLink, Loader2, AlertCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { formatMoney } from "@/lib/services/adminBillingService";
 
 interface GmcCardCheckoutModalProps {
   isOpen: boolean;
@@ -32,382 +27,134 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
   trialDays = 7,
   onSuccess,
 }) => {
-  const [holderName, setHolderName] = useState(athleteName || "");
-  const [email, setEmail] = useState(athleteEmail || "");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expMonth, setExpMonth] = useState("");
-  const [expYear, setExpYear] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [deviceSessionId, setDeviceSessionId] = useState("");
-  const [sdkLoaded, setSdkLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const merchantId = process.env.NEXT_PUBLIC_OPENPAY_MERCHANT_ID || "";
-  const publicKey = process.env.NEXT_PUBLIC_OPENPAY_PUBLIC_KEY || "";
-  const isSandbox = (process.env.NEXT_PUBLIC_OPENPAY_SANDBOX_MODE || "true").toLowerCase() === "true";
-
-  // Sincronizar datos iniciales si cambian las props
-  useEffect(() => {
-    if (athleteName) setHolderName(athleteName);
-  }, [athleteName]);
-
-  useEffect(() => {
-    if (athleteEmail) setEmail(athleteEmail);
-  }, [athleteEmail]);
-
-  // Calcular la fecha exacta del primer cobro tras los días gratis
-  const firstChargeDate = new Date();
-  firstChargeDate.setDate(firstChargeDate.getDate() + trialDays);
-  const formattedChargeDate = firstChargeDate.toLocaleDateString("es-CO", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  // Carga dinámica y asíncrona de las librerías oficiales de Openpay BBVA
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const loadScripts = async () => {
-      try {
-        if (!window.Openpay) {
-          const script1 = document.createElement("script");
-          script1.src = "https://js.openpay.co/openpay.v1.min.js";
-          script1.async = true;
-          document.body.appendChild(script1);
-
-          await new Promise((res) => {
-            script1.onload = res;
-          });
-
-          const script2 = document.createElement("script");
-          script2.src = "https://js.openpay.co/openpay-data.v1.min.js";
-          script2.async = true;
-          document.body.appendChild(script2);
-
-          await new Promise((res) => {
-            script2.onload = res;
-          });
-        }
-
-        if (window.Openpay && merchantId && publicKey) {
-          window.Openpay.setId(merchantId);
-          window.Openpay.setApiKey(publicKey);
-          window.Openpay.setSandboxMode(isSandbox);
-
-          const devId = window.Openpay.deviceData?.setup("gmc-card-form", "deviceIdHidden");
-          setDeviceSessionId(devId || `dev_${Date.now()}`);
-          setSdkLoaded(true);
-        } else {
-          // Fallback en modo desarrollo si las llaves no están configuradas
-          setDeviceSessionId(`dev_mock_${Date.now()}`);
-          setSdkLoaded(true);
-        }
-      } catch (err) {
-        console.warn("[GMC_OPENPAY_LOAD_WARN] Error cargando scripts de Openpay:", err);
-        setDeviceSessionId(`dev_fallback_${Date.now()}`);
-        setSdkLoaded(true);
-      }
-    };
-
-    loadScripts();
-  }, [isOpen, merchantId, publicKey, isSandbox]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
+  const handleProceedToOpenpay = async () => {
     setLoading(true);
+    setErrorMessage(null);
 
     try {
-      // Validación básica local
-      const cleanNumber = cardNumber.replace(/\s+/g, "");
-      if (cleanNumber.length < 15 || cleanNumber.length > 16) {
-        throw new Error("Por favor ingresa un número de tarjeta válido (15 o 16 dígitos).");
-      }
-      if (!expMonth || !expYear || expMonth.length !== 2 || expYear.length !== 2) {
-        throw new Error("Ingresa la fecha de expiración en formato MM y AA (ej: 12 y 28).");
-      }
-      if (!cvv || cvv.length < 3 || cvv.length > 4) {
-        throw new Error("Ingresa el código de seguridad CVV (3 o 4 dígitos al respaldo).");
-      }
-      if (!email || !email.includes("@")) {
-        throw new Error("Ingresa un correo electrónico válido para tu cuenta.");
-      }
-
-      // 1. Tokenización segura con Openpay.js en el navegador (Zero Server PAN)
-      if (window.Openpay && window.Openpay.token) {
-        window.Openpay.token.create(
-          {
-            card_number: cleanNumber,
-            holder_name: holderName,
-            expiration_year: expYear,
-            expiration_month: expMonth,
-            cvv2: cvv,
-          },
-          async (response: any) => {
-            const tokenId = response.data.id;
-            await sendSubscriptionRequest(tokenId);
-          },
-          (error: any) => {
-            setLoading(false);
-            const desc = error?.data?.description || error?.message || "La tarjeta fue rechazada por el banco emisor.";
-            setErrorMessage(desc);
-          }
-        );
-      } else {
-        // Modo Mock/Sandbox para pruebas sin SDK externo cargado
-        const mockToken = `tok_test_${Date.now()}`;
-        await sendSubscriptionRequest(mockToken);
-      }
-    } catch (err: any) {
-      setLoading(false);
-      setErrorMessage(err.message || "Error procesando el registro de la tarjeta.");
-    }
-  };
-
-  const sendSubscriptionRequest = async (tokenId: string) => {
-    try {
-      const res = await fetch("/api/billing/openpay/subscribe", {
+      const response = await fetch("/api/billing/openpay/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subscriberId: subscriberId || email.toLowerCase().replace(/[^a-z0-9]/g, "_"),
-          name: holderName,
-          email: email.trim().toLowerCase(),
+          subscriberId,
+          athleteName: athleteName || "Atleta Pulse",
+          athleteEmail,
           planCode: "PULSE_PRO_MONTHLY",
-          tokenId,
-          deviceSessionId: deviceSessionId || `dev_${Date.now()}`,
-          trialDays,
         }),
       });
 
-      const data = await res.json();
+      const data = await response.json().catch(() => null);
 
-      if (!res.ok) {
-        throw new Error(data.error || "No se pudo completar el registro de suscripción.");
+      if (!response.ok || !data?.checkoutUrl) {
+        throw new Error(data?.error || "No se pudo generar la sesión de pago con Openpay BBVA.");
       }
 
-      setSuccessMessage(data.message || "¡Tarjeta registrada y suscripción activa!");
-      setLoading(false);
-
-      if (onSuccess) {
-        onSuccess(data);
-      }
-
-      setTimeout(() => {
-        onClose();
-      }, 2500);
+      // Redirección inmediata al portal bancario seguro de Openpay (BBVA)
+      window.location.href = data.checkoutUrl;
     } catch (err: any) {
+      console.error("[CHECKOUT_REDIRECT_ERROR]", err);
+      setErrorMessage(err.message || "Error al conectar con la pasarela bancaria. Intenta nuevamente.");
       setLoading(false);
-      setErrorMessage(err.message || "Error comunicando con el servidor de pagos.");
     }
   };
 
   return (
-    <div
-      onClick={(e) => {
-        // Cerrar únicamente si el usuario hace clic directamente en el fondo oscuro
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in duration-200"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 text-slate-900 space-y-5"
-      >
-        {/* Cabecera del Modal */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-              <CreditCard className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
-                <span>{trialDays > 0 ? `${trialDays} Días de Prueba Gratis` : "Activar Suscripción"}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase tracking-wider">
-                  Openpay BBVA
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500">Módulo de pagos seguros de German Morales Consulting</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 text-white space-y-5">
+        {/* Botón Cerrar */}
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Encabezado con Insignia de Seguridad Bancaria */}
+        <div className="text-center space-y-2 pt-1">
+          <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
+            <ShieldCheck className="h-6 w-6 text-emerald-400" />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <h2 className="text-xl font-black text-white tracking-tight">
+            Checkout Seguro Openpay
+          </h2>
+          <p className="text-xs text-slate-400 max-w-xs mx-auto">
+            Pasarela bancaria oficial de BBVA Colombia • Cumplimiento PCI-DSS SAQ-A
+          </p>
         </div>
 
-        {/* Notificación de Éxito */}
-        {successMessage ? (
-          <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-2 text-center">
-            <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto" />
-            <h4 className="font-bold text-sm">¡Tarjeta Registrada con Éxito!</h4>
-            <p className="text-xs text-emerald-800 leading-relaxed">{successMessage}</p>
+        {/* Resumen del Plan */}
+        <div className="rounded-2xl bg-slate-950/70 border border-slate-800/80 p-4 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300">{planName}</span>
+            <span className="font-mono font-bold text-white text-sm">
+              {formatMoney(planAmountCop, "COP")} / mes
+            </span>
           </div>
-        ) : (
-          <form id="gmc-card-form" onSubmit={handleSubmit} className="space-y-4">
-            <input type="hidden" id="deviceIdHidden" name="deviceIdHidden" />
 
-            {/* Banner Informativo Transparente (Estilo Netflix) */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
-              <div className="flex items-center justify-between font-bold text-slate-900">
-                <span>{planName}</span>
-                <span className="font-mono text-emerald-700">${planAmountCop.toLocaleString("es-CO")} COP / mes</span>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                {trialDays > 0 ? (
-                  <>
-                    💳 <strong>Cobro de hoy: $0 COP.</strong> Tu tarjeta será validada pero no debitada. Tu primer cobro automático se realizará el <strong>{formattedChargeDate}</strong> a menos que canceles antes desde tu perfil con 1 solo clic.
-                  </>
-                ) : (
-                  <>
-                    💳 <strong>Cobro de hoy: ${planAmountCop.toLocaleString("es-CO")} COP.</strong> Tu suscripción se activará de inmediato con cobro mensual recurrente. Cancela cuando quieras desde tu perfil.
-                  </>
-                )}
-              </p>
+          <div className="space-y-1.5 text-[11px] text-slate-400 border-t border-slate-800/60 pt-2.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span>Acceso total ilimitado a IA Fisiológica y Head Coach</span>
             </div>
-
-            {/* Error Banner */}
-            {errorMessage && (
-              <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs">
-                <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
-                <p className="leading-snug">{errorMessage}</p>
-              </div>
-            )}
-
-            {/* Campos del Formulario (SAQ-A: SIN atributo name para blindaje PCI) */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Nombre en la Tarjeta
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="GERMAN MORALES"
-                  value={holderName}
-                  onChange={(e) => setHolderName(e.target.value.toUpperCase())}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Correo Electrónico (Para tu cuenta y comprobantes)
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="atleta@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Número de Tarjeta (Débito o Crédito)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    maxLength={19}
-                    placeholder="4111 1111 1111 1111"
-                    value={cardNumber}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").replace(/(\d{4})/g, "$1 ").trim();
-                      setCardNumber(val);
-                    }}
-                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                  <Lock className="absolute right-3.5 top-3 h-3.5 w-3.5 text-slate-400" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Mes (MM)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={2}
-                    placeholder="12"
-                    value={expMonth}
-                    onChange={(e) => setExpMonth(e.target.value.replace(/\D/g, ""))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Año (AA)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={2}
-                    placeholder="28"
-                    value={expYear}
-                    onChange={(e) => setExpYear(e.target.value.replace(/\D/g, ""))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    CVV
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    maxLength={4}
-                    placeholder="•••"
-                    value={cvv}
-                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span>Sincronización en vivo con Intervals.icu y Garmin</span>
             </div>
-
-            {/* Insignia de Seguridad PCI-DSS */}
-            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium py-1">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Conexión cifrada de 256 bits directa con BBVA Openpay</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span>Cancela cuando quieras con 1 clic desde tu panel</span>
             </div>
+          </div>
+        </div>
 
-            {/* Botón de Envío */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-black text-sm shadow-md transition cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Validando con Openpay BBVA...</span>
-                </>
-              ) : (
-                <span>
-                  {trialDays > 0
-                    ? `Comenzar mis ${trialDays} Días de Prueba Gratis ($0 COP)`
-                    : `Pagar y Activar Suscripción ($${planAmountCop.toLocaleString("es-CO")} COP)`}
-                </span>
-              )}
-            </button>
-          </form>
+        {/* Garantía de Seguridad PCI */}
+        <div className="rounded-xl bg-blue-950/30 border border-blue-800/40 p-3 flex items-start gap-2.5 text-xs text-blue-200">
+          <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] leading-relaxed text-blue-300">
+            Serás transferido al portal bancario de <strong>Openpay (BBVA)</strong>. Tus datos financieros jamás tocan los servidores de Pulse, garantizando 100% de protección y autenticación 3D Secure.
+          </p>
+        </div>
+
+        {/* Mensaje de Error si ocurre */}
+        {errorMessage && (
+          <div className="rounded-xl bg-rose-950/40 border border-rose-800/60 p-3 flex items-start gap-2 text-xs text-rose-300">
+            <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+            <p className="text-[11px]">{errorMessage}</p>
+          </div>
         )}
+
+        {/* Botón de Acción Principal: Redirección a Openpay BBVA */}
+        <div className="space-y-2 pt-1">
+          <button
+            type="button"
+            onClick={handleProceedToOpenpay}
+            disabled={loading}
+            className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-emerald-950 transition cursor-pointer flex items-center justify-center gap-2 group active:scale-[0.99]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <span>Conectando con Openpay BBVA...</span>
+              </>
+            ) : (
+              <>
+                <span>Continuar a Openpay (BBVA)</span>
+                <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
+          </button>
+
+          <span className="block text-center text-[10px] text-slate-500 font-mono">
+            Acepta Tarjetas Visa, Mastercard, American Express y PSE
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ interface PricingAndFaqSectionProps {
 const FAQS = [
   {
     q: "¿Cómo funciona el periodo de prueba gratis de 7 días?",
-    a: "Al registrarte ingresas tu tarjeta de crédito o débito de forma segura a través de Openpay BBVA. Se realiza una verificación de $0 COP (sin cobro inicial). Entrenas con acceso total ilimitado durante 7 días y solo se te cobrará el valor mensual en el Día 8 si decides continuar.",
+    a: "Te registras en 30 segundos sin necesidad de ingresar tarjeta de crédito ni datos bancarios. Conectas tu reloj (Garmin o Coros) o tu perfil de Intervals.icu y comienzas a entrenar de inmediato con tu plan adaptativo por IA. Al finalizar los 7 días, tú decides si deseas activar tu membresía Pro ($50.000 COP) en la pasarela bancaria oficial de Openpay BBVA.",
   },
   {
     q: "¿Cómo se sincroniza con mi reloj deportivo?",
@@ -80,6 +80,12 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
   };
 
   const handleStartCardCheckout = () => {
+    if (!user) {
+      if (onOpenAuthModal) {
+        onOpenAuthModal("register");
+      }
+      return;
+    }
     setIsCardModalOpen(true);
   };
 
@@ -174,11 +180,10 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
                 </div>
                 <div>
                   <div className="font-bold text-emerald-950">
-                    Prueba Gratuita de {trialDays} Días Activa
+                    Prueba Gratuita de {trialDays} Días Activa • Cero Tarjetas Requeridas
                   </div>
                   <p className="text-[11px] text-emerald-800">
-                    Registras tu tarjeta hoy por <strong>$0 COP</strong>. Tu primer cobro automático será en el Día{" "}
-                    {trialDays + 1}. Cancela cuando quieras.
+                    Comienza hoy sin ingresar tarjeta de crédito. Prueba la IA y conecta tus dispositivos. Activas tu membresía únicamente si te convence.
                   </p>
                 </div>
               </div>
@@ -223,8 +228,8 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
                 {userProfile?.hasUsedTrial
                   ? `Activar Suscripción Mensual (${priceDisplay})`
                   : trialDays > 0
-                  ? `Comenzar mis ${trialDays} Días Gratis ($0 COP Hoy)`
-                  : `Suscribirme con Tarjeta (${priceDisplay})`}
+                  ? `Comenzar mis ${trialDays} Días Gratis (Sin Tarjeta)`
+                  : `Suscribirme con Openpay BBVA (${priceDisplay})`}
               </span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
             </button>

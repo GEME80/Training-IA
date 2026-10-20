@@ -53,6 +53,7 @@ export async function syncUserFromGoogleAuth(userData: {
     let preAuthRunFtp: number | undefined, preAuthBikeFtp: number | undefined;
     let preAuthEncryptedApiKey: any, preAuthWeightKg: number | undefined;
     let preAuthLthr: number | undefined, preAuthRestingHR: number | undefined, preAuthMaxHR: number | undefined;
+    let preAuthBillingExempt: boolean | undefined;
 
     const sanitizedEmailId = `preauth_${userData.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_")}`;
     const preAuthRef = adminDb.collection("users").doc(sanitizedEmailId);
@@ -71,6 +72,7 @@ export async function syncUserFromGoogleAuth(userData: {
         preAuthLthr = pData.lthr;
         preAuthRestingHR = pData.restingHR;
         preAuthMaxHR = pData.maxHR;
+        preAuthBillingExempt = pData.billingExempt;
       }
       await preAuthRef.delete().catch(() => {});
     }
@@ -111,6 +113,8 @@ export async function syncUserFromGoogleAuth(userData: {
     }
 
     // Registro de nuevo usuario consolidado
+    const isExempt = Boolean(preAuthBillingExempt || isSuperadmin);
+    const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const finalEncryptedKey = existingData.encryptedApiKey || preAuthEncryptedApiKey;
     const newProfile: UserProfileData = {
       uid: userData.uid,
@@ -129,6 +133,14 @@ export async function syncUserFromGoogleAuth(userData: {
       restingHR: existingData.restingHR || preAuthRestingHR,
       maxHR: existingData.maxHR || preAuthMaxHR,
       weeklyAvailability: DEFAULT_WEEKLY_AVAILABILITY,
+      billingStatus: isExempt ? "PAID" : "PENDING",
+      billingExempt: isExempt || undefined,
+      isTrialActive: !isExempt,
+      hasUsedTrial: true,
+      gmcTrialEndDate: !isExempt ? trialEndDate : undefined,
+      gmcSubscriptionStatus: isExempt ? "ACTIVE" : "TRIAL_ACTIVE",
+      planPrice: 50000,
+      planCurrency: "COP",
       termsAcceptedAt: now,
       termsVersion: "1.0",
       createdAt: now,

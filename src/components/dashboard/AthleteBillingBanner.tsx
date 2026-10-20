@@ -196,7 +196,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
       </div>
     );
   } else if (gmcResolution?.isTrial && gmcResolution?.hasAccess) {
-    // CASO 2: EN PERIODOS DE PRUEBA GRATUITA (TRIAL ACTIVO)
+    // CASO 2: EN PERIODOS DE PRUEBA GRATUITA (TRIAL ACTIVO SIN TARJETA)
     bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200 text-xs shadow-2xs">
         <div className="flex items-center gap-2.5">
@@ -205,32 +205,25 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           </div>
           <div>
             <div className="font-bold text-emerald-950 flex items-center gap-1.5">
-              <span>Periodo de Prueba Gratuita</span>
+              <span>Prueba Gratuita Activa (Sin Tarjeta)</span>
               <span className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px]">
                 {gmcResolution.daysRemaining} {gmcResolution.daysRemaining === 1 ? "día restante" : "días restantes"}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-normal">
-              Tarjeta registrada. Tu primer cobro automático ({formatMoney(configuredPrice, planCurrency)}) se realizará al finalizar tus días de prueba.
+              Acceso total ilimitado. Al finalizar tu prueba podrás activar tu membresía de {formatMoney(configuredPrice, planCurrency)} / mes con seguridad bancaria en Openpay BBVA.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setIsCardModalOpen(true)}
-            className="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition cursor-pointer shadow-sm"
           >
-            Cambiar Tarjeta
-          </button>
-          <button
-            type="button"
-            disabled={actionLoading}
-            onClick={handleCancelSubscription}
-            className="text-[11px] text-slate-500 hover:text-rose-600 underline cursor-pointer shrink-0"
-          >
-            Cancelar suscripción
+            <CreditCard className="h-3.5 w-3.5" />
+            <span>Activar Membresía</span>
           </button>
         </div>
       </div>

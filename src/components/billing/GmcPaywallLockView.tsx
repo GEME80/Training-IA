@@ -99,11 +99,11 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-950 transition cursor-pointer active:scale-[0.99] flex items-center justify-center gap-2 group"
             >
               <CreditCard className="h-5 w-5 shrink-0" />
-              <span>Reactivar con Tarjeta de Crédito / Débito ({formatMoney(planPrice, "COP")})</span>
+              <span>Activar Membresía con Openpay BBVA ({formatMoney(planPrice, "COP")})</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
             <span className="block text-[11px] text-slate-400 mt-2 font-mono">
-              Procesado con seguridad bancaria por Openpay de BBVA • Activación Inmediata
+              Procesado en entorno bancario seguro por Openpay de BBVA • Activación Inmediata
             </span>
           </div>
 

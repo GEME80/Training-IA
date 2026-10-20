@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
-import { AthleteBreBPaymentModal } from "../dashboard/AthleteBreBPaymentModal";
 import { DEFAULT_SUBSCRIPTION_PLAN, SubscriptionPlanConfig } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
 
@@ -38,8 +37,8 @@ const FAQS = [
     a: "PULSE ENDURANCE recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica.",
   },
   {
-    q: "¿Puedo pagar por transferencia con Bre-B si no tengo tarjeta?",
-    a: "Sí, disponemos de riel dual de pago. Puedes transferir directamente mediante Llave Bre-B o QR a nuestra cuenta BBVA Colombia desde cualquier app bancaria o billetera (Nequi, Bancolombia, Daviplata) y reportar tu comprobante en la plataforma.",
+    q: "¿Qué medios de pago aceptan para la suscripción recurrente?",
+    a: "Aceptamos todas las tarjetas de crédito y débito (Visa, Mastercard, American Express) procesadas con seguridad criptográfica a través de Openpay BBVA Colombia. Cero almacenamiento de números de tarjeta en nuestros servidores (PCI-DSS SAQ-A).",
   },
   {
     q: "¿Cómo cancelo mi suscripción?",
@@ -53,7 +52,6 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
   const [plan, setPlan] = useState<SubscriptionPlanConfig>(DEFAULT_SUBSCRIPTION_PLAN);
   const [isCardModalOpen, setIsCardModalOpen] = useState<boolean>(false);
-  const [isBreBModalOpen, setIsBreBModalOpen] = useState<boolean>(false);
   const [copiedCard, setCopiedCard] = useState<boolean>(false);
 
   useEffect(() => {
@@ -216,9 +214,9 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
             </div>
           </div>
 
-          {/* Botonera de Acción y Riel Dual de Pagos */}
+          {/* Botonera de Acción: Suscripción 100% Recurrente con Tarjeta Openpay */}
           <div className="pt-4 border-t border-slate-100 space-y-3">
-            {/* Botón Principal: Tarjeta Openpay con Trial */}
+            {/* Botón Principal: Tarjeta Openpay */}
             <button
               type="button"
               onClick={handleStartCardCheckout}
@@ -226,30 +224,16 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
             >
               <CreditCard className="w-5 h-5 shrink-0" />
               <span>
-                {trialDays > 0
+                {userProfile?.hasUsedTrial
+                  ? `Activar Suscripción Mensual (${priceDisplay})`
+                  : trialDays > 0
                   ? `Comenzar mis ${trialDays} Días Gratis ($0 COP Hoy)`
-                  : "Suscribirme con Tarjeta de Crédito / Débito"}
+                  : `Suscribirme con Tarjeta (${priceDisplay})`}
               </span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
             </button>
 
-            {/* Botón Secundario: Bre-B / Transferencia */}
-            <button
-              type="button"
-              onClick={() => {
-                if (user) {
-                  setIsBreBModalOpen(true);
-                } else {
-                  onOpenAuthModal?.("register");
-                }
-              }}
-              className="w-full py-3 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-xs sm:text-sm border border-slate-200 transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <Landmark className="w-4 h-4 text-blue-600 shrink-0" />
-              <span>Pagar por Transferencia Bre-B / BBVA (Nequi, Bancolombia, etc.)</span>
-            </button>
-
-            {/* Métodos de Pago Seguros y Sellos */}
+            {/* Métodos de Pago Seguros y Sellos Oficiales */}
             <div className="pt-3 border-t border-slate-100 space-y-2.5">
               <div className="flex items-center justify-between text-[11px] text-slate-500">
                 <span className="flex items-center gap-1.5 font-medium">
@@ -274,12 +258,11 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
                 <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200">
                   American Express
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 flex items-center gap-1">
-                  <Landmark className="w-3 h-3 text-blue-600" />
-                  <span>Bre-B Interoperable</span>
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
+                  BBVA Colombia
                 </span>
-                <span className="px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-200 text-purple-800">
-                  Nequi / Bancolombia
+                <span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+                  Débito / Crédito
                 </span>
               </div>
 
@@ -315,25 +298,11 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
         athleteName={userProfile?.displayName || user?.displayName || "Atleta Pulse"}
         athleteEmail={user?.email || "atleta@pulse.com"}
         planAmountCop={plan.price}
-        trialDays={trialDays}
+        trialDays={userProfile?.hasUsedTrial ? 0 : trialDays}
         onSuccess={() => {
           setIsCardModalOpen(false);
-          alert("¡Tarjeta registrada con éxito! Tu periodo de prueba ha comenzado.");
+          alert("¡Tarjeta registrada con éxito! Tu suscripción está activa.");
           window.location.reload();
-        }}
-      />
-
-      {/* Modal Bre-B Transferencia */}
-      <AthleteBreBPaymentModal
-        isOpen={isBreBModalOpen}
-        onClose={() => setIsBreBModalOpen(false)}
-        athleteUid={user?.uid || "guest_tester"}
-        athleteEmail={user?.email || "atleta@pulse.com"}
-        athletePrice={plan.price}
-        athleteCurrency={plan.currency}
-        onPaymentReported={(ref) => {
-          setIsBreBModalOpen(false);
-          alert(`Comprobante reportado con referencia ${ref}.`);
         }}
       />
 

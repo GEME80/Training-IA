@@ -210,7 +210,12 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
 
                   {/* Estado del Mes */}
                   <td className="py-3 px-4">
-                    {athlete.isTrialActive ? (
+                    {athlete.billingExempt ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-300 shadow-2xs">
+                        <Sparkles className="h-3 w-3 text-purple-700" />
+                        <span>★ BECADO / CORTESÍA</span>
+                      </span>
+                    ) : athlete.isTrialActive ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
                         <Sparkles className="h-3 w-3 text-purple-600" />
                         <span>TRIAL 7 DÍAS</span>

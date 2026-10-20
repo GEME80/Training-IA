@@ -78,6 +78,17 @@ function runAssertions() {
   assert('Cancelación programada respeta acceso hasta fin de mes', resCancel.hasAccess === true);
   assert('Cancelación programada marca willCancelAtPeriodEnd = true', resCancel.willCancelAtPeriodEnd === true);
 
+  // Caso D: Atleta Becado / Lista Blanca de Cortesía
+  const exemptSub: any = {
+    ...trialSub,
+    status: 'PAST_DUE_LOCKED',
+    currentPeriodEnd: '2026-01-01T00:00:00Z',
+    billingExempt: true,
+  };
+  const resExempt = resolveSubscriberAccess(exemptSub, now);
+  assert('Atleta becado en lista blanca tiene acceso permanente activo', resExempt.hasAccess === true);
+  assert('Atleta becado marca status ACTIVE', resExempt.status === 'ACTIVE');
+
   // ------------------------------------------------------------------
   // 2. AGENTE 1: SENTINEL-ANTIFRAUD (PCI Sanitize & Device Session)
   // ------------------------------------------------------------------

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PulseLogo } from "@/components/PulseLogo";
-import { Lock, CreditCard, Landmark, LogOut, ShieldAlert, Sparkles, Check } from "lucide-react";
+import { Lock, CreditCard, LogOut, Sparkles, Check, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { GmcCardCheckoutModal } from "./GmcCardCheckoutModal";
-import { AthleteBreBPaymentModal } from "@/components/dashboard/AthleteBreBPaymentModal";
+import { formatMoney } from "@/lib/services/adminBillingService";
 
 interface GmcPaywallLockViewProps {
   reason?: string;
@@ -18,7 +18,18 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
 }) => {
   const { user, userProfile, signOutUser } = useAuth();
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  const [isBreBModalOpen, setIsBreBModalOpen] = useState(false);
+  const [planPrice, setPlanPrice] = useState<number>(50000);
+
+  useEffect(() => {
+    fetch("/api/admin/subscription-plan")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.plan?.price) {
+          setPlanPrice(data.plan.price);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const athleteUid = user?.uid || userProfile?.uid || "";
   const athleteName = userProfile?.displayName || user?.displayName || "Atleta";
@@ -67,7 +78,7 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
             <ul className="space-y-1.5 text-[11px] text-slate-400">
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span>Sincronización en vivo con Intervals.icu y Garmin</span>
+                <span>Sincronización en vivo con Intervals.icu, Garmin y Coros</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
@@ -75,40 +86,25 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span>Supervisión y feedback directo de tu Head Coach</span>
+                <span>Supervisión y feedback continuo de tu Head Coach Digital</span>
               </li>
             </ul>
           </div>
 
-          {/* Opciones de Pago (Riel Dual: Tarjeta Openpay BBVA o Bre-B Manual) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          {/* Acción Principal: Reactivación Inmediata con Tarjeta Openpay BBVA */}
+          <div className="pt-2">
             <button
               type="button"
               onClick={() => setIsCardModalOpen(true)}
-              className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-950 transition cursor-pointer active:scale-[0.99]"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-950 transition cursor-pointer active:scale-[0.99] flex items-center justify-center gap-2 group"
             >
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="h-4 w-4" />
-                <span>Tarjeta Crédito/Débito</span>
-              </div>
-              <span className="text-[10px] text-emerald-200 font-normal">
-                Openpay BBVA • $99.000 COP / mes
-              </span>
+              <CreditCard className="h-5 w-5 shrink-0" />
+              <span>Reactivar con Tarjeta de Crédito / Débito ({formatMoney(planPrice, "COP")})</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
-
-            <button
-              type="button"
-              onClick={() => setIsBreBModalOpen(true)}
-              className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition cursor-pointer active:scale-[0.99]"
-            >
-              <div className="flex items-center gap-1.5">
-                <Landmark className="h-4 w-4 text-blue-400" />
-                <span>Bre-B / BBVA Colombia</span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-normal">
-                Transferencia Manual
-              </span>
-            </button>
+            <span className="block text-[11px] text-slate-400 mt-2 font-mono">
+              Procesado con seguridad bancaria por Openpay de BBVA • Activación Inmediata
+            </span>
           </div>
 
           <p className="text-[10px] text-slate-500">
@@ -120,29 +116,18 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
         </div>
       </main>
 
-      {/* Modales de Checkout */}
+      {/* Modal de Checkout con Tarjeta Openpay BBVA (Cobro Inmediato) */}
       <GmcCardCheckoutModal
         isOpen={isCardModalOpen}
         onClose={() => setIsCardModalOpen(false)}
         subscriberId={athleteUid}
         athleteName={athleteName}
         athleteEmail={athleteEmail}
+        planAmountCop={planPrice}
         trialDays={0} // Al estar bloqueado en el paywall, se cobra de inmediato para reactivar
         onSuccess={() => {
           if (onRefresh) onRefresh();
           window.location.reload();
-        }}
-      />
-
-      <AthleteBreBPaymentModal
-        isOpen={isBreBModalOpen}
-        onClose={() => setIsBreBModalOpen(false)}
-        athleteUid={athleteUid}
-        athleteEmail={athleteEmail}
-        athletePrice={99000}
-        athleteCurrency="COP"
-        onPaymentReported={() => {
-          if (onRefresh) onRefresh();
         }}
       />
     </div>

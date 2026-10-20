@@ -39,6 +39,8 @@ export interface AthleteProfile {
   planPrice?: number;
   planCurrency?: string;
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  billingExempt?: boolean;
+  hasUsedTrial?: boolean;
   billingCycleDay?: number;
   paymentReference?: string;
 }

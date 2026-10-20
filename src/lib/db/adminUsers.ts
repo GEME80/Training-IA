@@ -84,6 +84,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserListItem[]> {
         planPrice: typeof data.planPrice === "number" ? data.planPrice : 80,
         planCurrency: data.planCurrency || "USD",
         billingStatus: data.billingStatus || (isSuper || (data as any).isDemoAthlete ? "PAID" : "PENDING"),
+        billingExempt: Boolean(data.billingExempt),
         billingCycleDay: data.billingCycleDay || 5,
         lastPaymentDate: data.lastPaymentDate || undefined,
         paymentMethod: data.paymentMethod || "TRANSFER",
@@ -263,7 +264,8 @@ export interface UpdateUserDetailsParams {
   hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
   planPrice?: number; planCurrency?: "USD" | "COP" | "EUR";
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
-  billingCycleDay?: number; lastPaymentDate?: string; paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OTHER";
+  billingExempt?: boolean;
+  billingCycleDay?: number; lastPaymentDate?: string; paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
   paymentReference?: string; paymentReportedAt?: string;
   primaryGoalRace?: string; primaryGoalDate?: string;
 }
@@ -289,7 +291,7 @@ export async function updateUserDetails(
     ...(typeof updates.maxHR === "number" && !isNaN(updates.maxHR) && { maxHR: updates.maxHR }), ...(typeof updates.lthr === "number" && !isNaN(updates.lthr) && { lthr: updates.lthr }),
     ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),
     ...(typeof updates.planPrice === "number" && !isNaN(updates.planPrice) && { planPrice: updates.planPrice }), ...(updates.planCurrency !== undefined && { planCurrency: updates.planCurrency }),
-    ...(updates.billingStatus !== undefined && { billingStatus: updates.billingStatus }), ...(typeof updates.billingCycleDay === "number" && !isNaN(updates.billingCycleDay) && { billingCycleDay: updates.billingCycleDay }),
+    ...(updates.billingStatus !== undefined && { billingStatus: updates.billingStatus }), ...(updates.billingExempt !== undefined && { billingExempt: updates.billingExempt }), ...(typeof updates.billingCycleDay === "number" && !isNaN(updates.billingCycleDay) && { billingCycleDay: updates.billingCycleDay }),
     ...(updates.lastPaymentDate !== undefined && { lastPaymentDate: updates.lastPaymentDate }), ...(updates.paymentMethod !== undefined && { paymentMethod: updates.paymentMethod }),
     ...(updates.paymentReference !== undefined && { paymentReference: updates.paymentReference.trim() }), ...(updates.paymentReportedAt !== undefined && { paymentReportedAt: updates.paymentReportedAt }),
     ...(updates.primaryGoalRace !== undefined && { primaryGoalRace: updates.primaryGoalRace.trim() }), ...(updates.primaryGoalDate !== undefined && { primaryGoalDate: updates.primaryGoalDate.trim() }),

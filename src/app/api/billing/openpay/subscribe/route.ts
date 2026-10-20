@@ -37,14 +37,18 @@ export async function POST(req: NextRequest) {
 
     // Obtener la configuración dinámica del plan (precio y días de trial fijados por el Administrador)
     let dynamicTenantConfig = { ...TENANT_PULSE_ENDURANCE };
-    let configuredPrice = 99000;
+    let configuredPrice = 50000;
+    let shouldForceZeroTrial = false;
+
     if (adminDb) {
       try {
+        // 1. Consultar configuración oficial del plan
         const planDoc = await adminDb.collection('system_config').doc('subscription_plan').get();
         if (planDoc.exists) {
           const cfg = planDoc.data();
           if (cfg) {
-            configuredPrice = typeof cfg.price === 'number' ? cfg.price : 99000;
+            configuredPrice = typeof cfg.price === 'number' ? cfg.price : 50000;
+            const configuredTrialDays = typeof cfg.trialDays === 'number' ? cfg.trialDays : 7;
             dynamicTenantConfig = {
               ...TENANT_PULSE_ENDURANCE,
               plans: TENANT_PULSE_ENDURANCE.plans.map((p) => {
@@ -52,7 +56,7 @@ export async function POST(req: NextRequest) {
                   return {
                     ...p,
                     amountCop: configuredPrice,
-                    trialDays: typeof cfg.trialDays === 'number' ? cfg.trialDays : p.trialDays,
+                    trialDays: configuredTrialDays,
                     dunningGraceHours: typeof cfg.dunningGraceHours === 'number' ? cfg.dunningGraceHours : p.dunningGraceHours,
                   };
                 }
@@ -61,9 +65,29 @@ export async function POST(req: NextRequest) {
             };
           }
         }
+
+        // 2. Comprobar si el usuario ya existe o ya consumió su periodo de prueba
+        const userDoc = await adminDb.collection('users').doc(subscriberId).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          if (userData?.hasUsedTrial || (userData?.createdAt && new Date(userData.createdAt).getTime() < (Date.now() - 1000 * 60 * 60 * 24 * 7) && !userData.isTrialActive)) {
+            shouldForceZeroTrial = true;
+          }
+        }
       } catch (e) {
         console.warn('[SUBSCRIBE_CONFIG_WARN] Usando configuración base de Pulse:', e);
       }
+    }
+
+    // Si el usuario es existente, ya consumió trial o el request especifica trialDays: 0 -> Cobro Inmediato
+    if (body.trialDays === 0 || shouldForceZeroTrial) {
+      dynamicTenantConfig = {
+        ...dynamicTenantConfig,
+        plans: dynamicTenantConfig.plans.map((p) => ({
+          ...p,
+          trialDays: 0,
+        })),
+      };
     }
 
     const engine = new GmcBillingEngine();
@@ -96,6 +120,7 @@ export async function POST(req: NextRequest) {
             gmcCurrentPeriodEnd: result.record.currentPeriodEnd,
             gmcTrialEndDate: result.record.trialEndDate,
             isTrialActive: result.isTrial,
+            hasUsedTrial: true,
             updatedAt: new Date().toISOString(),
           },
           { merge: true }

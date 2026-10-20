@@ -127,12 +127,14 @@ export const AthleteDashboardOverview: React.FC<AthleteDashboardOverviewProps> =
       {/* CONTENIDO DE PESTAÑA 1: RESUMEN ACTUAL Y CALENDARIO */}
       {activeTab === "overview" && (
         <div className="space-y-3 animate-fadeIn">
-          {/* Banner de Membresía & Pagos (Dual: Tarjeta Openpay 7d Gratis + Bre-B BBVA) */}
+          {/* Banner de Membresía & Pagos (Suscripción Recurrente Openpay BBVA) */}
           <AthleteBillingBanner
             athleteUid={profile.id}
             athleteEmail={profile.email || "atleta@pulse.com"}
             athleteName={profile.name || "Atleta Pulse"}
             billingStatus={profile.billingStatus}
+            billingExempt={profile.billingExempt}
+            hasUsedTrial={profile.hasUsedTrial}
             planPrice={profile.planPrice}
             planCurrency={profile.planCurrency}
             billingCycleDay={profile.billingCycleDay}

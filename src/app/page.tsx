@@ -79,6 +79,7 @@ export default function HomePage() {
   const isBillingBlocked =
     user &&
     !isAdmin &&
+    !userProfile?.billingExempt &&
     (userProfile?.billingStatus === "OVERDUE" ||
       userProfile?.gmcSubscriptionStatus === "PAST_DUE_LOCKED" ||
       userProfile?.gmcSubscriptionStatus === "CANCELLED_LOCKED" ||

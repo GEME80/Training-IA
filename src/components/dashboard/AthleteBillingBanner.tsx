@@ -1,16 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Landmark, CheckCircle2, Clock, AlertCircle, CreditCard, Sparkles, RefreshCw, XCircle } from "lucide-react";
-import { AthleteBreBPaymentModal } from "./AthleteBreBPaymentModal";
+import {
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  CreditCard,
+  Sparkles,
+  AlertTriangle,
+  Award,
+  ArrowRight,
+} from "lucide-react";
 import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import { useAuth } from "@/context/AuthContext";
 
 interface AthleteBillingBannerProps {
   athleteUid: string;
   athleteEmail?: string;
   athleteName?: string;
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  billingExempt?: boolean;
+  hasUsedTrial?: boolean;
   planPrice?: number;
   planCurrency?: string;
   billingCycleDay?: number;
@@ -23,20 +34,24 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
   athleteEmail,
   athleteName,
   billingStatus = "PENDING",
-  planPrice = 99000,
+  billingExempt = false,
+  hasUsedTrial = false,
+  planPrice = 50000,
   planCurrency = "COP",
   billingCycleDay = 5,
   paymentReference,
   onRefresh,
 }) => {
-  const [isBreBModalOpen, setIsBreBModalOpen] = useState<boolean>(false);
+  const { userProfile } = useAuth();
   const [isCardModalOpen, setIsCardModalOpen] = useState<boolean>(false);
   const [localStatus, setLocalStatus] = useState<typeof billingStatus>(billingStatus);
-  const [localRef, setLocalRef] = useState<string | undefined>(paymentReference);
   const [gmcResolution, setGmcResolution] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [configuredTrialDays, setConfiguredTrialDays] = useState<number>(7);
   const [configuredPrice, setConfiguredPrice] = useState<number>(planPrice);
+
+  const isExempt = billingExempt || userProfile?.billingExempt;
+  const userHasConsumedTrial = hasUsedTrial || userProfile?.hasUsedTrial;
 
   // Consultar configuración del plan para obtener trialDays y precio actualizados
   useEffect(() => {
@@ -57,7 +72,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
 
   // Consultar estado en vivo del GMC Billing Engine ("Efecto Netflix")
   useEffect(() => {
-    if (!athleteUid) return;
+    if (!athleteUid || isExempt) return;
 
     const fetchGmcStatus = async () => {
       try {
@@ -66,7 +81,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           const data = await res.json();
           if (data.success && data.resolution) {
             setGmcResolution(data.resolution);
-            if (data.resolution.hasAccess) {
+            if (data.resolution.hasAccess && data.resolution.status !== "GRACE_PERIOD") {
               setLocalStatus("PAID");
             }
           }
@@ -77,13 +92,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     };
 
     fetchGmcStatus();
-  }, [athleteUid]);
-
-  const handlePaymentReported = (ref: string) => {
-    setLocalStatus("PENDING_VERIFICATION");
-    setLocalRef(ref);
-    if (onRefresh) onRefresh();
-  };
+  }, [athleteUid, isExempt]);
 
   const handleCancelSubscription = async () => {
     if (!confirm("¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso completo hasta el final de tu periodo actual y no se realizará ningún cobro futuro.")) {
@@ -127,7 +136,83 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     }
   };
 
-  // CASO 1: EN PERIODOS DE PRUEBA GRATUITA (TRIAL 7 DÍAS)
+  // CASO 0: LISTA BLANCA / BECA DEPORTIVA (CORTESÍA)
+  if (isExempt) {
+    return (
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-purple-50 border border-purple-200 text-xs shadow-2xs">
+        <div className="flex items-center gap-2.5 text-purple-950 font-bold">
+          <div className="p-1.5 rounded-xl bg-purple-100 text-purple-700 shrink-0">
+            <Award className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Membresía Atleta Élite • Beca Cortesía</span>
+            <span className="font-mono text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-black">
+              ACCESO TOTAL ACTIVO
+            </span>
+          </div>
+        </div>
+        <span className="text-[11px] text-purple-700 font-medium hidden sm:inline">
+          Exento de cobro por GM Consulting
+        </span>
+      </div>
+    );
+  }
+
+  // CASO 1: FALLO DE COBRO AUTOMÁTICO / DUNNING (FONDOS INSUFICIENTES O TARJETA VENCIDA CON PERIODO DE GRACIA)
+  const isGraceDunning = gmcResolution?.status === "GRACE_PERIOD" || localStatus === "OVERDUE";
+  if (isGraceDunning) {
+    const hoursRemaining = gmcResolution?.daysRemaining ? gmcResolution.daysRemaining * 24 : 72;
+    return (
+      <>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 border-2 border-rose-300 text-xs shadow-md animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-rose-600 text-white shrink-0">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="font-black text-rose-950 text-sm flex items-center gap-2">
+                <span>⚠️ Atención: Cobro Fallido de tu Membresía</span>
+                <span className="font-mono text-[10px] bg-rose-200 text-rose-900 px-2 py-0.5 rounded-full">
+                  {hoursRemaining}h de gracia
+                </span>
+              </div>
+              <p className="text-[11px] text-rose-900 font-medium mt-0.5 max-w-xl">
+                Tu banco rechazó el cargo mensual de <strong>{formatMoney(configuredPrice, planCurrency)}</strong> (fondos insuficientes o tarjeta declinada). Actualiza tu tarjeta para evitar la interrupción de tus entrenamientos y sincronización con tu reloj.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCardModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0"
+          >
+            <CreditCard className="h-4 w-4" />
+            <span>Actualizar Tarjeta o Pagar Ahora</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        <GmcCardCheckoutModal
+          isOpen={isCardModalOpen}
+          onClose={() => setIsCardModalOpen(false)}
+          subscriberId={athleteUid}
+          athleteName={athleteName || "Atleta Pulse"}
+          athleteEmail={athleteEmail || ""}
+          planAmountCop={configuredPrice}
+          trialDays={0} // Al regularizar cobro fallido, se cobra de inmediato
+          onSuccess={() => {
+            setLocalStatus("PAID");
+            alert("¡Tarjeta actualizada con éxito! Tu suscripción continúa activa.");
+            if (onRefresh) onRefresh();
+            window.location.reload();
+          }}
+        />
+      </>
+    );
+  }
+
+  // CASO 2: EN PERIODOS DE PRUEBA GRATUITA (TRIAL ACTIVO)
   if (gmcResolution?.isTrial && gmcResolution?.hasAccess) {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200 text-xs shadow-2xs">
@@ -143,7 +228,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-normal">
-              Tarjeta registrada. Tu primer cobro automático se realizará al finalizar los 7 días.
+              Tarjeta registrada. Tu primer cobro automático ({formatMoney(configuredPrice, planCurrency)}) se realizará al finalizar tus días de prueba.
             </p>
           </div>
         </div>
@@ -160,7 +245,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     );
   }
 
-  // CASO 2: CANCELACIÓN PROGRAMADA (EFECTO NETFLIX)
+  // CASO 3: CANCELACIÓN PROGRAMADA (EFECTO NETFLIX)
   if (gmcResolution?.willCancelAtPeriodEnd && gmcResolution?.hasAccess) {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs shadow-2xs">
@@ -193,14 +278,14 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     );
   }
 
-  // CASO 3: SUSCRIPCIÓN ACTIVA REGULAR
+  // CASO 4: SUSCRIPCIÓN ACTIVA REGULAR
   if (localStatus === "PAID") {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs">
         <div className="flex items-center gap-2 text-emerald-900 font-bold">
           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           <span>Membresía Al Día</span>
-          <span className="text-[11px] text-emerald-700 font-mono font-medium">({formatMoney(planPrice, planCurrency)} / mes)</span>
+          <span className="text-[11px] text-emerald-700 font-mono font-medium">({formatMoney(configuredPrice, planCurrency)} / mes)</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-emerald-700 font-mono">Día de corte: {billingCycleDay}</span>
@@ -217,45 +302,31 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     );
   }
 
-  // CASO 4: PAGO REPORTADO MANUALMENTE POR BRE-B
-  if (localStatus === "PENDING_VERIFICATION") {
-    return (
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs shadow-2xs">
-        <div className="flex items-center gap-2 text-blue-950 font-bold">
-          <Clock className="h-4 w-4 text-blue-600 animate-pulse" />
-          <span>Pago Reportado (Bre-B / BBVA)</span>
-          {localRef && <span className="font-mono text-[11px] text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200">Ref: {localRef}</span>}
-        </div>
-        <span className="text-[11px] text-blue-700 font-medium">Validación en curso por tu entrenador</span>
-      </div>
-    );
-  }
-
-  // CASO 5: PENDIENTE O MORA (Ofrecer Riel Dual: Tarjeta Openpay con 7 Días Gratis vs Bre-B Manual)
-  const isOverdue = localStatus === "OVERDUE";
+  // CASO 5: ATLETA SIN SUSCRIPCIÓN O PENDIENTE (RECURRENCIA 100% TARJETA OPENPAY BBVA)
+  const isExistingAthlete = userHasConsumedTrial;
 
   return (
     <>
-      <div
-        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:px-4 sm:py-3 rounded-2xl border shadow-2xs transition-all ${
-          isOverdue
-            ? "bg-rose-50/90 border-rose-200 text-rose-950"
-            : "bg-gradient-to-r from-blue-50/80 via-white to-emerald-50/50 border-blue-200/90 text-blue-950"
-        }`}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:px-4 sm:py-3 rounded-2xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/60 shadow-2xs transition-all">
         <div className="flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl shrink-0 ${isOverdue ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
-            {isOverdue ? <AlertCircle className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+          <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+            <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <div className="font-bold text-xs flex items-center gap-1.5">
-              <span>{isOverdue ? "Membresía Mensual en Mora" : "Inicia tus 7 Días de Prueba Gratis"}</span>
-              <span className="font-mono font-black text-emerald-800">{formatMoney(planPrice, planCurrency)}</span>
+            <div className="font-bold text-xs flex items-center gap-1.5 text-slate-950">
+              <span>
+                {isExistingAthlete
+                  ? "Activa tu Membresía Mensual Recurrente"
+                  : `Inicia tus ${configuredTrialDays} Días de Prueba Gratis`}
+              </span>
+              <span className="font-mono font-black text-emerald-800">
+                {formatMoney(configuredPrice, planCurrency)}
+              </span>
             </div>
             <p className="text-[11px] text-slate-500 font-normal">
-              {isOverdue
-                ? "Tu suscripción requiere regularización para evitar el bloqueo del servicio."
-                : "Registra tu tarjeta y entrena 7 días sin costo. O paga manualmente vía transferencia."}
+              {isExistingAthlete
+                ? "Suscripción automática mensual con tarjeta de crédito o débito a través de Openpay BBVA."
+                : `Registra tu tarjeta y entrena ${configuredTrialDays} días sin costo ($0 COP hoy). Cancela cuando quieras.`}
             </p>
           </div>
         </div>
@@ -264,23 +335,16 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           <button
             type="button"
             onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-sm transition cursor-pointer"
           >
             <CreditCard className="h-3.5 w-3.5" />
             <span>
-              {configuredTrialDays > 0
+              {isExistingAthlete
+                ? `Pagar con Tarjeta (${formatMoney(configuredPrice, planCurrency)})`
+                : configuredTrialDays > 0
                 ? `Pagar con Tarjeta (${configuredTrialDays}d Gratis)`
                 : "Pagar con Tarjeta"}
             </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsBreBModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-200 transition cursor-pointer"
-          >
-            <Landmark className="h-3.5 w-3.5 text-blue-600" />
-            <span>Bre-B / BBVA</span>
           </button>
         </div>
       </div>
@@ -293,22 +357,12 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         athleteName={athleteName || "Atleta Pulse"}
         athleteEmail={athleteEmail || ""}
         planAmountCop={configuredPrice}
-        trialDays={configuredTrialDays}
+        trialDays={isExistingAthlete ? 0 : configuredTrialDays}
         onSuccess={() => {
           setLocalStatus("PAID");
           if (onRefresh) onRefresh();
+          window.location.reload();
         }}
-      />
-
-      {/* Modal Bre-B Transferencia Manual */}
-      <AthleteBreBPaymentModal
-        isOpen={isBreBModalOpen}
-        onClose={() => setIsBreBModalOpen(false)}
-        athleteUid={athleteUid}
-        athleteEmail={athleteEmail || ""}
-        athletePrice={planPrice}
-        athleteCurrency={planCurrency}
-        onPaymentReported={handlePaymentReported}
       />
     </>
   );

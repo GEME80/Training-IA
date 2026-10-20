@@ -12,6 +12,17 @@ export function resolveSubscriberAccess(
   record: SubscriberBillingRecord | null | undefined,
   nowDate: Date = new Date()
 ): AccessResolution {
+  // 0. Si el usuario está en la Lista Blanca / Becado por la Administración (Cortesía)
+  if ((record as any)?.billingExempt === true) {
+    return {
+      hasAccess: true,
+      status: 'ACTIVE',
+      daysRemaining: 999,
+      isTrial: false,
+      willCancelAtPeriodEnd: false,
+    };
+  }
+
   // 1. Si no existe registro de suscripción, bloqueo total inmediato
   if (!record) {
     return {

@@ -168,6 +168,7 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
           planCode: "PULSE_PRO_MONTHLY",
           tokenId,
           deviceSessionId: deviceSessionId || `dev_${Date.now()}`,
+          trialDays,
         }),
       });
 
@@ -239,7 +240,15 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
                 <span className="font-mono text-emerald-700">${planAmountCop.toLocaleString("es-CO")} COP / mes</span>
               </div>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                💳 <strong>Cobro de hoy: $0 COP.</strong> Tu tarjeta será validada pero no debitada. Tu primer cobro automático se realizará el <strong>{formattedChargeDate}</strong> a menos que canceles antes desde tu perfil con 1 solo clic.
+                {trialDays > 0 ? (
+                  <>
+                    💳 <strong>Cobro de hoy: $0 COP.</strong> Tu tarjeta será validada pero no debitada. Tu primer cobro automático se realizará el <strong>{formattedChargeDate}</strong> a menos que canceles antes desde tu perfil con 1 solo clic.
+                  </>
+                ) : (
+                  <>
+                    💳 <strong>Cobro de hoy: ${planAmountCop.toLocaleString("es-CO")} COP.</strong> Tu suscripción se activará de inmediato con cobro mensual recurrente. Cancela cuando quieras desde tu perfil.
+                  </>
+                )}
               </p>
             </div>
 
@@ -353,7 +362,9 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
                 </>
               ) : (
                 <span>
-                  {trialDays > 0 ? "Comenzar mis 7 Días de Prueba Gratis" : "Activar Suscripción Mensual"}
+                  {trialDays > 0
+                    ? `Comenzar mis ${trialDays} Días de Prueba Gratis ($0 COP)`
+                    : `Pagar y Activar Suscripción ($${planAmountCop.toLocaleString("es-CO")} COP)`}
                 </span>
               )}
             </button>

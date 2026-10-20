@@ -43,6 +43,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [planPrice, setPlanPrice] = useState<number | "">(80);
   const [planCurrency, setPlanCurrency] = useState<"USD" | "COP" | "EUR">("USD");
   const [billingStatus, setBillingStatus] = useState<"PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION">("PENDING");
+  const [billingExempt, setBillingExempt] = useState<boolean>(false);
   const [billingCycleDay, setBillingCycleDay] = useState<number | "">(1);
   const [paymentMethod, setPaymentMethod] = useState<"TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER">("TRANSFER");
   const [primaryGoalRace, setPrimaryGoalRace] = useState<string>("");
@@ -69,6 +70,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
       setPlanPrice(user.planPrice ?? (user.role === "admin" ? 0 : 80));
       setPlanCurrency(user.planCurrency || "USD");
       setBillingStatus(user.billingStatus || (user.role === "admin" ? "PAID" : "PENDING"));
+      setBillingExempt(Boolean(user.billingExempt));
       setBillingCycleDay(user.billingCycleDay ?? 1);
       setPaymentMethod(user.paymentMethod || "TRANSFER");
       setPrimaryGoalRace(user.primaryGoalRace || "");
@@ -143,6 +145,7 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           planPrice: planPrice === "" ? undefined : Number(planPrice),
           planCurrency,
           billingStatus,
+          billingExempt,
           billingCycleDay: billingCycleDay === "" ? undefined : Number(billingCycleDay),
           paymentMethod,
           primaryGoalRace: primaryGoalRace.trim() || undefined,
@@ -241,6 +244,8 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
             setPlanCurrency={setPlanCurrency}
             billingStatus={billingStatus}
             setBillingStatus={setBillingStatus}
+            billingExempt={billingExempt}
+            setBillingExempt={setBillingExempt}
             billingCycleDay={billingCycleDay}
             setBillingCycleDay={setBillingCycleDay}
             paymentMethod={paymentMethod}

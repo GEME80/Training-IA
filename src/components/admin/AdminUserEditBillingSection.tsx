@@ -10,6 +10,8 @@ interface AdminUserEditBillingSectionProps {
   setPlanCurrency: (v: "USD" | "COP" | "EUR") => void;
   billingStatus: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   setBillingStatus: (v: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION") => void;
+  billingExempt?: boolean;
+  setBillingExempt?: (v: boolean) => void;
   billingCycleDay: number | "";
   setBillingCycleDay: (v: number | "") => void;
   paymentMethod: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
@@ -27,6 +29,8 @@ export const AdminUserEditBillingSection: React.FC<AdminUserEditBillingSectionPr
   setPlanCurrency,
   billingStatus,
   setBillingStatus,
+  billingExempt = false,
+  setBillingExempt,
   billingCycleDay,
   setBillingCycleDay,
   paymentMethod,
@@ -38,9 +42,24 @@ export const AdminUserEditBillingSection: React.FC<AdminUserEditBillingSectionPr
 }) => {
   return (
     <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 space-y-3">
-      <div className="flex items-center space-x-2 text-xs font-bold text-emerald-950">
-        <CreditCard className="h-4 w-4 text-emerald-600" />
-        <span>Plan Comercial & Estado de Cobro</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-950">
+          <CreditCard className="h-4 w-4 text-emerald-600" />
+          <span>Plan Comercial & Estado de Cobro</span>
+        </div>
+        {setBillingExempt && (
+          <label className="flex items-center gap-2 cursor-pointer bg-purple-100 hover:bg-purple-200/80 px-2.5 py-1 rounded-xl border border-purple-300 transition">
+            <input
+              type="checkbox"
+              checked={billingExempt}
+              onChange={(e) => setBillingExempt(e.target.checked)}
+              className="h-3.5 w-3.5 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+            />
+            <span className="text-[11px] font-bold text-purple-900">
+              ★ Exento de Cobro / Beca (Cortesía)
+            </span>
+          </label>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

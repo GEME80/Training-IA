@@ -52,6 +52,10 @@ export interface UserProfileData {
   planPrice?: number;
   planCurrency?: "USD" | "COP" | "EUR";
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  billingExempt?: boolean;
+  hasUsedTrial?: boolean;
+  lastBillingErrorMessage?: string;
+  dunningGraceExpiresAt?: string;
   billingCycleDay?: number;
   lastPaymentDate?: string;
   paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";
@@ -101,6 +105,10 @@ export interface AdminUserListItem {
   planPrice?: number;
   planCurrency?: "USD" | "COP" | "EUR";
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
+  billingExempt?: boolean;
+  hasUsedTrial?: boolean;
+  lastBillingErrorMessage?: string;
+  dunningGraceExpiresAt?: string;
   billingCycleDay?: number;
   lastPaymentDate?: string;
   paymentMethod?: "TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER";

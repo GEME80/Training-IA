@@ -10196,3 +10196,30 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (27/27 rutas compiladas) ✅.
 - **Gate 4 (Preservación de Principios de Entrenamiento & Aislamiento):** Matriz temporal no modifica `weeklyAvailability` maestro; tarjetas de running con 5 estímulos distintos; 0 duplicados visuales ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 178 ✅.
+
+
+## 179. Universalización Multi-Deporte del Motor Anti-Monotonía en Matriz Temporal (Ciclismo, Carrera, Fuerza y Natación para Todos los Atletas)
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** 
+  1. Extender de forma universal la regla de variabilidad y no monotonía en adaptaciones de matriz temporal para que aplique a **cualquier atleta y cualquier combinación deportiva** configurada en el microciclo de Head Coach IA.
+  2. Si un atleta asigna 5 días de Ciclismo (ej. ciclistas puros o triatletas en bloque de rodillo), generar 5 entrenamientos completamente diferentes con métricas de FTP, duración y estructuras fisiológicas distintas (SweetSpot 2x15m, Base Z2 con cadencia dinámica, Intervalos VO2Max 5x3m, Soltura Z1 de lavado metabólico y Fondo Largo Progresivo Z2).
+  3. Secuenciar de forma autónoma estímulos diferenciados para **Fuerza** (Neuromuscular vs Funcional/Tendones vs Movilidad Dinámica) y **Natación** (Técnica Drills Z2 vs Umbral CSS vs Soltura Acuática).
+  4. Garantizar que este comportamiento sea exclusivo y acotado al microciclo temporal solicitado sin impactar la matriz maestra.
+
+### 179.1. Componentes Actualizados
+1. **Prompt de Inferencia de Head Coach ([`src/lib/ai/headcoach/chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):**
+   - Actualizada la directriz del sistema `MODO ADAPTACIÓN POR MATRIZ TEMPORAL (REESTRUCTURACIÓN DE MICROCICLO)` para prohibir taxativamente sesiones repetidas en Ciclismo, Carrera, Fuerza y Natación.
+2. **Arquetipos Determinísticos Multi-Deporte ([`src/lib/ai/headcoach/chatInference.ts`](src/lib/ai/headcoach/chatInference.ts)):**
+   - Incorporados los diccionarios fisiológicos de estímulos: `BIKE_ARCHETYPES` (5 sesiones), `RUN_ARCHETYPES` (5 sesiones), `STRENGTH_ARCHETYPES` (3 sesiones) y `SWIM_ARCHETYPES` (3 sesiones).
+   - Contadores independientes (`runCount`, `bikeCount`, `strCount`, `swCount`) y registro en `seenWorkoutNames` para rotar de manera garantizada ante cualquier propuesta genérica o repetitiva.
+   - Pauta de fin de semana para Ciclismo y Carrera asignando automáticamente los arquetipos de fondo largo / tirada larga progresiva.
+
+### 179.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/lib/ai/headcoach/chatInference.ts`: 346 LOC ($\le 348$) ✅
+  * `src/components/dashboard/headcoach/HeadCoachMicrocycleCard.tsx`: 340 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (28/28 rutas compiladas) ✅.
+- **Gate 4 (Universalidad para Todos los Atletas):** Verificado para perfiles de solo carrera, solo ciclismo (5 días de bici con 5 sesiones distintas), triatletas y fuerza funcional ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 179 ✅.

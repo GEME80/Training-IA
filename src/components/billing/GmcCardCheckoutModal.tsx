@@ -28,11 +28,12 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
   athleteName,
   athleteEmail,
   planName = "Plan Atleta Pro",
-  planAmountCop = 99000,
+  planAmountCop = 50000,
   trialDays = 7,
   onSuccess,
 }) => {
   const [holderName, setHolderName] = useState(athleteName || "");
+  const [email, setEmail] = useState(athleteEmail || "");
   const [cardNumber, setCardNumber] = useState("");
   const [expMonth, setExpMonth] = useState("");
   const [expYear, setExpYear] = useState("");
@@ -46,6 +47,15 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
   const merchantId = process.env.NEXT_PUBLIC_OPENPAY_MERCHANT_ID || "";
   const publicKey = process.env.NEXT_PUBLIC_OPENPAY_PUBLIC_KEY || "";
   const isSandbox = (process.env.NEXT_PUBLIC_OPENPAY_SANDBOX_MODE || "true").toLowerCase() === "true";
+
+  // Sincronizar datos iniciales si cambian las props
+  useEffect(() => {
+    if (athleteName) setHolderName(athleteName);
+  }, [athleteName]);
+
+  useEffect(() => {
+    if (athleteEmail) setEmail(athleteEmail);
+  }, [athleteEmail]);
 
   // Calcular la fecha exacta del primer cobro tras los días gratis
   const firstChargeDate = new Date();
@@ -119,10 +129,13 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
         throw new Error("Por favor ingresa un número de tarjeta válido (15 o 16 dígitos).");
       }
       if (!expMonth || !expYear || expMonth.length !== 2 || expYear.length !== 2) {
-        throw new Error("Ingresa la fecha de expiración en formato MM y AA.");
+        throw new Error("Ingresa la fecha de expiración en formato MM y AA (ej: 12 y 28).");
       }
       if (!cvv || cvv.length < 3 || cvv.length > 4) {
-        throw new Error("Ingresa el código de seguridad CVV (3 o 4 dígitos).");
+        throw new Error("Ingresa el código de seguridad CVV (3 o 4 dígitos al respaldo).");
+      }
+      if (!email || !email.includes("@")) {
+        throw new Error("Ingresa un correo electrónico válido para tu cuenta.");
       }
 
       // 1. Tokenización segura con Openpay.js en el navegador (Zero Server PAN)
@@ -162,9 +175,9 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subscriberId,
+          subscriberId: subscriberId || email.toLowerCase().replace(/[^a-z0-9]/g, "_"),
           name: holderName,
-          email: athleteEmail,
+          email: email.trim().toLowerCase(),
           planCode: "PULSE_PRO_MONTHLY",
           tokenId,
           deviceSessionId: deviceSessionId || `dev_${Date.now()}`,
@@ -178,7 +191,7 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
         throw new Error(data.error || "No se pudo completar el registro de suscripción.");
       }
 
-      setSuccessMessage(data.message);
+      setSuccessMessage(data.message || "¡Tarjeta registrada y suscripción activa!");
       setLoading(false);
 
       if (onSuccess) {
@@ -195,8 +208,19 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 text-slate-900 space-y-5">
+    <div
+      onClick={(e) => {
+        // Cerrar únicamente si el usuario hace clic directamente en el fondo oscuro
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 text-slate-900 space-y-5"
+      >
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center space-x-2.5">
@@ -278,6 +302,20 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Correo Electrónico (Para tu cuenta y comprobantes)
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="atleta@ejemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Número de Tarjeta (Débito o Crédito)
                 </label>
                 <div className="relative">
@@ -285,7 +323,7 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
                     type="text"
                     required
                     maxLength={19}
-                    placeholder="4000 1234 5678 9010"
+                    placeholder="4111 1111 1111 1111"
                     value={cardNumber}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "").replace(/(\d{4})/g, "$1 ").trim();
@@ -353,12 +391,12 @@ export const GmcCardCheckoutModal: React.FC<GmcCardCheckoutModalProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-xs shadow-md transition cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-black text-sm shadow-md transition cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Validando con el Banco...</span>
+                  <span>Validando con Openpay BBVA...</span>
                 </>
               ) : (
                 <span>

@@ -50,8 +50,8 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
   const [configuredTrialDays, setConfiguredTrialDays] = useState<number>(7);
   const [configuredPrice, setConfiguredPrice] = useState<number>(planPrice);
 
-  const isExempt = billingExempt || userProfile?.billingExempt;
-  const userHasConsumedTrial = hasUsedTrial || userProfile?.hasUsedTrial;
+  const isExempt = Boolean(billingExempt || userProfile?.billingExempt);
+  const userHasConsumedTrial = Boolean(hasUsedTrial || userProfile?.hasUsedTrial);
 
   // Consultar configuración del plan para obtener trialDays y precio actualizados
   useEffect(() => {
@@ -136,9 +136,15 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     }
   };
 
-  // CASO 0: LISTA BLANCA / BECA DEPORTIVA (CORTESÍA)
+  const isGraceDunning = gmcResolution?.status === "GRACE_PERIOD" || localStatus === "OVERDUE";
+  const isExistingAthlete = userHasConsumedTrial;
+
+  // Renderizado dinámico del banner según el estado
+  let bannerElement = null;
+
   if (isExempt) {
-    return (
+    // CASO 0: LISTA BLANCA / BECA DEPORTIVA (CORTESÍA)
+    bannerElement = (
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-purple-50 border border-purple-200 text-xs shadow-2xs">
         <div className="flex items-center gap-2.5 text-purple-950 font-bold">
           <div className="p-1.5 rounded-xl bg-purple-100 text-purple-700 shrink-0">
@@ -156,65 +162,42 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         </span>
       </div>
     );
-  }
-
-  // CASO 1: FALLO DE COBRO AUTOMÁTICO / DUNNING (FONDOS INSUFICIENTES O TARJETA VENCIDA CON PERIODO DE GRACIA)
-  const isGraceDunning = gmcResolution?.status === "GRACE_PERIOD" || localStatus === "OVERDUE";
-  if (isGraceDunning) {
+  } else if (isGraceDunning) {
+    // CASO 1: FALLO DE COBRO AUTOMÁTICO / DUNNING CON GRACIA
     const hoursRemaining = gmcResolution?.daysRemaining ? gmcResolution.daysRemaining * 24 : 72;
-    return (
-      <>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 border-2 border-rose-300 text-xs shadow-md animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-rose-600 text-white shrink-0">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="font-black text-rose-950 text-sm flex items-center gap-2">
-                <span>⚠️ Atención: Cobro Fallido de tu Membresía</span>
-                <span className="font-mono text-[10px] bg-rose-200 text-rose-900 px-2 py-0.5 rounded-full">
-                  {hoursRemaining}h de gracia
-                </span>
-              </div>
-              <p className="text-[11px] text-rose-900 font-medium mt-0.5 max-w-xl">
-                Tu banco rechazó el cargo mensual de <strong>{formatMoney(configuredPrice, planCurrency)}</strong> (fondos insuficientes o tarjeta declinada). Actualiza tu tarjeta para evitar la interrupción de tus entrenamientos y sincronización con tu reloj.
-              </p>
-            </div>
+    bannerElement = (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 border-2 border-rose-300 text-xs shadow-md animate-pulse">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-rose-600 text-white shrink-0">
+            <AlertTriangle className="h-5 w-5" />
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0"
-          >
-            <CreditCard className="h-4 w-4" />
-            <span>Actualizar Tarjeta o Pagar Ahora</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          <div>
+            <div className="font-black text-rose-950 text-sm flex items-center gap-2">
+              <span>⚠️ Atención: Cobro Fallido de tu Membresía</span>
+              <span className="font-mono text-[10px] bg-rose-200 text-rose-900 px-2 py-0.5 rounded-full">
+                {hoursRemaining}h de gracia
+              </span>
+            </div>
+            <p className="text-[11px] text-rose-900 font-medium mt-0.5 max-w-xl">
+              Tu banco rechazó el cargo mensual de <strong>{formatMoney(configuredPrice, planCurrency)}</strong> (fondos insuficientes o tarjeta declinada). Actualiza tu tarjeta para evitar la interrupción de tus entrenamientos.
+            </p>
+          </div>
         </div>
 
-        <GmcCardCheckoutModal
-          isOpen={isCardModalOpen}
-          onClose={() => setIsCardModalOpen(false)}
-          subscriberId={athleteUid}
-          athleteName={athleteName || "Atleta Pulse"}
-          athleteEmail={athleteEmail || ""}
-          planAmountCop={configuredPrice}
-          trialDays={0} // Al regularizar cobro fallido, se cobra de inmediato
-          onSuccess={() => {
-            setLocalStatus("PAID");
-            alert("¡Tarjeta actualizada con éxito! Tu suscripción continúa activa.");
-            if (onRefresh) onRefresh();
-            window.location.reload();
-          }}
-        />
-      </>
+        <button
+          type="button"
+          onClick={() => setIsCardModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0"
+        >
+          <CreditCard className="h-4 w-4" />
+          <span>Actualizar Tarjeta o Pagar Ahora</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
     );
-  }
-
-  // CASO 2: EN PERIODOS DE PRUEBA GRATUITA (TRIAL ACTIVO)
-  if (gmcResolution?.isTrial && gmcResolution?.hasAccess) {
-    return (
+  } else if (gmcResolution?.isTrial && gmcResolution?.hasAccess) {
+    // CASO 2: EN PERIODOS DE PRUEBA GRATUITA (TRIAL ACTIVO)
+    bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border border-emerald-200 text-xs shadow-2xs">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
@@ -233,21 +216,28 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          disabled={actionLoading}
-          onClick={handleCancelSubscription}
-          className="text-[11px] text-slate-500 hover:text-rose-600 underline cursor-pointer shrink-0"
-        >
-          Cancelar suscripción
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsCardModalOpen(true)}
+            className="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
+          >
+            Cambiar Tarjeta
+          </button>
+          <button
+            type="button"
+            disabled={actionLoading}
+            onClick={handleCancelSubscription}
+            className="text-[11px] text-slate-500 hover:text-rose-600 underline cursor-pointer shrink-0"
+          >
+            Cancelar suscripción
+          </button>
+        </div>
       </div>
     );
-  }
-
-  // CASO 3: CANCELACIÓN PROGRAMADA (EFECTO NETFLIX)
-  if (gmcResolution?.willCancelAtPeriodEnd && gmcResolution?.hasAccess) {
-    return (
+  } else if (gmcResolution?.willCancelAtPeriodEnd && gmcResolution?.hasAccess) {
+    // CASO 3: CANCELACIÓN PROGRAMADA (EFECTO NETFLIX)
+    bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs shadow-2xs">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0">
@@ -276,11 +266,9 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         </button>
       </div>
     );
-  }
-
-  // CASO 4: SUSCRIPCIÓN ACTIVA REGULAR
-  if (localStatus === "PAID") {
-    return (
+  } else if (localStatus === "PAID") {
+    // CASO 4: SUSCRIPCIÓN ACTIVA REGULAR
+    bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs">
         <div className="flex items-center gap-2 text-emerald-900 font-bold">
           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -289,6 +277,13 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-emerald-700 font-mono">Día de corte: {billingCycleDay}</span>
+          <button
+            type="button"
+            onClick={() => setIsCardModalOpen(true)}
+            className="text-[11px] text-emerald-800 hover:text-emerald-900 font-bold underline cursor-pointer"
+          >
+            Actualizar Tarjeta
+          </button>
           <button
             type="button"
             disabled={actionLoading}
@@ -300,13 +295,9 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         </div>
       </div>
     );
-  }
-
-  // CASO 5: ATLETA SIN SUSCRIPCIÓN O PENDIENTE (RECURRENCIA 100% TARJETA OPENPAY BBVA)
-  const isExistingAthlete = userHasConsumedTrial;
-
-  return (
-    <>
+  } else {
+    // CASO 5: ATLETA SIN SUSCRIPCIÓN O PENDIENTE
+    bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:px-4 sm:py-3 rounded-2xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/80 via-white to-teal-50/60 shadow-2xs transition-all">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
@@ -348,14 +339,20 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           </button>
         </div>
       </div>
+    );
+  }
 
-      {/* Modal de Tarjeta Openpay BBVA */}
+  return (
+    <>
+      {bannerElement}
+
+      {/* Modal Seguro de Tarjeta Openpay BBVA (Siempre montado para evitar que se cierre por re-render) */}
       <GmcCardCheckoutModal
         isOpen={isCardModalOpen}
         onClose={() => setIsCardModalOpen(false)}
-        subscriberId={athleteUid}
-        athleteName={athleteName || "Atleta Pulse"}
-        athleteEmail={athleteEmail || ""}
+        subscriberId={athleteUid || userProfile?.uid || "guest_subscriber"}
+        athleteName={athleteName || userProfile?.displayName || "Atleta Pulse"}
+        athleteEmail={athleteEmail || userProfile?.email || ""}
         planAmountCop={configuredPrice}
         trialDays={isExistingAthlete ? 0 : configuredTrialDays}
         onSuccess={() => {

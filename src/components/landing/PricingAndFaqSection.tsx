@@ -80,11 +80,7 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
   };
 
   const handleStartCardCheckout = () => {
-    if (user) {
-      setIsCardModalOpen(true);
-    } else {
-      onOpenAuthModal?.("register");
-    }
+    setIsCardModalOpen(true);
   };
 
   const handleCopySandboxCard = () => {

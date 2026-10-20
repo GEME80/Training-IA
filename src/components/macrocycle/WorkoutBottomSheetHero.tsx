@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Footprints, Bike, Dumbbell, Waves, Moon } from "lucide-react";
+import { X, Footprints, Bike, Dumbbell, Waves, Moon, Trophy } from "lucide-react";
 import { PlanItem } from "@/lib/gemini/engine";
 import { StatCard } from "./StatCard";
 
@@ -26,6 +26,7 @@ export function getDisciplineIcon(discipline: string) {
   if (discipline === "Fuerza") return <Dumbbell className="h-4 w-4 text-emerald-500 shrink-0" />;
   if (discipline === "Ciclismo") return <Bike className="h-4 w-4 text-sky-400 shrink-0" />;
   if (discipline === "Natacion" || discipline === "Natación") return <Waves className="h-4 w-4 text-teal-400 shrink-0" />;
+  if (discipline === "Triatlón" || discipline === "Triatlon") return <Trophy className="h-4 w-4 text-indigo-500 shrink-0" />;
   return <Footprints className="h-4 w-4 text-amber-500 shrink-0" />;
 }
 
@@ -33,6 +34,7 @@ export function getDisciplineBadgeClass(discipline: string) {
   if (discipline === "Natacion" || discipline === "Natación") return "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800";
   if (discipline === "Ciclismo") return "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800";
   if (discipline === "Fuerza") return "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
+  if (discipline === "Triatlón" || discipline === "Triatlon") return "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800";
   return "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
 }
 
@@ -46,8 +48,16 @@ export const WorkoutBottomSheetHero: React.FC<WorkoutBottomSheetHeroProps> = ({
   targetLabel,
   onClose,
 }) => {
-  const icon = getDisciplineIcon(workout.discipline);
-  const badgeClass = getDisciplineBadgeClass(workout.discipline);
+  const isTriathlon =
+    (workout.activityType as string) === "Triatlón" ||
+    (workout.activityType as string) === "Triatlon" ||
+    (workout.discipline as string) === "Triatlón" ||
+    (workout.discipline as string) === "Triatlon" ||
+    /triatl|ironman|70\.3|140\.6/i.test(workout.workoutName || "") ||
+    /sector 1:\s*nataci/i.test(workout.workoutDoc || "");
+  const effectiveDiscipline = isTriathlon ? "Triatlón" : workout.discipline;
+  const icon = getDisciplineIcon(effectiveDiscipline);
+  const badgeClass = getDisciplineBadgeClass(effectiveDiscipline);
 
   const compliancePercent = executedTss && plannedTss && plannedTss > 0
     ? Math.round((executedTss / plannedTss) * 100)
@@ -69,7 +79,7 @@ export const WorkoutBottomSheetHero: React.FC<WorkoutBottomSheetHeroProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${badgeClass} shrink-0`}>
-                {isExtraActivity ? "Extra" : workout.discipline}
+                {isExtraActivity ? "Extra" : effectiveDiscipline}
               </span>
               <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate max-w-[210px] sm:max-w-[340px]">
                 {workout.workoutName.replace(/\[.*?\]\s*/g, "")}

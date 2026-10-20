@@ -127,7 +127,7 @@ export const RestrictedAccessView: React.FC<RestrictedAccessViewProps> = ({ stat
       </main>
 
       <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-400">
-        <p>PULSE AI PRO © 2026 • Acceso Protegido por Aislamiento Multi-Tenant</p>
+        <p>PULSE ENDURANCE © 2026 • Desarrollado por GMC (Germán Morales Consulting)</p>
       </footer>
     </div>
   );

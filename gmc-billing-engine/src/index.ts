@@ -35,9 +35,7 @@ export class GmcBillingEngine {
     this.client = new OpenpayClient(customConfig);
   }
 
-  /**
-   * Obtiene o crea el cliente en Openpay
-   */
+  /** Obtiene o crea el cliente en Openpay */
   async getOrCreateCustomer(params: {
     tenantId: string;
     subscriberId: string;
@@ -45,24 +43,17 @@ export class GmcBillingEngine {
     email: string;
   }): Promise<string> {
     const existing = await NetflixLifecycleAgent.getSubscriberRecord(params.tenantId, params.subscriberId);
-    if (existing?.openpayCustomerId) {
-      return existing.openpayCustomerId;
-    }
+    if (existing?.openpayCustomerId) return existing.openpayCustomerId;
 
     const customer = await this.client.createCustomer({
       name: params.name,
       email: params.email,
       external_id: `${params.tenantId}_${params.subscriberId}`,
     });
-
     return customer.id;
   }
 
-  /**
-   * Crea una sesión de pago alojada (Hosted Checkout) en Openpay (BBVA)
-   * Cumplimiento PCI-DSS SAQ-A total: el atleta es redirigido al dominio oficial de Openpay.
-   * PULSE jamás toca ni procesa tarjetas ni datos sensibles.
-   */
+  /** Crea sesión de Hosted Checkout en Openpay (BBVA) - PCI-DSS SAQ-A */
   async createHostedCheckoutSession(params: {
     tenantId: string;
     subscriberId: string;
@@ -71,19 +62,13 @@ export class GmcBillingEngine {
     amountCop: number;
     description: string;
     redirectUrl: string;
-  }): Promise<{
-    checkoutUrl: string;
-    orderId: string;
-    transactionId: string;
-  }> {
-    const attemptNonce = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-    const orderId = generateDeterministicOrderId(
-      params.tenantId,
-      params.subscriberId,
-      new Date(),
-      attemptNonce
-    );
-
+  }): Promise<{ checkoutUrl: string; orderId: string; transactionId: string }> {
+    const attemptNonce = Math.random().toString(36).slice(2, 6);
+    let orderId = generateDeterministicOrderId(params.tenantId, params.subscriberId, new Date(), attemptNonce);
+    if (orderId.length > 64) {
+      orderId = generateDeterministicOrderId(params.tenantId, params.subscriberId, new Date());
+      if (orderId.length > 64) orderId = orderId.slice(0, 64);
+    }
     const [firstName, ...restName] = (params.name || 'Atleta').split(' ');
     const lastName = restName.join(' ') || 'Pulse';
 
@@ -92,29 +77,17 @@ export class GmcBillingEngine {
       currency: 'COP',
       description: params.description,
       orderId,
-      customer: {
-        name: firstName || 'Atleta',
-        lastName,
-        email: params.email,
-      },
+      customer: { name: firstName || 'Atleta', lastName, email: params.email },
       redirectUrl: params.redirectUrl,
     });
 
-    const checkoutUrl = res.payment_method?.url || (res as any).checkout_link;
-    if (!checkoutUrl) {
-      throw new Error(`[GMC_ENGINE_ERROR] Openpay no devolvió la URL de redirección bancaria.`);
-    }
+    const checkoutUrl = res.checkout_link || res.payment_method?.url;
+    if (!checkoutUrl) throw new Error(`[GMC_ENGINE_ERROR] Openpay no devolvió la URL de redirección bancaria.`);
 
-    return {
-      checkoutUrl,
-      orderId,
-      transactionId: res.id,
-    };
+    return { checkoutUrl, orderId, transactionId: res.id };
   }
 
-  /**
-   * ESCENARIO 1: Alta con Tarjeta Obligatoria (Trial de 7 Días o Cobro Inmediato)
-   */
+  /** ESCENARIO 1: Alta con Tarjeta Obligatoria (Trial de 7 Días o Cobro Inmediato) */
   async startSubscriptionFlow(params: {
     tenantConfig: TenantBillingConfig;
     subscriberId: string;
@@ -152,10 +125,8 @@ export class GmcBillingEngine {
           rawPayloadToSanitize: { tokenId: params.tokenId },
         });
 
-        // Determinar días de trial efectivos: si Sentinel detecta que ya consumió trial, fuerza 0
-        const effectiveTrialDays = preFlight.forcedTrialDays !== null 
-          ? preFlight.forcedTrialDays 
-          : plan.trialDays;
+        // Determinar días de trial efectivos
+        const effectiveTrialDays = preFlight.forcedTrialDays !== null ? preFlight.forcedTrialDays : plan.trialDays;
 
         // 2. Obtener o crear Cliente en Openpay
         const customerId = await this.getOrCreateCustomer({
@@ -172,7 +143,6 @@ export class GmcBillingEngine {
           deviceSessionId: params.deviceSessionId,
         });
 
-        // Generar huella antifraude de tarjeta
         const cardFingerprint = SentinelAntiFraudAgent.generateCardFingerprint(
           card.card_number.slice(0, 6),
           card.card_number.slice(-4),
@@ -184,7 +154,6 @@ export class GmcBillingEngine {
         try {
           await this.client.getPlan(openpayPlanId);
         } catch {
-          // El plan no existe aún en Openpay, lo creamos
           const createdPlan = await this.client.createPlan({
             name: `${params.tenantConfig.displayName} - ${plan.name} (${effectiveTrialDays}d Trial)`,
             amount: plan.amountCop,
@@ -219,7 +188,6 @@ export class GmcBillingEngine {
           cardBrand: card.brand,
         });
 
-        // 7. Si inició trial, registrar en gmc_trial_registry
         if (effectiveTrialDays > 0) {
           await SentinelAntiFraudAgent.recordTrialConsumption({
             tenantId: params.tenantConfig.tenantId,
@@ -312,9 +280,7 @@ export class GmcBillingEngine {
     );
   }
 
-  /**
-   * Procesa un webhook entrante de Openpay Colombia con verificación criptográfica y doble chequeo
-   */
+  /** Procesa webhook de Openpay con verificación criptográfica y doble chequeo */
   async processWebhook(authHeader: string | null, payload: OpenpayWebhookPayload): Promise<{
     processed: boolean;
     reason?: string;
@@ -323,11 +289,8 @@ export class GmcBillingEngine {
     if (!WebhookCryptoRouterAgent.verifyTimingSafeAuth(authHeader)) {
       return { processed: false, reason: 'UNAUTHORIZED_TIMING_SAFE_MISMATCH' };
     }
-
     const tx = payload.transaction;
-    if (!tx || !tx.id) {
-      return { processed: true, reason: 'NO_TRANSACTION_PAYLOAD' };
-    }
+    if (!tx || !tx.id) return { processed: true, reason: 'NO_TRANSACTION_PAYLOAD' };
 
     // 2. Deduplicación
     if (await WebhookCryptoRouterAgent.isTransactionProcessed(tx.id)) {
@@ -337,16 +300,12 @@ export class GmcBillingEngine {
     // 3. Double-Check con Openpay si fue cargo exitoso
     if (payload.type === 'charge.succeeded') {
       const isValid = await WebhookCryptoRouterAgent.verifyChargeWithOpenpay(tx.id);
-      if (!isValid) {
-        return { processed: false, reason: 'DOUBLE_CHECK_FAILED_AT_OPENPAY' };
-      }
+      if (!isValid) return { processed: false, reason: 'DOUBLE_CHECK_FAILED_AT_OPENPAY' };
     }
 
     // 4. Parsear Order ID
     const parsed = WebhookCryptoRouterAgent.parseOrderId(tx.order_id);
-    if (!parsed) {
-      return { processed: true, reason: 'ORDER_ID_NOT_GMC_FORMAT' };
-    }
+    if (!parsed) return { processed: true, reason: 'ORDER_ID_NOT_GMC_FORMAT' };
 
     const { tenantId, subscriberId } = parsed;
 
@@ -367,13 +326,11 @@ export class GmcBillingEngine {
         timestamp: payload.event_date || new Date().toISOString(),
       });
     } else if (payload.type === 'charge.failed') {
-      // Si el suscriptor estaba en TRIAL_ACTIVE, es su cobro del Día 8 -> corte inmediato
       const sub = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
-      const isFirstChargePostTrial = sub?.status === 'TRIAL_ACTIVE';
       await NetflixLifecycleAgent.handleFailedCharge({
         tenantId,
         subscriberId,
-        isFirstChargePostTrial,
+        isFirstChargePostTrial: sub?.status === 'TRIAL_ACTIVE',
       });
     }
 

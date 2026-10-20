@@ -111,9 +111,7 @@ export class OpenpayClient {
     return data as T;
   }
 
-  // ==========================================
-  // CLIENTES (Customers)
-  // ==========================================
+  // --- Clientes (Customers) ---
   async createCustomer(params: {
     name: string;
     email: string;
@@ -131,14 +129,10 @@ export class OpenpayClient {
   }
 
   async getCustomer(customerId: string): Promise<OpenpayCustomerResponse> {
-    return this.request<OpenpayCustomerResponse>(`/customers/${customerId}`, {
-      method: 'GET',
-    });
+    return this.request<OpenpayCustomerResponse>(`/customers/${customerId}`, { method: 'GET' });
   }
 
-  // ==========================================
-  // TARJETAS (Cards vinculadas a un cliente)
-  // ==========================================
+  // --- Tarjetas (Cards vinculadas a un cliente) ---
   async addCardToCustomer(params: {
     customerId: string;
     tokenId: string;
@@ -154,20 +148,14 @@ export class OpenpayClient {
   }
 
   async listCustomerCards(customerId: string): Promise<OpenpayCardResponse[]> {
-    return this.request<OpenpayCardResponse[]>(`/customers/${customerId}/cards`, {
-      method: 'GET',
-    });
+    return this.request<OpenpayCardResponse[]>(`/customers/${customerId}/cards`, { method: 'GET' });
   }
 
   async deleteCustomerCard(customerId: string, cardId: string): Promise<void> {
-    await this.request(`/customers/${customerId}/cards/${cardId}`, {
-      method: 'DELETE',
-    });
+    await this.request(`/customers/${customerId}/cards/${cardId}`, { method: 'DELETE' });
   }
 
-  // ==========================================
-  // PLANES DE SUSCRIPCIÓN (Plans)
-  // ==========================================
+  // --- Planes de Suscripción (Plans) ---
   async createPlan(params: {
     name: string;
     amount: number;
@@ -194,25 +182,19 @@ export class OpenpayClient {
   }
 
   async getPlan(planId: string): Promise<OpenpayPlanResponse> {
-    return this.request<OpenpayPlanResponse>(`/plans/${planId}`, {
-      method: 'GET',
-    });
+    return this.request<OpenpayPlanResponse>(`/plans/${planId}`, { method: 'GET' });
   }
 
   async listPlans(): Promise<OpenpayPlanResponse[]> {
-    return this.request<OpenpayPlanResponse[]>('/plans', {
-      method: 'GET',
-    });
+    return this.request<OpenpayPlanResponse[]>('/plans', { method: 'GET' });
   }
 
-  // ==========================================
-  // SUSCRIPCIONES (Subscriptions)
-  // ==========================================
+  // --- Suscripciones (Subscriptions) ---
   async createSubscription(params: {
     customerId: string;
     planId: string;
     cardId: string;
-    trialEndDate?: string; // Formato YYYY-MM-DD
+    trialEndDate?: string;
   }): Promise<OpenpaySubscriptionResponse> {
     const body: Record<string, any> = {
       plan_id: params.planId,
@@ -224,29 +206,19 @@ export class OpenpayClient {
 
     return this.request<OpenpaySubscriptionResponse>(
       `/customers/${params.customerId}/subscriptions`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      }
+      { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
   async getSubscription(customerId: string, subscriptionId: string): Promise<OpenpaySubscriptionResponse> {
     return this.request<OpenpaySubscriptionResponse>(
       `/customers/${customerId}/subscriptions/${subscriptionId}`,
-      {
-        method: 'GET',
-      }
+      { method: 'GET' }
     );
   }
 
   async cancelSubscription(customerId: string, subscriptionId: string): Promise<void> {
-    await this.request(
-      `/customers/${customerId}/subscriptions/${subscriptionId}`,
-      {
-        method: 'DELETE',
-      }
-    );
+    await this.request(`/customers/${customerId}/subscriptions/${subscriptionId}`, { method: 'DELETE' });
   }
 
   async updateSubscriptionCard(params: {
@@ -256,22 +228,13 @@ export class OpenpayClient {
   }): Promise<OpenpaySubscriptionResponse> {
     return this.request<OpenpaySubscriptionResponse>(
       `/customers/${params.customerId}/subscriptions/${params.subscriptionId}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          card_id: params.cardId,
-        }),
-      }
+      { method: 'PUT', body: JSON.stringify({ card_id: params.cardId }) }
     );
   }
 
-  // ==========================================
-  // CARGOS Y REEMBOLSOS (Charges & Refunds)
-  // ==========================================
+  // --- Cargos y Reembolsos (Charges & Refunds) ---
   async getCharge(chargeId: string): Promise<OpenpayChargeResponse> {
-    return this.request<OpenpayChargeResponse>(`/charges/${chargeId}`, {
-      method: 'GET',
-    });
+    return this.request<OpenpayChargeResponse>(`/charges/${chargeId}`, { method: 'GET' });
   }
 
   async refundCharge(params: {
@@ -279,9 +242,7 @@ export class OpenpayClient {
     description: string;
     amount?: number;
   }): Promise<OpenpayChargeResponse> {
-    const body: Record<string, any> = {
-      description: params.description,
-    };
+    const body: Record<string, any> = { description: params.description };
     if (params.amount) {
       body.amount = params.amount;
     }
@@ -293,7 +254,7 @@ export class OpenpayClient {
   }
 
   // ==========================================
-  // HOSTED CHECKOUT (PCI-DSS SAQ-A Redirection Directo a Tarjeta)
+  // HOSTED CHECKOUT (PCI-DSS SAQ-A Redirection Webcheckout BBVA)
   // ==========================================
   async createHostedCheckout(params: {
     amount: number;
@@ -307,18 +268,19 @@ export class OpenpayClient {
     };
     redirectUrl: string;
     currency?: string;
+    iva?: number | string;
   }): Promise<{
     id: string;
     amount: number;
     currency: string;
     status: string;
     order_id?: string;
+    checkout_link?: string;
     payment_method?: {
       type: string;
       url: string;
     };
   }> {
-    // Sanitizar descripción para Openpay (sin caracteres especiales ni acentos)
     const cleanDescription = (params.description || 'Suscripcion Pulse Pro')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -326,9 +288,7 @@ export class OpenpayClient {
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Redirección directa al formulario de tarjeta (cero pasos intermedios, sin PSE ni Tiendas)
-    const body = {
-      method: 'card',
+    const body: Record<string, any> = {
       amount: params.amount,
       currency: params.currency || 'COP',
       description: cleanDescription,
@@ -339,10 +299,13 @@ export class OpenpayClient {
         email: params.customer.email,
         phone_number: params.customer.phoneNumber || '3000000000',
       },
-      confirm: false,
       send_email: false,
       redirect_url: params.redirectUrl,
     };
+
+    if (params.iva !== undefined) {
+      body.iva = String(params.iva);
+    }
 
     return this.request<{
       id: string;
@@ -350,13 +313,18 @@ export class OpenpayClient {
       currency: string;
       status: string;
       order_id?: string;
+      checkout_link?: string;
       payment_method?: {
         type: string;
         url: string;
       };
-    }>('/charges', {
+    }>('/checkouts', {
       method: 'POST',
       body: JSON.stringify(body),
     });
+  }
+
+  async getCheckout(checkoutId: string): Promise<any> {
+    return this.request(`/checkouts/${checkoutId}`, { method: 'GET' });
   }
 }

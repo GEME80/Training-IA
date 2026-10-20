@@ -8,7 +8,7 @@ export const LandingFooter: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <PulseLogo size="sm" showSubtext={false} />
         <p className="text-slate-500 text-[11px]">
-          PULSE ENDURANCE PRO © 2026 • Smart Endurance & Performance Coach
+          PULSE ENDURANCE © 2026 • Desarrollado y operado por <strong>GMC (Germán Morales Consulting)</strong>
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-500 font-semibold">
           <a href="#metodologia" className="hover:text-emerald-700 transition">Metodología</a>

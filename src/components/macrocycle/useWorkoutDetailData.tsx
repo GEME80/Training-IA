@@ -59,9 +59,18 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
   const modalExecuted = dailyExecutedActivities?.[workout.date];
   const allActs = modalExecuted?.activities || [];
 
+  const isTriathlon =
+    (workout as any).activityType === "Triatlón" ||
+    (workout as any).activityType === "Triatlon" ||
+    (workout.discipline as string) === "Triatlón" ||
+    (workout.discipline as string) === "Triatlon" ||
+    /triatl|ironman|70\.3|140\.6/i.test(workout.workoutName || "") ||
+    /sector 1:\s*nataci/i.test(workout.workoutDoc || "");
+
   const findMatchingActivity = (): DailyExecutedActivity | null => {
     if (allActs.length === 0) return null;
     if (isExtraActivity) return allActs.find((a) => workout.id === `extra-${a.id}` || a.name === workout.workoutName) || allActs[0];
+    if (isTriathlon) return allActs.find((a) => /triatl|ironman/i.test(a.type) || /run|carrera|ride|bike|swim/i.test(a.type)) || allActs[0] || null;
     if (workout.discipline === "Carrera") return allActs.find((a) => a.type === "Run" || /run|carrera|trote|trail|fondo/i.test(`${a.type} ${a.name}`)) || null;
     if (workout.discipline === "Ciclismo") return allActs.find((a) => a.type === "Ride" || /ride|ciclismo|bike|virtualride|indoor/i.test(`${a.type} ${a.name}`)) || null;
     if (workout.discipline === "Fuerza") return allActs.find((a) => !/ride|bike|ciclismo|run|carrera|swim/i.test(a.type) && (a.type === "WeightTraining" || /weight|gym|strength|pesas|fuerza/i.test(a.type) || /gym|pesas|fortalec|s&c/i.test(a.name))) || null;
@@ -77,13 +86,14 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
     userProfile?.hasRunningPowerMeter === false;
 
   const isRunPace =
+    !isTriathlon &&
     workout.discipline === "Carrera" &&
     (isPaceAthlete || effRunFtp === 0 || !workout.powerTarget || !/\b\d+\s*W\b/i.test(workout.powerTarget) || /%\s*Pace\b/i.test(workout.workoutDoc || ""));
 
-  const isRunPower = workout.discipline === "Carrera" && !isRunPace && effRunFtp > 0;
+  const isRunPower = !isTriathlon && workout.discipline === "Carrera" && !isRunPace && effRunFtp > 0;
   const isBike = workout.discipline === "Ciclismo";
 
-  const adaptedDoc = isRunPace && workout.workoutDoc ? adaptRunningWorkoutDoc(workout.workoutDoc, workout.discipline, false, "PACE", workout.workoutName) : workout.workoutDoc;
+  const adaptedDoc = !isTriathlon && isRunPace && workout.workoutDoc ? adaptRunningWorkoutDoc(workout.workoutDoc, workout.discipline, false, "PACE", workout.workoutName) : workout.workoutDoc;
   const parsedDoc = parseWorkoutDoc(adaptedDoc, workout.discipline);
   const plannedTss = isRunPace && parsedDoc.estimatedTss && parsedDoc.estimatedTss > (workout.tss || 0)
     ? parsedDoc.estimatedTss

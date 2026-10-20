@@ -155,3 +155,8 @@ La plataforma integra los principios de cuatro figuras históricas del entrenami
 * **Descripción:** `Plataforma inteligente y adaptativa de periodización y entrenamiento deportivo de resistencia para Carrera, Ciclismo y Triatlón, integrada con Garmin, Coros e Intervals.icu.`
 * **Nombre de Aplicación PWA (Manifest):** `PULSE ENDURANCE — Smart Performance Coach` (Nombre corto: `PULSE ENDURANCE`)
 * **Color de Tema:** `#10b981` (Verde Esmeralda Fisiológico)
+
+### 5.7 Entidad Operativa, Comercial y Pasarela de Pagos (GMC)
+* **Entidad Desarrolladora y Operadora:** GMC (Germán Morales Consulting).
+* **Razón Social y Extracto Bancario:** Los cobros de suscripción y procesamiento de pagos vía Openpay BBVA se reflejan a nombre de **Germán Morales Consulting (GMC)**.
+* **Atribución en Interfaz:** Todos los pies de página (Dashboard de atletas, Landing Page, Consola de Administración) muestran la leyenda oficial: `PULSE ENDURANCE © 2026 • Desarrollado y operado por GMC (Germán Morales Consulting)` para garantizar coherencia y confianza inmediata en el extracto financiero del atleta.

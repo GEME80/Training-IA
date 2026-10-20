@@ -170,6 +170,8 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
                 <PlannedWorkoutPrescription
                   cleanDoc={sanitizeWorkoutDoc(adaptedDoc, { discipline: workout.discipline, isRunPaceOnly: isRunPace })}
                   discipline={workout.discipline}
+                  workoutName={workout.workoutName}
+                  activityType={workout.activityType}
                   isRunPace={isRunPace}
                   isRunPower={isRunPower}
                   isBike={isBike}

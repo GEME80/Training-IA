@@ -79,14 +79,14 @@ export const AthleteSidebar: React.FC<AthleteSidebarProps> = ({
   return (
     <aside
       className={`sticky top-0 h-screen hidden md:flex flex-col justify-between border-r border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl transition-all duration-300 z-30 shrink-0 select-none ${
-        isCollapsed ? "w-20" : "w-60"
+        isCollapsed ? "w-20" : "w-[260px]"
       }`}
     >
       {/* 1. Header del Sidebar: Logo & Toggle */}
-      <div className="p-3.5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
+      <div className="p-3 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-1.5">
         <div
           onClick={() => onSelectView && onSelectView("dashboard")}
-          className="cursor-pointer flex items-center overflow-hidden"
+          className="cursor-pointer flex items-center flex-1 min-w-0"
         >
           {isCollapsed ? (
             <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-cyan-500 to-emerald-500 flex items-center justify-center text-white font-black text-sm shadow-md">

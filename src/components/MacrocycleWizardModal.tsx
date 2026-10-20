@@ -505,7 +505,7 @@ export const MacrocycleWizardModal: React.FC<MacrocycleWizardModalProps> = ({
                     <div className="rounded-xl bg-slate-950/80 p-3.5 border border-amber-500/20 text-xs text-slate-300 flex items-start gap-3">
                       <Sparkles className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="text-white">Dinámica de Transición PULSE AI PRO:</strong> Al activar este plan, tu macrociclo rector actual será el <strong>Plan de Mantenimiento ({timeline.weeksUntilKickoff} semanas)</strong> para mantenerte en forma óptima. El <strong>{new Date(new Date(timeline.kickoffDateStr + "T00:00:00").getTime() - 86400000).toISOString().split("T")[0]}</strong> (el día antes del inicio), el Head Coach IA auditará tu nuevo nivel de fitness (CTL y Stryd CP) en Intervals.icu y construirá el <strong>Plan Específico de Maratón</strong> adaptado a tu condición física de ese momento.
+                        <strong className="text-white">Dinámica de Transición PULSE ENDURANCE:</strong> Al activar este plan, tu macrociclo rector actual será el <strong>Plan de Mantenimiento ({timeline.weeksUntilKickoff} semanas)</strong> para mantenerte en forma óptima. El <strong>{new Date(new Date(timeline.kickoffDateStr + "T00:00:00").getTime() - 86400000).toISOString().split("T")[0]}</strong> (el día antes del inicio), el Head Coach IA auditará tu nuevo nivel de fitness (CTL y Stryd CP) en Intervals.icu y construirá el <strong>Plan Específico de Maratón</strong> adaptado a tu condición física de ese momento.
                       </div>
                     </div>
                   </div>

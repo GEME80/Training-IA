@@ -1,10 +1,15 @@
-# ⚡ SGEA Pro (v5.86) — PULSE ENDURANCE™
+# ⚡ SGEA Pro (v5.87) — PULSE ENDURANCE™
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial en producción: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
 
+- 📱 **Ergonomía UI/UX Móvil & Web, Erradicación de Truncamientos y Atribución Comercial GMC (v5.87):**
+  - **Corrección de Truncamiento en Sidebar Web:** Ampliación a `w-[260px]` y reemplazo de `overflow-hidden` por `flex-1 min-w-0` en `AthleteSidebar.tsx`, permitiendo que la marca "PULSE ENDURANCE" se lea completa y nítida.
+  - **Descongestión de Cabecera Móvil:** Eliminación del botón "En Vivo / Sync..." en smartphones y retiro del badge "PRO" en `PulseLogo.tsx`, logrando un encabezado limpio y proporcionado.
+  - **Atribución Corporativa Oficial GMC:** Consagración en pies de página de la atribución `"PULSE ENDURANCE © 2026 • Desarrollado y operado por GMC (Germán Morales Consulting)"` en el Dashboard del Atleta, Landing Page, Consola Admin y Acceso Restringido, garantizando transparencia y reconocimiento inmediato para los cobros de membresía.
+  - **Estandarización de Nomenclatura:** Purga de menciones residuales `PULSE AI PRO` en modales y cabeceras.
 - 🔄 **Reorganización Táctica, Tarjeta Comparativa y Preservación Estricta de Carga (TSS) en Head Coach (v5.86):**
   - **Selector Táctico [ Hoy ] / [ Mañana ] (`HeadCoachReorgSubMenu.tsx`):** Unificación de los submenús de reagendamiento ("Intercambiar ejercicio" y "Poco tiempo") con navegación directa entre el día en curso y el día siguiente, y ocultamiento inteligente de "Invertir" cuando la sesión de hoy ya ha sido ejecutada.
   - **Preservación Estricta de TSS en Sustituciones Multideporte:** Al intercambiar una sesión por otra disciplina (ciclismo, carrera o fuerza), el motor fisiológico calcula la equivalencia exacta de vatios, ritmo o duración para preservar el 100% del TSS programado original, erradicando degradaciones arbitrarias a Z2 o regenerativo.

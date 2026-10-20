@@ -58,13 +58,14 @@ export default function HomePage() {
         hasHandledPaymentRef.current = true;
         setPaymentSuccessNotice("¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.");
         
-        const orderId = params.get("order_id");
+        const orderId = params.get("order_id") || params.get("id");
         const subId = userProfile?.uid || user?.uid;
 
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete("payment");
         cleanUrl.searchParams.delete("order_id");
+        cleanUrl.searchParams.delete("id");
         cleanUrl.searchParams.delete("sandbox_demo");
         cleanUrl.searchParams.delete("sandbox_simulated");
         window.history.replaceState({}, "", cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : ""));
@@ -196,7 +197,7 @@ export default function HomePage() {
           </div>
           <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-center text-xs text-slate-500">
             <div className="w-full max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-              <p>PULSE ENDURANCE PRO © 2026 • Admin Console</p>
+              <p>PULSE ENDURANCE © 2026 • Desarrollado por GMC (Germán Morales Consulting)</p>
               <button
                 type="button"
                 onClick={() => {

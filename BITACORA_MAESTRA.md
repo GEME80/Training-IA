@@ -10481,6 +10481,35 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 
 ---
 
+## 186. Ergonomía UI/UX Móvil & Web, Erradicación de Truncamientos y Atribución Comercial GMC (Germán Morales Consulting)
 
+- **Fecha:** 2026-10-20
+- **Objetivo:** Resolver el truncamiento del branding en la barra lateral web ("PULSE ENDURA..."), descongestionar la cabecera móvil eliminando elementos ruidosos sin valor ("PRO" y botón "En Vivo"), y consagrar en todos los pies de página la atribución legal y operativa a GMC (Germán Morales Consulting) para coherencia absoluta con la pasarela de pagos.
 
+### 186.1. Cambios Implementados
+1. **Resolución de Truncamiento Web en Barra Lateral ([`AthleteSidebar.tsx`](src/components/dashboard/AthleteSidebar.tsx)):**
+   - Ancho expandido ajustado de `w-60` (240px) a `w-[260px]`, otorgando margen holgado para la tipografía completa de la marca.
+   - Reemplazado `overflow-hidden` por `flex-1 min-w-0`, eliminando el corte involuntario que mostraba "PULSE ENDURA".
+2. **Descongestión Integral de la Cabecera Móvil ([`AthleteDashboardHeader.tsx`](src/components/dashboard/AthleteDashboardHeader.tsx), [`PulseLogo.tsx`](src/components/PulseLogo.tsx)):**
+   - Removido el botón interactivo "En Vivo / Sync..." del encabezado móvil que saturaba el ancho de pantalla en smartphones.
+   - Retirado el badge "PRO" en `PulseLogo.tsx` (desactivado por defecto `showPro = false`), permitiendo que el isotipo 3D y el nombre "PULSE ENDURANCE" se desplieguen con máxima elegancia, nitidez y espacio horizontal libre hacia la campana de notificaciones y avatar.
+   - Agregada la clase `whitespace-nowrap` para blindar la tipografía ante cualquier salto de línea no deseado.
+3. **Atribución Corporativa Oficial GMC en Pies de Página:**
+   - **Dashboard del Atleta ([`AthleteDashboard.tsx`](src/components/AthleteDashboard.tsx)):** `PULSE ENDURANCE © 2026 • Desarrollado y operado por GMC (Germán Morales Consulting) • Términos & Exención IA • Privacidad`.
+   - **Landing Page ([`LandingFooter.tsx`](src/components/landing/LandingFooter.tsx)):** `PULSE ENDURANCE © 2026 • Desarrollado y operado por GMC (Germán Morales Consulting)`.
+   - **Acceso Restringido ([`RestrictedAccessView.tsx`](src/components/RestrictedAccessView.tsx)):** `PULSE ENDURANCE © 2026 • Desarrollado por GMC (Germán Morales Consulting)`.
+   - **Consola de Administración ([`src/app/page.tsx`](src/app/page.tsx)):** `PULSE ENDURANCE © 2026 • Desarrollado por GMC (Germán Morales Consulting)`.
+   - **Cabecera Móvil Admin ([`AdminMobileHeader.tsx`](src/components/admin/AdminMobileHeader.tsx)):** Actualizado `PULSE AI PRO` a `PULSE ENDURANCE`.
+   - **Modales de Temporada y Onboarding ([`MacrocycleEmptyState.tsx`](src/components/MacrocycleEmptyState.tsx), [`MacrocycleWizardModal.tsx`](src/components/MacrocycleWizardModal.tsx), [`IntervalsOnboardingModal.tsx`](src/components/IntervalsOnboardingModal.tsx)):** Erradicación total de cadenas residuales `PULSE AI PRO` a favor del nombre canónico `PULSE ENDURANCE`.
 
+### 186.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `PulseLogo.tsx`: 66 LOC ($\le 350$) ✅
+  * `AthleteSidebar.tsx`: 213 LOC ($\le 350$) ✅
+  * `AthleteDashboardHeader.tsx`: 114 LOC ($\le 350$) ✅
+  * `AthleteDashboard.tsx`: 348 LOC ($\le 350$) ✅
+  * `LandingFooter.tsx`: 29 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Ergonomía & Consistencia Comercial):** Claridad total en pagos para los atletas al vincular la app con GMC (Germán Morales Consulting) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 186 ✅.

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
               lastPaymentDate: now.toISOString(),
               gmcCurrentPeriodEnd: periodEnd.toISOString(),
               paymentMethod: 'OPENPAY_CHECKOUT_HOSTED',
-              planPrice: payload.transaction.amount || 50000,
+              planPrice: payload.transaction.amount || 55000,
               planCurrency: payload.transaction.currency || 'COP',
               updatedAt: now.toISOString(),
             },

@@ -35,6 +35,20 @@ export async function POST(req: NextRequest) {
         },
         { merge: true }
       );
+
+      if (orderId) {
+        try {
+          await adminDb.collection('gmc_checkout_sessions').doc(orderId).set(
+            {
+              status: 'COMPLETED',
+              completedAt: now.toISOString(),
+            },
+            { merge: true }
+          );
+        } catch (sessErr) {
+          console.warn('[CONFIRM_SESSION_LOG_WARN]', sessErr);
+        }
+      }
     }
 
     return NextResponse.json({

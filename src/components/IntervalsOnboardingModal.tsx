@@ -33,7 +33,7 @@ export const IntervalsOnboardingModal: React.FC<IntervalsOnboardingModalProps> =
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-950/40 shrink-0">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-              Bienvenido a PULSE AI PRO
+              Bienvenido a PULSE ENDURANCE
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Conexión directa en 1 clic con Intervals.icu

@@ -29,7 +29,7 @@ export const MacrocycleEmptyState: React.FC<MacrocycleEmptyStateProps> = ({
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center space-x-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-3.5 py-1 text-xs font-bold text-amber-300">
             <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            <span>Arquitectura Fisiológica de Temporada PULSE AI PRO</span>
+            <span>Arquitectura Fisiológica de Temporada PULSE ENDURANCE</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -37,7 +37,7 @@ export const MacrocycleEmptyState: React.FC<MacrocycleEmptyStateProps> = ({
           </h1>
 
           <p className="text-sm text-slate-300 leading-relaxed">
-            No tienes ningún macrociclo activo ni carreras asignadas. PULSE AI PRO utiliza tu telemetría biológica directa de <strong>Intervals.icu</strong> (Stryd CP, Bike FTP y modelo Banister) para calcular periodizaciones adaptativas con ratios de carga y asimilación <strong>3:1</strong> sin riesgo de lesión ni sobreentrenamiento.
+            No tienes ningún macrociclo activo ni carreras asignadas. PULSE ENDURANCE utiliza tu telemetría biológica directa de <strong>Intervals.icu</strong> (Stryd CP, Bike FTP y modelo Banister) para calcular periodizaciones adaptativas con ratios de carga y asimilación <strong>3:1</strong> sin riesgo de lesión ni sobreentrenamiento.
           </p>
         </div>
       </div>

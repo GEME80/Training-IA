@@ -37,20 +37,13 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl h-[49px] sm:h-[53px]">
-      <div className="flex items-center space-x-2">
-        <div className="md:hidden"><PulseLogo size="sm" showSubtext={false} /></div>
-        <button
-          type="button"
-          onClick={onRefreshTelemetry}
-          disabled={isRefreshingTelemetry}
-          className="inline-flex md:hidden items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${isLiveConnected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
-          <span>{isRefreshingTelemetry ? "Sync..." : isLiveConnected ? "En Vivo" : "Offline"}</span>
-        </button>
+      <div className="flex items-center min-w-0">
+        <div className="md:hidden flex items-center">
+          <PulseLogo size="sm" showSubtext={false} />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-2 ml-auto shrink-0">
         <NotificationBellButton userStorage={userStorage} />
 
         <div className="relative">

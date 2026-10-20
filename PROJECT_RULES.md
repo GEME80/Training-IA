@@ -1,4 +1,4 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.86)
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.87)
 > **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
@@ -8,9 +8,14 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.86). Dominio oficial en producción: pulseendurance.co.
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.87). Dominio oficial en producción: pulseendurance.co.
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.87: Ergonomía UI/UX Móvil & Web, Erradicación de Truncamientos y Atribución Comercial GMC (Germán Morales Consulting):
+  * Resolución de Truncamiento Web en Barra Lateral (`AthleteSidebar.tsx`): Ancho expandido ampliado a `w-[260px]` con `flex-1 min-w-0` (eliminado `overflow-hidden`), garantizando que "PULSE ENDURANCE" se lea completo sin cortes en monitores de escritorio.
+  * Descongestión Integral de la Cabecera Móvil (`AthleteDashboardHeader.tsx`, `PulseLogo.tsx`): Remoción del botón "En Vivo / Sync..." en smartphones y retiro del badge "PRO" en `PulseLogo.tsx` (`showPro = false`), permitiendo una barra superior espaciosa y limpia con solo Isotipo + PULSE ENDURANCE a la izquierda y Campana + Avatar a la derecha.
+  * Atribución Corporativa Oficial GMC en Pies de Página: Actualización en Dashboard (`AthleteDashboard.tsx`), Landing (`LandingFooter.tsx`), Consola Admin (`src/app/page.tsx`) y Acceso Restringido (`RestrictedAccessView.tsx`) a "PULSE ENDURANCE © 2026 • Desarrollado y operado por GMC (Germán Morales Consulting)", vinculando transparentemente la plataforma con la razón social de la pasarela de pagos.
+  * Purga de Cadenas Residuales: Estandarización de `PULSE AI PRO` a `PULSE ENDURANCE` en cabecera móvil admin, modales de onboarding y estados de macrociclo.
 - Versión 5.86: Reorganización Táctica, Tarjeta Comparativa y Preservación Estricta de Carga (TSS) en Head Coach:
   * Selector Táctico [ Hoy ] / [ Mañana ] (`HeadCoachReorgSubMenu.tsx`): Unificación ergonómica del submenú de reagendamiento ("Intercambiar ejercicio" y "Poco tiempo") permitiendo planificar tácticamente el día activo o el día siguiente. Ocultamiento inteligente de la opción "Invertir" cuando la sesión de hoy ya ha sido completada (`hasTrainedToday`).
   * Preservación Estricta de TSS en Sustituciones Multideporte: Al sustituir un ejercicio por otra disciplina (ciclismo, carrera o fuerza), el motor fisiológico calcula la equivalencia exacta de duración e intensidad según el Stryd CP o Bike FTP del atleta para entregar exactamente la misma carga (TSS) programada, erradicando degradaciones arbitrarias a Z2 o regenerativo.

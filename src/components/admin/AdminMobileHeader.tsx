@@ -21,7 +21,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
   return (
     <header className="lg:hidden sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 py-2.5 transition-all">
       <div className="flex items-center justify-between gap-2">
-        {/* Identidad de Marca: PULSE AI PRO + Badge Admin */}
+        {/* Identidad de Marca: PULSE ENDURANCE + Badge Admin */}
         <div className="flex items-center space-x-2 min-w-0">
           <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
             <ShieldCheck className="h-4 w-4" />
@@ -29,7 +29,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-black text-slate-950 dark:text-white tracking-tight truncate">
-                PULSE AI PRO
+                PULSE ENDURANCE
               </span>
               <span className="px-1.5 py-0.5 rounded-md text-[9px] font-mono font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                 Admin

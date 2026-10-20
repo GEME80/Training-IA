@@ -10595,3 +10595,27 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
   * Tarifa unificada a $55.000 COP / mes ✅.
   * Suite FinSec: **47 de 47 pruebas superadas** (`npm run test:finsec`) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 188 ✅.
+
+---
+
+## 189. Simplificación Minimalista de Pie de Página en Landing y Dashboard
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Eliminar saturación textual en el pie de página de la Landing Page y Dashboard del atleta. Conservar el branding visual de `PULSE ENDURANCE` junto al isotipo, retirar párrafos descriptivos repetitivos ("GMC / Germán Morales Consulting"), y suprimir enlaces duplicados ("Metodología", "Preguntas") que ya residen en la cabecera superior de navegación.
+
+### 189.1. Cambios Implementados
+1. **Landing Page ([`LandingFooter.tsx`](src/components/landing/LandingFooter.tsx)):**
+   - Conservado exclusivamente el isotipo 3D y el nombre de marca oficial `PULSE ENDURANCE` a la izquierda.
+   - Eliminado el párrafo intermedio con texto descriptivo corporativo.
+   - Eliminados los enlaces duplicados "Metodología" y "Preguntas", focalizando la derecha únicamente en los enlaces legales obligatorios: `Términos y Condiciones • Política de Privacidad`.
+2. **Dashboard del Atleta ([`AthleteDashboard.tsx`](src/components/AthleteDashboard.tsx)):**
+   - Estandarizado el pie de página a una línea discreta y minimalista: `PULSE ENDURANCE © 2026 • Términos & Exención IA • Privacidad`.
+
+### 189.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `LandingFooter.tsx`: 22 LOC ($\le 350$) ✅
+  * `AthleteDashboard.tsx`: 346 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Ergonomía & Minimalismo Visual):** Interfaz limpia, sin enlaces duplicados y con foco en navegación esencial ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 189 ✅.

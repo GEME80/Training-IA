@@ -330,11 +330,9 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           />
           <NotificationToast />
 
-          {/* Pie de página discreto con identidad GMC y enlaces legales */}
-          <footer className="py-6 text-center text-[11px] text-slate-400 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+          {/* Pie de página discreto con enlaces legales */}
+          <footer className="py-6 text-center text-[11px] text-slate-400 space-x-2">
             <span>PULSE ENDURANCE © 2026</span>
-            <span>•</span>
-            <span>Desarrollado y operado por <strong className="text-slate-600 dark:text-slate-300 font-semibold">GMC (Germán Morales Consulting)</strong></span>
             <span>•</span>
             <Link href="/terms" target="_blank" className="hover:text-emerald-600 underline underline-offset-2">Términos & Exención IA</Link>
             <span>•</span>

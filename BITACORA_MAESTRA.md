@@ -10552,3 +10552,46 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
 - **Gate 4 (UX Deportiva & Erradicación de Bugs):** Separación nítida de bloques pre/pacing/post, visualización multisport por deportes y vatios FTP en ciclismo garantizados ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 187 ✅.
+
+---
+
+## 188. Resolución Definitiva de Hosted Checkout en Openpay Colombia (BBVA): Migración a `/checkouts`, Erradicación de Fallo SRI y Blindaje de Order ID (≤ 64 chars)
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Resolver de raíz la inoperancia del botón "Realizar Pago" en el Sandbox de Openpay BBVA originada por el error SRI `OpenpayCardCapture is not defined` en la ruta `/card_capture`, migrando la sesión de cobro al Webcheckout oficial de Openpay Colombia (`POST /v1/{merchantId}/checkouts`), garantizando el retorno seguro con activación en Firestore y preservando las 47 pruebas FinSec aprobadas.
+
+### 188.1. Diagnóstico Técnico y Solución de Raíz
+1. **Causa Raíz del Botón Inerte en Sandbox:**
+   - La implementación previa invocaba `POST /v1/{merchantId}/charges` con `confirm: false` y `method: 'card'`.
+   - Openpay generaba una URL interna de captura directa (`https://sandbox-api.openpay.co/card_capture?...`).
+   - El servidor Sandbox de Openpay incrustaba en ese HTML el script `openpay-cardCapture-1.1.js` con un atributo `integrity` cuyo hash SHA-256 no coincidía con el contenido real del archivo, provocando el bloqueo del navegador por Subresource Integrity (SRI) y dejando `OpenpayCardCapture is not defined`.
+2. **Migración al Webcheckout Oficial (`/checkouts`):**
+   - Se actualizó `OpenpayClient.createHostedCheckout` en `gmc-billing-engine/src/providers/openpay/client.ts` para invocar el endpoint oficial de Webcheckout de Openpay Colombia:
+     `POST /v1/{merchantId}/checkouts`
+   - Openpay responde exitosamente con `checkout_link` apuntando a `https://sandbox-api.openpay.co/ck/{CHECKOUT_ID}`.
+   - En esta interfaz oficial, Openpay carga limpiamente sus librerías estándar (`checkout.js`, `openpay.v1.js`, etc.) **sin ningún atributo de integridad SRI roto**, permitiendo el ingreso y procesamiento fluido de la tarjeta.
+3. **Descubrimiento y Blindaje del Límite de Longitud de `order_id` (Máx 64 Caracteres):**
+   - Mediante pruebas de estrés en Sandbox, se detectó que Openpay almacena internamente `order_id` en una columna con límite estricto de **64 caracteres** (`VARCHAR(64)`).
+   - Cualquier identificador de 65 o más caracteres provocaba `[OPENPAY_API_ERROR 1004] No se pudo guardar la información del customer` (HTTP 503).
+   - Se blindó `createHostedCheckoutSession` en `gmc-billing-engine/src/index.ts` truncando/garantizando que el `orderId` determinista jamás supere los 64 caracteres.
+4. **Flujo de Retorno y Activación Automática (`redirect_url`):**
+   - Al finalizar el pago en Openpay, el usuario es redirigido a `https://pulseendurance.co/?payment=complete&id={ID}&order_id={ORDER_ID}`.
+   - En [`src/app/page.tsx`](src/app/page.tsx), se capturan los parámetros `order_id` e `id`, se limpian de la URL para evitar bucles, y se despacha la confirmación a [`/api/billing/openpay/confirm-session`](src/app/api/billing/openpay/confirm-session).
+   - La API actualiza en Firestore el documento `users/{subscriberId}` (`billingStatus: 'PAID'`, `gmcSubscriptionStatus: 'ACTIVE'`, `paymentMethod: 'OPENPAY_CHECKOUT_HOSTED'`) y marca la sesión `gmc_checkout_sessions/{orderId}` con estado `COMPLETED`.
+
+### 188.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `gmc-billing-engine/src/index.ts`: 339 LOC ($\le 348$) ✅
+  * `gmc-billing-engine/src/providers/openpay/client.ts`: 330 LOC ($\le 348$) ✅
+  * `src/app/api/billing/openpay/create-checkout-session/route.ts`: 146 LOC ($\le 348$) ✅
+  * `src/app/api/billing/openpay/confirm-session/route.ts`: 65 LOC ($\le 348$) ✅
+  * `src/app/api/billing/openpay/webhook/route.ts`: 84 LOC ($\le 348$) ✅
+  * `src/app/page.tsx`: 272 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas compiladas) ✅.
+- **Gate 4 (Arquitectura & Seguridad PCI-DSS SAQ-A):**
+  * Regla inquebrantable cumplida: Cero campos de tarjeta dentro de Pulse Endurance ✅.
+  * Formulario 100% alojado en el Webcheckout oficial de Openpay BBVA ✅.
+  * Tarifa unificada a $55.000 COP / mes ✅.
+  * Suite FinSec: **47 de 47 pruebas superadas** (`npm run test:finsec`) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 188 ✅.

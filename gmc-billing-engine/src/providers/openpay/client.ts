@@ -313,16 +313,73 @@ export class OpenpayClient {
     currency: string;
     status: string;
     order_id?: string;
+    checkout_link?: string;
     payment_method?: {
       type: string;
       url: string;
     };
   }> {
+    // Sanitizar descripción para Openpay (sin caracteres especiales ni acentos)
+    const cleanDescription = (params.description || 'Suscripcion Pulse Pro')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // 1. Intentar con el endpoint moderno /checkouts (Webcheckout Oficial BBVA)
+    // que genera enlaces tipo https://sandbox-api.openpay.co/ck/... sin errores de SRI de sandbox
+    try {
+      const checkoutPayload = {
+        amount: params.amount,
+        currency: params.currency || 'COP',
+        description: cleanDescription,
+        order_id: params.orderId,
+        redirect_url: params.redirectUrl,
+        customer: {
+          name: params.customer.name,
+          last_name: params.customer.lastName || 'Atleta',
+          email: params.customer.email,
+          phone_number: params.customer.phoneNumber || '3000000000',
+        },
+      };
+
+      const res = await this.request<{
+        id: string;
+        amount: number;
+        currency: string;
+        status: string;
+        order_id?: string;
+        checkout_link?: string;
+      }>('/checkouts', {
+        method: 'POST',
+        body: JSON.stringify(checkoutPayload),
+      });
+
+      if (res && res.checkout_link) {
+        return {
+          id: res.id,
+          amount: res.amount,
+          currency: res.currency,
+          status: res.status,
+          order_id: res.order_id,
+          checkout_link: res.checkout_link,
+          payment_method: {
+            type: 'checkout',
+            url: res.checkout_link,
+          },
+        };
+      }
+    } catch (checkoutErr: any) {
+      console.warn('[OPENPAY_CHECKOUT_FALLBACK_WARN] /checkouts falló, intentando /charges:', checkoutErr.message);
+    }
+
+    // 2. Fallback: /charges con confirm: false
     const body = {
       method: 'card',
       amount: params.amount,
       currency: params.currency || 'COP',
-      description: params.description,
+      description: cleanDescription,
       order_id: params.orderId,
       customer: {
         name: params.customer.name,

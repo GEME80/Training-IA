@@ -47,22 +47,55 @@ export async function POST(req: NextRequest) {
       if (parsed?.subscriberId) {
         try {
           const now = new Date();
-          const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-          await adminDb.collection('users').doc(parsed.subscriberId).set(
-            {
-              billingStatus: 'PAID',
-              gmcSubscriptionStatus: 'ACTIVE',
-              isTrialActive: false,
-              hasUsedTrial: true,
-              lastPaymentDate: now.toISOString(),
-              gmcCurrentPeriodEnd: periodEnd.toISOString(),
-              paymentMethod: 'OPENPAY_CHECKOUT_HOSTED',
-              planPrice: payload.transaction.amount || 55000,
-              planCurrency: payload.transaction.currency || 'COP',
+          let baseDate = now;
+
+          // Si el atleta ya tiene un periodo activo futuro, extender a partir de esa fecha
+          try {
+            const userDoc = await adminDb.collection('users').doc(parsed.subscriberId).get();
+            if (userDoc.exists && userDoc.data()?.gmcCurrentPeriodEnd) {
+              const prevEnd = new Date(userDoc.data()!.gmcCurrentPeriodEnd);
+              if (prevEnd > now) baseDate = prevEnd;
+            }
+          } catch {}
+
+          const periodEnd = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+          const billingUpdate = {
+            billingStatus: 'PAID',
+            gmcSubscriptionStatus: 'ACTIVE',
+            isTrialActive: false,
+            hasUsedTrial: true,
+            cancelAtPeriodEnd: false,
+            lastPaymentDate: now.toISOString(),
+            gmcCurrentPeriodStart: now.toISOString(),
+            gmcCurrentPeriodEnd: periodEnd.toISOString(),
+            paymentMethod: 'OPENPAY_RECURRING',
+            openpayTransactionId: payload.transaction.id,
+            planPrice: payload.transaction.amount || 55000,
+            planCurrency: payload.transaction.currency || 'COP',
+            updatedAt: now.toISOString(),
+          };
+
+          // 1. Actualizar por subscriberId directo
+          await adminDb.collection('users').doc(parsed.subscriberId).set(billingUpdate, { merge: true });
+
+          // 2. Sincronizar doc vinculado por intervalsAthleteId
+          try {
+            const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', parsed.subscriberId).get();
+            for (const doc of snap.docs) {
+              await doc.ref.set(billingUpdate, { merge: true });
+            }
+          } catch {}
+
+          // 3. Sincronizar registro oficial en gmc_subscriptions
+          try {
+            await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${parsed.subscriberId}`).set({
+              status: 'ACTIVE',
+              currentPeriodStart: now.toISOString(),
+              currentPeriodEnd: periodEnd.toISOString(),
+              cancelAtPeriodEnd: false,
               updatedAt: now.toISOString(),
-            },
-            { merge: true }
-          );
+            }, { merge: true });
+          } catch {}
         } catch (dbErr) {
           console.warn('[WEBHOOK_FIRESTORE_SYNC_WARN]', dbErr);
         }

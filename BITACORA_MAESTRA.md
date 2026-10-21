@@ -10995,3 +10995,61 @@ flowchart TD
 - **Gate 3 (Baterías Automatizadas):** `npm run test:renewal` completado exitosamente con HTTP 200 y extensión confirmada ✅.
 - **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 199 ✅.
+
+---
+
+## 200. Certificación Integral: Cancelación, Reversión (Instant Cutoff), Redirección Directa y Bloqueo por Fin de Periodo de Prueba
+
+- **Fecha:** 2026-10-21
+- **Objetivo:** Certificar y documentar el set completo de pruebas del ciclo de vida financiero de suscripciones en PULSE Endurance bajo Openpay BBVA Sandbox:
+  1. **Prueba 2:** Cancelación voluntaria formal y reanudación sin doble cobro.
+  2. **Prueba 3:** Reembolso real (Refund) en consola Openpay con revocación inmediata de acceso (*Instant Cutoff*).
+  3. **Optimización UX:** Eliminación del modal intermedio de checkout y redirección directa hacia Openpay BBVA.
+  4. **Prueba 4:** Bloqueo determinista por Paywall al expirar el periodo de prueba de 7 días sin tarjeta registrada.
+
+### 200.1. Prueba 2: Cancelación Formal y Reanudación
+- **Eliminación del Término Informal:** Se purgó completamente el concepto informal "Efecto Netflix" en favor de la nomenclatura jurídica y corporativa **"Política de Cancelación del Plan"** y **"Garantía de Acceso Pagado"**.
+- **Comprobación en Vivo:**
+  * Al cancelar desde el perfil de atleta, la suscripción pasa a `CANCEL_SCHEDULED`.
+  * El atleta conserva el 100% de sus accesos hasta el último segundo de su vigencia pagada.
+  * Al pulsar **"Reanudar Suscripción"**, el plan retorna a `ACTIVE` sin ejecutar cobro adicional si el periodo sigue vigente.
+  * Si la vigencia ya expiró, el endpoint `/api/billing/openpay/resume` rechaza con código `402 (Payment Required)`.
+
+### 200.2. Prueba 3: Devolución / Reembolso Real (Refund Instant Cutoff)
+- **Ejecución en Pasarela Openpay BBVA:**
+  * Se procesó el reembolso real en consola Openpay para el cargo de \$55.000 COP (`trviel4zgnpogyeowucj` y `trszrgmejxb30tpc9wuv`).
+  * Estado en Openpay: `refunded` (visible bajo la sección *Pagos* ➔ *Reembolsos*).
+- **Procesamiento de Webhook `charge.refunded`:**
+  * Clave de deduplicación aislada: `ref_${tx.id}` en el libro mayor inmutable.
+  * Acceso revocado en tiempo real: `hasAccess: false`, `status: CANCELLED_LOCKED`, `daysRemaining: 0`.
+  * La tarjeta registrada se desvincula para garantizar que no existan cobros posteriores sobre un plan extinguido.
+
+### 200.3. Optimización de Conversión: Redirección Directa a Openpay (Sin Modal Intermedio)
+- **Problema Detectado:** Al presionar "Activar Membresía", se desplegaba un modal popup redundante requiriendo un segundo clic para ser transferido a Openpay.
+- **Solución Implementada:** 
+  * Se creó [`src/lib/services/openpayClient.ts`](src/lib/services/openpayClient.ts) (`redirectToOpenpayCheckout`).
+  * El botón en el Paywall ([`GmcPaywallLockView.tsx`](src/components/billing/GmcPaywallLockView.tsx)), en el Banner del Dashboard ([`AthleteBillingBanner.tsx`](src/components/dashboard/AthleteBillingBanner.tsx)) y en el Perfil ([`PaymentMethodCard.tsx`](src/components/profile/PaymentMethodCard.tsx)) muestra estado de carga (`Conectando con Openpay BBVA...`) e inmediatamente transfiere al atleta a la pasarela bancaria.
+
+### 200.4. Prueba 4: Fin de Periodo de Prueba sin Tarjeta (Bloqueo Total por Paywall)
+- **Ejecutable de Certificación:** `npm run test:trial` ([`simulate-trial-expiration.ts`](gmc-billing-engine/test/simulate-trial-expiration.ts)).
+- **Validaciones Automatizadas Superadas:**
+  1. **Día 1 a 7 (Trial Activo):** `resolveSubscriberAccess` retorna `hasAccess: true`, `status: TRIAL_ACTIVE`, `isTrial: true`.
+  2. **Día 8 (Expiración sin Tarjeta):** `resolveSubscriberAccess` evalúa la fecha determinista y retorna `hasAccess: false`, `status: PAST_DUE_LOCKED`, `daysRemaining: 0`, `actionRequired: UPDATE_CARD`.
+  3. **Compuerta Front-End ([`src/app/page.tsx`](src/app/page.tsx)):** `isTrialExpired === true` e `isBillingBlocked === true`, disparando el renderizado de [`GmcPaywallLockView`](src/components/billing/GmcPaywallLockView.tsx).
+  4. **Regularización:** Al pagar \$55.000 COP, el estado cambia a `ACTIVE` con 30 días de vigencia y el Paywall desaparece de inmediato.
+
+### 200.5. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/lib/services/openpayClient.ts`: 36 LOC ($\le 348$) ✅
+  * `src/components/billing/GmcPaywallLockView.tsx`: 150 LOC ($\le 348$) ✅
+  * `src/components/profile/PaymentMethodCard.tsx`: 113 LOC ($\le 348$) ✅
+  * `src/components/dashboard/AthleteBillingBanner.tsx`: 335 LOC ($\le 348$) ✅
+  * `src/components/profile/AthleteSubscriptionTab.tsx`: 344 LOC ($\le 348$) ✅
+  * `src/app/page.tsx`: 327 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):**
+  * `npm run test:trial`: Superada al 100% ✅
+  * `npm run test:renewal`: Superada al 100% ✅
+  * `npm run test:refund`: Superada al 100% ✅
+- **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 200 ✅.

@@ -15,6 +15,7 @@
     "test:openpay-live": "tsx gmc-billing-engine/test/openpay-live-certification.ts",
     "test:renewal": "tsx gmc-billing-engine/test/simulate-recurring-renewal.ts",
     "test:refund": "tsx gmc-billing-engine/test/simulate-refund-cutoff.ts",
+    "test:trial": "tsx gmc-billing-engine/test/simulate-trial-expiration.ts",
     "lint": "next lint"
   },
   "dependencies": {

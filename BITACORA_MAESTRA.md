@@ -10868,3 +10868,27 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Baterías Automatizadas):** FinSec 47/47 y Chaos Agent 12/12 superados al 100% ✅.
 - **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 196 ✅.
+
+---
+
+## 197. Eliminación de Banner Redundante en Cabecera y Cierre Controlado de Alerta en Perfil
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Limpiar la interfaz eliminando el banner verde persistente de la cabecera superior en `page.tsx`, ahora que el Pop-up / Modal de activación cumple la función informativa al retornar de Openpay. Dotar a la alerta de la pestaña de Suscripción de botón de descarte (`✕`) y consumo único en `sessionStorage`.
+
+### 197.1. Cambios Implementados
+1. **Eliminación del Banner de Cabecera ([`page.tsx`](src/app/page.tsx)):**
+   - Retirado el estado y bloque visual de `paymentSuccessNotice` en la parte superior del Dashboard.
+   - La confirmación visual principal recae 100% en el `PaymentSuccessModal` central y en la tarjeta de perfil.
+2. **Consumo Único y Cierre en Perfil ([`AthleteSubscriptionTab.tsx`](src/components/profile/AthleteSubscriptionTab.tsx)):**
+   - Tras leer `sessionStorage.getItem("pulse_payment_notice")`, se remueve inmediatamente con `sessionStorage.removeItem(...)` para evitar que vuelva a aparecer en futuras navegaciones.
+   - Se añadió botón `✕` para que el atleta pueda descartar el aviso en cualquier momento con un clic.
+
+### 197.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/app/page.tsx`: 321 LOC ($\le 348$) ✅
+  * `src/components/profile/AthleteSubscriptionTab.tsx`: 336 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** Chaos Agent 12/12 y FinSec superados al 100% ✅.
+- **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 197 ✅.

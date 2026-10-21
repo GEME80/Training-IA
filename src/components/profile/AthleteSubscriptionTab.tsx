@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CreditCard, ShieldCheck, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
+import { CreditCard, ShieldCheck, AlertTriangle, CheckCircle2, RefreshCw, X } from "lucide-react";
 import { PciDssCertifiedBadge } from "../billing/PaymentLogos";
 import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
 import { CancelConfirmModal } from "./CancelConfirmModal";
@@ -52,6 +52,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
       const stored = sessionStorage.getItem("pulse_payment_notice");
       if (stored) {
         setFeedbackMessage({ type: "success", text: stored });
+        sessionStorage.removeItem("pulse_payment_notice");
       }
     } catch {}
 
@@ -215,18 +216,28 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
 
         {feedbackMessage && (
           <div
-            className={`mt-3 p-3 rounded-2xl flex items-center gap-2.5 text-xs font-medium ${
+            className={`mt-3 p-3 rounded-2xl flex items-center justify-between gap-2.5 text-xs font-medium ${
               feedbackMessage.type === "success"
                 ? "bg-emerald-50 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                 : "bg-rose-50 text-rose-900 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
             }`}
           >
-            {feedbackMessage.type === "success" ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-            )}
-            <span>{feedbackMessage.text}</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              {feedbackMessage.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+              )}
+              <span className="truncate">{feedbackMessage.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFeedbackMessage(null)}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition shrink-0 cursor-pointer"
+              title="Cerrar aviso"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </div>

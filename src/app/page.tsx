@@ -39,7 +39,6 @@ export default function HomePage() {
   const [isGeminiConnected, setIsGeminiConnected] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
-  const [paymentSuccessNotice, setPaymentSuccessNotice] = useState<string | null>(null);
   const [successModalData, setSuccessModalData] = useState<{
     isOpen: boolean;
     cardLast4?: string;
@@ -69,7 +68,6 @@ export default function HomePage() {
       if (isPaymentReturn && !hasHandledPaymentRef.current) {
         hasHandledPaymentRef.current = true;
         const msg = "¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.";
-        setPaymentSuccessNotice(msg);
         try { sessionStorage.setItem("pulse_payment_notice", msg); } catch {}
         
         const orderId = params.get("order_id") || undefined;
@@ -126,17 +124,11 @@ export default function HomePage() {
           .catch(() => {});
       }
 
-      // Restaurar persistencia del modal o aviso ante recargas / re-renders de Auth
+      // Restaurar persistencia del modal ante recargas / re-renders de Auth
       try {
         const storedModal = sessionStorage.getItem("pulse_payment_success_modal");
         if (storedModal && !successModalData) {
           setSuccessModalData(JSON.parse(storedModal));
-        }
-      } catch {}
-      try {
-        const storedNotice = sessionStorage.getItem("pulse_payment_notice");
-        if (storedNotice && !paymentSuccessNotice) {
-          setPaymentSuccessNotice(storedNotice);
         }
       } catch {}
     }
@@ -273,24 +265,6 @@ export default function HomePage() {
       ) : (
         /* VISTA 3: DASHBOARD DEL ATLETA UNIFICADO (Sidebar Continuo de borde a borde) */
         <div className="flex flex-col min-h-screen">
-          {paymentSuccessNotice && (
-            <div className="bg-emerald-600 text-white px-4 py-3 text-xs sm:text-sm font-bold flex items-center justify-between shadow-md z-30">
-              <div className="flex items-center gap-2 max-w-5xl mx-auto">
-                <span className="text-base">🎉</span>
-                <span>{paymentSuccessNotice}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setPaymentSuccessNotice(null);
-                  try { sessionStorage.removeItem("pulse_payment_notice"); } catch {}
-                }}
-                className="text-white hover:text-emerald-200 font-bold px-2 py-1 rounded cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-          )}
           {previewAthlete && (
             <AdminImpersonationBanner
               athlete={previewAthlete}

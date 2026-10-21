@@ -72,17 +72,20 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
 
   // Consultar estado en vivo del GMC Billing Engine ("Efecto Netflix")
   useEffect(() => {
-    if (!athleteUid || isExempt) return;
+    const effectiveId = athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid;
+    if (!effectiveId || isExempt) return;
 
     const fetchGmcStatus = async () => {
       try {
-        const res = await fetch(`/api/billing/openpay/status?subscriberId=${athleteUid}`);
+        const res = await fetch(`/api/billing/openpay/status?subscriberId=${encodeURIComponent(effectiveId)}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.resolution) {
             setGmcResolution(data.resolution);
             if (data.resolution.hasAccess && data.resolution.status !== "GRACE_PERIOD") {
               setLocalStatus("PAID");
+            } else if (!data.resolution.hasAccess) {
+              setLocalStatus("PENDING");
             }
           }
         }
@@ -92,9 +95,10 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     };
 
     fetchGmcStatus();
-  }, [athleteUid, isExempt]);
+  }, [athleteUid, userProfile?.intervalsAthleteId, userProfile?.uid, isExempt]);
 
   const handleCancelSubscription = async () => {
+    const effectiveId = athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid;
     if (!confirm("¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso completo hasta el final de tu periodo actual y no se realizará ningún cobro futuro.")) {
       return;
     }
@@ -104,7 +108,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
       const res = await fetch("/api/billing/openpay/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriberId: athleteUid }),
+        body: JSON.stringify({ subscriberId: effectiveId }),
       });
       if (res.ok) {
         alert("Suscripción cancelada. Conservarás tu acceso hasta el vencimiento de tu periodo actual.");
@@ -118,12 +122,13 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
   };
 
   const handleResumeSubscription = async () => {
+    const effectiveId = athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid;
     setActionLoading(true);
     try {
       const res = await fetch("/api/billing/openpay/resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriberId: athleteUid }),
+        body: JSON.stringify({ subscriberId: effectiveId }),
       });
       if (res.ok) {
         alert("¡Suscripción reanudada con éxito! Tu plan continuará activo.");

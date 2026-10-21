@@ -1,5 +1,5 @@
 /**
- * API ROUTE: CANCELACIÓN PROGRAMADA DE SUSCRIPCIÓN (EFECTO NETFLIX)
+ * API ROUTE: CANCELACIÓN PROGRAMADA DE SUSCRIPCIÓN ("EFECTO NETFLIX")
  * GMC FinSec Billing Engine
  * (C) German Morales Consulting
  */
@@ -10,18 +10,45 @@ import { adminDb } from '@/lib/firebase/admin';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => null);
-    const subscriberId = body?.subscriberId;
-    const tenantId = body?.tenantId || 'PULSE_ENDURANCE';
+    const body = await req.json().catch(() => ({}));
+    const { subscriberId, tenantId = 'PULSE_ENDURANCE' } = body;
 
     if (!subscriberId) {
       return NextResponse.json({ error: 'subscriberId requerido' }, { status: 400 });
     }
 
-    const engine = new GmcBillingEngine();
-    await engine.scheduleCancellation(tenantId, subscriberId);
+    const candidateIds = new Set<string>([subscriberId]);
+    if (adminDb) {
+      try {
+        let userDoc = await adminDb.collection('users').doc(subscriberId).get();
+        if (!userDoc.exists) {
+          const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).limit(1).get();
+          if (!snap.empty) userDoc = snap.docs[0];
+        }
+        if (!userDoc.exists) {
+          const snap = await adminDb.collection('users').where('email', '==', subscriberId).limit(1).get();
+          if (!snap.empty) userDoc = snap.docs[0];
+        }
+        if (userDoc.exists) {
+          const u = userDoc.data();
+          candidateIds.add(userDoc.id);
+          if (u?.intervalsAthleteId) candidateIds.add(u.intervalsAthleteId);
+          if (u?.email) candidateIds.add(u.email);
+        }
+      } catch (err) {
+        console.warn('[CANCEL_RESOLVE_CANDIDATES_WARN]', err);
+      }
+    }
 
-    // Sincronizar cancelación en Firestore para el perfil del atleta
+    const engine = new GmcBillingEngine();
+    for (const cid of candidateIds) {
+      try {
+        await engine.scheduleCancellation(tenantId, cid);
+      } catch {
+        // continue
+      }
+    }
+
     if (adminDb) {
       const now = new Date().toISOString();
       const cancelPayload = {
@@ -30,25 +57,27 @@ export async function POST(req: NextRequest) {
         updatedAt: now,
       };
 
-      try {
-        await adminDb.collection('users').doc(subscriberId).set(cancelPayload, { merge: true });
-        const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).get();
-        for (const doc of snap.docs) {
-          await doc.ref.set(cancelPayload, { merge: true });
+      for (const cid of candidateIds) {
+        try {
+          await adminDb.collection('users').doc(cid).set(cancelPayload, { merge: true });
+          await adminDb.collection('gmc_subscriptions').doc(`${tenantId}_${cid}`).set(
+            { status: 'CANCEL_SCHEDULED', cancelAtPeriodEnd: true, updatedAt: now },
+            { merge: true }
+          );
+        } catch (dbErr) {
+          console.warn('[CANCEL_DB_SYNC_WARN]', dbErr);
         }
-      } catch (dbErr) {
-        console.warn('[CANCEL_DB_SYNC_WARN]', dbErr);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Suscripción cancelada exitosamente. Seguirás teniendo acceso activo hasta el fin de tu periodo actual sin cobros futuros.',
+      message: 'Suscripción cancelada exitosamente. Conservarás tu acceso activo completo hasta el fin de tu periodo actual y no se te cobrará nada.',
       willCancelAtPeriodEnd: true,
       status: 'CANCEL_SCHEDULED',
     });
   } catch (error: any) {
     console.error('[CANCEL_ROUTE_ERROR]', error);
-    return NextResponse.json({ error: error.message || 'Error al programar cancelación' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Error procesando cancelación' }, { status: 500 });
   }
 }

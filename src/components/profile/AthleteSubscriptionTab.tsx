@@ -1,28 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  CreditCard,
-  Calendar,
-  ShieldCheck,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  Lock,
-  ArrowRight,
-  Loader2,
-  ExternalLink,
-  Info,
-} from "lucide-react";
-import { formatMoney } from "@/lib/services/adminBillingService";
-import {
-  OpenpayByBbvaLogo,
-  PciDssCertifiedBadge,
-  VisaLogo,
-  MastercardLogo,
-  AmexLogo,
-} from "../billing/PaymentLogos";
+import { CreditCard, ShieldCheck, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
+import { PciDssCertifiedBadge } from "../billing/PaymentLogos";
 import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
+import { CancelConfirmModal } from "./CancelConfirmModal";
+import { PaymentMethodCard } from "./PaymentMethodCard";
+import { SubscriptionPlanCard } from "./SubscriptionPlanCard";
 
 interface AthleteSubscriptionTabProps {
   athleteId: string;
@@ -40,9 +24,10 @@ interface SubscriptionDetails {
   currentPlanCode: string;
   cardLast4?: string | null;
   cardBrand?: string | null;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
   trialEndDate?: string | null;
+  hasActiveSubscription?: boolean;
 }
 
 export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
@@ -66,24 +51,20 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
     fetch("/api/admin/subscription-plan")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.plan?.price) {
-          setPlanPrice(data.plan.price);
-        }
+        if (data?.plan?.price) setPlanPrice(data.plan.price);
       })
       .catch(() => {});
   }, []);
 
   const fetchStatus = async () => {
-    if (!athleteId && !email) {
+    const subscriberId = athleteId || email;
+    if (!subscriberId) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const subscriberId = athleteId || email;
-      const res = await fetch(
-        `/api/billing/openpay/status?subscriberId=${encodeURIComponent(subscriberId)}`
-      );
+      const res = await fetch(`/api/billing/openpay/status?subscriberId=${encodeURIComponent(subscriberId)}`);
       const data = await res.json().catch(() => null);
 
       if (res.ok && data?.success) {
@@ -97,17 +78,18 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         );
 
         setSubDetails({
-          status: isCancelScheduledFromData ? "CANCEL_SCHEDULED" : (record.status || resolution.status || "ACTIVE"),
-          hasAccess: Boolean(resolution.hasAccess ?? true),
-          daysRemaining: resolution.daysRemaining ?? 30,
+          status: isCancelScheduledFromData ? "CANCEL_SCHEDULED" : (record.status || resolution.status || "INACTIVE"),
+          hasAccess: Boolean(resolution.hasAccess ?? false),
+          daysRemaining: resolution.daysRemaining ?? 0,
           isTrial: Boolean(resolution.isTrial ?? false),
           willCancelAtPeriodEnd: isCancelScheduledFromData,
           currentPlanCode: record.currentPlanCode || "PULSE_PRO_MONTHLY",
-          cardLast4: record.cardLast4 || "1111",
-          cardBrand: record.cardBrand || "visa",
+          cardLast4: record.cardLast4 || null,
+          cardBrand: record.cardBrand || null,
           currentPeriodStart: record.currentPeriodStart,
           currentPeriodEnd: record.currentPeriodEnd,
           trialEndDate: record.trialEndDate,
+          hasActiveSubscription: Boolean(record.hasActiveSubscription),
         });
       }
     } catch (err) {
@@ -133,9 +115,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
       });
       const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
-        throw new Error(data?.error || "No se pudo procesar la cancelación.");
-      }
+      if (!res.ok) throw new Error(data?.error || "No se pudo procesar la cancelación.");
 
       setFeedbackMessage({
         type: "success",
@@ -147,7 +127,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
     } catch (err: any) {
       setFeedbackMessage({
         type: "error",
-        text: err.message || "Error al cancelar la suscripción. Intenta nuevamente.",
+        text: err?.message || "Ocurrió un error al cancelar la suscripción.",
       });
     } finally {
       setActionLoading(false);
@@ -166,9 +146,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
       });
       const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
-        throw new Error(data?.error || "No se pudo reactivar la suscripción.");
-      }
+      if (!res.ok) throw new Error(data?.error || "No se pudo reanudar la suscripción.");
 
       setFeedbackMessage({
         type: "success",
@@ -179,47 +157,32 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
     } catch (err: any) {
       setFeedbackMessage({
         type: "error",
-        text: err.message || "Error al reanudar la suscripción. Intenta nuevamente.",
+        text: err?.message || "Ocurrió un error al reanudar la suscripción.",
       });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) {
-      const defaultNext = new Date();
-      defaultNext.setDate(defaultNext.getDate() + 30);
-      return defaultNext.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
-    }
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "Al finalizar el ciclo";
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString("es-CO", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+      return d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
     } catch {
       return dateStr;
     }
   };
 
-  const getBrandLogo = (brand?: string | null) => {
-    const b = (brand || "").toLowerCase();
-    if (b.includes("visa")) return <VisaLogo />;
-    if (b.includes("master")) return <MastercardLogo />;
-    if (b.includes("amex") || b.includes("american")) return <AmexLogo />;
-    return <CreditCard className="h-7 w-7 text-slate-700" />;
-  };
-
   const isCancelScheduled = Boolean(
     subDetails?.willCancelAtPeriodEnd || subDetails?.status === "CANCEL_SCHEDULED"
   );
+  const isActive = Boolean(subDetails?.status === "ACTIVE" && !isCancelScheduled);
 
   return (
     <div className="space-y-6 animate-fadeIn pb-10">
-      {/* 1. Header de Sección */}
+      {/* Header */}
       <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -243,7 +206,6 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
           </button>
         </div>
 
-        {/* Mensaje de retroalimentación de operaciones */}
         {feedbackMessage && (
           <div
             className={`mt-3 p-3 rounded-2xl flex items-center gap-2.5 text-xs font-medium ${
@@ -262,149 +224,28 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         )}
       </div>
 
-      {/* 2. Grid de Información: Plan Actual & Medio de Pago */}
+      {/* Grid: Plan y Medio de Pago */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* =========================================================
-            TARJETA 1: PLAN ACTIVO & CICLO DE FACTURACIÓN
-           ========================================================= */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Plan Actual
-              </span>
-              <h4 className="text-xl font-black text-slate-950 dark:text-white mt-0.5">
-                Pulse Atleta Pro
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Acceso ilimitado a Head Coach IA, Periodización y Telemetría.
-              </p>
-            </div>
+        <SubscriptionPlanCard
+          planPrice={planPrice}
+          isMasterAdmin={isMasterAdmin}
+          isCancelScheduled={isCancelScheduled}
+          isTrial={Boolean(subDetails?.isTrial)}
+          isActive={isActive}
+          daysRemaining={subDetails?.daysRemaining ?? 0}
+          currentPeriodEnd={subDetails?.currentPeriodEnd}
+          formatDate={formatDate}
+        />
 
-            <div className="text-right shrink-0">
-              <span className="text-xl font-mono font-black text-slate-900 dark:text-white block">
-                {formatMoney(planPrice, "COP")}
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">
-                Mensual
-              </span>
-            </div>
-          </div>
-
-          {/* Insignia de Estado */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-slate-500">Estado de la cuenta:</span>
-            {isMasterAdmin ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Acceso Administrador (Exento)
-              </span>
-            ) : isCancelScheduled ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                Cancelación Programada (Acceso Activo)
-              </span>
-            ) : subDetails?.isTrial ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
-                Prueba Gratuita ({subDetails.daysRemaining}d restantes)
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                Suscripción Activa
-              </span>
-            )}
-          </div>
-
-          {/* Fechas de corte / renovación */}
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 p-3.5 space-y-2 text-xs">
-            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
-              <span className="flex items-center gap-2">
-                <Calendar className={`h-4 w-4 ${isCancelScheduled ? "text-amber-500" : "text-slate-400"}`} />
-                {isCancelScheduled ? "Acceso garantizado hasta:" : "Próxima renovación automática:"}
-              </span>
-              <strong className={`font-mono ${isCancelScheduled ? "text-amber-600 dark:text-amber-400 font-black" : "text-slate-950 dark:text-white"}`}>
-                {formatDate(subDetails?.currentPeriodEnd)}
-              </strong>
-            </div>
-
-            {isCancelScheduled && (
-              <div className="p-3 rounded-xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-[11px] text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
-                ⚠️ Tu suscripción <strong>está cancelada y no se renovará</strong>. Conservarás todos tus entrenamientos, análisis de IA y acceso completo hasta el <strong>{formatDate(subDetails?.currentPeriodEnd)}</strong> sin ningún cobro futuro.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* =========================================================
-            TARJETA 2: MEDIO DE PAGO EN ARCHIVO (OPENPAY BBVA)
-           ========================================================= */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Método de Pago
-                </span>
-                <h4 className="text-lg font-black text-slate-950 dark:text-white mt-0.5">
-                  Tarjeta Registrada
-                </h4>
-              </div>
-              <OpenpayByBbvaLogo />
-            </div>
-
-            {/* Visualización de la Tarjeta */}
-            <div className="mt-4 rounded-2xl bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-5 shadow-lg border border-slate-700/60 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-6 flex items-center">
-                  {getBrandLogo(subDetails?.cardBrand)}
-                </div>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
-                  Protegido 3DS
-                </span>
-              </div>
-
-              <div className="font-mono text-base sm:text-lg tracking-wider font-semibold text-slate-200 my-2">
-                •••• •••• •••• {subDetails?.cardLast4 || "1111"}
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-700/60 text-[11px] text-slate-400">
-                <span className="truncate max-w-[150px] font-medium text-slate-300">
-                  {athleteName || "Atleta Pulse"}
-                </span>
-                <span className="font-mono text-slate-400">
-                  {subDetails?.cardBrand?.toUpperCase() || "VISA"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Botón para Actualizar / Cambiar Medio de Pago */}
-          <div className="space-y-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setIsCheckoutModalOpen(true)}
-              className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2 group"
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Actualizar / Cambiar Medio de Pago</span>
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
-              <Lock className="h-3 w-3 text-slate-400" />
-              <span>Redirección directa y segura a Openpay (BBVA) • PCI-DSS SAQ-A</span>
-            </div>
-          </div>
-        </div>
+        <PaymentMethodCard
+          cardLast4={subDetails?.cardLast4}
+          cardBrand={subDetails?.cardBrand}
+          athleteName={athleteName}
+          onOpenCheckout={() => setIsCheckoutModalOpen(true)}
+        />
       </div>
 
-      {/* =========================================================
-          SECCIÓN 3: GESTIÓN DE CANCELACIÓN / REANUDACIÓN
-         ========================================================= */}
+      {/* Sección Gestión de Cancelación / Reanudación */}
       <div className="rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -423,21 +264,17 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
                 type="button"
                 onClick={handleResumeSubscription}
                 disabled={actionLoading}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-700/20 transition cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-700/20 transition cursor-pointer flex items-center justify-center gap-2"
               >
-                {actionLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
+                <RefreshCw className={`h-4 w-4 ${actionLoading ? "animate-spin" : ""}`} />
                 <span>Reanudar Suscripción</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsCancelConfirmOpen(true)}
-                disabled={actionLoading || isMasterAdmin}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-2xl border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={actionLoading || isMasterAdmin || !subDetails?.hasActiveSubscription}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-2xl border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40"
               >
                 <span>Cancelar Suscripción</span>
               </button>
@@ -445,7 +282,6 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
           </div>
         </div>
 
-        {/* Garantías de Seguridad y Certificación Bancaria */}
         <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <PciDssCertifiedBadge />
@@ -454,65 +290,19 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
               Cero responsabilidad sobre datos de tarjeta • Cifrado Bancario BBVA
             </span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-400 font-mono">
-              ID Suscriptor: {athleteId || email}
-            </span>
-          </div>
+          <span className="text-[10px] text-slate-400 font-mono">ID: {athleteId || email}</span>
         </div>
       </div>
 
-      {/* =========================================================
-          MODAL DE CONFIRMACIÓN DE CANCELACIÓN
-         ========================================================= */}
-      {isCancelConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl text-slate-900 dark:text-white space-y-5">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 shrink-0">
-                <AlertTriangle className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-base font-black">
-                  ¿Confirmas la cancelación de tu suscripción?
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  No se realizará ningún cobro posterior en tu tarjeta de crédito o débito.
-                </p>
-              </div>
-            </div>
+      <CancelConfirmModal
+        isOpen={isCancelConfirmOpen}
+        onClose={() => setIsCancelConfirmOpen(false)}
+        onConfirm={handleCancelSubscription}
+        isLoading={actionLoading}
+        currentPeriodEnd={subDetails?.currentPeriodEnd || undefined}
+        formatDate={formatDate}
+      />
 
-            <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-medium">
-              Conservarás acceso completo a tus planes, telemetría y Head Coach IA hasta el <strong>{formatDate(subDetails?.currentPeriodEnd)}</strong>.
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsCancelConfirmOpen(false)}
-                disabled={actionLoading}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
-              >
-                Mantener mi plan
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelSubscription}
-                disabled={actionLoading}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-md shadow-rose-700/20 transition cursor-pointer flex items-center gap-1.5"
-              >
-                {actionLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>Sí, cancelar suscripción</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================
-          MODAL DE CHECKOUT OPENPAY BBVA (ACTUALIZAR MEDIO DE PAGO)
-         ========================================================= */}
       <GmcCardCheckoutModal
         isOpen={isCheckoutModalOpen}
         onClose={() => setIsCheckoutModalOpen(false)}

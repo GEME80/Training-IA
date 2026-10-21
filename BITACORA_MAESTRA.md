@@ -10683,3 +10683,46 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 4 (UX Limpia & Fidelidad Financiera):** Dashboard sin banners residuales, tarjeta Visa 1111 real en perfil y notificación celebratoria persistente ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 191 ✅.
 
+
+---
+
+## 192. Ciclo de Vida Completo de Suscripción: Cancelación Programada Transparente ("Efecto Netflix"), Reanudación Instantánea y Gobernanza del Banner de Dashboard
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Perfeccionar y blindar el ciclo de vida post-pago de suscripciones recurrentes Openpay BBVA ($55.000 COP). Resolver la ambigüedad visual tras la cancelación (proporcionando al atleta certeza inmediata de que no habrá cobros futuros y que mantiene acceso garantizado hasta la fecha de corte), habilitar la reanudación con 1 solo clic, gobernar la visualización del banner en el Dashboard (oculto en membresía activa al día, visible invitando a pagar cuando no tiene tarjeta o suscripción activa, y en ámbar si está cancelada programada), y desacoplar los subcomponentes del perfil bajo la regla modular Gate 1 ($\le 348$ LOC).
+
+### 192.1. Diagnóstico y Causa Raíz
+1. **Identificadores Múltiples del Atleta:** El usuario opera con tres identificadores en diferentes capas: Firebase Auth UID (`2mKkQ...`), Intervals Athlete ID (`i442091`) y Email (`gerkof@...`). Las operaciones de cancelación/reanudación y consulta de estado requerían sincronizar bidireccionalmente tanto la colección `users` como `gmc_subscriptions` para cualquiera de estos identificadores.
+2. **Claridad Visual Post-Cancelación:** Tras dar clic en "Cancelar Suscripción", la UI seguía mostrando "Suscripción Activa" y "Próxima renovación automática", generando desconfianza en el atleta. Se requería reflejar inmediatamente el estado `CANCEL_SCHEDULED`: badge ámbar explícito, texto "Acceso garantizado hasta:", caja de advertencia confirmando la desactivación del cobro y botón verde dinámico "Reanudar Suscripción".
+3. **Gobernanza del Banner en Dashboard:** Para usuarios activos al día el banner debe estar oculto. Para usuarios sin tarjeta o con suscripción inactiva/vencida, el banner de activación ($55.000 COP) debe mostrarse claramente. Para usuarios con cancelación programada, debe mostrarse el banner ámbar con el botón de reanudar.
+
+### 192.2. Cambios Implementados
+1. **Rutas de Backend Multicandidato ([`cancel/route.ts`](src/app/api/billing/openpay/cancel/route.ts), [`resume/route.ts`](src/app/api/billing/openpay/resume/route.ts), [`status/route.ts`](src/app/api/billing/openpay/status/route.ts)):**
+   - Resuelven todos los IDs candidatos (`subscriberId`, Firebase UID, `intervalsAthleteId`, `email`).
+   - Sincronizan de forma atómica en `users` y `gmc_subscriptions` (`cancelAtPeriodEnd: true/false`, `gmcSubscriptionStatus: 'CANCEL_SCHEDULED'/'ACTIVE'`).
+   - En `status/route.ts`, si no hay tarjeta ni suscripción activa, retorna fielmente `cardLast4: null`, `status: 'INACTIVE'` y `hasActiveSubscription: false` (sin inventar tarjetas ni estados activos artificiales).
+2. **Modularización Arquitectónica Gate 1 de la Pestaña Suscripción:**
+   - [`AthleteSubscriptionTab.tsx`](src/components/profile/AthleteSubscriptionTab.tsx): Reducido a 318 LOC ($\le 348$). Orquesta el estado, las acciones de cancelación/reanudación y las garantías bancarias BBVA.
+   - [`SubscriptionPlanCard.tsx`](src/components/profile/SubscriptionPlanCard.tsx): 111 LOC ($\le 348$). Tarjeta del plan actual, badges de estado dinámicos (`Cancelación Programada (Acceso Activo)`, `Suscripción Activa`, `Sin Suscripción Activa`) y caja de alerta explicativa.
+   - [`PaymentMethodCard.tsx`](src/components/profile/PaymentMethodCard.tsx): 101 LOC ($\le 348$). Muestra la tarjeta registrada (`Visa •••• 1111`) con badges 3DS o estado vacío si no tiene tarjeta registrada con botón directo para agregarla.
+   - [`CancelConfirmModal.tsx`](src/components/profile/CancelConfirmModal.tsx): 74 LOC ($\le 348$). Modal de confirmación con explicación detallada de la garantía Efecto Netflix.
+3. **Gobernanza de Banners en Dashboard ([`AthleteBillingBanner.tsx`](src/components/dashboard/AthleteBillingBanner.tsx)):**
+   - Utiliza resolución de ID reactiva (`athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid`).
+   - Estado `PAID` activo: Banner oculto (UX limpia).
+   - Estado Cancelación Programada: Banner informativo ámbar con días restantes y botón `Reanudar mi Suscripción`.
+   - Estado Sin Tarjeta / Inactivo: Banner activo invitando al pago recurrente de $55.000 COP con redirección a Openpay BBVA.
+
+### 192.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `AthleteSubscriptionTab.tsx`: 318 LOC ($\le 348$) ✅
+  * `SubscriptionPlanCard.tsx`: 111 LOC ($\le 348$) ✅
+  * `PaymentMethodCard.tsx`: 101 LOC ($\le 348$) ✅
+  * `CancelConfirmModal.tsx`: 74 LOC ($\le 348$) ✅
+  * `AthleteBillingBanner.tsx`: 338 LOC ($\le 348$) ✅
+  * `status/route.ts`: 136 LOC ($\le 348$) ✅
+  * `cancel/route.ts`: 83 LOC ($\le 348$) ✅
+  * `resume/route.ts`: 83 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Pruebas Unitarias FinSec):** `npm run test:finsec` con 47 de 47 pruebas aprobadas (19 Fase 1 + 13 Fase 2 + 15 Matriz Certificación) ✅.
+- **Gate 4 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas generadas limpias) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 192 ✅.

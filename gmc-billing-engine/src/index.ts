@@ -223,34 +223,21 @@ export class GmcBillingEngine {
           ? `¡Periodo de prueba iniciado! Tienes ${effectiveTrialDays} días gratis. Tu primer cobro automático se realizará el ${new Date(record.trialEndDate!).toLocaleDateString('es-CO')}.`
           : '¡Suscripción activada exitosamente con cobro inmediato!';
 
-        return {
-          record,
-          isTrial,
-          trialDaysApplied: effectiveTrialDays,
-          message,
-        };
+        return { record, isTrial, trialDaysApplied: effectiveTrialDays, message };
       }
     );
   }
 
-  /**
-   * Resuelve el acceso de un atleta o usuario ("Efecto Netflix")
-   */
+  /** Resuelve el acceso de un atleta o usuario */
   async resolveAccess(tenantId: string, subscriberId: string): Promise<AccessResolution> {
     const record = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
     return resolveSubscriberAccess(record);
   }
 
-  /**
-   * Cancela la suscripción respetando el tiempo ya pagado o días de prueba restantes
-   */
+  /** Cancela la suscripción respetando el tiempo ya pagado o días de prueba restantes */
   async scheduleCancellation(tenantId: string, subscriberId: string): Promise<void> {
     await IdempotencyLockGuardAgent.executeProtectedOperation(
-      {
-        tenantId,
-        subscriberId,
-        operation: 'CANCEL',
-      },
+      { tenantId, subscriberId, operation: 'CANCEL' },
       async () => {
         const record = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
         if (record?.openpayCustomerId && record.openpaySubscriptionId) {
@@ -265,16 +252,10 @@ export class GmcBillingEngine {
     );
   }
 
-  /**
-   * Reanuda la suscripción si el usuario se arrepiente antes de que venza el ciclo
-   */
+  /** Reanuda la suscripción si el usuario se arrepiente antes de que venza el ciclo */
   async resumeSubscription(tenantId: string, subscriberId: string): Promise<void> {
     await IdempotencyLockGuardAgent.executeProtectedOperation(
-      {
-        tenantId,
-        subscriberId,
-        operation: 'RESUME',
-      },
+      { tenantId, subscriberId, operation: 'RESUME' },
       async () => {
         await NetflixLifecycleAgent.resumeSubscription({ tenantId, subscriberId });
       }
@@ -332,6 +313,21 @@ export class GmcBillingEngine {
         tenantId,
         subscriberId,
         isFirstChargePostTrial: sub?.status === 'TRIAL_ACTIVE',
+      });
+    } else if (payload.type === 'charge.refunded') {
+      await NetflixLifecycleAgent.processRefundCutoff({ tenantId, subscriberId });
+      await ForensicLedgerAuditorAgent.recordLedgerEntry({
+        id: `ref_${tx.id}`,
+        tenantId,
+        subscriberId,
+        orderId: tx.order_id || tx.id,
+        openpayTransactionId: tx.id,
+        type: 'REFUND',
+        grossAmountCop: -Math.abs(tx.amount),
+        currency: 'COP',
+        status: 'REFUNDED',
+        metadata: { reason: tx.description || 'Reembolso procesado en pasarela' },
+        timestamp: payload.event_date || new Date().toISOString(),
       });
     }
 

@@ -102,6 +102,40 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Revocación inmediata en Firestore si hubo reembolso o devolución bancaria
+    if (payload.type === 'charge.refunded' && payload.transaction?.order_id && adminDb) {
+      const parsed = WebhookCryptoRouterAgent.parseOrderId(payload.transaction.order_id);
+      if (parsed?.subscriberId) {
+        try {
+          const now = new Date().toISOString();
+          const refundPayload = {
+            billingStatus: 'REFUNDED',
+            gmcSubscriptionStatus: 'CANCELLED_LOCKED',
+            isTrialActive: false,
+            cancelAtPeriodEnd: false,
+            gmcCurrentPeriodEnd: now,
+            updatedAt: now,
+          };
+
+          await adminDb.collection('users').doc(parsed.subscriberId).set(refundPayload, { merge: true });
+          try {
+            const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', parsed.subscriberId).get();
+            for (const doc of snap.docs) await doc.ref.set(refundPayload, { merge: true });
+          } catch {}
+          try {
+            await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${parsed.subscriberId}`).set({
+              status: 'CANCELLED_LOCKED',
+              currentPeriodEnd: now,
+              cancelAtPeriodEnd: false,
+              updatedAt: now,
+            }, { merge: true });
+          } catch {}
+        } catch (dbErr) {
+          console.warn('[WEBHOOK_REFUND_SYNC_WARN]', dbErr);
+        }
+      }
+    }
+
     return NextResponse.json({
       status: 'success',
       message: 'Evento de webhook procesado y conciliado en Libro Mayor',

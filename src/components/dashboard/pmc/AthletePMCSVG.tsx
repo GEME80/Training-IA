@@ -330,9 +330,9 @@ export const AthletePMCSVG: React.FC<AthletePMCSVGProps> = ({
         {/* SEGUIMIENTO MAGNÉTICO ALINEADO CON EL MOUSE (CROSSHAIR) */}
         {activePoint && (
           <g>
-            <line x1={scaleX(activeIdx)} y1={p1Top} x2={scaleX(activeIdx)} y2={p3Bottom} stroke="#0f172a" strokeWidth="1.2" />
-            <rect x={scaleX(activeIdx) - 26} y={p1Top - 14} width="52" height="13" rx="3" fill="#0f172a" />
-            <text x={scaleX(activeIdx)} y={p1Top - 4} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
+            <line x1={scaleX(activeIdx)} y1={p1Top} x2={scaleX(activeIdx)} y2={p3Bottom} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" />
+            <rect x={scaleX(activeIdx) - 26} y={p1Top - 14} width="52" height="13" rx="3.5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+            <text x={scaleX(activeIdx)} y={p1Top - 4} textAnchor="middle" fill="#334155" fontSize="7" fontWeight="bold">{activePoint.date.split("-").slice(1).join("/")}</text>
             {visibleCurves?.ctl !== false && <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.ctl)} r="3.5" fill="#0284c7" stroke="#fff" strokeWidth="1.5" />}
             {visibleCurves?.ctl !== false && activePoint.plannedCtl !== undefined && (
               <circle cx={scaleX(activeIdx)} cy={scaleP1(activePoint.plannedCtl)} r="3" fill="#f59e0b" stroke="#fff" strokeWidth="1.2" />

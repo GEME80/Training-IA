@@ -304,34 +304,32 @@ export const AthletePMCChart: React.FC<AthletePMCChartProps> = ({
           {/* Web Desktop (>= 768px): Tooltip flotante interactivo siguiendo el crosshair */}
           {hoveredIdx !== null && activePoint && (
             <div
-              className="hidden md:flex pointer-events-none absolute top-2 z-20 flex-col gap-1 p-2.5 rounded-xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-xl backdrop-blur-md border border-slate-700/60 text-[11px] font-mono whitespace-nowrap transition-all duration-75"
+              className="hidden md:flex pointer-events-none absolute top-2 z-20 flex-col gap-1 p-2.5 rounded-xl bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-100 shadow-xl shadow-slate-900/10 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/80 text-[11px] font-mono whitespace-nowrap transition-all duration-75"
               style={{
                 left: `clamp(85px, calc(75px + ${(activeIdx / Math.max(1, points.length - 1)) * 100}% * 0.81), calc(100% - 220px))`,
               }}
             >
-              <div className="flex items-center justify-between gap-3 font-sans font-bold text-slate-300 text-[11px] border-b border-slate-700/50 pb-1">
+              <div className="flex items-center justify-between gap-3 font-sans font-bold text-slate-800 dark:text-slate-200 text-[11px] border-b border-slate-100 dark:border-slate-800 pb-1">
                 <span>{formatPmcHeaderDate(activePoint.date)}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                  (activePoint.tsb ?? 0) >= 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
-                }`}>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold border ${(activePoint.tsb ?? 0) >= 0 ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"}`}>
                   TSB: {activePoint.tsb > 0 ? `+${activePoint.tsb}` : activePoint.tsb}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10.5px] pt-0.5">
-                <span className="text-slate-400">CTL: <strong className="text-sky-400 font-black">{activePoint.ctl}</strong></span>
-                <span className="text-slate-400">ATL: <strong className="text-purple-400 font-black">{activePoint.atl}</strong></span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">CTL: <strong className="text-sky-600 dark:text-sky-400 font-black">{activePoint.ctl}</strong></span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">ATL: <strong className="text-purple-600 dark:text-purple-400 font-black">{activePoint.atl}</strong></span>
                 {activePoint.plannedCtl !== undefined && (
-                  <span className="text-slate-400">Plan: <strong className="text-amber-400">{activePoint.plannedCtl}</strong></span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Plan: <strong className="text-amber-600 dark:text-amber-400">{activePoint.plannedCtl}</strong></span>
                 )}
-                <span className="text-slate-400">Rampa: <strong className="text-slate-200">{activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate}</strong></span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Rampa: <strong className="text-slate-700 dark:text-slate-200 font-bold">{activePoint.rampRate > 0 ? `+${activePoint.rampRate}` : activePoint.rampRate}</strong></span>
               </div>
               {activeDayActivities && activeDayActivities.activities.length > 0 && (
-                <div className="mt-1 pt-1 border-t border-slate-700/50 text-[10px] text-slate-300 font-sans">
-                  <div className="flex items-center gap-1 font-bold text-purple-400">
+                <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-sans">
+                  <div className="flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400">
                     <Activity className="w-3 h-3" />
                     <span>{activeDayActivities.totalTss} TSS ({activeDayActivities.activities.length} ses)</span>
                   </div>
-                  <div className="truncate max-w-[190px] text-slate-400 text-[9.5px]">
+                  <div className="truncate max-w-[190px] text-slate-500 dark:text-slate-400 text-[9.5px]">
                     {activeDayActivities.activities.map((a) => a.name).join(", ")}
                   </div>
                 </div>

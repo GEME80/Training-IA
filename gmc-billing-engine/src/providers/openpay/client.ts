@@ -299,7 +299,7 @@ export class OpenpayClient {
         email: params.customer.email,
         phone_number: params.customer.phoneNumber || '3000000000',
       },
-      send_email: false,
+      send_email: true,
       redirect_url: params.redirectUrl,
     };
 

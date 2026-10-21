@@ -10960,3 +10960,38 @@ flowchart TD
 - **Gate 3 (Baterías Automatizadas):** Suite FinSec 47/47 y Chaos Agent 12/12 superados al 100% ✅.
 - **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 198 ✅.
+
+---
+
+## 199. Certificación en Vivo: Prueba 1 - Renovación Automática Recurrente (Día 30)
+
+- **Fecha:** 2026-10-21
+- **Objetivo:** Ejecutar la prueba en vivo del cobro automático recurrente de $55.000 COP contra el API real de Openpay Colombia Sandbox, despachar el evento de webhook `charge.succeeded` con verificación criptográfica y Server-to-Server Double Check, y constatar la extensión atómica del periodo de membresía en Firestore.
+
+### 199.1. Ejecución y Resultados en Vivo
+- **Suscriptor Objetivo:** `i442091` (German Morales)
+- **Estado Previo:** 30 días restantes (Corte: 20 de noviembre de 2026).
+- **Transacción Procesada en Openpay Sandbox:**
+  * **ID Transacción:** `trviel4zgnpogyeowucj`
+  * **Autorización BBVA:** `1875477106`
+  * **Monto:** $55.000 COP
+  * **Franquicia:** MasterCard •••• 4444
+  * **Order ID Determinista:** `GMC-PULSE_ENDURANCE-SUB-i442091-202611-ren2568`
+- **Despacho de Webhook a Producción:**
+  * Endpoint: `POST https://pulseendurance.co/api/billing/openpay/webhook`
+  * Autenticación: Timing-Safe HTTP Basic Auth
+  * Double Check: Verificación privada contra Openpay API (`completed` ✅).
+  * Deduplicación: Asentado en `gmc_immutable_ledger`.
+- **Estado Posterior Verificado en Vivo:**
+  * **Status:** `ACTIVE`
+  * **Nuevo Periodo:** `2026-10-21` 👉 `2026-12-20` (20 de diciembre de 2026)
+  * **Días de Acceso:** 60 días acumulados (30 iniciales + 30 de renovación).
+
+### 199.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `gmc-billing-engine/test/simulate-recurring-renewal.ts`: 145 LOC ($\le 348$) ✅
+  * `src/app/api/billing/openpay/webhook/route.ts`: 117 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** `npm run test:renewal` completado exitosamente con HTTP 200 y extensión confirmada ✅.
+- **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 199 ✅.

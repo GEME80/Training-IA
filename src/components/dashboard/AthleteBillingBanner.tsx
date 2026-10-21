@@ -14,6 +14,7 @@ import {
 import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
 import { formatMoney } from "@/lib/services/adminBillingService";
 import { useAuth } from "@/context/AuthContext";
+import { resolveOpenpayError } from "@/../gmc-billing-engine/src/core/openpayErrors";
 
 interface AthleteBillingBannerProps {
   athleteUid: string;
@@ -168,8 +169,14 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
       </div>
     );
   } else if (isGraceDunning) {
-    // CASO 1: FALLO DE COBRO AUTOMÁTICO / DUNNING CON GRACIA
+    // CASO 1: FALLO DE COBRO AUTOMÁTICO / DUNNING CON GRACIA Y MENSAJES PERSONALIZADOS
     const hoursRemaining = gmcResolution?.daysRemaining ? gmcResolution.daysRemaining * 24 : 72;
+    const errorDef = resolveOpenpayError(gmcResolution?.failureCode, {
+      hoursRemaining,
+      amountCop: configuredPrice,
+      cardLast4: (userProfile as any)?.cardLast4,
+    });
+
     bannerElement = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 border-2 border-rose-300 text-xs shadow-md animate-pulse">
         <div className="flex items-center gap-3">
@@ -184,7 +191,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-rose-900 font-medium mt-0.5 max-w-xl">
-              Tu banco rechazó el cargo mensual de <strong>{formatMoney(configuredPrice, planCurrency)}</strong> (fondos insuficientes o tarjeta declinada). Actualiza tu tarjeta para evitar la interrupción de tus entrenamientos.
+              {errorDef.dashboardBanner}
             </p>
           </div>
         </div>
@@ -195,7 +202,7 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
           className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0"
         >
           <CreditCard className="h-4 w-4" />
-          <span>Actualizar Tarjeta o Pagar Ahora</span>
+          <span>{errorDef.actionText}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>

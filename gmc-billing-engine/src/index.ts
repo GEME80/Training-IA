@@ -16,6 +16,7 @@ export * from './agents/idempotencyLockGuard';
 export * from './agents/webhookCryptoRouter';
 export * from './agents/netflixLifecycleDunning';
 export * from './agents/forensicLedgerAuditor';
+export * from './core/openpayErrors';
 
 import { OpenpayClient } from './providers/openpay/client';
 import { OpenpayServerConfig } from './core/config';

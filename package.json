@@ -11,6 +11,7 @@
     "start:robust": "bash scripts/start-server.sh",
     "watchdog": "node scripts/watchdog.js",
     "test:finsec": "tsx gmc-billing-engine/test/verify-phase1.ts && tsx gmc-billing-engine/test/verify-phase2.ts && tsx gmc-billing-engine/test/verify-phase3-matrix.ts",
+    "test:chaos": "tsx gmc-billing-engine/test/openpay-sandbox-chaos-agent.ts",
     "lint": "next lint"
   },
   "dependencies": {

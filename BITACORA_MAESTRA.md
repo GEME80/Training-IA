@@ -10726,3 +10726,52 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Pruebas Unitarias FinSec):** `npm run test:finsec` con 47 de 47 pruebas aprobadas (19 Fase 1 + 13 Fase 2 + 15 Matriz Certificación) ✅.
 - **Gate 4 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas generadas limpias) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 192 ✅.
+
+---
+
+## 193. Normalizador de Errores Bancarios Openpay, Matriz de Caos y Agente de Certificación Automatizada
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Erradicar mensajes genéricos ante fallos de cobro en pasarela y dotar al sistema de un catálogo formal de diagnósticos bancarios (`openpayErrors.ts`). Implementar el Agente Automatizado de Caos y Certificación (`test:chaos`), validar la compatibilidad con tarjetas internacionales (Visa, Mastercard, Amex) cobradas en Pesos Colombianos ($55.000 COP), y verificar el flujo de Dunning con 72 horas de gracia.
+
+### 193.1. Cambios Implementados
+1. **Catálogo de Errores y Normalizador UX ([`openpayErrors.ts`](gmc-billing-engine/src/core/openpayErrors.ts)):**
+   - Mapeo determinista de códigos bancarios de Openpay:
+     * `3003` (Fondos insuficientes): Alerta de saldo insuficiente, cálculo de horas de gracia restantes y acción "Actualizar Tarjeta o Reintentar".
+     * `3004` (Tarjeta vencida): Alerta de plástico expirado y solicitud de nuevo plástico vigente.
+     * `3006` (Restricción internacional): Diagnóstico claro indicando que el banco emisor extranjero no autorizó el cargo en Pesos Colombianos ($55.000 COP).
+     * `3001` / `3005` (Rechazo preventivo emisor): Sugerencia de contactar al banco o registrar medio alternativo.
+     * `3010` (3D Secure incompleto): Invitación a reintentar la autenticación de dos pasos.
+     * `3002` (Tarjeta restringida / reporte): Bloqueo preventivo y solicitud de nuevo método.
+2. **Inyección en Banner de Dashboard y API ([`AthleteBillingBanner.tsx`](src/components/dashboard/AthleteBillingBanner.tsx), [`status/route.ts`](src/app/api/billing/openpay/status/route.ts)):**
+   - El banner superior en estado `GRACE_PERIOD` / `OVERDUE` ahora resuelve dinámicamente el mensaje personalizado y el texto del botón de acción según la causa raíz real reportada por Openpay.
+   - Aislamiento estricto cliente/servidor para evitar que componentes cliente empaqueten dependencias de `firebase-admin`.
+3. **Agente de Pruebas de Caos & Certificación ([`openpay-sandbox-chaos-agent.ts`](gmc-billing-engine/test/openpay-sandbox-chaos-agent.ts)):**
+   - Batería desatendida de 12 casos (TC-01 a TC-12) que valida en segundos:
+     * TC-01: Visa Colombia Exitosa (Order ID $\le 64$ chars).
+     * TC-02: Mastercard Colombia Exitosa.
+     * TC-03: Visa Internacional procesada en COP.
+     * TC-04: Mastercard Internacional procesada en COP.
+     * TC-05: American Express (15 dígitos, 4 dígitos CID).
+     * TC-06: Mastercard Fondos Insuficientes (3003) $\rightarrow$ Activación de 72h de gracia.
+     * TC-07: Tarjeta Expirada (3004).
+     * TC-08: Tarjeta Internacional no habilitada (3006).
+     * TC-09: 3D Secure interrumpido (3010).
+     * TC-10: Renovación automática Día 30 (`charge.succeeded`).
+     * TC-11: Expiración de Gracia Día 34 $\rightarrow$ Bloqueo Paywall (`PAST_DUE_LOCKED`).
+     * TC-12: Efecto Netflix (Cancelación programada y reanudación instantánea).
+   - Registrado comando `npm run test:chaos` en `package.json`.
+
+### 193.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `openpayErrors.ts`: 89 LOC ($\le 348$) ✅
+  * `openpay-sandbox-chaos-agent.ts`: 246 LOC ($\le 348$) ✅
+  * `AthleteBillingBanner.tsx`: 345 LOC ($\le 348$) ✅
+  * `status/route.ts`: 146 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías de Pruebas):**
+  * `npm run test:chaos`: **12/12 Pruebas Superadas** ✅.
+  * `npm run test:finsec`: **47/47 Pruebas Superadas** ✅.
+  * **Total acumulado:** 59/59 pruebas automáticas aprobadas.
+- **Gate 4 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas generadas) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 193 ✅.

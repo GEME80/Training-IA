@@ -112,6 +112,9 @@ export async function GET(req: NextRequest) {
       finalStatus = rawRecord?.status || uData?.gmcSubscriptionStatus || 'ACTIVE';
     }
 
+    const failureCode = rawRecord?.failureCode || uData?.lastFailureCode || (rawRecord?.status === 'GRACE_PERIOD' ? 3003 : null);
+    const failureReason = rawRecord?.failureReason || uData?.lastFailureReason || null;
+
     const record = {
       status: finalStatus,
       currentPlanCode: 'PULSE_PRO_MONTHLY',
@@ -122,7 +125,14 @@ export async function GET(req: NextRequest) {
       cancelAtPeriodEnd: isCanceled,
       hasConsumedTrial: Boolean(rawRecord?.hasConsumedTrial || uData?.hasUsedTrial),
       hasActiveSubscription: Boolean(hasActiveSub || isCanceled),
+      failureCode,
+      failureReason,
     };
+
+    if (failureCode) {
+      (resolution as any).failureCode = failureCode;
+      (resolution as any).failureReason = failureReason;
+    }
 
     return NextResponse.json({
       success: true,

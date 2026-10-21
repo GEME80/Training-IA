@@ -10,8 +10,9 @@ import {
   AlertTriangle,
   Award,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
-import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
+import { redirectToOpenpayCheckout } from "@/lib/services/openpayClient";
 import { formatMoney } from "@/lib/services/adminBillingService";
 import { useAuth } from "@/context/AuthContext";
 import { resolveOpenpayError } from "@/../gmc-billing-engine/src/core/openpayErrors";
@@ -44,12 +45,28 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
   onRefresh,
 }) => {
   const { userProfile } = useAuth();
-  const [isCardModalOpen, setIsCardModalOpen] = useState<boolean>(false);
+  const [redirectingCheckout, setRedirectingCheckout] = useState<boolean>(false);
   const [localStatus, setLocalStatus] = useState<typeof billingStatus>(billingStatus);
   const [gmcResolution, setGmcResolution] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [configuredTrialDays, setConfiguredTrialDays] = useState<number>(7);
   const [configuredPrice, setConfiguredPrice] = useState<number>(planPrice);
+
+  const handleStartOpenpayCheckout = async () => {
+    setRedirectingCheckout(true);
+    try {
+      await redirectToOpenpayCheckout({
+        subscriberId: athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid || "guest_subscriber",
+        athleteName: athleteName || userProfile?.displayName || "Atleta Pulse",
+        athleteEmail: athleteEmail || userProfile?.email || "",
+        planCode: "PULSE_PRO_MONTHLY",
+      });
+    } catch (err: any) {
+      console.error("[BILLING_BANNER_CHECKOUT_ERROR]", err);
+      alert(err?.message || "No se pudo iniciar el checkout seguro con Openpay BBVA.");
+      setRedirectingCheckout(false);
+    }
+  };
 
   const isExempt = Boolean(billingExempt || userProfile?.billingExempt);
   const userHasConsumedTrial = Boolean(hasUsedTrial || userProfile?.hasUsedTrial);
@@ -97,30 +114,6 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
 
     fetchGmcStatus();
   }, [athleteUid, userProfile?.intervalsAthleteId, userProfile?.uid, isExempt]);
-
-  const handleCancelSubscription = async () => {
-    const effectiveId = athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid;
-    if (!confirm("¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso completo hasta el final de tu periodo actual y no se realizará ningún cobro futuro.")) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const res = await fetch("/api/billing/openpay/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriberId: effectiveId }),
-      });
-      if (res.ok) {
-        alert("Suscripción cancelada. Conservarás tu acceso hasta el vencimiento de tu periodo actual.");
-        window.location.reload();
-      }
-    } catch {
-      alert("Error al comunicarse con el servidor.");
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleResumeSubscription = async () => {
     const effectiveId = athleteUid || userProfile?.intervalsAthleteId || userProfile?.uid;
@@ -198,12 +191,17 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
 
         <button
           type="button"
-          onClick={() => setIsCardModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0"
+          disabled={redirectingCheckout}
+          onClick={handleStartOpenpayCheckout}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0 disabled:opacity-75"
         >
-          <CreditCard className="h-4 w-4" />
-          <span>{errorDef.actionText}</span>
-          <ArrowRight className="h-3.5 w-3.5" />
+          {redirectingCheckout ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CreditCard className="h-4 w-4" />
+          )}
+          <span>{redirectingCheckout ? "Conectando..." : errorDef.actionText}</span>
+          {!redirectingCheckout && <ArrowRight className="h-3.5 w-3.5" />}
         </button>
       </div>
     );
@@ -231,11 +229,16 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition cursor-pointer shadow-sm"
+            disabled={redirectingCheckout}
+            onClick={handleStartOpenpayCheckout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition cursor-pointer shadow-sm disabled:opacity-75"
           >
-            <CreditCard className="h-3.5 w-3.5" />
-            <span>Activar Membresía</span>
+            {redirectingCheckout ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CreditCard className="h-3.5 w-3.5" />
+            )}
+            <span>{redirectingCheckout ? "Conectando..." : "Activar Membresía"}</span>
           </button>
         </div>
       </div>
@@ -304,12 +307,19 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-sm transition cursor-pointer"
+            disabled={redirectingCheckout}
+            onClick={handleStartOpenpayCheckout}
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-sm transition cursor-pointer disabled:opacity-75"
           >
-            <CreditCard className="h-3.5 w-3.5" />
+            {redirectingCheckout ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CreditCard className="h-3.5 w-3.5" />
+            )}
             <span>
-              {isExistingAthlete
+              {redirectingCheckout
+                ? "Conectando con Openpay..."
+                : isExistingAthlete
                 ? `Pagar con Tarjeta (${formatMoney(configuredPrice, planCurrency)})`
                 : configuredTrialDays > 0
                 ? `Pagar con Tarjeta (${configuredTrialDays}d Gratis)`
@@ -321,25 +331,5 @@ export const AthleteBillingBanner: React.FC<AthleteBillingBannerProps> = ({
     );
   }
 
-  return (
-    <>
-      {bannerElement}
-
-      {/* Modal Seguro de Tarjeta Openpay BBVA (Siempre montado para evitar que se cierre por re-render) */}
-      <GmcCardCheckoutModal
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-        subscriberId={athleteUid || userProfile?.uid || "guest_subscriber"}
-        athleteName={athleteName || userProfile?.displayName || "Atleta Pulse"}
-        athleteEmail={athleteEmail || userProfile?.email || ""}
-        planAmountCop={configuredPrice}
-        trialDays={isExistingAthlete ? 0 : configuredTrialDays}
-        onSuccess={() => {
-          setLocalStatus("PAID");
-          if (onRefresh) onRefresh();
-          window.location.reload();
-        }}
-      />
-    </>
-  );
+  return bannerElement;
 };

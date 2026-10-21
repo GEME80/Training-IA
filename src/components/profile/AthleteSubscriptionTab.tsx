@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CreditCard, ShieldCheck, AlertTriangle, CheckCircle2, RefreshCw, X } from "lucide-react";
 import { PciDssCertifiedBadge } from "../billing/PaymentLogos";
-import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
+import { redirectToOpenpayCheckout } from "@/lib/services/openpayClient";
 import { CancelConfirmModal } from "./CancelConfirmModal";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { SubscriptionPlanCard } from "./SubscriptionPlanCard";
@@ -39,13 +39,31 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
   const [planPrice, setPlanPrice] = useState<number>(55000);
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState<boolean>(false);
+  const [redirectingCheckout, setRedirectingCheckout] = useState<boolean>(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  const handleOpenCheckout = async () => {
+    setRedirectingCheckout(true);
+    try {
+      await redirectToOpenpayCheckout({
+        subscriberId: athleteId || email,
+        athleteName,
+        athleteEmail: email,
+        planCode: "PULSE_PRO_MONTHLY",
+      });
+    } catch (err: any) {
+      setFeedbackMessage({
+        type: "error",
+        text: err?.message || "No se pudo conectar con Openpay BBVA. Intenta nuevamente.",
+      });
+      setRedirectingCheckout(false);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -259,7 +277,8 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
           cardLast4={subDetails?.cardLast4}
           cardBrand={subDetails?.cardBrand}
           athleteName={athleteName}
-          onOpenCheckout={() => setIsCheckoutModalOpen(true)}
+          onOpenCheckout={handleOpenCheckout}
+          isLoading={redirectingCheckout}
         />
       </div>
 
@@ -319,17 +338,6 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         isLoading={actionLoading}
         currentPeriodEnd={subDetails?.currentPeriodEnd || undefined}
         formatDate={formatDate}
-      />
-
-      <GmcCardCheckoutModal
-        isOpen={isCheckoutModalOpen}
-        onClose={() => setIsCheckoutModalOpen(false)}
-        subscriberId={athleteId || email}
-        athleteName={athleteName}
-        athleteEmail={email}
-        planName="Actualización de Medio de Pago"
-        planAmountCop={planPrice}
-        trialDays={0}
       />
     </div>
   );

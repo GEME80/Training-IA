@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { PulseLogo } from "@/components/PulseLogo";
-import { Lock, CreditCard, LogOut, Sparkles, Check, ArrowRight } from "lucide-react";
+import { Lock, CreditCard, LogOut, Sparkles, Check, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { GmcCardCheckoutModal } from "./GmcCardCheckoutModal";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import { redirectToOpenpayCheckout } from "@/lib/services/openpayClient";
 
 interface GmcPaywallLockViewProps {
   reason?: string;
@@ -14,11 +14,11 @@ interface GmcPaywallLockViewProps {
 
 export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
   reason = "Tu cuenta requiere una membresía activa para continuar accediendo a tus entrenamientos, análisis de IA y métricas fisiológicas.",
-  onRefresh,
 }) => {
   const { user, userProfile, signOutUser } = useAuth();
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  const [planPrice, setPlanPrice] = useState<number>(50000);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [planPrice, setPlanPrice] = useState<number>(55000);
 
   useEffect(() => {
     fetch("/api/admin/subscription-plan")
@@ -31,9 +31,26 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
       .catch(() => {});
   }, []);
 
-  const athleteUid = user?.uid || userProfile?.uid || "";
-  const athleteName = userProfile?.displayName || user?.displayName || "Atleta";
+  const athleteUid = userProfile?.intervalsAthleteId || user?.uid || userProfile?.uid || "";
+  const athleteName = userProfile?.displayName || user?.displayName || "Atleta Pulse";
   const athleteEmail = user?.email || userProfile?.email || "";
+
+  const handleProceedToOpenpay = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      await redirectToOpenpayCheckout({
+        subscriberId: athleteUid,
+        athleteName,
+        athleteEmail,
+        planCode: "PULSE_PRO_MONTHLY",
+      });
+    } catch (err: any) {
+      console.error("[PAYWALL_CHECKOUT_ERROR]", err);
+      setErrorMessage(err?.message || "Error al conectar con Openpay BBVA. Intenta nuevamente.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-between font-sans">
@@ -91,19 +108,32 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
             </ul>
           </div>
 
-          {/* Acción Principal: Reactivación Inmediata con Tarjeta Openpay BBVA */}
+          {/* Acción Principal: Redirección Directa a Openpay BBVA */}
           <div className="pt-2">
             <button
               type="button"
-              onClick={() => setIsCardModalOpen(true)}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-950 transition cursor-pointer active:scale-[0.99] flex items-center justify-center gap-2 group"
+              disabled={loading}
+              onClick={handleProceedToOpenpay}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-950 transition cursor-pointer active:scale-[0.99] flex items-center justify-center gap-2 group disabled:opacity-75 disabled:cursor-wait"
             >
-              <CreditCard className="h-5 w-5 shrink-0" />
-              <span>Activar Membresía con Openpay BBVA ({formatMoney(planPrice, "COP")})</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Conectando con Openpay BBVA...</span>
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 shrink-0" />
+                  <span>Activar Membresía con Openpay BBVA ({formatMoney(planPrice, "COP")})</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
             </button>
+            {errorMessage && (
+              <p className="text-xs text-rose-400 mt-2 font-medium">{errorMessage}</p>
+            )}
             <span className="block text-[11px] text-slate-400 mt-2 font-mono">
-              Procesado en entorno bancario seguro por Openpay de BBVA • Activación Inmediata
+              Redirección directa a pasarela bancaria oficial de BBVA • Cifrado PCI-DSS SAQ-A
             </span>
           </div>
 
@@ -115,21 +145,6 @@ export const GmcPaywallLockView: React.FC<GmcPaywallLockViewProps> = ({
           </p>
         </div>
       </main>
-
-      {/* Modal de Checkout con Tarjeta Openpay BBVA (Cobro Inmediato) */}
-      <GmcCardCheckoutModal
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-        subscriberId={athleteUid}
-        athleteName={athleteName}
-        athleteEmail={athleteEmail}
-        planAmountCop={planPrice}
-        trialDays={0} // Al estar bloqueado en el paywall, se cobra de inmediato para reactivar
-        onSuccess={() => {
-          if (onRefresh) onRefresh();
-          window.location.reload();
-        }}
-      />
     </div>
   );
 };

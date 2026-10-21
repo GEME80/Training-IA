@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CreditCard, Lock, ArrowRight } from "lucide-react";
+import { CreditCard, Lock, ArrowRight, Loader2 } from "lucide-react";
 import {
   OpenpayByBbvaLogo,
   VisaLogo,
@@ -14,6 +14,7 @@ interface PaymentMethodCardProps {
   cardBrand?: string | null;
   athleteName: string;
   onOpenCheckout: () => void;
+  isLoading?: boolean;
 }
 
 export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
@@ -21,6 +22,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   cardBrand,
   athleteName,
   onOpenCheckout,
+  isLoading = false,
 }) => {
   const getBrandLogo = (brand?: string | null) => {
     const b = (brand || "").toLowerCase();
@@ -84,12 +86,22 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
       <div className="space-y-2 pt-2">
         <button
           type="button"
+          disabled={isLoading}
           onClick={onOpenCheckout}
-          className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2 group"
+          className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2 group disabled:opacity-75 disabled:cursor-wait"
         >
-          <CreditCard className="h-4 w-4" />
-          <span>{hasCard ? "Actualizar / Cambiar Medio de Pago" : "Registrar Tarjeta y Activar Plan"}</span>
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Conectando con Openpay BBVA...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="h-4 w-4" />
+              <span>{hasCard ? "Actualizar / Cambiar Medio de Pago" : "Registrar Tarjeta y Activar Plan"}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </>
+          )}
         </button>
         <div className="flex items-center justify-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
           <Lock className="h-3 w-3 text-slate-400" />

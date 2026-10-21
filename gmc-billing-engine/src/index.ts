@@ -274,8 +274,9 @@ export class GmcBillingEngine {
     const tx = payload.transaction;
     if (!tx || !tx.id) return { processed: true, reason: 'NO_TRANSACTION_PAYLOAD' };
 
-    // 2. Deduplicación
-    if (await WebhookCryptoRouterAgent.isTransactionProcessed(tx.id)) {
+    // 2. Deduplicación por clave de evento contable
+    const ledgerKey = payload.type === 'charge.refunded' ? `ref_${tx.id}` : tx.id;
+    if (await WebhookCryptoRouterAgent.isTransactionProcessed(ledgerKey)) {
       return { processed: true, reason: 'ALREADY_PROCESSED_DEDUPLICATED' };
     }
 

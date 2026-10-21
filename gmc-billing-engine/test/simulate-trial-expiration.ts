@@ -22,13 +22,15 @@ async function runTrialExpirationSimulation() {
   const activeTrialRecord: SubscriberBillingRecord = {
     tenantId: 'PULSE_ENDURANCE',
     subscriberId: 'athlete_trial_test_001',
+    email: 'test@pulse.pro',
     status: 'TRIAL_ACTIVE',
     currentPlanCode: 'PULSE_PRO_MONTHLY',
+    openpayCustomerId: 'cus_test_123',
     currentPeriodStart: trialStart.toISOString(),
     currentPeriodEnd: trialEnd.toISOString(),
     trialEndDate: trialEnd.toISOString(),
     cancelAtPeriodEnd: false,
-    retryCount: 0,
+    hasConsumedTrial: true,
     createdAt: trialStart.toISOString(),
     updatedAt: trialStart.toISOString(),
   };

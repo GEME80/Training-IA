@@ -31,6 +31,13 @@ export async function POST(req: NextRequest) {
         }
         if (userDoc.exists) {
           const u = userDoc.data();
+          // BLINDAJE FINSEC: Si el periodo pagado ya venció, NO se puede reanudar gratis; debe pagar
+          if (u?.gmcCurrentPeriodEnd && new Date(u.gmcCurrentPeriodEnd).getTime() <= Date.now()) {
+            return NextResponse.json({
+              error: 'Tu periodo anterior ya ha finalizado. Para reactivar tu membresía, realiza el pago de tu suscripción.',
+              requiresPayment: true,
+            }, { status: 402 });
+          }
           candidateIds.add(userDoc.id);
           if (u?.intervalsAthleteId) candidateIds.add(u.intervalsAthleteId);
           if (u?.email) candidateIds.add(u.email);

@@ -70,11 +70,28 @@ export async function GET(req: NextRequest) {
       uData?.gmcSubscriptionStatus === 'ACTIVE'
     );
 
+    // Evaluar bloqueo por contracargo, reembolso o dunning vencido
+    const isLockedOrRefunded = Boolean(
+      rawRecord?.status === 'CANCELLED_LOCKED' ||
+      rawRecord?.status === 'PAST_DUE_LOCKED' ||
+      rawRecord?.status === 'SUSPENDED_FRAUD' ||
+      uData?.billingStatus === 'REFUNDED' ||
+      uData?.gmcSubscriptionStatus === 'CANCELLED_LOCKED' ||
+      uData?.gmcSubscriptionStatus === 'PAST_DUE_LOCKED' ||
+      uData?.gmcSubscriptionStatus === 'SUSPENDED_FRAUD'
+    );
+
     // Si el usuario pagó pero gmc_subscriptions aún no existía en el engine, asegurar acceso
-    if (!rawRecord && isPaidInUsers) {
+    if (!rawRecord && isPaidInUsers && !isLockedOrRefunded) {
       resolution.hasAccess = true;
       resolution.status = 'ACTIVE';
       resolution.daysRemaining = 30;
+    }
+
+    if (isLockedOrRefunded) {
+      resolution.hasAccess = false;
+      resolution.daysRemaining = 0;
+      resolution.status = rawRecord?.status || uData?.gmcSubscriptionStatus || 'CANCELLED_LOCKED';
     }
 
     // Evaluar si la cancelación fue programada en cualquiera de las fuentes
@@ -104,7 +121,9 @@ export async function GET(req: NextRequest) {
       null;
 
     let finalStatus = 'INACTIVE';
-    if (isCanceled) {
+    if (isLockedOrRefunded) {
+      finalStatus = resolution.status;
+    } else if (isCanceled) {
       finalStatus = 'CANCEL_SCHEDULED';
       resolution.willCancelAtPeriodEnd = true;
       resolution.status = 'CANCEL_SCHEDULED';

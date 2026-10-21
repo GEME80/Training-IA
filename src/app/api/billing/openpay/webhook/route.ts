@@ -120,7 +120,17 @@ export async function POST(req: NextRequest) {
           await adminDb.collection('users').doc(parsed.subscriberId).set(refundPayload, { merge: true });
           try {
             const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', parsed.subscriberId).get();
-            for (const doc of snap.docs) await doc.ref.set(refundPayload, { merge: true });
+            for (const doc of snap.docs) {
+              await doc.ref.set(refundPayload, { merge: true });
+              try {
+                await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${doc.id}`).set({
+                  status: 'CANCELLED_LOCKED',
+                  currentPeriodEnd: now,
+                  cancelAtPeriodEnd: false,
+                  updatedAt: now,
+                }, { merge: true });
+              } catch {}
+            }
           } catch {}
           try {
             await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${parsed.subscriberId}`).set({

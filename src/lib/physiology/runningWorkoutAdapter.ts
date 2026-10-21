@@ -316,7 +316,7 @@ export function adaptRunningPlanItem<T extends { discipline?: string; workoutNam
   opts: { mode?: RunningTrainingMode; runFtp?: number; thresholdPaceSec?: number; lthr?: number } = {}
 ): T {
   if (item.discipline !== "Carrera" || item.isRestDay) return item;
-  const mode = opts.mode || (opts.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+  const mode = opts.mode === "PACE" ? "PACE" : (opts.mode || (opts.runFtp && opts.runFtp > 0 ? "POWER" : "PACE"));
   const isQuality = isQualityRunningWorkout(item.workoutName || "", item.workoutDoc, item.day);
 
   if (mode === "POWER") {

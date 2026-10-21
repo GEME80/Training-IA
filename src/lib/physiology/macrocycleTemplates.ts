@@ -342,8 +342,8 @@ export function generateWeekTemplate(
     }
   }
 
-  const runningMode = runningOpts?.mode || (week as any).runningTrainingMode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
-  return result.map((item) => adaptRunningPlanItem(item, {
-    mode: runningMode, runFtp, thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr,
-  }));
+  const isPaceMode = runningOpts?.mode === "PACE" || (week as any).runningTrainingMode === "PACE";
+  const effFtp = isPaceMode ? 0 : runFtp;
+  const runningMode = isPaceMode ? "PACE" : (runningOpts?.mode || (week as any).runningTrainingMode || (effFtp && effFtp > 0 ? "POWER" : "PACE"));
+  return result.map((item) => adaptRunningPlanItem(item, { mode: runningMode, runFtp: effFtp, thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr }));
 }

@@ -36,6 +36,19 @@ export class IntervalsSyncService {
     const createdEvents: CalendarEvent[] = [];
     const errors: string[] = [];
 
+    // Determinación estricta de modalidad de carrera del atleta
+    let isPaceAthlete = false;
+    const reqMode = (input as any).runningTrainingMode;
+    if (reqMode === "PACE") {
+      isPaceAthlete = true;
+    } else if (uid) {
+      const { getUserProfileDecrypted } = await import("@/lib/db/userProfile");
+      const userDoc = await getUserProfileDecrypted(uid).catch(() => null);
+      if (userDoc?.profile.runningTrainingMode === "PACE" || userDoc?.profile.hasRunningPowerMeter === false) {
+        isPaceAthlete = true;
+      }
+    }
+
     // 1. Extraer rango de fechas del microciclo (Lunes a Domingo)
     const validDates = plan.map((p) => p.date).filter(Boolean).sort();
     let startDateStr = validDates[0];
@@ -117,11 +130,12 @@ export class IntervalsSyncService {
         (workoutText && (/%\s*CP\b/i.test(workoutText) || /stryd/i.test(workoutText))) ||
         (item.workoutName && /stryd/i.test(item.workoutName))
       );
-      const isRunPower = item.discipline === "Carrera" && isExplicitPower;
-      const isRunPaceOnly = item.discipline === "Carrera" && !isRunPower;
+      // Blindaje de Modalidad: Si el atleta entrena por ritmo, se anula la potencia incondicionalmente
+      const isRunPower = item.discipline === "Carrera" && !isPaceAthlete && isExplicitPower;
+      const isRunPaceOnly = item.discipline === "Carrera" && (isPaceAthlete || !isRunPower);
 
       const adaptedText = item.discipline === "Carrera"
-        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, isRunPower ? "POWER" : "PACE", item.workoutName || "")
+        ? adaptRunningWorkoutDoc(workoutText, item.discipline, false, isPaceAthlete ? "PACE" : (isRunPower ? "POWER" : "PACE"), item.workoutName || "")
         : workoutText;
       const canonicalDescription = sanitizeWorkoutDoc(adaptedText, {
         discipline: item.discipline,

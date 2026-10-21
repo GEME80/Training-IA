@@ -112,11 +112,11 @@ export function hydrateWeekPlanFromEvents(
       runFtp: opts?.runFtp,
       primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
     });
-    const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+    const runMode = runningOpts?.mode === "PACE" ? "PACE" : (runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE"));
     return overlaid.map((item) =>
       adaptRunningPlanItem(item, {
         mode: runMode,
-        runFtp: opts?.runFtp,
+        runFtp: runMode === "PACE" ? 0 : opts?.runFtp,
         thresholdPaceSec: runningOpts?.thresholdPaceSec,
         lthr: runningOpts?.lthr,
       })
@@ -154,11 +154,11 @@ export function hydrateWeekPlanFromEvents(
       bikeFtp: opts?.bikeFtp,
       primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
     });
-    const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+    const runMode = runningOpts?.mode === "PACE" ? "PACE" : (runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE"));
     return overlaid.map((item) =>
       adaptRunningPlanItem(item, {
         mode: runMode,
-        runFtp: opts?.runFtp,
+        runFtp: runMode === "PACE" ? 0 : opts?.runFtp,
         thresholdPaceSec: runningOpts?.thresholdPaceSec,
         lthr: runningOpts?.lthr,
       })
@@ -324,11 +324,11 @@ export function hydrateWeekPlanFromEvents(
     primaryRaceDate: opts?.primaryRaceDate || (week as any)?.primaryRaceDate,
   });
 
-  const runMode = runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE");
+  const runMode = runningOpts?.mode === "PACE" ? "PACE" : (runningOpts?.mode || (opts?.runFtp && opts.runFtp > 0 ? "POWER" : "PACE"));
   return overlaidItems.map((item) =>
     adaptRunningPlanItem(item, {
       mode: runMode,
-      runFtp: opts?.runFtp,
+      runFtp: runMode === "PACE" ? 0 : opts?.runFtp,
       thresholdPaceSec: runningOpts?.thresholdPaceSec,
       lthr: runningOpts?.lthr,
     })

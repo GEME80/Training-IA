@@ -81,12 +81,16 @@ export default function HomePage() {
         }
 
         // Mostrar de inmediato modal de confirmación con datos iniciales
-        setSuccessModalData({
+        const initialModalData = {
           isOpen: true,
-          cardLast4: "1111",
-          cardBrand: "visa",
+          cardLast4: "4444",
+          cardBrand: "mastercard",
           transactionId: transactionId || orderId,
-        });
+        };
+        setSuccessModalData(initialModalData);
+        try {
+          sessionStorage.setItem("pulse_payment_success_modal", JSON.stringify(initialModalData));
+        } catch {}
 
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
@@ -106,22 +110,35 @@ export default function HomePage() {
           .then((res) => res.json())
           .then((data) => {
             if (data?.success) {
-              setSuccessModalData({
+              const updatedModal = {
                 isOpen: true,
-                cardLast4: data.cardLast4 || "1111",
-                cardBrand: data.cardBrand || "visa",
+                cardLast4: data.cardLast4 || "4444",
+                cardBrand: data.cardBrand || "mastercard",
                 transactionId: transactionId || orderId,
-              });
+              };
+              setSuccessModalData(updatedModal);
+              try {
+                sessionStorage.setItem("pulse_payment_success_modal", JSON.stringify(updatedModal));
+              } catch {}
             }
             refreshProfile();
           })
           .catch(() => {});
-      } else if (!paymentSuccessNotice) {
-        try {
-          const stored = sessionStorage.getItem("pulse_payment_notice");
-          if (stored) setPaymentSuccessNotice(stored);
-        } catch {}
       }
+
+      // Restaurar persistencia del modal o aviso ante recargas / re-renders de Auth
+      try {
+        const storedModal = sessionStorage.getItem("pulse_payment_success_modal");
+        if (storedModal && !successModalData) {
+          setSuccessModalData(JSON.parse(storedModal));
+        }
+      } catch {}
+      try {
+        const storedNotice = sessionStorage.getItem("pulse_payment_notice");
+        if (storedNotice && !paymentSuccessNotice) {
+          setPaymentSuccessNotice(storedNotice);
+        }
+      } catch {}
     }
   }, [user?.uid]);
 
@@ -315,7 +332,12 @@ export default function HomePage() {
 
       <PaymentSuccessModal
         isOpen={Boolean(successModalData?.isOpen)}
-        onClose={() => setSuccessModalData(null)}
+        onClose={() => {
+          setSuccessModalData(null);
+          try {
+            sessionStorage.removeItem("pulse_payment_success_modal");
+          } catch {}
+        }}
         cardBrand={successModalData?.cardBrand}
         cardLast4={successModalData?.cardLast4}
         transactionId={successModalData?.transactionId}

@@ -251,6 +251,19 @@ export class IntervalsClient {
     return await res.json();
   }
 
+  async updateActivity(activityId: string, data: Record<string, any>): Promise<any> {
+    const res = await this.safeFetch(`${BASE_URL}/activity/${activityId}`, {
+      method: "PUT",
+      headers: getAuthHeader(this.apiKey),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error al actualizar actividad ${activityId} (${res.status}): ${errText || res.statusText}`);
+    }
+    return await res.json();
+  }
+
   async getActivityStreams(
     activityId: string,
     types: string[] = ["time", "heartrate", "watts", "velocity_smooth", "cadence", "altitude"]

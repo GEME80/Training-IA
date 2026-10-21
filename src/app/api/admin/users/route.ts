@@ -158,7 +158,7 @@ export async function PATCH(req: NextRequest) {
     const isPaceMode = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
     const effMode = isPaceMode ? "PACE" : (runningTrainingMode || (numRunFtp > 0 ? "POWER" : "PACE"));
     const effHasPower = !isPaceMode && Boolean(hasRunningPowerMeter ?? (numRunFtp > 0));
-    const effRunFtp = isPaceMode ? undefined : (numRunFtp > 0 ? numRunFtp : undefined);
+    const effRunFtp = isPaceMode ? 0 : (numRunFtp > 0 ? numRunFtp : 0);
 
     // Blindaje fisiológico universal: la FC Máxima nunca puede estrangular LTHR (buffer mínimo 10%)
     if (numLthr > 0 && numMaxHR > 0 && numLthr > numMaxHR) {
@@ -213,11 +213,15 @@ export async function PATCH(req: NextRequest) {
         const client = new IntervalsClient(creds.athleteId, creds.apiKey);
         const sports = await client.getSportSettings().catch(() => []);
 
-        if (effRunFtp || effRunSec || numLthr > 0 || safeMaxHR) {
+        if (effRunFtp !== undefined || effRunSec || numLthr > 0 || safeMaxHR) {
           const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             const patch: Record<string, any> = {};
-            if (effRunFtp) patch.ftp = effRunFtp;
+            if (isPaceMode) {
+              patch.ftp = null;
+            } else if (effRunFtp > 0) {
+              patch.ftp = effRunFtp;
+            }
             if (effRunSec && effRunSec > 0) {
               patch.threshold_pace = Number((1000 / effRunSec).toFixed(3));
               patch.pace_units = "per_km";
@@ -241,7 +245,11 @@ export async function PATCH(req: NextRequest) {
 
         const athletePayload: Record<string, any> = {};
         if (numBikeFtp > 0) athletePayload.icu_ftp = numBikeFtp;
-        if (effRunFtp) athletePayload.icu_running_ftp = effRunFtp;
+        if (!isPaceMode && effRunFtp > 0) {
+          athletePayload.icu_running_ftp = effRunFtp;
+        } else if (isPaceMode) {
+          athletePayload.icu_running_ftp = null;
+        }
         if (numWeight > 0) { athletePayload.weight = numWeight; athletePayload.icu_weight = numWeight; }
         if (numResting > 0) athletePayload.icu_resting_hr = numResting;
         if (numLthr > 0) athletePayload.lthr = numLthr;
@@ -249,6 +257,26 @@ export async function PATCH(req: NextRequest) {
 
         if (Object.keys(athletePayload).length > 0) {
           await client.updateAthlete(athletePayload as any).catch(() => {});
+        }
+
+        // Si entrena por Ritmo: forzar a Intervals a ignorar la potencia de muñeca Garmin en carreras pasadas (45 días)
+        if (isPaceMode) {
+          try {
+            const today = new Date();
+            const past45 = new Date(today.getTime() - 45 * 24 * 60 * 60 * 1000);
+            const oldest = past45.toISOString().split("T")[0];
+            const newest = today.toISOString().split("T")[0];
+            const activities = await client.getActivities(oldest, newest).catch(() => []);
+            const runActs = (activities || []).filter((a: any) => a.type === "Run");
+            for (const act of runActs) {
+              const anyAct = act as any;
+              if (act.id && (Number(anyAct.icu_training_load || 0) > 65 || anyAct.icu_ignore_power !== true)) {
+                await client.updateActivity(act.id, { icu_ignore_power: true }).catch(() => {});
+              }
+            }
+          } catch (actErr) {
+            console.warn("Aviso al recalibrar actividades pasadas de carrera:", actErr);
+          }
         }
         if (numWeight > 0) {
           const todayStr = new Date().toISOString().split("T")[0];

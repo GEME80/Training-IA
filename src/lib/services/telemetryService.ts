@@ -236,7 +236,7 @@ export class TelemetryService {
 
             // Datos maestros: prioridad de atleta en Pulse AI, con pre-llenado de sensores Garmin/Intervals
             const resolvedWeight = storedUser?.profile.weightKg || garminWel.weightKg || athleteData.weight || anyAthlete.icu_weight;
-            const isPaceRun = storedUser?.profile?.runningTrainingMode === "PACE" && storedUser?.profile?.hasRunningPowerMeter === false;
+            const isPaceRun = storedUser?.profile?.runningTrainingMode === "PACE" || storedUser?.profile?.hasRunningPowerMeter === false;
             const resolvedRunFtp = isPaceRun ? 0 : (customRunFtp ?? (storedUser?.profile.runFtp || runSport?.ftp || anyAthlete.icu_running_ftp || athleteData.run_ftp || 0));
             const hasRideHistory = activitiesData && activitiesData.length > 0;
             const initialBikeFtp = customBikeFtp ?? (storedUser?.profile.bikeFtp || (hasRideHistory ? (rideSport?.ftp || anyAthlete.icu_ftp || athleteData.bike_ftp || 0) : 0));

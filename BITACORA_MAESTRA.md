@@ -10775,3 +10775,37 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
   * **Total acumulado:** 59/59 pruebas automáticas aprobadas.
 - **Gate 4 (Compilación de Producción Next.js):** `npm run build` completado exitosamente (29/29 rutas generadas) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 193 ✅.
+
+---
+
+## 194. Ejecución de Cargos Reales en Vivo contra Openpay Sandbox (MasterCard, Amex y Fondos Insuficientes)
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Ejecutar cargos reales mediante el API oficial de Openpay Colombia Sandbox para impactar directamente el panel de control del comercio (`sandbox-dashboard.openpay.co`), activando las franquicias MasterCard y American Express, y generando el registro visual de rechazos bancarios en la gráfica de motivos de declinación.
+
+### 194.1. Transacciones Reales Procesadas en Sandbox
+1. **MasterCard Oficial Sandbox (`555555XXXXXX4444`):**
+   - Transacción: `trawmsgnngmjvpu5aleh`
+   - Estado: `completed` (Aprobada)
+   - Monto: $55.000 COP
+   - Código de Autorización: `1475732234`
+   - Resultado: Activa la rebanada de MasterCard en los reportes de Openpay.
+2. **American Express Oficial Sandbox (`345678XXXXX0007`):**
+   - Transacción: `trjx6haykwaigq5nojzm`
+   - Estado: `completed` (Aprobada)
+   - Monto: $55.000 COP
+   - Código de Autorización: `1208703556`
+   - Resultado: Activa la rebanada de American Express en los reportes de Openpay.
+3. **Simulación de Rechazo Bancario (`444444XXXXXX4448`):**
+   - Transacción: `trxzkepj142yw2srvdvj`
+   - Estado: `failed` (Rechazada con código 3006 / 412)
+   - Monto: $55.000 COP
+   - Resultado: Activa el motivo de declinación en los reportes de Openpay.
+
+### 194.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `openpay-live-certification.ts`: 142 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** `npm run test:openpay-live` completado con éxito contra el API de Openpay ✅.
+- **Gate 4 (Compilación Next.js):** `npm run build` completado exitosamente ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 194 ✅.

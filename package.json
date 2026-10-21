@@ -12,6 +12,7 @@
     "watchdog": "node scripts/watchdog.js",
     "test:finsec": "tsx gmc-billing-engine/test/verify-phase1.ts && tsx gmc-billing-engine/test/verify-phase2.ts && tsx gmc-billing-engine/test/verify-phase3-matrix.ts",
     "test:chaos": "tsx gmc-billing-engine/test/openpay-sandbox-chaos-agent.ts",
+    "test:openpay-live": "tsx gmc-billing-engine/test/openpay-live-certification.ts",
     "lint": "next lint"
   },
   "dependencies": {

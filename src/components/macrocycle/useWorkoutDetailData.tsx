@@ -10,7 +10,7 @@ import { TargetWorkRange } from "./ActivityTelemetryChart";
 import { SheetSnapPoint } from "./WorkoutBottomSheetHero";
 import { WorkoutModalTab } from "./WorkoutSegmentedTabs";
 import { MetricBar } from "./MetricBar";
-import { parsePaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
+import { parsePaceToSeconds, parseSwimPaceToSeconds, interpolateWorkoutTarget, adaptRunningWorkoutDoc } from "@/lib/physiology/runningWorkoutAdapter";
 import { formatDuration } from "@/lib/utils/formatters";
 
 export interface WorkoutDetailHookProps {
@@ -55,6 +55,9 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
   const effUid = uid || user?.uid || undefined;
   const effLthr = typeof lthr === "number" && lthr > 0 ? lthr : (userProfile?.lthr || 0);
   const effMaxHR = typeof maxHR === "number" && maxHR > 0 ? maxHR : (userProfile?.maxHR || 0);
+  const effSwimCssSec =
+    (userProfile as any)?.swimCssSecPer100m ||
+    (userProfile?.swimCssStr ? parseSwimPaceToSeconds(userProfile.swimCssStr) : 105);
 
   const isExtraActivity = workout.id?.startsWith("extra-");
   const modalExecuted = dailyExecutedActivities?.[workout.date];
@@ -176,6 +179,7 @@ export function useWorkoutDetailData(props: WorkoutDetailHookProps) {
     effUid,
     effRunFtp,
     effBikeFtp,
+    effSwimCssSec,
     effLthr,
     effMaxHR,
     isExtraActivity,

@@ -14,6 +14,7 @@ export interface TriathlonSector {
   distance?: string;
   intensity?: string;
   timeLimit?: string;
+  targetTime?: string;
   notes: string[];
 }
 
@@ -22,6 +23,7 @@ export interface ParsedRacePlan {
   isTriathlon: boolean;
   sport: "Running" | "Cycling" | "Triathlon" | "Swimming" | "Generic";
   title?: string;
+  targetTime?: string;
   preRaceProtocol: string[];
   pacingSplits: RaceSplitItem[];
   nutritionStrategy?: string;
@@ -37,7 +39,69 @@ interface ParseRaceOptions {
   effRunFtp?: number;
   effBikeFtp?: number;
   thresholdPaceSec?: number;
+  swimCssSec?: number;
   isRunPace?: boolean;
+}
+
+export function formatDurationRange(minMins: number, maxMins: number): string {
+  const fmt = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    if (h > 0) {
+      return m > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${h}h`;
+    }
+    return `${m}m`;
+  };
+  const roundedMin = Math.round(minMins);
+  const roundedMax = Math.round(maxMins);
+  if (Math.abs(roundedMin - roundedMax) <= 1) {
+    return fmt(roundedMin);
+  }
+  return `${fmt(roundedMin)} – ${fmt(roundedMax)}`;
+}
+
+export function calculateSectorTargetTime(
+  sectorKey: "SWIM" | "BIKE" | "RUN",
+  distanceStr: string | undefined,
+  opts: ParseRaceOptions
+): string | undefined {
+  if (!distanceStr) return undefined;
+
+  if (sectorKey === "SWIM") {
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)\s*(km|mtr|m)?/i);
+    if (!match) return undefined;
+    const val = parseFloat(match[1]);
+    const unit = (match[2] || "km").toLowerCase();
+    const meters = unit.startsWith("k") ? val * 1000 : val;
+    const css = opts.swimCssSec && opts.swimCssSec > 0 ? opts.swimCssSec : 110;
+    const minMins = ((meters / 100) * (css + 2)) / 60;
+    const maxMins = ((meters / 100) * (css + 7)) / 60;
+    return `~${formatDurationRange(minMins, maxMins)}`;
+  }
+
+  if (sectorKey === "BIKE") {
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)\s*k/i);
+    const km = match ? parseFloat(match[1]) : 90;
+    const ftp = opts.effBikeFtp && opts.effBikeFtp > 0 ? opts.effBikeFtp : 0;
+    const targetWatts = ftp > 0 ? ftp * 0.78 : 0;
+    const speedKmh = targetWatts > 0 ? Math.max(26, Math.min(42, 22 + (targetWatts / 180) * 11.5)) : 32;
+    const minHours = km / (speedKmh * 1.02);
+    const maxHours = km / (speedKmh * 0.98);
+    return `~${formatDurationRange(minHours * 60, maxHours * 60)}`;
+  }
+
+  if (sectorKey === "RUN") {
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)\s*k/i);
+    const km = match ? parseFloat(match[1]) : 21.1;
+    const tpSec = opts.thresholdPaceSec && opts.thresholdPaceSec > 0 ? opts.thresholdPaceSec : 270;
+    const paceSecMin = tpSec / 0.82;
+    const paceSecMax = tpSec / 0.80;
+    const minMins = (km * paceSecMin) / 60;
+    const maxMins = (km * paceSecMax) / 60;
+    return `~${formatDurationRange(minMins, maxMins)}`;
+  }
+
+  return undefined;
 }
 
 /** Interpola métricas numéricas (% FTP -> Watts, % CP -> Watts / Pace) en una línea */
@@ -166,38 +230,55 @@ function parseSingleSportRacePlan(lines: string[], sport: "Running" | "Cycling" 
     }
   }
 
-  return { isRacePlan: true, isTriathlon: false, sport, preRaceProtocol, pacingSplits, nutritionStrategy, postRaceProtocol, triathlonSectors: [], unparsedRemaining };
+  let totalKm = 0;
+  for (const s of pacingSplits) {
+    const kmMatch = s.distance?.match(/(\d+(?:\.\d+)?)\s*k/i);
+    if (kmMatch) totalKm += parseFloat(kmMatch[1]);
+  }
+  const targetTime = totalKm > 0
+    ? calculateSectorTargetTime(sport === "Cycling" ? "BIKE" : "RUN", `${totalKm} km`, opts)
+    : undefined;
+
+  return { isRacePlan: true, isTriathlon: false, sport, targetTime, preRaceProtocol, pacingSplits, nutritionStrategy, postRaceProtocol, triathlonSectors: [], unparsedRemaining };
 }
 
 function parseTriathlonPlan(lines: string[], opts: ParseRaceOptions): ParsedRacePlan {
   const triathlonSectors: TriathlonSector[] = [];
   let currentSector: TriathlonSector | null = null;
 
+  const pushSector = (s: TriathlonSector | null) => {
+    if (!s) return;
+    if (s.sectorKey === "SWIM" || s.sectorKey === "BIKE" || s.sectorKey === "RUN") {
+      s.targetTime = calculateSectorTargetTime(s.sectorKey, s.distance, opts);
+    }
+    triathlonSectors.push(s);
+  };
+
   for (const line of lines) {
     if (/sector\s*1[:\s]+nataci/i.test(line)) {
-      if (currentSector) triathlonSectors.push(currentSector);
+      pushSector(currentSector);
       currentSector = { sectorKey: "SWIM", title: "Sector 1: Natación", discipline: "Natacion", notes: [] };
       continue;
     }
     if (/transici[oó]n\s*t1/i.test(line)) {
-      if (currentSector) triathlonSectors.push(currentSector);
+      pushSector(currentSector);
       const timeMatch = line.match(/\((.*?)\)/);
       currentSector = { sectorKey: "T1", title: "Transición T1", discipline: "Transición", timeLimit: timeMatch ? timeMatch[1] : "< 4 min", notes: [] };
       continue;
     }
     if (/sector\s*2[:\s]+ciclismo/i.test(line)) {
-      if (currentSector) triathlonSectors.push(currentSector);
+      pushSector(currentSector);
       currentSector = { sectorKey: "BIKE", title: "Sector 2: Ciclismo", discipline: "Ciclismo", notes: [] };
       continue;
     }
     if (/transici[oó]n\s*t2/i.test(line)) {
-      if (currentSector) triathlonSectors.push(currentSector);
+      pushSector(currentSector);
       const timeMatch = line.match(/\((.*?)\)/);
       currentSector = { sectorKey: "T2", title: "Transición T2", discipline: "Transición", timeLimit: timeMatch ? timeMatch[1] : "< 3 min", notes: [] };
       continue;
     }
     if (/sector\s*3[:\s]+(?:carrera|marat[oó]n|medio marat[oó]n)/i.test(line)) {
-      if (currentSector) triathlonSectors.push(currentSector);
+      pushSector(currentSector);
       currentSector = { sectorKey: "RUN", title: "Sector 3: Carrera a Pie", discipline: "Carrera", notes: [] };
       continue;
     }
@@ -222,6 +303,6 @@ function parseTriathlonPlan(lines: string[], opts: ParseRaceOptions): ParsedRace
     }
   }
 
-  if (currentSector) triathlonSectors.push(currentSector);
+  pushSector(currentSector);
   return { isRacePlan: true, isTriathlon: true, sport: "Triathlon", preRaceProtocol: [], pacingSplits: [], postRaceProtocol: [], triathlonSectors, unparsedRemaining: [] };
 }

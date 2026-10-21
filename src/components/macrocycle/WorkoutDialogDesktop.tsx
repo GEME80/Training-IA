@@ -41,6 +41,7 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
     effUid,
     effRunFtp,
     effBikeFtp,
+    effSwimCssSec,
     effLthr,
     effMaxHR,
     isExtraActivity,
@@ -187,6 +188,7 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
                   effBikeFtp={effBikeFtp}
                   thresholdPaceStr={thresholdPaceStr}
                   thresholdPaceSec={thresholdPaceSec}
+                  swimCssSec={effSwimCssSec}
                   isExecuted={isExecuted}
                 />
               )}

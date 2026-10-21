@@ -13,7 +13,8 @@ import {
   resolveWeekendRide, resolveTriathlonBrick, resolveLongRunDay, resolveLongRideDay, resolveEveRide,
   resolveFridayFartlek, resolveCuratedModelForWeek, resolveMidweekRide,
 } from "./macrocycleTemplateHelpers";
-import { AntiMonotonyMemoryBuffer, applyParametricProgression } from "./workoutProgressionEngine"; import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
+import { AntiMonotonyMemoryBuffer, applyParametricProgression } from "./workoutProgressionEngine";
+import { adaptRunningPlanItem } from "./runningWorkoutAdapter";
 
 export { selectQualityWorkout, selectStrengthWorkout, interpolatePowerTarget };
 
@@ -122,7 +123,9 @@ export function generateWeekTemplate(
       continue;
     }
 
-    for (const disc of discList) {
+    const sortedDiscList = [...discList].sort((a, b) => (a === "Ciclismo" && b === "Carrera" ? -1 : a === "Carrera" && b === "Ciclismo" ? 1 : 0));
+
+    for (const disc of sortedDiscList) {
       if (disc === "Descanso") continue;
 
       if (disc === "Natacion") {
@@ -190,11 +193,14 @@ export function generateWeekTemplate(
 
           memory.record(rideTitle);
 
-          const brick = resolveTriathlonBrick({ day, dateStr, formattedDate, curatedModel, phase, isRecovery, isRaceWeek, distanceType, runFtp });
-          if (brick) {
-            usedRunWorkoutNames.add(brick.workoutName);
-            memory.record(brick.workoutName);
-            result.push(brick);
+          const hasExistingRun = result.some((r) => r.day === day && (r.discipline === "Carrera" || (r as any).activityType === "Brick"));
+          if (!hasExistingRun) {
+            const brick = resolveTriathlonBrick({ day, dateStr, formattedDate, curatedModel, phase, isRecovery, isRaceWeek, distanceType, runFtp });
+            if (brick) {
+              usedRunWorkoutNames.add(brick.workoutName);
+              memory.record(brick.workoutName);
+              result.push(brick);
+            }
           }
           continue;
         }
@@ -240,6 +246,8 @@ export function generateWeekTemplate(
       }
 
       if (disc === "Carrera") {
+        const hasExistingRun = result.some((r) => r.day === day && (r.discipline === "Carrera" || (r as any).activityType === "Brick" || /transici[oó]n|brick/i.test(r.workoutName || "")));
+        if (hasExistingRun) continue;
         runCount++;
         const runTest = scheduledTests.find((t) => t.sport === "Run" && !runTestInjected && day !== longRunDay);
         if (runTest) {
@@ -322,7 +330,6 @@ export function generateWeekTemplate(
         const recW = memory.selectDiverseCandidate(recVars, recIdx);
         usedRunWorkoutNames.add(recW.name); memory.record(recW.name);
         const dur = phase === "TAPER" || isRecovery ? 35 : (recW.durationMin || 40);
-
         result.push({
           day, date: dateStr, formattedDate, discipline: "Carrera", workoutName: recW.name, action: "MANTENER",
           durationMinutes: dur, tss: Math.round(dur * 0.75), powerTarget: interpolatePowerTarget(recW.powerTarget, runFtp, undefined),
@@ -336,12 +343,7 @@ export function generateWeekTemplate(
   }
 
   const runningMode = runningOpts?.mode || (week as any).runningTrainingMode || (runFtp && runFtp > 0 ? "POWER" : "PACE");
-  return result.map((item) =>
-    adaptRunningPlanItem(item, {
-      mode: runningMode,
-      runFtp,
-      thresholdPaceSec: runningOpts?.thresholdPaceSec,
-      lthr: runningOpts?.lthr,
-    })
-  );
+  return result.map((item) => adaptRunningPlanItem(item, {
+    mode: runningMode, runFtp, thresholdPaceSec: runningOpts?.thresholdPaceSec, lthr: runningOpts?.lthr,
+  }));
 }

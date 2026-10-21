@@ -15,13 +15,14 @@ interface RaceDayExecutionPlanProps {
   effRunFtp: number;
   effBikeFtp: number;
   thresholdPaceSec?: number;
+  swimCssSec?: number;
 }
 
 export const RaceDayExecutionPlan: React.FC<RaceDayExecutionPlanProps> = ({
-  cleanDoc, discipline, workoutName, activityType, isRunPace, isRunPower, isBike, effRunFtp, effBikeFtp, thresholdPaceSec,
+  cleanDoc, discipline, workoutName, activityType, isRunPace, isRunPower, isBike, effRunFtp, effBikeFtp, thresholdPaceSec, swimCssSec,
 }) => {
   const plan: ParsedRacePlan = parseRaceExecutionPlan(cleanDoc, {
-    discipline, workoutName, activityType, effRunFtp, effBikeFtp, thresholdPaceSec, isRunPace,
+    discipline, workoutName, activityType, effRunFtp, effBikeFtp, thresholdPaceSec, swimCssSec, isRunPace,
   });
 
   const [activeTriSector, setActiveTriSector] = useState<string>("ALL");
@@ -113,9 +114,17 @@ export const RaceDayExecutionPlan: React.FC<RaceDayExecutionPlanProps> = ({
               <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400 block leading-tight">
                 Bloque 2 • Pacing Plan Oficial
               </span>
-              <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                {plan.sport === "Cycling" ? "Estrategia por Tramos de Vatios" : "Splits & Gestión de Esfuerzo"}
-              </h4>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                  {plan.sport === "Cycling" ? "Estrategia por Tramos de Vatios" : "Splits & Gestión de Esfuerzo"}
+                </h4>
+                {plan.targetTime && (
+                  <span className="text-[10px] font-mono font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded border border-sky-200 dark:border-sky-800/60 flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-sky-500" />
+                    Meta Estimada: {plan.targetTime}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           {isRunPace ? (
@@ -248,25 +257,41 @@ function TriathlonSectorCard({ sector }: { sector: TriathlonSector }) {
 
   return (
     <div className={`rounded-xl border ${badgeConfig.color} p-3 space-y-2`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center shadow-2xs">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-7 w-7 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center shadow-2xs shrink-0">
             {badgeConfig.icon}
           </div>
-          <div>
+          <div className="min-w-0">
             <span className={`text-xs font-black ${badgeConfig.titleColor}`}>{sector.title}</span>
-            {sector.distance && (
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
-                Distancia Oficial: {sector.distance}
-              </span>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {sector.distance && (
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  Distancia: {sector.distance}
+                </span>
+              )}
+              {sector.targetTime && (
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-mono">
+                  <Timer className="h-3 w-3 shrink-0 text-indigo-500" />
+                  Tiempo Objetivo: {sector.targetTime}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        {sector.distance && (
-          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${badgeConfig.accentBadge}`}>
-            {sector.distance}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {sector.targetTime && (
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
+              <Clock className="h-3 w-3 text-indigo-500 shrink-0" />
+              {sector.targetTime}
+            </span>
+          )}
+          {sector.distance && (
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${badgeConfig.accentBadge}`}>
+              {sector.distance}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="space-y-1 pl-1 pt-0.5">

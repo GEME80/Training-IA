@@ -17,6 +17,7 @@ interface PlannedWorkoutPrescriptionProps {
   effBikeFtp: number;
   thresholdPaceStr?: string;
   thresholdPaceSec?: number;
+  swimCssSec?: number;
   isExecuted?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
   effBikeFtp,
   thresholdPaceStr,
   thresholdPaceSec,
+  swimCssSec,
   isExecuted = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(!isExecuted);
@@ -145,6 +147,7 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
                 effRunFtp={effRunFtp}
                 effBikeFtp={effBikeFtp}
                 thresholdPaceSec={thresholdPaceSec}
+                swimCssSec={swimCssSec}
               />
             ) : (
               <pre className="rounded-xl bg-slate-50 dark:bg-slate-950 p-3.5 font-mono text-xs leading-relaxed text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-pre-wrap max-h-60 overflow-y-auto">

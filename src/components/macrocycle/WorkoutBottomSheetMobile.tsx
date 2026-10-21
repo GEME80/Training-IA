@@ -38,6 +38,7 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
     effUid,
     effRunFtp,
     effBikeFtp,
+    effSwimCssSec,
     effLthr,
     effMaxHR,
     isExtraActivity,
@@ -118,6 +119,7 @@ export const WorkoutBottomSheetMobile: React.FC<WorkoutBottomSheetMobileProps> =
                       effBikeFtp={effBikeFtp}
                       thresholdPaceStr={thresholdPaceStr}
                       thresholdPaceSec={thresholdPaceSec}
+                      swimCssSec={effSwimCssSec}
                       isExecuted={isExecuted}
                     />
                   )}

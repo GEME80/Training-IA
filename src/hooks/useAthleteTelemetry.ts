@@ -208,6 +208,8 @@ export function useAthleteTelemetry({
           body: JSON.stringify({
             athleteId: athleteIdToUse || profile.id, apiKey: targetApiKey || undefined, uid: user?.uid, email: user?.email || userProfile?.email || "",
             runFtp: effRunFtp, bikeFtp: effBikeFtp, swimCssSecPer100m: data.swimCssSecPer100m ?? profile.swimCssSecPer100m,
+            runThresholdPaceSec: data.runThresholdPaceSecPerKm ?? profile.runThresholdPaceSecPerKm, runThresholdPaceStr: data.runThresholdPaceStr || profile.runThresholdPaceStr,
+            hasRunningPowerMeter: data.hasRunningPowerMeter ?? profile.hasRunningPowerMeter, runningTrainingMode: data.runningTrainingMode || profile.runningTrainingMode,
             weightKg: effWeight, birthDate: data.birthDate || profile.birthDate, gender: data.gender || profile.gender,
             lthr: effLthr, restingHR: data.restingHR ?? profile.restingHR, maxHR: effMaxHR,
           }),

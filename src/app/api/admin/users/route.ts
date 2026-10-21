@@ -146,12 +146,15 @@ export async function PATCH(req: NextRequest) {
     const numResting = Number(restingHR) || 0;
     const numWeight = Number(weightKg) || 0;
 
-    // Blindaje fisiológico: la FC Máxima nunca puede ser menor al Umbral de Lactato (LTHR)
+    // Blindaje fisiológico universal: la FC Máxima nunca puede estrangular LTHR (buffer mínimo 10%)
     if (numLthr > 0 && numMaxHR > 0 && numLthr > numMaxHR) {
       const swapHr = numLthr;
       numLthr = numMaxHR;
       numMaxHR = swapHr;
     }
+    const safeMaxHR = numMaxHR > 0
+      ? (numLthr > 0 ? Math.max(numMaxHR, Math.round(numLthr * 1.10)) : numMaxHR)
+      : (numLthr > 0 ? Math.round(numLthr * 1.10) : undefined);
 
     const result = await updateUserDetails(targetUid, {
       displayName,
@@ -165,7 +168,7 @@ export async function PATCH(req: NextRequest) {
       rawApiKey,
       weightKg: numWeight > 0 ? numWeight : undefined,
       restingHR: numResting > 0 ? numResting : undefined,
-      maxHR: numMaxHR > 0 ? numMaxHR : undefined,
+      maxHR: safeMaxHR || (numMaxHR > 0 ? numMaxHR : undefined),
       lthr: numLthr > 0 ? numLthr : undefined,
       planPrice,
       planCurrency,
@@ -194,23 +197,23 @@ export async function PATCH(req: NextRequest) {
         const client = new IntervalsClient(creds.athleteId, creds.apiKey);
         const sports = await client.getSportSettings().catch(() => []);
 
-        if (numRunFtp > 0 || numLthr > 0 || numMaxHR > 0) {
+        if (numRunFtp > 0 || numLthr > 0 || safeMaxHR) {
           const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             const patch: Record<string, any> = {};
             if (numRunFtp > 0) patch.ftp = numRunFtp;
             if (numLthr > 0) patch.lthr = numLthr;
-            if (numMaxHR > 0) patch.max_hr = numMaxHR;
+            if (safeMaxHR) patch.max_hr = safeMaxHR;
             await client.updateSportSettings(runSport.id, patch).catch(() => {});
           }
         }
-        if (numBikeFtp > 0 || numLthr > 0 || numMaxHR > 0) {
+        if (numBikeFtp > 0 || numLthr > 0 || safeMaxHR) {
           const rideSport = (sports || []).find(isRideSport);
           if (rideSport?.id) {
             const patch: Record<string, any> = {};
             if (numBikeFtp > 0) patch.ftp = numBikeFtp;
             if (numLthr > 0) patch.lthr = numLthr;
-            if (numMaxHR > 0) patch.max_hr = numMaxHR;
+            if (safeMaxHR) patch.max_hr = safeMaxHR;
             await client.updateSportSettings(rideSport.id, patch).catch(() => {});
           }
         }
@@ -221,7 +224,7 @@ export async function PATCH(req: NextRequest) {
         if (numWeight > 0) { athletePayload.weight = numWeight; athletePayload.icu_weight = numWeight; }
         if (numResting > 0) athletePayload.icu_resting_hr = numResting;
         if (numLthr > 0) athletePayload.lthr = numLthr;
-        if (numMaxHR > 0) athletePayload.max_hr = numMaxHR;
+        if (safeMaxHR) athletePayload.max_hr = safeMaxHR;
 
         if (Object.keys(athletePayload).length > 0) {
           await client.updateAthlete(athletePayload as any).catch(() => {});

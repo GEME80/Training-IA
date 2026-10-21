@@ -98,7 +98,11 @@ export async function POST(req: NextRequest) {
     const parsedLthr = lthr !== undefined && lthr !== null ? Number(lthr) : undefined;
     const parsedMaxHR = maxHR !== undefined && maxHR !== null ? Number(maxHR) : undefined;
     const numLthr = parsedLthr && parsedMaxHR && parsedLthr > parsedMaxHR ? parsedMaxHR : parsedLthr;
-    const numMaxHR = parsedLthr && parsedMaxHR && parsedLthr > parsedMaxHR ? parsedLthr : parsedMaxHR;
+    const rawMaxHR = parsedLthr && parsedMaxHR && parsedLthr > parsedMaxHR ? parsedLthr : parsedMaxHR;
+    // Guardarraíl fisiológico universal: FC máxima no puede estrangular LTHR (buffer mínimo 10% sobre LTHR para evitar cortes de picos en Intervals)
+    const numMaxHR = rawMaxHR
+      ? (numLthr ? Math.max(rawMaxHR, Math.round(numLthr * 1.10)) : rawMaxHR)
+      : (numLthr ? Math.round(numLthr * 1.10) : undefined);
 
     try {
       await saveUserProfile(uid, {
@@ -190,13 +194,18 @@ export async function POST(req: NextRequest) {
           await client.updateAthlete({ icu_running_ftp: cp } as any).catch(() => null);
         }
 
-        // 3. Ritmo Umbral Carrera
+        // 3. Ritmo Umbral Carrera (Sincronización SSOT m/s y orden de carga rTSS para todos los atletas)
         const effectiveSec = runThresholdPaceSecPerKm || (runThresholdPaceStr ? (await import("@/lib/physiology/runningWorkoutAdapter")).parsePaceToSeconds(runThresholdPaceStr) : 0);
         if (effectiveSec > 0) {
           const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             const speedMps = Number((1000 / effectiveSec).toFixed(3));
-            await client.updateSportSettings(runSport.id, { pace: speedMps }).catch(() => null);
+            const isPaceAthlete = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
+            await client.updateSportSettings(runSport.id, {
+              threshold_pace: speedMps,
+              pace_units: "per_km",
+              ...(isPaceAthlete ? { load_preference: "PACE,HR,POWER" } : { load_preference: "POWER,PACE,HR" }),
+            }).catch(() => null);
           }
         }
 

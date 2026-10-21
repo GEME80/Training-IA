@@ -171,10 +171,13 @@ export class PaceDetectionService {
       const runSport = (sports || []).find(isRunSport);
 
       if (runSport?.id) {
-        // En Intervals.icu se puede actualizar el pace en m/s
+        // En Intervals.icu se actualiza threshold_pace en m/s
         const speedMps = Number((1000 / candidatePaceSec).toFixed(3));
-        await client.updateSportSettings(runSport.id, { pace: speedMps }).catch((err) => {
-          console.warn("Aviso al actualizar sport-settings pace en Intervals:", err);
+        await client.updateSportSettings(runSport.id, {
+          threshold_pace: speedMps,
+          pace_units: "per_km",
+        }).catch((err) => {
+          console.warn("Aviso al actualizar sport-settings threshold_pace en Intervals:", err);
         });
       }
 

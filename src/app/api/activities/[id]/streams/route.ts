@@ -50,17 +50,38 @@ export async function GET(
       });
     }
 
-    // Fusión de FC en Bruto (RAW FC):
-    // Si Intervals.icu aplicó un filtro automático por Max HR (ej: recortando lecturas > 166 bpm a null/0),
-    // restaurar los valores reales desde el stream raw_heartrate o fixed_heartrate.
+    // Fusión y recuperación de stream de FC (Anti-Clipping & Anti-Truncation Universal):
+    // Si Intervals.icu aplicó un filtro automático por Max HR (recortando valores > max_hr a null o limitándolos)
+    // o truncó la cola del stream de FC respecto al tiempo real de la actividad,
+    // restaurar los valores reales desde raw_heartrate o fixed_heartrate registrados directamente por el sensor.
+    const timeStream = streamsMap.time as number[] | undefined;
     const rawHr = (streamsMap.raw_heartrate || streamsMap.fixed_heartrate) as number[] | undefined;
-    if (Array.isArray(rawHr) && rawHr.length > 0) {
-      const processedHr = (streamsMap.heartrate || []) as number[];
-      const mergedHr = (processedHr.length > 0 ? processedHr : rawHr).map((val: number, idx: number) => {
-        if (typeof val === "number" && !isNaN(val) && val >= 40) return val;
-        const r = rawHr[idx];
-        return typeof r === "number" && !isNaN(r) && r >= 40 ? r : val;
-      });
+    const processedHr = (streamsMap.heartrate || []) as number[];
+
+    const targetLength = Math.max(
+      Array.isArray(timeStream) ? timeStream.length : 0,
+      Array.isArray(rawHr) ? rawHr.length : 0,
+      Array.isArray(processedHr) ? processedHr.length : 0
+    );
+
+    if (targetLength > 0 && Array.isArray(rawHr) && rawHr.length > 0) {
+      const mergedHr: (number | null)[] = new Array(targetLength);
+      for (let i = 0; i < targetLength; i++) {
+        const pVal = processedHr[i];
+        const rVal = rawHr[i];
+        const pValid = typeof pVal === "number" && !isNaN(pVal) && pVal >= 40;
+        const rValid = typeof rVal === "number" && !isNaN(rVal) && rVal >= 40;
+
+        if (rValid && pValid) {
+          mergedHr[i] = Math.max(pVal, rVal);
+        } else if (rValid) {
+          mergedHr[i] = rVal;
+        } else if (pValid) {
+          mergedHr[i] = pVal;
+        } else {
+          mergedHr[i] = null;
+        }
+      }
       streamsMap.heartrate = mergedHr;
     }
 

@@ -269,7 +269,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-black text-slate-950 dark:text-white flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              Política de Cancelación Transparente ("Efecto Netflix")
+              Política de Cancelación del Plan
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
               En Pulse no existen cláusulas de permanencia ni penalizaciones. Puedes cancelar o reanudar tu membresía en cualquier momento con un solo clic. Si cancelas, mantendrás acceso completo hasta el último segundo de tu periodo pagado.

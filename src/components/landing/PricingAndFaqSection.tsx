@@ -42,7 +42,7 @@ const FAQS = [
   },
   {
     q: "¿Cómo cancelo mi suscripción?",
-    a: "Puedes cancelar en cualquier momento con un solo clic directamente desde tu dashboard. Si cancelas durante los 7 días de prueba, no se te cobrará absolutamente nada. Y si cancelas a mitad de mes, conservas tu acceso hasta el final del periodo ya pagado ('Efecto Netflix').",
+    a: "Puedes cancelar en cualquier momento con un solo clic directamente desde tu dashboard. Si cancelas durante los 7 días de prueba, no se te cobrará absolutamente nada. Y si cancelas a mitad de mes, conservas tu acceso hasta el final del periodo ya pagado.",
   },
 ];
 

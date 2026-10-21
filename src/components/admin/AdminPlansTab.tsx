@@ -223,7 +223,7 @@ export const AdminPlansTab: React.FC<AdminPlansTabProps> = ({ showMessage }) => 
                     <span>Definición, Precio & Periodo de Prueba</span>
                   </div>
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold uppercase">
-                    Efecto Netflix Activo
+                    Cancelación Flexible
                   </span>
                 </div>
 

@@ -41,7 +41,7 @@ export const CancelConfirmModal: React.FC<CancelConfirmModalProps> = ({
 
         <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3.5 text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-medium space-y-1.5">
           <div className="font-bold flex items-center gap-1.5">
-            <span>Garantía Efecto Netflix:</span>
+            <span>Garantía de Acceso Pagado:</span>
           </div>
           <p>
             Conservarás acceso completo a tus planes, telemetría y Head Coach IA hasta el{" "}

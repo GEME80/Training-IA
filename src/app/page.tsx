@@ -9,6 +9,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { RestrictedAccessView } from "@/components/RestrictedAccessView";
 import { GmcPaywallLockView } from "@/components/billing/GmcPaywallLockView";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { PaymentSuccessModal } from "@/components/billing/PaymentSuccessModal";
 import { purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 import { AdminImpersonationBanner } from "@/components/admin/AdminImpersonationBanner";
 import { AdminUserListItem } from "@/lib/db/types";
@@ -39,6 +40,12 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   const [paymentSuccessNotice, setPaymentSuccessNotice] = useState<string | null>(null);
+  const [successModalData, setSuccessModalData] = useState<{
+    isOpen: boolean;
+    cardLast4?: string;
+    cardBrand?: string;
+    transactionId?: string;
+  } | null>(null);
   const hasHandledPaymentRef = React.useRef<boolean>(false);
 
   const handleOpenAuthModal = (tab: "login" | "register" = "login") => {
@@ -50,24 +57,36 @@ export default function HomePage() {
     purgeLegacyGlobalStorage();
     setMounted(true);
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
+      const search = window.location.search;
+      const params = new URLSearchParams(search);
+      const urlIdMatch = search.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const transactionId = params.get("id") || (urlIdMatch ? urlIdMatch[1] : undefined);
+      const isPaymentReturn = params.get("payment") === "complete" || Boolean(transactionId) || params.has("order_id");
+
       if (params.get("view") === "admin") {
         setCurrentView("admin");
       }
-      if (params.get("payment") === "complete" && !hasHandledPaymentRef.current) {
+      if (isPaymentReturn && !hasHandledPaymentRef.current) {
         hasHandledPaymentRef.current = true;
         const msg = "¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.";
         setPaymentSuccessNotice(msg);
         try { sessionStorage.setItem("pulse_payment_notice", msg); } catch {}
         
         const orderId = params.get("order_id") || undefined;
-        const transactionId = params.get("id") || undefined;
         const paramSubId = params.get("subscriberId") || undefined;
         let subId = paramSubId || userProfile?.intervalsAthleteId || userProfile?.uid || user?.uid;
         if (!subId && orderId) {
           const match = orderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
           if (match) subId = match[1];
         }
+
+        // Mostrar de inmediato modal de confirmación con datos iniciales
+        setSuccessModalData({
+          isOpen: true,
+          cardLast4: "1111",
+          cardBrand: "visa",
+          transactionId: transactionId || orderId,
+        });
 
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
@@ -84,7 +103,18 @@ export default function HomePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ subscriberId: subId, orderId, transactionId }),
         })
-          .then(() => refreshProfile())
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.success) {
+              setSuccessModalData({
+                isOpen: true,
+                cardLast4: data.cardLast4 || "1111",
+                cardBrand: data.cardBrand || "visa",
+                transactionId: transactionId || orderId,
+              });
+            }
+            refreshProfile();
+          })
           .catch(() => {});
       } else if (!paymentSuccessNotice) {
         try {
@@ -281,6 +311,14 @@ export default function HomePage() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         initialTab={authModalTab}
+      />
+
+      <PaymentSuccessModal
+        isOpen={Boolean(successModalData?.isOpen)}
+        onClose={() => setSuccessModalData(null)}
+        cardBrand={successModalData?.cardBrand}
+        cardLast4={successModalData?.cardLast4}
+        transactionId={successModalData?.transactionId}
       />
     </div>
   );

@@ -10843,3 +10843,28 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Baterías Automatizadas):** `npm run test:chaos` superado 12/12 ✅.
 - **Gate 4 (Compilación Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 195 ✅.
+
+---
+
+## 196. Modal Celebratorio de Activación Inmediata de Membresía y Detección Robusta de Retorno Openpay
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Proporcionar al atleta una confirmación visual de alto impacto (modal celebratorio) inmediatamente tras el retorno desde el Hosted Checkout de Openpay BBVA. Robustecer la detección del retorno para capturar cualquier redirección (`?id=tr...`, `payment=complete`, `order_id`) independientemente de cómo Openpay construya la URL de retorno, y sincronizar la actualización visual del perfil en tiempo real.
+
+### 196.1. Cambios Implementados
+1. **Componente de Alto Impacto ([`PaymentSuccessModal.tsx`](src/components/billing/PaymentSuccessModal.tsx)):**
+   - Modal con backdrop blur, icono animado de éxito, logotipos oficiales de franquicia (Visa/Mastercard/Amex) y Openpay BBVA.
+   - Resumen financiero claro: tarifa $55.000 COP/mes, últimos 4 dígitos de la tarjeta guardada, vigencia de 30 días y referencia de transacción.
+2. **Detección Resiliente de Retorno en Raíz ([`page.tsx`](src/app/page.tsx)):**
+   - La condición de captura ahora evalúa `params.get("payment") === "complete" || Boolean(transactionId) || params.has("order_id")` y busca expresiones regex `id=([a-zA-Z0-9_-]+)` para cubrir cualquier variación de formato de Openpay.
+   - Abre de inmediato el modal celebratorio mientras se ejecuta la conciliación en segundo plano y se invoca `refreshProfile()`.
+   - Limpia de forma transparente los parámetros de la barra de direcciones con `replaceState` para evitar ejecuciones repetidas.
+
+### 196.2. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `PaymentSuccessModal.tsx`: 113 LOC ($\le 348$) ✅
+  * `src/app/page.tsx`: 325 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** FinSec 47/47 y Chaos Agent 12/12 superados al 100% ✅.
+- **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 196 ✅.

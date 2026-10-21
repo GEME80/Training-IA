@@ -12,10 +12,10 @@ interface BrandItem {
 
 const BRANDS: BrandItem[] = [
   { name: "Garmin Connect", sub: "Relojes GPS & Sensores", logoSrc: "/brands/garmin.png" },
+  { name: "Garmin Health", sub: "HRV, Sueño & Body Battery", logoSrc: "/brands/garmin.png" },
   { name: "Coros Training Hub", sub: "Pace, Apex & Pulsómetros", logoSrc: "/brands/coros.png" },
   { name: "Stryd", sub: "Potencia de Carrera (Vatios)", logoSrc: "/brands/stryd.png" },
   { name: "Intervals.icu", sub: "Sincronización Automática", logoSrc: "/brands/intervals.png" },
-  { name: "Strava", sub: "Comunidad & Segmentos", isStrava: true },
   { name: "Google Gemini", sub: "Motor Fisiológico Adaptativo", isGemini: true },
 ];
 

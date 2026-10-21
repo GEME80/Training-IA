@@ -39,7 +39,7 @@ export const OnboardingBanner: React.FC<OnboardingBannerProps> = ({ uid, onOpenO
               </h3>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:block">
-              Sincroniza Garmin, Coros o Strava en 1 solo clic para activar tu telemetría biológica y prescripción inteligente.
+              Sincroniza Garmin Connect en 1 solo clic para activar tu telemetría biológica y prescripción inteligente.
             </p>
           </div>
         </div>

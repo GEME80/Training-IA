@@ -133,7 +133,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
-              <span>Sincronizado a Garmin, Coros & Strava</span>
+              <span>Sincronizado a Garmin Connect</span>
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />

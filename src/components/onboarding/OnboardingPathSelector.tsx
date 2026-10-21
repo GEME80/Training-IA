@@ -20,7 +20,7 @@ export const OnboardingPathSelector: React.FC<OnboardingPathSelectorProps> = ({
           Conecta tu Telemetría y Reloj Deportivo
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-          PULSE AI se sincroniza con <strong>Intervals.icu</strong> para leer los entrenamientos de tu reloj (Garmin, Coros, Polar, Strava) y enviarte tus sesiones prescritas.
+          PULSE AI se sincroniza con <strong>Intervals.icu</strong> para leer los entrenamientos de tu reloj (<strong>Garmin Connect</strong> y sensores) y enviarte tus sesiones prescritas.
         </p>
       </div>
 

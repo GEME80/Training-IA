@@ -99,7 +99,13 @@ export function buildCondensedExecutedMap(
       map[dKey] = { date: dKey, totalTss: 0, activities: [] };
     }
 
-    const alreadyExists = map[dKey].activities.some((x) => x.id && String(x.id) === String(act.id));
+    const alreadyExists = map[dKey].activities.some((x) => {
+      if (x.id && String(x.id) === String(act.id)) return true;
+      const sameType = (x.type === act.type) || (/ride|bike/i.test(x.type) && /ride|bike/i.test(act.type || ""));
+      const timeDelta = Math.abs((x.movingTimeMin || 0) - movingTimeMin);
+      const distDelta = Math.abs((x.distanceKm || 0) - (distanceKm || 0));
+      return sameType && (timeDelta <= 3 || (distanceKm && distDelta <= 0.3));
+    });
     if (!alreadyExists) {
       map[dKey].totalTss += tss;
       map[dKey].activities.push({

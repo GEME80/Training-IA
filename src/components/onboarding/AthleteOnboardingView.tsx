@@ -46,7 +46,7 @@ export const AthleteOnboardingView: React.FC<AthleteOnboardingViewProps> = ({
             ¡Bienvenido a PULSE AI, {athleteName}!
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            Para activar tu Head Coach IA y periodizar tus entrenamientos, el primer paso obligatorio es vincular tu telemetría deportiva a través de <strong>Intervals.icu</strong> (lectura de Garmin, Coros, Strava y sensores).
+            Para activar tu Head Coach IA y periodizar tus entrenamientos, el primer paso obligatorio es vincular tu telemetría deportiva a través de <strong>Intervals.icu</strong> (lectura directa de <strong>Garmin Connect</strong> y sensores).
           </p>
         </div>
 

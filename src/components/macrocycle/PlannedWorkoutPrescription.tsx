@@ -39,19 +39,21 @@ export const PlannedWorkoutPrescription: React.FC<PlannedWorkoutPrescriptionProp
   const isStrength = discipline === "Fuerza";
   const isSwim = discipline === "Natacion";
 
-  const isTriathlon =
+  const isMultisportDoc = /sector 1:\s*nataci/i.test(cleanDoc);
+  const isTriathlonRace =
     activityType === "Triatlón" ||
     activityType === "Triatlon" ||
     discipline === "Triatlón" ||
     discipline === "Triatlon" ||
-    /triatl|ironman|70\.3|140\.6/i.test(workoutName || "") ||
-    /triatl|ironman|70\.3|140\.6/i.test(cleanDoc) ||
-    /sector 1:\s*nataci/i.test(cleanDoc);
+    isMultisportDoc;
 
-  const isRacePacing =
-    isTriathlon ||
-    /pacing plan|competición oficial|protocolo pre-carrera|protocolo pre-prueba/i.test(cleanDoc) ||
-    /competición|carrera oficial|gran fondo|prueba ciclista/i.test(workoutName || "");
+  const isOfficialRace =
+    /🏆|competición\s*objetivo|competición\s*oficial|carrera\s*objetivo|carrera\s*oficial|gran\s*fondo\s*oficial/i.test(workoutName || "") ||
+    isMultisportDoc ||
+    /protocolo pre-(?:carrera|prueba)|pacing plan\s*\(competición oficial/i.test(cleanDoc);
+
+  const isRacePacing = isOfficialRace;
+  const isTriathlon = isTriathlonRace && isOfficialRace;
 
   const sectionTitle = isStrength
     ? "Prescripción de la Sesión de Fuerza"

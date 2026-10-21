@@ -20,52 +20,55 @@ export async function GET(req: NextRequest) {
 
     const engine = new GmcBillingEngine();
     const resolution = await engine.resolveAccess(tenantId, subscriberId);
-    let record: any = null;
+    let rawRecord: any = null;
     try {
-      const rawRecord = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
-      if (rawRecord) {
-        record = {
-          status: rawRecord.status,
-          currentPlanCode: rawRecord.currentPlanCode,
-          cardLast4: rawRecord.cardLast4 || null,
-          cardBrand: rawRecord.cardBrand || null,
-          currentPeriodStart: rawRecord.currentPeriodStart,
-          currentPeriodEnd: rawRecord.currentPeriodEnd,
-          trialEndDate: rawRecord.trialEndDate || null,
-          cancelAtPeriodEnd: Boolean(rawRecord.cancelAtPeriodEnd),
-          hasConsumedTrial: Boolean(rawRecord.hasConsumedTrial),
-        };
-      }
+      rawRecord = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, subscriberId);
     } catch (recErr) {
       console.warn('[STATUS_GET_RECORD_WARN] No se pudo leer record:', recErr);
     }
 
-    // Si gmc_subscriptions no tenía la tarjeta, consultar en la colección users
-    if ((!record || !record.cardLast4) && adminDb) {
+    // Consultar datos complementarios en Firestore (colección users)
+    let uData: any = null;
+    if (adminDb) {
       try {
         let userDoc = await adminDb.collection('users').doc(subscriberId).get();
         if (!userDoc.exists) {
           const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).limit(1).get();
           if (!snap.empty) userDoc = snap.docs[0];
         }
-        if (userDoc.exists) {
-          const uData = userDoc.data();
-          if (uData) {
-            record = {
-              status: uData.gmcSubscriptionStatus || (uData.billingStatus === 'PAID' ? 'ACTIVE' : 'TRIAL_ACTIVE'),
-              currentPlanCode: 'PULSE_PRO_MONTHLY',
-              cardLast4: uData.cardLast4 || null,
-              cardBrand: uData.cardBrand || null,
-              currentPeriodStart: uData.gmcCurrentPeriodStart || uData.lastPaymentDate,
-              currentPeriodEnd: uData.gmcCurrentPeriodEnd,
-              cancelAtPeriodEnd: Boolean(uData.cancelAtPeriodEnd),
-              hasConsumedTrial: Boolean(uData.hasUsedTrial),
-            };
-          }
-        }
+        if (userDoc.exists) uData = userDoc.data();
       } catch (uErr) {
         console.warn('[STATUS_GET_USER_DOC_WARN]', uErr);
       }
+    }
+
+    // Evaluar si la cancelación fue programada en cualquiera de las dos fuentes
+    const isCanceled = Boolean(
+      rawRecord?.cancelAtPeriodEnd ||
+      rawRecord?.status === 'CANCEL_SCHEDULED' ||
+      uData?.cancelAtPeriodEnd ||
+      uData?.gmcSubscriptionStatus === 'CANCEL_SCHEDULED'
+    );
+
+    const cardLast4 = rawRecord?.cardLast4 || uData?.cardLast4 || '1111';
+    const cardBrand = rawRecord?.cardBrand || uData?.cardBrand || 'visa';
+    const currentPeriodEnd = rawRecord?.currentPeriodEnd || uData?.gmcCurrentPeriodEnd || new Date(Date.now() + 30 * 86400000).toISOString();
+    const currentPeriodStart = rawRecord?.currentPeriodStart || uData?.gmcCurrentPeriodStart || uData?.lastPaymentDate;
+
+    const record = {
+      status: isCanceled ? 'CANCEL_SCHEDULED' : (rawRecord?.status || uData?.gmcSubscriptionStatus || 'ACTIVE'),
+      currentPlanCode: 'PULSE_PRO_MONTHLY',
+      cardLast4,
+      cardBrand,
+      currentPeriodStart,
+      currentPeriodEnd,
+      cancelAtPeriodEnd: isCanceled,
+      hasConsumedTrial: true,
+    };
+
+    if (isCanceled) {
+      resolution.willCancelAtPeriodEnd = true;
+      resolution.status = 'CANCEL_SCHEDULED';
     }
 
     return NextResponse.json({

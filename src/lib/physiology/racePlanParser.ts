@@ -54,18 +54,45 @@ export function formatRaceIntensity(
   let res = text;
   const { effRunFtp = 0, effBikeFtp = 0, thresholdPaceSec = 285, isRunPace = false, discipline = "Carrera" } = opts;
 
-  if (discipline === "Ciclismo" && effBikeFtp > 0) {
-    res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*FTP/gi, (_, p1, p2) => {
-      const n1 = parseInt(p1, 10);
-      const w1 = Math.round((effBikeFtp * n1) / 100);
-      if (p2) {
-        const n2 = parseInt(p2, 10);
-        return `${n1}-${n2}% FTP (${w1}-${Math.round((effBikeFtp * n2) / 100)}W)`;
-      }
-      return `${n1}% FTP (${w1}W)`;
-    });
+  // 1. Ciclismo: SIEMPRE en % FTP. Erradicar cualquier residuo de CP o Pace
+  if (discipline === "Ciclismo") {
+    res = res.replace(/%\s*CP\b/gi, "% FTP");
+    if (effBikeFtp > 0) {
+      res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*FTP/gi, (_, p1, p2) => {
+        const n1 = parseInt(p1, 10);
+        const w1 = Math.round((effBikeFtp * n1) / 100);
+        if (p2) {
+          const n2 = parseInt(p2, 10);
+          return `${n1}-${n2}% FTP (${w1}-${Math.round((effBikeFtp * n2) / 100)}W)`;
+        }
+        return `${n1}% FTP (${w1}W)`;
+      });
+    }
+    return res;
   }
 
+  // 2. Carrera a Pie para Atletas de Ritmo (Pace): NUNCA vatios, NUNCA CP
+  if (discipline === "Carrera" && isRunPace) {
+    res = res.replace(/\s*\(\d+(?:\s*-\s*\d+)?\s*[wW]\)/gi, "");
+    res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:CP|FTP)/gi, (_, p1, p2) => {
+      const n1 = mapPowerPctToPacePct(parseInt(p1, 10));
+      return p2 ? `${n1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace` : `${n1}% Pace`;
+    });
+    res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
+      const n1 = parseInt(p1, 10);
+      const pace1 = formatPace(Math.round(thresholdPaceSec / (n1 / 100)));
+      if (p2) {
+        const n2 = parseInt(p2, 10);
+        const pace2 = formatPace(Math.round(thresholdPaceSec / (n2 / 100)));
+        return `${n1}-${n2}% Pace (${pace2}-${pace1}/km)`;
+      }
+      return `${n1}% Pace (~${pace1}/km)`;
+    });
+    res = res.replace(/Ritmo\s*Umbral/gi, `Ritmo Umbral (~${formatPace(thresholdPaceSec)}/km)`);
+    return res;
+  }
+
+  // 3. Carrera a Pie para Atletas Stryd (CP / Power): Vatios y % CP, sin ritmos min/km
   if (discipline === "Carrera" && !isRunPace && effRunFtp > 0) {
     res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:CP|FTP)/gi, (_, p1, p2) => {
       const n1 = parseInt(p1, 10);
@@ -76,22 +103,7 @@ export function formatRaceIntensity(
       }
       return `${n1}% CP (${w1}W)`;
     });
-  }
-
-  if (discipline === "Carrera" && isRunPace) {
-    res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:CP|FTP)/gi, (_, p1, p2) => {
-      const n1 = mapPowerPctToPacePct(parseInt(p1, 10));
-      return p2 ? `${n1}-${mapPowerPctToPacePct(parseInt(p2, 10))}% Pace` : `${n1}% Pace`;
-    });
-    res = res.replace(/(\d+)(?:\s*-\s*(\d+))?\s*%\s*(?:Pace|pace|Ritmo)/gi, (_, p1, p2) => {
-      const n1 = parseInt(p1, 10);
-      const pace1 = formatPace(Math.round(thresholdPaceSec / (n1 / 100)));
-      if (p2) {
-        const pace2 = formatPace(Math.round(thresholdPaceSec / (parseInt(p2, 10) / 100)));
-        return `${n1}-${p2}% Pace (${pace2}-${pace1}/km)`;
-      }
-      return `${n1}% Pace (~${pace1}/km)`;
-    });
+    return res;
   }
 
   return res;
@@ -99,17 +111,13 @@ export function formatRaceIntensity(
 
 export function parseRaceExecutionPlan(cleanDoc: string, options: ParseRaceOptions = {}): ParsedRacePlan {
   const { workoutName = "", activityType = "", discipline = "Carrera" } = options;
-  const isTriathlon =
-    activityType === "Triatlón" || activityType === "Triatlon" ||
-    /triatl|ironman|70\.3|140\.6/i.test(workoutName) ||
-    /triatl|ironman|70\.3|140\.6/i.test(cleanDoc) ||
-    /sector 1:\s*nataci/i.test(cleanDoc);
+  const isMultisportTriathlon = /sector 1:\s*nataci/i.test(cleanDoc);
 
   const isCycling = discipline === "Ciclismo" || activityType === "Ride" || /ciclismo|gran fondo|clásica/i.test(workoutName) || /prueba ciclista|gran fondo/i.test(cleanDoc);
   const isSwimming = discipline === "Natacion" || /nataci/i.test(cleanDoc);
   const lines = cleanDoc.split("\n").map((l) => l.trim()).filter(Boolean);
 
-  if (isTriathlon) return parseTriathlonPlan(lines, options);
+  if (isMultisportTriathlon) return parseTriathlonPlan(lines, options);
   const sport: "Running" | "Cycling" | "Swimming" | "Generic" = isCycling ? "Cycling" : isSwimming ? "Swimming" : "Running";
   return parseSingleSportRacePlan(lines, sport, options);
 }
@@ -123,9 +131,9 @@ function parseSingleSportRacePlan(lines: string[], sport: "Running" | "Cycling" 
   let currentSection: "NONE" | "PRE" | "PACING" | "POST" = "NONE";
 
   for (const line of lines) {
-    if (/protocolo pre-(?:carrera|prueba)|warmup|activaci[oó]n pre/i.test(line)) { currentSection = "PRE"; continue; }
-    if (/pacing plan|competicion oficial|competición oficial|main\s*\(/i.test(line)) { currentSection = "PACING"; continue; }
-    if (/protocolo post-meta|cooldown|recuperaci[oó]n post/i.test(line)) { currentSection = "POST"; continue; }
+    if (/protocolo pre-(?:carrera|prueba)|activaci[oó]n pre-(?:carrera|prueba)/i.test(line)) { currentSection = "PRE"; continue; }
+    if (/pacing plan|competicion oficial|competición oficial/i.test(line)) { currentSection = "PACING"; continue; }
+    if (/protocolo post-meta|recuperaci[oó]n post-meta/i.test(line)) { currentSection = "POST"; continue; }
 
     const clean = line.replace(/^[•\-\*]\s*/, "");
     if (currentSection === "PRE") {

@@ -49,14 +49,13 @@ export const WorkoutBottomSheetHero: React.FC<WorkoutBottomSheetHeroProps> = ({
   targetLabel,
   onClose,
 }) => {
-  const isTriathlon =
+  const isMultisportTriathlon =
     (workout.activityType as string) === "Triatlón" ||
     (workout.activityType as string) === "Triatlon" ||
     (workout.discipline as string) === "Triatlón" ||
     (workout.discipline as string) === "Triatlon" ||
-    /triatl|ironman|70\.3|140\.6/i.test(workout.workoutName || "") ||
     /sector 1:\s*nataci/i.test(workout.workoutDoc || "");
-  const effectiveDiscipline = isTriathlon ? "Triatlón" : workout.discipline;
+  const effectiveDiscipline = isMultisportTriathlon ? "Triatlón" : workout.discipline;
   const icon = getDisciplineIcon(effectiveDiscipline);
   const badgeClass = getDisciplineBadgeClass(effectiveDiscipline);
 

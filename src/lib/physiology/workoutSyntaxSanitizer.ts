@@ -27,6 +27,7 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
 
   const lines = doc.split("\n");
   const result: string[] = [];
+  let currentDiscipline = options?.discipline || "Carrera";
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i].trim();
@@ -37,6 +38,10 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       }
       continue;
     }
+
+    if (/sector\s*1|nataci/i.test(line)) currentDiscipline = "Natacion";
+    if (/sector\s*2|ciclismo|bike/i.test(line)) currentDiscipline = "Ciclismo";
+    if (/sector\s*3|carrera|marat[oó]n|running/i.test(line)) currentDiscipline = "Carrera";
 
     // 1. Detección y normalización de repeticiones con texto adjunto:
     // Ejemplos: "6x Fartlek Ágil", "4x (9m Over-Under)", "3x: Series Cuestas"
@@ -61,11 +66,16 @@ export function sanitizeWorkoutDoc(doc?: string, options?: SanitizeOptions): str
       // b) Convertir cualquier comentario residual entre paréntesis al final a comillas dobles
       line = line.replace(/\s*\(([^)]+)\)\s*$/, (_m, note) => ` "${note.trim()}"`);
 
-      // c) Normalización de unidades de carrera (Pace para atletas de ritmo, CP para atletas Stryd)
-      if (options?.isRunPaceOnly || (options?.discipline === "Carrera" && options?.isRunPaceOnly)) {
-        line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
-      } else if (options?.discipline === "Carrera") {
-        line = line.replace(/%\s*FTP\b/gi, "% CP").replace(/%\s*Pace\b/gi, "% CP");
+      // c) Normalización de unidades de esfuerzo:
+      // En Ciclismo: NUNCA reemplazar FTP por CP o Pace. Ciclismo es 100% FTP.
+      if (currentDiscipline === "Ciclismo" || /ciclismo|bike/i.test(line)) {
+        line = line.replace(/%\s*CP\b/gi, "% FTP");
+      } else if (currentDiscipline === "Carrera") {
+        if (options?.isRunPaceOnly) {
+          line = line.replace(/%\s*(?:CP|FTP)\b/gi, "% Pace");
+        } else {
+          line = line.replace(/%\s*FTP\b/gi, "% CP").replace(/%\s*Pace\b/gi, "% CP");
+        }
       }
 
       // d) Limpiar espacios redundantes dentro de la línea

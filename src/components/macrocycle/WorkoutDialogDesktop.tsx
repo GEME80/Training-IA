@@ -71,14 +71,13 @@ export const WorkoutDialogDesktop: React.FC<WorkoutDialogDesktopProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const isTriathlon =
+  const isMultisportTriathlon =
     workout.activityType === "Triatlón" ||
     workout.activityType === "Triatlon" ||
     (workout.discipline as string) === "Triatlón" ||
     (workout.discipline as string) === "Triatlon" ||
-    /triatl|ironman|70\.3|140\.6/i.test(workout.workoutName || "") ||
     /sector 1:\s*nataci/i.test(workout.workoutDoc || "");
-  const effectiveDiscipline = isTriathlon ? "Triatlón" : workout.discipline;
+  const effectiveDiscipline = isMultisportTriathlon ? "Triatlón" : workout.discipline;
   const icon = getDisciplineIcon(effectiveDiscipline);
   const badgeClass = getDisciplineBadgeClass(effectiveDiscipline);
   const durationMin = matchedAct?.movingTimeMin || workout.durationMinutes;

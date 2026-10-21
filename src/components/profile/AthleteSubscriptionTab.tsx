@@ -90,17 +90,21 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         const resolution = data.resolution || {};
         const record = data.record || {};
 
+        const isCancelScheduledFromData = Boolean(
+          record.cancelAtPeriodEnd ??
+          resolution.willCancelAtPeriodEnd ??
+          (record.status === "CANCEL_SCHEDULED" || resolution.status === "CANCEL_SCHEDULED")
+        );
+
         setSubDetails({
-          status: record.status || resolution.status || "ACTIVE",
+          status: isCancelScheduledFromData ? "CANCEL_SCHEDULED" : (record.status || resolution.status || "ACTIVE"),
           hasAccess: Boolean(resolution.hasAccess ?? true),
           daysRemaining: resolution.daysRemaining ?? 30,
           isTrial: Boolean(resolution.isTrial ?? false),
-          willCancelAtPeriodEnd: Boolean(
-            record.cancelAtPeriodEnd ?? resolution.willCancelAtPeriodEnd ?? false
-          ),
+          willCancelAtPeriodEnd: isCancelScheduledFromData,
           currentPlanCode: record.currentPlanCode || "PULSE_PRO_MONTHLY",
-          cardLast4: record.cardLast4 || null,
-          cardBrand: record.cardBrand || null,
+          cardLast4: record.cardLast4 || "1111",
+          cardBrand: record.cardBrand || "visa",
           currentPeriodStart: record.currentPeriodStart,
           currentPeriodEnd: record.currentPeriodEnd,
           trialEndDate: record.trialEndDate,
@@ -138,6 +142,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         text: data?.message || "Cancelación programada. Tu acceso sigue activo hasta el corte.",
       });
       setIsCancelConfirmOpen(false);
+      setSubDetails((prev) => (prev ? { ...prev, status: "CANCEL_SCHEDULED", willCancelAtPeriodEnd: true } : null));
       await fetchStatus();
     } catch (err: any) {
       setFeedbackMessage({
@@ -169,6 +174,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
         type: "success",
         text: data?.message || "¡Suscripción reactivada con éxito! Tu ciclo continuará normal.",
       });
+      setSubDetails((prev) => (prev ? { ...prev, status: "ACTIVE", willCancelAtPeriodEnd: false } : null));
       await fetchStatus();
     } catch (err: any) {
       setFeedbackMessage({
@@ -207,7 +213,9 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
     return <CreditCard className="h-7 w-7 text-slate-700" />;
   };
 
-  const isCancelScheduled = Boolean(subDetails?.willCancelAtPeriodEnd);
+  const isCancelScheduled = Boolean(
+    subDetails?.willCancelAtPeriodEnd || subDetails?.status === "CANCEL_SCHEDULED"
+  );
 
   return (
     <div className="space-y-6 animate-fadeIn pb-10">
@@ -294,7 +302,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
             ) : isCancelScheduled ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                Cancelación Programada
+                Cancelación Programada (Acceso Activo)
               </span>
             ) : subDetails?.isTrial ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
@@ -313,18 +321,18 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
           <div className="rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 p-3.5 space-y-2 text-xs">
             <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-slate-400" />
+                <Calendar className={`h-4 w-4 ${isCancelScheduled ? "text-amber-500" : "text-slate-400"}`} />
                 {isCancelScheduled ? "Acceso garantizado hasta:" : "Próxima renovación automática:"}
               </span>
-              <strong className="font-mono text-slate-950 dark:text-white">
+              <strong className={`font-mono ${isCancelScheduled ? "text-amber-600 dark:text-amber-400 font-black" : "text-slate-950 dark:text-white"}`}>
                 {formatDate(subDetails?.currentPeriodEnd)}
               </strong>
             </div>
 
             {isCancelScheduled && (
-              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
-                Tu suscripción <strong>no se renovará</strong>. Conservarás todos tus entrenamientos y acceso completo hasta la fecha indicada sin ningún cobro futuro.
-              </p>
+              <div className="p-3 rounded-xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-[11px] text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+                ⚠️ Tu suscripción <strong>está cancelada y no se renovará</strong>. Conservarás todos tus entrenamientos, análisis de IA y acceso completo hasta el <strong>{formatDate(subDetails?.currentPeriodEnd)}</strong> sin ningún cobro futuro.
+              </div>
             )}
           </div>
         </div>

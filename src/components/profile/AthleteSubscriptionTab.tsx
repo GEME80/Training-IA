@@ -173,7 +173,7 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
   };
 
   const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "Al finalizar el ciclo";
+    if (!dateStr) return isActive ? "Al finalizar el ciclo" : "Sin renovación programada";
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;

@@ -154,21 +154,23 @@ export default function HomePage() {
     return <RestrictedAccessView status="pending" />;
   }
 
-  // 3.5. Si el atleta no es admin y su membresía está vencida o bloqueada -> Paywall Bloqueante ("Efecto Netflix")
+  // 3.5. Si el atleta no es admin (o modo test) y su membresía está vencida -> Paywall Bloqueante
+  const isPaywallTest = mounted && typeof window !== "undefined" && window.location.search.includes("test_paywall=true");
   const isTrialExpired = Boolean(
     userProfile?.gmcTrialEndDate &&
     new Date(userProfile.gmcTrialEndDate).getTime() < Date.now()
   );
   const isBillingBlocked =
-    user &&
-    !isAdmin &&
+    (user &&
+    (!isAdmin || isPaywallTest) &&
     !userProfile?.billingExempt &&
     (userProfile?.billingStatus === "OVERDUE" ||
       userProfile?.gmcSubscriptionStatus === "PAST_DUE_LOCKED" ||
       userProfile?.gmcSubscriptionStatus === "CANCELLED_LOCKED" ||
       userProfile?.gmcSubscriptionStatus === "SUSPENDED_FRAUD" ||
       (isTrialExpired && userProfile?.billingStatus !== "PAID" && userProfile?.gmcSubscriptionStatus !== "ACTIVE") ||
-      (userProfile?.hasUsedTrial && !userProfile?.isTrialActive && userProfile?.billingStatus !== "PAID" && userProfile?.gmcSubscriptionStatus !== "ACTIVE"));
+      (userProfile?.hasUsedTrial && !userProfile?.isTrialActive && userProfile?.billingStatus !== "PAID" && userProfile?.gmcSubscriptionStatus !== "ACTIVE"))) ||
+    Boolean(isPaywallTest);
 
   if (isBillingBlocked) {
     return (

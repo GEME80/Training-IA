@@ -39,31 +39,53 @@ async function runRefundSimulation() {
   console.log(`   Acceso activo: ${initialData?.resolution?.hasAccess}`);
   console.log(`   Días restantes antes del reembolso: ${initialData?.resolution?.daysRemaining} días\n`);
 
-  // 2. Procesar reembolso real en Openpay Sandbox
-  console.log('2️⃣ Ejecutando reembolso real en Openpay para el cargo "trviel4zgnpogyeowucj"...');
+  // 2. Crear un cargo real en Openpay Sandbox y luego reembolsarlo inmediatamente
+  console.log('2️⃣ Creando cargo de prueba en Openpay Sandbox para procesar la reversión...');
   const client = new OpenpayClient();
-  let refundData: any;
-  try {
-    refundData = await client.refundCharge({
-      chargeId: 'trviel4zgnpogyeowucj',
-      description: 'Devolucion de prueba solicitada por el atleta',
-    });
-    console.log(`   ✅ [REEMBOLSO EXITOSO EN OPENPAY BBVA]`);
-    console.log(`   ID de Reembolso: ${refundData.id}`);
-    console.log(`   Monto Reembolsado: $${refundData.amount} COP`);
-    console.log(`   Estado en Pasarela: ${refundData.status}\n`);
-  } catch (err: any) {
-    console.log(`   ℹ️ Aviso de pasarela: ${err.message}`);
-    // Si ya fue reembolsada previamente, construimos los datos del cargo para el webhook
-    refundData = {
-      id: 'trviel4zgnpogyeowucj',
+  const timestamp = Date.now().toString().slice(-4);
+  const orderId = `GMC-PULSE_ENDURANCE-SUB-i442091-202611-rf${timestamp}`;
+
+  const token = await (client as any).request('/tokens', {
+    method: 'POST',
+    body: JSON.stringify({
+      holder_name: 'German Morales',
+      card_number: '5555555555554444',
+      expiration_year: '28',
+      expiration_month: '12',
+      cvv2: '123',
+    }),
+  });
+
+  const charge = await (client as any).request('/charges', {
+    method: 'POST',
+    body: JSON.stringify({
+      source_id: token.id,
+      method: 'card',
       amount: 55000,
-      status: 'refunded',
-    };
-  }
+      currency: 'COP',
+      description: 'Cargo a Reembolsar Pulse Pro',
+      order_id: orderId,
+      device_session_id: 'k62f9a1b0c3d4e5f6a7b8c9d0e1f2a3b',
+      customer: {
+        name: 'German',
+        last_name: 'Morales',
+        email: 'gerkof@gmail.com',
+        phone_number: '3001234567',
+      },
+    }),
+  });
+
+  console.log(`   ✅ [CARGO GENERADO EN OPENPAY] ID: ${charge.id} | Monto: $${charge.amount} COP`);
+
+  console.log(`\n3️⃣ Ejecutando reembolso oficial en Openpay BBVA para el cargo "${charge.id}"...`);
+  const refundData = await client.refundCharge({
+    chargeId: charge.id,
+    description: 'Devolucion voluntaria de prueba por el suscriptor',
+  });
+  console.log(`   ✅ [REEMBOLSO PROCESADO EN OPENPAY] ID: ${refundData.id} | Estado: ${refundData.status}`);
 
   // 3. Despachar evento "charge.refunded" al Webhook de Pulse
-  console.log('3️⃣ Despachando evento webhook "charge.refunded" a Pulse Endurance...');
+  console.log('\n4️⃣ Despachando evento webhook "charge.refunded" a Pulse Endurance...');
   const webhookUser = process.env.OPENPAY_WEBHOOK_USER || 'gmc_webhook_user';
   const webhookPassword = process.env.OPENPAY_WEBHOOK_PASSWORD || 'gmc_webhook_secret_key';
   const authHeader = `Basic ${Buffer.from(`${webhookUser}:${webhookPassword}`).toString('base64')}`;
@@ -72,14 +94,14 @@ async function runRefundSimulation() {
     type: 'charge.refunded',
     event_date: new Date().toISOString(),
     transaction: {
-      id: 'trviel4zgnpogyeowucj',
+      id: charge.id,
       amount: 55000,
       method: 'card',
       operation_type: 'out',
       transaction_type: 'refund',
       status: 'refunded',
-      order_id: 'GMC-PULSE_ENDURANCE-SUB-i442091-202611-ren2568',
-      description: 'Devolucion voluntaria de membresia',
+      order_id: orderId,
+      description: 'Devolucion de membresia',
     },
   };
 
@@ -96,7 +118,7 @@ async function runRefundSimulation() {
   console.log(`   Respuesta del Webhook HTTP ${webhookRes.status}:`, JSON.stringify(webhookResult));
 
   // 4. Verificar revocación inmediata de acceso
-  console.log('\n4️⃣ Verificando revocación inmediata de acceso en Pulse Endurance...');
+  console.log('\n5️⃣ Verificando revocación inmediata de acceso en Pulse Endurance...');
   const updatedRes = await fetch('https://pulseendurance.co/api/billing/openpay/status?subscriberId=i442091');
   const updatedData = await updatedRes.json().catch(() => null);
 

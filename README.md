@@ -1,9 +1,16 @@
-# ⚡ SGEA Pro (v5.87) — PULSE ENDURANCE™
+# ⚡ SGEA Pro (v5.88) — PULSE ENDURANCE™
 > **Plataforma de Alto Rendimiento Fisiológico, Periodización Dinámica, Prescripción Adaptativa, Design System PULSE ENDURANCE y Gestión Deportiva SSOT para Deportes de Resistencia (Carrera, Ciclismo y Triatlón). Dominio oficial en producción: [pulseendurance.co](https://pulseendurance.co)**
 
 ---
 
 ## 🌟 Características Principales
+
+- 🎯 **Sincronización Universal de Ritmo (`MINS_KM`), Blindaje Head Coach IA, Exclusividad Garmin Connect y Tooltip Claro en PMC (v5.88):**
+  - **Enum `MINS_KM` en Intervals.icu API:** Corrección universal de unidades de ritmo en `sport-settings` (`pace_units: "MINS_KM"` con conversión $v = 1000/t$ en m/s) en `/api/sync-settings`, `/api/profile`, `/api/admin/users` y `paceDetectionService.ts`, resolviendo el problema de ritmo umbral no reconocido (`? /`).
+  - **Prioridad Cuádruple de Carga & Purgado de Vatios:** Configuración automática en Intervals de `load_preference`, `time_in_zones_preference`, `plan_load_preference` e `interval_summary_preference` en `"PACE,HR,POWER"` y vaciado de `ftp: null` en corredores por ritmo para erradicar lecturas residuales de potencia de muñeca.
+  - **Alineación Fisiológica del Head Coach IA:** Transmisión de parámetros de ritmo en `useHeadCoachChat.ts` y `HeadCoachChatDrawer.tsx`, resolución estricta con `resolveRunningMode` en `chatContext.ts` e inyección de reglas dinámicas en `prompts.ts` que prohíben prescribir en vatios o citar Stryd para carrera a pie, guiando exclusivamente en min/km (Daniels) y % LTHR.
+  - **Prioridad Garmin Connect & Deduplicación Inteligente:** Implementación de filtro anti-duplicados en `telemetryService.ts` y `contextCondenser.ts` que descarta clones de Strava frente a Garmin Connect o archivos FIT manuales (evitando la duplicación de TSS y la distorsión del CTL/ATL), junto a una alerta en `AthleteDeviceSyncNotice.tsx` que orienta a desconectar Strava en Intervals.icu.
+  - **Rediseño del Tooltip de Métricas en PMC:** Erradicación del fondo negro en el cuadro de datos flotante de `AthletePMCChart.tsx` en favor de un diseño claro (`bg-white/95 dark:bg-slate-900/95` con borde tenue y sombras difuminadas) y modernización de la insignia del cursor cruzado en `AthletePMCSVG.tsx`.
 
 - 📱 **Ergonomía UI/UX Móvil & Web, Erradicación de Truncamientos y Atribución Comercial GMC (v5.87):**
   - **Corrección de Truncamiento en Sidebar Web:** Ampliación a `w-[260px]` y reemplazo de `overflow-hidden` por `flex-1 min-w-0` en `AthleteSidebar.tsx`, permitiendo que la marca "PULSE ENDURANCE" se lea completa y nítida.

@@ -11053,3 +11053,83 @@ flowchart TD
   * `npm run test:refund`: Superada al 100% ✅
 - **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 200 ✅.
+
+---
+
+## 201. Sincronización Universal de Ritmo (SSOT m/s y Enum MINS_KM en Intervals), Blindaje Head Coach IA para Carrera por Ritmo, Deduplicación de Actividades (Prioridad Garmin Connect vs Strava) y Refactorización Visual del Tooltip PMC
+
+- **Fecha:** 2026-10-21
+- **Objetivo:** Resolver de raíz la desconexión de telemetría de ritmo en Intervals.icu, erradicar prescripciones erróneas en vatios del Head Coach IA para atletas de ritmo, diagnosticar y blindar contra la duplicación de actividades de ciclismo generadas por Strava + Training Tilt, y refactorizar la experiencia visual del cuadro de datos flotante en el gráfico de rendimiento PMC.
+
+### 201.1. Sincronización SSOT de Ritmo y Corrección de Enum en Intervals.icu API (`MINS_KM`)
+- **Causa Raíz Identificada:** La API REST de Intervals.icu para `sport-settings` exige estrictamente el enum `"MINS_KM"` (o `"MINS_MILE"`, `"SECS_100M"`) para el campo `pace_units`. La base de código transmitía `"per_km"`, lo que provocaba que Intervals invalidara la configuración de ritmo, dejando el campo de ritmo umbral en blanco (`? /`) con el aviso *"Capture su ritmo de umbral para habilitar las zonas de ritmo y el análisis para este deporte"*.
+- **Correcciones Implementadas:**
+  * Se corrigió `pace_units = "MINS_KM"` de forma universal en:
+    - [`src/app/api/admin/users/route.ts`](src/app/api/admin/users/route.ts)
+    - [`src/app/api/profile/route.ts`](src/app/api/profile/route.ts)
+    - [`src/app/api/sync-settings/route.ts`](src/app/api/sync-settings/route.ts)
+    - [`src/lib/services/paceDetectionService.ts`](src/lib/services/paceDetectionService.ts)
+  * **Conversión SSOT de Velocidad:** Conversión estricta de ritmo a velocidad métrica SI en metros por segundo:
+    $$v_{\text{threshold}} = \frac{1000}{t_{\text{seg/km}}}$$
+    (Ejemplo: ritmo $4:18\text{ min/km} = 258\text{ s} \implies 3.876\text{ m/s}$).
+  * **Prioridad Cuádruple de Carga:** Configuración atómica en Intervals de las 4 preferencias (`load_preference`, `time_in_zones_preference`, `plan_load_preference` e `interval_summary_preference`) en `"PACE,HR,POWER"` para atletas en modo `PACE`.
+  * **Purgado de Potencia Residual:** Al cambiar a modo Ritmo, el backend envía `ftp: null` e `indoor_ftp: null` hacia Intervals y establece `runFtp: 0` en Firestore, erradicando lecturas erróneas de potencia de muñeca Garmin (como los 332W/385W residuales).
+
+### 201.2. Blindaje Fisiológico del Head Coach IA para Atletas en Modo Ritmo
+- **Problema Detectado:** Atletas configurados para entrenar por ritmo recibían respuestas del Head Coach IA prescribiendo vatios, intervalos a % CP y haciendo referencia a potenciómetros Stryd.
+- **Causa Raíz:** Los clientes de chat ([`useHeadCoachChat.ts`](src/components/dashboard/headcoach/useHeadCoachChat.ts) y [`HeadCoachChatDrawer.tsx`](src/components/HeadCoachChatDrawer.tsx)) no transferían `runningTrainingMode` ni `runThresholdPaceStr` en el payload JSON. El resolvedor de contexto ([`chatContext.ts`](src/lib/ai/headcoach/chatContext.ts)) leía el FTP residual de carrera de Intervals (`icu_running_ftp: 385W`) e inyectaba al prompt: `MODO POTENCIA STRYD (385W CP)`.
+- **Solución Implementada:**
+  * **Transmisión de Parámetros:** Inclusión explícita de `runningTrainingMode`, `hasRunningPowerMeter`, `runThresholdPaceStr` y `runThresholdPaceSecPerKm` en [`HeadCoachChatRequest`](src/lib/ai/headcoach/types.ts), `useHeadCoachChat.ts` y `HeadCoachChatDrawer.tsx`.
+  * **Resolución Canónica en Contexto ([`chatContext.ts`](src/lib/ai/headcoach/chatContext.ts)):** Invocación de `resolveRunningMode`. Si el modo resuelve a `PACE`:
+    - Se fuerza `profile.run_ftp = 0` (purgado inmediato).
+    - Se establece `profile.runningTrainingMode = "PACE"` y `hasRunningPowerMeter = false`.
+    - Se fija el ritmo umbral como métrica rectora (`runThresholdPaceStr` y `runThresholdPaceSecPerKm`).
+    - Se desactivan las calibraciones automáticas de potencia de carrera en `breakthroughDetectionService`.
+  * **Reglas Rectoras Dinámicas ([`src/lib/ai/prompts.ts`](src/lib/ai/prompts.ts)):**
+    - Se adaptaron las Reglas 7, 9, 11 y 12 del sistema.
+    - Se inyecta la directiva obligatoria: *"⚠️ MODALIDAD DE CARRERA: RITMO (DANIELS / MIN:KM). Este atleta entrena EXCLUSIVAMENTE por ritmo (/km) y frecuencia cardíaca. Queda TOTALMENTE PROHIBIDO prescribir entrenamientos en vatios (W), referenciar Stryd o hablar de potencia en carrera. Prescribir siempre en ritmo (min/km, ej: 4:18/km, 4:45/km) o pulsaciones (bpm)"*.
+
+### 201.3. Diagnóstico Fisiológico de Javier Taboada, Priorización de Garmin Connect y Filtro Anti-Duplicados
+- **Diagnóstico Forense de Métricas Infladas (CTL 109 / ATL 128):**
+  * Se identificó que el atleta presentaba sesiones de ciclismo duplicadas debido a la importación simultánea desde Strava y la subida manual de archivos desde Training Tilt.
+  * Cada sesión sumaba doble TSS diario (ej. 160 TSS en lugar de 80 TSS), inflando exponencialmente la rampa de fatiga y fitness.
+  * **Demostración de Validez del rTSS:** En la sesión de 11.51 km a $4:34\text{ min/km}$ en $52.65\text{ min}$ con umbral de $4:18\text{ min/km}$ ($IF \approx 0.94$):
+    $$\text{rTSS} = 100 \times \left(\frac{52.65}{60}\right) \times (0.94)^2 \approx 76.5\text{ TSS}$$
+    Se confirmó que $76\text{ TSS}$ es un rTSS fisiológicamente preciso para esa sesión, descartando anomalías en el cálculo de ritmo una vez purgados los vatios.
+- **Estrategia y Aislamiento de Strava:**
+  * Strava es una plataforma receptora pasiva: no admite el envío de sesiones estructuradas por series a relojes ni proporciona telemetría biológica continua (HRV, sueño, batería corporal).
+  * **Orientación UX ([`AthleteDeviceSyncNotice.tsx`](src/components/profile/AthleteDeviceSyncNotice.tsx)):** Se añadió una Alerta de Calidad de Datos instruyendo a desconectar Strava en Intervals.icu y mantener únicamente **Garmin Connect** con *"Upload Workouts"* activo.
+  * **Limpieza de Copys:** Se removió la recomendación de Strava en [`HeroSection.tsx`](src/components/landing/HeroSection.tsx), [`OnboardingBanner.tsx`](src/components/dashboard/OnboardingBanner.tsx), [`OnboardingPathSelector.tsx`](src/components/onboarding/OnboardingPathSelector.tsx), [`AthleteOnboardingView.tsx`](src/components/onboarding/AthleteOnboardingView.tsx) y [`EcosystemTicker.tsx`](src/components/landing/EcosystemTicker.tsx).
+- **Algoritmo de Deduplicación en Backend ([`telemetryService.ts`](src/lib/services/telemetryService.ts) y [`contextCondenser.ts`](src/lib/ai/contextCondenser.ts)):**
+  * Ordenamiento que prioriza actividades nativas de Garmin Connect y archivos directos frente a Strava.
+  * Si en el mismo día coinciden dos actividades de la misma disciplina con tiempos de movimiento (±3 min) y distancias similares, se descarta el clon de Strava, impidiendo la doble acumulación de TSS en `dailyExecutedActivities` y `executedWeeklyTss`.
+
+### 201.4. Refactorización Visual del Tooltip PMC (Erradicación del Fondo Negro)
+- **Problema de Diseño:** Al pasar el cursor sobre el gráfico de rendimiento (PMC), el tooltip flotante mostraba un fondo negro opaco (`bg-slate-900/95`) que desentonaba con la interfaz limpia en modo claro y dificultaba la lectura armónica.
+- **Solución Implementada:**
+  * **Tooltip Flotante ([`AthletePMCChart.tsx`](src/components/dashboard/pmc/AthletePMCChart.tsx)):**
+    - Fondo claro y moderno: `bg-white/95 dark:bg-slate-900/95` con borde `border-slate-200/90 dark:border-slate-700/80` y sombra difuminada `shadow-xl shadow-slate-900/10 backdrop-blur-md`.
+    - Tipografía oscura de alto contraste: `text-slate-800 dark:text-slate-100` con fecha delimitada por divisor tenue.
+    - Badges temáticos: Chip de TSB verde o ámbar según la frescura, y etiquetas de CTL (azul cielo), ATL (morado), Plan (ámbar) y Rampa (pizarra).
+  * **Insignia del Cursor Cruzado ([`AthletePMCSVG.tsx`](src/components/dashboard/pmc/AthletePMCSVG.tsx)):**
+    - Se reemplazó el rectángulo negro `fill="#0f172a"` y la línea sólida por una insignia clara (`fill="#f8fafc" stroke="#cbd5e1"`) con texto en gris pizarra (`#334155`) y línea guía punteada suave (`stroke="#94a3b8" strokeDasharray="3 3"`).
+
+### 201.5. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/app/api/admin/users/route.ts`: 306 LOC ($\le 350$) ✅
+  * `src/app/api/profile/route.ts`: 287 LOC ($\le 350$) ✅
+  * `src/app/api/sync-settings/route.ts`: 135 LOC ($\le 350$) ✅
+  * `src/lib/services/paceDetectionService.ts`: 199 LOC ($\le 350$) ✅
+  * `src/lib/ai/headcoach/types.ts`: 198 LOC ($\le 350$) ✅
+  * `src/components/dashboard/headcoach/useHeadCoachChat.ts`: 347 LOC ($\le 350$) ✅
+  * `src/lib/ai/headcoach/chatContext.ts`: 337 LOC ($\le 350$) ✅
+  * `src/lib/ai/prompts.ts`: 333 LOC ($\le 350$) ✅
+  * `src/lib/services/telemetryService.ts`: 318 LOC ($\le 350$) ✅
+  * `src/lib/ai/contextCondenser.ts`: 203 LOC ($\le 350$) ✅
+  * `src/components/profile/AthleteDeviceSyncNotice.tsx`: 187 LOC ($\le 350$) ✅
+  * `src/components/dashboard/pmc/AthletePMCChart.tsx`: 346 LOC ($\le 350$) ✅
+  * `src/components/dashboard/pmc/AthletePMCSVG.tsx`: 347 LOC ($\le 350$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** Suites de facturación y pruebas pasadas al 100% ✅.
+- **Gate 4 (Compilación Next.js):** Build limpio con 29/29 rutas estáticas y dinámicas optimizadas ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 201 ✅.

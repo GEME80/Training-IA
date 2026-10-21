@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, SlidersHorizontal, CheckCircle2, Copy, Check } from "lucide-react";
-import { AdminUserListItem, UserRole, UserStatus } from "@/lib/db/types";
+import { AdminUserListItem, UserRole, UserStatus, RunningTrainingMode } from "@/lib/db/types";
 import { isMasterAdminEmail } from "@/lib/env";
 import { useAuth } from "@/context/AuthContext";
 import { AdminUserEditIntervalsSection } from "./AdminUserEditIntervalsSection";
@@ -37,9 +37,10 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [lthr, setLthr] = useState<number | "">("");
   const [maxHR, setMaxHR] = useState<number | "">("");
   const [restingHR, setRestingHR] = useState<number | "">("");
+  const [runningTrainingMode, setRunningTrainingMode] = useState<RunningTrainingMode>("PACE");
+  const [runThresholdPaceStr, setRunThresholdPaceStr] = useState<string>("");
   const [role, setRole] = useState<UserRole>("athlete");
   const [status, setStatus] = useState<UserStatus>("pending");
-
   const [planPrice, setPlanPrice] = useState<number | "">(80);
   const [planCurrency, setPlanCurrency] = useState<"USD" | "COP" | "EUR">("USD");
   const [billingStatus, setBillingStatus] = useState<"PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION">("PENDING");
@@ -48,7 +49,6 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"TRANSFER" | "STRIPE" | "WOMPI" | "CASH" | "OPENPAY_CARD" | "OTHER">("TRANSFER");
   const [primaryGoalRace, setPrimaryGoalRace] = useState<string>("");
   const [primaryGoalDate, setPrimaryGoalDate] = useState<string>("");
-
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; athleteName?: string } | null>(null);
@@ -65,6 +65,9 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
       setLthr(user.lthr ?? "");
       setMaxHR(user.maxHR ?? "");
       setRestingHR(user.restingHR ?? "");
+      const isPaceUser = user.runningTrainingMode === "PACE" || (!user.runFtp && user.hasRunningPowerMeter === false) || Boolean(user.runThresholdPaceStr);
+      setRunningTrainingMode(isPaceUser ? "PACE" : (user.runningTrainingMode || "POWER"));
+      setRunThresholdPaceStr(user.runThresholdPaceStr || (isPaceUser ? "4:18" : ""));
       setRole(user.role);
       setStatus(user.status);
       setPlanPrice(user.planPrice ?? (user.role === "admin" ? 0 : 80));
@@ -134,8 +137,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           displayName: name.trim(),
           intervalsAthleteId: intervalsId.trim(),
           rawApiKey: rawApiKey.trim() || undefined,
-          runFtp: Number(runFtp) || 0,
+          runFtp: runningTrainingMode === "POWER" ? (Number(runFtp) || 0) : 0,
           bikeFtp: Number(bikeFtp) || 0,
+          runningTrainingMode,
+          hasRunningPowerMeter: runningTrainingMode === "POWER",
+          runThresholdPaceStr: runningTrainingMode === "PACE" ? (runThresholdPaceStr.trim() || "4:18") : undefined,
           weightKg: weightKg === "" ? undefined : Number(weightKg),
           lthr: lthr === "" ? undefined : (maxHR !== "" && Number(lthr) > Number(maxHR) ? Number(maxHR) : Number(lthr)),
           maxHR: maxHR === "" ? undefined : (lthr !== "" && Number(lthr) > Number(maxHR) ? Number(lthr) : Number(maxHR)),
@@ -223,18 +229,11 @@ export const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({
           />
 
           <AdminUserEditBiometricsSection
-            runFtp={runFtp}
-            setRunFtp={setRunFtp}
-            bikeFtp={bikeFtp}
-            setBikeFtp={setBikeFtp}
-            weightKg={weightKg}
-            setWeightKg={setWeightKg}
-            lthr={lthr}
-            setLthr={setLthr}
-            maxHR={maxHR}
-            setMaxHR={setMaxHR}
-            restingHR={restingHR}
-            setRestingHR={setRestingHR}
+            runFtp={runFtp} setRunFtp={setRunFtp} bikeFtp={bikeFtp} setBikeFtp={setBikeFtp}
+            weightKg={weightKg} setWeightKg={setWeightKg} lthr={lthr} setLthr={setLthr}
+            maxHR={maxHR} setMaxHR={setMaxHR} restingHR={restingHR} setRestingHR={setRestingHR}
+            runningTrainingMode={runningTrainingMode} setRunningTrainingMode={setRunningTrainingMode}
+            runThresholdPaceStr={runThresholdPaceStr} setRunThresholdPaceStr={setRunThresholdPaceStr}
           />
 
           <AdminUserEditBillingSection

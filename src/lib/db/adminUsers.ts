@@ -206,6 +206,7 @@ export interface PreauthorizeUserParams {
   email: string; displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
   rawApiKey?: string; runFtp?: number; bikeFtp?: number; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
   hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
+  runThresholdPaceStr?: string; runThresholdPaceSecPerKm?: number;
 }
 
 /**
@@ -262,6 +263,7 @@ export interface UpdateUserDetailsParams {
   displayName?: string; role?: UserRole; status?: UserStatus; intervalsAthleteId?: string;
   runFtp?: number; bikeFtp?: number; rawApiKey?: string; weightKg?: number; restingHR?: number; maxHR?: number; lthr?: number;
   hasRunningPowerMeter?: boolean; runningTrainingMode?: RunningTrainingMode;
+  runThresholdPaceStr?: string; runThresholdPaceSecPerKm?: number;
   planPrice?: number; planCurrency?: "USD" | "COP" | "EUR";
   billingStatus?: "PAID" | "PENDING" | "OVERDUE" | "PENDING_VERIFICATION";
   billingExempt?: boolean;
@@ -287,6 +289,7 @@ export async function updateUserDetails(
     ...(updates.intervalsAthleteId !== undefined && { intervalsAthleteId: updates.intervalsAthleteId.trim() }),
     ...(typeof updates.runFtp === "number" && !isNaN(updates.runFtp) && { runFtp: updates.runFtp }), ...(typeof updates.bikeFtp === "number" && !isNaN(updates.bikeFtp) && { bikeFtp: updates.bikeFtp }),
     ...(updates.hasRunningPowerMeter !== undefined && { hasRunningPowerMeter: updates.hasRunningPowerMeter }), ...(updates.runningTrainingMode !== undefined && { runningTrainingMode: updates.runningTrainingMode }),
+    ...(updates.runThresholdPaceStr !== undefined && { runThresholdPaceStr: updates.runThresholdPaceStr.trim() }), ...(typeof updates.runThresholdPaceSecPerKm === "number" && !isNaN(updates.runThresholdPaceSecPerKm) && { runThresholdPaceSecPerKm: updates.runThresholdPaceSecPerKm }),
     ...(typeof updates.weightKg === "number" && !isNaN(updates.weightKg) && { weightKg: updates.weightKg }), ...(typeof updates.restingHR === "number" && !isNaN(updates.restingHR) && { restingHR: updates.restingHR }),
     ...(typeof updates.maxHR === "number" && !isNaN(updates.maxHR) && { maxHR: updates.maxHR }), ...(typeof updates.lthr === "number" && !isNaN(updates.lthr) && { lthr: updates.lthr }),
     ...(updates.rawApiKey?.trim() && { encryptedApiKey: encryptSensitiveData(updates.rawApiKey.trim()) }),

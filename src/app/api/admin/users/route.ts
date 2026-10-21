@@ -90,6 +90,10 @@ export async function PATCH(req: NextRequest) {
       intervalsAthleteId,
       runFtp,
       bikeFtp,
+      runningTrainingMode,
+      hasRunningPowerMeter,
+      runThresholdPaceStr,
+      runThresholdPaceSecPerKm,
       rawApiKey,
       weightKg,
       restingHR,
@@ -146,6 +150,16 @@ export async function PATCH(req: NextRequest) {
     const numResting = Number(restingHR) || 0;
     const numWeight = Number(weightKg) || 0;
 
+    let effRunSec = Number(runThresholdPaceSecPerKm) || undefined;
+    if (!effRunSec && runThresholdPaceStr) {
+      const { parsePaceToSeconds } = await import("@/lib/physiology/runningWorkoutAdapter");
+      effRunSec = parsePaceToSeconds(runThresholdPaceStr);
+    }
+    const isPaceMode = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
+    const effMode = isPaceMode ? "PACE" : (runningTrainingMode || (numRunFtp > 0 ? "POWER" : "PACE"));
+    const effHasPower = !isPaceMode && Boolean(hasRunningPowerMeter ?? (numRunFtp > 0));
+    const effRunFtp = isPaceMode ? undefined : (numRunFtp > 0 ? numRunFtp : undefined);
+
     // Blindaje fisiológico universal: la FC Máxima nunca puede estrangular LTHR (buffer mínimo 10%)
     if (numLthr > 0 && numMaxHR > 0 && numLthr > numMaxHR) {
       const swapHr = numLthr;
@@ -161,10 +175,12 @@ export async function PATCH(req: NextRequest) {
       role,
       status,
       intervalsAthleteId,
-      runFtp: numRunFtp > 0 ? numRunFtp : undefined,
+      runFtp: effRunFtp,
       bikeFtp: numBikeFtp > 0 ? numBikeFtp : undefined,
-      hasRunningPowerMeter: numRunFtp > 0 ? true : undefined,
-      runningTrainingMode: numRunFtp > 0 ? "POWER" : undefined,
+      hasRunningPowerMeter: effHasPower,
+      runningTrainingMode: effMode,
+      runThresholdPaceStr: runThresholdPaceStr || undefined,
+      runThresholdPaceSecPerKm: effRunSec,
       rawApiKey,
       weightKg: numWeight > 0 ? numWeight : undefined,
       restingHR: numResting > 0 ? numResting : undefined,
@@ -197,11 +213,16 @@ export async function PATCH(req: NextRequest) {
         const client = new IntervalsClient(creds.athleteId, creds.apiKey);
         const sports = await client.getSportSettings().catch(() => []);
 
-        if (numRunFtp > 0 || numLthr > 0 || safeMaxHR) {
+        if (effRunFtp || effRunSec || numLthr > 0 || safeMaxHR) {
           const runSport = (sports || []).find(isRunSport);
           if (runSport?.id) {
             const patch: Record<string, any> = {};
-            if (numRunFtp > 0) patch.ftp = numRunFtp;
+            if (effRunFtp) patch.ftp = effRunFtp;
+            if (effRunSec && effRunSec > 0) {
+              patch.threshold_pace = Number((1000 / effRunSec).toFixed(3));
+              patch.pace_units = "per_km";
+            }
+            patch.load_preference = isPaceMode ? "PACE,HR,POWER" : "POWER,PACE,HR";
             if (numLthr > 0) patch.lthr = numLthr;
             if (safeMaxHR) patch.max_hr = safeMaxHR;
             await client.updateSportSettings(runSport.id, patch).catch(() => {});
@@ -220,7 +241,7 @@ export async function PATCH(req: NextRequest) {
 
         const athletePayload: Record<string, any> = {};
         if (numBikeFtp > 0) athletePayload.icu_ftp = numBikeFtp;
-        if (numRunFtp > 0) athletePayload.icu_running_ftp = numRunFtp;
+        if (effRunFtp) athletePayload.icu_running_ftp = effRunFtp;
         if (numWeight > 0) { athletePayload.weight = numWeight; athletePayload.icu_weight = numWeight; }
         if (numResting > 0) athletePayload.icu_resting_hr = numResting;
         if (numLthr > 0) athletePayload.lthr = numLthr;

@@ -27,34 +27,44 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
     targetTssAdjustmentPct = 0,
     isWeekKickoffAudit = false,
     currentPlan = [],
-    dailyExecutedActivities = {},
-    runFtp,
-    bikeFtp,
-    birthDate,
-    gender,
-    weight,
-    height,
-    restingHR,
-    maxHR,
-    lthr,
-    isInitialAudit = false,
-    coachProfile = "balanced",
-    customPrompt: initialCustomPrompt = "",
+    dailyExecutedActivities = {}, runFtp, bikeFtp, birthDate, gender, weight, height,
+    restingHR, maxHR, lthr, isInitialAudit = false, coachProfile = "balanced", customPrompt: initialCustomPrompt = "",
   } = body;
 
   let customPrompt = initialCustomPrompt;
-  const safeWeekNum = Number(weekNumber) || 1;
-  const safeOffset = Number(weekOffset) || 0;
-
+  const safeWeekNum = Number(weekNumber) || 1, safeOffset = Number(weekOffset) || 0;
   const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
     await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
 
+  let userDocProfile: any = null;
+  if (uid && (!body.runningTrainingMode || body.hasRunningPowerMeter === undefined || !body.runThresholdPaceStr)) {
+    try {
+      const { getUserProfileDecrypted } = await import("@/lib/db/userProfile");
+      userDocProfile = (await getUserProfileDecrypted(uid))?.profile || null;
+    } catch {}
+  }
+
+  const { resolveRunningMode, parsePaceToSeconds, formatPace } = await import("@/lib/physiology/runningWorkoutAdapter");
+  const effectiveRunningMode = resolveRunningMode({
+    runningTrainingMode: body.runningTrainingMode || userDocProfile?.runningTrainingMode,
+    hasRunningPowerMeter: body.hasRunningPowerMeter ?? userDocProfile?.hasRunningPowerMeter,
+    runFtp: runFtp ?? userDocProfile?.runFtp,
+  }, macrocyclePhase?.blueprint?.runningTrainingMode);
+
+  const isPaceMode = effectiveRunningMode === "PACE";
+  const resolvedPaceSec = body.runThresholdPaceSecPerKm || userDocProfile?.runThresholdPaceSecPerKm || (body.runThresholdPaceStr ? parsePaceToSeconds(body.runThresholdPaceStr) : (userDocProfile?.runThresholdPaceStr ? parsePaceToSeconds(userDocProfile.runThresholdPaceStr) : 258));
+  const resolvedPaceStr = body.runThresholdPaceStr || userDocProfile?.runThresholdPaceStr || formatPace(resolvedPaceSec);
+
   let profile: AthleteProfile = {
     id: effectiveAthleteId, name: body.athleteName || "Atleta", ctl: 0, atl: 0, tsb: 0, rampRate: 0,
-    run_ftp: runFtp ? Number(runFtp) : undefined, bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
+    run_ftp: isPaceMode ? undefined : (runFtp ? Number(runFtp) : undefined), bike_ftp: bikeFtp ? Number(bikeFtp) : undefined,
     weight: weight ? Number(weight) : undefined, heightCm: height ? Number(height) : undefined,
     birthDate, gender: (gender === "M" || gender === "F" || gender === "OTHER") ? gender : undefined,
     restingHR: restingHR ? Number(restingHR) : undefined, maxHR: maxHR ? Number(maxHR) : undefined, lthr: lthr ? Number(lthr) : undefined,
+    runningTrainingMode: isPaceMode ? "PACE" : "POWER",
+    hasRunningPowerMeter: !isPaceMode,
+    runThresholdPaceStr: resolvedPaceStr,
+    runThresholdPaceSecPerKm: resolvedPaceSec,
   };
   let wellness: AthleteWellness[] = [];
   let pastActivities: ActivitySummary[] = [];
@@ -93,7 +103,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
         const resolvedHeight = (body as any).height || (rawHeight ? (rawHeight < 3 ? Math.round(rawHeight * 100) : Math.round(rawHeight)) : undefined);
         const garminWel = extractGarminWellnessTelemetry(Array.isArray(wel) ? wel : []);
         const resolvedWeight = weight || garminWel.weightKg || anyAth.weight || ath?.weight;
-        const resolvedRunFtp = (runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0;
+        const resolvedRunFtp = isPaceMode ? 0 : ((runFtp ? Number(runFtp) : undefined) || runSport?.ftp || anyAth.icu_running_ftp || ath?.run_ftp || 0);
         const resolvedBikeFtp = (bikeFtp ? Number(bikeFtp) : undefined) || rideSport?.ftp || anyAth.icu_ftp || ath?.bike_ftp || 0;
         const defaultMaxHr = computedAge ? Math.round(208 - 0.7 * computedAge) : 185;
         const defaultLthr = Math.round(defaultMaxHr * 0.88);
@@ -109,6 +119,10 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           weight: resolvedWeight ? Number(resolvedWeight) : undefined, heightCm: resolvedHeight ? Number(resolvedHeight) : undefined,
           restingHR: restingHR || garminWel.restingHR || runSport?.resting_hr || anyAth.resting_hr || anyAth.restingHR || ath?.restingHR || defaultRestingHr,
           maxHR: safeMax, lthr: safeLthr, run_ftp: resolvedRunFtp, bike_ftp: resolvedBikeFtp,
+          runningTrainingMode: isPaceMode ? "PACE" : "POWER",
+          hasRunningPowerMeter: !isPaceMode,
+          runThresholdPaceStr: resolvedPaceStr,
+          runThresholdPaceSecPerKm: resolvedPaceSec,
         };
       }
       wellness = Array.isArray(wel) ? wel : [];
@@ -125,7 +139,7 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
           });
           if (bResults.recentFtpCalibration?.detected) { profile.bike_ftp = bResults.recentFtpCalibration.newFtp; customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD CICLISMO (FTP): ${bResults.recentFtpCalibration.message}`; }
           if (bResults.recentPaceCalibration?.detected) customPrompt = `${customPrompt ? customPrompt + "\n" : ""}🏃 NOVEDAD RITMO CARRERA: ${bResults.recentPaceCalibration.message}`;
-          if (bResults.recentRunPowerCalibration?.detected) { profile.run_ftp = bResults.recentRunPowerCalibration.newWatts; customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD POTENCIA CARRERA: ${bResults.recentRunPowerCalibration.message}`; }
+          if (!isPaceMode && bResults.recentRunPowerCalibration?.detected) { profile.run_ftp = bResults.recentRunPowerCalibration.newWatts; customPrompt = `${customPrompt ? customPrompt + "\n" : ""}⚡ NOVEDAD POTENCIA CARRERA: ${bResults.recentRunPowerCalibration.message}`; }
         } catch {}
       }
     } catch (err) {

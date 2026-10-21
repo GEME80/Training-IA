@@ -201,10 +201,15 @@ export async function POST(req: NextRequest) {
           if (runSport?.id) {
             const speedMps = Number((1000 / effectiveSec).toFixed(3));
             const isPaceAthlete = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
+            const pref = isPaceAthlete ? "PACE,HR,POWER" : "POWER,PACE,HR";
             await client.updateSportSettings(runSport.id, {
               threshold_pace: speedMps,
-              pace_units: "per_km",
-              ...(isPaceAthlete ? { load_preference: "PACE,HR,POWER" } : { load_preference: "POWER,PACE,HR" }),
+              pace_units: "MINS_KM",
+              load_preference: pref,
+              time_in_zones_preference: pref,
+              plan_load_preference: pref,
+              interval_summary_preference: pref,
+              ...(isPaceAthlete ? { ftp: null, indoor_ftp: null } : {}),
             }).catch(() => null);
           }
         }

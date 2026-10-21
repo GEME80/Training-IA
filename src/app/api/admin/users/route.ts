@@ -219,14 +219,19 @@ export async function PATCH(req: NextRequest) {
             const patch: Record<string, any> = {};
             if (isPaceMode) {
               patch.ftp = null;
+              patch.indoor_ftp = null;
             } else if (effRunFtp > 0) {
               patch.ftp = effRunFtp;
             }
             if (effRunSec && effRunSec > 0) {
               patch.threshold_pace = Number((1000 / effRunSec).toFixed(3));
-              patch.pace_units = "per_km";
+              patch.pace_units = "MINS_KM";
             }
-            patch.load_preference = isPaceMode ? "PACE,HR,POWER" : "POWER,PACE,HR";
+            const pref = isPaceMode ? "PACE,HR,POWER" : "POWER,PACE,HR";
+            patch.load_preference = pref;
+            patch.time_in_zones_preference = pref;
+            patch.plan_load_preference = pref;
+            patch.interval_summary_preference = pref;
             if (numLthr > 0) patch.lthr = numLthr;
             if (safeMaxHR) patch.max_hr = safeMaxHR;
             await client.updateSportSettings(runSport.id, patch).catch(() => {});

@@ -175,7 +175,7 @@ export class PaceDetectionService {
         const speedMps = Number((1000 / candidatePaceSec).toFixed(3));
         await client.updateSportSettings(runSport.id, {
           threshold_pace: speedMps,
-          pace_units: "per_km",
+          pace_units: "MINS_KM",
         }).catch((err) => {
           console.warn("Aviso al actualizar sport-settings threshold_pace en Intervals:", err);
         });

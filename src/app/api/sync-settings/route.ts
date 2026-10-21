@@ -26,6 +26,16 @@ export async function POST(req: NextRequest) {
       const { parsePaceToSeconds } = await import("@/lib/physiology/runningWorkoutAdapter");
       effectiveRunSec = parsePaceToSeconds(runThresholdPaceStr);
     }
+    if (!effectiveRunSec && uid) {
+      const { getUserProfileDecrypted } = await import("@/lib/db/userProfile");
+      const uDoc = await getUserProfileDecrypted(uid).catch(() => null);
+      if (uDoc?.profile?.runThresholdPaceSecPerKm) {
+        effectiveRunSec = uDoc.profile.runThresholdPaceSecPerKm;
+      } else if (uDoc?.profile?.runThresholdPaceStr) {
+        const { parsePaceToSeconds } = await import("@/lib/physiology/runningWorkoutAdapter");
+        effectiveRunSec = parsePaceToSeconds(uDoc.profile.runThresholdPaceStr);
+      }
+    }
 
     const { athleteId: effId, apiKey: effKey } = await resolveIntervalsCredentials({ athleteId, apiKey, uid, email });
     if (!effKey || !effId) {
@@ -42,22 +52,31 @@ export async function POST(req: NextRequest) {
       const rideSetting = (sportSettings || []).find(isRideSport);
       const swimSetting = (sportSettings || []).find(isSwimSport);
 
-      if (runSetting?.id && (runFtp || effectiveRunSec || safeLthr || safeMaxHR)) {
+      if (runSetting?.id) {
         const patch: Record<string, any> = { ...runSetting };
-        if (runFtp) patch.ftp = Number(runFtp);
+        const isPaceAthlete = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
+        if (isPaceAthlete) {
+          patch.ftp = null;
+          patch.indoor_ftp = null;
+        } else if (runFtp) {
+          patch.ftp = Number(runFtp);
+        }
         if (effectiveRunSec && effectiveRunSec > 0) {
           patch.threshold_pace = Number((1000 / effectiveRunSec).toFixed(3));
-          patch.pace_units = "per_km";
-          const isPaceAthlete = runningTrainingMode === "PACE" || hasRunningPowerMeter === false;
-          patch.load_preference = isPaceAthlete ? "PACE,HR,POWER" : "POWER,PACE,HR";
+          patch.pace_units = "MINS_KM";
           const pMin = Math.floor(effectiveRunSec / 60);
           const pSec = String(effectiveRunSec % 60).padStart(2, "0");
           syncResults.thresholdPace = `${pMin}:${pSec}/km`;
         }
+        const pref = isPaceAthlete ? "PACE,HR,POWER" : "POWER,PACE,HR";
+        patch.load_preference = pref;
+        patch.time_in_zones_preference = pref;
+        patch.plan_load_preference = pref;
+        patch.interval_summary_preference = pref;
         if (safeLthr) patch.lthr = safeLthr;
         if (safeMaxHR) patch.max_hr = safeMaxHR;
         await client.updateSportSettings(runSetting.id, patch);
-        if (runFtp) syncResults.runFtp = `${runFtp}W (Stryd)`;
+        if (!isPaceAthlete && runFtp) syncResults.runFtp = `${runFtp}W (Stryd)`;
       }
       if (rideSetting?.id && (bikeFtp || safeLthr || safeMaxHR)) {
         const patch: Record<string, any> = { ...rideSetting };

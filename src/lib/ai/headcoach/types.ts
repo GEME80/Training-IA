@@ -46,6 +46,10 @@ export interface HeadCoachChatRequest {
   dailyExecutedActivities?: Record<string, any>;
   runFtp?: number;
   bikeFtp?: number;
+  runningTrainingMode?: "POWER" | "PACE" | "HYBRID";
+  hasRunningPowerMeter?: boolean;
+  runThresholdPaceStr?: string;
+  runThresholdPaceSecPerKm?: number;
   birthDate?: string;
   gender?: string;
   weight?: number;

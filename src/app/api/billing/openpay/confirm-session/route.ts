@@ -38,17 +38,28 @@ export async function POST(req: NextRequest) {
       try {
         const client = new OpenpayClient();
         const charge = await client.getCharge(transactionId);
-        if (charge?.card) {
-          cardLast4 = charge.card.card_number ? charge.card.card_number.slice(-4) : '1111';
-          cardBrand = charge.card.brand || 'visa';
-          cardHolder = charge.card.holder_name || cardHolder;
+        if (charge) {
+          if (charge.card) {
+            cardLast4 = charge.card.card_number ? charge.card.card_number.slice(-4) : '1111';
+            cardBrand = charge.card.brand || 'visa';
+            cardHolder = charge.card.holder_name || cardHolder;
+          }
           openpayCustomerId = (charge as any).customer_id || '';
           authCode = charge.authorization || '';
+
+          // Si subscriberId no fue pasado o es default, extraerlo de charge.order_id
+          const chargeOrderId = (charge as any).order_id;
+          if ((!subscriberId || subscriberId === 'default_subscriber') && chargeOrderId) {
+            const match = chargeOrderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
+            if (match) subscriberId = match[1];
+          }
         }
       } catch (fetchErr) {
         console.warn('[CONFIRM_SESSION_OPENPAY_FETCH_WARN]', fetchErr);
       }
     }
+
+    if (!subscriberId) subscriberId = 'default_subscriber';
 
     if (adminDb) {
       const now = new Date();
@@ -57,6 +68,7 @@ export async function POST(req: NextRequest) {
       const userBillingPayload = {
         billingStatus: 'PAID',
         gmcSubscriptionStatus: 'ACTIVE',
+        cancelAtPeriodEnd: false, // Reset estricto de cualquier cancelación previa
         isTrialActive: false,
         hasUsedTrial: true,
         cardLast4,
@@ -77,6 +89,7 @@ export async function POST(req: NextRequest) {
       await adminDb.collection('users').doc(subscriberId).set(userBillingPayload, { merge: true });
 
       // 2. Si subscriberId es un intervalsAthleteId, buscar también el doc con UID de Firebase
+      let resolvedIntervalsId = subscriberId;
       try {
         const snap = await adminDb.collection('users').where('intervalsAthleteId', '==', subscriberId).get();
         for (const doc of snap.docs) {
@@ -86,8 +99,16 @@ export async function POST(req: NextRequest) {
         console.warn('[CONFIRM_SESSION_QUERY_UID_WARN]', qErr);
       }
 
-      // 3. Sincronizar registro oficial de suscripción en gmc_subscriptions
-      await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${subscriberId}`).set({
+      // 2.5 Si subscriberId era el UID, buscar también su intervalsAthleteId y actualizarlo
+      try {
+        const uDoc = await adminDb.collection('users').doc(subscriberId).get();
+        if (uDoc.exists && uDoc.data()?.intervalsAthleteId) {
+          resolvedIntervalsId = uDoc.data()!.intervalsAthleteId;
+        }
+      } catch (err) {}
+
+      // 3. Sincronizar registro oficial de suscripción en gmc_subscriptions para ambos IDs
+      const subPayload = {
         tenantId: 'PULSE_ENDURANCE',
         subscriberId,
         status: 'ACTIVE',
@@ -101,7 +122,15 @@ export async function POST(req: NextRequest) {
         openpayCustomerId,
         openpayTransactionId: transactionId || '',
         updatedAt: now.toISOString(),
-      }, { merge: true });
+      };
+
+      await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${subscriberId}`).set(subPayload, { merge: true });
+      if (resolvedIntervalsId && resolvedIntervalsId !== subscriberId) {
+        await adminDb.collection('gmc_subscriptions').doc(`PULSE_ENDURANCE_${resolvedIntervalsId}`).set({
+          ...subPayload,
+          subscriberId: resolvedIntervalsId,
+        }, { merge: true });
+      }
 
       // 4. Marcar sesión de checkout como completada
       if (orderId) {

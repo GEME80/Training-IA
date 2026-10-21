@@ -48,6 +48,13 @@ export const AthleteSubscriptionTab: React.FC<AthleteSubscriptionTabProps> = ({
   } | null>(null);
 
   useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("pulse_payment_notice");
+      if (stored) {
+        setFeedbackMessage({ type: "success", text: stored });
+      }
+    } catch {}
+
     fetch("/api/admin/subscription-plan")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {

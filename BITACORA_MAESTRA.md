@@ -10809,3 +10809,37 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Baterías Automatizadas):** `npm run test:openpay-live` completado con éxito contra el API de Openpay ✅.
 - **Gate 4 (Compilación Next.js):** `npm run build` completado exitosamente ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 194 ✅.
+
+---
+
+## 195. Blindaje del Retorno de Pago Hosted Checkout: Preservación de `subscriberId`, Reset de Cancelación y Tarjeta en Perfil
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Resolver la pérdida de contexto del suscriptor en el retorno desde Openpay BBVA. Asegurar que tras un pago aprobado, el sistema extraiga el ID del atleta directamente de `charge.order_id` y de la URL de redirección, restablezca estrictamente `cancelAtPeriodEnd: false` tanto en `users` como en `gmc_subscriptions`, persista los últimos 4 dígitos y la franquicia de la tarjeta, y propague el aviso de éxito tanto en el Dashboard como en la pestaña de Suscripción del perfil.
+
+### 195.1. Causa Raíz
+1. **Pérdida de `subscriberId` en el Retorno:** Al regresar del Hosted Checkout, Openpay solo añade `?id={transactionId}`. Como Firebase Auth tarda unos cientos de milisegundos en inicializar `user.uid`, la llamada a `/api/billing/openpay/confirm-session` caía en el fallback `default_subscriber`, no actualizando el documento del atleta `i442091`.
+2. **Inmutabilidad de `cancelAtPeriodEnd` en `confirm-session`:** Al confirmar el nuevo pago, `confirm-session` no sobreescribía `cancelAtPeriodEnd: false` en `users`, provocando que el estado previo de cancelación programada persistiera a pesar de haberse efectuado un nuevo pago de $55.000 COP.
+3. **Tarjeta no reflejada en Perfil:** Al no guardarse en el documento del atleta, `AthleteSubscriptionTab` mostraba "No hay tarjeta registrada".
+
+### 195.2. Cambios Implementados
+1. **Extracción Resiliente de Suscriptor ([`confirm-session/route.ts`](src/app/api/billing/openpay/confirm-session/route.ts)):**
+   - Si `subscriberId` no viene en el body, se extrae inmediatamente de `charge.order_id` (formato determinista `GMC-PULSE_ENDURANCE-SUB-{subscriberId}-...`).
+   - `userBillingPayload` ahora incluye `cancelAtPeriodEnd: false` de manera explícita y forzosa.
+   - Sincroniza atómicamente en `users/{subscriberId}`, `users where intervalsAthleteId == subscriberId`, y en `gmc_subscriptions` tanto para el UID como para el `intervalsAthleteId`.
+2. **Preservación en URL de Retorno ([`create-checkout-session/route.ts`](src/app/api/billing/openpay/create-checkout-session/route.ts), [`page.tsx`](src/app/page.tsx)):**
+   - La URL de retorno ahora transporta explícitamente `&subscriberId=${subscriberId}`.
+   - `page.tsx` lee `subscriberId` directamente de los parámetros de la URL antes de limpiar la barra de direcciones.
+3. **Aviso de Éxito en Perfil ([`AthleteSubscriptionTab.tsx`](src/components/profile/AthleteSubscriptionTab.tsx)):**
+   - Consume `sessionStorage.getItem("pulse_payment_notice")` en el montaje para que, si el atleta va directo a su perfil tras el pago, vea el banner celebratorio y el estado actualizado de inmediato.
+
+### 195.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `create-checkout-session/route.ts`: 146 LOC ($\le 348$) ✅
+  * `confirm-session/route.ts`: 163 LOC ($\le 348$) ✅
+  * `AthleteSubscriptionTab.tsx`: 325 LOC ($\le 348$) ✅
+  * `src/app/page.tsx`: 287 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** `npm run test:chaos` superado 12/12 ✅.
+- **Gate 4 (Compilación Next.js):** `npm run build` completado exitosamente (29/29 rutas) ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 195 ✅.

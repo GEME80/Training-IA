@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const forwardedHost = rawHost && !rawHost.includes('0.0.0.0') ? rawHost : 'pulseendurance.co';
     const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
-    const redirectUrl = `${baseUrl}/?payment=complete`;
+    const redirectUrl = `${baseUrl}/?payment=complete&subscriberId=${encodeURIComponent(subscriberId)}`;
 
     // 3. Consultar si existen credenciales de Openpay configuradas en Firestore
     let customConfig: any = undefined;

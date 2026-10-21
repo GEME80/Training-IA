@@ -62,7 +62,8 @@ export default function HomePage() {
         
         const orderId = params.get("order_id") || undefined;
         const transactionId = params.get("id") || undefined;
-        let subId = userProfile?.uid || user?.uid;
+        const paramSubId = params.get("subscriberId") || undefined;
+        let subId = paramSubId || userProfile?.intervalsAthleteId || userProfile?.uid || user?.uid;
         if (!subId && orderId) {
           const match = orderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
           if (match) subId = match[1];
@@ -71,6 +72,7 @@ export default function HomePage() {
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete("payment");
+        cleanUrl.searchParams.delete("subscriberId");
         cleanUrl.searchParams.delete("order_id");
         cleanUrl.searchParams.delete("id");
         cleanUrl.searchParams.delete("sandbox_demo");

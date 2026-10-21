@@ -10892,3 +10892,71 @@ Tras auditar todos los componentes de la portada contra el Diccionario Editorial
 - **Gate 3 (Baterías Automatizadas):** Chaos Agent 12/12 y FinSec superados al 100% ✅.
 - **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 197 ✅.
+
+---
+
+## 198. Blindaje de Expiración de Prueba y Hoja de Ruta de Pruebas Faltantes: Renovación, Cancelación, Reversión y Bloqueo
+
+- **Fecha:** 2026-10-20
+- **Objetivo:** Documentar los cambios de control de acceso para atletas con periodo de prueba expirado y estructurar la guía paso a paso para ejecutar las pruebas restantes de suscripción recurrente, cancelaciones con Efecto Netflix, reversiones/devoluciones y bloqueo por Paywall.
+
+### 198.1. Blindaje de Expiración del Periodo de Prueba ([`src/app/page.tsx`](src/app/page.tsx))
+- Se refinó la condición `isBillingBlocked` para evaluar explícitamente:
+  * Si `gmcTrialEndDate` ya venció (`new Date(userProfile.gmcTrialEndDate).getTime() < Date.now()`) y el atleta no tiene estado `PAID` ni membresía `ACTIVE`.
+  * Si `hasUsedTrial === true` y `isTrialActive === false` sin contar con una membresía activa de pago.
+- En ambos casos, el atleta es redirigido inmediatamente a [`GmcPaywallLockView`](src/components/billing/GmcPaywallLockView.tsx), impidiendo el acceso a métricas fisiológicas, periodización y Head Coach IA hasta que registre un método de pago válido.
+
+### 198.2. Hoja de Ruta de Pruebas Faltantes (Casos de Uso Críticos)
+
+```mermaid
+flowchart TD
+    A[Ciclo de Vida FinSec] --> B[1. Renovación Recurrente]
+    A --> C[2. Cancelación Efecto Netflix]
+    A --> D[3. Devolución / Reversión]
+    A --> E[4. Fin de Prueba / Bloqueo]
+
+    B --> B1["Simular Webhook charge.succeeded Día 30 -> Extensión 30 días"]
+    C --> C1["POST /api/billing/openpay/cancel -> Mantiene acceso hasta fin de mes"]
+    C --> C2["Llegada Día 30 tras cancelación -> Bloqueo a CANCELLED_LOCKED"]
+    C --> C3["POST /api/billing/openpay/resume -> Reactivación instantánea"]
+    D --> D1["Webhook charge.refunded -> Revocación inmediata a CANCELLED_LOCKED"]
+    E --> E1["Simular atleta con trial vencido -> GmcPaywallLockView activo"]
+```
+
+#### Caso 1: Renovación Periódica Recurrente (Cobro Día 30)
+- **Objetivo:** Verificar que el sistema procese el cobro recurrente automático mes a mes sin intervención del atleta.
+- **Método de Prueba:**
+  * Enviar evento simulado de Webhook de Openpay (`charge.succeeded`) hacia `/api/billing/openpay/webhook` firmado con la clave secreta o ejecutar el Agente de Caos (`npm run test:chaos` - Caso TC-10).
+  * Verificar en Firestore que `gmcCurrentPeriodEnd` se extienda por 30 días adicionales y el estado se mantenga en `ACTIVE`.
+
+#### Caso 2: Cancelación Voluntaria ("Efecto Netflix")
+- **Objetivo:** Verificar que un atleta que cancela su suscripción no reciba más cobros pero mantenga acceso completo hasta el último segundo de los 30 días pagados.
+- **Método de Prueba en UI:**
+  1. En Perfil $\rightarrow$ **Suscripción & Medios de Pago**, hacer clic en el botón rojo **"Cancelar Suscripción"**.
+  2. Confirmar en el modal. El badge cambiará a *"Cancelación Programada (Acceso Activo)"*.
+  3. Navegar por el Dashboard: el atleta sigue teniendo acceso total a sus entrenamientos.
+  4. Al llegar el fin de ciclo, el sistema transiciona automáticamente a `CANCELLED_LOCKED`.
+  5. Hacer clic en **"Reanudar Suscripción"**: el estado regresa inmediatamente a `ACTIVE`.
+
+#### Caso 3: Devoluciones y Reversiones (Refund / Chargeback)
+- **Objetivo:** Verificar que si una transacción es revertida o devuelta desde la consola bancaria de Openpay, el acceso del atleta sea revocado de forma inmediata sin esperar al fin del ciclo.
+- **Método de Prueba:**
+  * Enviar evento de webhook `charge.refunded` con el `transactionId`.
+  * El motor de reglas (`Forensic Ledger` y `Entitlement Guard`) cambia inmediatamente `status: CANCELLED_LOCKED` y `billingStatus: REFUNDED`.
+  * La aplicación redirige al atleta al Paywall bloqueante de inmediato.
+
+#### Caso 4: Fin de Periodo de Prueba sin Pago (Bloqueo Total por Paywall)
+- **Objetivo:** Validar que un nuevo usuario registrado que no active una suscripción al término de sus 7 días de prueba gratuita quede 100% bloqueado por el Paywall.
+- **Método de Prueba:**
+  * Simular en Firestore en un usuario de prueba `gmcTrialEndDate = "2026-10-01T00:00:00Z"` y `billingStatus = "PENDING"`.
+  * Iniciar sesión con esa cuenta.
+  * La pantalla de inicio despliega inmediatamente el `GmcPaywallLockView` con candado bloqueante, impidiendo acceder a la barra lateral o al Dashboard hasta completar el checkout en Openpay.
+
+### 198.3. Certificación del Pipeline de 5 Puertas
+- **Gate 1 (Presupuesto de Líneas - LOC Budget):**
+  * `src/app/page.tsx`: 327 LOC ($\le 348$) ✅
+  * `src/components/profile/AthleteSubscriptionTab.tsx`: 336 LOC ($\le 348$) ✅
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con 0 errores (Código 0) ✅.
+- **Gate 3 (Baterías Automatizadas):** Suite FinSec 47/47 y Chaos Agent 12/12 superados al 100% ✅.
+- **Gate 4 (Compilación Next.js):** Build limpio sin errores ✅.
+- **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 198 ✅.

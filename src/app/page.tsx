@@ -155,6 +155,10 @@ export default function HomePage() {
   }
 
   // 3.5. Si el atleta no es admin y su membresía está vencida o bloqueada -> Paywall Bloqueante ("Efecto Netflix")
+  const isTrialExpired = Boolean(
+    userProfile?.gmcTrialEndDate &&
+    new Date(userProfile.gmcTrialEndDate).getTime() < Date.now()
+  );
   const isBillingBlocked =
     user &&
     !isAdmin &&
@@ -162,7 +166,9 @@ export default function HomePage() {
     (userProfile?.billingStatus === "OVERDUE" ||
       userProfile?.gmcSubscriptionStatus === "PAST_DUE_LOCKED" ||
       userProfile?.gmcSubscriptionStatus === "CANCELLED_LOCKED" ||
-      userProfile?.gmcSubscriptionStatus === "SUSPENDED_FRAUD");
+      userProfile?.gmcSubscriptionStatus === "SUSPENDED_FRAUD" ||
+      (isTrialExpired && userProfile?.billingStatus !== "PAID" && userProfile?.gmcSubscriptionStatus !== "ACTIVE") ||
+      (userProfile?.hasUsedTrial && !userProfile?.isTrialActive && userProfile?.billingStatus !== "PAID" && userProfile?.gmcSubscriptionStatus !== "ACTIVE"));
 
   if (isBillingBlocked) {
     return (

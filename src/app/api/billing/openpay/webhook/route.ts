@@ -173,3 +173,17 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET() {
+  if (adminDb) {
+    try {
+      const doc = await adminDb.collection('system_config').doc('openpay_webhook_verification').get();
+      if (doc.exists) {
+        return NextResponse.json({ success: true, ...doc.data() });
+      }
+    } catch (err: any) {
+      console.warn('[WEBHOOK_GET_VERIFICATION_WARN]', err);
+    }
+  }
+  return NextResponse.json({ status: 'active', message: 'Openpay webhook endpoint ready' });
+}

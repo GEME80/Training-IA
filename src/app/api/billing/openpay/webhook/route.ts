@@ -25,6 +25,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Manejo automático de verificación inicial de webhook de Openpay
+    if (payload.type === 'verification' || payload.verification_code) {
+      console.log('🔔 [OPENPAY_VERIFICATION_CODE_RECEIVED]', payload.verification_code);
+      if (adminDb && payload.verification_code) {
+        try {
+          await adminDb.collection('system_config').doc('openpay_webhook_verification').set({
+            verificationCode: payload.verification_code,
+            receivedAt: new Date().toISOString(),
+          });
+        } catch {}
+      }
+      return NextResponse.json({ success: true, status: 'verified', code: payload.verification_code });
+    }
+
     const engine = new GmcBillingEngine();
     const result = await engine.processWebhook(authHeader, payload);
 

@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GmcBillingEngine } from '@/../gmc-billing-engine/src';
+import { GmcBillingEngine, SentinelAntiFraudAgent } from '@/../gmc-billing-engine/src';
 import { TENANT_PULSE_ENDURANCE } from '@/config/pulseBillingTenant';
 import { adminDb } from '@/lib/firebase/admin';
 
@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
     if (!body) {
       return NextResponse.json({ error: 'Payload vacío o inválido' }, { status: 400 });
     }
+
+    // 0. Escudo CISO PCI-DSS SAQ-A y Control de Velocidad Anti-Carding
+    SentinelAntiFraudAgent.assertNoRawPci(body as Record<string, unknown>);
 
     const {
       subscriberId,
@@ -34,6 +37,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      subscriberId;
+    SentinelAntiFraudAgent.assertVelocity(`checkout:${clientIp}`, 8, 15);
 
     // 1. Obtener precio oficial configurado por el Administrador
     let planPrice = 55000;
@@ -137,7 +146,14 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('[CREATE_CHECKOUT_SESSION_ERROR]', error);
-    const statusCode = error.statusCode || 500;
+    const msg = String(error?.message || '');
+    const statusCode = error.statusCode
+      ? error.statusCode
+      : msg.includes('PCI_VIOLATION_ABORT')
+      ? 403
+      : msg.includes('VELOCITY_RATE_LIMIT') || msg.includes('FRAUD_VELOCITY_LIMIT')
+      ? 429
+      : 500;
     return NextResponse.json(
       { error: error.message || 'Error al generar la sesión de pago con Openpay BBVA' },
       { status: statusCode }

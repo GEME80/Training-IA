@@ -1,11 +1,16 @@
 /**
- * API ROUTE: REANUDACIÓN DE SUSCRIPCIÓN (REVERSIÓN DE CANCELACIÓN)
+ * API ROUTE: REANUDACIÓN DE SUSCRIPCIÓN (BLINDADO CISO)
  * GMC FinSec Billing Engine
  * (C) German Morales Consulting
+ *
+ * Controles Antifraude:
+ * Solo permite reanudar sin cobro si el suscriptor cuenta con una suscripción
+ * previamente pagada (PAID / CANCEL_SCHEDULED), sin reembolsos ni bloqueos,
+ * y cuya fecha de corte (currentPeriodEnd) sea estrictamente futura (> Date.now()).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GmcBillingEngine } from '@/../gmc-billing-engine/src';
+import { GmcBillingEngine, NetflixLifecycleAgent } from '@/../gmc-billing-engine/src';
 import { adminDb } from '@/lib/firebase/admin';
 
 export async function POST(req: NextRequest) {
@@ -13,11 +18,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { subscriberId, tenantId = 'PULSE_ENDURANCE' } = body;
 
-    if (!subscriberId) {
-      return NextResponse.json({ error: 'subscriberId requerido' }, { status: 400 });
+    if (!subscriberId || typeof subscriberId !== 'string') {
+      return NextResponse.json({ error: 'subscriberId válido requerido' }, { status: 400 });
     }
 
     const candidateIds = new Set<string>([subscriberId]);
+    let uData: any = null;
+    let subRecord: any = null;
+
     if (adminDb) {
       try {
         let userDoc = await adminDb.collection('users').doc(subscriberId).get();
@@ -30,30 +38,60 @@ export async function POST(req: NextRequest) {
           if (!snap.empty) userDoc = snap.docs[0];
         }
         if (userDoc.exists) {
-          const u = userDoc.data();
-          // BLINDAJE FINSEC: Si el periodo pagado ya venció, NO se puede reanudar gratis; debe pagar
-          if (u?.gmcCurrentPeriodEnd && new Date(u.gmcCurrentPeriodEnd).getTime() <= Date.now()) {
-            return NextResponse.json({
-              error: 'Tu periodo anterior ya ha finalizado. Para reactivar tu membresía, realiza el pago de tu suscripción.',
-              requiresPayment: true,
-            }, { status: 402 });
-          }
+          uData = userDoc.data();
           candidateIds.add(userDoc.id);
-          if (u?.intervalsAthleteId) candidateIds.add(u.intervalsAthleteId);
-          if (u?.email) candidateIds.add(u.email);
+          if (uData?.intervalsAthleteId) candidateIds.add(uData.intervalsAthleteId);
+          if (uData?.email) candidateIds.add(uData.email);
         }
       } catch (err) {
         console.warn('[RESUME_RESOLVE_CANDIDATES_WARN]', err);
       }
     }
 
+    for (const cid of candidateIds) {
+      try {
+        const r = await NetflixLifecycleAgent.getSubscriberRecord(tenantId, cid);
+        if (r) {
+          subRecord = r;
+          break;
+        }
+      } catch {}
+    }
+
+    // BLINDAJE ANTIFRAUDE: Verificar elegibilidad estricta antes de reanudar sin cobro
+    const lockedStatuses = ['CANCELLED_LOCKED', 'PAST_DUE_LOCKED', 'SUSPENDED_FRAUD', 'REFUNDED'];
+    const isLockedOrRefunded =
+      lockedStatuses.includes(String(uData?.gmcSubscriptionStatus || '')) ||
+      lockedStatuses.includes(String(uData?.billingStatus || '')) ||
+      lockedStatuses.includes(String(subRecord?.status || ''));
+
+    const effectivePeriodEnd = uData?.gmcCurrentPeriodEnd || subRecord?.currentPeriodEnd;
+    const periodEndMs = effectivePeriodEnd ? new Date(effectivePeriodEnd).getTime() : 0;
+    const hasFuturePaidPeriod = !isNaN(periodEndMs) && periodEndMs > Date.now();
+
+    const isEligiblePaidCancel =
+      Boolean(
+        uData?.billingStatus === 'PAID' ||
+        uData?.gmcSubscriptionStatus === 'CANCEL_SCHEDULED' ||
+        subRecord?.status === 'CANCEL_SCHEDULED' ||
+        subRecord?.cancelAtPeriodEnd === true
+      ) && !uData?.isTrialActive;
+
+    if (isLockedOrRefunded || !hasFuturePaidPeriod || !isEligiblePaidCancel) {
+      return NextResponse.json(
+        {
+          error: 'Tu periodo pagado no se encuentra vigente o fue reembolsado. Para reactivar tu membresía, realiza el pago en el checkout de Openpay BBVA.',
+          requiresPayment: true,
+        },
+        { status: 402 }
+      );
+    }
+
     const engine = new GmcBillingEngine();
     for (const cid of candidateIds) {
       try {
         await engine.resumeSubscription(tenantId, cid);
-      } catch {
-        // continue
-      }
+      } catch {}
     }
 
     if (adminDb) {

@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { AlertTriangle, ShieldAlert, HeartPulse, Brain, ArrowLeft, FileCheck, CheckCircle2, Award } from "lucide-react";
+import { AlertTriangle, ShieldAlert, HeartPulse, Brain, ArrowLeft, FileCheck, CheckCircle2, Award, CreditCard, Scale } from "lucide-react";
 
 export const metadata = {
-  title: "Términos de Servicio y Exención Médica — PULSE ENDURANCE",
-  description: "Contrato de Términos de Uso, Exención de Responsabilidad Médica y Condiciones de PULSE ENDURANCE.",
+  title: "Términos de Servicio, Pagos y Exención Médica — PULSE ENDURANCE (German Morales Consulting)",
+  description: "Contrato de Términos de Uso, Condiciones Comerciales, Retracto, Reversión de Pago y Exención Médica de PULSE ENDURANCE operado por German Morales Consulting.",
 };
 
 export default function TermsAndConditionsPage() {
@@ -147,23 +147,72 @@ export default function TermsAndConditionsPage() {
           </div>
         </section>
 
-        {/* Cláusula 6: Aceptación Electrónica y Jurisdicción */}
+        {/* Cláusula 6: Identidad Comercial, Facturación en COP y Suscripción Recurrente */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2.5 text-emerald-400">
+            <CreditCard className="w-5 h-5 shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold text-white">6. Identidad Comercial, Facturación en COP y Suscripción Mensual</h2>
+          </div>
+          <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2.5">
+            <p>
+              <strong>Titularidad del Comercio:</strong> La plataforma digital <strong>PULSE ENDURANCE</strong> (<code>https://pulseendurance.co</code>) es propiedad y está operada comercialmente por <strong>German Morales Consulting</strong>, con domicilio en Bogotá D.C., República de Colombia, y correo oficial de atención al usuario y soporte:{" "}
+              <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
+                gerkof@gmail.com
+              </a>.
+            </p>
+            <p>
+              <strong>Moneda Única Oficial (COP) y Tarjetas Internacionales:</strong> Todos los cobros de la suscripción se liquidan y procesan única y exclusivamente en <strong>Pesos Colombianos (COP)</strong> según la tarifa vigente publicada en la plataforma al momento de la suscripción. Si el usuario realiza el pago desde el exterior o con una tarjeta internacional (Visa, Mastercard o American Express emitida fuera de Colombia), la transacción se procesará en Pesos Colombianos (COP) y la entidad bancaria emisora del comprador realizará automáticamente la conversión a su moneda local conforme a la tasa de cambio y condiciones de dicho banco emisor.
+            </p>
+            <p>
+              <strong>Procesamiento Bancario PCI-DSS y Comprobante de Pago:</strong> Los pagos se procesan a través de la pasarela certificada <strong>Openpay Colombia S.A.S. (Grupo BBVA)</strong> bajo el estándar <strong>PCI-DSS Nivel 1 (Arquitectura SAQ-A)</strong>. Ni PULSE ENDURANCE ni German Morales Consulting capturan, almacenan ni procesan números completos de tarjetas de crédito/débito (PAN) ni códigos de seguridad (CVV). Por cada cobro exitoso, Openpay by BBVA envía automáticamente el comprobante oficial de transacción al correo electrónico registrado por el atleta.
+            </p>
+            <p>
+              <strong>Renovación Mensual y Cancelación sin Cláusula de Permanencia:</strong> La suscripción tiene una periodicidad mensual (ciclos de 30 días) y carece de cláusulas de permanencia mínima o penalidades por retiro. El usuario puede cancelar la renovación automática en cualquier momento con un solo clic desde su panel de control (sección Suscripción), conservando el acceso pleno hasta el último día del periodo ya pagado.
+            </p>
+          </div>
+        </section>
+
+        {/* Cláusula 7: Derecho de Retracto y Reversión del Pago (Ley 1480 de 2011) */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2.5 text-emerald-400">
+            <Scale className="w-5 h-5 shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold text-white">7. Derecho de Retracto y Reversión del Pago (Estatuto del Consumidor — Ley 1480 de 2011)</h2>
+          </div>
+          <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2.5">
+            <p>
+              <strong>Derecho de Retracto (Artículo 47, Ley 1480 de 2011):</strong> En las ventas de servicios digitales celebradas por medios electrónicos, el usuario podrá ejercer el derecho de retracto dentro de los <strong>cinco (5) días hábiles</strong> siguientes a la fecha de contratación inicial, siempre y cuando el servicio digital personalizado de generación y ejecución del plan no haya empezado a consumirse con acuerdo expreso del consumidor tras agotar el periodo de prueba gratuito de 7 días.
+            </p>
+            <p>
+              <strong>Reversión del Pago (Artículo 51, Ley 1480 de 2011 y Decreto 587 de 2016):</strong> Cuando el pago se haya realizado mediante tarjeta de crédito, débito o cualquier otro instrumento de pago electrónico en Openpay BBVA, el consumidor podrá solicitar la reversión del pago dentro de los <strong>cinco (5) días hábiles</strong> siguientes a la fecha en que tuvo noticia de la operación, cuando: (i) sea objeto de fraude; (ii) corresponda a una operación no solicitada; (iii) el servicio adquirido no sea habilitado; o (iv) el valor cobrado no corresponda al precio publicado del plan o se haya efectuado un cobro duplicado.
+            </p>
+            <p>
+              Para presentar solicitudes de retracto, reversión de pago o peticiones, quejas y reclamos (PQR), el usuario deberá enviar su solicitud al correo{" "}
+              <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
+                gerkof@gmail.com
+              </a>{" "}
+              indicando su nombre completo, correo de cuenta y referencia de la transacción de Openpay.
+            </p>
+          </div>
+        </section>
+
+        {/* Cláusula 8: Aceptación Electrónica y Jurisdicción */}
         <section className="space-y-3">
           <div className="flex items-center gap-2.5 text-emerald-400">
             <ShieldAlert className="w-5 h-5 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold text-white">6. Aceptación Vinculante y Validez Legal</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">8. Aceptación Vinculante y Jurisdicción Aplicable</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
-            La marcación de la casilla de consentimiento electrónico durante el inicio de sesión o registro constituye una firma electrónica con pleno valor probatorio y vinculación contractual. Si no estás de acuerdo con alguna de estas disposiciones, debes abstenerte de utilizar la plataforma y suspender tu cuenta.
+            La marcación de la casilla de consentimiento electrónico durante el inicio de sesión, registro o pago constituye una firma electrónica con pleno valor probatorio y vinculación contractual conforme a la Ley 527 de 1999 de la República de Colombia. Este contrato se rige por las leyes de la República de Colombia.
           </p>
         </section>
 
         {/* Pie de Página */}
         <footer className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500 space-y-2">
-          <p>© 2026 PULSE ENDURANCE™ — Todos los derechos reservados.</p>
+          <p>© 2026 PULSE ENDURANCE™ — Operado por <strong className="text-slate-300">German Morales Consulting</strong> (Bogotá D.C., Colombia). Todos los derechos reservados.</p>
+          <p className="text-[11px] text-slate-500">Pagos procesados por Openpay Colombia S.A.S. (Grupo BBVA) • Estándar de Seguridad PCI-DSS Nivel 1 (SAQ-A).</p>
           <div className="flex items-center justify-center gap-4 text-slate-400">
             <Link href="/privacy" className="hover:text-emerald-400 transition underline underline-offset-2">
-              Política de Privacidad
+              Política de Privacidad (Ley 1581)
             </Link>
             <span>•</span>
             <Link href="/" className="hover:text-emerald-400 transition underline underline-offset-2">

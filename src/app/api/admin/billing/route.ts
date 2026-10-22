@@ -28,23 +28,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "targetUid es requerido." }, { status: 400 });
     }
 
-    // 1. Autorización
+    // 1. Autorización CISO: Exigir verificación real de requesterUid en Firestore (Anti-Email Spoofing)
     let isAuthorized = false;
-    if (isMasterAdminEmail(requesterEmail)) {
-      isAuthorized = true;
-    } else if (requesterUid) {
+    if (requesterUid && requesterUid !== "superadmin-root") {
       const userResult = await getUserProfileDecrypted(requesterUid);
-      if (userResult?.profile && (userResult.profile.role === "admin" || isMasterAdminEmail(userResult.profile.email))) {
+      if (
+        userResult?.profile &&
+        (userResult.profile.role === "admin" || isMasterAdminEmail(userResult.profile.email))
+      ) {
         isAuthorized = true;
       }
     }
 
-    if (!isAuthorized && process.env.NODE_ENV !== "production") {
-      isAuthorized = true;
-    }
-
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: "No autorizado." }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "No autorizado: Se requiere identidad de Administrador verificada en servidor." },
+        { status: 403 }
+      );
     }
 
     // 2. Ejecutar actualización

@@ -2,20 +2,11 @@
 
 import React, { useState } from "react";
 import {
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  RefreshCw,
-  DollarSign,
-  Calendar,
-  Edit3,
-  RotateCcw,
-  Smartphone,
-  Sparkles,
-  X,
+  CheckCircle2, Clock, AlertCircle, RefreshCw, Calendar, Edit3, RotateCcw, Smartphone, Sparkles, X,
 } from "lucide-react";
 import { AdminUserListItem } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import { useAuth } from "@/context/AuthContext";
 import { MobileBillingCard } from "./MobileBillingCard";
 
 interface AdminBillingTableProps {
@@ -31,6 +22,7 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
   showMessage,
   onEditAthlete,
 }) => {
+  const { user, userProfile } = useAuth();
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
   const [filter, setFilter] = useState<"ALL" | "PAID" | "PENDING" | "VERIFY">("ALL");
 
@@ -60,11 +52,13 @@ export const AdminBillingTable: React.FC<AdminBillingTableProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          requesterUid: user?.uid || userProfile?.uid,
+          requesterEmail: user?.email || userProfile?.email,
           targetUid: athlete.uid,
           billingStatus: newStatus,
           lastPaymentDate: newStatus === "PAID" ? todayStr : athlete.lastPaymentDate,
-          planPrice: typeof athlete.planPrice === "number" ? athlete.planPrice : 80,
-          planCurrency: athlete.planCurrency || "USD",
+          planPrice: typeof athlete.planPrice === "number" ? athlete.planPrice : 55000,
+          planCurrency: athlete.planCurrency || "COP",
         }),
       });
 

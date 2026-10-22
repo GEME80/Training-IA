@@ -49,10 +49,10 @@ export default function PrivacyPolicyPage() {
         <section className="space-y-3">
           <div className="flex items-center gap-2.5 text-emerald-400">
             <FileText className="w-5 h-5 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold text-white">1. Responsable del Tratamiento</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">1. Responsable del Tratamiento (Ley 1581 de 2012)</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
-            La plataforma tecnológica <strong className="text-slate-100">PULSE ENDURANCE</strong> es operada bajo la dirección técnica de Germán Morales. Para cualquier duda, ejercicio de derechos de privacidad o supresión de datos, puedes comunicarte directamente al correo institucional:{" "}
+            En cumplimiento de la <strong>Ley Estatutaria 1581 de 2012 (Régimen General de Protección de Datos Personales en Colombia — Habeas Data)</strong> y el Decreto Reglamentario 1377 de 2013, se informa que la plataforma tecnológica <strong className="text-slate-100">PULSE ENDURANCE</strong> es propiedad y está operada comercialmente por <strong className="text-slate-100">German Morales Consulting</strong>, con domicilio en Bogotá D.C., Colombia, bajo la dirección técnica de Germán Morales. Para cualquier consulta, petición, reclamo o ejercicio de tus derechos de conocer, actualizar, rectificar y suprimir tus datos personales, puedes comunicarte directamente al correo oficial:{" "}
             <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
               gerkof@gmail.com
             </a>.
@@ -141,30 +141,35 @@ export default function PrivacyPolicyPage() {
           </div>
         </section>
 
-        {/* Sección 5: Integraciones con Terceros */}
+        {/* Sección 5: Integraciones con Terceros y Pasarela Bancaria Openpay BBVA */}
         <section className="space-y-3">
           <div className="flex items-center gap-2.5 text-emerald-400">
             <Eye className="w-5 h-5 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold text-white">5. Servicios de Terceros Conectados</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">5. Servicios de Terceros y Procesamiento de Pagos (Openpay by BBVA)</h2>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
-            Nuestra aplicación interactúa con la API oficial de <strong className="text-slate-100">Intervals.icu</strong> y con modelos de lenguaje de alto rendimiento de <strong className="text-slate-100">Google Gemini API</strong>. Los datos enviados a la IA se comprimen exclusivamente como métricas cuantitativas despersonalizadas para optimizar tokens y preservar el anonimato del atleta.
-          </p>
+          <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2">
+            <p>
+              <strong>Pasarela de Pagos Openpay Colombia S.A.S. (Grupo BBVA):</strong> El procesamiento de pagos y suscripciones de <strong>German Morales Consulting</strong> se realiza directamente a través de la infraestructura certificada de <strong>Openpay Colombia S.A.S. (BBVA)</strong> bajo el estándar internacional <strong>PCI-DSS Nivel 1 (Arquitectura SAQ-A)</strong>. PULSE ENDURANCE no captura, almacena ni transmite números completos de tarjetas de crédito o débito (PAN) ni códigos CVV en sus servidores; el titular ingresa sus datos financieros directamente en el entorno seguro de Openpay BBVA.
+            </p>
+            <p>
+              <strong>Telemetría e Inteligencia Artificial:</strong> Nuestra aplicación interactúa con la API oficial de <strong className="text-slate-100">Intervals.icu</strong> y con modelos de lenguaje de alto rendimiento de <strong className="text-slate-100">Google Gemini API</strong>. Los datos enviados a la IA se comprimen exclusivamente como métricas cuantitativas despersonalizadas para optimizar tokens y preservar el anonimato del atleta.
+            </p>
+          </div>
         </section>
 
         {/* Sección 6: Tus Derechos y Supresión de Cuenta */}
         <section className="space-y-3">
           <div className="flex items-center gap-2.5 text-emerald-400">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold text-white">6. Derechos del Usuario (Acceso, Rectificación y Olvido)</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">6. Derechos del Titular (Habeas Data — Ley 1581 de 2012)</h2>
           </div>
           <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2">
             <p>
-              Como titular de tus datos, puedes en cualquier momento:
+              Como titular de tus datos personales, tienes derecho en cualquier momento y de forma gratuita a conocer, actualizar, rectificar y suprimir tu información, así como a revocar la autorización otorgada:
             </p>
             <ul className="space-y-1.5 list-disc list-inside text-slate-300">
               <li>Consultar y editar tus métricas antropométricas desde la sección Perfil.</li>
-              <li>Desconectar o revocar el acceso a Intervals.icu con un solo clic.</li>
+              <li>Desconectar o revocar el acceso a Intervals.icu o cancelar tu suscripción con un solo clic.</li>
               <li>Solicitar la eliminación total y permanente de tu cuenta y base de datos escribiéndonos a <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline">gerkof@gmail.com</a>.</li>
             </ul>
           </div>
@@ -172,10 +177,11 @@ export default function PrivacyPolicyPage() {
 
         {/* Pie de Página */}
         <footer className="pt-8 border-t border-slate-800 text-center text-xs text-slate-500 space-y-2">
-          <p>© 2026 PULSE ENDURANCE™ — Todos los derechos reservados.</p>
+          <p>© 2026 PULSE ENDURANCE™ — Operado por <strong className="text-slate-300">German Morales Consulting</strong> (Bogotá D.C., Colombia). Todos los derechos reservados.</p>
+          <p className="text-[11px] text-slate-500">Pagos procesados de forma segura por Openpay Colombia S.A.S. (Grupo BBVA) • Cumplimiento PCI-DSS Nivel 1 (SAQ-A).</p>
           <div className="flex items-center justify-center gap-4 text-slate-400">
             <Link href="/terms" className="hover:text-emerald-400 transition underline underline-offset-2">
-              Términos de Servicio y Exención Médica
+              Términos, Retracto y Reversión
             </Link>
             <span>•</span>
             <Link href="/" className="hover:text-emerald-400 transition underline underline-offset-2">

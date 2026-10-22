@@ -35,35 +35,43 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { requesterUid, requesterEmail, plan } = body;
 
-    // 1. Autorización de Administrador
+    // 1. Autorización CISO: Exigir verificación real de requesterUid en Firestore (Anti-Email Spoofing)
     let isAuthorized = false;
-    if (isMasterAdminEmail(requesterEmail)) {
-      isAuthorized = true;
-    } else if (requesterUid) {
+    if (requesterUid && requesterUid !== "superadmin-root") {
       const userResult = await getUserProfileDecrypted(requesterUid);
-      if (userResult?.profile && (userResult.profile.role === "admin" || isMasterAdminEmail(userResult.profile.email))) {
+      if (
+        userResult?.profile &&
+        (userResult.profile.role === "admin" || isMasterAdminEmail(userResult.profile.email))
+      ) {
         isAuthorized = true;
       }
     }
 
-    if (!isAuthorized && process.env.NODE_ENV !== "production") {
-      isAuthorized = true;
-    }
-
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: "No autorizado. Se requieren privilegios de Administrador." }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "No autorizado. Se requiere identidad de Administrador verificada en servidor." },
+        { status: 403 }
+      );
     }
 
     if (!plan || typeof plan !== "object") {
       return NextResponse.json({ success: false, error: "Datos de plan inválidos." }, { status: 400 });
     }
 
+    const numericPrice = typeof plan.price === "number" ? plan.price : DEFAULT_SUBSCRIPTION_PLAN.price;
+    if (numericPrice < 10000) {
+      return NextResponse.json(
+        { success: false, error: "Regla de Seguridad CISO: La tarifa del plan no puede ser inferior a $10.000 COP." },
+        { status: 400 }
+      );
+    }
+
     const planToSave: SubscriptionPlanConfig = {
       ...DEFAULT_SUBSCRIPTION_PLAN,
       ...inMemoryPlanConfig,
       ...plan,
-      price: typeof plan.price === "number" ? Math.max(0, plan.price) : DEFAULT_SUBSCRIPTION_PLAN.price,
-      currency: plan.currency || "COP",
+      price: numericPrice,
+      currency: "COP",
       trialDays: typeof plan.trialDays === "number" ? Math.max(0, plan.trialDays) : (inMemoryPlanConfig.trialDays ?? 7),
       dunningGraceHours: typeof plan.dunningGraceHours === "number" ? Math.max(0, plan.dunningGraceHours) : (inMemoryPlanConfig.dunningGraceHours ?? 72),
       name: plan.name?.trim() || DEFAULT_SUBSCRIPTION_PLAN.name,

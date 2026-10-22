@@ -67,9 +67,6 @@ export default function HomePage() {
       }
       if (isPaymentReturn && !hasHandledPaymentRef.current) {
         hasHandledPaymentRef.current = true;
-        const msg = "¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.";
-        try { sessionStorage.setItem("pulse_payment_notice", msg); } catch {}
-        
         const orderId = params.get("order_id") || undefined;
         const paramSubId = params.get("subscriberId") || undefined;
         let subId = paramSubId || userProfile?.intervalsAthleteId || userProfile?.uid || user?.uid;
@@ -77,18 +74,6 @@ export default function HomePage() {
           const match = orderId.match(/^GMC-[^-]+-SUB-([^-]+)-/);
           if (match) subId = match[1];
         }
-
-        // Mostrar de inmediato modal de confirmación con datos iniciales
-        const initialModalData = {
-          isOpen: true,
-          cardLast4: "4444",
-          cardBrand: "mastercard",
-          transactionId: transactionId || orderId,
-        };
-        setSuccessModalData(initialModalData);
-        try {
-          sessionStorage.setItem("pulse_payment_success_modal", JSON.stringify(initialModalData));
-        } catch {}
 
         // Limpiar inmediatamente los query params de la URL para evitar recargas en bucle
         const cleanUrl = new URL(window.location.href);
@@ -100,6 +85,7 @@ export default function HomePage() {
         cleanUrl.searchParams.delete("sandbox_simulated");
         window.history.replaceState({}, "", cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : ""));
 
+        // Verificar en servidor contra Openpay BBVA antes de mostrar confirmación de éxito
         fetch("/api/billing/openpay/confirm-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,15 +94,23 @@ export default function HomePage() {
           .then((res) => res.json())
           .then((data) => {
             if (data?.success) {
-              const updatedModal = {
+              const msg = "¡Membresía Atleta Pro Activada con Éxito! Tu suscripción ha sido confirmada por Openpay BBVA.";
+              try { sessionStorage.setItem("pulse_payment_notice", msg); } catch {}
+              const verifiedModal = {
                 isOpen: true,
                 cardLast4: data.cardLast4 || "4444",
                 cardBrand: data.cardBrand || "mastercard",
-                transactionId: transactionId || orderId,
+                transactionId: data.transactionId || transactionId || orderId,
               };
-              setSuccessModalData(updatedModal);
+              setSuccessModalData(verifiedModal);
               try {
-                sessionStorage.setItem("pulse_payment_success_modal", JSON.stringify(updatedModal));
+                sessionStorage.setItem("pulse_payment_success_modal", JSON.stringify(verifiedModal));
+              } catch {}
+            } else {
+              setSuccessModalData(null);
+              try {
+                sessionStorage.removeItem("pulse_payment_success_modal");
+                sessionStorage.removeItem("pulse_payment_notice");
               } catch {}
             }
             refreshProfile();

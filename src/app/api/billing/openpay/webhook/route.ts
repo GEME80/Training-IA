@@ -60,6 +60,25 @@ export async function POST(req: NextRequest) {
       const parsed = WebhookCryptoRouterAgent.parseOrderId(payload.transaction.order_id);
       if (parsed?.subscriberId) {
         try {
+          // Validar monto mínimo oficial del plan antes de activar suscripción
+          let expectedPrice = 55000;
+          try {
+            const planDoc = await adminDb.collection('system_config').doc('subscription_plan').get();
+            if (planDoc.exists && typeof planDoc.data()?.price === 'number') {
+              expectedPrice = planDoc.data()!.price;
+            }
+          } catch {}
+
+          const chargedAmount = Number(payload.transaction.amount || 0);
+          const chargedCurrency = String(payload.transaction.currency || 'COP').toUpperCase();
+          if (chargedAmount < expectedPrice || chargedCurrency !== 'COP') {
+            console.error('[WEBHOOK_AMOUNT_TAMPER_BLOCKED]', { chargedAmount, expectedPrice, chargedCurrency });
+            return NextResponse.json(
+              { error: `Alerta CISO: Monto (${chargedAmount} ${chargedCurrency}) inferior al plan (${expectedPrice} COP).` },
+              { status: 402 }
+            );
+          }
+
           const now = new Date();
           let baseDate = now;
 
@@ -175,15 +194,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  if (adminDb) {
-    try {
-      const doc = await adminDb.collection('system_config').doc('openpay_webhook_verification').get();
-      if (doc.exists) {
-        return NextResponse.json({ success: true, ...doc.data() });
-      }
-    } catch (err: any) {
-      console.warn('[WEBHOOK_GET_VERIFICATION_WARN]', err);
-    }
-  }
-  return NextResponse.json({ status: 'active', message: 'Openpay webhook endpoint ready' });
+  return NextResponse.json({
+    status: 'active',
+    provider: 'Openpay Colombia S.A.S. (BBVA)',
+    merchant: 'German Morales Consulting',
+    pciDss: 'SAQ-A',
+  });
 }

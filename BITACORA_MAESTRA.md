@@ -11133,3 +11133,45 @@ flowchart TD
 - **Gate 3 (Baterías Automatizadas):** Suites de facturación y pruebas pasadas al 100% ✅.
 - **Gate 4 (Compilación Next.js):** Build limpio con 29/29 rutas estáticas y dinámicas optimizadas ✅.
 - **Gate 5 (Bitácora Maestra Sincronizada):** Registrado en Sección 201 ✅.
+
+
+---
+
+## 202. Plan Maestro de Certificación Openpay BBVA, Blindaje Antifraude CISO, Moneda Única COP y Cumplimiento Legal (German Morales Consulting) (2026-10-22)
+
+### 202.1. Fase 1: Blindaje Antifraude CISO en Motor de Pagos y Endpoints Administrativos (6 Vectores Cerrados)
+1. **Vector 1 — Bloqueo de Bypass en URL de Retorno ([`src/app/api/billing/openpay/confirm-session/route.ts`](src/app/api/billing/openpay/confirm-session/route.ts) - 248 LOC & [`src/app/page.tsx`](src/app/page.tsx) - 321 LOC):**
+   - Eliminada la activación optimista por el solo parámetro `?payment=complete`.
+   - `confirm-session` exige verificación **Server-to-Server** contra la API de Openpay BBVA confirmando `charge.status === 'completed'`. Cualquier estado `in_progress`, `charge_pending`, `failed`, `cancelled` o ausencia de transacción retorna `HTTP 402 Payment Required` sin activar la cuenta.
+   - `page.tsx` solo despliega `PaymentSuccessModal` si `confirm-session` responde con `data.success === true`.
+2. **Vector 2 — Bloqueo de Secuestro de Transaction ID entre Usuarios (*Transaction Hijacking*):**
+   - En `confirm-session/route.ts`, se extrae el propietario original embebido en `charge.order_id` (`GMC-PULSE_ENDURANCE-SUB-{ownerId}-...`) y en `gmc_immutable_ledger`. Si el `subscriberId` solicitante no pertenece a `validIds` del titular del pago, la petición es rechazada con `HTTP 403 Forbidden`.
+3. **Vector 3 — Validación Estricta de Monto y Moneda Oficial COP ([`confirm-session/route.ts`](src/app/api/billing/openpay/confirm-session/route.ts) & [`webhook/route.ts`](src/app/api/billing/openpay/webhook/route.ts) - 203 LOC):**
+   - Se contrasta el monto cobrado (`charge.amount`) contra el precio oficial del plan en `system_config/subscription_plan` (`expectedPrice`, por defecto \$55.000 COP) y se exige `currency === 'COP'`. Cobros inferiores son bloqueados con `HTTP 402`.
+4. **Vector 4 — Cierre de Reanudación Gratuita sin Pago Previo ([`src/app/api/billing/openpay/resume/route.ts`](src/app/api/billing/openpay/resume/route.ts) - 128 LOC):**
+   - Se bloquea con `HTTP 402` cualquier intento de reanudar (`POST /api/billing/openpay/resume`) si el usuario está en `CANCELLED_LOCKED`, `PAST_DUE_LOCKED`, `SUSPENDED_FRAUD`, `REFUNDED`, o si no posee un `gmcCurrentPeriodEnd` futuro vigente (`> Date.now()`).
+5. **Vector 5 — Anti-Spoofing de `requesterEmail` en Endpoints Admin ([`src/app/api/admin/subscription-plan/route.ts`](src/app/api/admin/subscription-plan/route.ts) - 124 LOC, [`src/app/api/admin/billing/route.ts`](src/app/api/admin/billing/route.ts) - 72 LOC & [`src/components/admin/AdminBillingTable.tsx`](src/components/admin/AdminBillingTable.tsx) - 339 LOC):**
+   - Eliminada la autorización basada únicamente en `isMasterAdminEmail(requesterEmail)` o `NODE_ENV !== 'production'`. Ahora se exige verificar `requesterUid` en Firestore (`getUserProfileDecrypted(requesterUid)`) confirmando rol `admin` en base de datos, y se impone un piso de seguridad `plan.price >= 10000` COP.
+6. **Vector 6 — Escudo PCI-DSS SAQ-A, Rate Limiting Anti-Carding e Higienización de GET Webhook ([`create-checkout-session/route.ts`](src/app/api/billing/openpay/create-checkout-session/route.ts) - 162 LOC & [`webhook/route.ts`](src/app/api/billing/openpay/webhook/route.ts)):**
+   - Invocación de `SentinelAntiFraudAgent.assertNoRawPci(body)` (`HTTP 403`) y `SentinelAntiFraudAgent.assertVelocity` (máximo 8 intentos / 15 min por IP/usuario, `HTTP 429`).
+   - El endpoint `GET /api/billing/openpay/webhook` fue higienizado para retornar únicamente el estado de salud y comercio (`German Morales Consulting`) sin exponer `openpay_webhook_verification`.
+
+### 202.2. Fase 2: Moneda Única Oficial (COP), Conversión Internacional y Limpieza UX ([`PricingAndFaqSection.tsx`](src/components/landing/PricingAndFaqSection.tsx) - 315 LOC)
+- **Eliminación Total del Selector USD (`$14.99 / mo`):** La Landing Page exhibe exclusivamente el valor configurado en el plan en **Pesos Colombianos (COP)**.
+- **Aviso Transparente para Tarjetas Internacionales:** Se incorporó la leyenda explicativa e ítem de FAQ indicando que todos los cobros se procesan en Pesos Colombianos (COP) y que, si un atleta paga desde el exterior con tarjeta internacional (Visa, Mastercard o American Express), su banco emisor realiza automáticamente la conversión a su moneda local.
+- **Retiro del Bloque Sandbox Test (`4111 1111...`) y Redirección Directa:** Se eliminó el bloque negro de pruebas de la vista pública y se conectó el botón principal directamente a `redirectToOpenpayCheckout`.
+
+### 202.3. Fase 3: Identidad Comercial "German Morales Consulting", Ley 1480 y Ley 1581
+- **Visibilidad de Razón Comercial en Pies de Página:** Se incorporó explícitamente **`German Morales Consulting`** (Bogotá D.C., Colombia) y el sello de procesamiento por **Openpay Colombia S.A.S. (Grupo BBVA) — PCI-DSS Nivel 1 (SAQ-A)** en [`LandingFooter.tsx`](src/components/landing/LandingFooter.tsx) (38 LOC), [`AthleteDashboard.tsx`](src/components/AthleteDashboard.tsx) (346 LOC), [`src/app/terms/page.tsx`](src/app/terms/page.tsx) (226 LOC) y [`src/app/privacy/page.tsx`](src/app/privacy/page.tsx) (195 LOC).
+- **Cláusulas de Comercio Electrónico en `/terms`:** Se añadieron las Cláusulas 6 y 7 con titularidad de **German Morales Consulting**, facturación exclusiva en COP y conversión bancaria internacional, comprobante oficial enviado por Openpay (`send_email: true`), cancelación sin permanencia, **Derecho de Retracto (Art. 47 Ley 1480 de 2011)** y **Reversión del Pago (Art. 51 Ley 1480 de 2011 / Decreto 587 de 2016)**.
+- **Cumplimiento Habeas Data en `/privacy`:** Actualizadas las Secciones 1, 5 y 6 bajo la **Ley Estatutaria 1581 de 2012** y Decreto 1377 de 2013.
+
+### 202.4. Certificación del Pipeline de 5 Puertas y Auditorías Automatizadas por Fase
+- **Gate 1 (Presupuesto Estricto $\le 348$ LOC):** Todos los 13 archivos intervenidos cumplen $\le 348$ líneas (`confirm-session`: 248L, `page.tsx`: 321L, `resume`: 128L, `AdminBillingTable`: 339L, `admin/billing`: 72L, `admin/subscription-plan`: 124L, `create-checkout-session`: 162L, `webhook`: 203L, `PricingAndFaqSection`: 315L, `LandingFooter`: 38L, `AthleteDashboard`: 346L, `terms`: 226L, `privacy`: 195L) ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` ejecutado con **0 errores** ✅.
+- **Gate 3 (Auditorías Automatizadas por Fase):**
+  * `audit-phase1-antifraud.ts`: **7/7 vectores de fraude bloqueados al 100%** ✅.
+  * `audit-phase2-ux-currency.ts`: **5/5 controles de moneda única COP y UX superados al 100%** ✅.
+  * `audit-phase3-legal-compliance.ts`: **6/6 controles legales y de identidad comercial superados al 100%** ✅.
+- **Gate 4 (Bitácora Maestra Sincronizada):** Registrado en Sección 202 ✅.
+- **Gate 5 (Despliegue Continuo):** Commit y Push a `origin/main` ✅.

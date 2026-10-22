@@ -8,16 +8,15 @@ import {
   ArrowRight,
   ShieldCheck,
   CreditCard,
-  Landmark,
+  Globe,
   Lock,
-  Copy,
-  Check,
+  Loader2,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { GmcCardCheckoutModal } from "../billing/GmcCardCheckoutModal";
 import { DEFAULT_SUBSCRIPTION_PLAN, SubscriptionPlanConfig } from "@/lib/db/types";
 import { formatMoney } from "@/lib/services/adminBillingService";
+import { redirectToOpenpayCheckout } from "@/lib/services/openpayClient";
 
 interface PricingAndFaqSectionProps {
   onOpenAuthModal?: (tab?: "login" | "register") => void;
@@ -26,7 +25,7 @@ interface PricingAndFaqSectionProps {
 const FAQS = [
   {
     q: "¿Cómo funciona el periodo de prueba gratis de 7 días?",
-    a: "Te registras en 30 segundos sin necesidad de ingresar tarjeta de crédito ni datos bancarios. Conectas tu reloj (Garmin o Coros) o tu perfil de Intervals.icu y comienzas a entrenar de inmediato con tu plan adaptativo por IA. Al finalizar los 7 días, tú decides si deseas activar tu membresía Pro ($50.000 COP) en la pasarela bancaria oficial de Openpay BBVA.",
+    a: "Te registras en 30 segundos sin necesidad de ingresar tarjeta de crédito ni datos bancarios. Conectas tu reloj (Garmin o Coros) o tu perfil de Intervals.icu y comienzas a entrenar de inmediato con tu plan adaptativo por IA. Al finalizar los 7 días, tú decides si deseas activar tu membresía Pro en la pasarela bancaria oficial de Openpay BBVA.",
   },
   {
     q: "¿Cómo se sincroniza con mi reloj deportivo?",
@@ -37,22 +36,20 @@ const FAQS = [
     a: "PULSE ENDURANCE recalibra tu microciclo en tiempo real. Al registrar tu asimilación matutina por HRV o notar una sesión omitida por trabajo o familia, el motor reestructura la carga semanal sin duplicar volumen ni castigar al cuerpo, eliminando la culpa psicológica.",
   },
   {
-    q: "¿Qué medios de pago aceptan para la suscripción recurrente?",
-    a: "Aceptamos todas las tarjetas de crédito y débito (Visa, Mastercard, American Express) procesadas con seguridad criptográfica a través de Openpay BBVA Colombia. Cero almacenamiento de números de tarjeta en nuestros servidores (PCI-DSS SAQ-A).",
+    q: "¿Puedo pagar desde fuera de Colombia con tarjeta internacional?",
+    a: "Sí. Todos los cobros se procesan oficialmente en Pesos Colombianos (COP) a través de Openpay by BBVA Colombia (comercio German Morales Consulting). Si pagas con una tarjeta internacional (Visa, Mastercard o American Express), tu banco emisor convertirá automáticamente el valor a tu moneda local a la tasa vigente del día.",
   },
   {
     q: "¿Cómo cancelo mi suscripción?",
-    a: "Puedes cancelar en cualquier momento con un solo clic directamente desde tu dashboard. Si cancelas durante los 7 días de prueba, no se te cobrará absolutamente nada. Y si cancelas a mitad de mes, conservas tu acceso hasta el final del periodo ya pagado.",
+    a: "Puedes cancelar en cualquier momento con un solo clic directamente desde tu dashboard, sin cláusulas de permanencia ni penalidades. Si cancelas durante los 7 días de prueba, no se te cobrará nada. Si cancelas durante un mes pagado, conservas tu acceso hasta el último día de tu ciclo vigente.",
   },
 ];
 
 export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOpenAuthModal }) => {
   const { user, userProfile } = useAuth();
-  const [currency, setCurrency] = useState<"COP" | "USD">("COP");
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
   const [plan, setPlan] = useState<SubscriptionPlanConfig>(DEFAULT_SUBSCRIPTION_PLAN);
-  const [isCardModalOpen, setIsCardModalOpen] = useState<boolean>(false);
-  const [copiedCard, setCopiedCard] = useState<boolean>(false);
+  const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,28 +68,31 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
   }, []);
 
   const trialDays = typeof plan.trialDays === "number" ? plan.trialDays : 7;
-  const currentPrice = currency === "COP" ? plan.price : 14.99;
-  const priceDisplay = formatMoney(currentPrice, currency);
-  const periodText = currency === "COP" ? "/ mes" : "/ mo";
+  const priceDisplay = `${formatMoney(plan.price, "COP")} COP`;
 
   const toggleFaq = (idx: number) => {
     setOpenFaqIdx(openFaqIdx === idx ? null : idx);
   };
 
-  const handleStartCardCheckout = () => {
+  const handleStartCardCheckout = async () => {
     if (!user) {
       if (onOpenAuthModal) {
         onOpenAuthModal("register");
       }
       return;
     }
-    setIsCardModalOpen(true);
-  };
 
-  const handleCopySandboxCard = () => {
-    navigator.clipboard.writeText("4111111111111111");
-    setCopiedCard(true);
-    setTimeout(() => setCopiedCard(false), 2000);
+    setIsRedirecting(true);
+    try {
+      await redirectToOpenpayCheckout({
+        subscriberId: userProfile?.intervalsAthleteId || user.uid,
+        athleteName: userProfile?.displayName || user.displayName || "Atleta Pulse",
+        athleteEmail: user.email || "atleta@pulseendurance.co",
+      });
+    } catch (err: any) {
+      alert(err?.message || "No fue posible conectar con la pasarela de Openpay BBVA.");
+      setIsRedirecting(false);
+    }
   };
 
   return (
@@ -116,31 +116,16 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
         </p>
       </div>
 
-      {/* Toggle de Divisa */}
+      {/* Distintivo de Moneda Única Oficial (COP) y Conversión Internacional */}
       <div className="flex justify-center mb-8">
-        <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setCurrency("COP")}
-            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
-              currency === "COP"
-                ? "bg-white text-emerald-800 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <span>🇨🇴 COP {formatMoney(plan.price, "COP")} / mes</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrency("USD")}
-            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
-              currency === "USD"
-                ? "bg-white text-emerald-800 shadow-sm border border-slate-200"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            <span>🌎 USD $14.99 / mo</span>
-          </button>
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs">
+          <span className="px-2.5 py-1 rounded-xl bg-white text-emerald-800 shadow-2xs border border-slate-200">
+            🇨🇴 Facturación Oficial en Pesos Colombianos ({priceDisplay} / mes)
+          </span>
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 px-1">
+            <Globe className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Tarjetas internacionales convierten automáticamente a tu moneda local</span>
+          </span>
         </div>
       </div>
 
@@ -161,9 +146,9 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
             <div className="text-left sm:text-right shrink-0">
               <div className="flex items-baseline sm:justify-end gap-1">
                 <span className="text-3xl sm:text-4xl font-black text-slate-950 font-mono tracking-tight">
-                  {priceDisplay}
+                  {formatMoney(plan.price, "COP")}
                 </span>
-                <span className="text-xs font-bold text-slate-500">{periodText}</span>
+                <span className="text-xs font-bold text-slate-500">COP / mes</span>
               </div>
               <span className="text-[11px] text-emerald-700 font-semibold block mt-0.5">
                 {plan.billingCycleDaysText}
@@ -221,17 +206,27 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
             <button
               type="button"
               onClick={handleStartCardCheckout}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 group"
+              disabled={isRedirecting}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-60 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 group"
             >
-              <CreditCard className="w-5 h-5 shrink-0" />
-              <span>
-                {userProfile?.hasUsedTrial
-                  ? `Activar Suscripción Mensual (${priceDisplay})`
-                  : trialDays > 0
-                  ? `Comenzar mis ${trialDays} Días Gratis (Sin Tarjeta)`
-                  : `Suscribirme con Openpay BBVA (${priceDisplay})`}
-              </span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
+                  <span>Conectando con pasarela segura Openpay BBVA...</span>
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5 shrink-0" />
+                  <span>
+                    {userProfile?.hasUsedTrial
+                      ? `Activar Suscripción Mensual (${priceDisplay})`
+                      : trialDays > 0
+                      ? `Comenzar mis ${trialDays} Días Gratis (Sin Tarjeta)`
+                      : `Suscribirme con Openpay BBVA (${priceDisplay})`}
+                  </span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+                </>
+              )}
             </button>
 
             {/* Métodos de Pago Seguros y Sellos Oficiales */}
@@ -260,52 +255,20 @@ export const PricingAndFaqSection: React.FC<PricingAndFaqSectionProps> = ({ onOp
                   American Express
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
-                  BBVA Colombia
+                  Openpay by BBVA
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
-                  Débito / Crédito
+                  Débito / Crédito (Nacional e Internacional)
                 </span>
               </div>
 
-              {/* Helper para Pruebas Sandbox Openpay */}
-              <div className="mt-2 p-2.5 rounded-xl bg-slate-900 text-slate-200 text-[11px] font-mono flex items-center justify-between gap-2 shadow-xs">
-                <div className="flex items-center gap-2 truncate">
-                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase">
-                    Sandbox Test
-                  </span>
-                  <span className="truncate">
-                    Tarjeta: <strong className="text-white">4111 1111 1111 1111</strong> • Exp: <strong>12/28</strong> • CVV: <strong>123</strong>
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopySandboxCard}
-                  className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0 flex items-center gap-1 text-[10px]"
-                >
-                  {copiedCard ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                  <span>{copiedCard ? "Copiada" : "Copiar"}</span>
-                </button>
-              </div>
+              <p className="text-[11px] text-center text-slate-500 leading-relaxed pt-1">
+                Comercio procesado por <strong className="text-slate-700">German Morales Consulting</strong> en Pesos Colombianos (COP). Si pagas desde el exterior con tarjeta internacional, tu banco convertirá automáticamente el valor a tu moneda local.
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Modal de Pago con Tarjeta Openpay BBVA */}
-      <GmcCardCheckoutModal
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-        subscriberId={user?.uid || "guest_tester"}
-        athleteName={userProfile?.displayName || user?.displayName || "Atleta Pulse"}
-        athleteEmail={user?.email || "atleta@pulse.com"}
-        planAmountCop={plan.price}
-        trialDays={userProfile?.hasUsedTrial ? 0 : trialDays}
-        onSuccess={() => {
-          setIsCardModalOpen(false);
-          alert("¡Tarjeta registrada con éxito! Tu suscripción está activa.");
-          window.location.reload();
-        }}
-      />
 
       {/* =========================================================
           PARTE 2: ACORDEÓN DE PREGUNTAS FRECUENTES (FAQ)

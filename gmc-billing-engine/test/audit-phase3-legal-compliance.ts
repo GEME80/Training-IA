@@ -25,17 +25,22 @@ function runPhase3Audit() {
   let passed = 0;
   const total = 6;
 
-  // 1. Verificar "German Morales Consulting" en los 4 pies de página / vistas
+  // 1. Verificar "German Morales Consulting" en los 4 pies de página / vistas y correo solo en páginas legales
   if (
     landingFooter.includes('German Morales Consulting') &&
+    !landingFooter.includes('@') &&
     dashboard.includes('German Morales Consulting') &&
     terms.includes('German Morales Consulting') &&
-    privacy.includes('German Morales Consulting')
+    terms.includes('germanmoralesconsulting@gmail.com') &&
+    !terms.includes('gerkof@gmail.com') &&
+    privacy.includes('German Morales Consulting') &&
+    privacy.includes('germanmoralesconsulting@gmail.com') &&
+    !privacy.includes('gerkof@gmail.com')
   ) {
-    console.log('✅ [CONTROL 3.1] Razón comercial "German Morales Consulting" visible en LandingFooter, AthleteDashboard, /terms y /privacy.');
+    console.log('✅ [CONTROL 3.1] Razón "German Morales Consulting" en los 4 archivos; correo germanmoralesconsulting@gmail.com únicamente en /terms y /privacy (sin correo en Home).');
     passed++;
   } else {
-    throw new Error('❌ [FALLO 3.1] Falta "German Morales Consulting" en alguno de los 4 archivos.');
+    throw new Error('❌ [FALLO 3.1] Error en identidad comercial o correo de contacto.');
   }
 
   // 2. Verificar cláusula de Moneda Única COP y conversión internacional en /terms

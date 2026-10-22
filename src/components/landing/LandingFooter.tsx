@@ -22,10 +22,6 @@ export const LandingFooter: React.FC = () => {
             <Link href="/privacy" className="hover:text-emerald-700 text-slate-600 transition underline underline-offset-2">
               Política de Privacidad (Habeas Data)
             </Link>
-            <span>•</span>
-            <a href="mailto:gerkof@gmail.com" className="hover:text-emerald-700 text-slate-600 transition">
-              Soporte: gerkof@gmail.com
-            </a>
           </div>
         </div>
         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 text-center sm:text-left">

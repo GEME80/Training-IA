@@ -155,9 +155,9 @@ export default function TermsAndConditionsPage() {
           </div>
           <div className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7 space-y-2.5">
             <p>
-              <strong>Titularidad del Comercio:</strong> La plataforma digital <strong>PULSE ENDURANCE</strong> (<code>https://pulseendurance.co</code>) es propiedad y está operada comercialmente por <strong>German Morales Consulting</strong>, con domicilio en Bogotá D.C., República de Colombia, y correo oficial de atención al usuario y soporte:{" "}
-              <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
-                gerkof@gmail.com
+              <strong>Titularidad del Comercio:</strong> La plataforma digital <strong>PULSE ENDURANCE</strong> (<code>https://pulseendurance.co</code>) es propiedad y está operada comercialmente por <strong>German Morales Consulting</strong>, con domicilio en Bogotá D.C., República de Colombia, y canal oficial para notificaciones legales, retracto y PQR:{" "}
+              <a href="mailto:germanmoralesconsulting@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
+                germanmoralesconsulting@gmail.com
               </a>.
             </p>
             <p>
@@ -187,8 +187,8 @@ export default function TermsAndConditionsPage() {
             </p>
             <p>
               Para presentar solicitudes de retracto, reversión de pago o peticiones, quejas y reclamos (PQR), el usuario deberá enviar su solicitud al correo{" "}
-              <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
-                gerkof@gmail.com
+              <a href="mailto:germanmoralesconsulting@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
+                germanmoralesconsulting@gmail.com
               </a>{" "}
               indicando su nombre completo, correo de cuenta y referencia de la transacción de Openpay.
             </p>

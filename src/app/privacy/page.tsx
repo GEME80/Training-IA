@@ -52,9 +52,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-lg sm:text-xl font-bold text-white">1. Responsable del Tratamiento (Ley 1581 de 2012)</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pl-7">
-            En cumplimiento de la <strong>Ley Estatutaria 1581 de 2012 (Régimen General de Protección de Datos Personales en Colombia — Habeas Data)</strong> y el Decreto Reglamentario 1377 de 2013, se informa que la plataforma tecnológica <strong className="text-slate-100">PULSE ENDURANCE</strong> es propiedad y está operada comercialmente por <strong className="text-slate-100">German Morales Consulting</strong>, con domicilio en Bogotá D.C., Colombia, bajo la dirección técnica de Germán Morales. Para cualquier consulta, petición, reclamo o ejercicio de tus derechos de conocer, actualizar, rectificar y suprimir tus datos personales, puedes comunicarte directamente al correo oficial:{" "}
-            <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
-              gerkof@gmail.com
+            En cumplimiento de la <strong>Ley Estatutaria 1581 de 2012 (Régimen General de Protección de Datos Personales en Colombia — Habeas Data)</strong> y el Decreto Reglamentario 1377 de 2013, se informa que la plataforma tecnológica <strong className="text-slate-100">PULSE ENDURANCE</strong> es propiedad y está operada comercialmente por <strong className="text-slate-100">German Morales Consulting</strong>, con domicilio en Bogotá D.C., Colombia, bajo la dirección técnica de Germán Morales. Para cualquier consulta, petición, reclamo o ejercicio de tus derechos de conocer, actualizar, rectificar y suprimir tus datos personales, puedes comunicarte al canal oficial:{" "}
+            <a href="mailto:germanmoralesconsulting@gmail.com" className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300">
+              germanmoralesconsulting@gmail.com
             </a>.
           </p>
         </section>
@@ -170,7 +170,7 @@ export default function PrivacyPolicyPage() {
             <ul className="space-y-1.5 list-disc list-inside text-slate-300">
               <li>Consultar y editar tus métricas antropométricas desde la sección Perfil.</li>
               <li>Desconectar o revocar el acceso a Intervals.icu o cancelar tu suscripción con un solo clic.</li>
-              <li>Solicitar la eliminación total y permanente de tu cuenta y base de datos escribiéndonos a <a href="mailto:gerkof@gmail.com" className="text-emerald-400 underline">gerkof@gmail.com</a>.</li>
+              <li>Solicitar la eliminación total y permanente de tu cuenta y base de datos escribiéndonos a <a href="mailto:germanmoralesconsulting@gmail.com" className="text-emerald-400 underline">germanmoralesconsulting@gmail.com</a>.</li>
             </ul>
           </div>
         </section>

@@ -1,4 +1,4 @@
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines, resolveEffectiveAvailability } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines, resolveEffectiveAvailability, getExplicitLongRideDay } from "../gemini/engine";
 import { MacrocycleWeek } from "./macrocycle";
 import { MacrocycleDistanceType } from "./macrocycleLibrary";
 import { resolveTrainingModel, calculateProgressiveLongRun, BIKE_TEST_RAMP } from "../ai/knowledge";
@@ -57,7 +57,7 @@ export function generateWeekTemplate(
   const longRun = calculateProgressiveLongRun(curatedModel, weekNumber, weekNumber + countdown - 1, isRecovery, phase, countdown, volumeScaleFactor, athleteCtl, runFtp, raceGoal);
   const longRunDay = resolveLongRunDay(safeAvailability), longRideDay = resolveLongRideDay(safeAvailability);
   const result: PlanItem[] = [];
-  let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false, runCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
+  let bikeTestInjected = false, swimTestInjected = false, runTestInjected = false, longRideInjected = false, runCount = 0, qualityRunCount = 0, bikeCount = 0, swimCount = 0, strengthCount = 0;
   const usedRunWorkoutNames = new Set<string>(), usedBikeWorkoutNames = new Set<string>();
   const memory = new AntiMonotonyMemoryBuffer(5);
   memory.record(longRun.workoutName);
@@ -149,12 +149,9 @@ export function generateWeekTemplate(
         const prevHadStrength = curatedModel.sportCategory !== "Running" && idx > 0 && getDayDisciplines(safeAvailability, days[idx - 1]).includes("Fuerza");
         if (prevHadStrength) {
           result.push({
-            day, date: dateStr, formattedDate, discipline: "Fuerza",
-            workoutName: "Movilidad Articular Dinámica & Descarga Muscular (20m)", action: "MANTENER",
-            durationMinutes: 20, tss: 10, powerTarget: "Movilidad Articular",
-            justification: "Descompresión y soltura fascial para permitir supercompensación del SNC.",
-            workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Columna Torácica y Hombros\n- 5m Estiramientos Dinámicos\n- 5m Respiración Diafragmática",
-            isRestDay: false,
+            day, date: dateStr, formattedDate, discipline: "Fuerza", workoutName: "Movilidad Articular Dinámica & Descarga Muscular (20m)", action: "MANTENER",
+            durationMinutes: 20, tss: 10, powerTarget: "Movilidad Articular", justification: "Descompresión y soltura fascial para permitir supercompensación del SNC.",
+            workoutDoc: "Movilidad Dinámica\n- 5m Caderas y Tobillos\n- 5m Columna Torácica y Hombros\n- 5m Estiramientos Dinámicos\n- 5m Respiración Diafragmática", isRestDay: false,
           });
           continue;
         }
@@ -165,7 +162,8 @@ export function generateWeekTemplate(
 
       if (disc === "Ciclismo") {
         bikeCount++;
-        const bikeTest = scheduledTests.find((t) => t.sport === "Ride" && !bikeTestInjected);
+        const totalBikeDays = days.filter((d) => getDayDisciplines(safeAvailability, d).includes("Ciclismo")).length;
+        const bikeTest = scheduledTests.find((t) => t.sport === "Ride" && !bikeTestInjected && (day !== longRideDay || totalBikeDays <= 1));
         if (bikeTest) {
           bikeTestInjected = true;
           result.push({
@@ -174,9 +172,10 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const isEve = curatedModel.sportCategory === "Running" && day === "Sábado" && longRunDay === "Domingo";
+        const hasExplicitRide = Boolean(getExplicitLongRideDay(safeAvailability));
+        const isEve = curatedModel.sportCategory === "Running" && idx < days.length - 1 && days[idx + 1] === longRunDay && (!hasExplicitRide || day !== longRideDay);
         const isLongRideMatch = !longRideInjected && !isEve && (day === longRideDay || (!longRideDay && (day === "Sábado" || day === "Domingo")));
-        if (isLongRideMatch && day !== longRunDay) {
+        if (isLongRideMatch && (day !== longRunDay || hasExplicitRide || totalBikeDays <= 1)) {
           longRideInjected = true;
           const { rideMins, rideTitle, rideJust, rideTarget, workoutDoc: rideWorkoutDoc } = resolveWeekendRide({
             distanceType, phase, weekNumber, isRecovery, bikeFtp,
@@ -292,12 +291,13 @@ export function generateWeekTemplate(
           continue;
         }
 
-        const isAdj = day === "Sábado" && longRunDay === "Domingo";
+        const isAdj = (idx < days.length - 1 && days[idx + 1] === longRunDay) || (idx > 0 && days[idx - 1] === longRunDay);
         const totalRunDays = days.filter((d) => getDayDisciplines(safeAvailability, d).includes("Carrera")).length;
-        const isPrimaryQuality = runCount === 1 && day !== longRunDay && !isAdj;
-        const isSecondaryQuality = totalRunDays >= 4 && runCount === 3 && day !== longRunDay && !isAdj && !isRecovery;
+        const isPrimaryQuality = qualityRunCount === 0 && day !== longRunDay && !isAdj;
+        const isSecondaryQuality = totalRunDays >= 4 && qualityRunCount === 1 && day !== longRunDay && !isAdj && !isRecovery;
 
         if (isPrimaryQuality || isSecondaryQuality) {
+          qualityRunCount++;
           let q = selectQualityWorkout(phase, weekNumber, curatedModel, runFtp, bikeFtp, {
             isRecovery, memoryBuffer: memory, mode: (runningOpts?.mode as any), thresholdPaceSec: runningOpts?.thresholdPaceSec,
             microcycleType: week.microcycleType, stagedRacePaceSec: (week as any).stagedRacePaceSec || runningOpts?.stagedRacePaceSec,

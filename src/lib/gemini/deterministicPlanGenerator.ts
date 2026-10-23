@@ -4,6 +4,7 @@ import { MacrocyclePhaseInfo } from "../physiology/macrocycle";
 import { resolveSpecializedStrengthWorkout } from "../physiology/specializedStrengthCoaches";
 import { BIKE_TEST_RAMP } from "../ai/knowledge/testingProtocols";
 import { adaptRunningPlanItem, resolveRunningMode } from "../physiology/runningWorkoutAdapter";
+import { resolveLongRunDay, resolveLongRideDay } from "../physiology/macrocycleTemplateHelpers";
 import {
   AgentDecisionOutput,
   PlanItem,
@@ -32,6 +33,8 @@ export function generateDeterministicAnalysis(
   const isFtpTestWeek = !isFatigued && (macrocyclePhase?.blueprint?.currentWeek?.microcycleType === "TEST_CONTROL" || /test.*ftp|control.*ftp/i.test(`${macrocyclePhase?.guideline || ""} ${macrocyclePhase?.suggestedFocus || ""}`));
   const macroTitle = macrocyclePhase?.primaryRace ? `Macrociclo: ${macrocyclePhase.phaseLabel} (${macrocyclePhase.weeksRemaining} sem para ${macrocyclePhase.primaryRace.name}).` : `Macrociclo: Mantenimiento General Adaptativo.`;
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const longRideDay = resolveLongRideDay(availability);
+  const longRunDay = resolveLongRunDay(availability);
 
   const suggestedPlan: PlanItem[] = days.map((day, idx) => {
     const rawDiscList = getDayDisciplines(availability, day);
@@ -181,7 +184,7 @@ export function generateDeterministicAnalysis(
         };
       }
 
-      const isLong = day === "Sábado" || day === "Domingo";
+      const isLong = day === longRideDay;
       const isPeakBuild = phase === "BUILD" || phase === "PEAK";
       const isBaseCadence = (phase === "BASE_1" || phase === "BASE_2") && !isLong;
 
@@ -245,9 +248,9 @@ export function generateDeterministicAnalysis(
     }
 
     // 5. Carrera por defecto
-    const isQuality = day === "Martes" || day === "Jueves";
-    const isLongRun = day === "Domingo" || day === "Sábado";
-    const isFridayStrides = day === "Viernes" && (phase === "BASE_1" || phase === "BASE_2");
+    const isQuality = (day === "Martes" || day === "Jueves") && day !== longRunDay;
+    const isLongRun = day === longRunDay;
+    const isFridayStrides = day === "Viernes" && day !== longRunDay && (phase === "BASE_1" || phase === "BASE_2");
 
     if (isFridayStrides && !isFatigued) {
       return {
@@ -323,7 +326,7 @@ export function generateDeterministicAnalysis(
       `1. Contexto de Temporada: ${macroTitle}`,
       `2. Multi-Disciplina: Soporte completo para días de doble sesión y transiciones brick.`,
       `3. Evaluación Banister: CTL=${status.ctl.toFixed(1)}, ATL=${status.atl.toFixed(1)}, TSB=${status.tsb.toFixed(1)}.`,
-      `4. Matriz Base: ${Object.entries(availability).map(([d, disc]) => `${d}: ${Array.isArray(disc) ? disc.join("+") : disc}`).join(", ")}.`,
+      `4. Matriz Base: ${Object.entries(availability).filter(([d]) => !d.startsWith("_")).map(([d, disc]) => `${d}: ${Array.isArray(disc) ? disc.join("+") : disc}`).join(", ")}.`,
     ],
     modelUsed: "Motor Fisiológico Determinístico",
     suggestedPlan: finalPlan,

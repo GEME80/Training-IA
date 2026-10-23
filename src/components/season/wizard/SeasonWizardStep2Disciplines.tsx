@@ -1,8 +1,15 @@
 "use client";
 
 import React from "react";
-import { Footprints, Bike, Dumbbell, Waves, Mountain, Layers, Check, Moon } from "lucide-react";
-import { WeeklyAvailabilityMap, DisciplineType, DEFAULT_WEEKLY_AVAILABILITY, getDayDisciplines } from "@/lib/gemini/engine";
+import { Footprints, Bike, Dumbbell, Waves, Mountain, Layers, Check, Moon, Star, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  WeeklyAvailabilityMap,
+  DisciplineType,
+  DEFAULT_WEEKLY_AVAILABILITY,
+  getDayDisciplines,
+  setLongSessionDay,
+  validateLongSessionDays,
+} from "@/lib/gemini/engine";
 
 interface SeasonWizardStep2DisciplinesProps {
   trainingApproach: string;
@@ -15,12 +22,12 @@ interface SeasonWizardStep2DisciplinesProps {
 type MainSportKey = "running" | "cycling" | "triathlon" | "trail";
 
 const MATRIX_DEFAULTS: Record<string, WeeklyAvailabilityMap> = {
-  "Solo Running": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Carrera"], Jueves: ["Fuerza"], Viernes: ["Carrera"], Sábado: ["Descanso"], Domingo: ["Carrera"] },
-  "Entrenamiento Cruzado": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Ciclismo"], Jueves: ["Fuerza"], Viernes: ["Carrera"], Sábado: ["Ciclismo"], Domingo: ["Carrera"] },
-  "Solo Ciclismo": { Lunes: ["Descanso"], Martes: ["Ciclismo"], Miércoles: ["Ciclismo"], Jueves: ["Fuerza"], Viernes: ["Ciclismo"], Sábado: ["Descanso"], Domingo: ["Ciclismo"] },
-  "Ciclismo Cruzado": { Lunes: ["Descanso"], Martes: ["Ciclismo"], Miércoles: ["Carrera"], Jueves: ["Fuerza"], Viernes: ["Ciclismo"], Sábado: ["Ciclismo"], Domingo: ["Carrera"] },
-  "Triatlón": { Lunes: ["Descanso"], Martes: ["Natacion", "Carrera"], Miércoles: ["Ciclismo"], Jueves: ["Natacion", "Fuerza"], Viernes: ["Carrera"], Sábado: ["Ciclismo"], Domingo: ["Carrera"] },
-  "Trail Running": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Fuerza"], Jueves: ["Carrera"], Viernes: ["Descanso"], Sábado: ["Ciclismo"], Domingo: ["Carrera"] },
+  "Solo Running": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Carrera"], Jueves: ["Fuerza"], Viernes: ["Carrera"], Sábado: ["Descanso"], Domingo: ["Carrera"], _longRunDay: "Domingo" },
+  "Entrenamiento Cruzado": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Ciclismo"], Jueves: ["Fuerza"], Viernes: ["Carrera"], Sábado: ["Ciclismo"], Domingo: ["Carrera"], _longRideDay: "Sábado", _longRunDay: "Domingo" },
+  "Solo Ciclismo": { Lunes: ["Descanso"], Martes: ["Ciclismo"], Miércoles: ["Ciclismo"], Jueves: ["Fuerza"], Viernes: ["Ciclismo"], Sábado: ["Descanso"], Domingo: ["Ciclismo"], _longRideDay: "Domingo" },
+  "Ciclismo Cruzado": { Lunes: ["Descanso"], Martes: ["Ciclismo"], Miércoles: ["Carrera"], Jueves: ["Fuerza"], Viernes: ["Ciclismo"], Sábado: ["Ciclismo"], Domingo: ["Carrera"], _longRideDay: "Sábado", _longRunDay: "Domingo" },
+  "Triatlón": { Lunes: ["Descanso"], Martes: ["Natacion", "Carrera"], Miércoles: ["Ciclismo"], Jueves: ["Natacion", "Fuerza"], Viernes: ["Carrera"], Sábado: ["Ciclismo"], Domingo: ["Carrera"], _longRideDay: "Sábado", _longRunDay: "Domingo" },
+  "Trail Running": { Lunes: ["Descanso"], Martes: ["Carrera"], Miércoles: ["Fuerza"], Jueves: ["Carrera"], Viernes: ["Descanso"], Sábado: ["Ciclismo"], Domingo: ["Carrera"], _longRideDay: "Sábado", _longRunDay: "Domingo" },
 };
 
 export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2DisciplinesProps> = ({
@@ -193,17 +200,61 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
         <div className="flex items-center justify-between text-xs font-mono font-bold">
           <span className="flex items-center gap-1.5 text-slate-800 dark:text-white">
             <Layers className="h-3.5 w-3.5 text-emerald-500" />
-            Matriz Semanal de Disponibilidad (Personaliza tus Días)
+            Matriz Semanal de Disponibilidad (Personaliza tus Días y Fondos)
           </span>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
             ⚡ Doble sesión permitida
           </span>
         </div>
 
+        {(() => {
+          const v = validateLongSessionDays(weeklyAvailability);
+          const missing: string[] = [];
+          if (v.missingRunLong) missing.push("Tirada Larga de Carrera");
+          if (v.missingRideLong) missing.push("Fondo de Ciclismo");
+          if (v.sameDayConflict) {
+            return (
+              <div className="flex items-start gap-2 p-2.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50/90 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 text-[11px]">
+                <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Protección al Atleta: No programes los dos ★ Fondos el mismo día ({v.explicitRunDay}). </span>
+                  <span>Selecciona días distintos para tu Fondo de Ciclismo y tu Tirada Larga de Carrera para evitar sobrecarga articular.</span>
+                </div>
+              </div>
+            );
+          }
+          if (!v.isValid) {
+            return (
+              <div className="flex items-start gap-2 p-2.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/90 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-[11px]">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Requerido: Marca tu día de ★ Fondo ({missing.join(" y ")}). </span>
+                  <span>Pulsa el botón <strong>[☆ Fondo]</strong> en el día (entre semana o fin de semana) donde harás tu entrenamiento largo para continuar.</span>
+                </div>
+              </div>
+            );
+          }
+          if (v.hasRun || v.hasRide) {
+            return (
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2 px-3 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/25 text-[11px] text-emerald-900 dark:text-emerald-200">
+                <div className="flex flex-wrap items-center gap-2 font-bold">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Días de Fondo:</span>
+                  {v.explicitRunDay && <span className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-mono text-[10px]">🏃 Run: {v.explicitRunDay}</span>}
+                  {v.explicitRideDay && <span className="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-800 dark:text-sky-300 font-mono text-[10px]">🚴 Bici: {v.explicitRideDay}</span>}
+                </div>
+                <span className="text-[10px] font-mono text-slate-500">Toca [☆ Fondo] en otro día para cambiarlo</span>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
           {daysList.map((day) => {
             const dayDiscs = getDayDisciplines(weeklyAvailability, day);
             const isRest = dayDiscs.includes("Descanso");
+            const v = validateLongSessionDays(weeklyAvailability);
             return (
               <div key={day} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5 flex flex-col justify-between">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
@@ -214,13 +265,34 @@ export const SeasonWizardStep2Disciplines: React.FC<SeasonWizardStep2Disciplines
                   {disciplineOptions.map((opt) => {
                     const isActive = dayDiscs.includes(opt.id);
                     const Icon = opt.icon;
+                    const canBeLong = opt.id === "Carrera" || opt.id === "Ciclismo";
+                    const isLongDay = (opt.id === "Carrera" && v.explicitRunDay === day) || (opt.id === "Ciclismo" && v.explicitRideDay === day);
                     return (
-                      <button key={opt.id} type="button" onClick={() => toggleDayDiscipline(day, opt.id)}
-                        className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold transition cursor-pointer flex items-center gap-0.5 ${isActive ? opt.colorActive : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
-                        title={`Marcar ${opt.label} para ${day}`}>
-                        <Icon className="h-2.5 w-2.5" />
-                        <span>{opt.label}</span>
-                      </button>
+                      <div key={opt.id} className="flex items-center gap-0.5">
+                        <button type="button" onClick={() => toggleDayDiscipline(day, opt.id)}
+                          className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold transition cursor-pointer flex items-center gap-0.5 ${isActive ? opt.colorActive : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                          title={`Marcar ${opt.label} para ${day}`}>
+                          <Icon className="h-2.5 w-2.5" />
+                          <span>{opt.label}</span>
+                        </button>
+                        {isActive && canBeLong && (
+                          <button
+                            type="button"
+                            onClick={() => onChangeWeeklyAvailability && onChangeWeeklyAvailability(setLongSessionDay(weeklyAvailability || DEFAULT_WEEKLY_AVAILABILITY, opt.id as "Carrera" | "Ciclismo", day))}
+                            className={`px-1 py-0.5 rounded-md text-[8px] font-mono font-bold transition cursor-pointer flex items-center gap-0.5 border ${
+                              isLongDay
+                                ? opt.id === "Carrera"
+                                  ? "bg-amber-600 text-white border-amber-700"
+                                  : "bg-sky-600 text-white border-sky-700"
+                                : "bg-slate-50 dark:bg-slate-800 text-slate-500 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400"
+                            }`}
+                            title={`Marcar ${day} como día de Fondo de ${opt.label}`}
+                          >
+                            <Star className={`h-2 w-2 ${isLongDay ? "fill-current" : ""}`} />
+                            <span>{isLongDay ? "FONDO" : "☆ Fondo"}</span>
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

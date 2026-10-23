@@ -1,4 +1,4 @@
-import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines } from "../gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, getDayDisciplines, getExplicitLongRunDay, getExplicitLongRideDay } from "../gemini/engine";
 import { resolveTrainingModel } from "../ai/knowledge";
 import { resolveWeekendRide, resolveTriathlonBrick, WeekendRideParams, WeekendRideResult } from "./weekendRideResolver";
 import { applyParametricProgression, AntiMonotonyMemoryBuffer } from "./workoutProgressionEngine";
@@ -223,6 +223,8 @@ export { resolveWeekendRide, resolveTriathlonBrick, type WeekendRideParams, type
  * respetando la matriz semanal del atleta (fin de semana o último día disponible).
  */
 export function resolveLongRunDay(availability: WeeklyAvailabilityMap = {}): string {
+  const explicit = getExplicitLongRunDay(availability);
+  if (explicit) return explicit;
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const runDays = days.filter((d) => getDayDisciplines(availability, d).includes("Carrera"));
   if (runDays.includes("Domingo")) return "Domingo";
@@ -232,16 +234,19 @@ export function resolveLongRunDay(availability: WeeklyAvailabilityMap = {}): str
 
 /**
  * Resuelve dinámicamente el día óptimo para el Fondo de Ciclismo
- * coordinando con la Tirada Larga para prevenir interferencias concurrentes.
+ * priorizando el día explícito marcado por el atleta (★ Fondo) o el fin de semana.
  */
 export function resolveLongRideDay(availability: WeeklyAvailabilityMap = {}): string {
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   const bikeDays = days.filter((d) => getDayDisciplines(availability, d).includes("Ciclismo"));
-  const runsSunday = getDayDisciplines(availability, "Domingo").includes("Carrera");
-  if (bikeDays.includes("Sábado") && runsSunday) return "Sábado";
-  if (bikeDays.includes("Domingo")) return "Domingo";
-  if (bikeDays.includes("Sábado")) return "Sábado";
-  return bikeDays[bikeDays.length - 1] || "Sábado";
+  const longRun = resolveLongRunDay(availability);
+  const explicit = getExplicitLongRideDay(availability);
+  if (explicit && (explicit !== longRun || bikeDays.length <= 1)) return explicit;
+  const nonRunBikeDays = bikeDays.filter((d) => d !== longRun);
+  const candidates = nonRunBikeDays.length > 0 ? nonRunBikeDays : bikeDays;
+  if (candidates.includes("Sábado")) return "Sábado";
+  if (candidates.includes("Domingo")) return "Domingo";
+  return candidates[candidates.length - 1] || "Sábado";
 }
 
 export function resolveEveRide(bikeFtp?: number) {

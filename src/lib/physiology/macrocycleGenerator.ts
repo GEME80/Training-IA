@@ -5,6 +5,7 @@ import { resolveTrainingModel, calculateProgressiveLongRun, calculateProgressive
 import { PMCHistoricalSummary } from "./pmcEngine";
 import { calculateTargetPeakCtlPotential } from "./ctlPotentialEngine";
 import { evaluateGoalFeasibility, GoalFeasibilityResult } from "./goalFeasibilityEngine";
+import { resolveLongRunDay, resolveLongRideDay } from "./macrocycleTemplateHelpers";
 
 
 export interface CustomMacrocycleConfig {
@@ -291,9 +292,10 @@ export function generateCustomMacrocycleBlueprint(
     const testBadge = scheduledTests.length > 0 ? `🧪 ${resolvedTestName} • ` : "";
     const isTri = curatedModel.sportCategory === "Triathlon";
     const raceNameStr = config.primaryRace?.name || curatedModel.displayName.split("(")[0].trim();
+    const longDay = curatedModel.sportCategory === "Cycling" ? resolveLongRideDay(config.athleteMetrics?.weeklyAvailability) : resolveLongRunDay(config.athleteMetrics?.weeklyAvailability);
     const raceNote = (isEventDriven && countdown === 1)
       ? (isTri ? `🏆 Competición Oficial: ${raceNameStr}. Natación + Ciclismo + Carrera con estrategia nutricional.` : `🏆 Competición Oficial: ${raceNameStr} (${longRun.km} km${raceGoalTarget ? ` - Meta: ${raceGoalTarget}` : ""}). Carrera objetivo con ritmo específico y tapering.`)
-      : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? "Fondo dominical" : "Tirada dominical"} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
+      : `${phaseLabel}: ${curatedModel.sportCategory === "Cycling" ? `Fondo (${longDay})` : `Tirada larga (${longDay})`} de ${longRun.km} km (${longRun.minutes}m). ${isRecoveryWeek ? "Semana de asimilación biológica." : "Sobrecarga progresiva aeróbica."}`;
     const focusDescription = `${testBadge}${raceNote}`;
 
     const isPast = weekMon.getTime() < currentMonday.getTime();

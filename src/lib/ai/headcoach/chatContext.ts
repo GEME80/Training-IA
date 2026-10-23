@@ -3,7 +3,7 @@ import { isRunSport, isRideSport } from "@/lib/intervals/sportMatchers";
 import { extractGarminWellnessTelemetry } from "@/lib/intervals/wellnessHelpers";
 import { PhysiologicalEngine, PhysiologicalStatus } from "@/lib/physiology/engine";
 import { AthleteProfile, AthleteWellness, ActivitySummary } from "@/lib/intervals/types";
-import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, normalizeDisciplines, CANONICAL_DAYS, getDayDisciplines, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, DEFAULT_WEEKLY_AVAILABILITY, getWeekDates, normalizeDisciplines, CANONICAL_DAYS, getDayDisciplines, resolveEffectiveAvailability, getExplicitLongRunDay, getExplicitLongRideDay } from "@/lib/gemini/engine";
 import { MacrocyclePhaseInfo } from "@/lib/physiology/macrocycle";
 import { HeadCoachPromptContext } from "@/lib/ai/prompts";
 import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
@@ -155,7 +155,8 @@ export async function resolveChatContext(body: HeadCoachChatRequest): Promise<Re
 
   const effectiveAvailability = (temporaryAvailability && Object.keys(temporaryAvailability).length > 0) ? temporaryAvailability : weeklyAvailability;
   const safeAvailability = resolveEffectiveAvailability(effectiveAvailability);
-  const availabilityFormatted = CANONICAL_DAYS.map((day) => `  - ${day}: ${getDayDisciplines(safeAvailability, day).join(", ")}`).join("\n");
+  const expRun = getExplicitLongRunDay(safeAvailability), expRide = getExplicitLongRideDay(safeAvailability);
+  const availabilityFormatted = CANONICAL_DAYS.map((day) => `  - ${day}: ${getDayDisciplines(safeAvailability, day).join(", ")}${day === expRun ? " (★ FONDO CARRERA)" : ""}${day === expRide ? " (★ FONDO CICLISMO)" : ""}`).join("\n");
 
   const hasExistingPlan = Array.isArray(currentPlan) && currentPlan.length > 0 && currentPlan.some((p) => p && ((p.tss || 0) > 0 || (p.durationMinutes || 0) > 0));
   const currentPlanSummary = hasExistingPlan

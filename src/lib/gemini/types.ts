@@ -1,5 +1,5 @@
 export type DisciplineType = "Descanso" | "Carrera" | "Ciclismo" | "Fuerza" | "Natacion";
-export type WeeklyAvailabilityMap = Record<string, DisciplineType[] | DisciplineType>;
+export type WeeklyAvailabilityMap = Record<string, any>;
 
 export const CANONICAL_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
 
@@ -52,15 +52,78 @@ export function isLegacyAvailability(avail?: WeeklyAvailabilityMap): boolean {
   return !hasAnyDay && keys.length < 3;
 }
 
+export function getExplicitLongRunDay(avail?: WeeklyAvailabilityMap): string | undefined {
+  const raw = avail?._longRunDay;
+  if (typeof raw !== "string" || !raw) return undefined;
+  const canonical = CANONICAL_DAYS.find((d) => d.toLowerCase() === raw.toLowerCase()) || raw;
+  return getDayDisciplines(avail, canonical).includes("Carrera") ? canonical : undefined;
+}
+
+export function getExplicitLongRideDay(avail?: WeeklyAvailabilityMap): string | undefined {
+  const raw = avail?._longRideDay;
+  if (typeof raw !== "string" || !raw) return undefined;
+  const canonical = CANONICAL_DAYS.find((d) => d.toLowerCase() === raw.toLowerCase()) || raw;
+  return getDayDisciplines(avail, canonical).includes("Ciclismo") ? canonical : undefined;
+}
+
+export function setLongSessionDay(
+  avail: WeeklyAvailabilityMap,
+  discipline: "Carrera" | "Ciclismo",
+  dayName: string
+): WeeklyAvailabilityMap {
+  const next: WeeklyAvailabilityMap = { ...(avail || DEFAULT_WEEKLY_AVAILABILITY) };
+  const key = discipline === "Carrera" ? "_longRunDay" : "_longRideDay";
+  const current = discipline === "Carrera" ? getExplicitLongRunDay(next) : getExplicitLongRideDay(next);
+  if (current === dayName) {
+    delete next[key];
+  } else {
+    next[key] = dayName;
+  }
+  return next;
+}
+
+export function validateLongSessionDays(avail?: WeeklyAvailabilityMap): {
+  isValid: boolean;
+  hasRun: boolean;
+  hasRide: boolean;
+  explicitRunDay?: string;
+  explicitRideDay?: string;
+  missingRunLong: boolean;
+  missingRideLong: boolean;
+  sameDayConflict: boolean;
+} {
+  const runDays = CANONICAL_DAYS.filter((d) => getDayDisciplines(avail, d).includes("Carrera"));
+  const bikeDays = CANONICAL_DAYS.filter((d) => getDayDisciplines(avail, d).includes("Ciclismo"));
+  const explicitRunDay = getExplicitLongRunDay(avail);
+  const explicitRideDay = getExplicitLongRideDay(avail);
+  const missingRunLong = runDays.length > 0 && !explicitRunDay;
+  const missingRideLong = bikeDays.length > 0 && !explicitRideDay;
+  const sameDayConflict = Boolean(explicitRunDay && explicitRideDay && explicitRunDay === explicitRideDay);
+  return {
+    isValid: !missingRunLong && !missingRideLong && !sameDayConflict,
+    hasRun: runDays.length > 0,
+    hasRide: bikeDays.length > 0,
+    explicitRunDay,
+    explicitRideDay,
+    missingRunLong,
+    missingRideLong,
+    sameDayConflict,
+  };
+}
+
 export function resolveEffectiveAvailability(avail?: WeeklyAvailabilityMap): WeeklyAvailabilityMap {
   if (!avail || isLegacyAvailability(avail)) {
     return DEFAULT_WEEKLY_AVAILABILITY;
   }
-  // Normalizar hacia los 7 días canónicos preservando la matriz del atleta
+  // Normalizar hacia los 7 días canónicos preservando la matriz y los días de fondo del atleta
   const resolved: WeeklyAvailabilityMap = {};
   for (const day of CANONICAL_DAYS) {
     resolved[day] = getDayDisciplines(avail, day);
   }
+  const explicitRun = getExplicitLongRunDay(avail);
+  const explicitRide = getExplicitLongRideDay(avail);
+  if (explicitRun) resolved._longRunDay = explicitRun;
+  if (explicitRide) resolved._longRideDay = explicitRide;
 
   return resolved;
 }

@@ -1,7 +1,7 @@
 import { AthleteProfile, AthleteWellness } from "../intervals/types";
 import { PhysiologicalStatus } from "../physiology/engine";
 import { MacrocyclePhaseInfo, MacrocycleBlueprint } from "../physiology/macrocycle";
-import { WeeklyAvailabilityMap, PlanItem } from "../gemini/engine";
+import { WeeklyAvailabilityMap, PlanItem, getExplicitLongRunDay, getExplicitLongRideDay } from "../gemini/engine";
 import { WizardPlanConfig } from "../physiology/macrocycleWizard";
 
 export interface SpecializedAgentMeta {
@@ -231,9 +231,12 @@ export function buildMacrocycleArchitectSystemPrompt(
   });
 
   const directiveBlock = customPromptDirective?.trim() ? `\nDIRECTRICES PERSONALIZADAS DEL ATLETA:\n${customPromptDirective.trim()}\n` : "";
+  const explicitRun = getExplicitLongRunDay(config.weeklyAvailability);
+  const explicitRide = getExplicitLongRideDay(config.weeklyAvailability);
   const availabilityBlock = config.weeklyAvailability
     ? `\n=== MATRIZ SEMANAL DE DISPONIBILIDAD DEPORTIVA ===\n${Object.entries(config.weeklyAvailability)
-        .map(([day, discs]) => `- ${day}: ${Array.isArray(discs) ? discs.join(" + ") : discs} ${Array.isArray(discs) && discs.length > 1 ? "(DOBLE SESIÓN)" : ""}`).join("\n")}\n` : "";
+        .filter(([day]) => !day.startsWith("_"))
+        .map(([day, discs]) => `- ${day}: ${Array.isArray(discs) ? discs.join(" + ") : discs}${day === explicitRun ? " (★ FONDO CARRERA)" : ""}${day === explicitRide ? " (★ FONDO CICLISMO)" : ""} ${Array.isArray(discs) && discs.length > 1 ? "(DOBLE SESIÓN)" : ""}`).join("\n")}\n` : "";
   const testsBlock = curatedModel.mandatoryTests.length > 0
     ? `\n=== PROTOCOLOS DE TESTS FISIOLÓGICOS REQUERIDOS ===\n${curatedModel.mandatoryTests.map((t) => `- Semana ${t.recommendedWeekIndex}: ${t.testName} (${t.sport}, Métrica: ${t.targetMetric})\n  Pauta: ${t.protocolDescription}`).join("\n")}\n` : "";
   const feasibilityBlock = ctx.goalFeasibility

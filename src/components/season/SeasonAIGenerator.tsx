@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Sparkles, ArrowRight, ArrowLeft, Check } from "lucide-react";
-import { WeeklyAvailabilityMap } from "@/lib/gemini/engine";
+import { WeeklyAvailabilityMap, validateLongSessionDays } from "@/lib/gemini/engine";
 import { TargetRace, MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
 import { generateCustomMacrocycleBlueprint } from "@/lib/physiology/macrocycleGenerator";
 import { PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
@@ -105,8 +105,9 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
     }
   }, [weeklyAvailability]);
 
+  const longValidation = validateLongSessionDays(localWeeklyAvailability);
   const isStep1Valid = Boolean((primaryRace && primaryRace.name && primaryRace.date) || targetDistance === "maintenance" || targetDistance === "base_building" || targetDistance === "general_fitness");
-  const isStep2Valid = Object.values(localWeeklyAvailability || {}).some((discs: any) => Array.isArray(discs) && discs.some((d) => d && d !== "Descanso"));
+  const isStep2Valid = Object.entries(localWeeklyAvailability || {}).some(([k, discs]: [string, any]) => !k.startsWith("_") && Array.isArray(discs) && discs.some((d) => d && d !== "Descanso")) && longValidation.isValid;
   const isStep3Valid = Boolean(runningTrainingMode);
 
   const handleGenerateAI = async () => {
@@ -332,7 +333,7 @@ export const SeasonAIGenerator: React.FC<SeasonAIGeneratorProps> = ({
               {currentStep === 1
                 ? (isStep1Valid ? "Siguiente" : "Selecciona tu objetivo")
                 : currentStep === 2
-                ? (isStep2Valid ? "Siguiente" : "Configura al menos 1 día")
+                ? (isStep2Valid ? "Siguiente" : longValidation.sameDayConflict ? "Separa ★ Fondos en días distintos" : !longValidation.isValid ? "Marca ★ Fondo para continuar" : "Configura al menos 1 día")
                 : (isGeneratingPlan || isGenerating
                   ? "Head Coach IA Periodizando..."
                   : !isStep3Valid

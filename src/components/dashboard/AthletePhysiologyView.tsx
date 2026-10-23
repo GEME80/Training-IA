@@ -274,6 +274,7 @@ export const AthletePhysiologyView: React.FC<AthletePhysiologyViewProps> = ({
         <div className="animate-fadeIn">
           <ProfileAvailabilityTab
             weeklyAvailability={weeklyAvailability} onToggleDayDiscipline={handleToggleDayDiscipline}
+            onChangeAvailability={setWeeklyAvailability}
             onSaveAvailability={handleSaveAvailability} onResetToCanonical={handleResetCanonical}
             isSaving={isSavingAvailability}
           />

@@ -114,40 +114,15 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
   }
 
   if (activeNavSection === "season_studio") {
-    const handlePersistAvailability = async (newMap: Record<string, string[]>) => {
-      try {
-        season.setWeeklyAvailability(newMap as any);
-        userStorage.setJSON("weekly_availability", newMap);
-        await fetch("/api/profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid: user?.uid || "",
-            email: user?.email || userProfile?.email || "",
-            weeklyAvailability: newMap,
-          }),
-        });
-      } catch { /* silent fail — localStorage already saved */ }
-    };
-
     const handlePersistRunningMode = async (mode: "POWER" | "PACE") => {
       try {
         userStorage.setItem("running_training_mode", mode);
         userStorage.setItem("has_running_power_meter", String(mode === "POWER"));
-        telemetry.setProfile((prev: any) => ({
-          ...prev,
-          runningTrainingMode: mode,
-          hasRunningPowerMeter: mode === "POWER",
-        }));
+        telemetry.setProfile((prev: any) => ({ ...prev, runningTrainingMode: mode, hasRunningPowerMeter: mode === "POWER" }));
         await fetch("/api/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid: user?.uid || "",
-            email: user?.email || userProfile?.email || "",
-            runningTrainingMode: mode,
-            hasRunningPowerMeter: mode === "POWER",
-          }),
+          body: JSON.stringify({ uid: user?.uid || "", email: user?.email || userProfile?.email || "", runningTrainingMode: mode, hasRunningPowerMeter: mode === "POWER" }),
         });
       } catch { /* silent fail */ }
     };
@@ -178,7 +153,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         onApplyPlan={(newBlueprint, options) =>
           season.handleApplyMacrocycle(newBlueprint, undefined, "WIZARD_CUSTOM", options)
         }
-        onPersistAvailability={handlePersistAvailability}
+        onPersistAvailability={season.handlePersistAvailability}
         onPersistRunningMode={handlePersistRunningMode}
         onNavigateToDashboard={() => onNavigateTo("dashboard")}
         onOpenHeadCoach={() => onNavigateTo("head_coach")}
@@ -335,8 +310,7 @@ export const AthleteDashboardViewRouter: React.FC<AthleteDashboardViewRouterProp
         }}
         onSave={telemetry.handleSaveSettings}
         onUpdateAvailability={async (newMap) => {
-          season.setWeeklyAvailability(newMap);
-          userStorage.setJSON("weekly_availability", newMap);
+          await season.handlePersistAvailability(newMap as any);
           await telemetry.handleSaveSettings({ weeklyAvailability: newMap });
         }}
       />

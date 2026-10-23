@@ -100,6 +100,10 @@ export function syncAndCalibrateBlueprint(
   if (!blueprint) return { blueprint, upgraded: false };
 
   const syncedBp = syncBlueprintToCurrentDate(blueprint);
+  const liveAvail = options.athleteMetrics?.weeklyAvailability;
+  if (liveAvail && typeof liveAvail === "object" && Object.keys(liveAvail).length > 0) {
+    syncedBp.availabilitySnapshot = liveAvail;
+  }
   const weeks = syncedBp.weeks || [];
   if (weeks.length === 0) return { blueprint: syncedBp, upgraded: false };
 

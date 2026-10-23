@@ -100,7 +100,9 @@ export const AthleteContinuousCalendar: React.FC<AthleteContinuousCalendarProps>
   }, []);
 
   const effectiveAvailability = resolveEffectiveAvailability(
-    (blueprint?.availabilitySnapshot && !isLegacyAvailability(blueprint.availabilitySnapshot as any))
+    !isLegacyAvailability(weeklyAvailability)
+      ? weeklyAvailability
+      : (blueprint?.availabilitySnapshot && !isLegacyAvailability(blueprint.availabilitySnapshot as any))
       ? (blueprint.availabilitySnapshot as any)
       : weeklyAvailability
   );

@@ -194,7 +194,7 @@ export function generateWeekTemplate(
           memory.record(rideTitle);
 
           const hasExistingRun = result.some((r) => r.day === day && (r.discipline === "Carrera" || (r as any).activityType === "Brick"));
-          if (!hasExistingRun) {
+          if (!hasExistingRun && sortedDiscList.includes("Carrera")) {
             const brick = resolveTriathlonBrick({ day, dateStr, formattedDate, curatedModel, phase, isRecovery, isRaceWeek, distanceType, runFtp });
             if (brick) {
               usedRunWorkoutNames.add(brick.workoutName);
@@ -246,7 +246,7 @@ export function generateWeekTemplate(
       }
 
       if (disc === "Carrera") {
-        const hasExistingRun = result.some((r) => r.day === day && (r.discipline === "Carrera" || (r as any).activityType === "Brick" || /transici[oó]n|brick/i.test(r.workoutName || "")));
+        const hasExistingRun = result.some((r) => r.day === day && (r.discipline === "Carrera" || (r as any).activityType === "Brick"));
         if (hasExistingRun) continue;
         runCount++;
         const runTest = scheduledTests.find((t) => t.sport === "Run" && !runTestInjected && day !== longRunDay);

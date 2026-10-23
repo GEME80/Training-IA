@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { UserStorage } from "@/lib/storage/userStorage";
 import { MacrocycleBlueprint } from "@/lib/physiology/macrocycle";
-import { PlanItem, WeeklyAvailabilityMap, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, resolveEffectiveAvailability, isLegacyAvailability } from "@/lib/gemini/engine";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import {
   isAthleteEligibleForAutoSync,
@@ -120,7 +120,11 @@ export function useAutoIntervalsSync({
         week,
         stableRunFtp,
         stableBikeFtp,
-        resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
+        resolveEffectiveAvailability(
+          !isLegacyAvailability(weeklyAvailability)
+            ? weeklyAvailability
+            : (blueprint.availabilitySnapshot as any) || weeklyAvailability
+        ),
         (blueprint.distanceType || blueprint.primaryRace?.distance) as any,
         stableCtl,
         effPrimaryRaceDate,

@@ -222,7 +222,7 @@ export function hydrateWeekPlanFromEvents(
       const disc = resolveDiscipline(evt.type, evt.name);
       const isPulseGenerated = evt.name && (/\[(?:PULSE AI|SGEA)\]/i.test(evt.name) || /test.*(ftp|css|vam|stryd|calibraci[oó]n)/i.test(evt.name));
       
-      if (isPulseGenerated && dayFallbackDiscs.size > 0 && !dayFallbackDiscs.has(disc) && !dayFallbackDiscs.has("Descanso")) {
+      if (isPulseGenerated && dayFallbackDiscs.size > 0 && !dayFallbackDiscs.has(disc)) {
         return;
       }
 
@@ -320,7 +320,7 @@ export function hydrateWeekPlanFromEvents(
       dayFallback.forEach((fb) => {
         if (!fb.isRestDay && fb.discipline !== "Descanso" && !seenDisciplines.has(fb.discipline)) {
           seenDisciplines.add(fb.discipline);
-          hydratedItems.push(fb);
+          hydratedItems.push({ ...fb, date: dateStr, formattedDate, day });
         }
       });
     }

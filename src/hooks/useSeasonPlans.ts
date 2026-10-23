@@ -323,9 +323,20 @@ export function useSeasonPlans({
     const resolved = resolveEffectiveAvailability(map as any);
     setWeeklyAvailability(resolved);
     userStorage.setJSON("weekly_availability", resolved);
+    const updatedPlans = seasonPlans.map((p) =>
+      p.blueprint ? { ...p, blueprint: { ...p.blueprint, availabilitySnapshot: resolved as any } } : p
+    );
+    if (updatedPlans.length > 0) {
+      setSeasonPlans(updatedPlans);
+      userStorage.setJSON("season_plans", updatedPlans);
+      if (updatedPlans[0].blueprint) userStorage.setJSON("active_blueprint", updatedPlans[0].blueprint);
+    }
     const tId = profileId || userProfile?.intervalsAthleteId;
     if (tId) { userStorage.removeItem(`last_synced_to_${tId}`); userStorage.removeItem(`last_synced_hash_${tId}`); }
-    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { weeklyAvailability: resolved }, isReadOnly);
+    await persistProfileField(user?.uid, user?.email || userProfile?.email || "", {
+      weeklyAvailability: resolved,
+      ...(updatedPlans.length > 0 ? { seasonPlans: updatedPlans } : {}),
+    }, isReadOnly);
   };
 
   return {

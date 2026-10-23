@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlanItem, WeeklyAvailabilityMap, resolveEffectiveAvailability } from "@/lib/gemini/engine";
+import { PlanItem, WeeklyAvailabilityMap, resolveEffectiveAvailability, isLegacyAvailability } from "@/lib/gemini/engine";
 import { MacrocycleBlueprint, TargetRace } from "@/lib/physiology/macrocycle";
 import { generateWeekTemplate } from "@/lib/physiology/macrocycleTemplates";
 import { SyncNotificationData } from "@/components/dashboard/SyncNotificationModal";
@@ -128,7 +128,7 @@ export function useIntervalsSync({
     blueprint.weeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
         week, runFtp, bikeFtp,
-        resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
+        resolveEffectiveAvailability(!isLegacyAvailability(weeklyAvailability) ? weeklyAvailability : (blueprint.availabilitySnapshot as any) || weeklyAvailability),
         (blueprint.distanceType || primaryRace?.distance) as any, ctl, effPrimaryRaceDate, effRunningOpts
       );
       fullCyclePlan.push(...weekPlan);
@@ -234,7 +234,7 @@ export function useIntervalsSync({
     targetWeeks.forEach((week) => {
       const weekPlan = generateWeekTemplate(
         week, runFtp, bikeFtp,
-        resolveEffectiveAvailability((blueprint.availabilitySnapshot as any) || weeklyAvailability),
+        resolveEffectiveAvailability(!isLegacyAvailability(weeklyAvailability) ? weeklyAvailability : (blueprint.availabilitySnapshot as any) || weeklyAvailability),
         (blueprint.distanceType || primaryRace?.distance) as any, ctl, effPrimaryRaceDate, effRunningOpts
       );
       triweeklyPlan.push(...weekPlan);

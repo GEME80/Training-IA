@@ -1,5 +1,10 @@
 # 🛡️ PULSE ENDURANCE™ — Documento Rector de Identidad de Marca, Sistema de Diseño y Filosofía Fisiológica
 
+> [!IMPORTANT]
+> **DOCUMENTO CANÓNICO CONSOLIDADO:**  
+> Este documento ha sido ampliado y consolidado oficialmente en [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md).  
+> Todo agente y desarrollador debe consultar directamente **[`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md)** para acceder a la versión completa con las especificaciones de DNS, OAuth, proxy inverso de autenticación, atribución comercial GMC y directrices editoriales actualizadas.
+
 > **MANDATO DE LECTURA OBLIGATORIA PARA AGENTES:**  
 > Este archivo define el contexto de marca, la dirección de arte, el sistema de diseño y las reglas editoriales inviolables de **PULSE ENDURANCE** (dominio oficial: `pulseendurance.co`). Todo agente de desarrollo, diseñador o modelo de código (Antigravity) debe regirse estrictamente por estos principios al construir componentes visuales, páginas o micro-copys.
 

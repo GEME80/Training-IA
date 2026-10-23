@@ -1,4 +1,4 @@
-# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.82)
+# 🏛️ AUDITORÍA DE ARQUITECTURA, MEJORES PRÁCTICAS Y BACKLOG DE MEJORAS (SGEA v5.88)
 
 Este documento contiene la **auditoría forense de la arquitectura actual del sistema**, la evaluación de cumplimiento de **mejores prácticas de ingeniería de software** y el **Backlog Técnico Priorizado** con las refactorizaciones y mejoras identificadas para ser ejecutadas sin generar reprocesos.
 
@@ -8,7 +8,7 @@ Este documento contiene la **auditoría forense de la arquitectura actual del si
 
 ```mermaid
 xychart-beta
-    title "Evaluación de Madurez Arquitectónica (SGEA v5.82)"
+    title "Evaluación de Madurez Arquitectónica (SGEA v5.88)"
     x-axis ["Modularidad", "Type Safety", "Seguridad/OAuth", "18 Modelos SSOT", "Motor Híbrido", "Hooks/Servicios", "Zod API", "FinOps/Tokens", "Mobile UX", "Observabilidad"]
     y-axis "Cumplimiento (%)" 0 --> 100
     bar [96, 100, 100, 100, 100, 100, 100, 100, 100, 75]
@@ -200,6 +200,46 @@ xychart-beta
   - Auditoría fisiológica semanal SSOT con 366 TSS canónicos, desglose exacto de cargas, frescura biológica (TSB -0.3, HRV 54 ms) y prohibición categórica de doblar o compensar entrenamientos.
   - Fallback determinístico espejo con idéntico rigor fisiológico en caso de degradación de red o latencia de LLM.
   - Modularidad estricta respetando LOC Budgets: `chatInference.ts` (339 LOC), `deterministicFallback.ts` (344 LOC), `chatContext.ts` (346 LOC) $\le 348$ LOC.
+
+---
+
+### 🟢 MEJORA 18: Identidad de Marca PULSE ENDURANCE, Dominio pulseendurance.co y Rigor Fisiológico Seiler 80/20 [✅ COMPLETADA AL 100% v5.83 - v5.85]
+* **Estado:** ✅ **COMPLETADA EN v5.83 - v5.85**.
+* **Impacto:**
+  - Erradicación de la sigla "IA / AI" del nombre comercial frontal para afianzar credibilidad en deportes de fondo (la IA actúa como motor adaptativo invisible 24/7). Dominio canónico: `pulseendurance.co`.
+  - Asignación rigurosa a Dr. Stephen Seiler del "Entrenamiento Polarizado (80/20)" en sustitución del HRV; sincronización reactiva de tabs en `UnifiedPhysioEngine.tsx`.
+  - Dominio personalizado de autenticación `pulseendurance.co` vía reverse proxy OAuth en `next.config.mjs` (`/__/auth/:path*`) y configuración GCP unificada.
+  - Despliegue en producción con DNS GoDaddy (IP Anycast, TXT claim y CNAME SSL/TLS HTTP/2) y actualización de cliente OAuth 2.0 Intervals.icu #1371.
+
+---
+
+### 🟢 MEJORA 19: Reorganización Táctica, Tarjeta Comparativa Dual y Preservación Estricta de Carga (TSS) [✅ COMPLETADA AL 100% v5.86 - v5.87]
+* **Estado:** ✅ **COMPLETADA EN v5.86 - v5.87**.
+* **Impacto:**
+  - Selector táctico [ Hoy ] / [ Mañana ] en `HeadCoachReorgSubMenu.tsx` y preservación exacta del 100% del TSS programado al sustituir disciplinas (ciclismo, carrera, fuerza).
+  - Tarjeta comparativa dual `HeadCoachSingleDiffCard.tsx` que despliega `🔴 Ejercicio actual programado` vs `🟢 Ejercicio que se va a cambiar` con métricas exactas y botón directo `[ Confirmar y Sincronizar Sesión ]`.
+  - Purga de sermones o auditorías pasadas irrelevantes en respuestas del Head Coach, enfocándose al objetivo específico del atleta.
+  - Ergonomía UI/UX en barra lateral web (`w-[260px]`), descongestión de cabecera móvil y atribución corporativa oficial GMC en pies de página.
+
+---
+
+### 🟢 MEJORA 20: Sincronización Universal de Ritmo (MINS_KM), Blindaje Head Coach IA y Exclusividad Garmin Connect [✅ COMPLETADA AL 100% v5.88]
+* **Estado:** ✅ **COMPLETADA EN v5.88**.
+* **Impacto:**
+  - Enum `MINS_KM` universal en Intervals.icu API (`sport-settings`) con conversión estricta $v = 1000/t$ en m/s en endpoints y servicios, resolviendo ritmos no reconocidos.
+  - Configuración automática en Intervals de preferencias de carga en `"PACE,HR,POWER"` y vaciado de `ftp: null` en corredores por ritmo para purgar vatios de muñeca erróneos.
+  - Alineación estricta del Head Coach IA: transmisión de parámetros de ritmo, resolución canónica con `resolveRunningMode` y prohibición categórica de prescribir en vatios o citar Stryd para atletas por ritmo.
+  - Filtro anti-duplicados descartando clones de Strava frente a Garmin Connect/FIT y rediseño claro del tooltip de métricas en PMC (`bg-white/95 dark:bg-slate-900/95`).
+
+---
+
+### 🟢 MEJORA 21: Motor Financiero GMC FinSec Billing Engine, Hosted Checkout Openpay BBVA y Certificación Bancaria [✅ COMPLETADA AL 100% v5.88]
+* **Estado:** ✅ **COMPLETADA EN v5.88**.
+* **Impacto:**
+  - Módulo desacoplado `@gmc/billing-engine` con 47/47 pruebas superadas en sandbox y certificación PCI-DSS SAQ-A Nivel 1.
+  - Arquitectura Hosted Checkout en Openpay BBVA: cero datos de tarjeta en servidores de Pulse Endurance, redirección segura a pasarela bancaria oficial.
+  - Blindaje CISO de 6 vectores antifraude (`SentinelAntiFraudAgent`), moneda única oficial COP ($55.000 COP) y cumplimiento normativo de comercio electrónico (Ley 1480 y Ley 1581 Habeas Data).
+  - Expediente técnico exhaustivo compilado en `gmc-billing-engine/docs/OPENPAY_CERTIFICATION_DOSSIER.md`.
 
 ---
 

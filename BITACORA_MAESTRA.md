@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **PROTOCOLO DE 3 PASOS OBLIGATORIO PARA NUEVOS CHATS/AGENTES:**
-> 1. **Paso 1 (Arranque):** Leer [`PROJECT_RULES.md`](./PROJECT_RULES.md), [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md) y la última sección de esta Bitácora antes de proponer cambios.
+> 1. **Paso 1 (Arranque):** Leer [`PROJECT_RULES.md`](./PROJECT_RULES.md), [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) y la última sección de esta Bitácora (vía `tail -n 200`, prohibido leer el archivo completo) antes de proponer cambios.
 > 2. **Paso 2 (Desarrollo):** Trabajar en submódulos atómicos (< 350 líneas) respetando el puerto `3000` (`npm run dev:clean`) y las reglas de workouts Stryd (% FTP + tiempo).
 > 3. **Paso 3 (Cierre & Validación):** Validar con `npx tsc --noEmit` (código 0) y `npm run build`, y registrar el avance en esta Bitácora.
 
@@ -11183,3 +11183,34 @@ flowchart TD
   * Evidencia de transacciones de prueba aprobadas (Mastercard `tr1d2v2wbouv8gz305sc`, Amex `tr8cyjgy5wbqq3mflfar`, Rechazo 3006, Hosted Checkout `ckm0za6yvj1vnpvdxdro`).
   * Guía de preguntas y respuestas técnicas para la entrevista con el ingeniero de Openpay BBVA.
   * Protocolo de pase a producción (reemplazo de credenciales y activación en Cloud Run).
+
+---
+
+## 203. Sincronización Integral, Consolidación de Marca y Gobernanza Documental (v5.88) (2026-10-23)
+
+### 203.1. Sincronización del Prompt Maestro en `PROJECT_RULES.md`
+- **Actualización de Versión Canónica:** Actualizado encabezado y cuerpo a **SGEA v5.88**.
+- **Inyección de la Versión 5.88 en el Prompt Maestro:** Se formalizó la directriz de sincronización universal de ritmo (`MINS_KM` con $v = 1000/t$ m/s), purga de vatios residuales (`ftp: null`), blindaje estricto del Head Coach IA para atletas por ritmo, priorización de Garmin Connect sobre Strava y rediseño de legibilidad del tooltip de métricas en PMC.
+- **Directriz Estricta Tail-Only:** Se reforzó el mandato inicial de lectura exigiendo `tail -n 200` sobre `BITACORA_MAESTRA.md` para resguardar el presupuesto de tokens (FinOps).
+
+### 203.2. Consolidación de Identidad de Marca y Eliminación de Ambigüedades
+- **Consagración Canónica ([`BRAND_IDENTITY_PULSE_ENDURANCE.md`](BRAND_IDENTITY_PULSE_ENDURANCE.md)):** Se consolidó como el único documento rector exhaustivo de identidad, diseño visual, infraestructura DNS, certificados TLS y directrices editoriales.
+- **Banner de Redirección en [`BRAND_IDENTITY_PULSE_AI.md`](BRAND_IDENTITY_PULSE_AI.md):** Se añadió advertencia visible para redirigir inmediatamente a cualquier modelo o agente hacia el documento rector canónico.
+- **Actualización de Enlaces en Bitácora:** Actualizada la cabecera de arranque de la bitácora hacia `BRAND_IDENTITY_PULSE_ENDURANCE.md`.
+
+### 203.3. Actualización del Backlog Técnico de Arquitectura ([`BACKLOG_MEJORAS_ARQUITECTURA.md`](BACKLOG_MEJORAS_ARQUITECTURA.md))
+- Se actualizó el título y gráfico a **v5.88**.
+- Se incorporaron formalmente las 4 mejoras de evolución reciente:
+  * **Mejora 18:** Identidad PULSE ENDURANCE, dominio oficial `pulseendurance.co`, rigor Seiler 80/20 y reverse proxy OAuth (v5.83-v5.85).
+  * **Mejora 19:** Reorganización táctica, tarjeta comparativa dual y preservación estricta de TSS (v5.86-v5.87).
+  * **Mejora 20:** Sincronización universal de ritmo `MINS_KM`, Head Coach Daniels y exclusividad Garmin Connect (v5.88).
+  * **Mejora 21:** Motor Financiero GMC FinSec Billing Engine, Hosted Checkout Openpay BBVA y Certificación Bancaria PCI-DSS SAQ-A (v5.88).
+
+### 203.4. Higienización de Raíz y Organización de Archivos de Trabajo
+- Los archivos operativos temporales de checkout fueron archivados en [`gmc-billing-engine/docs/archive/`](gmc-billing-engine/docs/archive/):
+  * `INSTRUCCION_NUEVO_CHAT_OPENPAY.md`
+  * `PLAN_FACTURACION_RECURRENTE_OPENPAY.md`
+- La raíz del proyecto queda despejada, conteniendo únicamente los documentos maestros vivos.
+
+### 203.5. Validación y Compilación Limpia
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` ejecutado con **0 errores** (código 0).

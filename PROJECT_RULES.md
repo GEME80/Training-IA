@@ -1,5 +1,5 @@
-# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.87)
-> **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) (y [`BRAND_IDENTITY_PULSE_AI.md`](./BRAND_IDENTITY_PULSE_AI.md)) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
+# 🛡️ DIRECTRICES Y REGLAS DE GOBERNANZA ANTI-REPROCESO (SGEA v5.88)
+> **MANDATO PARA TODO AGENTE DE IA O DESARROLLADOR:** Este archivo contiene las leyes inmutables del proyecto. Todo agente que participe en este repositorio debe leer este documento, [`BRAND_IDENTITY_PULSE_ENDURANCE.md`](./BRAND_IDENTITY_PULSE_ENDURANCE.md) y [`BITACORA_MAESTRA.md`](./BITACORA_MAESTRA.md) (últimas 200 líneas vía `tail -n 200`) y cumplirlos sin excepción antes de proponer cambios, escribir código o ejecutar comandos.
 
 ---
 
@@ -8,9 +8,15 @@
 Copia y pega este bloque completo al abrir cualquier nuevo chat con un agente:
 
 ```text
-Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.87). Dominio oficial en producción: pulseendurance.co.
+Actúa como el Arquitecto de Software Principal, Especialista en Sistemas Multi-Agente de IA y Head Coach de Deportes de Resistencia del Sistema PULSE ENDURANCE / SGEA (v5.88). Dominio oficial en producción: pulseendurance.co.
 
 Contexto Actual del Proyecto y Estado de la Arquitectura:
+- Versión 5.88: Sincronización Universal de Ritmo (MINS_KM), Blindaje Head Coach IA, Exclusividad Garmin Connect y Tooltip Claro en PMC:
+  * Enum MINS_KM en Intervals.icu API: Corrección universal de unidades de ritmo en `sport-settings` (`pace_units: "MINS_KM"` con conversión estricta v = 1000/t en m/s) en `/api/sync-settings`, `/api/profile`, `/api/admin/users` y `paceDetectionService.ts`, erradicando el problema de ritmo umbral no reconocido (`? /`).
+  * Prioridad Cuádruple de Carga & Purgado de Vatios: Configuración automática en Intervals de `load_preference`, `time_in_zones_preference`, `plan_load_preference` e `interval_summary_preference` en `"PACE,HR,POWER"` y vaciado de `ftp: null` en corredores por ritmo para erradicar lecturas residuales de potencia de muñeca.
+  * Alineación Fisiológica del Head Coach IA: Transmisión explícita de parámetros de ritmo en `useHeadCoachChat.ts` y `HeadCoachChatDrawer.tsx`, resolución estricta con `resolveRunningMode` en `chatContext.ts` e inyección de reglas dinámicas en `prompts.ts` que prohíben categóricamente prescribir en vatios o citar Stryd para carrera a pie, guiando exclusivamente en min/km (Daniels) y % LTHR.
+  * Prioridad Garmin Connect & Deduplicación Inteligente: Implementación de filtro anti-duplicados en `telemetryService.ts` y `contextCondenser.ts` que descarta clones de Strava frente a Garmin Connect o archivos FIT manuales (evitando la duplicación de TSS y la distorsión del CTL/ATL), junto a una alerta en `AthleteDeviceSyncNotice.tsx` que orienta a desconectar Strava en Intervals.icu.
+  * Rediseño del Tooltip de Métricas en PMC: Erradicación del fondo negro en el cuadro de datos flotante de `AthletePMCChart.tsx` en favor de un diseño claro (`bg-white/95 dark:bg-slate-900/95` con borde tenue y sombras difuminadas) y modernización de la insignia del cursor cruzado en `AthletePMCSVG.tsx`.
 - Versión 5.87: Ergonomía UI/UX Móvil & Web, Erradicación de Truncamientos y Atribución Comercial GMC (Germán Morales Consulting):
   * Resolución de Truncamiento Web en Barra Lateral (`AthleteSidebar.tsx`): Ancho expandido ampliado a `w-[260px]` con `flex-1 min-w-0` (eliminado `overflow-hidden`), garantizando que "PULSE ENDURANCE" se lea completo sin cortes en monitores de escritorio.
   * Descongestión Integral de la Cabecera Móvil (`AthleteDashboardHeader.tsx`, `PulseLogo.tsx`): Remoción del botón "En Vivo / Sync..." en smartphones y retiro del badge "PRO" en `PulseLogo.tsx` (`showPro = false`), permitiendo una barra superior espaciosa y limpia con solo Isotipo + PULSE ENDURANCE a la izquierda y Campana + Avatar a la derecha.
@@ -129,7 +135,7 @@ Por favor, confirma que leíste el Prompt Maestro de PROJECT_RULES.md y la últi
 
 ---
 
-## 🧭 ÍNDICE ESTRUCTURAL DE REGLAS Y GOBERNANZA (SGEA v5.82)
+## 🧭 ÍNDICE ESTRUCTURAL DE REGLAS Y GOBERNANZA (SGEA v5.88)
 
 Para navegar sin desperdiciar tokens de lectura, utiliza este índice temático:
 - **Bloque I — Arquitectura Base, Seguridad y Operación (Secciones 1 a 8):**

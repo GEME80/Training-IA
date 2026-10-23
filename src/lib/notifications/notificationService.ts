@@ -127,6 +127,15 @@ class NotificationManager {
 
     if (userStorage) {
       const current = this.getNotifications(userStorage);
+      if (
+        current[0] &&
+        !current[0].read &&
+        current[0].title === item.title &&
+        current[0].message === item.message &&
+        current[0].details === item.details
+      ) {
+        return current[0];
+      }
       const updated = [newItem, ...current.filter((n) => n.id !== newItem.id)].slice(0, this.maxItems);
       userStorage.setItem(this.getStorageKey(), JSON.stringify(updated));
       this.notify(updated);

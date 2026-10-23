@@ -31,6 +31,7 @@ interface UseAutoIntervalsSyncProps {
     lthr?: number;
   };
   refreshTelemetry?: (athleteId?: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => Promise<void>;
+  isTelemetryLoading?: boolean;
   isReadOnly?: boolean;
 }
 
@@ -51,15 +52,15 @@ export function useAutoIntervalsSync({
   bikeFtp = 0,
   ctl = 0,
   runningOpts,
-  refreshTelemetry,
+  isTelemetryLoading = false,
   isReadOnly = false,
 }: UseAutoIntervalsSyncProps) {
   const isExecutingRef = useRef<boolean>(false);
   const lastCheckTimestampRef = useRef<number>(0);
 
   const checkAndExecuteRollingSync = useCallback(async () => {
-    // 0. Si ya hay una sincronización en ejecución, no solapar
-    if (isExecutingRef.current) return;
+    // 0. Bloquear si ya está en ejecución o si la telemetría de perfil aún se está resolviendo
+    if (isExecutingRef.current || isTelemetryLoading) return;
 
     // 1. Si los datos mínimos aún no están en memoria, abortar de inmediato SIN penalizar el throttle
     if (!athleteId || !blueprint?.weeks || blueprint.weeks.length === 0) {
@@ -84,27 +85,28 @@ export function useAutoIntervalsSync({
 
     if (!isEligible) return;
 
-    // 3. Throttling mínimo: solo penalizar si ya tenemos datos y el atleta es elegible
+    // 3. Throttling mínimo: evitar re-evaluaciones repetitivas en la misma sesión
     const now = Date.now();
-    if (lastCheckTimestampRef.current > 0 && now - lastCheckTimestampRef.current < 20000) {
+    if (lastCheckTimestampRef.current > 0 && now - lastCheckTimestampRef.current < 60000) {
       return;
     }
 
     // 4. Extraer ventana rodante de 3 semanas (21 días hacia adelante)
     const todayStr = new Date().toISOString().split("T")[0];
-    const { targetWeeks, fromDate, toDate } = calculateRollingWindow(blueprint.weeks, todayStr, 3);
+    const { targetWeeks, toDate } = calculateRollingWindow(blueprint.weeks, todayStr, 3);
     if (targetWeeks.length === 0) return;
 
-    // 3. Generar entrenamientos para la ventana con métricas estables del macrociclo
+    // Generar entrenamientos para la ventana con métricas estables del macrociclo
     const stableCtl = blueprint.athleteCtlAtCreation || userProfile?.ctl || ctl || 35;
     const stableRunFtp = userProfile?.runFtp || runFtp || 0;
     const stableBikeFtp = userProfile?.bikeFtp || bikeFtp || 0;
     const stableThresholdPace = userProfile?.runThresholdPaceSecPerKm || runningOpts?.thresholdPaceSec || 285;
 
     const effPrimaryRaceDate = blueprint.primaryRace?.date || blueprint.raceDate || undefined;
+    const effRunningMode = blueprint.runningTrainingMode || runningOpts?.mode || (stableRunFtp > 0 ? "POWER" : "PACE");
     const effRunningOpts = {
       ...runningOpts,
-      mode: blueprint.runningTrainingMode || runningOpts?.mode || (stableRunFtp > 0 ? "POWER" : "PACE"),
+      mode: effRunningMode,
       thresholdPaceSec: stableThresholdPace,
       raceGoal: blueprint.primaryRace?.goalTarget,
     };
@@ -124,15 +126,13 @@ export function useAutoIntervalsSync({
       rollingPlan.push(...weekPlan);
     });
 
-    const futurePlan = rollingPlan.filter((item) => !item.date || item.date >= fromDate);
+    // Solo sincronizar entrenamientos desde hoy en adelante (nunca re-subir ni borrar días ya pasados)
+    const futurePlan = rollingPlan.filter((item) => !item.date || item.date >= todayStr);
     if (futurePlan.length === 0) return;
 
-    // 4. Calcular Hash de contenido para Dirty Checking
-    const currentHash = computePlanHash(futurePlan, {
-      runFtp: stableRunFtp,
-      bikeFtp: stableBikeFtp,
-      runningMode: effRunningOpts.mode,
-      thresholdPaceSec: stableThresholdPace,
+    // 5. Calcular Hash estructural sobre las 3 semanas completas (invariante al día de la semana)
+    const currentHash = computePlanHash(rollingPlan, {
+      runningMode: effRunningMode,
     });
 
     const syncToKey = `last_synced_to_${athleteId}`;
@@ -140,16 +140,23 @@ export function useAutoIntervalsSync({
     const lastSyncedTo = userStorage.getItem(syncToKey);
     const lastSyncedHash = userStorage.getItem(syncHashKey);
 
+    // Migración transparente de hashes v1 sin consumir llamadas al API de Intervals
+    if (lastSyncedTo === toDate && lastSyncedHash && !lastSyncedHash.startsWith("v2_")) {
+      userStorage.setItem(syncHashKey, currentHash);
+      lastCheckTimestampRef.current = now;
+      return;
+    }
+
     const isNeeded = isRollingSyncNeeded(lastSyncedTo, toDate, todayStr, lastSyncedHash, currentHash, 14);
     if (!isNeeded) {
       lastCheckTimestampRef.current = now;
       return;
     }
 
-    // 5. Ejecutar sincronización silenciosa en segundo plano
+    // 6. Ejecutar sincronización silenciosa en segundo plano
     try {
       isExecutingRef.current = true;
-      console.info(`[AutoIntervalsSync] Sincronizando buffer rodante (${fromDate} al ${toDate}) para ${athleteId}...`);
+      console.info(`[AutoIntervalsSync] Sincronizando buffer rodante (${todayStr} al ${toDate}) para ${athleteId}...`);
 
       const res = await fetch("/api/sync-intervals", {
         method: "POST",
@@ -160,7 +167,7 @@ export function useAutoIntervalsSync({
           apiKey: activeApiKey,
           uid: user?.uid,
           email: user?.email || userProfile?.email || "",
-          fromDate,
+          fromDate: todayStr,
           toDate,
           plan: futurePlan,
         }),
@@ -174,18 +181,13 @@ export function useAutoIntervalsSync({
         const weekCount = targetWeeks.length;
         const createdCount = data.createdCount || futurePlan.length;
 
-        // Registrar en el Espacio de Notificaciones
         notificationService.addNotification(userStorage, {
           title: "Sincronización Automática",
           message: `Próximas ${weekCount} semanas actualizadas en tu reloj Garmin e Intervals.icu (${createdCount} sesiones).`,
-          details: `Ventana activa del ${fromDate} al ${toDate}.`,
+          details: `Ventana activa del ${todayStr} al ${toDate}.`,
           category: "SYNC",
           severity: "success",
         });
-
-        if (refreshTelemetry) {
-          await refreshTelemetry(athleteId, activeApiKey, runFtp, bikeFtp);
-        }
       } else {
         console.warn("[AutoIntervalsSync] Backend reportó aviso:", data.error);
         if (data.isAuthError) {
@@ -208,41 +210,27 @@ export function useAutoIntervalsSync({
     apiKeyCache,
     user?.uid,
     user?.email,
-    userProfile,
+    userProfile?.status,
+    userProfile?.isDemo,
+    userProfile?.autoSyncIntervals,
+    userProfile?.encryptedApiKey,
+    userProfile?.hasApiKey,
+    userProfile?.runFtp,
+    userProfile?.bikeFtp,
+    userProfile?.runThresholdPaceSecPerKm,
     userStorage,
     blueprint,
     weeklyAvailability,
     runFtp,
     bikeFtp,
     ctl,
-    runningOpts,
-    refreshTelemetry,
+    runningOpts?.mode,
+    runningOpts?.thresholdPaceSec,
+    isTelemetryLoading,
     isReadOnly,
   ]);
 
   useEffect(() => {
-    // Trigger 1: Mount inicial o cuando cambian los datos del atleta
     checkAndExecuteRollingSync();
-
-    // Trigger 2: Reintento de cortesía a los 1.5s por resolución asíncrona de Firestore/LocalStorage
-    const timer = setTimeout(() => {
-      checkAndExecuteRollingSync();
-    }, 1500);
-
-    // Trigger 3: Retorno a primer plano en móvil (desbloqueo o cambio de pestaña)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        checkAndExecuteRollingSync();
-      }
-    };
-
-    window.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", checkAndExecuteRollingSync);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", checkAndExecuteRollingSync);
-    };
   }, [checkAndExecuteRollingSync]);
 }

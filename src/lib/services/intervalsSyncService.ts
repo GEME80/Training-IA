@@ -18,7 +18,7 @@ export class IntervalsSyncService {
   /**
    * Sincroniza un conjunto de entrenamientos estructurados hacia el calendario de Intervals.icu
    */
-  static async syncPlan(input: SyncIntervalsRequest): Promise<IntervalsSyncResult> {
+  static async syncPlan(input: SyncIntervalsRequest & { skipPreClean?: boolean }): Promise<IntervalsSyncResult> {
     const { athleteId, apiKey, uid, email, plan } = input;
 
     const { athleteId: effectiveAthleteId, apiKey: effectiveApiKey } =
@@ -71,7 +71,7 @@ export class IntervalsSyncService {
     const cleanStartStr = startDateStr < todayStr ? todayStr : startDateStr;
 
     // 2. Limpieza de entrenamientos previos [PULSE AI] / [SGEA] para evitar duplicación
-    if (cleanStartStr <= endDateStr) {
+    if (!input.skipPreClean && cleanStartStr <= endDateStr) {
       try {
         const existingEvents = await client.getEvents(cleanStartStr, endDateStr);
         const sgeaEventsToDelete = existingEvents.filter(
@@ -264,6 +264,7 @@ export class IntervalsSyncService {
     const syncResult = await this.syncPlan({
       ...input,
       plan: futurePlan,
+      skipPreClean: true,
     });
 
     return {

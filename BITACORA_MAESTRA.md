@@ -11307,3 +11307,18 @@ flowchart TD
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con **0 errores** ✅.
 - **Next.js Production Build:** `npm run build` completado exitosamente con **31/31 rutas** compiladas ✅.
 
+---
+
+## 207. Blindaje Anti-Tormenta en Sincronización Rodante de 3 Semanas con Intervals.icu (v5.92) (2026-10-23)
+
+### 207.1. Diagnóstico Forense de Doble Disparo en `useAutoIntervalsSync`
+- **Causa Raíz Detectada:** Al cargar o recargar el Dashboard, `useAutoIntervalsSync` se ejecutaba en $t = 0\text{s}$ mientras `/api/evaluate` seguía en curso (`telemetry.isLoading === true`). En ese instante el perfil tenía valores iniciales por defecto (`mode = "POWER"`, `thresholdPaceSec = 285`), generando un `Hash_Temporal` que difería del `Hash_Real` guardado en `localStorage` y disparando una sincronización de 27 sesiones. Segundos después, al resolverse `/api/evaluate` con los valores reales del atleta (`mode = "PACE"`, ritmo real) y activarse el evento `focus`/`visibilitychange`, el hash volvía a cambiar a `Hash_Real`, disparando una **segunda sincronización consecutiva** (~112 llamadas al API de Intervals por recarga).
+
+### 207.2. Solución Arquitectónica Implementada
+- **Compuerta de Carga (`isTelemetryLoading`):** Se bloquea cualquier evaluación en [`src/hooks/useAutoIntervalsSync.ts`](src/hooks/useAutoIntervalsSync.ts) hasta que `telemetry.isLoading === false` y `telemetry.isLiveConnected === true`.
+- **Hash Estructural Determinista (`v2_`):** En [`src/lib/physiology/rollingSyncEngine.ts`](src/lib/physiology/rollingSyncEngine.ts), `computePlanHash` ahora calcula la huella exclusivamente sobre la estructura de las 3 semanas del `blueprint` (`date`, `discipline`, `workoutName`, `durationMinutes`, `targetTss` y `runningMode`), ignorando fluctuaciones transitorias de telemetría. Incluye migración silenciosa de hashes `v1` a `v2_` con 0 llamadas al API.
+- **Filtro Estricto Desde Hoy (`date >= todayStr`):** Solo se limpian y sincronizan sesiones desde la fecha actual en adelante, sin borrar ni re-subir días ya transcurridos de la semana en curso.
+- **Eliminación de Disparadores Redundantes:** Se removieron los listeners agresivos de `window.focus`/`visibilitychange`, el llamado redundante a `refreshTelemetry` post-sync, y la doble limpieza en [`IntervalsSyncService.cleanAndSync`](src/lib/services/intervalsSyncService.ts) (`skipPreClean: true`).
+- **Deduplicación en Campanita:** [`notificationService.addNotification`](src/lib/notifications/notificationService.ts) ignora notificaciones idénticas consecutivas no leídas.
+
+

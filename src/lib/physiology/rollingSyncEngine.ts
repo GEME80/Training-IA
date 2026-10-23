@@ -108,17 +108,13 @@ export function computePlanHash(
   } = {}
 ): string {
   const parts: string[] = [
-    String(opts.runFtp || 0),
-    String(opts.bikeFtp || 0),
-    String(opts.runningMode || "POWER"),
-    String(opts.thresholdPaceSec || 0),
-    String(opts.swimCssSec || 0),
+    String(opts.runningMode || "PACE"),
   ];
 
   for (const item of planItems) {
     if (item.isRestDay || item.discipline === "Descanso") continue;
     parts.push(
-      `${item.date}_${item.discipline}_${item.workoutName || ""}_${item.durationMinutes || 0}_${(item as any).targetTss || item.tss || 0}_${item.powerTarget || ""}`
+      `${item.date}_${item.discipline}_${item.workoutName || ""}_${item.durationMinutes || 0}_${(item as any).targetTss || item.tss || 0}`
     );
   }
 
@@ -130,7 +126,7 @@ export function computePlanHash(
     hash = Math.imul(hash, 16777619);
   }
 
-  return (hash >>> 0).toString(36);
+  return "v2_" + (hash >>> 0).toString(36);
 }
 
 /**

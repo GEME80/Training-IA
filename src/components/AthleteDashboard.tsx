@@ -205,7 +205,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       thresholdPaceStr: telemetry.profile.runThresholdPaceStr,
       lthr: telemetry.profile.lthr,
     },
-    refreshTelemetry: telemetry.refreshTelemetry,
+    isTelemetryLoading: telemetry.isLoading || telemetry.isRefreshingTelemetry || !telemetry.isLiveConnected,
     isReadOnly: effectiveReadOnly,
   });
 

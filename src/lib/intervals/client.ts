@@ -134,7 +134,15 @@ export class IntervalsClient {
 
   private async safeFetch(url: string, init?: RequestInit): Promise<Response> {
     try {
-      return await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(12000) });
+      const res = await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(12000) });
+      if (res.status === 429) {
+        const retryAfterSec = parseInt(res.headers.get("retry-after") || "2", 10);
+        const waitMs = Math.max(retryAfterSec * 1000, 1500);
+        console.warn(`[IntervalsClient] 429 Rate Limit en ${url}. Esperando ${waitMs}ms antes de reintentar...`);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        return await fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(12000) });
+      }
+      return res;
     } catch (err: unknown) {
       console.warn(`[IntervalsClient] Reintentando fetch a ${url}... Error previo:`, err instanceof Error ? err.message : err);
       await new Promise((resolve) => setTimeout(resolve, 500));

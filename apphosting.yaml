@@ -33,6 +33,8 @@ env:
     value: "1371"
   - variable: INTERVALS_CLIENT_SECRET
     secret: intervals-client-secret
+  - variable: INTERVALS_WEBHOOK_SECRET
+    value: "pulse_intervals_whsec_2026"
   - variable: NEXT_PUBLIC_OPENPAY_MERCHANT_ID
     value: "muujkkywmqgrlisleaen"
   - variable: NEXT_PUBLIC_OPENPAY_PUBLIC_KEY

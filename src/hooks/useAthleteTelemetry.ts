@@ -85,8 +85,8 @@ export function useAthleteTelemetry({
       if (!isSuper && targetAthleteId.toLowerCase() === "i442091") { setIsLiveConnected(false); return; }
       if (!targetAthleteId && !targetApiKey && !userProfile?.encryptedApiKey && !userProfile?.hasApiKey) { setIsLiveConnected(false); return; }
 
-      const now = Date.now();
-      if (!forceRefresh && lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < 180000)) return;
+      const now = Date.now(), isDirty = Boolean(userProfile?.telemetryDirty);
+      if (!forceRefresh && !isDirty && lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < 180000)) return;
 
       try {
         setIsRefreshingTelemetry(true);

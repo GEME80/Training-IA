@@ -7,6 +7,7 @@ import { resolveIntervalsCredentials } from "@/lib/intervals/credentials";
 import { getLocalTodayStr, formatLocalDateToYMD, getMondayOfWeekStr } from "@/lib/dateUtils";
 import { EvaluateRequest } from "@/lib/validation/schemas";
 import { getUserProfileDecrypted } from "@/lib/db/userProfile";
+import { adminDb } from "@/lib/firebase/admin";
 import { FtpCalibrationEvent } from "@/lib/services/ftpDetectionService";
 import { PaceCalibrationEvent } from "@/lib/services/paceDetectionService";
 import { RunPowerCalibrationEvent } from "@/lib/services/runPowerDetectionService";
@@ -286,6 +287,10 @@ export class TelemetryService {
 
       const physioStatus = PhysiologicalEngine.evaluateAthlete(profile, wellness);
       profile.ctl = physioStatus.ctl; profile.atl = physioStatus.atl; profile.tsb = physioStatus.tsb; profile.rampRate = physioStatus.rampRate;
+
+      if (uid && adminDb && isLive) {
+        adminDb.collection("users").doc(uid).update({ telemetryDirty: false }).catch(() => {});
+      }
 
       return {
         success: true, isLive, profile, wellness, events, physioStatus, macrocyclePhase: null, agentDecision: null,

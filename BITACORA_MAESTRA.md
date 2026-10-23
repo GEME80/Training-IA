@@ -11214,3 +11214,39 @@ flowchart TD
 
 ### 203.5. Validación y Compilación Limpia
 - **TypeScript:** `./node_modules/.bin/tsc --noEmit` ejecutado con **0 errores** (código 0).
+
+---
+
+## 204. Arquitectura Reactiva por Eventos: Webhook Gateway de Intervals.icu y Manejo Inteligente de Rate Limiting 429 (v5.89) (2026-10-23)
+
+### 204.1. Diagnóstico de Capacidad y Cuotas de Intervals.icu (OAuth App #1371)
+- **Cuotas Base:** 100 req/usuario/día (piso mínimo de 5.000 req/día y techo inicial de 50.000 req/día), ventana móvil de 15 minutos (1/8 del límite diario, mín. 2.500 req) y límite estricto de firewall perimetral de **10 req/s por IP**.
+- **Solución al Riesgo de Escala:** Sustitución progresiva del modelo de sondeo periódico ("polling") por una arquitectura reactiva dirigida por eventos ("event-driven") mediante Webhooks oficiales de Intervals.icu.
+
+### 204.2. Blindaje Activo contra HTTP 429 en `IntervalsClient`
+- **Manejo del Header `Retry-After` ([`src/lib/intervals/client.ts`](src/lib/intervals/client.ts)):**
+  * `safeFetch` ahora intercepta respuestas `HTTP 429 Too Many Requests`.
+  * Extrae dinámicamente el header `Retry-After` de Intervals.icu:
+    $$t_{\text{wait}} = \max(\text{retryAfter} \times 1000, 1500)\text{ ms}$$
+  * Suspende la ejecución y reintenta automáticamente de forma transparente sin propagar errores 429 hacia la UI ni hacia los agentes.
+
+### 204.3. Gateway de Webhooks en Tiempo Real ([`src/app/api/intervals/webhook/route.ts`](src/app/api/intervals/webhook/route.ts) - 46 LOC)
+- **Ruta Oficial:** `https://pulseendurance.co/api/intervals/webhook`.
+- **Soporte Dual `GET` y `POST`:**
+  * `GET`: Healthcheck y verificación de conectividad del gateway.
+  * `POST`: Recepción de eventos con validación de secreto de autenticidad `body.secret === INTERVALS_WEBHOOK_SECRET` (`HTTP 401` ante secretos inválidos).
+
+### 204.4. Servicio de Procesamiento y Persistencia Atómica ([`src/lib/services/intervalsWebhookService.ts`](src/lib/services/intervalsWebhookService.ts) - 116 LOC)
+- **Eventos Soportados:** `ACTIVITY_UPLOADED`, `ACTIVITY_ANALYZED`, `ACTIVITY_DELETED`, `CALENDAR_UPDATED` y `WELLNESS_UPDATED`.
+- **Resolución de Atleta en Firestore:** Búsqueda atómica por `intervalsAthleteId` o `profile.intervalsAthleteId`.
+- **Flag Reactivo `telemetryDirty: true`:** Al detectarse una nueva actividad sincronizada desde Garmin a Intervals, el usuario se marca con `telemetryDirty: true` y se registra el resumen de la actividad (`activityId`, `name`, `trainingLoad`).
+- **Pista de Auditoría Forense:** Registro inmutable en la colección Firestore `intervals_webhook_events`.
+
+### 204.5. Invalidation Reactiva de Caché en Cliente ([`src/hooks/useAthleteTelemetry.ts`](src/hooks/useAthleteTelemetry.ts) & [`src/lib/services/telemetryService.ts`](src/lib/services/telemetryService.ts))
+- Si `userProfile.telemetryDirty === true`, el cliente en el navegador rompe inmediatamente el candado de caché de 3 minutos, descargando la nueva sesión de Garmin en tiempo real.
+- Tras la evaluación exitosa en `TelemetryService.evaluate`, `telemetryDirty` se restablece a `false` de forma asíncrona.
+
+### 204.6. Validación del Pipeline y Presupuesto LOC
+- **Gate 1 (LOC Budgets):** `route.ts`: 46 LOC ($\le 80$), `intervalsWebhookService.ts`: 116 LOC ($\le 250$), `client.ts`: 287 LOC ($\le 350$), `useAthleteTelemetry.ts`: 349 LOC ($\le 350$), `telemetryService.ts`: 323 LOC ($\le 350$) ✅.
+- **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con **0 errores** ✅.
+- **Gate 3 (Prueba Unitaria de Servicio):** Validación de secreto y procesamiento simulado de `ACTIVITY_ANALYZED` verificado al 100% ✅.

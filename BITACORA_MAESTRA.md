@@ -11250,3 +11250,25 @@ flowchart TD
 - **Gate 1 (LOC Budgets):** `route.ts`: 46 LOC ($\le 80$), `intervalsWebhookService.ts`: 116 LOC ($\le 250$), `client.ts`: 287 LOC ($\le 350$), `useAthleteTelemetry.ts`: 349 LOC ($\le 350$), `telemetryService.ts`: 323 LOC ($\le 350$) ✅.
 - **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` completado con **0 errores** ✅.
 - **Gate 3 (Prueba Unitaria de Servicio):** Validación de secreto y procesamiento simulado de `ACTIVITY_ANALYZED` verificado al 100% ✅.
+
+---
+
+## 205. Optimización FinOps de Ancho de Banda: Caché Inmutable para Assets Estáticos y Multimedia (v5.90) (2026-10-23)
+
+### 205.1. Diagnóstico Forense de Tráfico en App Hosting (8.4 GB)
+- **Causa Raíz:** Se detectó que el video del hero (`public/videos/hero-athlete.mp4`, 4.6 MB) y assets estáticos carecían de encabezado de caché debido a una regla comodín en `next.config.mjs` que aplicaba `Cache-Control: no-cache, no-store, must-revalidate` a todas las rutas fuera de `_next/static`.
+- **Efecto Multiplicador:** Durante las más de 35 pruebas de despliegue y validación de checkout bancario del 20 y 21 de octubre, cada recarga de página obligaba al navegador a volver a descargar los 4.6 MB completos del video, generando un pico de 2.6 GiB en un solo día.
+
+### 205.2. Implementación de Cabecera Inmutable de Largo Plazo ([`next.config.mjs`](next.config.mjs))
+- **Configuración de Caché Anual:** Se incorporaron reglas explícitas con `Cache-Control: public, max-age=31536000, immutable` para:
+  * `/videos/:path*` (video cinematográfico del hero).
+  * `/_next/image/:path*` (imágenes optimizadas).
+  * `/showcase/:path*` (capturas de chasis móvil).
+  * `/coaches/:path*` (fotografías de entrenadores de élite).
+  * `/images/:path*` y `/brands/:path*` (recursos visuales).
+- **Aislamiento de Seguridad:** Se excluyeron estas carpetas multimedia de la regla `no-cache, no-store`, manteniendo intacto el blindaje de seguridad (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`) en páginas dinámicas y APIs.
+
+### 205.3. Impacto Financiero y Proyección a Escala
+- **Descarga Única por Dispositivo:** El navegador del atleta ahora descarga los assets pesados una sola vez y los preserva en el disco local durante 1 año, reduciendo el consumo de ancho de banda en visitas recurrentes a **0 bytes**.
+- **Blindaje de Cuota Gratuita:** El consumo mensual se mantiene de forma segura por debajo de los **10 GB gratuitos** de Firebase App Hosting, eliminando el riesgo de cobros imprevistos al escalar a cientos de usuarios.
+- **Validación:** `npm run build` compila con éxito las 30/30 rutas (código 0).

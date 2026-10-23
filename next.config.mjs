@@ -36,18 +36,44 @@ const nextConfig = {
     ];
   },
   async headers() {
+    const immutableCacheHeader = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=31536000, immutable",
+      },
+    ];
+
     return [
       {
         source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+        headers: immutableCacheHeader,
       },
       {
-        source: "/((?!_next/static|_next/image|favicon.ico|__/auth).*)",
+        source: "/_next/image/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/videos/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/showcase/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/coaches/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/images/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/brands/:path*",
+        headers: immutableCacheHeader,
+      },
+      {
+        source: "/((?!_next/static|_next/image|videos|showcase|coaches|images|brands|favicon.ico|icon.svg|pulse-.*|__/auth).*)",
         headers: [
           {
             key: "Cache-Control",

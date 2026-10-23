@@ -29,7 +29,19 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
   notifications,
   userStorage,
 }) => {
+  const [nativePerm, setNativePerm] = React.useState<string>(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      return Notification.permission;
+    }
+    return "granted";
+  });
+
   if (!isOpen) return null;
+
+  const handleRequestNative = async () => {
+    const res = await notificationService.requestPermission();
+    if (res !== "unsupported") setNativePerm(res);
+  };
 
   const handleMarkAllRead = () => {
     notificationService.markAllAsRead(userStorage);
@@ -119,6 +131,19 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
             </button>
           </div>
         </div>
+
+        {nativePerm === "default" && (
+          <div className="mx-3 my-2 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-2 text-emerald-800 dark:text-emerald-300">
+            <span className="text-[11px] font-medium leading-tight">¿Recibir avisos en tu teléfono al sincronizar entrenos?</span>
+            <button
+              type="button"
+              onClick={handleRequestNative}
+              className="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition shrink-0 cursor-pointer"
+            >
+              Activar
+            </button>
+          </div>
+        )}
 
         {/* Lista de Notificaciones */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 p-2 sm:p-3 space-y-1">

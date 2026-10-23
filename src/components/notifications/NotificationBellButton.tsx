@@ -9,13 +9,17 @@ import { NotificationCenterDrawer } from "./NotificationCenterDrawer";
 
 interface NotificationBellButtonProps {
   userStorage?: UserStorage;
+  uid?: string;
 }
 
-export const NotificationBellButton: React.FC<NotificationBellButtonProps> = ({ userStorage }) => {
+export const NotificationBellButton: React.FC<NotificationBellButtonProps> = ({ userStorage, uid }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    if (uid) {
+      notificationService.setCurrentUid(uid);
+    }
     if (userStorage) {
       setNotifications(notificationService.getNotifications(userStorage));
     }

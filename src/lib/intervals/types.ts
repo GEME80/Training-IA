@@ -43,6 +43,7 @@ export interface AthleteProfile {
   hasUsedTrial?: boolean;
   billingCycleDay?: number;
   paymentReference?: string;
+  notifications?: any[];
 }
 
 export interface MetricIndicatorConfig {

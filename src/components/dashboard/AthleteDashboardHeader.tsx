@@ -18,6 +18,7 @@ interface AthleteDashboardHeaderProps {
   onNavigateSection?: (section: "dashboard" | "season_studio" | "head_coach" | "physiology" | "subscription") => void;
   signOutUser: () => void;
   userStorage?: UserStorage;
+  uid?: string;
 }
 
 export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
@@ -31,6 +32,7 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
   onNavigateSection,
   signOutUser,
   userStorage,
+  uid,
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const isMasterAdmin = isMasterAdminEmail(email);
@@ -44,7 +46,7 @@ export const AthleteDashboardHeader: React.FC<AthleteDashboardHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 ml-auto shrink-0">
-        <NotificationBellButton userStorage={userStorage} />
+        <NotificationBellButton userStorage={userStorage} uid={uid} />
 
         <div className="relative">
           <button

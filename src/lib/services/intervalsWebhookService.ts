@@ -83,10 +83,50 @@ export class IntervalsWebhookService {
             trainingLoad: typeof ev.activity?.icu_training_load === "number" ? ev.activity.icu_training_load : null,
           };
 
-          // Marcar al atleta con telemetría desactualizada para refresco instantáneo sin polling
+          let newNotif: any = null;
+          if (ev.type === "ACTIVITY_ANALYZED" || ev.type === "ACTIVITY_UPLOADED") {
+            const isRun = /run|carrera|trote/i.test(`${ev.activity?.type} ${ev.activity?.name}`);
+            const isRide = /ride|bici|ciclismo/i.test(`${ev.activity?.type} ${ev.activity?.name}`);
+            const isSwim = /swim|nado|nataci/i.test(`${ev.activity?.type} ${ev.activity?.name}`);
+            const icon = isRun ? "🏃‍♂️" : isRide ? "🚴‍♂️" : isSwim ? "🏊‍♂️" : "⚡";
+
+            const loadStr = typeof ev.activity?.icu_training_load === "number" ? ` • ${Math.round(ev.activity.icu_training_load)} TSS` : "";
+            const distKm = typeof ev.activity?.distance === "number" && ev.activity.distance > 0 ? `${(ev.activity.distance / 1000).toFixed(1)} km` : "";
+            const timeMin = typeof ev.activity?.moving_time === "number" && ev.activity.moving_time > 0 ? `${Math.round(ev.activity.moving_time / 60)} min` : "";
+            const metricsDetail = [distKm, timeMin].filter(Boolean).join(" • ");
+
+            newNotif = {
+              id: `wh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              title: `${icon} Actividad Sincronizada`,
+              message: `${ev.activity?.name || "Entrenamiento"}${loadStr}`,
+              details: metricsDetail ? `${metricsDetail} sincronizados desde Garmin Connect` : "Sincronizado desde Garmin Connect",
+              category: "SYNC",
+              severity: "success",
+              timestamp: ev.timestamp || nowIso,
+              read: false,
+              metadata: { activityId: ev.activity?.id, trainingLoad: ev.activity?.icu_training_load },
+            };
+          } else if (ev.type === "WELLNESS_UPDATED") {
+            newNotif = {
+              id: `wh_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              title: "📊 Biomarcadores Actualizados",
+              message: "Nuevas métricas de recuperación, sueño o FC reposo registradas.",
+              category: "SYNC",
+              severity: "info",
+              timestamp: ev.timestamp || nowIso,
+              read: false,
+            };
+          }
+
+          const userData = userDoc.data();
+          const currentNotifs = Array.isArray(userData.notifications) ? userData.notifications : [];
+          const updatedNotifs = newNotif ? [newNotif, ...currentNotifs.filter((n: any) => n.id !== newNotif.id)].slice(0, 15) : currentNotifs;
+
+          // Marcar al atleta con telemetría desactualizada y persistir notificación en Firestore
           await userDoc.ref.update({
             telemetryDirty: true,
             lastWebhookEvent: eventSummary,
+            notifications: updatedNotifs,
             updatedAt: nowIso,
           });
 

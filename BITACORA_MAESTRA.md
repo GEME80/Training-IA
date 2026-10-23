@@ -11272,3 +11272,38 @@ flowchart TD
 - **Descarga Única por Dispositivo:** El navegador del atleta ahora descarga los assets pesados una sola vez y los preserva en el disco local durante 1 año, reduciendo el consumo de ancho de banda en visitas recurrentes a **0 bytes**.
 - **Blindaje de Cuota Gratuita:** El consumo mensual se mantiene de forma segura por debajo de los **10 GB gratuitos** de Firebase App Hosting, eliminando el riesgo de cobros imprevistos al escalar a cientos de usuarios.
 - **Validación:** `npm run build` compila con éxito las 30/30 rutas (código 0).
+
+---
+
+## 206. Persistencia de Notificaciones en Firestore, Enlace con Webhooks de Intervals y Notificaciones Nativas PWA (v5.91) (2026-10-23)
+
+### 206.1. Arquitectura FinOps de Notificaciones a Costo Cero
+- **Almacenamiento Embebido en Perfil:** En lugar de crear una subcolección con lecturas/escrituras costosas, las notificaciones se persisten en un array `notifications` dentro de `users/{uid}` limitado a un máximo estricto de **15 elementos (FIFO)**.
+- **Cero Costo en Lecturas:** Al estar integrado directamente en la lectura inicial del perfil del atleta (`TelemetryService.evaluate`), no genera lecturas adicionales en Firestore (\$0 USD).
+
+### 206.2. Inyección Automática desde el Webhook de Intervals ([`src/lib/services/intervalsWebhookService.ts`](src/lib/services/intervalsWebhookService.ts))
+- **Eventos Enriquecidos:**
+  * Al recibir `ACTIVITY_UPLOADED` o `ACTIVITY_ANALYZED`, el webhook genera una notificación con título `🏃‍♂️ Actividad Sincronizada`, detallando el nombre de la actividad y la carga fisiológica calculada por Intervals/Garmin.
+  * Al recibir `WELLNESS_UPDATED`, se genera una notificación `📊 Biomarcadores Actualizados` informando sobre la calibración de HRV, sueño y FC en reposo.
+- Las notificaciones se inyectan atómicamente en el array `notifications` del usuario en Firestore junto con el flag `telemetryDirty: true`.
+
+### 206.3. API Endpoint de Gestión de Notificaciones ([`src/app/api/profile/notifications/route.ts`](src/app/api/profile/notifications/route.ts))
+- Endpoint seguro `POST /api/profile/notifications` (44 LOC $\le 80$) para mutaciones de usuario autenticado (`mark_as_read`, `mark_all_read`, `clear_all`), actualizando Firestore de forma asíncrona.
+
+### 206.4. Sincronización Bidireccional y Notificaciones Nativas PWA ([`src/lib/notifications/notificationService.ts`](src/lib/notifications/notificationService.ts) & [`src/components/notifications/NotificationCenterDrawer.tsx`](src/components/notifications/NotificationCenterDrawer.tsx))
+- **Sincronización Silenciosa:** `syncWithServer(serverNotifs, uid, userStorage)` fusiona las alertas del servidor con el estado local del dispositivo sin sobrescribir las lecturas offline.
+- **Soporte PWA en Teléfono Móvil:** Se agregó `requestPermission()` e integración con la API del navegador `Notification`.
+- **Banner de Activación en UI:** El cajón de notificaciones (`NotificationCenterDrawer`) presenta un banner elegante para que el atleta active las alertas en su teléfono móvil con un clic al instalar la PWA como acceso directo.
+- Si llega una nueva actividad mientras el usuario tiene la aplicación abierta o en segundo plano compatible, se despliega una alerta nativa del sistema operativo.
+
+### 206.5. Verificación de Presupuestos LOC y Compilación
+- `src/app/api/profile/notifications/route.ts`: 44 LOC ($\le 80$) ✅.
+- `src/lib/services/intervalsWebhookService.ts`: 156 LOC ($\le 250$) ✅.
+- `src/lib/notifications/notificationService.ts`: 194 LOC ($\le 250$) ✅.
+- `src/components/notifications/NotificationBellButton.tsx`: 66 LOC ($\le 350$) ✅.
+- `src/components/notifications/NotificationCenterDrawer.tsx`: 206 LOC ($\le 350$) ✅.
+- `src/hooks/useAthleteTelemetry.ts`: 348 LOC ($\le 350$) ✅.
+- `src/components/AthleteDashboard.tsx`: 347 LOC ($\le 350$) ✅.
+- **TypeScript:** `./node_modules/.bin/tsc --noEmit` completado con **0 errores** ✅.
+- **Next.js Production Build:** `npm run build` completado exitosamente con **31/31 rutas** compiladas ✅.
+

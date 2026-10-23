@@ -278,6 +278,7 @@ export class TelemetryService {
               runThresholdPaceSecPerKm: resRunPaceSec,
               swimCssStr: resSwimStr,
               swimCssSecPer100m: resSwimSec,
+              notifications: (storedUser?.profile as any)?.notifications || [],
             };
           }
         } catch (clientErr) {

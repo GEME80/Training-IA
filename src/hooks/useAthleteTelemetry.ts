@@ -6,6 +6,7 @@ import { PhysiologicalStatus } from "@/lib/physiology/engine";
 import { isMasterAdminEmail } from "@/lib/env";
 import { UserStorage, purgeLegacyGlobalStorage } from "@/lib/storage/userStorage";
 import { computePMCHistoricalSummary, PMCHistoricalSummary } from "@/lib/physiology/pmcEngine";
+import { notificationService } from "@/lib/notifications/notificationService";
 
 interface UseAthleteTelemetryProps {
   user: any;
@@ -16,14 +17,7 @@ interface UseAthleteTelemetryProps {
   isReadOnly?: boolean;
 }
 
-export function useAthleteTelemetry({
-  user,
-  userProfile,
-  userStorage,
-  refreshProfile,
-  onLiveConnectedChange,
-  isReadOnly = false,
-}: UseAthleteTelemetryProps) {
+export function useAthleteTelemetry({ user, userProfile, userStorage, refreshProfile, onLiveConnectedChange, isReadOnly = false }: UseAthleteTelemetryProps) {
   const isSuper = isMasterAdminEmail(userProfile?.email || user?.email) && !isReadOnly;
   const [isLoading, setIsLoading] = useState<boolean>(true), [isRefreshingTelemetry, setIsRefreshingTelemetry] = useState<boolean>(false);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false), [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
@@ -34,6 +28,10 @@ export function useAthleteTelemetry({
   const [physioStatus, setPhysioStatus] = useState<PhysiologicalStatus | null>(null);
   const [recentFtpCalibration, setRecentFtpCalibration] = useState<any>(null), [recentPaceCalibration, setRecentPaceCalibration] = useState<any>(null), [recentRunPowerCalibration, setRecentRunPowerCalibration] = useState<any>(null);
   const lastFetchTimestampRef = useRef<number>(0), lastPersistedProfileRef = useRef<string>("");
+
+  useEffect(() => {
+    if (Array.isArray(userProfile?.notifications)) notificationService.syncWithServer(userProfile.notifications, user?.uid, userStorage);
+  }, [userProfile?.notifications, user?.uid, userStorage]);
 
   const persistProfileToApi = useCallback(async (body: Record<string, any>) => {
     if (isReadOnly) return;
@@ -118,6 +116,7 @@ export function useAthleteTelemetry({
           if (data.recentRunPowerCalibration) setRecentRunPowerCalibration(data.recentRunPowerCalibration);
 
           const p = data.profile || {};
+          if (p.notifications) notificationService.syncWithServer(p.notifications, user?.uid, userStorage);
           const [resBike, resRun] = [p.bike_ftp || bikeFtp || profile.bike_ftp, p.run_ftp || runFtp || profile.run_ftp];
           const [rawL, rawM] = [p.lthr ?? profile.lthr, p.maxHR ?? profile.maxHR];
           const [resLthr, resMax] = rawL && rawM && Number(rawL) > Number(rawM) ? [rawM, rawL] : [rawL, rawM];

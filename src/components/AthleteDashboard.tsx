@@ -259,6 +259,7 @@ export const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
           onNavigateSection={(s) => setActiveNavSection(s)}
           signOutUser={signOutUser}
           userStorage={userStorage}
+          uid={effectiveUser?.uid}
         />
         <main className="flex-1 min-w-0 w-full max-w-[1550px] mx-auto px-3 sm:px-5 lg:px-6 py-3 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5">
           {!isAuditing && !isAthleteConnected && !bypassOnboardingView && activeNavSection === "dashboard" ? (

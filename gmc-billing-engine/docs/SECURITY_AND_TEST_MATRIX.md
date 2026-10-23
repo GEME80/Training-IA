@@ -93,3 +93,13 @@ Antes de activar dinero real en **Pulse Endurance** (Fase 3), el motor debe supe
 - [x] **Fase 2 (Pulse Endurance):** Verificado al 100%. Integración completada con modal PCI SAQ-A, flujo de 7 días gratis con tarjeta obligatoria, cancelación a mitad de ciclo respetando días pagados y Paywall Netflix (`gmc-billing-engine/test/verify-phase2.ts`).
 - [x] **Fase 3 (Certificación):** Verificado al 100%. Matriz exhaustiva de 15 escenarios `TC-01` a `TC-15` aprobada exitosamente en Sandbox (`gmc-billing-engine/test/verify-phase3-matrix.ts`).
 - [x] **Fase 4 (`GMC FinSec HQ`):** Verificado al 100%. Consola ejecutiva `/admin/finsec` y API `/api/admin/finsec/metrics` operativas con desglose semanal BBVA, pipeline de suscripciones, monitor en vivo de los 5 agentes y Libro Mayor Multi-Tenant descargable en CSV.
+- [x] **Fase 5 (Blindaje Antifraude CISO y Certificación Openpay BBVA):** Verificado al 100%.
+  * `gmc-billing-engine/test/audit-phase1-antifraud.ts`: 7/7 vectores de fraude bloqueados al 100% (Bypass URL, Transaction Hijacking, Price/Currency Tampering, Fake Resume, Email Spoofing, PCI Injection, Velocity Rate Limiting).
+  * `gmc-billing-engine/test/audit-phase2-ux-currency.ts`: 5/5 controles de moneda única COP (\$55.000 COP) y redirección directa en 1 clic superados al 100%.
+  * `gmc-billing-engine/test/audit-phase3-legal-compliance.ts`: 6/6 controles legales de German Morales Consulting, Ley 1480 (Retracto Art. 47 / Reversión Art. 51), Ley 1581 (Habeas Data) y Openpay `send_email: true` superados al 100%.
+  * Transacciones de prueba en vivo registradas en Sandbox de Openpay con Merchant ID `muujkkywmqgrlisleaen`:
+    - MasterCard Live: `tr1d2v2wbouv8gz305sc` (Auth: 1363732459)
+    - American Express Live: `tr8cyjgy5wbqq3mflfar` (Auth: 1722296990)
+    - Rechazo Bancario: Código 3006
+    - Hosted Checkout Session: `ckm0za6yvj1vnpvdxdro`
+    - Webhook ID: `wzwcbnsi4bnu0tqijyd2` (Verificado con código `wuF0CxFR`).

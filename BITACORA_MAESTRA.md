@@ -11162,12 +11162,13 @@ flowchart TD
 - **Retiro del Bloque Sandbox Test (`4111 1111...`) y Redirección Directa:** Se eliminó el bloque negro de pruebas de la vista pública y se conectó el botón principal directamente a `redirectToOpenpayCheckout`.
 
 ### 202.3. Fase 3: Identidad Comercial "German Morales Consulting", Ley 1480 y Ley 1581
-- **Visibilidad de Razón Comercial en Pies de Página:** Se incorporó explícitamente **`German Morales Consulting`** (Bogotá D.C., Colombia) y el sello de procesamiento por **Openpay Colombia S.A.S. (Grupo BBVA) — PCI-DSS Nivel 1 (SAQ-A)** en [`LandingFooter.tsx`](src/components/landing/LandingFooter.tsx) (38 LOC), [`AthleteDashboard.tsx`](src/components/AthleteDashboard.tsx) (346 LOC), [`src/app/terms/page.tsx`](src/app/terms/page.tsx) (226 LOC) y [`src/app/privacy/page.tsx`](src/app/privacy/page.tsx) (195 LOC).
+- **Visibilidad de Razón Comercial en Pies de Página:** Se incorporó explícitamente **`German Morales Consulting`** (Bogotá D.C., Colombia) y el sello de procesamiento por **Openpay Colombia S.A.S. (Grupo BBVA) — PCI-DSS Nivel 1 (SAQ-A)** en [`LandingFooter.tsx`](src/components/landing/LandingFooter.tsx) (35 LOC), [`AthleteDashboard.tsx`](src/components/AthleteDashboard.tsx) (346 LOC), [`src/app/terms/page.tsx`](src/app/terms/page.tsx) (226 LOC) y [`src/app/privacy/page.tsx`](src/app/privacy/page.tsx) (195 LOC).
+- **Protección OpSec y Correo Oficial:** Se eliminó cualquier correo electrónico del pie de página del Home para evitar scraping y exposición pública del Superadmin. Se estableció el correo oficial corporativo **`germanmoralesconsulting@gmail.com`** únicamente donde es requerido por ley: en `/terms` (Retracto y Reversión) y en `/privacy` (Habeas Data).
 - **Cláusulas de Comercio Electrónico en `/terms`:** Se añadieron las Cláusulas 6 y 7 con titularidad de **German Morales Consulting**, facturación exclusiva en COP y conversión bancaria internacional, comprobante oficial enviado por Openpay (`send_email: true`), cancelación sin permanencia, **Derecho de Retracto (Art. 47 Ley 1480 de 2011)** y **Reversión del Pago (Art. 51 Ley 1480 de 2011 / Decreto 587 de 2016)**.
 - **Cumplimiento Habeas Data en `/privacy`:** Actualizadas las Secciones 1, 5 y 6 bajo la **Ley Estatutaria 1581 de 2012** y Decreto 1377 de 2013.
 
 ### 202.4. Certificación del Pipeline de 5 Puertas y Auditorías Automatizadas por Fase
-- **Gate 1 (Presupuesto Estricto $\le 348$ LOC):** Todos los 13 archivos intervenidos cumplen $\le 348$ líneas (`confirm-session`: 248L, `page.tsx`: 321L, `resume`: 128L, `AdminBillingTable`: 339L, `admin/billing`: 72L, `admin/subscription-plan`: 124L, `create-checkout-session`: 162L, `webhook`: 203L, `PricingAndFaqSection`: 315L, `LandingFooter`: 38L, `AthleteDashboard`: 346L, `terms`: 226L, `privacy`: 195L) ✅.
+- **Gate 1 (Presupuesto Estricto $\le 348$ LOC):** Todos los 13 archivos intervenidos cumplen $\le 348$ líneas (`confirm-session`: 248L, `page.tsx`: 321L, `resume`: 128L, `AdminBillingTable`: 339L, `admin/billing`: 72L, `admin/subscription-plan`: 124L, `create-checkout-session`: 162L, `webhook`: 203L, `PricingAndFaqSection`: 315L, `LandingFooter`: 35L, `AthleteDashboard`: 346L, `terms`: 226L, `privacy`: 195L) ✅.
 - **Gate 2 (TypeScript Estricto):** `./node_modules/.bin/tsc --noEmit` ejecutado con **0 errores** ✅.
 - **Gate 3 (Auditorías Automatizadas por Fase):**
   * `audit-phase1-antifraud.ts`: **7/7 vectores de fraude bloqueados al 100%** ✅.
@@ -11175,3 +11176,10 @@ flowchart TD
   * `audit-phase3-legal-compliance.ts`: **6/6 controles legales y de identidad comercial superados al 100%** ✅.
 - **Gate 4 (Bitácora Maestra Sincronizada):** Registrado en Sección 202 ✅.
 - **Gate 5 (Despliegue Continuo):** Commit y Push a `origin/main` ✅.
+
+### 202.5. Dossier Maestro de Certificación Oficial Openpay BBVA
+- Se compiló el expediente técnico exhaustivo en [`gmc-billing-engine/docs/OPENPAY_CERTIFICATION_DOSSIER.md`](gmc-billing-engine/docs/OPENPAY_CERTIFICATION_DOSSIER.md) conteniendo:
+  * Ficha técnica del comercio (Merchant ID `muujkkywmqgrlisleaen`, Webhook `wzwcbnsi4bnu0tqijyd2` código `wuF0CxFR`).
+  * Evidencia de transacciones de prueba aprobadas (Mastercard `tr1d2v2wbouv8gz305sc`, Amex `tr8cyjgy5wbqq3mflfar`, Rechazo 3006, Hosted Checkout `ckm0za6yvj1vnpvdxdro`).
+  * Guía de preguntas y respuestas técnicas para la entrevista con el ingeniero de Openpay BBVA.
+  * Protocolo de pase a producción (reemplazo de credenciales y activación en Cloud Run).

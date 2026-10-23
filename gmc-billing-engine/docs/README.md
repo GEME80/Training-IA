@@ -225,9 +225,19 @@ flowchart LR
   3. Buscador global de transacciones y monitor en vivo del Escuadrón de 5 Agentes FinSec.
   4. Conexión Plug & Play de la segunda aplicación (*Hubinfo*).
 
+### 🔹 FASE 5: Blindaje Antifraude CISO, Moneda Única COP y Certificación Oficial Openpay BBVA
+* **Objetivo:** Cumplir el 100% de los requisitos técnicos, antifraude y normativos para la certificación oficial con el equipo de Openpay Colombia (BBVA).
+* **Entregables:**
+  1. **Hosted Checkout en 1 Clic:** Desacople del modal local hacia la sesión hospedada de Openpay (`createHostedCheckoutSession`) con cumplimiento PCI-DSS SAQ-A y despacho automático de comprobante oficial vía `send_email: true`.
+  2. **Moneda Única COP (\$55.000 COP / mes):** Retiro total del selector USD y aviso transparente para tarjetas internacionales con conversión bancaria automática.
+  3. **Escudo Antifraude CISO (6 Vectores):** Cierre de bypass por URL, bloqueo de secuestro de transacciones (*Hijacking*), validación de monto y moneda, bloqueo de reanudación sin pago previo, anti-spoofing en endpoints de administración y control de velocidad anti-carding (`SentinelAntiFraudAgent`).
+  4. **Cumplimiento Legal y Comercial:** Razón social visible **German Morales Consulting** en pies de página, Cláusula de Retracto (Art. 47) y Reversión del Pago (Art. 51 Ley 1480 / Decreto 587) en `/terms`, y Política de Privacidad (Ley 1581 Habeas Data) en `/privacy`.
+  5. **Batería Automatizada de Auditorías:** Scripts `audit-phase1-antifraud.ts`, `audit-phase2-ux-currency.ts` y `audit-phase3-legal-compliance.ts` superados con 18/18 controles al 100%.
+
 ---
 
 ## 5. Documentación Complementaria del Motor
 
+* 📋 **[Dossier Maestro de Certificación Openpay BBVA (`OPENPAY_CERTIFICATION_DOSSIER.md`)](./OPENPAY_CERTIFICATION_DOSSIER.md)**
 * 🤖 **[Especificación del Escuadrón de Agentes FinSec (`AGENTS_FINSEC_MONITORING.md`)](./AGENTS_FINSEC_MONITORING.md)**
-* 🛡️ **[Políticas de Seguridad Bancaria y Matriz de 15 Pruebas (`SECURITY_AND_TEST_MATRIX.md`)](./SECURITY_AND_TEST_MATRIX.md)**
+* 🛡️ **[Políticas de Seguridad Bancaria y Matriz de Pruebas (`SECURITY_AND_TEST_MATRIX.md`)](./SECURITY_AND_TEST_MATRIX.md)**

@@ -11320,5 +11320,7 @@ flowchart TD
 - **Filtro Estricto Desde Hoy (`date >= todayStr`):** Solo se limpian y sincronizan sesiones desde la fecha actual en adelante, sin borrar ni re-subir días ya transcurridos de la semana en curso.
 - **Eliminación de Disparadores Redundantes:** Se removieron los listeners agresivos de `window.focus`/`visibilitychange`, el llamado redundante a `refreshTelemetry` post-sync, y la doble limpieza en [`IntervalsSyncService.cleanAndSync`](src/lib/services/intervalsSyncService.ts) (`skipPreClean: true`).
 - **Deduplicación en Campanita:** [`notificationService.addNotification`](src/lib/notifications/notificationService.ts) ignora notificaciones idénticas consecutivas no leídas.
+- **Verificación Contra Eventos Reales de Intervals (`calendarEvents`) y Estabilidad de CTL en `useSeasonPlans`:** [`useAutoIntervalsSync.ts`](src/hooks/useAutoIntervalsSync.ts) ahora contrasta la ventana contra `telemetry.calendarEvents` (eventos reales descargados de Intervals.icu en `/api/evaluate`). Si la ventana `lastSyncedTo === toDate` o el calendario de Intervals ya posee las sesiones `[PULSE AI]` futuras cubriendo hasta la tercera semana, se aborta cualquier re-sincronización en recargas normales, *hard refresh* o cambios de dispositivo, desbloqueándose únicamente cuando el usuario edita el plan en [`useSeasonPlans.ts`](src/hooks/useSeasonPlans.ts) o cuando avanza la semana el lunes.
+
 
 

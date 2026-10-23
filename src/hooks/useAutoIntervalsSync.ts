@@ -12,6 +12,7 @@ import {
   isRollingSyncNeeded,
 } from "@/lib/physiology/rollingSyncEngine";
 import { notificationService } from "@/lib/notifications/notificationService";
+import { CalendarEvent } from "@/lib/intervals/types";
 
 interface UseAutoIntervalsSyncProps {
   athleteId?: string;
@@ -30,6 +31,7 @@ interface UseAutoIntervalsSyncProps {
     thresholdPaceStr?: string;
     lthr?: number;
   };
+  calendarEvents?: CalendarEvent[];
   refreshTelemetry?: (athleteId?: string, apiKey?: string, runFtp?: number, bikeFtp?: number) => Promise<void>;
   isTelemetryLoading?: boolean;
   isReadOnly?: boolean;
@@ -52,6 +54,7 @@ export function useAutoIntervalsSync({
   bikeFtp = 0,
   ctl = 0,
   runningOpts,
+  calendarEvents,
   isTelemetryLoading = false,
   isReadOnly = false,
 }: UseAutoIntervalsSyncProps) {
@@ -140,8 +143,33 @@ export function useAutoIntervalsSync({
     const lastSyncedTo = userStorage.getItem(syncToKey);
     const lastSyncedHash = userStorage.getItem(syncHashKey);
 
-    // Migración transparente de hashes v1 sin consumir llamadas al API de Intervals
-    if (lastSyncedTo === toDate && lastSyncedHash && !lastSyncedHash.startsWith("v2_")) {
+    // Verificar sesiones [PULSE AI] que YA existen realmente en el calendario de Intervals.icu
+    const activeFutureWorkouts = futurePlan.filter((item) => !item.isRestDay && item.discipline !== "Descanso");
+    const pulseEventsInWindow = (calendarEvents || []).filter((e) => {
+      const d = (e.start_date_local || "").split("T")[0];
+      return d >= todayStr && d <= toDate && e.category === "WORKOUT" && (e.name?.startsWith("[PULSE AI]") || e.name?.startsWith("[SGEA]"));
+    });
+    const maxExistingDate = pulseEventsInWindow.reduce((max, e) => {
+      const d = (e.start_date_local || "").split("T")[0];
+      return d > max ? d : max;
+    }, "");
+
+    const minLastWeekDate = targetWeeks[targetWeeks.length - 1]?.startDate || toDate;
+    const intervalsAlreadyPopulated =
+      pulseEventsInWindow.length >= Math.max(1, Math.floor(activeFutureWorkouts.length * 0.7)) &&
+      maxExistingDate >= minLastWeekDate;
+
+    // Candado 1: Si esta ventana exacta ya fue sincronizada o Intervals ya tiene las sesiones cargadas
+    if (lastSyncedTo === toDate || (intervalsAlreadyPopulated && lastSyncedTo !== null)) {
+      userStorage.setItem(syncToKey, toDate);
+      userStorage.setItem(syncHashKey, currentHash);
+      lastCheckTimestampRef.current = now;
+      return;
+    }
+
+    // Candado 2: En un navegador/dispositivo nuevo donde Intervals ya tiene las 3 semanas pobladas
+    if (!lastSyncedTo && intervalsAlreadyPopulated && !lastSyncedHash) {
+      userStorage.setItem(syncToKey, toDate);
       userStorage.setItem(syncHashKey, currentHash);
       lastCheckTimestampRef.current = now;
       return;
@@ -226,6 +254,7 @@ export function useAutoIntervalsSync({
     ctl,
     runningOpts?.mode,
     runningOpts?.thresholdPaceSec,
+    calendarEvents,
     isTelemetryLoading,
     isReadOnly,
   ]);

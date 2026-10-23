@@ -146,6 +146,8 @@ export function useSeasonPlans({
       console.warn("Aviso al persistir macrociclo en Firestore:", e);
     }
 
+    const tId = profileId || userProfile?.intervalsAthleteId;
+    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
     const initIdx = syncedBlueprint.currentWeekIndex ?? 0;
     setSelectedMacroWeekIdx(initIdx);
     setWeekOffset(syncedBlueprint.weeks?.[initIdx] ? getOffsetForWeek(syncedBlueprint.weeks[initIdx]) : 0);
@@ -173,6 +175,8 @@ export function useSeasonPlans({
     setSeasonPlans(updatedPlans);
     userStorage.setJSON("season_plans", updatedPlans);
     userStorage.setJSON("active_blueprint", updatedBlueprint);
+    const tId = profileId || userProfile?.intervalsAthleteId;
+    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
     if (macrocyclePhase) setMacrocyclePhase({ ...macrocyclePhase, blueprint: updatedBlueprint });
   };
 
@@ -272,7 +276,7 @@ export function useSeasonPlans({
             planName: p.planName,
             primaryRace: p.blueprint.primaryRace,
             athleteMetrics: {
-              ctl: ctl || historicalMetrics?.lastKnownCtl || 35,
+              ctl: p.blueprint.athleteCtlAtCreation || ctl || historicalMetrics?.lastKnownCtl || 35,
               runFtp,
               bikeFtp,
               lthr: userProfile?.lthr,
@@ -319,6 +323,8 @@ export function useSeasonPlans({
     const resolved = resolveEffectiveAvailability(map as any);
     setWeeklyAvailability(resolved);
     userStorage.setJSON("weekly_availability", resolved);
+    const tId = profileId || userProfile?.intervalsAthleteId;
+    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
     await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { weeklyAvailability: resolved }, isReadOnly);
   };
 

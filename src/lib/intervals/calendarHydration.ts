@@ -306,7 +306,8 @@ export function hydrateWeekPlanFromEvents(
       });
     });
 
-    if (hydratedItems.filter((p) => p.date === dateStr).length === 0) {
+    const dayHydrated = hydratedItems.filter((p) => p.date === dateStr);
+    if (dayHydrated.length === 0) {
       if (dayFallback.length > 0) {
         hydratedItems.push(...dayFallback);
       } else {
@@ -315,6 +316,13 @@ export function hydrateWeekPlanFromEvents(
           action: "MANTENER", durationMinutes: 0, tss: 0, justification: "Día de asimilación biológica.", isRestDay: true,
         });
       }
+    } else if (dayFallback.length > 0) {
+      dayFallback.forEach((fb) => {
+        if (!fb.isRestDay && fb.discipline !== "Descanso" && !seenDisciplines.has(fb.discipline)) {
+          seenDisciplines.add(fb.discipline);
+          hydratedItems.push(fb);
+        }
+      });
     }
   }
 

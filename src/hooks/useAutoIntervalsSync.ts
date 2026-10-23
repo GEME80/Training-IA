@@ -159,8 +159,8 @@ export function useAutoIntervalsSync({
       pulseEventsInWindow.length >= Math.max(1, Math.floor(activeFutureWorkouts.length * 0.7)) &&
       maxExistingDate >= minLastWeekDate;
 
-    // Candado 1: Si esta ventana exacta ya fue sincronizada o Intervals ya tiene las sesiones cargadas
-    if (lastSyncedTo === toDate || (intervalsAlreadyPopulated && lastSyncedTo !== null)) {
+    // Candado 1: Si esta ventana exacta y mismo hash ya fueron sincronizados
+    if ((lastSyncedTo === toDate && lastSyncedHash === currentHash) || (intervalsAlreadyPopulated && lastSyncedTo !== null && lastSyncedHash === currentHash)) {
       userStorage.setItem(syncToKey, toDate);
       userStorage.setItem(syncHashKey, currentHash);
       lastCheckTimestampRef.current = now;

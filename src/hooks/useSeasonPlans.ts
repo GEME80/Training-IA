@@ -147,7 +147,7 @@ export function useSeasonPlans({
     }
 
     const tId = profileId || userProfile?.intervalsAthleteId;
-    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
+    if (tId) { userStorage.removeItem(`last_synced_to_${tId}`); userStorage.removeItem(`last_synced_hash_${tId}`); }
     const initIdx = syncedBlueprint.currentWeekIndex ?? 0;
     setSelectedMacroWeekIdx(initIdx);
     setWeekOffset(syncedBlueprint.weeks?.[initIdx] ? getOffsetForWeek(syncedBlueprint.weeks[initIdx]) : 0);
@@ -176,7 +176,7 @@ export function useSeasonPlans({
     userStorage.setJSON("season_plans", updatedPlans);
     userStorage.setJSON("active_blueprint", updatedBlueprint);
     const tId = profileId || userProfile?.intervalsAthleteId;
-    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
+    if (tId) { userStorage.removeItem(`last_synced_to_${tId}`); userStorage.removeItem(`last_synced_hash_${tId}`); }
     if (macrocyclePhase) setMacrocyclePhase({ ...macrocyclePhase, blueprint: updatedBlueprint });
   };
 
@@ -324,7 +324,7 @@ export function useSeasonPlans({
     setWeeklyAvailability(resolved);
     userStorage.setJSON("weekly_availability", resolved);
     const tId = profileId || userProfile?.intervalsAthleteId;
-    if (tId) userStorage.removeItem(`last_synced_to_${tId}`);
+    if (tId) { userStorage.removeItem(`last_synced_to_${tId}`); userStorage.removeItem(`last_synced_hash_${tId}`); }
     await persistProfileField(user?.uid, user?.email || userProfile?.email || "", { weeklyAvailability: resolved }, isReadOnly);
   };
 
